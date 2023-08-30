@@ -1,0 +1,27 @@
+# This file was generated automatically by Qleany's generator, edit at your own risk! 
+# If you do, be careful to not overwrite it when you run the generator again.
+
+find_package(Qt6 COMPONENTS Core  REQUIRED)
+
+set(LIBRARY_NAME {{ application_name }}-contracts-dto-{{ feature_spinal_name }})
+
+set(SRC
+
+    {% for file in files %}
+    {{ file }}
+    {%- endfor %}
+)
+qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
+
+target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+{% for feature_dependency in feature_dependencies %}
+add_dependencies(${LIBRARY_NAME} {{ application_name }}-contracts-dto-{{ feature_dependency }})
+{% endfor %}
+{% for feature_dependency in feature_dependencies %}
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_name }}-contracts-dto-{{ feature_dependency }})
+{% endfor %}
+
+target_link_libraries(${LIBRARY_NAME}
+    PRIVATE Qt6::Core
+)

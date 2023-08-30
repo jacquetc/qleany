@@ -1,0 +1,100 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "remove_{{ entity_mappable_with_snake }}_tree_command_handler.h"
+#include "tools/automapper/automapper.h"
+#include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
+
+using namespace Qleany;
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Commands;
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands;
+
+Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::Remove{{ entity_mappable_with_pascal }}TreeCommandHandler(Interface{{ entity_mappable_with_pascal }}Repository *repository)
+    : m_repository(repository)
+{
+    if (!s_mappingRegistered)
+    {
+        registerMappings();
+        s_mappingRegistered = true;
+    }
+}
+
+Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::handle(QPromise<Result<void> >   & progressPromise,
+                                                      const Remove{{ entity_mappable_with_pascal }}TreeCommand& request)
+{
+    Result<int> result;
+
+    try
+    {
+        result = handleImpl(progressPromise, request);
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling Remove{{ entity_mappable_with_pascal }}TreeCommand:" << ex.what();
+    }
+    return result;
+}
+
+Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::restore()
+{
+    Result<int> result;
+
+    try
+    {
+        result = restoreImpl();
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling Remove{{ entity_mappable_with_pascal }}TreeCommand restore:" << ex.what();
+    }
+    return result;
+}
+
+Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::handleImpl(QPromise<Result<void> >   & progressPromise,const Remove{{ entity_mappable_with_pascal }}TreeCommand& request)
+{   
+    int {{ entity_mappable_with_camel }}Id = request.id;
+
+
+    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> {{ entity_mappable_with_camel }}Result = m_repository->get({{ entity_mappable_with_camel }}Id);
+
+    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
+    {
+        qDebug() << "Error getting {{ entity_mappable_with_camel }} from repository:" << {{ entity_mappable_with_camel }}Result.error().message();
+        return Result<int>({{ entity_mappable_with_camel }}Result.error());
+    }
+
+    // save old entity
+    m_oldState = {{ entity_mappable_with_camel }}Result.value();
+
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << {{ entity_mappable_with_camel }}Id);
+
+    if (Q_UNLIKELY(deleteResult.hasError()))
+    {
+        qDebug() << "Error deleting {{ entity_mappable_with_camel }} from repository:" << deleteResult.error().message();
+        return Result<int>(deleteResult.error());
+    }
+
+    // repositories handle remove signals
+    // emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+
+    qDebug() << "{{ entity_mappable_with_pascal }} removed:" << {{ entity_mappable_with_camel }}Id;
+
+    return Result<int>({{ entity_mappable_with_camel }}Id);
+}
+
+Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::restoreImpl()
+{
+    // no restore possible
+    return Result<int>(0);
+}
+
+
+bool Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::s_mappingRegistered = false;
+
+void Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::registerMappings() 
+{
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true);
+}

@@ -1,0 +1,225 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "create_{{ entity_mappable_with_snake }}_command_handler.h"
+#include "tools/automapper/automapper.h"
+#include "{{ feature_snake_name }}/validators/create_{{ entity_mappable_with_snake }}_command_validator.h"
+{% if has_owner %} 
+#include "domain/{{ owner_name_snake }}.h"
+{% endif %}
+
+using namespace Qleany;
+using namespace {{ application_cpp_domain_name }}::Domain;
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Validators;
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands;
+
+Create{{ entity_mappable_with_pascal }}CommandHandler::Create{{ entity_mappable_with_pascal }}CommandHandler(Interface{{ entity_mappable_with_pascal }}Repository *repository)
+    : m_repository(repository)
+{
+    if (!s_mappingRegistered)
+    {
+        registerMappings();
+        s_mappingRegistered = true;
+    }
+
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::handle(QPromise<Result<void> >   & progressPromise,
+                                                      const Create{{ entity_mappable_with_pascal }}Command& request)
+{
+    Result<{{ entity_mappable_with_pascal }}DTO> result;
+
+    try
+    {
+        result = handleImpl(progressPromise, request);
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling Create{{ feature_pascal_name }}Command:" << ex.what();
+    }
+    return result;
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::restore()
+{
+    Result<{{ entity_mappable_with_pascal }}DTO> result;
+
+    try
+    {
+        result = restoreImpl();
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling Create{{ entity_mappable_with_pascal }}Command restore:" << ex.what();
+    }
+    return result;
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPromise<Result<void> >   & progressPromise,const Create{{ entity_mappable_with_pascal }}Command& request)
+{
+    qDebug() << "Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl called";
+    {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }};
+    {% if has_owner %}
+    {{ application_cpp_domain_name }}::Domain::{{ owner_name_pascal }} ownerEntity{{ owner_field_pascal }};
+    {% endif %}
+
+    if (m_newEntity.isEmpty())
+    {
+        // Validate the create {{ entity_mappable_with_pascal }} command using the validator
+        auto validator               = Create{{ entity_mappable_with_pascal }}CommandValidator(m_repository);
+        Result<void> validatorResult = validator.validate(request.req);
+
+        if (Q_UNLIKELY(validatorResult.hasError()))
+        {
+            return Result<{{ entity_mappable_with_pascal }}DTO>(validatorResult.error());
+        }
+
+        Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
+
+        // Map the create {{ entity_mappable_with_pascal }} command to a domain {{ entity_mappable_with_pascal }} object and
+        // generate a UUID
+        {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(createDTO);
+
+        // allow for forcing the uuid
+        if ({{ entity_mappable_with_camel }}.uuid().isNull())
+        {
+            {{ entity_mappable_with_camel }}.setUuid(QUuid::createUuid());
+        }
+
+        // Set the creation and update timestamps to the current date and time
+        {{ entity_mappable_with_camel }}.setCreationDate(QDateTime::currentDateTime());
+        {{ entity_mappable_with_camel }}.setUpdateDate(QDateTime::currentDateTime());
+
+        {% if has_owner %}
+        // Get the enitties from owner
+        int ownerId = createDTO.{{ owner_name_camel }}Id();
+
+        {% if owner_field_is_list %}
+        auto originalOwner{{ owner_field_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}");
+        if (Q_UNLIKELY(originalOwner{{ owner_field_pascal }}Result.hasError()))
+        {
+            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_pascal }}Result.error());
+        }
+        auto originalOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }}Result.value();
+
+        // save
+        m_oldOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
+
+
+        {% if owner_field_is_ordered %}
+        // Insert to the right position
+
+        int position = createDTO.position();
+        if(position == -1){
+            position = originalOwner{{ owner_field_camel }}.count();
+        }
+        if(position >  originalOwner{{ owner_field_camel }}.count()){
+            position =  originalOwner{{ owner_field_camel }}.count();
+        }
+        else if(position < 0){
+            position = 0;
+        }
+
+        originalOwner{{ owner_field_pascal }}.insert(position, {{ entity_mappable_with_camel }});
+        {% else %}
+        originalOwner{{ owner_field_pascal }}.append({{ entity_mappable_with_camel }});
+        {% endif %}
+
+
+        {% else %}
+        auto originalOwner{{ owner_field_pascal }}Result = m_repository->getEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}");
+        if (Q_UNLIKELY(originalOwner{{ owner_field_pascal }}Result.hasError()))
+        {
+            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_pascal }}Result.error());
+        }
+        auto originalOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }}Result.value();
+
+        // save
+        m_oldOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
+        originalOwner{{ owner_field_pascal }} = {{ entity_mappable_with_camel }};
+
+        {% endif %}
+    
+        m_owner{{ owner_field_pascal }}NewState = originalOwner{{ owner_field_pascal }};
+        ownerEntity{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
+         {% endif %}
+ }
+  else {
+    {{ entity_mappable_with_camel }} = m_newEntity.value();
+    {% if has_owner %}
+    ownerEntity{{ owner_field_pascal }} = m_owner{{ owner_field_pascal }}NewState;
+    {% endif %}
+ }
+
+    // Add the {{ entity_mappable_with_camel }} to the repository
+
+    m_repository->beginChanges();
+    auto {{ entity_mappable_with_camel }}Result = m_repository->add(std::move({{ entity_mappable_with_camel }}));
+
+    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
+    {
+        m_repository->cancelChanges();
+        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
+    }
+
+    {% if has_owner %}
+    // Apply the addition of the new entity to the owner entity
+    {% if owner_field_is_list %}
+    // Add the {{ entity_mappable_with_camel }} to the owner entity
+    Result<void> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+
+    {% else %}
+    // Add the {{ entity_mappable_with_camel }} to the owner entity
+    Result<void> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+
+    {% endif %}
+
+    if (Q_UNLIKELY(updateResult.hasError()))
+    {
+        m_repository->cancelChanges();
+        return Result<{{ entity_mappable_with_pascal }}DTO>(updateResult.error());
+    }
+    {% endif %}
+
+    m_repository->saveChanges();
+
+
+    m_newEntity = {{ entity_mappable_with_camel }}Result;
+
+    auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
+    emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
+
+    qDebug() << "{{ entity_mappable_with_pascal }} added:" << {{ entity_mappable_with_camel }}DTO.id();
+
+    // Return the DTO of the newly created {{ entity_mappable_with_pascal }} as a Result object
+    return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}DTO);
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl()
+{
+
+    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+
+    if (Q_UNLIKELY(deleteResult.hasError()))
+    {
+        qDebug() << "Error deleting {{ entity_mappable_with_pascal }} from repository:" << deleteResult.error().message();
+        return Result<{{ entity_mappable_with_pascal }}DTO>(deleteResult.error());
+    }
+
+    emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+
+    qDebug() << "{{ entity_mappable_with_pascal }} removed:" << deleteResult.value();
+
+    return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_pascal }}DTO());
+}
+
+bool Create{{ entity_mappable_with_pascal }}CommandHandler::s_mappingRegistered = false;
+
+void Create{{ entity_mappable_with_pascal }}CommandHandler::registerMappings() 
+{
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>();
+}

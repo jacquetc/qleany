@@ -1,0 +1,59 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+{% if not validator.request_is_id %}
+#include "{{ validator.feature_name_snake }}/{{ validator.dto_snake }}.h"
+{% endif %}
+{% for repository in validator.repositories %}
+#include "repository/interface_{{ repository.snake_name }}_repository.h"
+{% endfor %}
+#include "common/result.h"
+
+using namespace Qleany;
+{% if validator.repositories|length %}
+using namespace {{ validator.application_cpp_domain_name }}::Contracts::Repository;
+{% endif %}
+{% if not validator.request_is_id %}using namespace {{ validator.application_cpp_domain_name }}::Contracts::DTO::{{ validator.feature_name_pascal }};{% endif %}
+
+namespace {{ validator.application_cpp_domain_name }}::Contracts::CQRS::{{ validator.feature_name_pascal }}::Validators
+{
+class {{ validator.name }}
+{
+  public:
+    {{ validator.name }}({% for repository in validator.repositories %}Interface{{ repository.pascal_name }}Repository *{{ repository.camel_name }}Repository{% if not loop.last %},{% endif %}{% endfor %})
+        {% for repository in validator.repositories %}{% if loop.first %}: {% endif %} m_{{ repository.camel_name }}Repository({{ repository.camel_name }}Repository){% if not loop.last %},{% endif %}{% endfor %}
+    {
+    }
+{% if validator.request_is_id %}
+    Result<void> validate(int id) const
+{% else %}
+    Result<void> validate(const {{ validator.dto_pascal }} &dto) const
+{% endif %}
+    {
+
+{% if validator.check_if_exists %}
+{% for repository in validator.repositories %}
+{% if validator.request_is_id %}
+        Result<bool> existsResult = m_{{ repository.camel_name }}Repository->exists(id);
+{% else %}
+        Result<bool> existsResult = m_{{ repository.camel_name }}Repository->exists(dto.id());
+{% endif %}
+        if (!existsResult.value())
+        {
+            return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+        }
+{% endfor %}
+{% endif %}
+
+
+        // Return that is Ok :
+        return Result<void>();
+    }
+
+  private:
+{% for repository in validator.repositories %}
+    Interface{{ repository.pascal_name }}Repository *m_{{ repository.camel_name }}Repository;
+{% endfor %}
+};
+} // namespace {{ validator.application_cpp_domain_name }}::Contracts::CQRS::{{ validator.feature_name_pascal }}::Validators

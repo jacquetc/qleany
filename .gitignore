@@ -52,3 +52,128 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Qleany
+generator/preview
+generator/temp/
+*_rc.py
+qleany_preview
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+cmake/build-*
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Eclipse
+.project
+.pydevproject
+.settings
+
+#KDE
+.directory
+
+#cx_Freeze
+build/
+build
+
+#gedit
+*~
+
+#eric6
+.eric6project
+*.e4p
+.idea
+
+#Qt Creator
+*.autosave
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+CMakeLists.txt.user
+*.qtds.*
+*.qtds
+
+# QML
+*.qmlc
+*.jsc
+
+#plume
+.~lock.*
+
+#cmake
+CMakeLists.txt.user.*
+
+#kdevelop
+.kdev4/
+.kdev4 
+
+#flatpak
+.flatpak-builder
+.flatpak-builder/
+build-dir
+build-dir/
+
+.DS_Store
+
+#vscode
+.vscode/
+
+#vcpkg
+.vcpkg/
+.vcpkg_installed/

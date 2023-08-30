@@ -1,0 +1,169 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "{{ command.snake_name }}_command_handler.h"
+#include "tools/automapper/automapper.h"
+{% if command.dto_in_is_enabled %}#include "{{ feature_snake_name }}/{{ command.dto_in_snake_name }}.h"{% endif %}
+{% if validator_enabled %}#include "{{ feature_snake_name }}/validators/{{ command.snake_name }}_command_validator.h"{% endif %}
+#include <QDebug>
+
+using namespace Qleany;
+{% if command.dto_in_is_enabled or command.dto_out_is_enabled %}using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};{% endif %}
+{% if command.repositories %}using namespace {{ application_cpp_domain_name }}::Contracts::Repository;{% endif %}
+{% if validator_enabled %}using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Validators;{% endif %}
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands;
+
+{{ command.pascal_name }}CommandHandler::{{ command.pascal_name }}CommandHandler({% for repository in command.repositories %}
+Interface{{ repository.pascal_name }}Repository *{{ repository.camel_name }}Repository {% if not loop.last %},{% endif %}{% endfor %})
+    {% for repository in command.repositories %}{% if loop.first %}: {% endif %} m_{{ repository.camel_name }}Repository({{ repository.camel_name }}Repository){% if not loop.last %},{% endif %}{% endfor %}
+{
+    if (!s_mappingRegistered)
+    {
+        registerMappings();
+        s_mappingRegistered = true;
+    }
+}
+
+Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler::handle(QPromise<Result<void> >   & progressPromise,
+                                                      const {{ command.pascal_name }}Command& request)
+{
+    Result<{{ command.dto_out_pascal_name }}> result;
+
+    try
+    {
+        result = handleImpl(progressPromise, request);
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<{{ command.dto_out_pascal_name }}>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling {{ command.pascal_name }}Command:" << ex.what();
+    }
+    return result;
+}
+
+
+
+Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler::restore()
+{
+    {% if not command.undo %}
+
+    Q_UNREACHABLE();
+    return Result<{{ command.dto_out_pascal_name }}>();
+
+    {% else %}
+
+    Result<{{ command.dto_out_pascal_name }}> result;
+
+    try
+    {
+        result = restoreImpl();
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<{{ command.dto_out_pascal_name }}>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling {{ command.pascal_name }}Command restore:" << ex.what();
+    }
+    return result;
+
+    {% endif %}
+}
+
+Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler::handleImpl(QPromise<Result<void> >& progressPromise, const {{ command.pascal_name }}Command& request)
+{
+    qDebug() << "{{ command.pascal_name }}CommandHandler::handleImpl called";
+    
+{% if command.undo %}
+    if (m_newState.isEmpty())
+    { {% endif %}
+    {% if validator_enabled %}
+        // Validate the create {{ feature_snake_name }} command using the validator
+        auto validator               = {{ command.pascal_name }}CommandValidator({% for repository in command.repositories %}m_{{ repository.camel_name }}Repository{% if not loop.last %},{% endif %}{% endfor %});
+        Result<void> validatorResult = validator.validate(request.req);
+
+        if (Q_UNLIKELY(validatorResult.hasError()))
+        {
+            {% if command.dto_out_is_enabled %}
+            return Result<{{ command.dto_out_pascal_name }}>(validatorResult.error());
+            {% else %}
+            return Result<void>(validatorResult.error());
+            {% endif %}
+       }
+    {% endif %}
+        
+        // implement logic here which will not be repeated on restore
+        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}>(request.req);
+
+            
+{% if command.undo %}
+    }
+    else
+    {
+        // implement logic here to load already filled newState for restore
+        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}>(request.req);
+
+    }
+{% endif %}
+    {% for repository in command.repositories %}{% if loop.first %}m_{{ repository.camel_name }}Repository->beginChanges();{% endif %}{% endfor %}
+    
+    // play here with the repositories
+    Q_UNIMPLEMENTED();
+
+    {% for repository in command.repositories %}{% if loop.first %}m_{{ repository.camel_name }}Repository->saveChanges();{% endif %}{% endfor %}
+
+{% if command.dto_out_is_enabled %}
+
+    // dummy to compile:
+    {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }};
+
+    // implement logic here to save to new state for restore
+    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>({{ feature_snake_name }}Result.value());
+
+{% if command.undo %}
+    // m_newState = Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
+{% endif %}
+
+    // emit signal
+    //emit {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
+
+    // Return 
+    return Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
+{% else %}
+    // emit signal
+    //emit {{ command.camel_name }}Changed();
+
+    // Return 
+    return Result<void>();
+
+{% endif %}
+}
+
+{% if command.undo %}
+Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler::restoreImpl()
+{
+{% if command.dto_out_is_enabled %}
+    {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }}; 
+    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>(m_newState);
+    
+    // dummy to compile:
+    {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }};
+
+    Q_UNIMPLEMENTED();
+
+    emit {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
+
+    return Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
+{% else %}
+    Q_UNIMPLEMENTED();
+
+    emit {{ command.camel_name }}Changed();
+
+    return Result<void>();
+{% endif %}
+}
+{% endif %}
+
+bool {{ command.pascal_name }}CommandHandler::s_mappingRegistered = false;
+
+void {{ command.pascal_name }}CommandHandler::registerMappings() 
+{
+
+}

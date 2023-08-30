@@ -1,0 +1,26 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+{% if command.has_dto_in %}
+#include "{{ command.feature_name_snake }}/{{ command.dto_snake }}.h"
+{% endif %}
+
+namespace {{ command.application_cpp_domain_name }}::Contracts::CQRS::{{ command.feature_name_pascal }}::Commands
+{
+class {{ command.name }}
+{
+  public:
+    {{ command.name }}()
+    {
+    }
+
+{% if command.request_is_id %}
+    int id = -1;
+{% else %}
+{% if command.has_dto_in %}
+    {{ command.application_cpp_domain_name }}::Contracts::DTO::{{ command.feature_name_pascal }}::{{ command.dto_pascal }} req;
+{% endif %}
+{% endif %}
+};
+} // namespace {{ command.application_cpp_domain_name }}::Contracts::CQRS::{{ command.feature_name_pascal }}::Commands

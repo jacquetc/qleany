@@ -1,0 +1,62 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "get_{{ entity_mappable_with_snake }}_query_handler.h"
+#include "tools/automapper/automapper.h"
+#include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
+
+using namespace Qleany;
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Queries;
+
+Get{{ entity_mappable_with_pascal }}QueryHandler::Get{{ entity_mappable_with_pascal }}QueryHandler(Interface{{ entity_mappable_with_pascal }}Repository *repository)
+    : m_repository(repository)
+{
+    if (!s_mappingRegistered)
+    {
+        registerMappings();
+        s_mappingRegistered = true;
+    }
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Get{{ entity_mappable_with_pascal }}QueryHandler::handle(QPromise<Result<void> >& progressPromise,
+                                                   const Get{{ entity_mappable_with_pascal }}Query& query)
+{
+    Result<{{ entity_mappable_with_pascal }}DTO> result;
+
+    try
+    {
+        result = handleImpl(progressPromise, query);
+    }
+    catch (const std::exception& ex)
+    {
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        qDebug() << "Error handling Get{{ entity_mappable_with_pascal }}Query:" << ex.what();
+    }
+    return result;
+}
+
+Result<{{ entity_mappable_with_pascal }}DTO>Get{{ entity_mappable_with_pascal }}QueryHandler::handleImpl(QPromise<Result<void> >   & progressPromise, const Get{{ entity_mappable_with_pascal }}Query& query)
+{
+    qDebug() << "Get{{ entity_mappable_with_pascal }}QueryHandler::handleImpl called with id" << query.id;
+
+    // do
+    auto {{ entity_mappable_with_camel }}Result = m_repository->get(query.id);
+
+    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.isError()))
+    {
+        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
+    }
+
+    // map
+    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
+
+    qDebug() << "Get{{ entity_mappable_with_pascal }}QueryHandler::handleImpl done";
+
+    return Result<{{ entity_mappable_with_pascal }}DTO>(dto);
+}
+
+bool Get{{ entity_mappable_with_pascal }}QueryHandler::s_mappingRegistered = false;
+
+void Get{{ entity_mappable_with_pascal }}QueryHandler::registerMappings() 
+{
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true);
+}

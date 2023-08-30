@@ -1,0 +1,245 @@
+---
+
+global:
+  application_name: SimpleExample
+  application_cpp_domain_name: Simple
+  organisation:
+    name: simpleexample
+    domain: qleany.eu
+
+entities:
+  list:
+    - name: Entity
+      parent: EntityBase
+      only_for_heritage: true
+      fields:
+        - type: QUuid
+          name: uuid
+        - type: QDateTime
+          name: creationDate
+        - type: QDateTime
+          name: updateDate
+    - name: Car
+      parent: Entity
+      fields:
+        - type: QString
+          name: content
+        - type: Brand
+          name: brand
+          strong: true
+        - type: QList<Passenger>
+          name: passengers
+          ordered: true
+          strong: true
+    - name: Brand
+      parent: Entity
+      fields:
+        - type: QString
+          name: name
+    - name: Passenger
+      parent: Entity
+      fields:
+        - type: QString
+          name: name
+    - name: Client
+      parent: Entity
+      fields:
+        - type: Passenger
+          name: client
+          ordered: false
+          strong: false
+  export: SIMPLEEXAMPLE_DOMAIN_EXPORT
+  export_header_file: domain_export.h
+  folder_path: src/core/domain/
+
+repositories:
+  list:
+    - entity_name: Car
+      lazy_loaders: true
+    - entity_name: Brand
+      lazy_loaders: true
+    - entity_name: Passenger
+      lazy_loaders: true
+    - entity_name: Client
+      lazy_loaders: true
+
+  interface_path: src/core/contracts/repository/
+  export: SIMPLEEXAMPLE_PERSISTENCE_EXPORT
+  export_header_file: persistence_export.h
+  repository_folder_path: src/core/persistence/repository/
+  base_folder_path: src/core/persistence/
+
+controller: 
+  folder_path: src/core/controller/
+  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
+  export_header_file: presenter_export.h
+  list:
+    - name: Car
+    - name: Brand
+    - name: Passenger
+    - name: Client
+
+qml:
+  mock_imports_folder_path: src/gui/touch/mock_imports/
+  real_imports_folder_path: src/gui/touch/real_imports/
+
+application:
+  common_cmake_folder_path: src/core/application
+  features:
+    - name: Car
+      DTO:
+        id_field: id
+        dto_identical_to_entity:
+          enabled: true
+          entity_mappable_with: Car
+      CRUD:
+        enabled: true       
+        entity_mappable_with: Car
+        get:
+          enabled: true
+        get_all:
+          enabled: true
+        get_with_details:
+          enabled: true
+        create: 
+          enabled: true
+        remove: 
+          enabled: true
+        remove_tree: 
+          enabled: true
+        update: 
+          enabled: true
+    - name: Brand
+      DTO:
+        id_field: id
+        dto_identical_to_entity:
+          enabled: true
+          entity_mappable_with: Brand
+      CRUD:
+        enabled: true       
+        entity_mappable_with: Brand
+        get:
+          enabled: true
+        get_all:
+          enabled: true
+        get_with_details:
+          enabled: false
+        create: 
+          enabled: true
+        remove: 
+          enabled: true
+        remove_tree: 
+          enabled: false
+        update: 
+          enabled: true
+    - name: Passenger
+      DTO:
+        id_field: id
+        dto_identical_to_entity:
+          enabled: true
+          entity_mappable_with: Passenger
+      CRUD:
+        enabled: true       
+        entity_mappable_with: Passenger
+        get:
+          enabled: true
+        get_all:
+          enabled: true
+        get_with_details:
+          enabled: false
+        create: 
+          enabled: true
+        remove: 
+          enabled: true
+        remove_tree: 
+          enabled: false
+        update: 
+          enabled: true  
+    - name: Client
+      DTO:
+        id_field: id
+        dto_identical_to_entity: 
+          enabled: true
+          entity_mappable_with: Client 
+      CRUD:
+        enabled: true       
+        entity_mappable_with: Client
+        get:
+          enabled: true
+        get_all:
+          enabled: true
+        get_with_details:
+          enabled: true
+        create: 
+          enabled: true
+        remove: 
+          enabled: true
+        remove_tree: 
+          enabled: false
+        update: 
+          enabled: true
+    - name: Custom
+      DTO:
+        id_field: id
+        dto_identical_to_entity:
+          enabled: false
+      CRUD:
+        enabled: false
+      commands:
+        - name: WriteRandomThings
+          entities:
+            - Car
+            - Passenger
+            - Brand
+            - Client
+          validator: 
+            enabled: True
+          undo: False
+          dto:
+            in:
+              type_prefix: WriteRandomThings
+              fields:
+                - type: QString
+                  name: randomCarName
+            out:
+              enabled: false
+        - name: CloseSystem
+          entities:
+            - Car
+            - Passenger
+            - Brand
+            - Client
+          validator: 
+            enabled: False
+          undo: False
+          dto:
+            in:
+              enabled: false
+            out:
+              enabled: false
+      queries:
+        - name: GetCurrentTime
+          validator:
+            enabled: false
+          undo: False
+          dto:
+            in:
+              enabled: false
+            out:
+              type_prefix: GetCurrentTimeReply
+              fields:
+                - type: QDateTime
+                  name: currentDateTime
+
+
+DTOs:
+  common_cmake_folder_path: src/core/contracts.dto
+
+CQRS:
+  common_cmake_folder_path: src/core/contracts.cqrs
+
+contracts:
+  inverted_app_domain: eu.qleany
+  folder_path: src/core/contracts
+  export: SIMPLEEXAMPLE_CONTRACTS_EXPORT
+  export_header_file: contracts_export.h

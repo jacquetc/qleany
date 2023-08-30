@@ -1,0 +1,5 @@
+add_subdirectory(brand_dto)
+add_subdirectory(passenger_dto)
+add_subdirectory(car_dto)
+add_subdirectory(client_dto)
+add_subdirectory(custom_dto)

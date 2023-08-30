@@ -1,0 +1,31 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ export_header }}"
+#include "{{ feature_snake_name }}/{{ entity_mappable_with_snake }}_dto.h"
+
+#include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
+#include <QPromise>
+
+using namespace Qleany;
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+
+namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Queries
+{
+class {{ export }} GetAll{{ entity_mappable_with_pascal }}QueryHandler : public QObject
+{
+    Q_OBJECT
+  public:
+    GetAll{{ entity_mappable_with_pascal }}QueryHandler(Interface{{ entity_mappable_with_pascal }}Repository  *repository);
+    Result<QList<{{ entity_mappable_with_pascal }}DTO>> handle(QPromise<Result<void>> &progressPromise);
+
+  private:
+    Interface{{ entity_mappable_with_pascal }}Repository *m_repository;
+    Result<QList<{{ entity_mappable_with_pascal }}DTO>> handleImpl(QPromise<Result<void> >   & progressPromise);
+    static bool s_mappingRegistered;
+    void registerMappings();
+};
+
+} // namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Queries

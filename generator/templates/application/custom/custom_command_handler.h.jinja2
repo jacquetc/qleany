@@ -1,0 +1,56 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ export_header }}"
+{% if command.dto_out_is_enabled %}#include "{{ feature_snake_name }}/{{ command.dto_out_snake_name }}.h"{% endif %}
+#include "{{ feature_snake_name }}/commands/{{ command.snake_name }}_command.h"
+{% for repository in command.repositories %}
+#include "repository/interface_{{ repository.snake_name}}_repository.h"{% endfor %}
+#include "common/result.h"
+#include <QPromise>
+
+using namespace Qleany;
+{% if command.dto_out_is_enabled %}
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
+{% endif %}
+{% if command.repositories %}
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+{% endif %}
+using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Commands;
+
+namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands
+{
+class {{ export }} {{ command.pascal_name }}CommandHandler : public QObject 
+{
+    Q_OBJECT
+  public:
+    {{ command.pascal_name }}CommandHandler({% for repository in command.repositories %}
+ Interface{{ repository.pascal_name }}Repository *{{ repository.camel_name }}Repository {% if not loop.last %},{% endif %}{% endfor %});
+
+    Result<{{ command.dto_out_pascal_name }}> handle(QPromise<Result<void>> &progressPromise, const {{ command.pascal_name }}Command &request);
+
+    Result<{{ command.dto_out_pascal_name }}> restore();
+
+  signals:
+{% if command.dto_out_is_enabled %}
+    void {{ command.camel_name }}Changed({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ command.dto_out_pascal_name }} {{ command.dto.out.type_prefix_camel }}Dto);
+{% else %}
+    void {{ command.camel_name }}Changed();
+{% endif %}
+
+  private:
+  {% for repository in command.repositories %}
+    Interface{{ repository.pascal_name }}Repository *m_{{ repository.camel_name }}Repository;
+  {%- endfor %}
+    Result<{{ command.dto_out_pascal_name }}> handleImpl(QPromise<Result<void> >   & progressPromise, const {{ command.pascal_name }}Command &request);
+{% if command.undo %}
+    Result<{{ command.dto_out_pascal_name }}> restoreImpl();
+    {{ command.dto_out_pascal_name }} m_oldState;
+    Result<{{ command.dto_out_pascal_name }}> m_newState;
+{% endif %}    
+    static bool s_mappingRegistered;
+    void registerMappings();
+};
+
+} // namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands

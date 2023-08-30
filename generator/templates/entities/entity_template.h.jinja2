@@ -1,0 +1,192 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ export_header_file }}"
+{% for header in headers -%}
+#include {{ header }}
+{% endfor %}
+#include {{ parent_header }}
+#include "entities.h"
+#include "domain/entity_schema.h"
+
+using namespace Qleany::Domain;
+
+namespace {{ application_cpp_domain_name }}::Domain
+{
+
+class {{ export }} {{ name }} : public {{ parent }}
+{
+    Q_GADGET
+{% for field in fields %}
+    Q_PROPERTY({{ field.type }} {{ field.name }} READ {{ field.name }} WRITE set{{ field.name_pascal }})
+
+    {% if field.need_lazy_loader %}
+    Q_PROPERTY(bool {{ field.name }}Loaded MEMBER m_{{ field.name }}Loaded)
+    {% endif %}{% endfor %}
+
+  public:
+    {{ name }}() : {{ parent }}() {{ fields_init_values }}
+    {
+    }
+
+    ~{{ name }}()
+    {
+    }
+
+   {{ name }}( {% for field in parent_fields %} const {{ field.type }} &{{ field.name }}, {% endfor %} {% for field in fields %}{% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
+        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
+    {
+    }
+
+    {{ name }}(const {{ name }} &other) : {{ parent }}(other){% for field in fields %}, m_{{ field.name }}(other.m_{{ field.name }}){% if field.need_lazy_loader %}, m_{{ field.name }}Loaded(other.m_{{ field.name }}Loaded){% endif %}{% endfor %}
+    {
+    }
+
+    static {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum enumValue()
+    {
+        return {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ name }};
+    }
+
+    {{ name }} &operator=(const {{ name }} &other)
+    {
+        if (this != &other)
+        {
+            {{ parent }}::operator=(other);
+            {% for field in fields -%}
+            m_{{ field.name }} = other.m_{{ field.name }};
+            {% if field.need_lazy_loader -%}
+            m_{{ field.name }}Loaded = other.m_{{ field.name }}Loaded;
+            {% endif %}{% endfor %}
+        }
+        return *this;
+    }
+
+    friend bool operator==(const {{ name }} &lhs, const {{ name }} &rhs);
+
+
+    friend uint qHash(const {{ name }} &entity, uint seed) noexcept;
+
+
+{% for field in fields %}
+    // ------ {{ field.name }} : -----
+
+    {{ field.type }} {{ field.name }}() {% if not field.need_lazy_loader %}const{% endif %}
+    {
+        {% if field.need_lazy_loader -%}
+        if (!m_{{ field.name }}Loaded && m_{{ field.name }}Loader)
+        {
+            m_{{ field.name }} = m_{{ field.name }}Loader(this->id());
+            m_{{ field.name }}Loaded = true;
+        }
+        {%- endif %}
+        return m_{{ field.name }};
+    }
+
+    void set{{ field.name_pascal }}({% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
+    {
+        m_{{ field.name }} = {{ field.name }};
+      {% if field.need_lazy_loader %}
+      m_{{ field.name }}Set = true;
+      {% endif %}
+    }
+    {% if field.need_lazy_loader %}
+    using {{ field.name_pascal }}Loader = std::function<{{ field.type }}(int entityId)>;
+
+    void set{{ field.name_pascal }}Loader(const {{ field.name_pascal }}Loader &loader)
+    {
+        m_{{ field.name }}Loader = loader;
+    }
+
+    bool {{ field.name }}Set() const
+    {
+        return m_{{ field.name }}Set;
+    }
+    
+    {% endif %}
+{% endfor %}
+
+  static Qleany::Domain::EntitySchema schema;
+
+  private:
+{% for field in fields -%}
+    {{ field.type }} m_{{ field.name }};
+    {% if field.need_lazy_loader -%}
+    {{ field.name_pascal }}Loader m_{{ field.name }}Loader;
+    bool m_{{ field.name }}Loaded = false;
+    bool m_{{ field.name }}Set = false;
+    {%- endif %}
+{%- endfor %}
+};
+
+inline bool operator==(const {{ name }} &lhs, const {{ name }} &rhs)
+{
+
+    return 
+            static_cast<const {{ parent }}&>(lhs) == static_cast<const {{ parent }}&>(rhs) &&
+    
+            {% for field in fields -%}
+            lhs.m_{{ field.name }} == rhs.m_{{ field.name }} {% if not loop.last %} && {% endif %}
+            {%- endfor %}
+    ;
+}
+
+inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
+{        // Seed the hash with the parent class's hash
+        uint hash = 0;
+        hash ^= qHash(static_cast<const {{ parent }}&>(entity), seed);
+
+        // Combine with this class's properties
+        {% for field in fields -%}
+        hash ^= ::qHash(entity.m_{{ field.name }}, seed);
+        {% endfor %}
+
+        return hash;
+}
+
+/// Schema for {{ name }} entity
+inline Qleany::Domain::EntitySchema {{ name }}::schema = {
+    {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ name }},
+    "{{ name }}",
+
+    // relationships:
+    {
+        {% for relationship in relationships -%}
+        { 
+            {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ relationship.left_entity_name }}, 
+            "{{ relationship.left_entity_name }}", 
+            {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ relationship.right_entity_name }}, 
+            "{{ relationship.right_entity_name }}", 
+            "{{ relationship.field_name }}", 
+            RelationshipType::{{ relationship.type }},
+            RelationshipStrength::{{ relationship.strength }},
+            RelationshipCardinality::{{ relationship.cardinality }},
+            RelationshipDirection::{{ relationship.direction }}       
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+    },
+
+    //fields:
+    {
+        {% for field in parent_fields -%}
+        { 
+            "{{ field.name }}",
+            FieldType::{% if field.type == "bool" %}Boolean{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
+            {% if field.is_primary_key %}true{% else %}false{%endif %},
+            {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}
+        },
+        {%- endfor %}
+        {% for field in fields -%}
+        { 
+            "{{ field.name }}",
+            FieldType::{% if field.type == "bool" %}Boolean{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
+            {% if field.is_primary_key %}true{% else %}false{%endif %},
+            {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+    }
+};
+
+
+} // namespace {{ application_cpp_domain_name }}::Domain
+Q_DECLARE_METATYPE({{ application_cpp_domain_name }}::Domain::{{ name }})
