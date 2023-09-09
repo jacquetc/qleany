@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_client_command_handler.h"
 #include "client/validators/update_client_command_validator.h"
-#include "repository/interface_client_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_client_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Client;
@@ -143,7 +143,7 @@ bool UpdateClientCommandHandler::s_mappingRegistered = false;
 void UpdateClientCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
-        true);
+        true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::UpdateClientDTO,
                                                            Simple::Domain::Client>();
 }

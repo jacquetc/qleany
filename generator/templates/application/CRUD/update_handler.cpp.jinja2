@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_{{ entity_mappable_with_snake }}_command_handler.h"
-#include "tools/automapper/automapper.h"
+#include "qleany/tools/automapper/automapper.h"
 #include "{{ feature_snake_name }}/validators/update_{{ entity_mappable_with_snake }}_command_validator.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
 
@@ -139,6 +139,6 @@ bool Update{{ entity_mappable_with_pascal }}CommandHandler::s_mappingRegistered 
 
 void Update{{ entity_mappable_with_pascal }}CommandHandler::registerMappings() 
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Update{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>();
 }

@@ -14,7 +14,7 @@ using namespace Qleany::Contracts::Database;
 
 namespace Qleany::Database
 {
-template <class RightEntity> class QLEANY_EXPORT OneToOneAssociator
+template <class RightEntity> class OneToOneAssociator
 {
   public:
     OneToOneAssociator(QSharedPointer<InterfaceDatabaseContext> context,

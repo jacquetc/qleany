@@ -16,7 +16,9 @@ class UpdateBrandCommand
     }
 
 
+
     Simple::Contracts::DTO::Brand::UpdateBrandDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Brand::Commands

@@ -20,6 +20,7 @@ using namespace Qleany::Tools::UndoRedo;
  */
 QueryCommand::QueryCommand(const QString &text) : UndoRedoCommand(text)
 {
+    this->setType(Type::QueryCommand);
 }
 
 /*!

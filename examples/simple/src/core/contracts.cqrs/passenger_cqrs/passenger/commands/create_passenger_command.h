@@ -16,7 +16,9 @@ class CreatePassengerCommand
     }
 
 
+
     Simple::Contracts::DTO::Passenger::CreatePassengerDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Passenger::Commands

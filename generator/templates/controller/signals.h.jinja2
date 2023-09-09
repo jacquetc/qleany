@@ -1,0 +1,49 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "controller_export.h"
+{% if feature.crud.enabled %}
+{% if feature.crud.get_with_details %}
+#include "{{ entity_name_snake }}/{{ entity_name_snake }}_with_details_dto.h"
+{% endif %}
+#include "{{ entity_name_snake }}/{{ entity_name_snake }}_dto.h"
+{% endif %}
+#include <QObject>
+
+namespace {{ application_cpp_domain_name }}::Controller
+{
+
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ entity_name_pascal }};
+
+class {{ export }} {{ entity_name_pascal }}Signals : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit {{ entity_name_pascal }}Signals(QObject *parent = nullptr) : QObject{parent}
+    {
+    }
+
+  signals:
+    void removed(QList<int> removedIds);
+    void activeStatusChanged(QList<int> changedIds, bool isActive);
+    
+{% if feature.crud.enabled %}
+    {%if feature.crud.get %}
+    void getReplied({{ entity_name_pascal }}DTO dto);
+    {% endif %}
+    {%if feature.crud.get_with_details %}
+    void getWithDetailsReplied({{ entity_name_pascal }}WithDetailsDTO dto);
+    {% endif %}
+    {%if feature.crud.get_all %}
+    void getAllReplied(QList<{{ entity_name_pascal }}DTO> dtoList);
+    {% endif %}
+    {%if feature.crud.create %}
+    void created({{ entity_name_pascal }}DTO dto);
+    {% endif %}
+    {%if feature.crud.update %}
+    void updated(Contracts::DTO::{{ entity_name_pascal }}::{{ entity_name_pascal }}DTO dto);
+    {% endif %}
+{% endif %}
+};
+} // namespace {{ application_cpp_domain_name }}::Controller

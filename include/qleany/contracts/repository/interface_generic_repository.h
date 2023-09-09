@@ -2,14 +2,13 @@
 #include "qleany/common/result.h"
 #include "qleany/database/types.h"
 #include "qleany/domain/entity_schema.h"
-#include "qleany/qleany_global.h"
 #include <QCoreApplication>
 #include <QFuture>
 #include <QUuid>
 
 namespace Qleany::Contracts::Repository
 {
-template <class T> class QLEANY_EXPORT InterfaceGenericRepository
+template <class T> class InterfaceGenericRepository
 {
   public:
     virtual ~InterfaceGenericRepository()

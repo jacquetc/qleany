@@ -19,11 +19,13 @@ PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<Simple::Dom
 
 SignalHolder *PassengerRepository::signalHolder()
 {
+    QReadLocker locker(&m_lock);
     return m_signalHolder.data();
 }
 
 Result<QHash<int, QList<int>>> PassengerRepository::removeInCascade(QList<int> ids)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // finally remove the entites of this repository
@@ -43,6 +45,7 @@ Result<QHash<int, QList<int>>> PassengerRepository::removeInCascade(QList<int> i
 
 Result<QHash<int, QList<int>>> PassengerRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // finally change the entites of this repository

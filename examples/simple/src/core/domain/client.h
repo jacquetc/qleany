@@ -2,26 +2,50 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "domain_export.h"
 #include "passenger.h"
 
 #include "entities.h"
 #include "entity.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 
 namespace Simple::Domain
 {
 
-class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
+class Client : public Entity
 {
     Q_GADGET
 
     Q_PROPERTY(Passenger client READ client WRITE setClient)
 
-    Q_PROPERTY(bool clientLoaded MEMBER m_clientLoaded)
-
   public:
+    struct MetaData
+    {
+
+        bool clientSet = false;
+        bool clientLoaded = false;
+
+        bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "client")
+            {
+                return clientSet;
+            }
+            return false;
+        }
+
+        bool getLoaded(const QString &fieldName) const
+        {
+
+            if (fieldName == "client")
+            {
+                return clientLoaded;
+            }
+            return false;
+        }
+    };
+
     Client() : Entity()
     {
     }
@@ -36,7 +60,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
     {
     }
 
-    Client(const Client &other) : Entity(other), m_client(other.m_client), m_clientLoaded(other.m_clientLoaded)
+    Client(const Client &other) : Entity(other), m_metaData(other.m_metaData), m_client(other.m_client)
     {
     }
 
@@ -51,7 +75,8 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
         {
             Entity::operator=(other);
             m_client = other.m_client;
-            m_clientLoaded = other.m_clientLoaded;
+
+            m_metaData = other.m_metaData;
         }
         return *this;
     }
@@ -64,10 +89,10 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
 
     Passenger client()
     {
-        if (!m_clientLoaded && m_clientLoader)
+        if (!m_metaData.clientLoaded && m_clientLoader)
         {
             m_client = m_clientLoader(this->id());
-            m_clientLoaded = true;
+            m_metaData.clientLoaded = true;
         }
         return m_client;
     }
@@ -76,7 +101,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
     {
         m_client = client;
 
-        m_clientSet = true;
+        m_metaData.clientSet = true;
     }
 
     using ClientLoader = std::function<Passenger(int entityId)>;
@@ -86,18 +111,17 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Client : public Entity
         m_clientLoader = loader;
     }
 
-    bool clientSet() const
-    {
-        return m_clientSet;
-    }
-
     static Qleany::Domain::EntitySchema schema;
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+    MetaData m_metaData;
     Passenger m_client;
     ClientLoader m_clientLoader;
-    bool m_clientLoaded = false;
-    bool m_clientSet = false;
 };
 
 inline bool operator==(const Client &lhs, const Client &rhs)

@@ -15,7 +15,7 @@ set(SRCS
 
 qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
 
-target_compile_definitions(${LIBRARY_NAME} PUBLIC {{ application_uppercase_name }}_PERSISTENCE_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_PERSISTENCE_LIBRARY)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -24,4 +24,3 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-c
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql
 )
-target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)

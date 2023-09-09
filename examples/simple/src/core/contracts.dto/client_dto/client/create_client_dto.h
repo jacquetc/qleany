@@ -24,6 +24,30 @@ class CreateClientDTO
     Q_PROPERTY(PassengerDTO client READ client WRITE setClient)
 
   public:
+    struct MetaData {
+    bool uuidSet = false;
+    bool creationDateSet = false;
+    bool updateDateSet = false;
+    bool clientSet = false;
+    bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "uuid")
+            {
+                return uuidSet;
+            }if (fieldName == "creationDate")
+            {
+                return creationDateSet;
+            }if (fieldName == "updateDate")
+            {
+                return updateDateSet;
+            }if (fieldName == "client")
+            {
+                return clientSet;
+            }
+            return false;
+        }
+    };
+
     CreateClientDTO() : m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
     {
     }
@@ -37,14 +61,17 @@ class CreateClientDTO
     {
     }
 
-    CreateClientDTO(const CreateClientDTO &other) : m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_client(other.m_client)
+    CreateClientDTO(const CreateClientDTO &other) : m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_client(other.m_client)
     {
     }
+
+        
 
     CreateClientDTO &operator=(const CreateClientDTO &other)
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
             m_updateDate = other.m_updateDate;
@@ -71,6 +98,7 @@ class CreateClientDTO
     void setUuid( const QUuid &uuid)
     {
         m_uuid = uuid;
+        m_metaData.uuidSet = true;
     }
     
 
@@ -84,6 +112,7 @@ class CreateClientDTO
     void setCreationDate( const QDateTime &creationDate)
     {
         m_creationDate = creationDate;
+        m_metaData.creationDateSet = true;
     }
     
 
@@ -97,6 +126,7 @@ class CreateClientDTO
     void setUpdateDate( const QDateTime &updateDate)
     {
         m_updateDate = updateDate;
+        m_metaData.updateDateSet = true;
     }
     
 
@@ -110,11 +140,18 @@ class CreateClientDTO
     void setClient( const PassengerDTO &client)
     {
         m_client = client;
+        m_metaData.clientSet = true;
     }
     
 
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 
     QUuid m_uuid;
     QDateTime m_creationDate;

@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_car_query_handler.h"
-#include "repository/interface_car_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_car_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Car::Queries;
@@ -56,5 +56,6 @@ bool GetCarQueryHandler::s_mappingRegistered = false;
 
 void GetCarQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                             true);
 }

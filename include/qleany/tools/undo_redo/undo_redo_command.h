@@ -60,6 +60,18 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
     QUuid stackId() const;
     void setStackId(const QUuid &newStackId);
 
+    bool isAlterCommand() const;
+    bool isQueryCommand() const;
+
+    enum Type
+    {
+        AlterCommand,
+        QueryCommand
+    };
+    Q_ENUM(Type)
+
+  protected:
+    void setType(Type newType);
   signals:
     void finished(bool isSuccessful);
     /*!
@@ -88,5 +100,6 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
     Scope m_scope;   /*!< The command's scope as an UndoRedoCommand::Scope enumeration value. */
     Status m_status; /*!< An enum representing the state of the command. */
     QUuid m_stackId; /*!< A QUuid representing the id of the stack the command is in. */
+    Type m_type = AlterCommand;
 };
 } // namespace Qleany::Tools::UndoRedo

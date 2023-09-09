@@ -1,10 +1,8 @@
 #pragma once
 
-#include "interface_foreign_entity.h"
 #include "qleany/common/result.h"
 #include "qleany/database/types.h"
 #include "qleany/domain/entity_schema.h"
-#include "qleany/qleany_global.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -12,7 +10,7 @@
 namespace Qleany::Contracts::Database
 {
 
-template <class T> class QLEANY_EXPORT InterfaceDatabaseTableGroup
+template <class T> class InterfaceDatabaseTableGroup
 {
   public:
     virtual ~InterfaceDatabaseTableGroup()

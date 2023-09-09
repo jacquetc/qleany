@@ -18,6 +18,18 @@ class GetCurrentTimeReplyDTO
     Q_PROPERTY(QDateTime currentDateTime READ currentDateTime WRITE setCurrentDateTime)
 
   public:
+    struct MetaData {
+    bool currentDateTimeSet = false;
+    bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "currentDateTime")
+            {
+                return currentDateTimeSet;
+            }
+            return false;
+        }
+    };
+
     GetCurrentTimeReplyDTO() : m_currentDateTime(QDateTime())
     {
     }
@@ -31,14 +43,17 @@ class GetCurrentTimeReplyDTO
     {
     }
 
-    GetCurrentTimeReplyDTO(const GetCurrentTimeReplyDTO &other) : m_currentDateTime(other.m_currentDateTime)
+    GetCurrentTimeReplyDTO(const GetCurrentTimeReplyDTO &other) : m_metaData(other.m_metaData), m_currentDateTime(other.m_currentDateTime)
     {
     }
+
+     
 
     GetCurrentTimeReplyDTO &operator=(const GetCurrentTimeReplyDTO &other)
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             m_currentDateTime = other.m_currentDateTime;
             
         }
@@ -62,11 +77,18 @@ class GetCurrentTimeReplyDTO
     void setCurrentDateTime( const QDateTime &currentDateTime)
     {
         m_currentDateTime = currentDateTime;
+        m_metaData.currentDateTimeSet = true;
     }
     
 
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 
     QDateTime m_currentDateTime;
 };

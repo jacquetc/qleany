@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_{{ entity_mappable_with_snake }}_query_handler.h"
-#include "tools/automapper/automapper.h"
+#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
 
 using namespace Qleany;
@@ -58,5 +58,5 @@ bool Get{{ entity_mappable_with_pascal }}QueryHandler::s_mappingRegistered = fal
 
 void Get{{ entity_mappable_with_pascal }}QueryHandler::registerMappings() 
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
 }

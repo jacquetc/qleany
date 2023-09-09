@@ -19,11 +19,13 @@ BrandRepository::BrandRepository(InterfaceDatabaseTableGroup<Simple::Domain::Bra
 
 SignalHolder *BrandRepository::signalHolder()
 {
+    QReadLocker locker(&m_lock);
     return m_signalHolder.data();
 }
 
 Result<QHash<int, QList<int>>> BrandRepository::removeInCascade(QList<int> ids)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // finally remove the entites of this repository
@@ -43,6 +45,7 @@ Result<QHash<int, QList<int>>> BrandRepository::removeInCascade(QList<int> ids)
 
 Result<QHash<int, QList<int>>> BrandRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // finally change the entites of this repository

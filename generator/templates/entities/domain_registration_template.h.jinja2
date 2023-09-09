@@ -2,7 +2,6 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "{{ export_header_file }}"
 {% for header in headers -%}
 #include {{ header }}
 {% endfor %}
@@ -10,11 +9,11 @@
 
 namespace {{ application_cpp_domain_name }}::Domain {
 
-class {{ export }} DomainRegistration : public QObject
+class DomainRegistration : public QObject
 {
     Q_OBJECT
   public:
-    explicit DomainRegistration(QObject *parent)
+    explicit DomainRegistration(QObject *parent) : QObject(parent)
     {
         {% for entity in entities_list %}
         qRegisterMetaType<{{ application_cpp_domain_name }}::Domain::{{ entity.name }}>("{{ application_cpp_domain_name }}::Domain::{{ entity.name }}");

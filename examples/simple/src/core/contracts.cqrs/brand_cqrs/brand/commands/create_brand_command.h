@@ -16,7 +16,9 @@ class CreateBrandCommand
     }
 
 
+
     Simple::Contracts::DTO::Brand::CreateBrandDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Brand::Commands

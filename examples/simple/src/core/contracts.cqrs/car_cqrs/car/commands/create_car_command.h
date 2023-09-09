@@ -16,7 +16,9 @@ class CreateCarCommand
     }
 
 
+
     Simple::Contracts::DTO::Car::CreateCarDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Car::Commands

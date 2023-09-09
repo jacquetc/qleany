@@ -78,7 +78,8 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/database/interface_database_context.h
 )
 
-add_library(qleany SHARED
+add_library(Qleany SHARED
+    ${LIB_PUBLIC_HEADERS}
         src/tools/undo_redo/alter_command.cpp
         src/tools/undo_redo/query_command.cpp
         src/tools/undo_redo/undo_redo_stack.cpp
@@ -91,27 +92,38 @@ add_library(qleany SHARED
         src/database/database_context.cpp
         src/domain/entity_base.cpp
         src/contracts/repository/signal_holder.cpp
-        ${LIB_PUBLIC_HEADERS}
 )
-target_include_directories(qleany PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(Qleany PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
-
-target_link_libraries(qleany PRIVATE Qt6::Core Qt6::Concurrent Qt6::Sql)
+target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 
 if(QLEANY_BUILD_WITH_QT_GUI)
-    target_link_libraries(qleany PRIVATE Qt::Gui)
+    target_link_libraries(Qleany PRIVATE Qt::Gui)
 endif()
 
-target_compile_definitions(qleany PUBLIC QLEANY_LIBRARY)
+target_compile_definitions(Qleany PRIVATE QLEANY_LIBRARY)
 
+# Specify where to install the library and headers
 
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include
-#        DESTINATION include
-#)
+install(TARGETS Qleany
+    EXPORT QleanyTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
 
+install(EXPORT QleanyTargets
+    FILE QleanyTargets.cmake
+    NAMESPACE Qleany::
+    DESTINATION lib/cmake/Qleany
+)
 
-
-
+install(DIRECTORY include/
+    DESTINATION include
+)
 
 
 

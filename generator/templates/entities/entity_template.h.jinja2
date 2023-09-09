@@ -2,30 +2,66 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "{{ export_header_file }}"
 {% for header in headers -%}
 #include {{ header }}
 {% endfor %}
 #include {{ parent_header }}
 #include "entities.h"
-#include "domain/entity_schema.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 
 namespace {{ application_cpp_domain_name }}::Domain
 {
 
-class {{ export }} {{ name }} : public {{ parent }}
+class {{ name }} : public {{ parent }}
 {
     Q_GADGET
 {% for field in fields %}
     Q_PROPERTY({{ field.type }} {{ field.name }} READ {{ field.name }} WRITE set{{ field.name_pascal }})
+{% endfor %}
 
-    {% if field.need_lazy_loader %}
-    Q_PROPERTY(bool {{ field.name }}Loaded MEMBER m_{{ field.name }}Loaded)
-    {% endif %}{% endfor %}
 
   public:
+    struct MetaData {
+    {% for field in fields -%}
+    {% if field.need_lazy_loader %}
+        bool {{ field.name }}Set = false;
+        bool {{ field.name }}Loaded = false;
+    {% endif %}
+    {% endfor %}
+    bool getSet(const QString &fieldName) const
+    {
+        {% for field in fields -%}
+        if (fieldName == "{{ field.name }}")
+        {
+            {% if field.need_lazy_loader -%}
+            return {{ field.name }}Set;
+            {% else -%}
+            return true;
+            {% endif -%}
+        }
+        {%- endfor %}
+        return false;
+    }
+
+    bool getLoaded(const QString &fieldName) const
+    {
+        {% for field in fields %}
+        if (fieldName == "{{ field.name }}")
+        {
+            {% if field.need_lazy_loader -%}
+            return {{ field.name }}Loaded;
+            {% else -%}
+            return true;
+            {% endif -%}
+        }
+        {%- endfor %}
+        return false;
+    }
+    };
+
+
     {{ name }}() : {{ parent }}() {{ fields_init_values }}
     {
     }
@@ -39,7 +75,7 @@ class {{ export }} {{ name }} : public {{ parent }}
     {
     }
 
-    {{ name }}(const {{ name }} &other) : {{ parent }}(other){% for field in fields %}, m_{{ field.name }}(other.m_{{ field.name }}){% if field.need_lazy_loader %}, m_{{ field.name }}Loaded(other.m_{{ field.name }}Loaded){% endif %}{% endfor %}
+    {{ name }}(const {{ name }} &other) : {{ parent }}(other), m_metaData(other.m_metaData){% for field in fields %}, m_{{ field.name }}(other.m_{{ field.name }}){% endfor %}
     {
     }
 
@@ -55,10 +91,9 @@ class {{ export }} {{ name }} : public {{ parent }}
             {{ parent }}::operator=(other);
             {% for field in fields -%}
             m_{{ field.name }} = other.m_{{ field.name }};
-            {% if field.need_lazy_loader -%}
-            m_{{ field.name }}Loaded = other.m_{{ field.name }}Loaded;
-            {% endif %}{% endfor %}
-        }
+            {% endfor %}
+            m_metaData = other.m_metaData;
+    }
         return *this;
     }
 
@@ -74,10 +109,10 @@ class {{ export }} {{ name }} : public {{ parent }}
     {{ field.type }} {{ field.name }}() {% if not field.need_lazy_loader %}const{% endif %}
     {
         {% if field.need_lazy_loader -%}
-        if (!m_{{ field.name }}Loaded && m_{{ field.name }}Loader)
+        if (!m_metaData.{{ field.name }}Loaded && m_{{ field.name }}Loader)
         {
             m_{{ field.name }} = m_{{ field.name }}Loader(this->id());
-            m_{{ field.name }}Loaded = true;
+            m_metaData.{{ field.name }}Loaded = true;
         }
         {%- endif %}
         return m_{{ field.name }};
@@ -87,7 +122,7 @@ class {{ export }} {{ name }} : public {{ parent }}
     {
         m_{{ field.name }} = {{ field.name }};
       {% if field.need_lazy_loader %}
-      m_{{ field.name }}Set = true;
+      m_metaData.{{ field.name }}Set = true;
       {% endif %}
     }
     {% if field.need_lazy_loader %}
@@ -98,23 +133,22 @@ class {{ export }} {{ name }} : public {{ parent }}
         m_{{ field.name }}Loader = loader;
     }
 
-    bool {{ field.name }}Set() const
-    {
-        return m_{{ field.name }}Set;
-    }
-    
     {% endif %}
 {% endfor %}
 
   static Qleany::Domain::EntitySchema schema;
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+    MetaData m_metaData;
 {% for field in fields -%}
     {{ field.type }} m_{{ field.name }};
     {% if field.need_lazy_loader -%}
     {{ field.name_pascal }}Loader m_{{ field.name }}Loader;
-    bool m_{{ field.name }}Loaded = false;
-    bool m_{{ field.name }}Set = false;
     {%- endif %}
 {%- endfor %}
 };

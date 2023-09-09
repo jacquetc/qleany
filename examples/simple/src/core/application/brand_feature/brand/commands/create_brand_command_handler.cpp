@@ -138,7 +138,7 @@ bool CreateBrandCommandHandler::s_mappingRegistered = false;
 void CreateBrandCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true);
+        true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO,
                                                            Simple::Domain::Brand>();
 }

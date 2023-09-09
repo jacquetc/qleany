@@ -1,35 +1,38 @@
 
-set(PROJECT_NAME simple-example-presenter)
+set(LIBRARY_NAME simple-example-presenter)
 
 set(SRC
+    presenter_export.h
     passenger_list_model.cpp
     passenger_list_model.h
 
 )
-qt_add_library(${PROJECT_NAME} SHARED ${SRC})
+qt_add_library(${LIBRARY_NAME} SHARED ${SRC}
+    single_passenger.h single_passenger.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC SIMPLEEXAMPLE_APPLICATION_PASSENGER_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PRESENTER_LIBRARY)
 
-add_dependencies(${PROJECT_NAME} simple-example-controller)
+add_dependencies(${LIBRARY_NAME} simple-example-controller)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC simple-example-controller)
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-controller)
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE Qt6::Core
+target_link_libraries(${LIBRARY_NAME}
+    PRIVATE Qt6::Core Qt6::Gui
 )
+target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
 
 if(IOS)
-    install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif(IOS)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    install(TARGETS ${PROJECT_NAME}
+    install(TARGETS ${LIBRARY_NAME}
         RUNTIME DESTINATION ${BINDIR}
         LIBRARY DESTINATION ${LIBDIR})
 endif(CMAKE_SYSTEM_NAME STREQUAL "Windows")

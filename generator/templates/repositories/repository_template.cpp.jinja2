@@ -18,6 +18,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 }
 
 SignalHolder *{{ name }}Repository::signalHolder(){
+    QReadLocker locker(&m_lock);
     return m_signalHolder.data();
 }
 
@@ -25,8 +26,9 @@ SignalHolder *{{ name }}Repository::signalHolder(){
 
 Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Repository::update(Domain::{{ name }} &&entity)
 {
+    QWriteLocker locker(&m_lock);
 {% for key, value in foreign_entities.items() %}
-    if (entity.{{ value["related_field_name"] }}Set())
+    if (entity.metaData().{{ value["related_field_name"] }}Set)
     {
 {% if value["is_list"] %}
         Result<QList<Domain::{{ value["type_pascal_name"] }}>> {{ value["related_field_name"] }}Result =
@@ -52,6 +54,7 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
 
 Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Repository::getWithDetails(int entityId)
 {
+    QWriteLocker locker(&m_lock);
     auto getResult = Qleany::Repository::GenericRepository<Domain::{{ name }}>::get(entityId);
 
     if (getResult.isError())
@@ -133,6 +136,7 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
 
 Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> ids)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     {% for key, value in foreign_entities.items() %}
@@ -196,6 +200,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> 
 
 Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     {% for key, value in foreign_entities.items() %}

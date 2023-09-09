@@ -5,31 +5,14 @@
 #include <QObject>
 #include "{{ snake_name }}.h"
 #include "{{ contracts_export_header_file }}" 
-#include "contracts/repository/interface_generic_repository.h"
-#include "contracts/repository/interface_repository.h"
-#include "common/result.h"
+#include "qleany/contracts/repository/interface_generic_repository.h"
+#include "qleany/contracts/repository/interface_repository.h"
+#include "qleany/common/result.h"
 
 using namespace Qleany;
 
 namespace {{ application_cpp_domain_name }}::Contracts::Repository
 {
-
-class {{ contracts_export }} {{ name }}SignalHolder : public QObject
-{
-  Q_OBJECT
-
-  public:
-    {{ name }}SignalHolder(QObject *parent = nullptr)
-        : QObject(parent)
-    {
-    }
-  
-  signals:
-    void {{ camel_name }}Removed(QList<int> removedIds);
-    void {{ camel_name }}ActiveStatusChanged(QList<int> changedIds, bool active);
-
-};
-
 
 class {{ contracts_export }} Interface{{ name }}Repository
     : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<{{ application_cpp_domain_name }}::Domain::{{ name }}>,
@@ -48,7 +31,6 @@ class {{ contracts_export }} Interface{{ name }}Repository
     {% endfor %}
     virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
     virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
-    virtual {{ name }}SignalHolder *signalHolder() = 0;
 
 
 };

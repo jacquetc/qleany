@@ -16,7 +16,9 @@ class UpdatePassengerCommand
     }
 
 
+
     Simple::Contracts::DTO::Passenger::UpdatePassengerDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Passenger::Commands

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "qleany/qleany_global.h"
+#include <QList>
 #include <QObject>
 
 namespace Qleany::Contracts::Repository

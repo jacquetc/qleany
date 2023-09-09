@@ -13,11 +13,11 @@ set(SRCS
     domain_registration.h
 )
 
-qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${ENTITY_LIST})
+qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${ENTITY_LIST})
 
-target_compile_definitions(${LIBRARY_NAME} PUBLIC SIMPLEEXAMPLE_DOMAIN_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_DOMAIN_LIBRARY)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qt6::Core )
-target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)

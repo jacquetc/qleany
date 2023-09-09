@@ -22,13 +22,15 @@ CarRepository::CarRepository(InterfaceDatabaseTableGroup<Simple::Domain::Car> *c
 
 SignalHolder *CarRepository::signalHolder()
 {
+    QReadLocker locker(&m_lock);
     return m_signalHolder.data();
 }
 
 Result<Simple::Domain::Car> CarRepository::update(Domain::Car &&entity)
 {
+    QWriteLocker locker(&m_lock);
 
-    if (entity.brandSet())
+    if (entity.metaData().brandSet)
     {
 
         Result<Domain::Brand> brandResult =
@@ -44,7 +46,7 @@ Result<Simple::Domain::Car> CarRepository::update(Domain::Car &&entity)
         }
     }
 
-    if (entity.passengersSet())
+    if (entity.metaData().passengersSet)
     {
 
         Result<QList<Domain::Passenger>> passengersResult = m_passengerRepository->updateEntitiesInRelationOf(
@@ -66,6 +68,7 @@ Result<Simple::Domain::Car> CarRepository::update(Domain::Car &&entity)
 
 Result<Simple::Domain::Car> CarRepository::getWithDetails(int entityId)
 {
+    QWriteLocker locker(&m_lock);
     auto getResult = Qleany::Repository::GenericRepository<Domain::Car>::get(entityId);
 
     if (getResult.isError())
@@ -161,6 +164,7 @@ Simple::Domain::Car::PassengersLoader CarRepository::fetchPassengersLoader()
 
 Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // remove the brand in cascade
@@ -251,6 +255,7 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
 
 Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // cahnge active status of the brand in cascade

@@ -36,13 +36,6 @@ Qleany::Result<void> DatabaseContext::init()
     {
         return Result<void>(databaseNameResult.error());
     }
-    QTemporaryFile tempFile;
-    tempFile.open();
-    tempFile.setAutoRemove(false);
-    QString tempFileName = tempFile.fileName();
-
-    m_databaseName = tempFileName;
-
     return Result<void>();
 }
 
@@ -131,7 +124,7 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
         optimization << QStringLiteral("PRAGMA case_sensitive_like=true")
                      << QStringLiteral("PRAGMA journal_mode=MEMORY") << QStringLiteral("PRAGMA temp_store=MEMORY")
                      << QStringLiteral("PRAGMA locking_mode=NORMAL") << QStringLiteral("PRAGMA synchronous = OFF")
-                     << QStringLiteral("PRAGMA recursive_triggers=true");
+                     << QStringLiteral("PRAGMA recursive_triggers = ON") << QStringLiteral("PRAGMA foreign_keys = ON");
 
         // execute each optimization option as a single query within the transaction
 

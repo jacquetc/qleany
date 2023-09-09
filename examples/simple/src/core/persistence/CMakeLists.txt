@@ -13,10 +13,9 @@ set(SRCS
     persistence_export.h
 )
 
-qt_add_library(
-    ${LIBRARY_NAME} SHARED ${SRCS} ${REPOSITORY_LIST})
+qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
 
-target_compile_definitions(${LIBRARY_NAME} PUBLIC SIMPLEEXAMPLE_PERSISTENCE_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PERSISTENCE_LIBRARY)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -25,4 +24,3 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql
 )
-

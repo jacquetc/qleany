@@ -29,6 +29,38 @@ class CreateCarDTO
     Q_PROPERTY(QList<PassengerDTO> passengers READ passengers WRITE setPassengers)
 
   public:
+    struct MetaData {
+    bool uuidSet = false;
+    bool creationDateSet = false;
+    bool updateDateSet = false;
+    bool contentSet = false;
+    bool brandSet = false;
+    bool passengersSet = false;
+    bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "uuid")
+            {
+                return uuidSet;
+            }if (fieldName == "creationDate")
+            {
+                return creationDateSet;
+            }if (fieldName == "updateDate")
+            {
+                return updateDateSet;
+            }if (fieldName == "content")
+            {
+                return contentSet;
+            }if (fieldName == "brand")
+            {
+                return brandSet;
+            }if (fieldName == "passengers")
+            {
+                return passengersSet;
+            }
+            return false;
+        }
+    };
+
     CreateCarDTO() : m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_content(QString())
     {
     }
@@ -42,14 +74,17 @@ class CreateCarDTO
     {
     }
 
-    CreateCarDTO(const CreateCarDTO &other) : m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_content(other.m_content), m_brand(other.m_brand), m_passengers(other.m_passengers)
+    CreateCarDTO(const CreateCarDTO &other) : m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_content(other.m_content), m_brand(other.m_brand), m_passengers(other.m_passengers)
     {
     }
+
+          
 
     CreateCarDTO &operator=(const CreateCarDTO &other)
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
             m_updateDate = other.m_updateDate;
@@ -78,6 +113,7 @@ class CreateCarDTO
     void setUuid( const QUuid &uuid)
     {
         m_uuid = uuid;
+        m_metaData.uuidSet = true;
     }
     
 
@@ -91,6 +127,7 @@ class CreateCarDTO
     void setCreationDate( const QDateTime &creationDate)
     {
         m_creationDate = creationDate;
+        m_metaData.creationDateSet = true;
     }
     
 
@@ -104,6 +141,7 @@ class CreateCarDTO
     void setUpdateDate( const QDateTime &updateDate)
     {
         m_updateDate = updateDate;
+        m_metaData.updateDateSet = true;
     }
     
 
@@ -117,6 +155,7 @@ class CreateCarDTO
     void setContent( const QString &content)
     {
         m_content = content;
+        m_metaData.contentSet = true;
     }
     
 
@@ -130,6 +169,7 @@ class CreateCarDTO
     void setBrand( const BrandDTO &brand)
     {
         m_brand = brand;
+        m_metaData.brandSet = true;
     }
     
 
@@ -143,11 +183,18 @@ class CreateCarDTO
     void setPassengers( const QList<PassengerDTO> &passengers)
     {
         m_passengers = passengers;
+        m_metaData.passengersSet = true;
     }
     
 
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 
     QUuid m_uuid;
     QDateTime m_creationDate;

@@ -14,6 +14,22 @@ from collections import OrderedDict
 def get_dto_dict_and_feature_ordered_dict(
     feature_by_name: dict, entities_by_name: dict
 ) -> tuple[dict, OrderedDict]:
+    def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
+        owner_dict = {}
+        for possible_owner_name, entity in entities_by_name.items():
+            for field in entity["fields"]:
+                if (
+                    field["type"] == entity_name
+                    or field["type"] == f"QList<{entity_name}>"
+                ):
+                    if field.get("strong", False):
+                        owner_dict["name"] = possible_owner_name
+                        owner_dict["field"] = field["name"]
+                        owner_dict["ordered"] = field.get("ordered", False)
+                        owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
+                        break
+        return owner_dict
+
     def get_fields_with_foreign_entities(
         fields: list, entities_by_name: dict, entity_mappable_with: str = ""
     ) -> list:
@@ -205,13 +221,12 @@ def get_dto_dict_and_feature_ordered_dict(
                 ]
 
                 # add owner id
-                if entities_by_name[entity_mappable_with].get("owner", False):
+                owner_dict = determine_owner(entity_mappable_with, entities_by_name)
+                if owner_dict:
                     owner_name_pascal = stringcase.pascalcase(
-                        entities_by_name[entity_mappable_with]["owner"].get("name", "")
+                        owner_dict.get("name", "")
                     )
-                    owner_name_camel = stringcase.camelcase(
-                        entities_by_name[entity_mappable_with]["owner"].get("name", "")
-                    )
+                    owner_name_camel = stringcase.camelcase(owner_dict.get("name", ""))
                     dto_dict[dto_type_name]["fields"].append(
                         {
                             "name": f"{owner_name_camel}Id",
@@ -221,26 +236,11 @@ def get_dto_dict_and_feature_ordered_dict(
                         }
                     )
 
-                    # add position if it has an owner and the field of owner entity is a QList
-                    owner = (
-                        entities_by_name[entity_mappable_with]
-                        .get("owner", {})
-                        .get("name", "")
-                    )
-                    owner_field = (
-                        entities_by_name[entity_mappable_with]
-                        .get("owner", {})
-                        .get("field", "")
-                    )
+                    # add "position" if it has an owner and the field of owner entity is a QList
+                    owner = owner_dict.get("name", "")
+                    owner_field = owner_dict.get("field", "")
 
-                    owner_field_list = entities_by_name[owner].get("fields", [])
-                    owner_field_type = ""
-                    for field in owner_field_list:
-                        if field.get("name", "") == owner_field:
-                            owner_field_type = field.get("type", "")
-                            break
-
-                    if owner_field_type.count("QList") > 0:
+                    if owner_dict.get("is_list", False) and owner_dict.get("ordered", False):
                         dto_dict[dto_type_name]["fields"].append(
                             {
                                 "name": "position",
@@ -568,10 +568,9 @@ def generate_dto(
         dto_data["file_name"],
     )
 
-
     if not files_to_be_generated.get(dto_file_path, False):
         return None
-    
+
     dto_file_path = os.path.join(root_path, dto_file_path)
 
     # Create the directory if it does not exist
@@ -617,7 +616,9 @@ def generate_dto_files(
     feature_list = application_data.get("features", [])
 
     global_data = manifest_data.get("global", [])
-    application_cpp_domain_name = global_data.get("application_cpp_domain_name", "Undefined")
+    application_cpp_domain_name = global_data.get(
+        "application_cpp_domain_name", "Undefined"
+    )
 
     # Organize feature_list by name for easier lookup
     feature_by_name = {feature["name"]: feature for feature in feature_list}
@@ -738,10 +739,11 @@ def generate_dto_files(
 
     # generate common cmakelists.txt
 
-    relative_dto_common_cmakelists_file = os.path.join(dto_common_cmake_folder_path, "CMakeLists.txt"
+    relative_dto_common_cmakelists_file = os.path.join(
+        dto_common_cmake_folder_path, "CMakeLists.txt"
     )
     dto_common_cmakelists_file = os.path.join(
-        root_path,relative_dto_common_cmakelists_file
+        root_path, relative_dto_common_cmakelists_file
     )
     if files_to_be_generated.get(relative_dto_common_cmakelists_file, False):
         ## After the loop, write the list of features folders to the common cmakelists.txt

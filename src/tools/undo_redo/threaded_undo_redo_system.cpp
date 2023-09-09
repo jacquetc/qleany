@@ -34,31 +34,32 @@ ThreadedUndoRedoSystem::ThreadedUndoRedoSystem(QObject *parent, const Scopes &sc
     m_instance = this;
 
     // Create a new UndoRedoSystem instance
-    m_undoRedoSystem = new UndoRedoSystem(nullptr, scopes);
+    m_undoRedoSystemWorker = new UndoRedoSystem(m_undoRedoSystemWorker, scopes);
 
-    // Move the UndoRedoSystem to a new thread
-    m_thread = new QThread(this);
-    m_undoRedoSystem->moveToThread(m_thread);
-
-    // Connect the thread started signal to the startUndoRedoSystem slot
-    connect(m_thread, &QThread::started, this, &ThreadedUndoRedoSystem::startUndoRedoSystem);
+    // Connect the UndoRedoSystem's stateChanged signal to this class's stateChanged signal
+    connect(m_undoRedoSystemWorker, &UndoRedoSystem::stateChanged, this,
+            &ThreadedUndoRedoSystem::onUndoRedoSystemStateChanged);
+    connect(m_undoRedoSystemWorker, &UndoRedoSystem::warningSent, this, &ThreadedUndoRedoSystem::onWarningSent);
+    connect(m_undoRedoSystemWorker, &UndoRedoSystem::errorSent, this, &ThreadedUndoRedoSystem::onErrorSent);
+    connect(m_undoRedoSystemWorker, &UndoRedoSystem::undoing, this, &ThreadedUndoRedoSystem::undoing);
+    connect(m_undoRedoSystemWorker, &UndoRedoSystem::redoing, this, &ThreadedUndoRedoSystem::redoing);
 
     connect(qApp, &QCoreApplication::aboutToQuit, this, &ThreadedUndoRedoSystem::quitGracefully);
 
     // Start the thread
-    m_thread->start();
+    m_undoRedoSystemWorker->start();
 }
 
 ThreadedUndoRedoSystem::~ThreadedUndoRedoSystem()
 {
     QMutexLocker locker(&m_mutex);
     // Stop the thread
-    m_thread->quit();
-    m_thread->wait();
+    m_undoRedoSystemWorker->quit();
+    m_undoRedoSystemWorker->wait();
 
     // Delete the UndoRedoSystem instance and the thread
-    m_undoRedoSystem->deleteLater();
-    // m_thread->deleteLater();
+    m_undoRedoSystemWorker->deleteLater();
+    // m_undoRedoSystemWorker->deleteLater();
 }
 
 /*!
@@ -73,30 +74,13 @@ ThreadedUndoRedoSystem *ThreadedUndoRedoSystem::instance()
 }
 
 /*!
- * \brief Starts the UndoRedoSystem when the encapsulated thread is started.
- */
-void ThreadedUndoRedoSystem::startUndoRedoSystem()
-{
-    QMutexLocker locker(&m_mutex);
-    // Connect the UndoRedoSystem's stateChanged signal to this class's stateChanged signal
-    connect(m_undoRedoSystem, &UndoRedoSystem::stateChanged, this,
-            &ThreadedUndoRedoSystem::onUndoRedoSystemStateChanged);
-    connect(m_undoRedoSystem, &UndoRedoSystem::warningSent, this, &ThreadedUndoRedoSystem::onWarningSent);
-    connect(m_undoRedoSystem, &UndoRedoSystem::errorSent, this, &ThreadedUndoRedoSystem::onErrorSent);
-    connect(m_undoRedoSystem, &UndoRedoSystem::undoing, this, &ThreadedUndoRedoSystem::undoing);
-    connect(m_undoRedoSystem, &UndoRedoSystem::redoing, this, &ThreadedUndoRedoSystem::redoing);
-
-    QMetaObject::invokeMethod(m_undoRedoSystem, "run", Qt::QueuedConnection);
-}
-
-/*!
  * \brief Returns true if an undo operation can be performed, otherwise false.
  */
 bool ThreadedUndoRedoSystem::canUndo() const
 {
     QMutexLocker locker(&m_mutex);
     bool result = false;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "canUndo", Qt::QueuedConnection, Q_RETURN_ARG(bool, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canUndo", Qt::QueuedConnection, Q_RETURN_ARG(bool, result));
     return result;
 }
 
@@ -107,7 +91,7 @@ bool ThreadedUndoRedoSystem::canRedo() const
 {
     QMutexLocker locker(&m_mutex);
     bool result = false;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "canRedo", Qt::QueuedConnection, Q_RETURN_ARG(bool, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canRedo", Qt::QueuedConnection, Q_RETURN_ARG(bool, result));
     return result;
 }
 
@@ -117,7 +101,7 @@ bool ThreadedUndoRedoSystem::canRedo() const
 void ThreadedUndoRedoSystem::undo()
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "undo", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undo", Qt::QueuedConnection);
 }
 
 /*!
@@ -126,7 +110,7 @@ void ThreadedUndoRedoSystem::undo()
 void ThreadedUndoRedoSystem::redo()
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "redo", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "redo", Qt::QueuedConnection);
 }
 
 /*!
@@ -135,8 +119,8 @@ void ThreadedUndoRedoSystem::redo()
 void ThreadedUndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId)
 {
     QMutexLocker locker(&m_mutex);
-    command->moveToThread(m_undoRedoSystem->thread());
-    QMetaObject::invokeMethod(m_undoRedoSystem, "push", Qt::QueuedConnection, Q_ARG(UndoRedoCommand *, command),
+    command->moveToThread(m_undoRedoSystemWorker->thread());
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "push", Qt::QueuedConnection, Q_ARG(UndoRedoCommand *, command),
                               Q_ARG(QString, commandScope), Q_ARG(QUuid, stackId));
 }
 
@@ -147,7 +131,7 @@ void ThreadedUndoRedoSystem::clear()
 {
 
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "clear", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "clear", Qt::QueuedConnection);
 }
 
 /*!
@@ -182,7 +166,7 @@ void ThreadedUndoRedoSystem::onWarningSent(const Error &error)
 void ThreadedUndoRedoSystem::setUndoLimit(int limit)
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "setUndoLimit", Qt::QueuedConnection, Q_ARG(int, limit));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "setUndoLimit", Qt::QueuedConnection, Q_ARG(int, limit));
 }
 
 /*!
@@ -192,7 +176,7 @@ int ThreadedUndoRedoSystem::undoLimit() const
 {
     QMutexLocker locker(&m_mutex);
     int result = 0;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "undoLimit", Qt::QueuedConnection, Q_RETURN_ARG(int, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undoLimit", Qt::QueuedConnection, Q_RETURN_ARG(int, result));
     return result;
 }
 
@@ -203,7 +187,7 @@ QString ThreadedUndoRedoSystem::undoText() const
 {
     QMutexLocker locker(&m_mutex);
     QString result;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "undoText", Qt::QueuedConnection, Q_RETURN_ARG(QString, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undoText", Qt::QueuedConnection, Q_RETURN_ARG(QString, result));
     return result;
 }
 
@@ -214,7 +198,7 @@ QString ThreadedUndoRedoSystem::redoText() const
 {
     QMutexLocker locker(&m_mutex);
     QString result;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "redoText", Qt::QueuedConnection, Q_RETURN_ARG(QString, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "redoText", Qt::QueuedConnection, Q_RETURN_ARG(QString, result));
     return result;
 }
 
@@ -222,7 +206,7 @@ QStringList ThreadedUndoRedoSystem::undoRedoTextList() const
 {
     QMutexLocker locker(&m_mutex);
     QStringList result;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "undoRedoTextList", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undoRedoTextList", Qt::QueuedConnection,
                               Q_RETURN_ARG(QStringList, result));
     return result;
 }
@@ -231,45 +215,46 @@ int ThreadedUndoRedoSystem::currentIndex() const
 {
     QMutexLocker locker(&m_mutex);
     int result = 0;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "currentIndex", Qt::QueuedConnection, Q_RETURN_ARG(int, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "currentIndex", Qt::QueuedConnection, Q_RETURN_ARG(int, result));
     return result;
 }
 
 void ThreadedUndoRedoSystem::setCurrentIndex(int index)
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "setCurrentIndex", Qt::QueuedConnection, Q_ARG(int, index));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "setCurrentIndex", Qt::QueuedConnection, Q_ARG(int, index));
 }
 
 void ThreadedUndoRedoSystem::setActiveStack(const QUuid &stackId)
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "setActiveStack", Qt::QueuedConnection, Q_ARG(QUuid, stackId));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "setActiveStack", Qt::QueuedConnection, Q_ARG(QUuid, stackId));
 }
 
 QUuid ThreadedUndoRedoSystem::activeStackId() const
 {
     QMutexLocker locker(&m_mutex);
     QUuid result;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "activeStackId", Qt::QueuedConnection, Q_RETURN_ARG(QUuid, result));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "activeStackId", Qt::QueuedConnection,
+                              Q_RETURN_ARG(QUuid, result));
     return result;
 }
 
 void ThreadedUndoRedoSystem::quitGracefully()
 {
     QMutexLocker locker(&m_mutex);
-    QMetaObject::invokeMethod(m_undoRedoSystem, "quitGracefully", Qt::QueuedConnection);
+    m_undoRedoSystemWorker->requestInterruption();
     // let the thread exit gracefully
-    if (m_thread->wait(QDeadlineTimer(10s)))
+    if (m_undoRedoSystemWorker->wait(QDeadlineTimer(10s)))
     {
-        m_thread->quit();
-        m_thread->wait();
+        m_undoRedoSystemWorker->quit();
+        m_undoRedoSystemWorker->wait();
         qInfo() << "UndoRedoSystem thread exited gracefully";
     }
     else
     {
-        m_thread->terminate();
-        m_thread->wait();
+        m_undoRedoSystemWorker->terminate();
+        m_undoRedoSystemWorker->wait();
         qCritical() << "UndoRedoSystem thread did not exit gracefully";
     }
 }
@@ -284,11 +269,12 @@ QAction *ThreadedUndoRedoSystem::createRedoAction(QObject *parent, const QString
     QMutexLocker locker(&m_mutex);
     QAction *action = new QAction(parent);
     bool canRedo = false;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "canRedo", Qt::BlockingQueuedConnection, Q_RETURN_ARG(bool, canRedo));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canRedo", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(bool, canRedo));
     QString text;
     if (canRedo)
     {
-        QMetaObject::invokeMethod(m_undoRedoSystem, "redoText", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "redoText", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(QString, text));
         if (!text.isEmpty())
         {
@@ -299,11 +285,11 @@ QAction *ThreadedUndoRedoSystem::createRedoAction(QObject *parent, const QString
 
     connect(this, &ThreadedUndoRedoSystem::stateChanged, action, [action, this, prefix]() {
         QString text;
-        QMetaObject::invokeMethod(m_undoRedoSystem, "redoText", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "redoText", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(QString, text));
         action->setText(prefix.isEmpty() ? tr("Redo %1").arg(text) : prefix.arg(text));
         bool canRedo = false;
-        QMetaObject::invokeMethod(m_undoRedoSystem, "canRedo", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canRedo", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(bool, canRedo));
         action->setEnabled(canRedo);
     });
@@ -322,11 +308,12 @@ QAction *ThreadedUndoRedoSystem::createUndoAction(QObject *parent, const QString
     QMutexLocker locker(&m_mutex);
     QAction *action = new QAction(parent);
     bool canUndo = false;
-    QMetaObject::invokeMethod(m_undoRedoSystem, "canUndo", Qt::BlockingQueuedConnection, Q_RETURN_ARG(bool, canUndo));
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canUndo", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(bool, canUndo));
     QString text;
     if (canUndo)
     {
-        QMetaObject::invokeMethod(m_undoRedoSystem, "undoText", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undoText", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(QString, text));
         if (!text.isEmpty())
         {
@@ -338,11 +325,11 @@ QAction *ThreadedUndoRedoSystem::createUndoAction(QObject *parent, const QString
 
     connect(this, &ThreadedUndoRedoSystem::stateChanged, action, [action, this, prefix]() {
         QString text;
-        QMetaObject::invokeMethod(m_undoRedoSystem, "undoText", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "undoText", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(QString, text));
         action->setText(prefix.isEmpty() ? tr("Undo %1").arg(text) : prefix.arg(text));
         bool canUndo = false;
-        QMetaObject::invokeMethod(m_undoRedoSystem, "canUndo", Qt::BlockingQueuedConnection,
+        QMetaObject::invokeMethod(m_undoRedoSystemWorker, "canUndo", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(bool, canUndo));
         action->setEnabled(canUndo);
     });

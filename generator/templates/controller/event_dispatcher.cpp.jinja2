@@ -1,0 +1,32 @@
+#include "event_dispatcher.h"
+
+using namespace Simple::Controller;
+
+EventDispatcher *EventDispatcher::s_instance = nullptr;
+
+EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
+{
+    m_errorSignals = new ErrorSignals(this);
+{% for feature in features%}
+    m_{{ feature.feature_name_camel }}Signals = new {{ feature.feature_name_pascal }}Signals(this);
+{% endfor %}
+
+    s_instance = this;
+}
+
+EventDispatcher *EventDispatcher::instance()
+{
+    return s_instance;
+}
+
+{% for feature in features%}
+{{ feature.feature_name_pascal }}Signals *EventDispatcher::{{ feature.feature_name_camel }}() const
+{
+    return m_{{ feature.feature_name_camel }}Signals;
+}
+{% endfor %}
+
+ErrorSignals *EventDispatcher::error() const
+{
+    return m_errorSignals;
+}

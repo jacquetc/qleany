@@ -24,6 +24,23 @@ class {{ dto_pascal_type }}
 {%- endfor %}
 
   public:
+    struct MetaData {
+    {% for field in fields -%}
+        bool {{ field.name }}Set = false;
+    {% endfor -%}
+
+        bool getSet(const QString &fieldName) const
+        {
+            {% for field in fields -%}
+            if (fieldName == "{{ field.name }}")
+            {
+                return {{ field.name }}Set;
+            }
+            {%- endfor %}
+            return false;
+        }
+    };
+
     {{ dto_pascal_type }}() : {{ fields_init_values }}
     {
     }
@@ -37,7 +54,7 @@ class {{ dto_pascal_type }}
     {
     }
 
-    {{ dto_pascal_type }}(const {{ dto_pascal_type }} &other) : {% for field in fields %}m_{{ field.name }}(other.m_{{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
+    {{ dto_pascal_type }}(const {{ dto_pascal_type }} &other) : m_metaData(other.m_metaData), {% for field in fields %}m_{{ field.name }}(other.m_{{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
     {
     }
 
@@ -52,6 +69,7 @@ class {{ dto_pascal_type }}
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             {% for field in fields -%}
             m_{{ field.name }} = other.m_{{ field.name }};
             {% endfor %}
@@ -76,11 +94,18 @@ class {{ dto_pascal_type }}
     void set{{ field.pascal_name }}({% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
     {
         m_{{ field.name }} = {{ field.name }};
+        m_metaData.{{ field.name }}Set = true;
     }
     
 {% endfor %}
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 {% for field in fields%}
     {{ field.type }} m_{{ field.name }};
 {%- endfor %}

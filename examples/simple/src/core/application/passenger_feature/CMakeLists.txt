@@ -24,10 +24,12 @@ qt_add_library(${LIBRARY_NAME} SHARED ${SRC})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_compile_definitions(${LIBRARY_NAME} PUBLIC SIMPLEEXAMPLE_APPLICATION_PASSENGER_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_APPLICATION_PASSENGER_LIBRARY)
 
 add_dependencies(${LIBRARY_NAME} simple-example-contracts)
 add_dependencies(${LIBRARY_NAME} simple-example-contracts-cqrs-passenger)
+add_dependencies(${LIBRARY_NAME} Qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-cqrs-passenger)
@@ -35,7 +37,6 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-cqrs-passe
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core
 )
-
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif(IOS)

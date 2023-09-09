@@ -3,19 +3,19 @@
 #pragma once
 
 #include "brand.h"
-#include "domain_export.h"
 #include "passenger.h"
 #include <QString>
 
 #include "entities.h"
 #include "entity.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 
 namespace Simple::Domain
 {
 
-class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
+class Car : public Entity
 {
     Q_GADGET
 
@@ -23,13 +23,54 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
 
     Q_PROPERTY(Brand brand READ brand WRITE setBrand)
 
-    Q_PROPERTY(bool brandLoaded MEMBER m_brandLoaded)
-
     Q_PROPERTY(QList<Passenger> passengers READ passengers WRITE setPassengers)
 
-    Q_PROPERTY(bool passengersLoaded MEMBER m_passengersLoaded)
-
   public:
+    struct MetaData
+    {
+
+        bool brandSet = false;
+        bool brandLoaded = false;
+
+        bool passengersSet = false;
+        bool passengersLoaded = false;
+
+        bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "content")
+            {
+                return true;
+            }
+            if (fieldName == "brand")
+            {
+                return brandSet;
+            }
+            if (fieldName == "passengers")
+            {
+                return passengersSet;
+            }
+            return false;
+        }
+
+        bool getLoaded(const QString &fieldName) const
+        {
+
+            if (fieldName == "content")
+            {
+                return true;
+            }
+            if (fieldName == "brand")
+            {
+                return brandLoaded;
+            }
+            if (fieldName == "passengers")
+            {
+                return passengersLoaded;
+            }
+            return false;
+        }
+    };
+
     Car() : Entity(), m_content(QString())
     {
     }
@@ -45,8 +86,8 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
     }
 
     Car(const Car &other)
-        : Entity(other), m_content(other.m_content), m_brand(other.m_brand), m_brandLoaded(other.m_brandLoaded),
-          m_passengers(other.m_passengers), m_passengersLoaded(other.m_passengersLoaded)
+        : Entity(other), m_metaData(other.m_metaData), m_content(other.m_content), m_brand(other.m_brand),
+          m_passengers(other.m_passengers)
     {
     }
 
@@ -62,9 +103,9 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
             Entity::operator=(other);
             m_content = other.m_content;
             m_brand = other.m_brand;
-            m_brandLoaded = other.m_brandLoaded;
             m_passengers = other.m_passengers;
-            m_passengersLoaded = other.m_passengersLoaded;
+
+            m_metaData = other.m_metaData;
         }
         return *this;
     }
@@ -90,10 +131,10 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
 
     Brand brand()
     {
-        if (!m_brandLoaded && m_brandLoader)
+        if (!m_metaData.brandLoaded && m_brandLoader)
         {
             m_brand = m_brandLoader(this->id());
-            m_brandLoaded = true;
+            m_metaData.brandLoaded = true;
         }
         return m_brand;
     }
@@ -102,7 +143,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
     {
         m_brand = brand;
 
-        m_brandSet = true;
+        m_metaData.brandSet = true;
     }
 
     using BrandLoader = std::function<Brand(int entityId)>;
@@ -112,19 +153,14 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
         m_brandLoader = loader;
     }
 
-    bool brandSet() const
-    {
-        return m_brandSet;
-    }
-
     // ------ passengers : -----
 
     QList<Passenger> passengers()
     {
-        if (!m_passengersLoaded && m_passengersLoader)
+        if (!m_metaData.passengersLoaded && m_passengersLoader)
         {
             m_passengers = m_passengersLoader(this->id());
-            m_passengersLoaded = true;
+            m_metaData.passengersLoaded = true;
         }
         return m_passengers;
     }
@@ -133,7 +169,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
     {
         m_passengers = passengers;
 
-        m_passengersSet = true;
+        m_metaData.passengersSet = true;
     }
 
     using PassengersLoader = std::function<QList<Passenger>(int entityId)>;
@@ -143,23 +179,20 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Car : public Entity
         m_passengersLoader = loader;
     }
 
-    bool passengersSet() const
-    {
-        return m_passengersSet;
-    }
-
     static Qleany::Domain::EntitySchema schema;
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+    MetaData m_metaData;
     QString m_content;
     Brand m_brand;
     BrandLoader m_brandLoader;
-    bool m_brandLoaded = false;
-    bool m_brandSet = false;
     QList<Passenger> m_passengers;
     PassengersLoader m_passengersLoader;
-    bool m_passengersLoaded = false;
-    bool m_passengersSet = false;
 };
 
 inline bool operator==(const Car &lhs, const Car &rhs)

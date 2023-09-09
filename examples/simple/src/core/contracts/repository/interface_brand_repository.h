@@ -3,10 +3,10 @@
 #pragma once
 
 #include "brand.h"
+#include "contracts_export.h"
 #include "qleany/common/result.h"
 #include "qleany/contracts/repository/interface_generic_repository.h"
 #include "qleany/contracts/repository/interface_repository.h"
-#include "contracts_export.h"
 #include <QObject>
 
 using namespace Qleany;

@@ -3,7 +3,6 @@
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_table_group.h"
 #include "qleany/contracts/repository/interface_generic_repository.h"
-#include "qleany/qleany_global.h"
 
 #include <QFuture>
 #include <QObject>
@@ -17,8 +16,7 @@ namespace Qleany::Repository
 {
 // -------------------------------------------------
 
-template <class T>
-class QLEANY_EXPORT GenericRepository : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<T>
+template <class T> class GenericRepository : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<T>
 {
 
   public:

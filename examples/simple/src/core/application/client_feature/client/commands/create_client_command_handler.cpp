@@ -139,7 +139,7 @@ bool CreateClientCommandHandler::s_mappingRegistered = false;
 void CreateClientCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
-        true);
+        true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::CreateClientDTO,
                                                            Simple::Domain::Client>();
 }

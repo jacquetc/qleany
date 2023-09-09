@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_car_command_handler.h"
 #include "car/validators/update_car_command_validator.h"
-#include "repository/interface_car_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_car_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Car;
@@ -139,6 +139,7 @@ bool UpdateCarCommandHandler::s_mappingRegistered = false;
 
 void UpdateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                             true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::UpdateCarDTO, Simple::Domain::Car>();
 }

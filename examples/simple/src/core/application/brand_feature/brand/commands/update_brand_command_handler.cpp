@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_brand_command_handler.h"
 #include "brand/validators/update_brand_command_validator.h"
-#include "repository/interface_brand_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_brand_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Brand;
@@ -141,7 +141,7 @@ bool UpdateBrandCommandHandler::s_mappingRegistered = false;
 void UpdateBrandCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true);
+        true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO,
                                                            Simple::Domain::Brand>();
 }

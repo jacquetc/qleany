@@ -11,7 +11,8 @@ using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Validators;
 using namespace Simple::Application::Features::Car::Commands;
 
-CreateCarCommandHandler::CreateCarCommandHandler(InterfaceCarRepository *repository) : m_repository(repository)
+CreateCarCommandHandler::CreateCarCommandHandler(InterfaceCarRepository *repository)
+    : QObject(nullptr), m_repository(repository)
 {
     if (!s_mappingRegistered)
     {
@@ -57,6 +58,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 {
     qDebug() << "CreateCarCommandHandler::handleImpl called";
     Simple::Domain::Car car;
+    CreateCarDTO createDTO = request.req;
 
     if (m_newEntity.isEmpty())
     {
@@ -68,8 +70,6 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
         {
             return Result<CarDTO>(validatorResult.error());
         }
-
-        CreateCarDTO createDTO = request.req;
 
         // Map the create Car command to a domain Car object and
         // generate a UUID
@@ -136,6 +136,7 @@ bool CreateCarCommandHandler::s_mappingRegistered = false;
 
 void CreateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                             true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, Simple::Domain::Car>();
 }

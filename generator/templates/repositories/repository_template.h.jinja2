@@ -6,10 +6,11 @@
 {% for foreign_repository_header in foreign_repository_header_list %}
 #include {{ foreign_repository_header }}
 {% endfor %}
-#include "contracts/database/interface_database_table_group.h"
-#include "repository/generic_repository.h"
+#include "qleany/contracts/database/interface_database_table_group.h"
+#include "qleany/repository/generic_repository.h"
 #include "repository/interface_{{ snake_name }}_repository.h"
 #include "{{ export_header_file }}"
+#include <QReadWriteLock>
 
 using namespace Qleany;
 using namespace Qleany::Contracts::Repository;
@@ -42,6 +43,8 @@ class {{ export }} {{ name }}Repository  final : public Qleany::Repository::Gene
     {{ loader_private_member }}
     {% endfor %}
     QScopedPointer<SignalHolder> m_signalHolder;
+    QReadWriteLock m_lock;
+
 };
 
 } // namespace {{ application_cpp_domain_name }}::Repository

@@ -12,8 +12,6 @@ qt6_add_qml_module(presenter
 
 )
 
-add_dependencies(presenter {{ application_name }}-presenter)
-
 target_link_libraries(presenter PRIVATE {{ application_name }}-presenter)
 
 target_link_libraries(presenter

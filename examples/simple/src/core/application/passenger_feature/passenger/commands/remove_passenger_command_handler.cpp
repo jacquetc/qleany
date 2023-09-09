@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_passenger_command_handler.h"
-#include "repository/interface_passenger_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_passenger_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -110,5 +110,5 @@ bool RemovePassengerCommandHandler::s_mappingRegistered = false;
 void RemovePassengerCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true);
+                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

@@ -8,10 +8,11 @@
 
 #include "repository/interface_passenger_repository.h"
 
-#include "qleany/contracts/database/interface_database_table_group.h"
 #include "persistence_export.h"
+#include "qleany/contracts/database/interface_database_table_group.h"
 #include "qleany/repository/generic_repository.h"
 #include "repository/interface_car_repository.h"
+#include <QReadWriteLock>
 
 using namespace Qleany;
 using namespace Qleany::Contracts::Repository;
@@ -48,6 +49,7 @@ class SIMPLEEXAMPLE_PERSISTENCE_EXPORT CarRepository final
     InterfacePassengerRepository *m_passengerRepository;
 
     QScopedPointer<SignalHolder> m_signalHolder;
+    QReadWriteLock m_lock;
 };
 
 } // namespace Simple::Persistence::Repository

@@ -33,7 +33,7 @@ InterfaceRepository *RepositoryProvider::repository(const QString &name)
 
     if (!repository)
     {
-        qWarning() << "No repository registered for type" << name.toCaseFolded();
+        qCritical() << "No repository registered for type" << name.toCaseFolded();
     }
     return repository;
 }

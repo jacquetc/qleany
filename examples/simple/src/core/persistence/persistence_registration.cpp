@@ -3,7 +3,6 @@
 #include "persistence_registration.h"
 #include "qleany/database/database_context.h"
 #include "qleany/database/database_table_group.h"
-#include "qleany/repository/repository_provider.h"
 
 #include "repository/brand_repository.h"
 #include "repository/car_repository.h"

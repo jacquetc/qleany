@@ -16,7 +16,9 @@ class UpdateCarCommand
     }
 
 
+
     Simple::Contracts::DTO::Car::UpdateCarDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Car::Commands

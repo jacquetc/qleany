@@ -18,6 +18,18 @@ class WriteRandomThingsDTO
     Q_PROPERTY(QString randomCarName READ randomCarName WRITE setRandomCarName)
 
   public:
+    struct MetaData {
+    bool randomCarNameSet = false;
+    bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "randomCarName")
+            {
+                return randomCarNameSet;
+            }
+            return false;
+        }
+    };
+
     WriteRandomThingsDTO() : m_randomCarName(QString())
     {
     }
@@ -31,14 +43,17 @@ class WriteRandomThingsDTO
     {
     }
 
-    WriteRandomThingsDTO(const WriteRandomThingsDTO &other) : m_randomCarName(other.m_randomCarName)
+    WriteRandomThingsDTO(const WriteRandomThingsDTO &other) : m_metaData(other.m_metaData), m_randomCarName(other.m_randomCarName)
     {
     }
+
+     
 
     WriteRandomThingsDTO &operator=(const WriteRandomThingsDTO &other)
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             m_randomCarName = other.m_randomCarName;
             
         }
@@ -62,11 +77,18 @@ class WriteRandomThingsDTO
     void setRandomCarName( const QString &randomCarName)
     {
         m_randomCarName = randomCarName;
+        m_metaData.randomCarNameSet = true;
     }
     
 
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 
     QString m_randomCarName;
 };

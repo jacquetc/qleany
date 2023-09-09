@@ -2,20 +2,19 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "domain_export.h"
 #include <QDateTime>
 #include <QUuid>
 
 #include "entities.h"
-#include "qleany/domain//entity_base.h"
-#include <qleany/domain/entity_schema.h>
+#include "qleany/domain/entity_base.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 
 namespace Simple::Domain
 {
 
-class SIMPLEEXAMPLE_DOMAIN_EXPORT Entity : public EntityBase
+class Entity : public EntityBase
 {
     Q_GADGET
 
@@ -26,6 +25,45 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Entity : public EntityBase
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate)
 
   public:
+    struct MetaData
+    {
+
+        bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "uuid")
+            {
+                return true;
+            }
+            if (fieldName == "creationDate")
+            {
+                return true;
+            }
+            if (fieldName == "updateDate")
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool getLoaded(const QString &fieldName) const
+        {
+
+            if (fieldName == "uuid")
+            {
+                return true;
+            }
+            if (fieldName == "creationDate")
+            {
+                return true;
+            }
+            if (fieldName == "updateDate")
+            {
+                return true;
+            }
+            return false;
+        }
+    };
+
     Entity() : EntityBase(), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
     {
     }
@@ -40,7 +78,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Entity : public EntityBase
     }
 
     Entity(const Entity &other)
-        : EntityBase(other), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
+        : EntityBase(other), m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
           m_updateDate(other.m_updateDate)
     {
     }
@@ -58,6 +96,8 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Entity : public EntityBase
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
             m_updateDate = other.m_updateDate;
+
+            m_metaData = other.m_metaData;
         }
         return *this;
     }
@@ -107,7 +147,13 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Entity : public EntityBase
 
     static Qleany::Domain::EntitySchema schema;
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+    MetaData m_metaData;
     QUuid m_uuid;
     QDateTime m_creationDate;
     QDateTime m_updateDate;

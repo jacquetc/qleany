@@ -109,6 +109,8 @@ application:
           enabled: true
         update: 
           enabled: true
+        update_with_details:
+          enabled: true
     - name: Brand
       DTO:
         id_field: id
@@ -132,6 +134,8 @@ application:
           enabled: false
         update: 
           enabled: true
+        update_with_details:
+          enabled: false
     - name: Passenger
       DTO:
         id_field: id
@@ -154,7 +158,9 @@ application:
         remove_tree: 
           enabled: false
         update: 
-          enabled: true  
+          enabled: true
+        update_with_details:
+          enabled: false
     - name: Client
       DTO:
         id_field: id
@@ -177,6 +183,8 @@ application:
         remove_tree: 
           enabled: false
         update: 
+          enabled: true        
+        update_with_details:
           enabled: true
     - name: Custom
       DTO:

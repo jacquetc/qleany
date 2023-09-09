@@ -14,7 +14,7 @@ using namespace Qleany::Contracts::Database;
 
 namespace Qleany::Database
 {
-template <class RightEntity> class QLEANY_EXPORT OneToManyOrderedAssociator
+template <class RightEntity> class OneToManyOrderedAssociator
 {
   public:
     OneToManyOrderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,

@@ -18,7 +18,7 @@ using namespace Qleany::Tools::UndoRedo;
 /*!
  * \brief Constructs an UndoRedoSystem with the specified \a parent.
  */
-UndoRedoSystem::UndoRedoSystem(QObject *parent, Scopes scopes) : QObject(parent), m_undoLimit(10), m_scopes(scopes)
+UndoRedoSystem::UndoRedoSystem(QObject *parent, Scopes scopes) : QThread(parent), m_undoLimit(10), m_scopes(scopes)
 {
     qRegisterMetaType<Qleany::Tools::UndoRedo::Scope>();
 
@@ -36,13 +36,14 @@ void UndoRedoSystem::run()
     QEventLoop eventLoop;
 
     // Create a QTimer to periodically check the size of the hashes.
-    m_quitGracefullyCheckTimer = new QTimer(this);
-    connect(m_quitGracefullyCheckTimer, &QTimer::timeout, &eventLoop, [&]() {
-        if (m_gracefulShutdownInitiated && areQueuesEmpty())
+    QTimer quitGracefullyCheckTimer(&eventLoop);
+    connect(&quitGracefullyCheckTimer, &QTimer::timeout, &eventLoop, [&]() {
+        if (QThread::currentThread()->isInterruptionRequested() && areQueuesEmpty())
         {
             eventLoop.quit();
         }
     });
+    quitGracefullyCheckTimer.start(1000);
 
     // Connect the thread started signal to the event loop quit slot
     connect(this, &UndoRedoSystem::finished, &eventLoop, &QEventLoop::quit);
@@ -58,8 +59,11 @@ bool UndoRedoSystem::areQueuesEmpty() const
         if (!queue.isEmpty())
             return false;
     }
-    if (!m_currentCommandHash.isEmpty())
-        return false;
+    for (const auto &command : m_currentCommandHash)
+    {
+        if (!command.isNull())
+            return false;
+    }
     return true;
 }
 
@@ -137,7 +141,6 @@ void UndoRedoSystem::redo()
                 m_currentCommandHash.insert(scopeFlag, command);
             }
         }
-        m_quitGracefullyCheckTimer->start(500);
 
         command->asyncRedo();
         emit stateChanged();
@@ -149,6 +152,12 @@ void UndoRedoSystem::redo()
  */
 void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId)
 {
+    // forbids new commands while in the process of quitting
+    if (QThread::currentThread()->isInterruptionRequested())
+    {
+        return;
+    }
+
     command->setParent(this);
 
     Scope scope = m_scopes.createScopeFromString(commandScope);
@@ -429,12 +438,6 @@ QUuid UndoRedoSystem::activeStackId() const
     return m_activeStack->id();
 }
 
-void UndoRedoSystem::quitGracefully()
-{
-    m_gracefulShutdownInitiated = true;
-    m_quitGracefullyCheckTimer->start(200);
-}
-
 bool UndoRedoSystem::isRunning() const
 {
 
@@ -568,8 +571,8 @@ void UndoRedoSystem::onCommandDoFinished(bool isSuccessful)
         m_currentCommandHash.insert(scopeFlag, QSharedPointer<UndoRedoCommand>());
     }
 
-    // If the command is a query command, remove it from the general command queue
-    if (nullptr != qobject_cast<QueryCommand *>(QObject::sender()) || command->obsolete())
+    // If the command is an alter command and is obsolete, remove it from the stack
+    if (command->isAlterCommand() && command->obsolete())
     {
         stack->queue().removeLast();
         stack->decrementCurrentIndex();
@@ -592,6 +595,7 @@ void UndoRedoSystem::onCommandDoFinished(bool isSuccessful)
         for (ScopeFlag scopeFlag : commandScope.flags())
         {
             m_scopedCommandQueueHash[scopeFlag].clear();
+            m_currentCommandHash.insert(scopeFlag, QSharedPointer<UndoRedoCommand>());
         }
     }
 
@@ -648,8 +652,8 @@ void UndoRedoSystem::executeNextCommandDo(const ScopeFlag &scopeFlag, const QUui
     }
 
     // keep in general command queue only the true AlterCommands, not QueryCommand, and only if it's allowed to run.
-    // If the command is a system command, it mustn't be added to the general command queue
-    if (qSharedPointerDynamicCast<QueryCommand>(command).isNull() && allowedToRun && !command->isSystem())
+    // If the command is a system command, it mustn't be added to the stack
+    if (command->isAlterCommand() && allowedToRun && !command->isSystem())
     {
 
         // Remove any redo commands that are after the current index
@@ -663,7 +667,7 @@ void UndoRedoSystem::executeNextCommandDo(const ScopeFlag &scopeFlag, const QUui
             // Increment the current index
             stack->incrementCurrentIndex();
 
-            // Remove excess commands from the general command queue if necessary
+            // Remove excess commands from the stack queue if necessary
             while (stack->queue().size() > m_undoLimit)
             {
                 stack->queue().dequeue();

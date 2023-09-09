@@ -25,6 +25,34 @@ class ClientWithDetailsDTO
     Q_PROPERTY(PassengerDTO client READ client WRITE setClient)
 
   public:
+    struct MetaData {
+    bool idSet = false;
+    bool uuidSet = false;
+    bool creationDateSet = false;
+    bool updateDateSet = false;
+    bool clientSet = false;
+    bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "id")
+            {
+                return idSet;
+            }if (fieldName == "uuid")
+            {
+                return uuidSet;
+            }if (fieldName == "creationDate")
+            {
+                return creationDateSet;
+            }if (fieldName == "updateDate")
+            {
+                return updateDateSet;
+            }if (fieldName == "client")
+            {
+                return clientSet;
+            }
+            return false;
+        }
+    };
+
     ClientWithDetailsDTO() : m_id(0), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
     {
     }
@@ -38,14 +66,22 @@ class ClientWithDetailsDTO
     {
     }
 
-    ClientWithDetailsDTO(const ClientWithDetailsDTO &other) : m_id(other.m_id), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_client(other.m_client)
+    ClientWithDetailsDTO(const ClientWithDetailsDTO &other) : m_metaData(other.m_metaData), m_id(other.m_id), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate), m_updateDate(other.m_updateDate), m_client(other.m_client)
     {
     }
+
+    
+    bool isValid()
+    {
+        return m_id > 0;
+    }
+         
 
     ClientWithDetailsDTO &operator=(const ClientWithDetailsDTO &other)
     {
         if (this != &other)
         {
+            m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -73,6 +109,7 @@ class ClientWithDetailsDTO
     void setId( int id)
     {
         m_id = id;
+        m_metaData.idSet = true;
     }
     
 
@@ -86,6 +123,7 @@ class ClientWithDetailsDTO
     void setUuid( const QUuid &uuid)
     {
         m_uuid = uuid;
+        m_metaData.uuidSet = true;
     }
     
 
@@ -99,6 +137,7 @@ class ClientWithDetailsDTO
     void setCreationDate( const QDateTime &creationDate)
     {
         m_creationDate = creationDate;
+        m_metaData.creationDateSet = true;
     }
     
 
@@ -112,6 +151,7 @@ class ClientWithDetailsDTO
     void setUpdateDate( const QDateTime &updateDate)
     {
         m_updateDate = updateDate;
+        m_metaData.updateDateSet = true;
     }
     
 
@@ -125,11 +165,18 @@ class ClientWithDetailsDTO
     void setClient( const PassengerDTO &client)
     {
         m_client = client;
+        m_metaData.clientSet = true;
     }
     
 
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+  MetaData m_metaData;
 
     int m_id;
     QUuid m_uuid;

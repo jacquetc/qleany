@@ -2,24 +2,47 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "domain_export.h"
 #include <QString>
 
 #include "entities.h"
 #include "entity.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 
 namespace Simple::Domain
 {
 
-class SIMPLEEXAMPLE_DOMAIN_EXPORT Brand : public Entity
+class Brand : public Entity
 {
     Q_GADGET
 
     Q_PROPERTY(QString name READ name WRITE setName)
 
   public:
+    struct MetaData
+    {
+
+        bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "name")
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool getLoaded(const QString &fieldName) const
+        {
+
+            if (fieldName == "name")
+            {
+                return true;
+            }
+            return false;
+        }
+    };
+
     Brand() : Entity(), m_name(QString())
     {
     }
@@ -34,7 +57,7 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Brand : public Entity
     {
     }
 
-    Brand(const Brand &other) : Entity(other), m_name(other.m_name)
+    Brand(const Brand &other) : Entity(other), m_metaData(other.m_metaData), m_name(other.m_name)
     {
     }
 
@@ -49,6 +72,8 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Brand : public Entity
         {
             Entity::operator=(other);
             m_name = other.m_name;
+
+            m_metaData = other.m_metaData;
         }
         return *this;
     }
@@ -72,7 +97,13 @@ class SIMPLEEXAMPLE_DOMAIN_EXPORT Brand : public Entity
 
     static Qleany::Domain::EntitySchema schema;
 
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
   private:
+    MetaData m_metaData;
     QString m_name;
 };
 

@@ -7,6 +7,7 @@ EventDispatcher *EventDispatcher::s_instance = nullptr;
 EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
 {
     m_passengerSignals = new PassengerSignals(this);
+    m_carSignals = new CarSignals(this);
     m_errorSignals = new ErrorSignals(this);
 
     s_instance = this;
@@ -20,6 +21,10 @@ EventDispatcher *EventDispatcher::instance()
 PassengerSignals *EventDispatcher::passenger() const
 {
     return m_passengerSignals;
+}
+CarSignals *EventDispatcher::car() const
+{
+    return m_carSignals;
 }
 
 ErrorSignals *EventDispatcher::error() const

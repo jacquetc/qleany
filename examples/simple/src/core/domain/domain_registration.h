@@ -2,7 +2,6 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "domain_export.h"
 #include "entity.h"
 #include "car.h"
 #include "brand.h"
@@ -13,11 +12,11 @@
 
 namespace Simple::Domain {
 
-class SIMPLEEXAMPLE_DOMAIN_EXPORT DomainRegistration : public QObject
+class DomainRegistration : public QObject
 {
     Q_OBJECT
   public:
-    explicit DomainRegistration(QObject *parent)
+    explicit DomainRegistration(QObject *parent) : QObject(parent)
     {
         
         qRegisterMetaType<Simple::Domain::Entity>("Simple::Domain::Entity");

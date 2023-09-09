@@ -1,8 +1,10 @@
 #pragma once
 
+#include "passenger_list_model.h"
 #include <QMainWindow>
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -16,5 +18,5 @@ class MainWindow : public QMainWindow
 
   private:
     Ui::MainWindow *ui;
+    PassengerListModel *m_passengerModel;
 };
-

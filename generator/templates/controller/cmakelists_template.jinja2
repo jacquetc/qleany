@@ -1,0 +1,43 @@
+# This file was generated automatically by Qleany's generator, edit at your own risk! 
+# If you do, be careful to not overwrite it when you run the generator again.
+
+find_package(Qt6 COMPONENTS Core REQUIRED)
+
+set(LIBRARY_NAME {{ application_spinalcase_name }}-controller)
+
+include(controllers.cmake)
+
+set(SRCS
+    {{ export_header_file }}
+    event_dispatcher.h
+    event_dispatcher.cpp
+    controller_registration.h
+    error_signals.h
+    controller_registration.cpp
+)
+
+qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${CONTROLLER_LIST})
+
+target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_CONTROLLER_LIBRARY)
+
+target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+
+target_link_libraries(${LIBRARY_NAME} PRIVATE
+    Qt6::Core Qt::Gui)
+target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
+target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
+
+if(IOS)
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif(IOS)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    install(TARGETS ${LIBRARY_NAME}
+        RUNTIME DESTINATION ${BINDIR}
+        LIBRARY DESTINATION ${LIBDIR})
+endif(CMAKE_SYSTEM_NAME STREQUAL "Windows")

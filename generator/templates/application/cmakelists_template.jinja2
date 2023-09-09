@@ -15,10 +15,7 @@ qt_add_library(${LIBRARY_NAME} SHARED ${SRC})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_compile_definitions(${LIBRARY_NAME} PUBLIC {{ application_uppercase_name }}_APPLICATION_{{ feature_uppercase_name }}_LIBRARY)
-
-add_dependencies(${LIBRARY_NAME} {{ application_spinalcase_name }}-contracts)
-add_dependencies(${LIBRARY_NAME} {{ application_spinalcase_name }}-contracts-cqrs-{{ feature_spinal_name }})
+target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_APPLICATION_{{ feature_uppercase_name }}_LIBRARY)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-contracts)
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-contracts-cqrs-{{ feature_spinal_name }})

@@ -7,7 +7,7 @@
 #include "{{ feature_snake_name }}/commands/{{ command.snake_name }}_command.h"
 {% for repository in command.repositories %}
 #include "repository/interface_{{ repository.snake_name}}_repository.h"{% endfor %}
-#include "common/result.h"
+#include "qleany/common/result.h"
 #include <QPromise>
 
 using namespace Qleany;

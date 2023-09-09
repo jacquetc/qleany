@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_car_with_details_query_handler.h"
-#include "repository/interface_car_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_car_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Car::Queries;

@@ -11,10 +11,9 @@ set(SRCS
     contracts_export.h
 )
 
-qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${REPOSITORY_LIST}
-    )
+qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
 
-target_compile_definitions(simple-example-contracts PUBLIC SIMPLEEXAMPLE_CONTRACTS_LIBRARY)
+target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_CONTRACTS_LIBRARY)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

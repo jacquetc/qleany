@@ -21,13 +21,15 @@ ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<Simple::Domain::C
 
 SignalHolder *ClientRepository::signalHolder()
 {
+    QReadLocker locker(&m_lock);
     return m_signalHolder.data();
 }
 
 Result<Simple::Domain::Client> ClientRepository::update(Domain::Client &&entity)
 {
+    QWriteLocker locker(&m_lock);
 
-    if (entity.clientSet())
+    if (entity.metaData().clientSet)
     {
 
         Result<Domain::Passenger> clientResult = m_passengerRepository->updateEntityInRelationOf(
@@ -48,6 +50,7 @@ Result<Simple::Domain::Client> ClientRepository::update(Domain::Client &&entity)
 
 Result<Simple::Domain::Client> ClientRepository::getWithDetails(int entityId)
 {
+    QWriteLocker locker(&m_lock);
     auto getResult = Qleany::Repository::GenericRepository<Domain::Client>::get(entityId);
 
     if (getResult.isError())
@@ -102,6 +105,7 @@ Simple::Domain::Client::ClientLoader ClientRepository::fetchClientLoader()
 
 Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // remove the client in cascade
@@ -155,6 +159,7 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
 Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
+    QWriteLocker locker(&m_lock);
     QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // cahnge active status of the client in cascade

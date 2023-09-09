@@ -1,6 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_passenger_command_handler.h"
+#include "car.h"
 #include "passenger/validators/create_passenger_command_validator.h"
 #include "qleany/tools/automapper/automapper.h"
 
@@ -59,6 +60,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 {
     qDebug() << "CreatePassengerCommandHandler::handleImpl called";
     Simple::Domain::Passenger passenger;
+    CreatePassengerDTO createDTO = request.req;
 
     if (m_newEntity.isEmpty())
     {
@@ -70,8 +72,6 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
         {
             return Result<PassengerDTO>(validatorResult.error());
         }
-
-        CreatePassengerDTO createDTO = request.req;
 
         // Map the create Passenger command to a domain Passenger object and
         // generate a UUID
@@ -102,6 +102,32 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     {
         m_repository->cancelChanges();
         return Result<PassengerDTO>(passengerResult.error());
+    }
+    const auto &carSchema = Simple::Domain::Car::schema;
+    auto rightListResult = m_repository->getEntitiesInRelationOf(carSchema, createDTO.carId(), "passengers");
+
+    if (Q_UNLIKELY(rightListResult.hasError()))
+    {
+        m_repository->cancelChanges();
+        return Result<PassengerDTO>(rightListResult.error());
+    }
+    auto rightList = rightListResult.value();
+
+    if (createDTO.position() == -1)
+    {
+        createDTO.setPosition(rightList.size());
+    }
+    else
+    {
+        rightList.insert(createDTO.position(), passengerResult.value());
+    }
+    auto newListResult =
+        m_repository->updateEntitiesInRelationOf(carSchema, createDTO.carId(), "passengers", rightList);
+
+    if (Q_UNLIKELY(newListResult.hasError()))
+    {
+        m_repository->cancelChanges();
+        return Result<PassengerDTO>(newListResult.error());
     }
 
     m_repository->saveChanges();
@@ -141,7 +167,7 @@ bool CreatePassengerCommandHandler::s_mappingRegistered = false;
 void CreatePassengerCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true);
+                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::CreatePassengerDTO,
                                                            Simple::Domain::Passenger>();
 }

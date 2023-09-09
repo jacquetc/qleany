@@ -15,7 +15,7 @@
 namespace Qleany::Tools::UndoRedo
 {
 
-class QLEANY_EXPORT UndoRedoSystem : public QObject
+class QLEANY_EXPORT UndoRedoSystem : public QThread
 {
     Q_OBJECT
   public:
@@ -53,8 +53,6 @@ class QLEANY_EXPORT UndoRedoSystem : public QObject
     Q_INVOKABLE void setActiveStack(const QUuid &stackId = QUuid());
 
     Q_INVOKABLE QUuid activeStackId() const;
-
-    Q_INVOKABLE void quitGracefully();
 
     QStringList queuedCommandTextListByScope(const QString &scopeFlagString) const;
     bool isRunning() const;
@@ -94,8 +92,6 @@ class QLEANY_EXPORT UndoRedoSystem : public QObject
     QHash<QUuid, QSharedPointer<UndoRedoStack>> m_stackHash;
     QQueue<QSharedPointer<UndoRedoCommand>> m_setIndexCommandQueue;
     bool m_readyAfterSettingIndex = true;
-    bool m_gracefulShutdownInitiated = false;
-    QTimer *m_quitGracefullyCheckTimer;
     QHash<ScopeFlag, QQueue<QSharedPointer<UndoRedoCommand>>> m_scopedCommandQueueHash;
     QHash<ScopeFlag, QSharedPointer<UndoRedoCommand>> m_currentCommandHash;
 };

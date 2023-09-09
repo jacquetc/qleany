@@ -317,7 +317,7 @@ def generate_entity_files(
 
         parent_header = f'"{stringcase.snakecase(parent)}.h"'
         if parent == "EntityBase":
-            parent_header = '"domain/entity_base.h"'
+            parent_header = '"qleany/domain/entity_base.h"'
 
         # If the parent is a custom entity defined in the manifest, include its fields as well. Also, it will add the fields parent of the parent recursively, butonly if the parent is defined in the
         # manifest. If the parent is not defined in the manifest, it will only add the fields of the current entity. But it adds the field "id" of type "int" from EntityBase.

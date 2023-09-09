@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_brand_query_handler.h"
-#include "repository/interface_brand_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_brand_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Brand::Queries;
@@ -57,5 +57,5 @@ bool GetBrandQueryHandler::s_mappingRegistered = false;
 void GetBrandQueryHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true);
+        true, true);
 }

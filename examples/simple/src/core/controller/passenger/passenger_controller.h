@@ -1,11 +1,11 @@
 #pragma once
 
-#include "qleany/contracts/repository/interface_repository_provider.h"
 #include "controller_export.h"
 #include "event_dispatcher.h"
 #include "passenger/create_passenger_dto.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/update_passenger_dto.h"
+#include "qleany/contracts/repository/interface_repository_provider.h"
 #include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
@@ -30,17 +30,19 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 
   public slots:
 
-    void get(int id);
+    QCoro::Task<PassengerDTO> get(int id);
 
-    void getWithDetails(int id);
+    //    QCoro::Task<PassengerWithDetailsDTO>  getWithDetails(int id);
 
-    void getAll();
+    QCoro::Task<QList<PassengerDTO>> getAll();
 
     QCoro::Task<PassengerDTO> create(const CreatePassengerDTO &dto);
 
-    void update(const UpdatePassengerDTO &dto);
+    QCoro::Task<PassengerDTO> update(const UpdatePassengerDTO &dto);
 
-    void remove(int id);
+    QCoro::Task<bool> remove(int id);
+
+    QCoro::Task<bool> removeTree(int id);
 
     static Contracts::DTO::Passenger::CreatePassengerDTO getCreateDTO();
     static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();

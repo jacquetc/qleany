@@ -9,7 +9,7 @@
 namespace Qleany::Contracts::Database
 {
 
-template <class T> class QLEANY_EXPORT InterfaceForeignEntity
+template <class T> class InterfaceForeignEntity
 {
   public:
     virtual ~InterfaceForeignEntity()

@@ -46,7 +46,11 @@ void UndoRedoCommand::asyncRedo()
 {
     m_status = Status::Running;
     emit redoing(m_scope, true);
-    QFuture<Result<void>> future = QtConcurrent::run(&UndoRedoCommand::redo, this);
+    QFuture<Result<void>> future =
+        QtConcurrent::run(&UndoRedoCommand::redo, this).onFailed([](const std::exception &e) {
+            return Result<void>(
+                Error(Q_FUNC_INFO, Error::Critical, "redo-error", "Redo failed: " + QString::fromStdString(e.what())));
+        });
     m_watcher->setFuture(future);
 }
 
@@ -99,6 +103,21 @@ QUuid UndoRedoCommand::stackId() const
 void UndoRedoCommand::setStackId(const QUuid &newStackId)
 {
     m_stackId = newStackId;
+}
+
+bool UndoRedoCommand::isAlterCommand() const
+{
+    return m_type == Type::AlterCommand;
+}
+
+bool UndoRedoCommand::isQueryCommand() const
+{
+    return m_type == Type::QueryCommand;
+}
+
+void UndoRedoCommand::setType(Type newType)
+{
+    m_type = newType;
 }
 
 bool UndoRedoCommand::isSystem() const

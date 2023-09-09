@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_client_query_handler.h"
-#include "repository/interface_client_repository.h"
 #include "qleany/tools/automapper/automapper.h"
+#include "repository/interface_client_repository.h"
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Client::Queries;
@@ -65,5 +65,5 @@ bool GetAllClientQueryHandler::s_mappingRegistered = false;
 void GetAllClientQueryHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
-        true);
+        true, true);
 }

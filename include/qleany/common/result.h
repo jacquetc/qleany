@@ -8,7 +8,7 @@
 namespace Qleany
 {
 
-template <typename T> class QLEANY_EXPORT Result;
+template <typename T> class Result;
 
 template <> class QLEANY_EXPORT Result<void>
 {
@@ -95,7 +95,7 @@ template <> class QLEANY_EXPORT Result<void>
  * @brief A class that represents the result of an operation, which can be either a value or an error message.
  * @tparam T The type of the result value.
  */
-template <typename T> class QLEANY_EXPORT Result
+template <typename T> class Result
 {
 
   public:

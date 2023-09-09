@@ -86,7 +86,6 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
     void undoing(Scope scope, bool active);
 
   private slots:
-    void startUndoRedoSystem();
 
     void onUndoRedoSystemStateChanged();
     void onErrorSent(const Error &error);
@@ -95,7 +94,6 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
   private:
     static ThreadedUndoRedoSystem *m_instance;
     mutable QMutex m_mutex;
-    UndoRedoSystem *m_undoRedoSystem = nullptr;
-    QThread *m_thread = nullptr;
+    UndoRedoSystem *m_undoRedoSystemWorker = nullptr;
 };
 } // namespace Qleany::Tools::UndoRedo

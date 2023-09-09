@@ -23,7 +23,7 @@
 
 using namespace Qleany::Contracts::Database;
 
-struct PropertyWithList
+struct QLEANY_EXPORT PropertyWithList
 {
     Q_GADGET
   public:
@@ -43,7 +43,7 @@ struct PropertyWithList
 namespace Qleany::Database
 {
 
-template <class T> class QLEANY_EXPORT DatabaseTableGroup : public virtual InterfaceDatabaseTableGroup<T>
+template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTableGroup<T>
 {
   public:
     explicit DatabaseTableGroup(QSharedPointer<InterfaceDatabaseContext> context);
@@ -245,7 +245,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(int id)
 {
     const QString &entityName = m_tableName;
     const QStringList &properties = m_properties;
-    const QStringList &columns = m_propertyColumns;
+    const QStringList &columns = m_propertyColumnsWithoutForeignKeys;
 
     QSqlDatabase database = m_databaseContext->getConnection();
     QHash<QString, QVariant> columnWithValues;
@@ -297,7 +297,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(const QUuid &uuid)
 {
     const QString &entityName = m_tableName;
     const QStringList &properties = m_properties;
-    const QStringList &columns = m_propertyColumns;
+    const QStringList &columns = m_propertyColumnsWithoutForeignKeys;
 
     QSqlDatabase database = m_databaseContext->getConnection();
     QHash<QString, QVariant> columnWithValues;
@@ -352,7 +352,7 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::get(const QList<int> 
 
     const QString &entityName = m_tableName;
     const QStringList &properties = m_properties;
-    const QStringList &columns = m_propertyColumns;
+    const QStringList &columns = m_propertyColumnsWithoutForeignKeys;
 
     QSqlDatabase database = m_databaseContext->getConnection();
     QList<QHash<QString, QVariant>> listOfColumnsWithValues;
@@ -421,7 +421,7 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll()
 {
 
     const QString &entityName = m_tableName;
-    const QStringList &columns = m_propertyColumns;
+    const QStringList &columns = m_propertyColumnsWithoutForeignKeys;
     QSqlDatabase database = m_databaseContext->getConnection();
     QList<QHash<QString, QVariant>> listOfColumnsWithValues;
     QList<T> entities;
@@ -493,7 +493,7 @@ template <class T> QString DatabaseTableGroup<T>::generateFilterQueryString(cons
 template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll(const QHash<QString, QVariant> &filters)
 {
     const QString &entityName = m_tableName;
-    const QStringList &properties = m_properties;
+    const QStringList &properties = m_propertyColumnsWithoutForeignKeys;
     const QStringList &columns = m_propertyColumns;
 
     QSqlDatabase database = m_databaseContext->getConnection();
