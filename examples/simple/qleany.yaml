@@ -71,24 +71,15 @@ repositories:
 
 controller: 
   folder_path: src/core/controller/
-  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
-  export_header_file: presenter_export.h
-  list:
-    - name: Car
-    - name: Brand
-    - name: Passenger
-    - name: Client
-
-qml:
-  mock_imports_folder_path: src/gui/touch/mock_imports/
-  real_imports_folder_path: src/gui/touch/real_imports/
+  export: SIMPLEEXAMPLE_CONTROLLER_EXPORT
+  export_header_file: controller_export.h
+  create_undo_redo_controller: false
 
 application:
   common_cmake_folder_path: src/core/application
   features:
     - name: Car
       DTO:
-        id_field: id
         dto_identical_to_entity:
           enabled: true
           entity_mappable_with: Car
@@ -109,11 +100,8 @@ application:
           enabled: true
         update: 
           enabled: true
-        update_with_details:
-          enabled: true
     - name: Brand
       DTO:
-        id_field: id
         dto_identical_to_entity:
           enabled: true
           entity_mappable_with: Brand
@@ -134,11 +122,8 @@ application:
           enabled: false
         update: 
           enabled: true
-        update_with_details:
-          enabled: false
     - name: Passenger
       DTO:
-        id_field: id
         dto_identical_to_entity:
           enabled: true
           entity_mappable_with: Passenger
@@ -159,11 +144,8 @@ application:
           enabled: false
         update: 
           enabled: true
-        update_with_details:
-          enabled: false
     - name: Client
       DTO:
-        id_field: id
         dto_identical_to_entity: 
           enabled: true
           entity_mappable_with: Client 
@@ -184,11 +166,8 @@ application:
           enabled: false
         update: 
           enabled: true        
-        update_with_details:
-          enabled: true
     - name: Custom
       DTO:
-        id_field: id
         dto_identical_to_entity:
           enabled: false
       CRUD:
@@ -251,3 +230,28 @@ contracts:
   folder_path: src/core/contracts
   export: SIMPLEEXAMPLE_CONTRACTS_EXPORT
   export_header_file: contracts_export.h
+
+presenter:
+  folder_path: src/core/contracts/presenter
+  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
+  export_header_file: presenter_export.h
+  create_undo_redo_single: false
+  singles:
+    - name: SimpleCar
+      entity: Car
+    - name: SimpleBrand
+      entity: Brand
+    - name: SimplePassenger
+      entity: Passenger
+    - name: SimpleClient
+      entity: Client
+  list_models:
+    - name: Car
+      entity: Car
+    - name: Passenger
+      entity: Passenger
+      in_relation_of: Car
+
+qml:
+  mock_imports_folder_path: src/gui/touch/mock_imports/
+  real_imports_folder_path: src/gui/touch/real_imports/

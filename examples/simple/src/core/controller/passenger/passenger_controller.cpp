@@ -1,4 +1,7 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
 #include "passenger_controller.h"
+
 #include "passenger/commands/create_passenger_command.h"
 #include "passenger/commands/create_passenger_command_handler.h"
 #include "passenger/commands/remove_passenger_command.h"
@@ -72,40 +75,6 @@ QCoro::Task<PassengerDTO> PassengerController::get(int id)
     co_return optional_result.value();
 }
 
-// QCoro::Task<PassengerWithDetailsDTO> PassengerController::getWithDetails(int id)
-//{
-//     auto queryCommand = new QueryCommand("getWithDetails");
-
-//    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
-//        GetPassengerWithDetailsQuery query;
-//        query.id = id;
-//        auto interface = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
-//        GetPassengerWithDetailsQueryHandler handler(interface);
-//        auto result = handler.handle(progressPromise, query);
-
-//        if (result.isSuccess())
-//        {
-//            emit m_eventDispatcher->passenger()->getWithDetailsReplied(result.value());
-//        }
-//        return Result<void>(result.error());
-//    });
-
-//    m_undo_redo_system->push(queryCommand, "passenger");
-
-//    // async wait for result signal
-//    const std::optional<PassengerWithDetailsDTO> optional_result =
-//        co_await qCoro(m_eventDispatcher.get(), &PassengerSignals::getWithDetailsReplied,
-//        std::chrono::milliseconds(200));
-
-//    if (!optional_result.has_value())
-//    {
-//        // for now, I insert one invalid item to the list to show that there was an error
-//        co_return PassengerWithDetailsDTO();
-//    }
-
-//    co_return optional_result.value();
-//}
-
 QCoro::Task<QList<PassengerDTO>> PassengerController::getAll()
 {
     auto queryCommand = new QueryCommand("getAll");
@@ -142,7 +111,7 @@ QCoro::Task<PassengerDTO> PassengerController::create(const CreatePassengerDTO &
 
     query.req = dto;
 
-    auto repository = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("passenger"));
+    auto repository = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
 
     auto *handler = new CreatePassengerCommandHandler(repository);
 
@@ -158,7 +127,7 @@ QCoro::Task<PassengerDTO> PassengerController::create(const CreatePassengerDTO &
         PassengerController::tr("Create passenger"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "passenger, car");
+    m_undo_redo_system->push(command, "passenger");
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
@@ -236,40 +205,6 @@ QCoro::Task<bool> PassengerController::remove(int id)
     {
         co_return false;
     }
-
-    co_return true;
-}
-
-QCoro::Task<bool> PassengerController::removeTree(int id)
-{
-    //    RemovePassengerTreeCommand query;
-
-    //    query.id = id;
-
-    //    auto repository = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
-
-    //    auto *handler = new RemovePassengerTreeCommandHandler(repository);
-
-    //    // connect
-    //    QObject::connect(handler, &RemovePassengerTreeCommandHandler::passengerCreated, this,
-    //                     [this](PassengerDTO dto) { emit m_eventDispatcher->passenger()->created(dto); });
-    //    // no need to connect to removed signal, because it will be emitted by the repository itself
-
-    //    // Create specialized UndoRedoCommand
-    //    auto command = new AlterCommand<RemovePassengerTreeCommandHandler, RemovePassengerTreeCommand>(
-    //        PassengerController::tr("Remove passenger tree"), handler, query);
-
-    //    // push command
-    //    m_undo_redo_system->push(command, "passenger");
-
-    //    // async wait for result signal
-    //    const std::optional<QList<int>> optional_result =
-    //        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
-
-    //    if (!optional_result.has_value())
-    //    {
-    //        co_return false;
-    //    }
 
     co_return true;
 }

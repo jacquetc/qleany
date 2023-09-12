@@ -1,9 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_passenger_command_handler.h"
-#include "car.h"
 #include "passenger/validators/create_passenger_command_validator.h"
 #include "qleany/tools/automapper/automapper.h"
+
+#include "car.h"
 
 using namespace Qleany;
 using namespace Simple::Domain;
@@ -60,13 +61,18 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 {
     qDebug() << "CreatePassengerCommandHandler::handleImpl called";
     Simple::Domain::Passenger passenger;
+
+    QList<Simple::Domain::Passenger> ownerEntityPassengers;
+
+    // Get the entities from owner
     CreatePassengerDTO createDTO = request.req;
+    int ownerId = createDTO.carId();
 
     if (m_newEntity.isEmpty())
     {
         // Validate the create Passenger command using the validator
         auto validator = CreatePassengerCommandValidator(m_repository);
-        Result<void> validatorResult = validator.validate(request.req);
+        Result<void> validatorResult = validator.validate(createDTO);
 
         if (Q_UNLIKELY(validatorResult.hasError()))
         {
@@ -103,31 +109,62 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
         m_repository->cancelChanges();
         return Result<PassengerDTO>(passengerResult.error());
     }
-    const auto &carSchema = Simple::Domain::Car::schema;
-    auto rightListResult = m_repository->getEntitiesInRelationOf(carSchema, createDTO.carId(), "passengers");
 
-    if (Q_UNLIKELY(rightListResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<PassengerDTO>(rightListResult.error());
-    }
-    auto rightList = rightListResult.value();
+    // Get the newly created Passenger entity
+    passenger = passengerResult.value();
+    // Save the newly created entity
+    m_newEntity = passengerResult;
 
-    if (createDTO.position() == -1)
+    //  Manage relation to owner
+
+    if (m_ownerPassengersNewState.isEmpty())
     {
-        createDTO.setPosition(rightList.size());
+
+        auto originalOwnerPassengersResult = m_repository->getEntitiesInRelationOf(Car::schema, ownerId, "passengers");
+        if (Q_UNLIKELY(originalOwnerPassengersResult.hasError()))
+        {
+            return Result<PassengerDTO>(originalOwnerPassengersResult.error());
+        }
+        auto originalOwnerPassengers = originalOwnerPassengersResult.value();
+
+        // save
+        m_oldOwnerPassengers = originalOwnerPassengers;
+
+        // Insert to the right position
+
+        int position = createDTO.position();
+        if (position == -1)
+        {
+            position = originalOwnerPassengers.count();
+        }
+        if (position > originalOwnerPassengers.count())
+        {
+            position = originalOwnerPassengers.count();
+        }
+        else if (position < 0)
+        {
+            position = 0;
+        }
+
+        originalOwnerPassengers.insert(position, passenger);
+
+        m_ownerPassengersNewState = originalOwnerPassengers;
+        ownerEntityPassengers = originalOwnerPassengers;
     }
     else
     {
-        rightList.insert(createDTO.position(), passengerResult.value());
-    }
-    auto newListResult =
-        m_repository->updateEntitiesInRelationOf(carSchema, createDTO.carId(), "passengers", rightList);
 
-    if (Q_UNLIKELY(newListResult.hasError()))
+        ownerEntityPassengers = m_ownerPassengersNewState;
+    }
+
+    // Add the passenger to the owner entity
+    Result<QList<Simple::Domain::Passenger>> updateResult =
+        m_repository->updateEntitiesInRelationOf(Car::schema, ownerId, "passengers", ownerEntityPassengers);
+
+    if (Q_UNLIKELY(updateResult.hasError()))
     {
         m_repository->cancelChanges();
-        return Result<PassengerDTO>(newListResult.error());
+        return Result<PassengerDTO>(updateResult.error());
     }
 
     m_repository->saveChanges();

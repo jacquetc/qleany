@@ -50,12 +50,12 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromi
     Simple::Domain::Client client = clientResult.value();
 
     // map
-    auto WithDetailsDTO =
+    auto clientWithDetailsDTO =
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientWithDetailsDTO>(client);
 
     qDebug() << "GetClientWithDetailsQueryHandler::handleImpl done";
 
-    return Result<ClientWithDetailsDTO>(WithDetailsDTO);
+    return Result<ClientWithDetailsDTO>(clientWithDetailsDTO);
 }
 
 bool GetClientWithDetailsQueryHandler::s_mappingRegistered = false;

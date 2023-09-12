@@ -1,0 +1,62 @@
+#include "controller_registration.h"
+#include "event_dispatcher.h"
+{% for feature in features -%}
+{% if feature.crud.enabled %}
+#include "{{ feature.feature_name_snake }}/{{ feature.feature_name_snake }}_controller.h"
+{% endif %}
+{% endfor -%}
+#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
+#include "qleany/tools/undo_redo/undo_redo_scopes.h"
+#include <QSharedPointer>
+
+using namespace {{ application_cpp_domain_name }}::Controller;
+
+ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceRepositoryProvider *repositoryProvider)
+    : QObject{parent}
+{
+
+    auto dispatcher =
+        QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
+
+    // Undo Redo System
+    Scopes scopes(QStringList() 
+{% for feature in features-%}
+                                << "{{ feature.feature_name_camel }}"
+{% endfor -%}
+                                );
+    auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
+
+    // error handling
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
+            [dispatcher](Qleany::Error error) {
+                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message();
+                emit dispatcher->error()->errorSent(error);
+            });
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
+            [dispatcher](Qleany::Error error) {
+                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message();
+                emit dispatcher->error()->warningSent(error);
+            });
+
+{% for feature in features%}
+{% if feature.crud.enabled %}
+    // {{ feature.feature_name_pascal }}Controller
+
+    new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+
+    SignalHolder *{{ feature.feature_name_camel }}SignalHolder = repositoryProvider->repository("{{ feature.feature_name_pascal }}")->signalHolder();
+    emit {{ feature.feature_name_camel }}SignalHolder->removed(QList<int>() << 0);
+    connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->{{ feature.feature_name_camel }}(),
+            &{{ feature.feature_name_pascal }}Signals::removed);
+    connect(repositoryProvider->repository("{{ feature.feature_name_camel }}")->signalHolder(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->{{ feature.feature_name_camel }}(),
+            &{{ feature.feature_name_pascal }}Signals::activeStatusChanged);
+            
+{% endif %}
+{% endfor %}
+
+}
+
+ControllerRegistration::~ControllerRegistration()
+{
+}

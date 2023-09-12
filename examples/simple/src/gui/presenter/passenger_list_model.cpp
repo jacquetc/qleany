@@ -11,7 +11,9 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
 
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::created, this, [this](PassengerDTO dto) {
         beginInsertRows(QModelIndex(), rowCount(), rowCount());
-        m_passengers.append(dto);
+        // TODO: see to implement a fine grained update where the new dto is inserted at the right emplacement,
+        //  only if it's an "ordered" list. Include this case in the generator.
+        populate();
         endInsertRows();
     });
 
@@ -101,6 +103,9 @@ bool PassengerListModel::setData(const QModelIndex &index, const QVariant &value
 
 void PassengerListModel::populate()
 {
+    if (m_carId == 0)
+        return;
+
     auto task = Car::CarController::instance()->getWithDetails(m_carId);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<Simple::Contracts::DTO::Passenger::PassengerDTO> passengers = result.passengers();

@@ -49,11 +49,11 @@ Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>Get{{ entity_mappable_wit
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }} = {{ entity_mappable_with_camel }}Result.value();
 
     // map
-    auto WithDetailsDTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}WithDetailsDTO>({{ entity_mappable_with_camel }});
+    auto {{ entity_mappable_with_camel }}WithDetailsDTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}WithDetailsDTO>({{ entity_mappable_with_camel }});
 
     qDebug() << "Get{{ entity_mappable_with_pascal }}WithDetailsQueryHandler::handleImpl done";
 
-    return Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>(WithDetailsDTO);
+    return Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>({{ entity_mappable_with_camel }}WithDetailsDTO);
 }
 
 bool Get{{ entity_mappable_with_pascal }}WithDetailsQueryHandler::s_mappingRegistered = false;

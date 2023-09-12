@@ -1,4 +1,7 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
 #include "car_controller.h"
+
 #include "car/commands/create_car_command.h"
 #include "car/commands/create_car_command_handler.h"
 #include "car/commands/remove_car_command.h"
@@ -93,8 +96,8 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
     m_undo_redo_system->push(queryCommand, "car");
 
     // async wait for result signal
-    const std::optional<CarWithDetailsDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
+    const std::optional<CarWithDetailsDTO> optional_result = co_await qCoro(
+        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
 
     if (!optional_result.has_value())
     {
@@ -141,7 +144,7 @@ QCoro::Task<CarDTO> CarController::create(const CreateCarDTO &dto)
 
     query.req = dto;
 
-    auto repository = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("car"));
+    auto repository = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
 
     auto *handler = new CreateCarCommandHandler(repository);
 
@@ -233,40 +236,6 @@ QCoro::Task<bool> CarController::remove(int id)
     {
         co_return false;
     }
-
-    co_return true;
-}
-
-QCoro::Task<bool> CarController::removeTree(int id)
-{
-    //    RemoveCarTreeCommand query;
-
-    //    query.id = id;
-
-    //    auto repository = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
-
-    //    auto *handler = new RemoveCarTreeCommandHandler(repository);
-
-    //    // connect
-    //    QObject::connect(handler, &RemoveCarTreeCommandHandler::carCreated, this,
-    //                     [this](CarDTO dto) { emit m_eventDispatcher->car()->created(dto); });
-    //    // no need to connect to removed signal, because it will be emitted by the repository itself
-
-    //    // Create specialized UndoRedoCommand
-    //    auto command = new AlterCommand<RemoveCarTreeCommandHandler, RemoveCarTreeCommand>(
-    //        CarController::tr("Remove car tree"), handler, query);
-
-    //    // push command
-    //    m_undo_redo_system->push(command, "car");
-
-    //    // async wait for result signal
-    //    const std::optional<QList<int>> optional_result =
-    //        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
-
-    //    if (!optional_result.has_value())
-    //    {
-    //        co_return false;
-    //    }
 
     co_return true;
 }

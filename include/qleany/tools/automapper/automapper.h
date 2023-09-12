@@ -49,7 +49,7 @@ class QLEANY_EXPORT AutoMapper
             };
         }
 
-        writerHash[MetaTypePair(QMetaType::fromType<SourceType>(), QMetaType::fromType<QList<DestinationType>>())] =
+        writerHash[MetaTypePair(QMetaType::fromType<SourceType>(), QMetaType::fromType<DestinationType>())] =
             [&](const QMetaProperty &destinationProperty, void *gadgetPointer, const QVariant &sourceValue) {
                 const QVariant &customDestinationObject = AutoMapper::implDefaultMap<DestinationType>(sourceValue);
                 DestinationType destinationValue = customDestinationObject.value<DestinationType>();
@@ -58,7 +58,7 @@ class QLEANY_EXPORT AutoMapper
             };
 
         writerForListHash[MetaTypePair(QMetaType::fromType<QList<SourceType>>(),
-                                       QMetaType::fromType<QList<DestinationType>>())] =
+                                       QMetaType::fromType<DestinationType>())] =
             [](const QMetaProperty &destinationProperty, void *gadgetPointer, const QList<QVariant> &sourceList) {
                 QList<DestinationType> destinationList;
 
@@ -97,7 +97,7 @@ class QLEANY_EXPORT AutoMapper
                 };
             }
 
-            writerHash[MetaTypePair(QMetaType::fromType<DestinationType>(), QMetaType::fromType<QList<SourceType>>())] =
+            writerHash[MetaTypePair(QMetaType::fromType<DestinationType>(), QMetaType::fromType<SourceType>())] =
                 [](const QMetaProperty &destinationProperty, void *gadgetPointer, const QVariant &sourceValue) {
                     const QVariant &customDestinationObject = AutoMapper::implDefaultMap<SourceType>(sourceValue);
                     SourceType destinationValue = customDestinationObject.value<SourceType>();
@@ -106,7 +106,7 @@ class QLEANY_EXPORT AutoMapper
                 };
 
             writerForListHash[MetaTypePair(QMetaType::fromType<QList<DestinationType>>(),
-                                           QMetaType::fromType<QList<SourceType>>())] =
+                                           QMetaType::fromType<SourceType>())] =
                 [](const QMetaProperty &destinationProperty, void *gadgetPointer, const QList<QVariant> &sourceList) {
                     QList<SourceType> destinationList;
 
@@ -175,8 +175,6 @@ class QLEANY_EXPORT AutoMapper
                     const QMetaProperty &destinationProperty =
                         destinationMetaObject->property(destinationPropertyIndex);
 
-                    QVariant destinationValue;
-
                     if (destinationProperty.isWritable() &&
                         QMetaType::canConvert(value.metaType(), destinationProperty.metaType()))
                     {
@@ -186,72 +184,6 @@ class QLEANY_EXPORT AutoMapper
                         {
                             qWarning() << "Failed to write value" << value << "to destination property"
                                        << destinationProperty.name();
-                        }
-                    }
-
-                    else if (destinationProperty.isWritable())
-                    {
-                        // Check if a conversion function exists for this
-                        // property type
-                        auto getDefaultSiblingFunction = getDefaultSiblingFunctions.find(value.metaType());
-
-                        if (getDefaultSiblingFunction != getDefaultSiblingFunctions.end())
-                        {
-                            // We have a conversion for this type.
-                            if (QString(value.metaType().name()).startsWith("QList<"))
-                            {
-                                // If it's a QList<QVariant>, process each
-                                // QVariant.
-                                QList<QVariant> sourceList = value.toList();
-
-                                if (sourceList.isEmpty())
-                                {
-                                    // If the list is empty, we can't get the
-                                    // type of the custom type.
-                                    // So we can't instantiate a new object of
-                                    // the custom type.
-                                    // So we can't call mapImpl recursively.
-                                    // So we can't convert the list.
-                                    // So we can't do anything.
-                                    // So we just return an empty list.
-                                    continue;
-                                }
-
-                                // destinationValue = foreignDestinationList;
-
-                                auto writeForListIt = writerForListHash.find(
-                                    MetaTypePair(value.metaType(), getDefaultSiblingFunction.value()().metaType()));
-
-                                if (writeForListIt != writerForListHash.end())
-                                {
-                                    bool success =
-                                        writeForListIt.value()(destinationProperty, destinationPointer, sourceList);
-
-                                    if (!success)
-                                    {
-                                        qWarning() << "Failed to write value" << destinationValue
-                                                   << "to destination property" << destinationProperty.name();
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // It's a single QVariant with custom type.
-
-                                auto writeIt = writerHash.find(
-                                    MetaTypePair(value.metaType(), getDefaultSiblingFunction.value()().metaType()));
-
-                                if (writeIt != writerHash.end())
-                                {
-                                    bool success = writeIt.value()(destinationProperty, destinationPointer, value);
-
-                                    if (!success)
-                                    {
-                                        qWarning() << "Failed to write value" << destinationValue
-                                                   << "to destination property" << destinationProperty.name();
-                                    }
-                                }
-                            }
                         }
                     }
 
@@ -273,6 +205,10 @@ class QLEANY_EXPORT AutoMapper
         //        for (auto it = getSiblingFunctions.begin(); it != getSiblingFunctions.end(); ++it)
         //        {
         //            qDebug() << "from" << it.key().first.name() << "to" << it.key().second.name();
+        //        }
+        //        for (auto it = getDefaultSiblingFunctions.begin(); it != getDefaultSiblingFunctions.end(); ++it)
+        //        {
+        //            qDebug() << "Default from" << it.key().name() << "to" << it.value()().typeName();
         //        }
 
         //        qDebug() << "Entries of getSiblingFunctions while in implMap: "
@@ -351,8 +287,8 @@ class QLEANY_EXPORT AutoMapper
                                 auto writeForListIt = writerForListHash.find(
                                     MetaTypePair(value.metaType(), getDefaultSiblingFunction.value()().metaType()));
 
-                                if (writeForListIt != writerForListHash.end() &&
-                                    source.metaData().getSet(QString::fromLatin1(sourceProperty.name())))
+                                if (writeForListIt != writerForListHash.end() /*&&
+                                    source.metaData().getSet(sourceProperty.name())*/)
                                 {
                                     bool success =
                                         writeForListIt.value()(destinationProperty, destinationPointer, sourceList);
@@ -371,8 +307,7 @@ class QLEANY_EXPORT AutoMapper
                                 auto writeIt = writerHash.find(
                                     MetaTypePair(value.metaType(), getDefaultSiblingFunction.value()().metaType()));
 
-                                if (writeIt != writerHash.end() &&
-                                    source.metaData().getSet(QString::fromLatin1(sourceProperty.name())))
+                                if (writeIt != writerHash.end() && source.metaData().getSet(sourceProperty.name()))
                                 {
                                     bool success = writeIt.value()(destinationProperty, destinationPointer, value);
 

@@ -16,7 +16,9 @@ class UpdateClientCommand
     }
 
 
+
     Simple::Contracts::DTO::Client::UpdateClientDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Client::Commands

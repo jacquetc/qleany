@@ -4,7 +4,7 @@
 #include "qleany/tools/automapper/automapper.h"
 #include "{{ feature_snake_name }}/validators/create_{{ entity_mappable_with_snake }}_command_validator.h"
 {% if has_owner %} 
-#include "domain/{{ owner_name_snake }}.h"
+#include "{{ owner_name_snake }}.h"
 {% endif %}
 
 using namespace Qleany;
@@ -63,21 +63,27 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     qDebug() << "Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl called";
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }};
     {% if has_owner %}
-    {{ application_cpp_domain_name }}::Domain::{{ owner_name_pascal }} ownerEntity{{ owner_field_pascal }};
+        {% if owner_field_is_list %}
+    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_pascal }};
+    {% else %}
+        {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_pascal }};
+    {% endif %}
+        // Get the entities from owner
+        Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
+        int ownerId = createDTO.{{ owner_name_camel }}Id();
     {% endif %}
 
     if (m_newEntity.isEmpty())
     {
         // Validate the create {{ entity_mappable_with_pascal }} command using the validator
         auto validator               = Create{{ entity_mappable_with_pascal }}CommandValidator(m_repository);
-        Result<void> validatorResult = validator.validate(request.req);
+        Result<void> validatorResult = validator.validate(createDTO);
 
         if (Q_UNLIKELY(validatorResult.hasError()))
         {
             return Result<{{ entity_mappable_with_pascal }}DTO>(validatorResult.error());
         }
 
-        Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
 
         // Map the create {{ entity_mappable_with_pascal }} command to a domain {{ entity_mappable_with_pascal }} object and
         // generate a UUID
@@ -93,9 +99,35 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
         {{ entity_mappable_with_camel }}.setCreationDate(QDateTime::currentDateTime());
         {{ entity_mappable_with_camel }}.setUpdateDate(QDateTime::currentDateTime());
 
+
+    }
+    else
+    {
+        {{ entity_mappable_with_camel }} = m_newEntity.value();
+    }
+
+
+    // Add the {{ entity_mappable_with_camel }} to the repository
+
+    m_repository->beginChanges();
+    auto {{ entity_mappable_with_camel }}Result = m_repository->add(std::move({{ entity_mappable_with_camel }}));
+
+    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
+    {
+        m_repository->cancelChanges();
+        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
+    }
+
+    // Get the newly created {{ entity_mappable_with_pascal }} entity
+    {{ entity_mappable_with_camel }} = {{ entity_mappable_with_camel }}Result.value();
+    // Save the newly created entity
+     m_newEntity = {{ entity_mappable_with_camel }}Result;
+
+    //  Manage relation to owner
+    
+    if (m_owner{{ owner_field_pascal }}NewState.isEmpty())
+    {
         {% if has_owner %}
-        // Get the enitties from owner
-        int ownerId = createDTO.{{ owner_name_camel }}Id();
 
         {% if owner_field_is_list %}
         auto originalOwner{{ owner_field_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}");
@@ -114,10 +146,10 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
         int position = createDTO.position();
         if(position == -1){
-            position = originalOwner{{ owner_field_camel }}.count();
+            position = originalOwner{{ owner_field_pascal }}.count();
         }
-        if(position >  originalOwner{{ owner_field_camel }}.count()){
-            position =  originalOwner{{ owner_field_camel }}.count();
+        if(position >  originalOwner{{ owner_field_pascal }}.count()){
+            position =  originalOwner{{ owner_field_pascal }}.count();
         }
         else if(position < 0){
             position = 0;
@@ -148,32 +180,20 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
          {% endif %}
  }
   else {
-    {{ entity_mappable_with_camel }} = m_newEntity.value();
     {% if has_owner %}
     ownerEntity{{ owner_field_pascal }} = m_owner{{ owner_field_pascal }}NewState;
     {% endif %}
  }
 
-    // Add the {{ entity_mappable_with_camel }} to the repository
-
-    m_repository->beginChanges();
-    auto {{ entity_mappable_with_camel }}Result = m_repository->add(std::move({{ entity_mappable_with_camel }}));
-
-    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
-    }
-
     {% if has_owner %}
-    // Apply the addition of the new entity to the owner entity
+
     {% if owner_field_is_list %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<void> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+    Result<QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
 
     {% else %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<void> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
 
     {% endif %}
 

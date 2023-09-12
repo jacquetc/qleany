@@ -144,7 +144,9 @@ def get_generation_dict(
                     ),
                 }
             remove_tree_data = crud_data.get("remove_tree", {})
-            if remove_tree_data.get("enabled", False) and remove_tree_data.get("generate", True):
+            if remove_tree_data.get("enabled", False) and remove_tree_data.get(
+                "generate", True
+            ):
                 crud_handlers["remove_tree"] = {
                     "generate": True,
                     "templates": [
@@ -356,7 +358,7 @@ def get_generation_dict(
                 command["camel_name"] = stringcase.camelcase(command["name"])
                 command["snake_name"] = stringcase.snakecase(command["name"])
                 command["pascal_name"] = stringcase.pascalcase(command["name"])
-                command["dto_in_is_enabled"] = True 
+                command["dto_in_is_enabled"] = True
                 # DTO in
                 if command.get("dto", {}).get("in", {}):
                     if command.get("dto", {}).get("in", {}).get("enabled", True):
@@ -376,7 +378,7 @@ def get_generation_dict(
                         command["dto_in_snake_name"] = "void"
                         command["dto_in_is_enabled"] = False
                 # DTO out
-                command["dto_out_is_enabled"] = True 
+                command["dto_out_is_enabled"] = True
 
                 if command.get("dto", {}).get("out", {}):
                     if command.get("dto", {}).get("out", {}).get("enabled", True):
@@ -538,15 +540,15 @@ def get_generation_dict(
 
 def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
     owner_dict = {}
-    for entity_name, entity in entities_by_name.items():
+    for possible_owner_name, entity in entities_by_name.items():
         for field in entity["fields"]:
             if field["type"] == entity_name or field["type"] == f"QList<{entity_name}>":
                 if field.get("strong", False):
-                    owner_dict["name"] = entity_name
+                    owner_dict["name"] = possible_owner_name
                     owner_dict["field"] = field["name"]
-                    owner_dict["ordered"] = field["ordered"]
+                    owner_dict["ordered"] = field.get("ordered", False)
                     owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
-                    break
+                    return owner_dict
     return owner_dict
 
 
@@ -736,6 +738,8 @@ def generate_crud_handler(
                     owner_field_pascal=handler.get("owner_field_pascal", ""),
                     owner_field_camel=handler.get("owner_field_camel", ""),
                     application_cpp_domain_name=application_cpp_domain_name,
+                    owner_field_is_list=handler.get("owner_field_is_list", False),
+                    owner_field_is_ordered=handler.get("owner_field_is_ordered", False),
                 )
             )
             print(f"Successfully wrote file {file_path}")
@@ -800,7 +804,6 @@ def generate_custom_query_handler(
     for file_path in handler["files"]:
         if not files_to_be_generated.get(file_path, False):
             continue
-
 
         template_env = Environment(
             loader=FileSystemLoader("templates/application/custom")
@@ -867,7 +870,7 @@ def generate_application_files(
     entities_data = manifest_data.get("entities", [])
     entities_list = entities_data.get("list", [])
     # remove entities that are not to be generated
-    entities_list = [entity for entity in entities_list if entity.get("generate", True)]
+    entities_list = [entity for entity in entities_list]
 
     # Organize entities by name for easier lookup
     entities_by_name = {entity["name"]: entity for entity in entities_list}

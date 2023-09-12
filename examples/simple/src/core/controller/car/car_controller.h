@@ -1,3 +1,5 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "car/car_dto.h"
@@ -7,6 +9,7 @@
 #include "controller_export.h"
 #include "event_dispatcher.h"
 #include "qleany/contracts/repository/interface_repository_provider.h"
+
 #include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
@@ -42,9 +45,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarController : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-    QCoro::Task<bool> removeTree(int id);
-
     static Contracts::DTO::Car::CreateCarDTO getCreateDTO();
+
     static Contracts::DTO::Car::UpdateCarDTO getUpdateDTO();
 
   private:

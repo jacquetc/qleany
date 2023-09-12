@@ -6,9 +6,17 @@ EventDispatcher *EventDispatcher::s_instance = nullptr;
 
 EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
 {
-    m_passengerSignals = new PassengerSignals(this);
-    m_carSignals = new CarSignals(this);
     m_errorSignals = new ErrorSignals(this);
+
+    m_carSignals = new CarSignals(this);
+
+    m_brandSignals = new BrandSignals(this);
+
+    m_passengerSignals = new PassengerSignals(this);
+
+    m_clientSignals = new ClientSignals(this);
+
+    m_customSignals = new CustomSignals(this);
 
     s_instance = this;
 }
@@ -18,13 +26,29 @@ EventDispatcher *EventDispatcher::instance()
     return s_instance;
 }
 
+CarSignals *EventDispatcher::car() const
+{
+    return m_carSignals;
+}
+
+BrandSignals *EventDispatcher::brand() const
+{
+    return m_brandSignals;
+}
+
 PassengerSignals *EventDispatcher::passenger() const
 {
     return m_passengerSignals;
 }
-CarSignals *EventDispatcher::car() const
+
+ClientSignals *EventDispatcher::client() const
 {
-    return m_carSignals;
+    return m_clientSignals;
+}
+
+CustomSignals *EventDispatcher::custom() const
+{
+    return m_customSignals;
 }
 
 ErrorSignals *EventDispatcher::error() const

@@ -22,6 +22,9 @@ target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
+{% for feature in features -%}
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-application-feature-{{ feature.feature_name_spinal }})
+{% endfor -%}
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt::Gui)

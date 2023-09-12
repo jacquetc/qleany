@@ -1,9 +1,18 @@
 #pragma once
 
-#include "car/car_signals.h"
 #include "controller_export.h"
 #include "error_signals.h"
+
+#include "car/car_signals.h"
+
+#include "brand/brand_signals.h"
+
 #include "passenger/passenger_signals.h"
+
+#include "client/client_signals.h"
+
+#include "custom/custom_signals.h"
+
 #include <QObject>
 
 namespace Simple::Controller
@@ -16,14 +25,30 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
     static EventDispatcher *instance();
 
     ErrorSignals *error() const;
-    PassengerSignals *passenger() const;
+
     CarSignals *car() const;
+
+    BrandSignals *brand() const;
+
+    PassengerSignals *passenger() const;
+
+    ClientSignals *client() const;
+
+    CustomSignals *custom() const;
 
   private:
     static EventDispatcher *s_instance;
     ErrorSignals *m_errorSignals;
-    PassengerSignals *m_passengerSignals;
+
     CarSignals *m_carSignals;
+
+    BrandSignals *m_brandSignals;
+
+    PassengerSignals *m_passengerSignals;
+
+    ClientSignals *m_clientSignals;
+
+    CustomSignals *m_customSignals;
 
     EventDispatcher() = delete;
     EventDispatcher(const EventDispatcher &) = delete;

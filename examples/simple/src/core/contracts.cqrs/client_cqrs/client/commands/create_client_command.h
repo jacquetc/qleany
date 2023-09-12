@@ -16,7 +16,9 @@ class CreateClientCommand
     }
 
 
+
     Simple::Contracts::DTO::Client::CreateClientDTO req;
+
 
 };
 } // namespace Simple::Contracts::CQRS::Client::Commands

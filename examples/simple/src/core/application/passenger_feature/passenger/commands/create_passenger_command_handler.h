@@ -36,6 +36,9 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler :
     Result<PassengerDTO> restoreImpl();
     Result<Simple::Domain::Passenger> m_newEntity;
 
+    QList<Simple::Domain::Passenger> m_oldOwnerPassengers;
+    QList<Simple::Domain::Passenger> m_ownerPassengersNewState;
+
     static bool s_mappingRegistered;
     void registerMappings();
 };

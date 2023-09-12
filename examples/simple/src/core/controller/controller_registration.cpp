@@ -1,7 +1,14 @@
 #include "controller_registration.h"
-#include "car/car_controller.h"
 #include "event_dispatcher.h"
+
+#include "car/car_controller.h"
+
+#include "brand/brand_controller.h"
+
 #include "passenger/passenger_controller.h"
+
+#include "client/client_controller.h"
+
 #include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include "qleany/tools/undo_redo/undo_redo_scopes.h"
 #include <QSharedPointer>
@@ -12,14 +19,14 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     : QObject{parent}
 {
 
-    auto dispatcher =
-        QSharedPointer<Simple::Controller::EventDispatcher>(new Simple::Controller::EventDispatcher(nullptr));
+    auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
 
     // Undo Redo System
     Scopes scopes(QStringList() << "car"
-                                << "passenger"
                                 << "brand"
-                                << "client");
+                                << "passenger"
+                                << "client"
+                                << "custom");
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling
@@ -34,27 +41,53 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
                 emit dispatcher->error()->warningSent(error);
             });
 
+    // CarController
+
+    new Car::CarController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+
+    SignalHolder *carSignalHolder = repositoryProvider->repository("Car")->signalHolder();
+    emit carSignalHolder->removed(QList<int>() << 0);
+    connect(carSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(),
+            &CarSignals::removed);
+    connect(repositoryProvider->repository("car")->signalHolder(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->car(),
+            &CarSignals::activeStatusChanged);
+
+    // BrandController
+
+    new Brand::BrandController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+
+    SignalHolder *brandSignalHolder = repositoryProvider->repository("Brand")->signalHolder();
+    emit brandSignalHolder->removed(QList<int>() << 0);
+    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
+            &BrandSignals::removed);
+    connect(repositoryProvider->repository("brand")->signalHolder(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->brand(),
+            &BrandSignals::activeStatusChanged);
+
     // PassengerController
 
     new Passenger::PassengerController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
-    SignalHolder *passengerSignalHolder = repositoryProvider->repository("passenger")->signalHolder();
+    SignalHolder *passengerSignalHolder = repositoryProvider->repository("Passenger")->signalHolder();
     emit passengerSignalHolder->removed(QList<int>() << 0);
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
-            &Simple::Controller::PassengerSignals::removed);
+            &PassengerSignals::removed);
     connect(repositoryProvider->repository("passenger")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->passenger(),
-            &Simple::Controller::PassengerSignals::activeStatusChanged);
+            &PassengerSignals::activeStatusChanged);
 
-    // CarController
-    new Car::CarController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    // ClientController
 
-    connect(repositoryProvider->repository("car")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(),
-            &Simple::Controller::CarSignals::removed);
-    connect(repositoryProvider->repository("car")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->car(),
-            &Simple::Controller::CarSignals::activeStatusChanged);
+    new Client::ClientController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+
+    SignalHolder *clientSignalHolder = repositoryProvider->repository("Client")->signalHolder();
+    emit clientSignalHolder->removed(QList<int>() << 0);
+    connect(clientSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->client(),
+            &ClientSignals::removed);
+    connect(repositoryProvider->repository("client")->signalHolder(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->client(),
+            &ClientSignals::activeStatusChanged);
 }
 
 ControllerRegistration::~ControllerRegistration()

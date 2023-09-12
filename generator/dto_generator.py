@@ -27,7 +27,8 @@ def get_dto_dict_and_feature_ordered_dict(
                         owner_dict["field"] = field["name"]
                         owner_dict["ordered"] = field.get("ordered", False)
                         owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
-                        break
+                        return owner_dict
+
         return owner_dict
 
     def get_fields_with_foreign_entities(

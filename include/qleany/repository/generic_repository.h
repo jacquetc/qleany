@@ -179,14 +179,14 @@ template <class T>
 Result<QList<T>> GenericRepository<T>::getEntitiesInRelationOf(const Domain::EntitySchema &leftEntitySchema,
                                                                int entityId, const QString &field)
 {
-    return m_databaseTable->getEntitiesInRelationOf(T::schema, entityId, field);
+    return m_databaseTable->getEntitiesInRelationOf(leftEntitySchema, entityId, field);
 }
 
 template <class T>
 Result<T> GenericRepository<T>::getEntityInRelationOf(const Domain::EntitySchema &leftEntitySchema, int entityId,
                                                       const QString &field)
 {
-    return m_databaseTable->getEntityInRelationOf(T::schema, entityId, field);
+    return m_databaseTable->getEntityInRelationOf(leftEntitySchema, entityId, field);
 }
 
 template <class T>
@@ -194,14 +194,14 @@ Result<QList<T>> GenericRepository<T>::updateEntitiesInRelationOf(const Domain::
                                                                   int entityId, const QString &field,
                                                                   const QList<T> &rightEntities)
 {
-    return m_databaseTable->updateEntitiesInRelationOf(T::schema, entityId, field, rightEntities);
+    return m_databaseTable->updateEntitiesInRelationOf(leftEntitySchema, entityId, field, rightEntities);
 }
 
 template <class T>
 Result<T> GenericRepository<T>::updateEntityInRelationOf(const Domain::EntitySchema &leftEntitySchema, int entityId,
                                                          const QString &field, const T &rightEntity)
 {
-    return m_databaseTable->updateEntityInRelationOf(T::schema, entityId, field, rightEntity);
+    return m_databaseTable->updateEntityInRelationOf(leftEntitySchema, entityId, field, rightEntity);
 }
 
 } // namespace Qleany::Repository

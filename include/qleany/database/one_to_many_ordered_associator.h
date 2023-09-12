@@ -3,7 +3,6 @@
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
 #include "qleany/domain/entity_schema.h"
-#include "qleany/qleany_global.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>
@@ -92,6 +91,10 @@ template <class RightEntity> class OneToManyOrderedAssociator
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
     Qleany::Domain::EntitySchema m_leftEntitySchema;
     QString m_fieldName;
+    QList<OneToManyOrderedAssociator<RightEntity>::EntityShadow> writePreviousAndNext(
+        const QList<EntityShadow> &shadows) const;
+    QList<OneToManyOrderedAssociator<RightEntity>::EntityShadow> markUpdatePreviousOrNext(
+        const QList<EntityShadow> &shadows) const;
 };
 
 template <class RightEntity> QString OneToManyOrderedAssociator<RightEntity>::getTableCreationSql() const
@@ -170,21 +173,21 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
         return Result<QList<RightEntity>>(
             Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
-    QList<int> rightEntityIds;
+    QList<int> originalRightEntityIds;
     QList<EntityShadow> originalShadows;
     int order = 0;
     while (query.next())
     {
-        rightEntityIds.append(query.value(1).toInt());
+        originalRightEntityIds.append(query.value(1).toInt());
         originalShadows.append(EntityShadow(query.value(0).toInt(), query.value(1).toInt(), order++,
                                             query.value(2).toInt(), query.value(3).toInt()));
     }
 
     // create new shadow list
     QList<EntityShadow> newShadows;
-    for (int i = 0; i < rightEntityIds.size(); ++i)
+    for (int i = 0; i < rightEntities.size(); ++i)
     {
-        newShadows.append(EntityShadow(-1, rightEntityIds[i], i, -1, -1));
+        newShadows.append(EntityShadow(-1, rightEntities[i].id(), i, -1, -1));
     }
 
     // merge shadows list, setting create, remove, updatePrevious, updateNext
@@ -225,7 +228,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
             }
         }
         // update junction table rows
-        if (shadow.updatePreviousOrNext)
+        if (shadow.updatePreviousOrNext && shadow.junctionTableId != -1)
         {
             queryStr = QString("UPDATE %1 SET previous = :previous, next = :next WHERE id = :junctionId")
                            .arg(m_junctionTableName);
@@ -250,6 +253,11 @@ template <class RightEntity>
 Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEntitiesFromTheirIds(
     QList<int> rightEntityIds) const
 {
+    if (rightEntityIds.isEmpty())
+    {
+        return Result<QList<RightEntity>>(QList<RightEntity>());
+    }
+
     const QStringList &columns = getTablePropertyColumns(m_rightEntitySchema);
 
     QSqlDatabase database = m_databaseContext->getConnection();
@@ -354,7 +362,7 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
         {
             shadow.remove = true;
         }
-        return shadows;
+        return markUpdatePreviousOrNext(writePreviousAndNext(shadows));
     }
 
     // if originalShadows is empty, return newShadows with all the entities marked as create
@@ -365,7 +373,7 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
         {
             shadow.create = true;
         }
-        return shadows;
+        return markUpdatePreviousOrNext(writePreviousAndNext(shadows));
     }
 
     // both lists are empty, return empty list
@@ -402,7 +410,7 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
                 shadow.remove = true;
             }
         }
-        return shadows;
+        return markUpdatePreviousOrNext(writePreviousAndNext(shadows));
     }
 
     // mark as common in originalShadows and newShadows all the entities that are present in both originalShadows and
@@ -449,31 +457,7 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
         }
     }
     // keept the new shadows as base
-    QList<EntityShadow> mergedShadows = newShadowsClone;
-
-    // calculate the newPrevious and newNext for all the entities in mergedShadows but removed ones
-    for (int i = 0; i < mergedShadows.size(); i++)
-    {
-        if (mergedShadows[i].remove == false)
-        {
-            if (i == 0)
-            {
-                mergedShadows[i].newPrevious = 0;
-            }
-            else
-            {
-                mergedShadows[i].newPrevious = mergedShadows[i - 1].entityId;
-            }
-            if (i == mergedShadows.size() - 1)
-            {
-                mergedShadows[i].newNext = 0;
-            }
-            else
-            {
-                mergedShadows[i].newNext = mergedShadows[i + 1].entityId;
-            }
-        }
-    }
+    QList<EntityShadow> mergedShadows = writePreviousAndNext(newShadowsClone);
 
     // add the removed entities at the end of the merged shadows
     for (auto &originalShadow : originalShadowsClone)
@@ -484,8 +468,49 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
         }
     }
 
+    return markUpdatePreviousOrNext(mergedShadows);
+}
+
+template <class RightEntity>
+QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyOrderedAssociator<
+    RightEntity>::writePreviousAndNext(const QList<EntityShadow> &shadows) const
+{
+    QList<EntityShadow> writtenShadows = shadows;
+
+    // calculate the newPrevious and newNext for all the entities in mergedShadows but removed ones
+    for (int i = 0; i < writtenShadows.size(); i++)
+    {
+        if (writtenShadows[i].remove == false)
+        {
+            if (i == 0)
+            {
+                writtenShadows[i].newPrevious = 0;
+            }
+            else
+            {
+                writtenShadows[i].newPrevious = writtenShadows[i - 1].entityId;
+            }
+            if (i == writtenShadows.size() - 1)
+            {
+                writtenShadows[i].newNext = 0;
+            }
+            else
+            {
+                writtenShadows[i].newNext = writtenShadows[i + 1].entityId;
+            }
+        }
+    }
+    return writtenShadows;
+}
+
+template <class RightEntity>
+QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyOrderedAssociator<
+    RightEntity>::markUpdatePreviousOrNext(const QList<EntityShadow> &shadows) const
+{
+    QList<EntityShadow> writtenShadows = shadows;
+
     // mark updatePreviousOrNext
-    for (auto &shadow : mergedShadows)
+    for (auto &shadow : writtenShadows)
     {
         if (shadow.remove == false)
         {
@@ -498,6 +523,7 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
         }
     }
 
-    return mergedShadows;
+    return writtenShadows;
 }
+
 } // namespace Qleany::Database

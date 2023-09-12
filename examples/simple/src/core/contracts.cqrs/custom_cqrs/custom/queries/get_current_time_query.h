@@ -14,5 +14,7 @@ class GetCurrentTimeQuery
     }
 
 
+
+
 };
 } // namespace Simple::Contracts::CQRS::Custom::Queries

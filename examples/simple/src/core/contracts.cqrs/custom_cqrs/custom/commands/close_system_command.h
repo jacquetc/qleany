@@ -14,5 +14,7 @@ class CloseSystemCommand
     }
 
 
+
+
 };
 } // namespace Simple::Contracts::CQRS::Custom::Commands

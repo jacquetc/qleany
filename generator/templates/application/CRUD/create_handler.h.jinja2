@@ -37,8 +37,8 @@ class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_newEntity;
     {% if has_owner %}
         {% if owner_field_is_list %}
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}::{{ owner_field_pascal }}> m_oldOwner{{ owner_field_pascal }};
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}::{{ owner_field_pascal }}> m_owner{{ owner_field_pascal }}NewState;
+    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_oldOwner{{ owner_field_pascal }};
+    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_owner{{ owner_field_pascal }}NewState;
         {% else %}
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} m_oldOwner{{ owner_field_pascal }};
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} m_owner{{ owner_field_pascal }}NewState;

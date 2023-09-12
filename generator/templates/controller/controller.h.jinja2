@@ -2,20 +2,29 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "controller_export.h"
+#include "{{ export_header_file }}"
 #include "event_dispatcher.h"
-{% if feature.crud.enabled %}
-#include "{{ feature_name_snake }}/{{ entity_name_snake }}_dto.h"
-    {%if feature.crud.get_with_details %}
-#include "{{ feature_name_snake }}/{{ entity_name_snake }}_with_details_dto.h"
-    {% endif %}
-    {%if feature.crud.create %}
-#include "{{ feature_name_snake }}/create_{{ entity_name_snake }}_dto.h"
-    {% endif %}
-    {%if feature.crud.update %}
-#include "{{ feature_name_snake }}/update_{{ entity_name_snake }}_dto.h"
 #include "qleany/contracts/repository/interface_repository_provider.h"
-    {% endif %}
+{% if feature.crud.enabled -%}
+#include "{{ feature_name_snake }}/{{ entity_name_snake }}_dto.h"
+    {% if feature.crud.get_with_details -%}
+#include "{{ feature_name_snake }}/{{ entity_name_snake }}_with_details_dto.h"
+    {% endif -%}
+    {% if feature.crud.create -%}
+#include "{{ feature_name_snake }}/create_{{ entity_name_snake }}_dto.h"
+    {% endif -%}
+    {% if feature.crud.update -%}
+#include "{{ feature_name_snake }}/update_{{ entity_name_snake }}_dto.h"
+    {% endif -%}
+{% endif -%}
+{% for command in feature.custom_commands -%}
+{% if command.dto_in_enabled %}#include "{{ feature_name_snake }}/{{ command.dto_in_snake }}_dto.h"{% endif %}
+{% if command.dto_out_enabled %}#include "{{ feature_name_snake }}/{{ command.dto_out_snake }}_dto.h"{% endif %}
+{% endfor %}
+{% for query in feature.custom_queries -%}
+{% if query.dto_in_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_in_snake }}_dto.h"{% endif %}
+{% if query.dto_out_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_out_snake }}_dto.h"{% endif %}
+{% endfor -%}
 #include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
@@ -23,7 +32,7 @@
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
-using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ entity_name_pascal }};
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_name_pascal }};
 
 namespace {{ application_cpp_domain_name }}::Controller::{{ feature_name_pascal }}
 {
@@ -59,16 +68,24 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {%if feature.crud.remove %}
     QCoro::Task<bool> remove(int id);
     {% endif %}
-    {%if feature.crud.updateTree %}
+    {%if feature.crud.removeTree %}
     QCoro::Task<bool> removeTree(int id);
     {% endif %}
 
-    {%if feature.crud.create %}
+    {% if feature.crud.create %}
     static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
     {% endif %}
-    {%if feature.crud.update %}
+    {% if feature.crud.update %}
     static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
     {% endif %}
+{% endif %}
+
+    {% for command in feature.custom_commands %}
+    QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
+    {% endfor %}
+    {% for query in feature.custom_queries %}
+    QCoro::Task<{{ query.dto_out }}DTO> {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %});
+    {% endfor %}
 
   private:
     static QScopedPointer<{{ feature_name_pascal }}Controller> s_instance;

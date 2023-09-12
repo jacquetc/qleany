@@ -6,6 +6,579 @@ import stringcase
 import shutil
 import uncrustify
 from pathlib import Path
+import clang_format
+
+
+def get_generation_dict(
+    folder_path: str,
+    application_name: str,
+    application_cpp_domain_name: str,
+    feature_by_name: dict,
+    entities_by_name: dict,
+    controller_by_name: dict,
+    export: str,
+    export_header_file: str,
+) -> dict:
+    generation_dict = {}
+
+    # add export_header
+    generation_dict["export_header"] = export_header_file
+    generation_dict["export"] = export
+    generation_dict["folder_path"] = folder_path
+    generation_dict["all_controller_files"] = []
+
+    # add application name
+    generation_dict["application_cpp_domain_name"] = application_cpp_domain_name
+    generation_dict["application_snakecase_name"] = stringcase.snakecase(
+        application_name
+    )
+    generation_dict["application_pascalcase_name"] = stringcase.pascalcase(
+        application_name
+    )
+    generation_dict["application_spinalcase_name"] = stringcase.spinalcase(
+        application_name
+    )
+    generation_dict["application_camelcase_name"] = stringcase.camelcase(
+        application_name
+    )
+    generation_dict["application_uppercase_name"] = application_name.upper()
+
+    generation_dict["features"] = []
+
+    for feature_name, feature in feature_by_name.items():
+        feature_snake_name = stringcase.snakecase(feature_name)
+        feature_pascal_name = stringcase.pascalcase(feature_name)
+        feature_spinal_name = stringcase.spinalcase(feature_name)
+        feature_camel_name = stringcase.camelcase(feature_name)
+        final_feature_dict = {
+            "feature_name_snake": feature_snake_name,
+            "feature_name_pascal": feature_pascal_name,
+            "feature_name_spinal": feature_spinal_name,
+            "feature_name_camel": feature_camel_name,
+        }
+        final_feature_dict["crud"] = {
+            "enabled": feature.get("CRUD", {}).get("enabled", False)
+        }
+
+        if feature.get("CRUD", {}).get("enabled", False):
+            entity_name = feature["CRUD"].get("entity_mappable_with", "Undefined")
+            entity = entities_by_name[entity_name]
+            entity_snake_name = stringcase.snakecase(entity_name)
+            entity_pascal_name = stringcase.pascalcase(entity_name)
+            entity_spinal_name = stringcase.spinalcase(entity_name)
+            entity_camel_name = stringcase.camelcase(entity_name)
+            final_feature_dict["crud"]["entity_name_snake"] = entity_snake_name
+            final_feature_dict["crud"]["entity_name_pascal"] = entity_pascal_name
+            final_feature_dict["crud"]["entity_name_spinal"] = entity_spinal_name
+            final_feature_dict["crud"]["entity_name_camel"] = entity_camel_name
+
+            final_feature_dict["crud"]["get"] = (
+                feature["CRUD"].get("get", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["get_with_details"] = (
+                feature["CRUD"].get("get_with_details", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["get_all"] = (
+                feature["CRUD"].get("get_all", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["create"] = (
+                feature["CRUD"].get("create", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["update"] = (
+                feature["CRUD"].get("update", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["remove"] = (
+                feature["CRUD"].get("remove", {}).get("enabled", False)
+            )
+            final_feature_dict["crud"]["remove_tree"] = (
+                feature["CRUD"].get("remove_tree", {}).get("enabled", False)
+            )
+
+        # files :
+        generation_dict["all_controller_files"].append(
+            os.path.join(
+                folder_path,
+                feature_snake_name,
+                f"{feature_snake_name}_controller.h",
+            )
+        )
+        generation_dict["all_controller_files"].append(
+            os.path.join(
+                folder_path,
+                feature_snake_name,
+                f"{feature_snake_name}_controller.cpp",
+            )
+        )
+        generation_dict["all_controller_files"].append(
+            os.path.join(
+                folder_path,
+                feature_snake_name,
+                f"{feature_snake_name}_signals.h",
+            )
+        )
+
+        # add custom commands
+        if feature.get("commands", []):
+            final_feature_dict["custom_commands"] = []
+            for command in feature["commands"]:
+                repositories = []
+                for entity in command.get("entities", []):
+                    repositories.append(
+                        {
+                            "name_snake": stringcase.snakecase(entity),
+                            "name_pascal": stringcase.pascalcase(entity),
+                            "name_spinal": stringcase.spinalcase(entity),
+                            "name_camel": stringcase.camelcase(entity),
+                        }
+                    )
+                dto_out_enabled = (
+                    command.get("dto", {}).get("out", {}).get("enabled", True)
+                )
+                dto_out = (
+                    command.get("dto", {})
+                    .get("out", {})
+                    .get("type_prefix", "Undefined")
+                    if dto_out_enabled
+                    else "Undefined"
+                )
+                dto_in_enabled = (
+                    command.get("dto", {}).get("in", {}).get("enabled", True)
+                )
+                dto_in = (
+                    command.get("dto", {}).get("in", {}).get("type_prefix", "Undefined")
+                    if dto_in_enabled
+                    else "Undefined"
+                )
+
+                final_feature_dict["custom_commands"].append(
+                    {
+                        "name": command["name"],
+                        "name_snake": stringcase.snakecase(command["name"]),
+                        "name_camel": stringcase.camelcase(command["name"]),
+                        "repositories": repositories,
+                        "dto_out_enabled": dto_out_enabled,
+                        "dto_out": dto_out,
+                        "dto_out_snake": stringcase.snakecase(dto_out),
+                        "dto_in_enabled": dto_in_enabled,
+                        "dto_in": dto_in,
+                        "dto_in_snake": stringcase.snakecase(dto_in),
+                    }
+                )
+
+        # add custom queries
+        if feature.get("queries", []):
+            final_feature_dict["custom_queries"] = []
+            for query in feature["queries"]:
+                repositories = []
+                for entity in query.get("entities", []):
+                    repositories.append(
+                        {
+                            "name_snake": stringcase.snakecase(entity),
+                            "name_pascal": stringcase.pascalcase(entity),
+                            "name_spinal": stringcase.spinalcase(entity),
+                            "name_camel": stringcase.camelcase(entity),
+                        }
+                    )
+
+                dto_out_enabled = (
+                    query.get("dto", {}).get("out", {}).get("enabled", True)
+                )
+                dto_out = (
+                    query.get("dto", {}).get("out", {}).get("type_prefix", "Undefined")
+                    if dto_out_enabled
+                    else "Undefined"
+                )
+                dto_in_enabled = query.get("dto", {}).get("in", {}).get("enabled", True)
+                dto_in = (
+                    query.get("dto", {}).get("in", {}).get("type_prefix", "Undefined")
+                    if dto_in_enabled
+                    else "Undefined"
+                )
+
+                final_feature_dict["custom_queries"].append(
+                    {
+                        "name": query["name"],
+                        "name_snake": stringcase.snakecase(query["name"]),
+                        "name_camel": stringcase.camelcase(query["name"]),
+                        "repositories": repositories,
+                        "dto_out_enabled": dto_out_enabled,
+                        "dto_out": dto_out,
+                        "dto_out_snake": stringcase.snakecase(dto_out),
+                        "dto_in_enabled": dto_in_enabled,
+                        "dto_in": dto_in,
+                        "dto_in_snake": stringcase.snakecase(dto_in),
+                    }
+                )
+
+        generation_dict["features"].append(final_feature_dict)
+
+    return generation_dict
+
+
+def generate_cmakelists(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("cmakelists_template.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_cmakelists_file = os.path.join(folder_path, "CMakeLists.txt")
+    cmakelists_file = os.path.join(root_path, relative_cmakelists_file)
+
+    if files_to_be_generated.get(relative_cmakelists_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cmakelists_file), exist_ok=True)
+
+        with open(cmakelists_file, "w") as f:
+            f.write(
+                template.render(
+                    export_header_file=generation_dict["export_header"],
+                    application_spinalcase_name=generation_dict[
+                        "application_spinalcase_name"
+                    ],
+                    application_uppercase_name=generation_dict[
+                        "application_uppercase_name"
+                    ],
+                    features=generation_dict["features"],
+                )
+            )
+            print(f"Successfully wrote file {cmakelists_file}")
+
+
+def generate_cmake_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("controllers.cmake.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+    all_controller_files = generation_dict["all_controller_files"]
+
+    relative_cmake_file = os.path.join(folder_path, "controllers.cmake")
+    cmake_file = os.path.join(root_path, relative_cmake_file)
+
+    # write the controller cmake list file
+
+    if files_to_be_generated.get(relative_cmake_file, False):
+        controller_files = []
+        for controller_file in all_controller_files:
+            relative_path = os.path.relpath(
+                os.path.join(root_path, controller_file), os.path.dirname(cmake_file)
+            )
+            controller_files.append(relative_path.replace("\\", "/"))
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cmake_file), exist_ok=True)
+
+        rendered_template = template.render(
+            controller_files=controller_files,
+        )
+
+        with open(cmake_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {cmake_file}")
+
+
+def generate_event_dispatcher_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    #  event dispatcher h
+    template = template_env.get_template("event_dispatcher.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+    all_controller_files = generation_dict["all_controller_files"]
+
+    relative_event_dispatcher_file = os.path.join(folder_path, "event_dispatcher.h")
+    event_dispatcher_file = os.path.join(root_path, relative_event_dispatcher_file)
+
+    # write the event dispatcher header file
+
+    if files_to_be_generated.get(relative_event_dispatcher_file, False):
+        controller_files = []
+        for controller_file in all_controller_files:
+            relative_path = os.path.relpath(
+                controller_file, os.path.dirname(event_dispatcher_file)
+            )
+            controller_files.append(relative_path.replace("\\", "/"))
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(event_dispatcher_file), exist_ok=True)
+
+        rendered_template = template.render(
+            export_header_file=generation_dict["export_header"],
+            export=generation_dict["export"],
+            features=generation_dict["features"],
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+        )
+
+        with open(event_dispatcher_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {event_dispatcher_file}")
+
+    #  event dispatcher cpp
+    template = template_env.get_template("event_dispatcher.cpp.jinja2")
+    relative_event_dispatcher_file = os.path.join(folder_path, "event_dispatcher.cpp")
+    event_dispatcher_file = os.path.join(root_path, relative_event_dispatcher_file)
+
+    # write the event dispatcher cpp file
+
+    if files_to_be_generated.get(relative_event_dispatcher_file, False):
+        controller_files = []
+        for controller_file in all_controller_files:
+            relative_path = os.path.relpath(
+                controller_file, os.path.dirname(event_dispatcher_file)
+            )
+            controller_files.append(relative_path.replace("\\", "/"))
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(event_dispatcher_file), exist_ok=True)
+
+        rendered_template = template.render(
+            features=generation_dict["features"],
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+        )
+
+        with open(event_dispatcher_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {event_dispatcher_file}")
+
+
+def generate_controller_h_and_cpp_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    for feature in generation_dict["features"]:
+        #  controller h
+        template = template_env.get_template("controller.h.jinja2")
+
+        folder_path = generation_dict["folder_path"]
+        all_controller_files = generation_dict["all_controller_files"]
+
+        relative_controller_file = os.path.join(
+            folder_path,
+            feature["feature_name_snake"],
+            f"{feature['feature_name_snake']}_controller.h",
+        )
+        controller_file = os.path.join(root_path, relative_controller_file)
+
+        # write the controller header file
+
+        if files_to_be_generated.get(relative_controller_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+            rendered_template = template.render(
+                export_header_file=generation_dict["export_header"],
+                export=generation_dict["export"],
+                feature=feature,
+                application_cpp_domain_name=generation_dict[
+                    "application_cpp_domain_name"
+                ],
+                custom_commands=feature.get("custom_commands", []),
+                custom_queries=feature.get("custom_queries", []),
+                entity_name_pascal=feature["crud"].get("entity_name_pascal", ""),
+                entity_name_snake=feature["crud"].get("entity_name_snake", ""),
+                entity_name_spinal=feature["crud"].get("entity_name_spinal", ""),
+                entity_name_camel=feature["crud"].get("entity_name_camel", ""),
+                feature_name_pascal=feature["feature_name_pascal"],
+                feature_name_snake=feature["feature_name_snake"],
+                feature_name_spinal=feature["feature_name_spinal"],
+                feature_name_camel=feature["feature_name_camel"],
+            )
+
+            with open(controller_file, "w") as fh:
+                fh.write(rendered_template)
+                print(f"Successfully wrote file {controller_file}")
+
+        #  controller cpp
+        template = template_env.get_template("controller.cpp.jinja2")
+        relative_controller_file = os.path.join(
+            folder_path,
+            feature["feature_name_snake"],
+            f"{feature['feature_name_snake']}_controller.cpp",
+        )
+        controller_file = os.path.join(root_path, relative_controller_file)
+
+        # write the controller cpp file
+
+        if files_to_be_generated.get(relative_controller_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+            rendered_template = template.render(
+                feature=feature,
+                application_cpp_domain_name=generation_dict[
+                    "application_cpp_domain_name"
+                ],
+                custom_commands=feature.get("custom_commands", []),
+                custom_queries=feature.get("custom_queries", []),
+                entity_name_pascal=feature["crud"].get("entity_name_pascal", ""),
+                entity_name_snake=feature["crud"].get("entity_name_snake", ""),
+                entity_name_spinal=feature["crud"].get("entity_name_spinal", ""),
+                entity_name_camel=feature["crud"].get("entity_name_camel", ""),
+                feature_name_pascal=feature["feature_name_pascal"],
+                feature_name_snake=feature["feature_name_snake"],
+                feature_name_spinal=feature["feature_name_spinal"],
+                feature_name_camel=feature["feature_name_camel"],
+            )
+
+            with open(controller_file, "w") as fh:
+                fh.write(rendered_template)
+                print(f"Successfully wrote file {controller_file}")
+
+
+def generate_controller_registration_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    #  controller_registration.h
+    template = template_env.get_template("controller_registration.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+    all_controller_files = generation_dict["all_controller_files"]
+
+    relative_controller_file = os.path.join(
+        folder_path,
+        "controller_registration.h",
+    )
+    controller_file = os.path.join(root_path, relative_controller_file)
+
+    # write the controller header file
+
+    if files_to_be_generated.get(relative_controller_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+        rendered_template = template.render(
+            export_header_file=generation_dict["export_header"],
+            export=generation_dict["export"],
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+        )
+
+        with open(controller_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {controller_file}")
+
+    #  controller_registration.cpp
+    template = template_env.get_template("controller_registration.cpp.jinja2")
+    relative_controller_file = os.path.join(
+        folder_path,
+        "controller_registration.cpp",
+    )
+    controller_file = os.path.join(root_path, relative_controller_file)
+
+    # write the controller cpp file
+
+    if files_to_be_generated.get(relative_controller_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+        rendered_template = template.render(
+            features=generation_dict["features"],
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+        )
+
+        with open(controller_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {controller_file}")
+
+
+def generate_export_header_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("export_template.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_export_header_file = os.path.join(
+        folder_path, generation_dict["export_header"]
+    )
+    export_header_file = os.path.join(root_path, relative_export_header_file)
+
+    if files_to_be_generated.get(relative_export_header_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
+
+        with open(export_header_file, "w") as f:
+            f.write(
+                template.render(
+                    application_uppercase_name=generation_dict[
+                        "application_uppercase_name"
+                    ],
+                    export=generation_dict["export"],
+                )
+            )
+            print(f"Successfully wrote file {export_header_file}")
+
+
+def generate_error_signals_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("error_signals.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_error_signals_header_file = os.path.join(
+        folder_path,
+        f"error_signals.h",
+    )
+    error_signals_header_file = os.path.join(
+        root_path, relative_error_signals_header_file
+    )
+
+    if files_to_be_generated.get(relative_error_signals_header_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(error_signals_header_file), exist_ok=True)
+
+        with open(error_signals_header_file, "w") as f:
+            f.write(
+                template.render(
+                    export_header_file=generation_dict["export_header"],
+                    export=generation_dict["export"],
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {error_signals_header_file}")
+
+
+def generate_signal_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("signals.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    for feature in generation_dict["features"]:
+        relative_signal_header_file = os.path.join(
+            folder_path,
+            feature["feature_name_snake"],
+            f"{feature['feature_name_snake']}_signals.h",
+        )
+        signal_header_file = os.path.join(root_path, relative_signal_header_file)
+
+        if files_to_be_generated.get(relative_signal_header_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(signal_header_file), exist_ok=True)
+
+            with open(signal_header_file, "w") as f:
+                f.write(
+                    template.render(
+                        export_header_file=generation_dict["export_header"],
+                        export=generation_dict["export"],
+                        feature=feature,
+                        application_cpp_domain_name=generation_dict[
+                            "application_cpp_domain_name"
+                        ],
+                    )
+                )
+                print(f"Successfully wrote file {signal_header_file}")
 
 
 def generate_controller_files(
@@ -14,7 +587,79 @@ def generate_controller_files(
     files_to_be_generated: dict[str, bool] = None,
     uncrustify_config_file: str = None,
 ):
-    pass
+    with open(manifest_file, "r") as stream:
+        try:
+            manifest_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return
+
+    application_name = manifest_data.get("global", {}).get(
+        "application_name", "example"
+    )
+
+    application_data = manifest_data.get("application", {})
+    feature_list = application_data.get("features", [])
+
+    # Organize feature_list by name for easier lookup
+    feature_by_name = {feature["name"]: feature for feature in feature_list}
+
+    global_data = manifest_data.get("global", {})
+    application_cpp_domain_name = global_data.get(
+        "application_cpp_domain_name", "Undefined"
+    )
+
+    entities_data = manifest_data.get("entities", {})
+    entities_list = entities_data.get("list", [])
+    # remove entities that are not to be generated
+    entities_list = [entity for entity in entities_list]
+
+    # Organize entities by name for easier lookup
+    entities_by_name = {entity["name"]: entity for entity in entities_list}
+
+    controller_data = manifest_data.get("controller", {})
+    controller_list = controller_data.get("features", [])
+    controller_by_name = {
+        controller["name"]: controller for controller in controller_list
+    }
+
+    folder_path = controller_data.get("folder_path", "Undefined")
+    export = controller_data.get("export", "Undefined")
+    export_header_file = controller_data.get("export_header_file", "Undefined")
+    create_undo_redo_controller = controller_data.get(
+        "create_undo_redo_controller", False
+    )
+
+    generation_dict = get_generation_dict(
+        folder_path,
+        application_name,
+        application_cpp_domain_name,
+        feature_by_name,
+        entities_by_name,
+        controller_by_name,
+        export,
+        export_header_file,
+    )
+
+    generate_event_dispatcher_files(root_path, generation_dict, files_to_be_generated)
+    generate_cmake_file(root_path, generation_dict, files_to_be_generated)
+    generate_cmakelists(root_path, generation_dict, files_to_be_generated)
+    generate_export_header_file(root_path, generation_dict, files_to_be_generated)
+    generate_signal_files(root_path, generation_dict, files_to_be_generated)
+    generate_controller_h_and_cpp_files(
+        root_path, generation_dict, files_to_be_generated
+    )
+    generate_controller_registration_files(
+        root_path, generation_dict, files_to_be_generated
+    )
+    generate_error_signals_file(root_path, generation_dict, files_to_be_generated)
+
+    # format the files
+    for file, to_be_generated in files_to_be_generated.items():
+        # if uncrustify_config_file and files_to_be_generated.get(file, False):
+        #     uncrustify.run_uncrustify(file, uncrustify_config_file)
+        if to_be_generated and file.endswith(".h") or file.endswith(".cpp"):
+            clang_format.run_clang_format(os.path.join(root_path, file))
 
 
 def get_files_to_be_generated(
@@ -27,24 +672,36 @@ def get_files_to_be_generated(
     """
     # Read the manifest file
     with open(manifest_file, "r") as fh:
-        manifest = yaml.safe_load(fh)
+        manifest_data = yaml.safe_load(fh)
 
-    folder_path = manifest["controller"]["folder_path"]
+    controller_data = manifest_data.get("controller", {})
+    folder_path = controller_data["folder_path"]
+    export_header_file = controller_data.get("export_header_file", "Undefined")
 
     # Get the list of files to be generated
     files = []
-    for controller in manifest["controller"]["list"]:
-        controller_name = controller["name"]
+    for feature in manifest_data["application"]["features"]:
+        feature_name = feature["name"]
+        feature_name_snake = stringcase.snakecase(feature_name)
         files.append(
             os.path.join(
                 folder_path,
-                f"{stringcase.snakecase(controller_name)}_controller.h",
+                feature_name_snake,
+                f"{feature_name_snake}_controller.h",
             )
         )
         files.append(
             os.path.join(
                 folder_path,
-                f"{stringcase.snakecase(controller_name)}_controller.cpp",
+                feature_name_snake,
+                f"{feature_name_snake}_controller.cpp",
+            )
+        )
+        files.append(
+            os.path.join(
+                folder_path,
+                feature_name_snake,
+                f"{feature_name_snake}_signals.h",
             )
         )
 
@@ -53,6 +710,50 @@ def get_files_to_be_generated(
         os.path.join(
             folder_path,
             "controllers.cmake",
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            "CMakeLists.txt",
+        )
+    )
+
+    files.append(
+        os.path.join(
+            folder_path,
+            "event_dispatcher.h",
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            "event_dispatcher.cpp",
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            "error_signals.h",
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            export_header_file,
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            "controller_registration.h",
+        )
+    )
+
+    files.append(
+        os.path.join(
+            folder_path,
+            "controller_registration.cpp",
         )
     )
 
@@ -85,7 +786,7 @@ def preview_controller_files(
     manifest["controller"]["folder_path"] = manifest["controller"][
         "folder_path"
     ].replace("..", "")
-    
+
     # write the modified manifest file
     with open(manifest_preview_file, "w") as fh:
         yaml.dump(manifest, fh)

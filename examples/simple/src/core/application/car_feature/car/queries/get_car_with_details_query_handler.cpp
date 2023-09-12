@@ -50,11 +50,11 @@ Result<CarWithDetailsDTO> GetCarWithDetailsQueryHandler::handleImpl(QPromise<Res
     Simple::Domain::Car car = carResult.value();
 
     // map
-    auto WithDetailsDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarWithDetailsDTO>(car);
+    auto carWithDetailsDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarWithDetailsDTO>(car);
 
     qDebug() << "GetCarWithDetailsQueryHandler::handleImpl done";
 
-    return Result<CarWithDetailsDTO>(WithDetailsDTO);
+    return Result<CarWithDetailsDTO>(carWithDetailsDTO);
 }
 
 bool GetCarWithDetailsQueryHandler::s_mappingRegistered = false;
