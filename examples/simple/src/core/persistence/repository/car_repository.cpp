@@ -36,14 +36,14 @@ Result<Simple::Domain::Car> CarRepository::update(Domain::Car &&entity)
         Result<Domain::Brand> brandResult =
             m_brandRepository->updateEntityInRelationOf(Domain::Car::schema, entity.id(), "brand", entity.brand());
 
+#ifdef QT_DEBUG
         if (brandResult.isError())
         {
-#ifdef QT_DEBUG
             qCritical() << brandResult.error().code() << brandResult.error().message() << brandResult.error().data();
             qFatal("Error found. The application will now exit");
-#endif
-            return Result<Domain::Car>(brandResult.error());
         }
+#endif
+        QLN_RETURN_IF_ERROR(Domain::Car, brandResult)
     }
 
     if (entity.metaData().passengersSet)
@@ -52,15 +52,15 @@ Result<Simple::Domain::Car> CarRepository::update(Domain::Car &&entity)
         Result<QList<Domain::Passenger>> passengersResult = m_passengerRepository->updateEntitiesInRelationOf(
             Domain::Car::schema, entity.id(), "passengers", entity.passengers());
 
+#ifdef QT_DEBUG
         if (passengersResult.isError())
         {
-#ifdef QT_DEBUG
             qCritical() << passengersResult.error().code() << passengersResult.error().message()
                         << passengersResult.error().data();
             qFatal("Error found. The application will now exit");
-#endif
-            return Result<Domain::Car>(passengersResult.error());
         }
+#endif
+        QLN_RETURN_IF_ERROR(Domain::Car, passengersResult)
     }
 
     return Qleany::Repository::GenericRepository<Domain::Car>::update(std::move(entity));
@@ -81,28 +81,30 @@ Result<Simple::Domain::Car> CarRepository::getWithDetails(int entityId)
     Result<Domain::Brand> brandResult =
         m_brandRepository->getEntityInRelationOf(Domain::Car::schema, entity.id(), "brand");
 
+#ifdef QT_DEBUG
     if (brandResult.isError())
     {
-#ifdef QT_DEBUG
         qCritical() << brandResult.error().code() << brandResult.error().message() << brandResult.error().data();
         qFatal("Error found. The application will now exit");
-#endif
-        return Result<Domain::Car>(brandResult.error());
     }
+#endif
+    QLN_RETURN_IF_ERROR(Domain::Car, brandResult)
+
     entity.setBrand(brandResult.value());
 
     Result<QList<Domain::Passenger>> passengersResult =
         m_passengerRepository->getEntitiesInRelationOf(Domain::Car::schema, entity.id(), "passengers");
 
+#ifdef QT_DEBUG
     if (passengersResult.isError())
     {
-#ifdef QT_DEBUG
         qCritical() << passengersResult.error().code() << passengersResult.error().message()
                     << passengersResult.error().data();
         qFatal("Error found. The application will now exit");
-#endif
-        return Result<Domain::Car>(passengersResult.error());
     }
+#endif
+    QLN_RETURN_IF_ERROR(Domain::Car, passengersResult)
+
     entity.setPassengers(passengersResult.value());
 
     return Result<Domain::Car>(entity);
@@ -192,10 +194,7 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
             foreignIds.append(foreignBrand.id());
 
             auto removalResult = m_brandRepository->removeInCascade(foreignIds);
-            if (removalResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(removalResult.error());
-            }
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removalResult)
 
             returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
         }
@@ -229,10 +228,7 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
             }
 
             auto removalResult = m_passengerRepository->removeInCascade(foreignIds);
-            if (removalResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(removalResult.error());
-            }
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removalResult)
 
             returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
         }
@@ -240,11 +236,10 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
 
     // finally remove the entites of this repository
 
+    Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, associationRemovalResult)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
-    if (removedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(removedIdsResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
     returnedHashOfEntityWithRemovedIds.insert(Simple::Domain::Entities::Car, removedIdsResult.value());
 
@@ -283,10 +278,8 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
             foreignIds.append(foreignBrand.id());
 
             auto changeResult = m_brandRepository->changeActiveStatusInCascade(foreignIds, active);
-            if (changeResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(changeResult.error());
-            }
+
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changeResult)
 
             returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
         }
@@ -320,10 +313,8 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
             }
 
             auto changeResult = m_passengerRepository->changeActiveStatusInCascade(foreignIds, active);
-            if (changeResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(changeResult.error());
-            }
+
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changeResult)
 
             returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
         }
@@ -332,10 +323,9 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
     // finally change the entites of this repository
 
     Result<QList<int>> changedIdsResult = this->databaseTable()->changeActiveStatus(ids, active);
-    if (changedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(changedIdsResult.error());
-    }
+
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
+
     returnedHashOfEntityWithActiveChangedIds.insert(Simple::Domain::Entities::Car, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 

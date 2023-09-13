@@ -35,6 +35,8 @@ class SIMPLEEXAMPLE_PERSISTENCE_EXPORT ClientRepository final
 
     Simple::Domain::Client::ClientLoader fetchClientLoader() override;
 
+    Simple::Domain::Client::ClientFriendsLoader fetchClientFriendsLoader() override;
+
     Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
     Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
 

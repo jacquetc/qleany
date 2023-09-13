@@ -30,11 +30,10 @@ Result<QHash<int, QList<int>>> BrandRepository::removeInCascade(QList<int> ids)
 
     // finally remove the entites of this repository
 
+    Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, associationRemovalResult)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
-    if (removedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(removedIdsResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
     returnedHashOfEntityWithRemovedIds.insert(Simple::Domain::Entities::Brand, removedIdsResult.value());
 
@@ -51,10 +50,9 @@ Result<QHash<int, QList<int>>> BrandRepository::changeActiveStatusInCascade(QLis
     // finally change the entites of this repository
 
     Result<QList<int>> changedIdsResult = this->databaseTable()->changeActiveStatus(ids, active);
-    if (changedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(changedIdsResult.error());
-    }
+
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
+
     returnedHashOfEntityWithActiveChangedIds.insert(Simple::Domain::Entities::Brand, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 

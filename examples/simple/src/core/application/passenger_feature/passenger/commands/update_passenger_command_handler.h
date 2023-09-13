@@ -28,6 +28,7 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT UpdatePassengerCommandHandler :
 
   signals:
     void passengerUpdated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
+    void passengerDetailsUpdated(int id);
 
   private:
     InterfacePassengerRepository *m_repository;

@@ -86,6 +86,7 @@ template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTa
                                                 const QString &field, const QList<T> &rightEntities) override;
     Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
                                        const QString &field, const T &rightEntity) override;
+    Result<void> removeAssociationsWith(QList<int> rightEntityIds) override;
 
   protected:
     QSharedPointer<InterfaceDatabaseContext> databaseContext() const;
@@ -262,16 +263,19 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(int id)
         QString queryStr = "SELECT " + fields + " FROM " + entityName + " WHERE " + "id = :id";
         if (!query.prepare(queryStr))
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":id", QVariant(id));
         if (!query.exec())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -284,7 +288,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(int id)
         if (columnWithValues.isEmpty())
         {
             return Result<T>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
         }
     }
 
@@ -314,16 +318,19 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(const QUuid &uuid)
         QString queryStr = "SELECT " + fields + " FROM " + entityName + " WHERE " + "uuid = :uuid";
         if (!query.prepare(queryStr))
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":uuid", QVariant(uuid));
         if (!query.exec())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -336,7 +343,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(const QUuid &uuid)
         if (columnWithValues.isEmpty())
         {
             return Result<T>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
         }
     }
 
@@ -377,18 +384,18 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::get(const QList<int> 
         if (!query.prepare(queryStr))
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":ids", idsString);
         if (!query.exec())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -439,17 +446,17 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll()
         if (!query.prepare(queryStr))
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (!query.exec())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -520,7 +527,7 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll(const QHash<QS
         if (!query.prepare(queryStr))
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         for (auto it = filters.constBegin(); it != filters.constEnd(); ++it)
         {
@@ -530,12 +537,12 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll(const QHash<QS
         if (!query.exec())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
             return Result<QList<T>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -576,14 +583,16 @@ template <class T> Result<int> DatabaseTableGroup<T>::remove(int id)
         QSqlQuery query(database);
         if (!query.prepare(queryStr))
         {
-            return Result<int>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<int>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":id", id);
 
         // Execute the DELETE statement with the entity ID
         if (!query.exec())
         {
-            return Result<int>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<int>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         // Return an appropriate Result object based on the query execution result
@@ -593,11 +602,11 @@ template <class T> Result<int> DatabaseTableGroup<T>::remove(int id)
         }
         else
         {
-            return Result<int>(Error(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
-                                     "Failed to delete row from database", QString::number(id)));
+            return Result<int>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
+                                           "Failed to delete row from database", QString::number(id)));
         }
     }
-    return Result<int>(Error(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable", ""));
+    return Result<int>(QLN_ERROR_1(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable"));
 }
 
 //--------------------------------------------
@@ -615,7 +624,7 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::remove(QList<int> i
         if (!query.prepare(queryStr))
         {
             return Result<QList<int>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         QString idsString;
@@ -630,7 +639,7 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::remove(QList<int> i
         if (!query.exec())
         {
             return Result<QList<int>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         // Return an appropriate Result object based on the query execution result
@@ -640,8 +649,8 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::remove(QList<int> i
         }
         else
         {
-            return Result<QList<int>>(Error(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
-                                            "Failed to delete row from database", QString::number(ids.count())));
+            return Result<QList<int>>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
+                                                  "Failed to delete row from database", QString::number(ids.count())));
         }
     }
 }
@@ -662,7 +671,7 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::changeActiveStatus(
         if (!query.prepare(queryStr))
         {
             return Result<QList<int>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         QString idsString;
@@ -678,7 +687,7 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::changeActiveStatus(
         if (!query.exec())
         {
             return Result<QList<int>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         // Return an appropriate Result object based on the query execution result
@@ -688,8 +697,8 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::changeActiveStatus(
         }
         else
         {
-            return Result<QList<int>>(Error(Q_FUNC_INFO, Error::Critical, "sql_update_failed",
-                                            "Failed to update row in database", QString::number(ids.count())));
+            return Result<QList<int>>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_update_failed",
+                                                  "Failed to update row in database", QString::number(ids.count())));
         }
     }
 }
@@ -733,7 +742,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
         QSqlQuery query(database);
         if (!query.prepare(queryStrMain))
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
         }
 
         for (const QString &column : columnsWithoutForeignKeys)
@@ -744,7 +754,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
 
         if (!query.exec())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
         }
 
         if (query.numRowsAffected() == 1)
@@ -755,7 +766,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
         else
         {
             return Result<T>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_insert_failed", "Failed to insert row into database"));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_insert_failed", "Failed to insert row into database"));
         }
     }
 
@@ -798,7 +809,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::update(T &&entity)
         QSqlQuery query(database);
         if (!query.prepare(queryStrMain))
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
         }
 
         for (const QString &property : columnsWithoutForeignKeys)
@@ -809,13 +821,14 @@ template <class T> Result<T> DatabaseTableGroup<T>::update(T &&entity)
 
         if (!query.exec())
         {
-            return Result<T>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
+            return Result<T>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
         }
 
         if (query.numRowsAffected() != 1)
         {
             return Result<T>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_update_failed", "Failed to update row in database"));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_update_failed", "Failed to update row in database"));
         }
     }
 
@@ -838,12 +851,14 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(const QUuid &uuid)
         QString queryStr = "SELECT COUNT(*) FROM " + entityName + " WHERE uuid = :uuid";
         if (!query.prepare(queryStr))
         {
-            return Result<bool>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<bool>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":uuid", uuid.toString());
         if (!query.exec())
         {
-            return Result<bool>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<bool>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         if (query.next())
@@ -853,10 +868,10 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(const QUuid &uuid)
         else
         {
             return Result<bool>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
         }
     }
-    return Result<bool>(Error(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable", ""));
+    return Result<bool>(QLN_ERROR_1(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable"));
 }
 
 //--------------------------------------------
@@ -872,12 +887,14 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(int id)
         QString queryStr = "SELECT COUNT(*) FROM " + entityName + " WHERE id = :id";
         if (!query.prepare(queryStr))
         {
-            return Result<bool>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<bool>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":id", id);
         if (!query.exec())
         {
-            return Result<bool>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            return Result<bool>(
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         if (query.next())
@@ -887,10 +904,10 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(int id)
         else
         {
             return Result<bool>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
         }
     }
-    return Result<bool>(Error(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable", ""));
+    return Result<bool>(QLN_ERROR_1(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable"));
 }
 
 //--------------------------------------------
@@ -904,11 +921,13 @@ template <class T> Result<void> DatabaseTableGroup<T>::clear()
 
     if (!query.prepare(queryStrMain))
     {
-        return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
+        return Result<void>(
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStrMain));
     }
     if (!query.exec())
     {
-        return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_clear_failed", "Failed to clear the main table"));
+        return Result<void>(
+            QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_clear_failed", "Failed to clear the main table"));
     }
 
     return Result<void>();
@@ -953,7 +972,7 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
         if (!query.prepare(queryStr))
         {
             return Result<QMap<QString, QList<QVariantHash>>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (!idList.isEmpty())
         {
@@ -980,8 +999,8 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
         else
         {
             // Handle query error
-            return Result<QMap<QString, QList<QVariantHash>>>(
-                Error(Q_FUNC_INFO, Error::Critical, "database_table_save_error", query.lastError().text(), queryStr));
+            return Result<QMap<QString, QList<QVariantHash>>>(QLN_ERROR_3(
+                Q_FUNC_INFO, Error::Critical, "database_table_save_error", query.lastError().text(), queryStr));
         }
     }
 
@@ -1018,18 +1037,19 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
 
             if (!checkQuery.prepare(checkQueryStr))
             {
-                return Result<void>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", checkQuery.lastError().text(), checkQueryStr));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                checkQuery.lastError().text(), checkQueryStr));
             }
             checkQuery.bindValue(":id", row.value("id"));
             if (!checkQuery.exec())
             {
-                return Result<void>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", checkQuery.lastError().text(), checkQueryStr));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                checkQuery.lastError().text(), checkQueryStr));
             }
             if (!checkQuery.next())
             {
-                return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", checkQuery.lastError().text()));
+                return Result<void>(
+                    QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_error", checkQuery.lastError().text()));
             }
 
             int rowCount = checkQuery.value(0).toInt();
@@ -1058,7 +1078,7 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
                 if (!updateQuery.exec())
                 {
                     return Result<void>(
-                        Error(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text()));
+                        QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text()));
                 }
             }
             else
@@ -1078,8 +1098,8 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
                 QSqlQuery insertQuery(database);
                 if (!insertQuery.prepare(insertStr))
                 {
-                    return Result<void>(
-                        Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertStr));
+                    return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                    insertQuery.lastError().text(), insertStr));
                 }
                 for (const QString &column : columns)
                 {
@@ -1089,7 +1109,7 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
                 if (!insertQuery.exec())
                 {
                     return Result<void>(
-                        Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text()));
+                        QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text()));
                 }
             }
         }
@@ -1117,7 +1137,8 @@ template <class T> Result<void> DatabaseTableGroup<T>::beginTransaction()
     bool result = database.transaction();
     if (!result)
     {
-        return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
+        return Result<void>(
+            QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
     }
     return Result<void>();
 }
@@ -1131,7 +1152,8 @@ template <class T> Result<void> DatabaseTableGroup<T>::commit()
     bool result = database.commit();
     if (!result)
     {
-        return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
+        return Result<void>(
+            QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
     }
     return Result<void>();
 }
@@ -1144,7 +1166,8 @@ template <class T> Result<void> DatabaseTableGroup<T>::rollback()
     bool result = database.rollback();
     if (!result)
     {
-        return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
+        return Result<void>(
+            QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "transaction_error", database.lastError().text()));
     }
     return Result<void>();
 }
@@ -1280,7 +1303,8 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::Do
             }
             else
             {
-                result = Result<QList<T>>(Error(Q_FUNC_INFO, Error::Critical, "not_implemented", "not implemented"));
+                result =
+                    Result<QList<T>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "not_implemented", "not implemented"));
             }
             break;
         }
@@ -1325,7 +1349,8 @@ Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(const Qleany:
             }
             else
             {
-                result = Result<QList<T>>(Error(Q_FUNC_INFO, Error::Critical, "not_implemented", "not implemented"));
+                result =
+                    Result<QList<T>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "not_implemented", "not implemented"));
             }
             break;
         }
@@ -1382,5 +1407,25 @@ Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Qleany::Domain::
         break;
     }
     return result;
+}
+
+template <class T> Result<void> DatabaseTableGroup<T>::removeAssociationsWith(QList<int> rightEntityIds)
+{
+    // only reordering OneToManyOrdered relationships on backward relationships, meaning this entity T is the "target"
+    // of the relationship. Other associations types are deleted in cascade by the database.
+    const Qleany::Domain::EntitySchema &entitySchema = T::schema;
+    for (const auto &relationship : entitySchema.relationships)
+    {
+        if (relationship.rightEntityId == T::enumValue() &&
+            relationship.direction == Qleany::Domain::RelationshipDirection::Backward &&
+            relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
+            relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyOrdered)
+        {
+            OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
+            auto result = associator.removeTheseRightIds(rightEntityIds);
+            QLN_RETURN_IF_ERROR(void, result)
+        }
+    }
+    return Result<void>();
 }
 } // namespace Qleany::Database

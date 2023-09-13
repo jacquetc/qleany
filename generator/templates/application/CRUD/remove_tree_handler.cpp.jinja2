@@ -31,7 +31,7 @@ Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::handle(QPr
     }
     catch (const std::exception& ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Remove{{ entity_mappable_with_pascal }}TreeCommand:" << ex.what();
     }
     return result;
@@ -47,7 +47,7 @@ Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::restore()
     }
     catch (const std::exception& ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Remove{{ entity_mappable_with_pascal }}TreeCommand restore:" << ex.what();
     }
     return result;
@@ -60,22 +60,14 @@ Result<int>Remove{{ entity_mappable_with_pascal }}TreeCommandHandler::handleImpl
 
     Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> {{ entity_mappable_with_camel }}Result = m_repository->get({{ entity_mappable_with_camel }}Id);
 
-    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
-    {
-        qDebug() << "Error getting {{ entity_mappable_with_camel }} from repository:" << {{ entity_mappable_with_camel }}Result.error().message();
-        return Result<int>({{ entity_mappable_with_camel }}Result.error());
-    }
+    QLN_RETURN_IF_ERROR(int, {{ entity_mappable_with_camel }}Result)
 
     // save old entity
     m_oldState = {{ entity_mappable_with_camel }}Result.value();
 
     auto deleteResult = m_repository->removeInCascade(QList<int>() << {{ entity_mappable_with_camel }}Id);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting {{ entity_mappable_with_camel }} from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     // repositories handle remove signals
     // emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());

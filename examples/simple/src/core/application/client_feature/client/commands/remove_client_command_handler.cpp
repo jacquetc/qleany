@@ -30,7 +30,7 @@ Result<int> RemoveClientCommandHandler::handle(QPromise<Result<void>> &progressP
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveClientCommand:" << ex.what();
     }
     return result;
@@ -46,7 +46,7 @@ Result<int> RemoveClientCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveClientCommand restore:" << ex.what();
     }
     return result;
@@ -59,22 +59,14 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     Result<Simple::Domain::Client> clientResult = m_repository->get(clientId);
 
-    if (Q_UNLIKELY(clientResult.hasError()))
-    {
-        qDebug() << "Error getting client from repository:" << clientResult.error().message();
-        return Result<int>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, clientResult)
 
     // save old entity
     m_oldState = clientResult.value();
 
     auto deleteResult = m_repository->remove(clientId);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting client from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     emit clientRemoved(deleteResult.value());
 
@@ -89,10 +81,7 @@ Result<int> RemoveClientCommandHandler::restoreImpl()
     // Add the client to the repository
     auto clientResult = m_repository->add(std::move(m_oldState));
 
-    if (Q_UNLIKELY(clientResult.hasError()))
-    {
-        return Result<int>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, clientResult)
 
     auto clientDTO =
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());

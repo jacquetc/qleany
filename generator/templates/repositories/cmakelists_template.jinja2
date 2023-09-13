@@ -13,7 +13,7 @@ set(SRCS
     {{ export_header_file }}
 )
 
-qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
+qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${REPOSITORY_LIST})
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_PERSISTENCE_LIBRARY)
 

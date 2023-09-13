@@ -276,6 +276,21 @@ def generate_entity_files(
     generated_files = []
     all_headers = []
 
+    # add "active" field to entities fields in entities_list if entity activable is set to true
+
+    for entity in entities_list:
+        if entity.get("activable", False):
+            entity["fields"].append(
+                {
+                    "name": "active",
+                    "type": "bool",
+                    "need_lazy_loader": False,
+                    "name_pascal": "Active",
+                    "is_primary_key": False,
+                    "is_linked_to_another_entity": False,
+                }
+            )
+
     for entity in entities_list:
         name = entity["name"]
         fields = entity["fields"]

@@ -9,6 +9,8 @@
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
 
+#include "passenger/passenger_inserted_into_relative_dto.h"
+
 using namespace Qleany;
 using namespace Simple::Domain;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -30,17 +32,23 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler :
     void passengerCreated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerRemoved(int id);
 
+    void passengerInsertedIntoCarPassengers(
+        Simple::Contracts::DTO::Passenger::PassengerInsertedIntoRelativeDTO passengerInsertedIntoRelativeDto);
+
   private:
     InterfacePassengerRepository *m_repository;
     Result<PassengerDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreatePassengerCommand &request);
     Result<PassengerDTO> restoreImpl();
     Result<Simple::Domain::Passenger> m_newEntity;
 
+    int m_position = -1;
+
     QList<Simple::Domain::Passenger> m_oldOwnerPassengers;
     QList<Simple::Domain::Passenger> m_ownerPassengersNewState;
 
     static bool s_mappingRegistered;
     void registerMappings();
+    bool m_firstPass = true;
 };
 
 } // namespace Simple::Application::Features::Passenger::Commands

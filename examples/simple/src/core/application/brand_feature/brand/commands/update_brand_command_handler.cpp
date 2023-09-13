@@ -32,7 +32,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::handle(QPromise<Result<void>> &progr
     }
     catch (const std::exception &ex)
     {
-        result = Result<BrandDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateBrandCommand:" << ex.what();
     }
     return result;
@@ -48,7 +48,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<BrandDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateBrandCommand restore:" << ex.what();
     }
     return result;
@@ -63,10 +63,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     auto validator = UpdateBrandCommandValidator(m_repository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<BrandDTO>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR(BrandDTO, validatorResult)
 
     // map
     auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateBrandDTO, Simple::Domain::Brand>(request.req);
@@ -82,11 +79,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     {
         Result<Simple::Domain::Brand> saveResult = m_repository->get(request.req.id());
 
-        if (Q_UNLIKELY(saveResult.hasError()))
-        {
-            qDebug() << "Error getting brand from repository:" << saveResult.error().message();
-            return Result<BrandDTO>(saveResult.error());
-        }
+        QLN_RETURN_IF_ERROR(BrandDTO, saveResult)
 
         // map
         m_newState = Result<BrandDTO>(
@@ -106,6 +99,11 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     emit brandUpdated(brandDto);
 
+    if (request.req.metaData().areDetailsSet())
+    {
+        emit brandDetailsUpdated(brandDto.id());
+    }
+
     qDebug() << "UpdateBrandCommandHandler::handleImpl done";
 
     return Result<BrandDTO>(brandDto);
@@ -121,10 +119,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::restoreImpl()
     // do
     auto brandResult = m_repository->update(std::move(brand));
 
-    if (Q_UNLIKELY(brandResult.hasError()))
-    {
-        return Result<BrandDTO>(brandResult.error());
-    }
+    QLN_RETURN_IF_ERROR(BrandDTO, brandResult)
 
     // map
     auto brandDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());

@@ -150,6 +150,7 @@ QCoro::Task<CarDTO> CarController::create(const CreateCarDTO &dto)
 
     // connect
     QObject::connect(handler, &CreateCarCommandHandler::carCreated, m_eventDispatcher->car(), &CarSignals::created);
+
     QObject::connect(handler, &CreateCarCommandHandler::carRemoved, this,
                      [this](int removedId) { emit m_eventDispatcher->car()->removed(QList<int>() << removedId); });
 
@@ -185,6 +186,8 @@ QCoro::Task<CarDTO> CarController::update(const UpdateCarDTO &dto)
     // connect
     QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this,
                      [this](CarDTO dto) { emit m_eventDispatcher->car()->updated(dto); });
+    QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(),
+                     &CarSignals::detailsUpdated);
 
     // Create specialized UndoRedoCommand
     auto command =

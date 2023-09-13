@@ -195,8 +195,10 @@ def get_dto_dict_and_feature_ordered_dict(
             generate_update = False
 
             if crud_data["enabled"]:
-                generate_create = crud_data["create"].get("enabled", False)
-                generate_update = crud_data["update"].get("enabled", False)
+                generate_create = crud_data.get("create", {}).get("enabled", False)
+                generate_update = crud_data.get("update", {}).get("enabled", False)
+                generate_insert = crud_data.get("insert_into_relative", {}).get("enabled", False)
+                generate_move = crud_data.get("move_in_relative", {}).get("enabled", False)
 
             if generate_create:
                 dto_type_name = f"Create{stringcase.pascalcase(feature['name'])}DTO"
@@ -273,6 +275,91 @@ def get_dto_dict_and_feature_ordered_dict(
                     entity_mappable_with,
                 )
 
+                dto_dict[dto_type_name][
+                    "dto_dependencies"
+                ] = determine_dto_dependencies_from_fields(
+                    dto_dict[dto_type_name]["fields"]
+                )
+
+            if generate_insert:
+
+                # DTO in
+                dto_type_name = f"Insert{stringcase.pascalcase(feature['name'])}IntoRelativeDTO"
+                dto_dict[dto_type_name] = {
+                    "feature_name": stringcase.pascalcase(feature["name"]),
+                    "entity_mappable_with": entity_mappable_with,
+                    "file_name": f"insert_{stringcase.snakecase(feature['name'])}_into_relative_dto.h",
+                    "fields": [],
+                }
+
+
+                # add fields
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": "id",
+                        "pascal_name": "Id",
+                        "is_foreign": False,
+                        "type": "int",
+                    }
+                )
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": "position",
+                        "pascal_name": "Position",
+                        "is_foreign": False,
+                        "type": "int",
+                    }
+                )
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": "relatedId",
+                        "pascal_name": "RelatedId",
+                        "is_foreign": False,
+                        "type": "int",
+                    }
+                )
+
+                dto_dict[dto_type_name][
+                    "dto_dependencies"
+                ] = []
+
+                # DTO out
+                dto_type_name = f"{stringcase.pascalcase(feature['name'])}InsertedIntoRelativeDTO"
+                dto_dict[dto_type_name] = {
+                    "feature_name": stringcase.pascalcase(feature["name"]),
+                    "entity_mappable_with": entity_mappable_with,
+                    "file_name": f"{stringcase.snakecase(feature['name'])}_inserted_into_relative_dto.h",
+                    "fields": [],
+                }
+                # add fields
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": stringcase.camelcase(entity_mappable_with),
+                        "pascal_name": stringcase.pascalcase(entity_mappable_with),
+                        "is_foreign": True,
+                        "foreign_dto_type": f"{stringcase.pascalcase(entity_mappable_with)}DTO",
+                        "type": f"{stringcase.pascalcase(entity_mappable_with)}DTO",
+                    }
+                )
+
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": "relatedId",
+                        "pascal_name": "RelatedId",
+                        "is_foreign": False,
+                        "type": "int",
+                    }
+                )
+
+                dto_dict[dto_type_name]["fields"].append(
+                    {
+                        "name": "position",
+                        "pascal_name": "Position",
+                        "is_foreign": False,
+                        "type": "int",
+                    }
+                )
+                
                 dto_dict[dto_type_name][
                     "dto_dependencies"
                 ] = determine_dto_dependencies_from_fields(
@@ -438,10 +525,17 @@ def get_dto_dict_and_feature_ordered_dict(
     # order the features by their dependencies, so that the features that depend on other features are generated after the features they depend on
 
     dto_ordered_dict = OrderedDict()
+
+    for feature_name, feature_data in feature_dto_dict.items():
+        # case if a dto depends on another dto in the same feature
+        if feature_name in feature_data["feature_dependencies"]:
+            feature_data["feature_dependencies"].remove(feature_name)
+
     original_feature_dto_dict = copy.deepcopy(feature_dto_dict)
 
     while len(feature_dto_dict) > 0:
         for feature_name, feature_data in feature_dto_dict.items():
+            # case if a dto depends on another dto in another feature
             if len(feature_data["feature_dependencies"]) == 0:
                 dto_ordered_dict[feature_name] = {}
                 dto_ordered_dict[feature_name]["dtos"] = feature_data["dtos"]
@@ -672,12 +766,6 @@ def generate_dto_files(
         # strip generated files of None values
         generated_files = [file for file in generated_files if file]
 
-        for file in generated_files:
-            # if uncrustify_config_file and files_to_be_generated.get(file, False):
-            #     uncrustify.run_uncrustify(file, uncrustify_config_file)
-            if files_to_be_generated.get(file, False):
-                clang_format.run_clang_format(file)
-
         # generate these DTO's cmakelists.txt
         dto_cmakelists_template = template_env.get_template(
             "cmakelists_template.jinja2"
@@ -754,6 +842,14 @@ def generate_dto_files(
                     f"add_subdirectory({stringcase.snakecase(feature_name)}_dto)" + "\n"
                 )
             print(f"Successfully wrote file {dto_common_cmakelists_file}")
+
+    
+    # format the files
+    for file, to_be_generated in files_to_be_generated.items():
+        # if uncrustify_config_file and files_to_be_generated.get(file, False):
+        #     uncrustify.run_uncrustify(file, uncrustify_config_file)
+        if to_be_generated and file.endswith(".h") or file.endswith(".cpp"):
+            clang_format.run_clang_format(os.path.join(root_path, file))
 
 
 def get_files_to_be_generated(

@@ -48,6 +48,8 @@ entities:
           name: client
           ordered: false
           strong: false
+        - type: QList<Passenger>
+          name: clientFriends
   export: SIMPLEEXAMPLE_DOMAIN_EXPORT
   export_header_file: domain_export.h
   folder_path: src/core/domain/
@@ -122,6 +124,10 @@ application:
           enabled: false
         update: 
           enabled: true
+        insert_into_relative: 
+          enabled: true
+        change_active_status: 
+          enabled: true
     - name: Passenger
       DTO:
         dto_identical_to_entity:
@@ -143,6 +149,14 @@ application:
         remove_tree: 
           enabled: false
         update: 
+          enabled: true
+        insert_into_relative: 
+          enabled: true
+        move_inside_relative: 
+          enabled: true
+        remove_from_relative: 
+          enabled: true
+        change_active_status: 
           enabled: true
     - name: Client
       DTO:
@@ -237,20 +251,22 @@ presenter:
   export_header_file: presenter_export.h
   create_undo_redo_single: false
   singles:
-    - name: SimpleCar
+    - name: SingleCar
       entity: Car
-    - name: SimpleBrand
+    - name: SingleBrand
       entity: Brand
-    - name: SimplePassenger
+    - name: SinglePassenger
       entity: Passenger
-    - name: SimpleClient
+    - name: SingleClient
       entity: Client
   list_models:
-    - name: Car
+    - name: CarListModel
       entity: Car
-    - name: Passenger
+    - name: PassengerListModelFromCarPassengers
       entity: Passenger
       in_relation_of: Car
+      relation_field_name: passengers  
+      
 
 qml:
   mock_imports_folder_path: src/gui/touch/mock_imports/

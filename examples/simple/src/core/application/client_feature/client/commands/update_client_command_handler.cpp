@@ -32,7 +32,7 @@ Result<ClientDTO> UpdateClientCommandHandler::handle(QPromise<Result<void>> &pro
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateClientCommand:" << ex.what();
     }
     return result;
@@ -48,7 +48,7 @@ Result<ClientDTO> UpdateClientCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateClientCommand restore:" << ex.what();
     }
     return result;
@@ -63,10 +63,7 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     auto validator = UpdateClientCommandValidator(m_repository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<ClientDTO>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR(ClientDTO, validatorResult)
 
     // map
     auto client = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateClientDTO, Simple::Domain::Client>(request.req);
@@ -82,11 +79,7 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     {
         Result<Simple::Domain::Client> saveResult = m_repository->get(request.req.id());
 
-        if (Q_UNLIKELY(saveResult.hasError()))
-        {
-            qDebug() << "Error getting client from repository:" << saveResult.error().message();
-            return Result<ClientDTO>(saveResult.error());
-        }
+        QLN_RETURN_IF_ERROR(ClientDTO, saveResult)
 
         // map
         m_newState = Result<ClientDTO>(
@@ -107,6 +100,11 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
     emit clientUpdated(clientDto);
 
+    if (request.req.metaData().areDetailsSet())
+    {
+        emit clientDetailsUpdated(clientDto.id());
+    }
+
     qDebug() << "UpdateClientCommandHandler::handleImpl done";
 
     return Result<ClientDTO>(clientDto);
@@ -122,10 +120,7 @@ Result<ClientDTO> UpdateClientCommandHandler::restoreImpl()
     // do
     auto clientResult = m_repository->update(std::move(client));
 
-    if (Q_UNLIKELY(clientResult.hasError()))
-    {
-        return Result<ClientDTO>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(ClientDTO, clientResult)
 
     // map
     auto clientDto =

@@ -28,7 +28,7 @@ Result<QList<CarDTO>> GetAllCarQueryHandler::handle(QPromise<Result<void>> &prog
     }
     catch (const std::exception &ex)
     {
-        result = Result<QList<CarDTO>>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<QList<CarDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllCarQuery:" << ex.what();
     }
     return result;
@@ -41,10 +41,7 @@ Result<QList<CarDTO>> GetAllCarQueryHandler::handleImpl(QPromise<Result<void>> &
     // do
     auto carResult = m_repository->getAll();
 
-    if (Q_UNLIKELY(carResult.isError()))
-    {
-        return Result<QList<CarDTO>>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QList<CarDTO>, carResult)
 
     // map
     QList<CarDTO> dtoList;

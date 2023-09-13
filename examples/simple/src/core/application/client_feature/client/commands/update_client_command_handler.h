@@ -28,6 +28,7 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : publi
 
   signals:
     void clientUpdated(Simple::Contracts::DTO::Client::ClientDTO clientDto);
+    void clientDetailsUpdated(int id);
 
   private:
     InterfaceClientRepository *m_repository;

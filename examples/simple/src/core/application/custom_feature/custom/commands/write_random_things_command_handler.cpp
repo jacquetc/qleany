@@ -37,7 +37,7 @@ Result<void> WriteRandomThingsCommandHandler::handle(QPromise<Result<void>> &pro
     }
     catch (const std::exception &ex)
     {
-        result = Result<void>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling WriteRandomThingsCommand:" << ex.what();
     }
     return result;
@@ -60,11 +60,7 @@ Result<void> WriteRandomThingsCommandHandler::handleImpl(QPromise<Result<void>> 
                                                        m_clientRepository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-
-        return Result<void>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR(void, validatorResult);
 
     // implement logic here which will not be repeated on restore
     // custom = Qleany::Tools::AutoMapper::AutoMapper::map<WriteRandomThingsDTO, Simple::Domain::Custom>(request.req);

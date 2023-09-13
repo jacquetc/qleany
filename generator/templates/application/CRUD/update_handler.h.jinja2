@@ -28,6 +28,7 @@ class {{ export }} Update{{ entity_mappable_with_pascal }}CommandHandler : publ
 
   signals:
     void {{ entity_mappable_with_camel }}Updated({{ application_cpp_domain_name }}::Contracts::DTO::{{ entity_mappable_with_pascal }}::{{ entity_mappable_with_pascal }}DTO {{ entity_mappable_with_camel }}Dto);
+    void {{ entity_mappable_with_camel }}DetailsUpdated(int id);
 
   private:
     Interface{{ entity_mappable_with_pascal }}Repository *m_repository;

@@ -258,6 +258,7 @@ void ForeignEntityTest::testComplexMergeShadows()
         }
     }
 }
+
 //-----------------------------------------------------------------------------
 
 void ForeignEntityTest::debugListsRelationshipTable()

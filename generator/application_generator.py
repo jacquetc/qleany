@@ -101,13 +101,13 @@ def get_generation_dict(
                     "owner_name_camel": stringcase.camelcase(
                         owner_dict.get("name", "")
                     ),
-                    "owner_field_snake": stringcase.snakecase(
+                    "owner_field_name_snake": stringcase.snakecase(
                         owner_dict.get("field", "")
                     ),
-                    "owner_field_pascal": stringcase.pascalcase(
+                    "owner_field_name_pascal": stringcase.pascalcase(
                         owner_dict.get("field", "")
                     ),
-                    "owner_field_camel": stringcase.camelcase(
+                    "owner_field_name_camel": stringcase.camelcase(
                         owner_dict.get("field", "")
                     ),
                     "owner_field_is_list": owner_dict.get("is_list", False),
@@ -734,9 +734,9 @@ def generate_crud_handler(
                     owner_name_snake=handler.get("owner_name_snake", ""),
                     owner_name_pascal=handler.get("owner_name_pascal", ""),
                     owner_name_camel=handler.get("owner_name_camel", ""),
-                    owner_field_snake=handler.get("owner_field_snake", ""),
-                    owner_field_pascal=handler.get("owner_field_pascal", ""),
-                    owner_field_camel=handler.get("owner_field_camel", ""),
+                    owner_field_name_snake=handler.get("owner_field_name_snake", ""),
+                    owner_field_name_pascal=handler.get("owner_field_name_pascal", ""),
+                    owner_field_name_camel=handler.get("owner_field_name_camel", ""),
                     application_cpp_domain_name=application_cpp_domain_name,
                     owner_field_is_list=handler.get("owner_field_is_list", False),
                     owner_field_is_ordered=handler.get("owner_field_is_ordered", False),

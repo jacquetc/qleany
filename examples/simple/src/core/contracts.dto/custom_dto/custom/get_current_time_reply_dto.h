@@ -1,12 +1,9 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include <QObject>
 #include <QDateTime>
-
-
-
+#include <QObject>
 
 namespace Simple::Contracts::DTO::Custom
 {
@@ -18,14 +15,21 @@ class GetCurrentTimeReplyDTO
     Q_PROPERTY(QDateTime currentDateTime READ currentDateTime WRITE setCurrentDateTime)
 
   public:
-    struct MetaData {
-    bool currentDateTimeSet = false;
-    bool getSet(const QString &fieldName) const
+    struct MetaData
+    {
+        bool currentDateTimeSet = false;
+        bool getSet(const QString &fieldName) const
         {
             if (fieldName == "currentDateTime")
             {
                 return currentDateTimeSet;
             }
+            return false;
+        }
+
+        bool areDetailsSet() const
+        {
+
             return false;
         }
     };
@@ -38,16 +42,14 @@ class GetCurrentTimeReplyDTO
     {
     }
 
-    GetCurrentTimeReplyDTO( const QDateTime &currentDateTime ) 
-        : m_currentDateTime(currentDateTime)
+    GetCurrentTimeReplyDTO(const QDateTime &currentDateTime) : m_currentDateTime(currentDateTime)
     {
     }
 
-    GetCurrentTimeReplyDTO(const GetCurrentTimeReplyDTO &other) : m_metaData(other.m_metaData), m_currentDateTime(other.m_currentDateTime)
+    GetCurrentTimeReplyDTO(const GetCurrentTimeReplyDTO &other)
+        : m_metaData(other.m_metaData), m_currentDateTime(other.m_currentDateTime)
     {
     }
-
-     
 
     GetCurrentTimeReplyDTO &operator=(const GetCurrentTimeReplyDTO &other)
     {
@@ -55,17 +57,13 @@ class GetCurrentTimeReplyDTO
         {
             m_metaData = other.m_metaData;
             m_currentDateTime = other.m_currentDateTime;
-            
         }
         return *this;
     }
 
     friend bool operator==(const GetCurrentTimeReplyDTO &lhs, const GetCurrentTimeReplyDTO &rhs);
 
-
     friend uint qHash(const GetCurrentTimeReplyDTO &dto, uint seed) noexcept;
-
-
 
     // ------ currentDateTime : -----
 
@@ -74,13 +72,11 @@ class GetCurrentTimeReplyDTO
         return m_currentDateTime;
     }
 
-    void setCurrentDateTime( const QDateTime &currentDateTime)
+    void setCurrentDateTime(const QDateTime &currentDateTime)
     {
         m_currentDateTime = currentDateTime;
         m_metaData.currentDateTimeSet = true;
     }
-    
-
 
     MetaData metaData() const
     {
@@ -88,7 +84,7 @@ class GetCurrentTimeReplyDTO
     }
 
   private:
-  MetaData m_metaData;
+    MetaData m_metaData;
 
     QDateTime m_currentDateTime;
 };
@@ -96,20 +92,17 @@ class GetCurrentTimeReplyDTO
 inline bool operator==(const GetCurrentTimeReplyDTO &lhs, const GetCurrentTimeReplyDTO &rhs)
 {
 
-    return 
-            lhs.m_currentDateTime == rhs.m_currentDateTime 
-    ;
+    return lhs.m_currentDateTime == rhs.m_currentDateTime;
 }
 
 inline uint qHash(const GetCurrentTimeReplyDTO &dto, uint seed = 0) noexcept
-{        // Seed the hash with the parent class's hash
-        uint hash = 0;
+{ // Seed the hash with the parent class's hash
+    uint hash = 0;
 
-        // Combine with this class's properties
-        hash ^= ::qHash(dto.m_currentDateTime, seed);
-        
+    // Combine with this class's properties
+    hash ^= ::qHash(dto.m_currentDateTime, seed);
 
-        return hash;
+    return hash;
 }
 
 } // namespace Simple::Contracts::DTO::Custom

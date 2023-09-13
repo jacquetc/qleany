@@ -29,7 +29,7 @@ Result<int> RemoveCarCommandHandler::handle(QPromise<Result<void>> &progressProm
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveCarCommand:" << ex.what();
     }
     return result;
@@ -45,7 +45,7 @@ Result<int> RemoveCarCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveCarCommand restore:" << ex.what();
     }
     return result;
@@ -58,22 +58,14 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
 
     Result<Simple::Domain::Car> carResult = m_repository->get(carId);
 
-    if (Q_UNLIKELY(carResult.hasError()))
-    {
-        qDebug() << "Error getting car from repository:" << carResult.error().message();
-        return Result<int>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, carResult)
 
     // save old entity
     m_oldState = carResult.value();
 
     auto deleteResult = m_repository->remove(carId);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting car from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     emit carRemoved(deleteResult.value());
 
@@ -88,10 +80,7 @@ Result<int> RemoveCarCommandHandler::restoreImpl()
     // Add the car to the repository
     auto carResult = m_repository->add(std::move(m_oldState));
 
-    if (Q_UNLIKELY(carResult.hasError()))
-    {
-        return Result<int>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, carResult)
 
     auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());
 

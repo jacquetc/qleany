@@ -34,7 +34,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ command.dto_out_pascal_name }}>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ command.dto_out_pascal_name }}>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling {{ command.pascal_name }}Command:" << ex.what();
     }
     return result;
@@ -59,7 +59,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ command.dto_out_pascal_name }}>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ command.dto_out_pascal_name }}>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling {{ command.pascal_name }}Command restore:" << ex.what();
     }
     return result;
@@ -79,14 +79,12 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
         auto validator               = {{ command.pascal_name }}CommandValidator({% for repository in command.repositories %}m_{{ repository.camel_name }}Repository{% if not loop.last %},{% endif %}{% endfor %});
         Result<void> validatorResult = validator.validate(request.req);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            {% if command.dto_out_is_enabled %}
-            return Result<{{ command.dto_out_pascal_name }}>(validatorResult.error());
-            {% else %}
-            return Result<void>(validatorResult.error());
-            {% endif %}
-       }
+        {% if command.dto_out_is_enabled %}
+        QLN_RETURN_IF_ERROR({{ command.dto_out_pascal_name }}, validatorResult);
+        {% else %}
+        QLN_RETURN_IF_ERROR(void, validatorResult);
+        {% endif %}
+       
     {% endif %}
         
         // implement logic here which will not be repeated on restore

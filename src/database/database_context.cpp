@@ -54,7 +54,25 @@ QSqlDatabase DatabaseContext::getConnection()
             QSqlDatabase::removeDatabase(connectionName);
             qDebug() << Q_FUNC_INFO << "sql_error" << database.lastError().text();
         }
+
+        // List of PRAGMA statements to execute for the new connection
+        QStringList pragmas = {
+            QStringLiteral("PRAGMA case_sensitive_like=true"), QStringLiteral("PRAGMA journal_mode=MEMORY"),
+            QStringLiteral("PRAGMA temp_store=MEMORY"),        QStringLiteral("PRAGMA locking_mode=NORMAL"),
+            QStringLiteral("PRAGMA synchronous=OFF"),          QStringLiteral("PRAGMA recursive_triggers=ON"),
+            QStringLiteral("PRAGMA foreign_keys=ON")};
+
+        QSqlQuery pragmaQuery(database);
+        for (const QString &pragma : pragmas)
+        {
+            if (!pragmaQuery.exec(pragma))
+            {
+                qDebug() << Q_FUNC_INFO << "pragma_error" << pragma << pragmaQuery.lastError().text();
+                // Decide on error handling: continue, abort, or some other strategy
+            }
+        }
     }
+
     // qDebug() << QSqlDatabase::connectionNames();
 
     return QSqlDatabase::database(connectionName);
@@ -75,7 +93,7 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
     {
         m_databaseName = tempFileName;
         databaseName = m_databaseName;
-        // qDebug() << m_databaseName;
+        qDebug() << "database name" << m_databaseName;
 
         QSqlDatabase sqlDb = getConnection();
 
@@ -93,12 +111,12 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
             if (!query.prepare(string))
             {
                 return Result<QString>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
             if (!query.exec())
             {
                 return Result<QString>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
         }
 
@@ -110,12 +128,12 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
             if (!query.prepare(string))
             {
                 return Result<QString>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
             if (!query.exec())
             {
                 return Result<QString>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
         }
 

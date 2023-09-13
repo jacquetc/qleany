@@ -152,6 +152,7 @@ QCoro::Task<ClientDTO> ClientController::create(const CreateClientDTO &dto)
     // connect
     QObject::connect(handler, &CreateClientCommandHandler::clientCreated, m_eventDispatcher->client(),
                      &ClientSignals::created);
+
     QObject::connect(handler, &CreateClientCommandHandler::clientRemoved, this,
                      [this](int removedId) { emit m_eventDispatcher->client()->removed(QList<int>() << removedId); });
 
@@ -187,6 +188,8 @@ QCoro::Task<ClientDTO> ClientController::update(const UpdateClientDTO &dto)
     // connect
     QObject::connect(handler, &UpdateClientCommandHandler::clientUpdated, this,
                      [this](ClientDTO dto) { emit m_eventDispatcher->client()->updated(dto); });
+    QObject::connect(handler, &UpdateClientCommandHandler::clientDetailsUpdated, m_eventDispatcher->client(),
+                     &ClientSignals::detailsUpdated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<UpdateClientCommandHandler, UpdateClientCommand>(

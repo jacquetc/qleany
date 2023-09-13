@@ -5,6 +5,23 @@
 #include <QMetaType>
 #include <QString>
 
+#define QLN_RETURN_IF_ERROR(return_result_type, result)                                                                \
+    if (Q_UNLIKELY(result.hasError()))                                                                                 \
+    {                                                                                                                  \
+        Q_ASSERT(false);                                                                                               \
+        return Result<return_result_type>(result.error());                                                             \
+    }
+
+#define QLN_RETURN_IF_ERROR_WITH_ACTION(return_result_type, result, action)                                            \
+    if (Q_UNLIKELY(result.hasError()))                                                                                 \
+    {                                                                                                                  \
+        Q_ASSERT(false);                                                                                               \
+        action;                                                                                                        \
+        return Result<return_result_type>(result.error());                                                             \
+    }
+
+#define QLN_COMMA ,
+
 namespace Qleany
 {
 

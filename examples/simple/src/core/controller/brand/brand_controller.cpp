@@ -10,6 +10,8 @@
 #include "brand/commands/update_brand_command_handler.h"
 #include "brand/queries/get_all_brand_query_handler.h"
 #include "brand/queries/get_brand_query_handler.h"
+// #include "brand/commands/insert_brand_into_xxx_command.h"
+// #include "brand/commands/update_brand_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -118,6 +120,10 @@ QCoro::Task<BrandDTO> BrandController::create(const CreateBrandDTO &dto)
     // connect
     QObject::connect(handler, &CreateBrandCommandHandler::brandCreated, m_eventDispatcher->brand(),
                      &BrandSignals::created);
+
+    QObject::connect(handler, &CreateBrandCommandHandler::brandInsertedIntoCarBrand, m_eventDispatcher->brand(),
+                     &BrandSignals::insertedIntoCarBrand);
+
     QObject::connect(handler, &CreateBrandCommandHandler::brandRemoved, this,
                      [this](int removedId) { emit m_eventDispatcher->brand()->removed(QList<int>() << removedId); });
 
@@ -153,6 +159,8 @@ QCoro::Task<BrandDTO> BrandController::update(const UpdateBrandDTO &dto)
     // connect
     QObject::connect(handler, &UpdateBrandCommandHandler::brandUpdated, this,
                      [this](BrandDTO dto) { emit m_eventDispatcher->brand()->updated(dto); });
+    QObject::connect(handler, &UpdateBrandCommandHandler::brandDetailsUpdated, m_eventDispatcher->brand(),
+                     &BrandSignals::detailsUpdated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<UpdateBrandCommandHandler, UpdateBrandCommand>(BrandController::tr("Update brand"),

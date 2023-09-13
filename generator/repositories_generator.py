@@ -7,6 +7,7 @@ import shutil
 import uncrustify
 import clang_format
 from pathlib import Path
+from copy import deepcopy
 
 
 def generate_export_header_file(
@@ -137,8 +138,9 @@ def generate_repository_files(
 
     global_data = manifest_data.get("global", [])
     application_name = global_data.get("application_name", "example")
-    application_cpp_domain_name = global_data.get("application_cpp_domain_name", "Undefined")
-
+    application_cpp_domain_name = global_data.get(
+        "application_cpp_domain_name", "Undefined"
+    )
 
     template_env = Environment(loader=FileSystemLoader("templates/repositories"))
     repo_template = template_env.get_template("repository_template.h.jinja2")
@@ -197,60 +199,68 @@ def generate_repository_files(
         foreign_entities = {}
         for field in entities_by_name[name]["fields"]:
             field_type = field["type"]
+            field_name = field["name"]
             if is_unique_foreign_entity(field_type):
-                foreign_entities[field_type] = entities_by_name[field_type]
-            if is_list_foreign_entity(field_type):
-                foreign_entities[field_type] = entities_by_name[
-                    field_type.split("<")[1].split(">")[0].strip()
-                ]
+                foreign_entities[f"{field_type}__{field_name}"] = deepcopy(
+                    entities_by_name[field_type]
+                )
+            elif is_list_foreign_entity(field_type):
+                foreign_entities[f"{field_type}__{field_name}"] = deepcopy(
+                    entities_by_name[field_type.split("<")[1].split(">")[0].strip()]
+                )
+
+        foreign_entities = dict(sorted(foreign_entities.items()))
 
         # add helpful keys to foreign entities
         for key, value in foreign_entities.items():
-            value["is_list"] = key.split("<")[0] == "QList" and is_list_foreign_entity(
-                key
-            )
+            field_type = key.split("__")[0]
+            field_name = key.split("__")[1]
+            value["is_list"] = field_type.split("<")[
+                0
+            ] == "QList" and is_list_foreign_entity(field_type)
             if value["is_list"]:
                 value["type_camel_name"] = stringcase.camelcase(
-                    key.split("<")[1].split(">")[0].strip()
+                    field_type.split("<")[1].split(">")[0].strip()
                 )
             else:
-                value["type_camel_name"] = stringcase.camelcase(key)
+                value["type_camel_name"] = stringcase.camelcase(field_type)
 
             if value["is_list"]:
                 value["type_name_only"] = stringcase.pascalcase(
-                    key.split("<")[1].split(">")[0].strip()
+                    field_type.split("<")[1].split(">")[0].strip()
                 )
             else:
-                value["type_name_only"] = stringcase.pascalcase(key)
+                value["type_name_only"] = stringcase.pascalcase(field_type)
 
             if value["is_list"]:
                 value["type_pascal_name"] = stringcase.pascalcase(
-                    key.split("<")[1].split(">")[0].strip()
+                    field_type.split("<")[1].split(">")[0].strip()
                 )
             else:
-                value["type_pascal_name"] = stringcase.pascalcase(key)
+                value["type_pascal_name"] = stringcase.pascalcase(field_type)
 
             if value["is_list"]:
                 value["type_snake_name"] = stringcase.snakecase(
-                    key.split("<")[1].split(">")[0].strip()
+                    field_type.split("<")[1].split(">")[0].strip()
                 )
             else:
-                value["type_snake_name"] = stringcase.snakecase(key)
+                value["type_snake_name"] = stringcase.snakecase(field_type)
 
-            for field in entities_by_name[name]["fields"]:
-                field_type = field["type"]
-                if field_type == key:
-                    value["related_field_name"] = field["name"]
-                    value["related_field_pascal_name"] = stringcase.pascalcase(
-                        field["name"]
-                    )
+            value["related_field_name"] = field_name
+            value["related_field_pascal_name"] = stringcase.pascalcase(field_name)
 
         foreign_repository_constructor_arguments = []
         if generate_lazy_loaders:
             for key, value in foreign_entities.items():
-                foreign_repository_constructor_arguments.append(
-                    f"Interface{value['type_pascal_name']}Repository *{value['type_camel_name']}Repository"
-                )
+                new_constructor_argument = f"Interface{value['type_pascal_name']}Repository *{value['type_camel_name']}Repository"
+                if (
+                    new_constructor_argument
+                    not in foreign_repository_constructor_arguments
+                ):
+                    foreign_repository_constructor_arguments.append(
+                        new_constructor_argument
+                    )
+
         foreign_repository_constructor_arguments_string = ", ".join(
             foreign_repository_constructor_arguments
         )
@@ -266,6 +276,8 @@ def generate_repository_files(
                 loader_private_member_list.append(
                     f"Interface{value['type_pascal_name']}Repository *m_{value['type_camel_name']}Repository;"
                 )
+        # remove duplicates :
+        loader_private_member_list = list(dict.fromkeys(loader_private_member_list))
 
         foreign_repository_header_list = []
         if generate_lazy_loaders:
@@ -273,6 +285,10 @@ def generate_repository_files(
                 foreign_repository_header_list.append(
                     f"\"repository/interface_{value['type_snake_name']}_repository.h\""
                 )
+        # remove duplicates :
+        foreign_repository_header_list = list(
+            dict.fromkeys(foreign_repository_header_list)
+        )
 
         # loader functions like     Domain::Book::ChaptersLoader fetchChaptersLoader();
 
@@ -315,12 +331,14 @@ def generate_repository_files(
 
         # prepare the fields init values
 
-        fields_init_values = ", ".join(
-            [
-                f"m_{value['type_camel_name']}Repository({value['type_camel_name']}Repository)"
-                for key, value in foreign_entities.items()
-            ]
-        )
+        fields_init_values = [
+            f"m_{value['type_camel_name']}Repository({value['type_camel_name']}Repository)"
+            for key, value in foreign_entities.items()
+        ]
+        # remove duplicates :
+        fields_init_values = list(dict.fromkeys(fields_init_values))
+
+        fields_init_values = ", ".join(fields_init_values)
         fields_init_values = (
             ", " + fields_init_values if fields_init_values else fields_init_values
         )
@@ -616,8 +634,13 @@ def generate_repository_files(
         for entity in ordered_entities:
             entity_pascal_name = stringcase.pascalcase(entity)
             entity_camel_name = stringcase.camelcase(entity)
-            children_entities = []
+            pre_children_entities = []
             for child in determine_direct_children(entities_by_name[entity]):
+                if child not in pre_children_entities:
+                    pre_children_entities.append(child)
+
+            children_entities = []
+            for child in pre_children_entities:
                 children_entities.append(
                     {
                         "child_camel_name": stringcase.camelcase(child),
@@ -646,7 +669,9 @@ def generate_repository_files(
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
         rendered_template = persistence_registration_template.render(
-            repository_headers=repository_headers, entities=entities, application_cpp_domain_name=application_cpp_domain_name
+            repository_headers=repository_headers,
+            entities=entities,
+            application_cpp_domain_name=application_cpp_domain_name,
         )
 
         with open(output_file, "w") as fh:

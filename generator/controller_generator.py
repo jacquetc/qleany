@@ -9,6 +9,23 @@ from pathlib import Path
 import clang_format
 
 
+def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
+    owner_dict = {}
+    for possible_owner_name, entity in entities_by_name.items():
+        for field in entity["fields"]:
+            if (
+                field["type"] == entity_name
+                or field["type"] == f"QList<{entity_name}>"
+            ):
+                if field.get("strong", False):
+                    owner_dict["name"] = possible_owner_name
+                    owner_dict["field"] = field["name"]
+                    owner_dict["ordered"] = field.get("ordered", False)
+                    owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
+                    return owner_dict
+
+    return owner_dict
+
 def get_generation_dict(
     folder_path: str,
     application_name: str,
@@ -93,6 +110,32 @@ def get_generation_dict(
             final_feature_dict["crud"]["remove_tree"] = (
                 feature["CRUD"].get("remove_tree", {}).get("enabled", False)
             )
+            final_feature_dict["crud"]["insert_into_relative"] = (
+                feature["CRUD"].get("insert_into_relative", {}).get("enabled", False)
+            )
+
+            # has owner ?
+            owner_dict = determine_owner(entity_name, entities_by_name)
+
+            final_feature_dict["crud"]["has_owner"] = owner_dict != {}
+            owner_name = owner_dict.get(
+                "name", "Undefined"
+            )           
+            owner_field_name = owner_dict.get(
+                "field", "Undefined"
+            )
+            final_feature_dict["crud"]["owner_is_list"] = owner_dict.get(
+                "is_list", False
+            )
+            final_feature_dict["crud"]["owner_is_ordered"] = owner_dict.get(
+                "ordered", False
+            )
+            final_feature_dict["crud"]["owner_name_camel"] = stringcase.camelcase(owner_name)
+            final_feature_dict["crud"]["owner_name_snake"] = stringcase.snakecase(owner_name)
+            final_feature_dict["crud"]["owner_name_pascal"] = stringcase.pascalcase(owner_name)
+            final_feature_dict["crud"]["owner_field_name_camel"] = stringcase.camelcase(owner_field_name)
+            final_feature_dict["crud"]["owner_field_name_snake"] = stringcase.snakecase(owner_field_name)
+            final_feature_dict["crud"]["owner_field_name_pascal"] = stringcase.pascalcase(owner_field_name)
 
         # files :
         generation_dict["all_controller_files"].append(

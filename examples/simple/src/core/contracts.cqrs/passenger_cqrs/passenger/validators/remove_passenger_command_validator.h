@@ -35,7 +35,7 @@ class RemovePassengerCommandValidator
 
         if (!existsResult.value())
         {
-            return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
         }
 
 

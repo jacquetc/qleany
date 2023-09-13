@@ -9,6 +9,8 @@
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
 
+#include "brand/brand_inserted_into_relative_dto.h"
+
 using namespace Qleany;
 using namespace Simple::Domain;
 using namespace Simple::Contracts::DTO::Brand;
@@ -30,14 +32,23 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public 
     void brandCreated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandRemoved(int id);
 
+    void brandInsertedIntoCarBrand(
+        Simple::Contracts::DTO::Brand::BrandInsertedIntoRelativeDTO brandInsertedIntoRelativeDto);
+
   private:
     InterfaceBrandRepository *m_repository;
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request);
     Result<BrandDTO> restoreImpl();
     Result<Simple::Domain::Brand> m_newEntity;
 
+    int m_position = -1;
+
+    Simple::Domain::Brand m_oldOwnerBrand;
+    Simple::Domain::Brand m_ownerBrandNewState;
+
     static bool s_mappingRegistered;
     void registerMappings();
+    bool m_firstPass = true;
 };
 
 } // namespace Simple::Application::Features::Brand::Commands

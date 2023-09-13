@@ -38,6 +38,7 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : publi
 
     static bool s_mappingRegistered;
     void registerMappings();
+    bool m_firstPass = true;
 };
 
 } // namespace Simple::Application::Features::Client::Commands

@@ -31,5 +31,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarSignals : public QObject
     void getAllReplied(QList<CarDTO> dtoList);
     void created(CarDTO dto);
     void updated(Contracts::DTO::Car::CarDTO dto);
+    void detailsUpdated(int id);
 };
 } // namespace Simple::Controller

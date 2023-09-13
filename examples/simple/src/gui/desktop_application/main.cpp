@@ -3,6 +3,7 @@
 #include "mainwindow.h"
 #include "persistence_registration.h"
 #include <QApplication>
+#include <QCoroTask>
 
 int main(int argc, char *argv[])
 {
@@ -16,5 +17,7 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
+    w.init();
+
     return a.exec();
 }

@@ -33,7 +33,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handle(QPromise<Result<void>
     }
     catch (const std::exception &ex)
     {
-        result = Result<PassengerDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdatePassengerCommand:" << ex.what();
     }
     return result;
@@ -49,7 +49,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<PassengerDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdatePassengerCommand restore:" << ex.what();
     }
     return result;
@@ -64,10 +64,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
     auto validator = UpdatePassengerCommandValidator(m_repository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<PassengerDTO>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR(PassengerDTO, validatorResult)
 
     // map
     auto passenger =
@@ -84,11 +81,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
     {
         Result<Simple::Domain::Passenger> saveResult = m_repository->get(request.req.id());
 
-        if (Q_UNLIKELY(saveResult.hasError()))
-        {
-            qDebug() << "Error getting passenger from repository:" << saveResult.error().message();
-            return Result<PassengerDTO>(saveResult.error());
-        }
+        QLN_RETURN_IF_ERROR(PassengerDTO, saveResult)
 
         // map
         m_newState = Result<PassengerDTO>(
@@ -109,6 +102,11 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     emit passengerUpdated(passengerDto);
 
+    if (request.req.metaData().areDetailsSet())
+    {
+        emit passengerDetailsUpdated(passengerDto.id());
+    }
+
     qDebug() << "UpdatePassengerCommandHandler::handleImpl done";
 
     return Result<PassengerDTO>(passengerDto);
@@ -125,10 +123,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::restoreImpl()
     // do
     auto passengerResult = m_repository->update(std::move(passenger));
 
-    if (Q_UNLIKELY(passengerResult.hasError()))
-    {
-        return Result<PassengerDTO>(passengerResult.error());
-    }
+    QLN_RETURN_IF_ERROR(PassengerDTO, passengerResult)
 
     // map
     auto passengerDto =

@@ -46,6 +46,7 @@ template <class T> class InterfaceDatabaseTableGroup
                                                         const QList<T> &rightEntities) = 0;
     virtual Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
                                                const QString &field, const T &rightEntity) = 0;
+    virtual Result<void> removeAssociationsWith(QList<int> rightEntityIds) = 0;
 
   private:
 };

@@ -26,7 +26,7 @@ Result<CarDTO> GetCarQueryHandler::handle(QPromise<Result<void>> &progressPromis
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetCarQuery:" << ex.what();
     }
     return result;
@@ -39,10 +39,7 @@ Result<CarDTO> GetCarQueryHandler::handleImpl(QPromise<Result<void>> &progressPr
     // do
     auto carResult = m_repository->get(query.id);
 
-    if (Q_UNLIKELY(carResult.isError()))
-    {
-        return Result<CarDTO>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(CarDTO, carResult)
 
     // map
     auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());

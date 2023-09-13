@@ -13,7 +13,7 @@ set(SRCS
     persistence_export.h
 )
 
-qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
+qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${REPOSITORY_LIST})
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PERSISTENCE_LIBRARY)
 

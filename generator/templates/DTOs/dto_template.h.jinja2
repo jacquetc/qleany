@@ -39,6 +39,20 @@ class {{ dto_pascal_type }}
             {%- endfor %}
             return false;
         }
+        
+        bool areDetailsSet() const
+        {
+           
+                {% for field in fields %}
+                {% if field.is_foreign %}
+                if({{ field.name }}Set)
+                    return true;
+                {% endif %}
+                {% endfor %}
+            return false;
+            
+            
+        }
     };
 
     {{ dto_pascal_type }}() : {{ fields_init_values }}

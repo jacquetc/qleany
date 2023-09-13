@@ -35,7 +35,7 @@ void QueryCommand::setQueryFunction(const std::function<Result<void>(QPromise<Re
 Result<void> QueryCommand::undo()
 {
     // Nothing to undo
-    return Result<void>(Error(Q_FUNC_INFO, Error::Fatal, "unreachable", "unreachable"));
+    return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Fatal, "unreachable", "unreachable"));
 }
 
 void QueryCommand::redo(QPromise<Result<void>> &progressPromise)
@@ -46,5 +46,5 @@ void QueryCommand::redo(QPromise<Result<void>> &progressPromise)
         return;
     }
     progressPromise.addResult(
-        Result<void>(Error(Q_FUNC_INFO, Error::Critical, "no_m_queryFunction", "no m_queryFunction")));
+        Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "no_m_queryFunction", "no m_queryFunction")));
 }

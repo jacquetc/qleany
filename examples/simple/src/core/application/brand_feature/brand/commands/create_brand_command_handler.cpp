@@ -4,6 +4,8 @@
 #include "brand/validators/create_brand_command_validator.h"
 #include "qleany/tools/automapper/automapper.h"
 
+#include "car.h"
+
 using namespace Qleany;
 using namespace Simple::Domain;
 using namespace Simple::Contracts::DTO::Brand;
@@ -31,7 +33,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handle(QPromise<Result<void>> &progr
     }
     catch (const std::exception &ex)
     {
-        result = Result<BrandDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateBrandCommand:" << ex.what();
     }
     return result;
@@ -47,7 +49,7 @@ Result<BrandDTO> CreateBrandCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<BrandDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateBrandCommand restore:" << ex.what();
     }
     return result;
@@ -58,19 +60,20 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 {
     qDebug() << "CreateBrandCommandHandler::handleImpl called";
     Simple::Domain::Brand brand;
+    CreateBrandDTO createDTO = request.req;
 
-    if (m_newEntity.isEmpty())
+    Simple::Domain::Brand ownerEntityBrand;
+
+    // Get the entities from owner
+    int ownerId = createDTO.carId();
+
+    if (m_firstPass)
     {
         // Validate the create Brand command using the validator
         auto validator = CreateBrandCommandValidator(m_repository);
-        Result<void> validatorResult = validator.validate(request.req);
+        Result<void> validatorResult = validator.validate(createDTO);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            return Result<BrandDTO>(validatorResult.error());
-        }
-
-        CreateBrandDTO createDTO = request.req;
+        QLN_RETURN_IF_ERROR(BrandDTO, validatorResult);
 
         // Map the create Brand command to a domain Brand object and
         // generate a UUID
@@ -96,11 +99,45 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     m_repository->beginChanges();
     auto brandResult = m_repository->add(std::move(brand));
 
-    if (Q_UNLIKELY(brandResult.hasError()))
+    QLN_RETURN_IF_ERROR_WITH_ACTION(BrandDTO, brandResult, m_repository->cancelChanges();)
+
+    // Get the newly created Brand entity
+    brand = brandResult.value();
+    // Save the newly created entity
+    m_newEntity = brandResult;
+
+    //  Manage relation to owner
+
+    int position = -1;
+
+    if (m_firstPass)
     {
-        m_repository->cancelChanges();
-        return Result<BrandDTO>(brandResult.error());
+
+        auto originalOwnerBrandResult = m_repository->getEntityInRelationOf(Car::schema, ownerId, "brand");
+        if (Q_UNLIKELY(originalOwnerBrandResult.hasError()))
+        {
+            return Result<BrandDTO>(originalOwnerBrandResult.error());
+        }
+        auto originalOwnerBrand = originalOwnerBrandResult.value();
+
+        // save
+        m_oldOwnerBrand = originalOwnerBrand;
+        originalOwnerBrand = brand;
+
+        m_ownerBrandNewState = originalOwnerBrand;
+        ownerEntityBrand = originalOwnerBrand;
     }
+    else
+    {
+        ownerEntityBrand = m_ownerBrandNewState;
+        position = m_position;
+    }
+
+    // Add the brand to the owner entity
+    Result<Simple::Domain::Brand> updateResult =
+        m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand", ownerEntityBrand);
+
+    QLN_RETURN_IF_ERROR_WITH_ACTION(BrandDTO, updateResult, m_repository->cancelChanges();)
 
     m_repository->saveChanges();
 
@@ -109,7 +146,14 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());
     emit brandCreated(brandDTO);
 
+    // send an insertion signal
+    BrandInsertedIntoRelativeDTO brandInsertedIntoRelativeDto(brandDTO, ownerId, position);
+
+    emit brandInsertedIntoCarBrand(brandInsertedIntoRelativeDto);
+
     qDebug() << "Brand added:" << brandDTO.id();
+
+    m_firstPass = false;
 
     // Return the DTO of the newly created Brand as a Result object
     return Result<BrandDTO>(brandDTO);
@@ -120,11 +164,7 @@ Result<BrandDTO> CreateBrandCommandHandler::restoreImpl()
 
     auto deleteResult = m_repository->remove(m_newEntity.value().id());
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting Brand from repository:" << deleteResult.error().message();
-        return Result<BrandDTO>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(BrandDTO, deleteResult)
 
     emit brandRemoved(deleteResult.value());
 

@@ -31,7 +31,7 @@ Result<int> RemovePassengerCommandHandler::handle(QPromise<Result<void>> &progre
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemovePassengerCommand:" << ex.what();
     }
     return result;
@@ -47,7 +47,7 @@ Result<int> RemovePassengerCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemovePassengerCommand restore:" << ex.what();
     }
     return result;
@@ -60,22 +60,14 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
 
     Result<Simple::Domain::Passenger> passengerResult = m_repository->get(passengerId);
 
-    if (Q_UNLIKELY(passengerResult.hasError()))
-    {
-        qDebug() << "Error getting passenger from repository:" << passengerResult.error().message();
-        return Result<int>(passengerResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, passengerResult)
 
     // save old entity
     m_oldState = passengerResult.value();
 
     auto deleteResult = m_repository->remove(passengerId);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting passenger from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     emit passengerRemoved(deleteResult.value());
 
@@ -90,10 +82,7 @@ Result<int> RemovePassengerCommandHandler::restoreImpl()
     // Add the passenger to the repository
     auto passengerResult = m_repository->add(std::move(m_oldState));
 
-    if (Q_UNLIKELY(passengerResult.hasError()))
-    {
-        return Result<int>(passengerResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, passengerResult)
 
     auto passengerDTO =
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passengerResult.value());

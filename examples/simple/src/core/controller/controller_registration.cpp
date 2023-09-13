@@ -32,12 +32,14 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     // error handling
     connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
             [dispatcher](Qleany::Error error) {
-                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message();
+                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
+                         << error.data() << error.stackTrace();
                 emit dispatcher->error()->errorSent(error);
             });
     connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
             [dispatcher](Qleany::Error error) {
-                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message();
+                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
+                         << error.data() << error.stackTrace();
                 emit dispatcher->error()->warningSent(error);
             });
 

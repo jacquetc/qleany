@@ -38,14 +38,15 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
             m_{{ value["type_camel_name"] }}Repository->updateEntityInRelationOf(Domain::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}", entity.{{ value["related_field_name"] }}());
 {% endif %}
 
+#ifdef QT_DEBUG
         if ({{ value["related_field_name"] }}Result.isError())
         {
-#ifdef QT_DEBUG
             qCritical() << {{ value["related_field_name"] }}Result.error().code() << {{ value["related_field_name"] }}Result.error().message() << {{ value["related_field_name"] }}Result.error().data();
             qFatal("Error found. The application will now exit");
-#endif
-            return Result<Domain::{{ name }}>({{ value["related_field_name"] }}Result.error());
         }
+#endif
+        QLN_RETURN_IF_ERROR(Domain::{{ name }}, {{ value["related_field_name"] }}Result)
+
     }
 {% endfor %}
 
@@ -74,14 +75,15 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
             m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf(Domain::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}");
 {% endif %}
 
+#ifdef QT_DEBUG
         if ({{ value["related_field_name"] }}Result.isError())
         {
-#ifdef QT_DEBUG
             qCritical() << {{ value["related_field_name"] }}Result.error().code() << {{ value["related_field_name"] }}Result.error().message() << {{ value["related_field_name"] }}Result.error().data();
             qFatal("Error found. The application will now exit");
-#endif
-            return Result<Domain::{{ name }}>({{ value["related_field_name"] }}Result.error());
         }
+#endif
+        QLN_RETURN_IF_ERROR(Domain::{{ name }}, {{ value["related_field_name"] }}Result)
+
         entity.set{{ value["related_field_pascal_name"] }}({{ value["related_field_name"] }}Result.value());
     
 {% endfor %}
@@ -173,10 +175,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> 
             {% endif %}
 
             auto removalResult = m_{{ value["type_camel_name"] }}Repository->removeInCascade(foreignIds);
-            if(removalResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(removalResult.error());
-            }
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removalResult)
 
             returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
         }
@@ -185,11 +184,10 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> 
 
            // finally remove the entites of this repository
 
+    Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);  
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, associationRemovalResult)
     Result<QList<int>> removedIdsResult =  this->databaseTable()->remove(ids);
-    if(removedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(removedIdsResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
     returnedHashOfEntityWithRemovedIds.insert({{ application_cpp_domain_name }}::Domain::Entities::{{ name }}, removedIdsResult.value());
 
@@ -237,10 +235,8 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
             {% endif %}
 
             auto changeResult = m_{{ value["type_camel_name"] }}Repository->changeActiveStatusInCascade(foreignIds, active);
-            if(changeResult.isError())
-            {
-                return Result<QHash<int, QList<int>>>(changeResult.error());
-            }
+            
+            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changeResult)
 
             returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
         }
@@ -250,10 +246,9 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
     // finally change the entites of this repository
 
     Result<QList<int>> changedIdsResult =  this->databaseTable()->changeActiveStatus(ids, active);
-    if(changedIdsResult.isError())
-    {
-        return Result<QHash<int, QList<int>>>(changedIdsResult.error());
-    }
+
+    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
+
     returnedHashOfEntityWithActiveChangedIds.insert({{ application_cpp_domain_name }}::Domain::Entities::{{ name }}, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 

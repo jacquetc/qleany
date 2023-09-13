@@ -34,7 +34,7 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ query.dto_out_pascal_name }}>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ query.dto_out_pascal_name }}>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling {{ query.pascal_name }}Query:" << ex.what();
     }
     return result;
@@ -50,10 +50,8 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
     auto validator               = {{ query.pascal_name }}QueryValidator({% for repository in query.repositories %}m_{{ repository.camel_name }}Repository{% if not loop.last %},{% endif %}{% endfor %});
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<{{ query.dto_out_pascal_name }}>(validatorResult.error());
-    }
+    // If the validation failed, return the error
+    QLN_RETURN_IF_ERROR({{ query.dto_out_pascal_name }}, validatorResult)
 {% endif %}
 
     // implement logic here 

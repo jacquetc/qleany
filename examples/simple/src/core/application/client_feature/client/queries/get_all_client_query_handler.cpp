@@ -28,7 +28,7 @@ Result<QList<ClientDTO>> GetAllClientQueryHandler::handle(QPromise<Result<void>>
     }
     catch (const std::exception &ex)
     {
-        result = Result<QList<ClientDTO>>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<QList<ClientDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllClientQuery:" << ex.what();
     }
     return result;
@@ -41,10 +41,7 @@ Result<QList<ClientDTO>> GetAllClientQueryHandler::handleImpl(QPromise<Result<vo
     // do
     auto clientResult = m_repository->getAll();
 
-    if (Q_UNLIKELY(clientResult.isError()))
-    {
-        return Result<QList<ClientDTO>>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QList<ClientDTO>, clientResult)
 
     // map
     QList<ClientDTO> dtoList;

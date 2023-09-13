@@ -25,7 +25,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QListView" name="passengerListView"/>
+       <widget class="QListView" name="passengerListView">
+        <property name="editTriggers">
+         <set>QAbstractItemView::EditKeyPressed</set>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

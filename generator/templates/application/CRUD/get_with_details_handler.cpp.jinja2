@@ -28,7 +28,7 @@ Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>Get{{ entity_mappable_wit
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Get{{ entity_mappable_with_pascal }}Query:" << ex.what();
     }
     return result;
@@ -40,11 +40,8 @@ Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>Get{{ entity_mappable_wit
 
     // do
     auto {{ entity_mappable_with_camel }}Result = m_repository->getWithDetails(query.id);
-
-    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.isError()))
-    {
-        return Result<{{ entity_mappable_with_pascal }}WithDetailsDTO>({{ entity_mappable_with_camel }}Result.error());
-    }
+    
+    QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}WithDetailsDTO, {{ entity_mappable_with_camel }}Result)
 
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }} = {{ entity_mappable_with_camel }}Result.value();
 

@@ -31,7 +31,7 @@ Result<GetCurrentTimeReplyDTO> GetCurrentTimeQueryHandler::handle(QPromise<Resul
     }
     catch (const std::exception &ex)
     {
-        result = Result<GetCurrentTimeReplyDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<GetCurrentTimeReplyDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetCurrentTimeQuery:" << ex.what();
     }
     return result;

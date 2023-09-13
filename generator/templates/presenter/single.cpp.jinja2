@@ -1,0 +1,74 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "{{ single.class_name_snake }}.h"
+#include "event_dispatcher.h"
+#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_controller.h"
+
+using namespace {{ application_cpp_domain_name }}::Controller;
+using namespace {{ application_cpp_domain_name }}::Presenter;
+
+{{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QObject{parent}
+{
+    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::removed, this, [this](QList<int> removedIds) {
+        if (removedIds.contains(id()))
+        {
+            resetId();
+        }
+    });
+    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::updated, this, [this]({{ model.entity_name_pascal }}DTO dto) {
+        if (dto.id() == id())
+        {
+            setName(dto.name());
+        }
+    });
+}
+
+int {{ model.class_name_pascal }}::id() const
+{
+    return m_id;
+}
+
+void {{ model.class_name_pascal }}::setId(int newId)
+{
+    if (m_id == newId)
+        return;
+    m_id = newId;
+    emit idChanged();
+
+    // clear
+    if (m_id == 0)
+    {
+        setName("");
+    }
+
+    // set
+    else
+    {
+        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->get(m_id).then(
+            [this](const Simple::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }}) { setName({{ model.entity_name_camel }}.name()); });
+    }
+}
+
+void {{ model.class_name_pascal }}::resetId()
+{
+    setId(0);
+}
+
+QString {{ model.class_name_pascal }}::name() const
+{
+    return m_name;
+}
+
+void {{ model.class_name_pascal }}::setName(const QString &newName)
+{
+    if (m_name == newName)
+        return;
+    m_name = newName;
+
+    Update{{ model.entity_name_pascal }}DTO dto;
+    dto.setId(id());
+    dto.setName(newName);
+    {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto);
+
+    emit nameChanged();
+}

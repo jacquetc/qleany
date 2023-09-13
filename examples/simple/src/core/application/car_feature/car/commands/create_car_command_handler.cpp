@@ -30,7 +30,7 @@ Result<CarDTO> CreateCarCommandHandler::handle(QPromise<Result<void>> &progressP
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateCarCommand:" << ex.what();
     }
     return result;
@@ -46,7 +46,7 @@ Result<CarDTO> CreateCarCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateCarCommand restore:" << ex.what();
     }
     return result;
@@ -57,19 +57,15 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 {
     qDebug() << "CreateCarCommandHandler::handleImpl called";
     Simple::Domain::Car car;
+    CreateCarDTO createDTO = request.req;
 
-    if (m_newEntity.isEmpty())
+    if (m_firstPass)
     {
         // Validate the create Car command using the validator
         auto validator = CreateCarCommandValidator(m_repository);
-        Result<void> validatorResult = validator.validate(request.req);
+        Result<void> validatorResult = validator.validate(createDTO);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            return Result<CarDTO>(validatorResult.error());
-        }
-
-        CreateCarDTO createDTO = request.req;
+        QLN_RETURN_IF_ERROR(CarDTO, validatorResult);
 
         // Map the create Car command to a domain Car object and
         // generate a UUID
@@ -95,11 +91,14 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     m_repository->beginChanges();
     auto carResult = m_repository->add(std::move(car));
 
-    if (Q_UNLIKELY(carResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<CarDTO>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION(CarDTO, carResult, m_repository->cancelChanges();)
+
+    // Get the newly created Car entity
+    car = carResult.value();
+    // Save the newly created entity
+    m_newEntity = carResult;
+
+    //  Manage relation to owner
 
     m_repository->saveChanges();
 
@@ -110,6 +109,8 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     qDebug() << "Car added:" << carDTO.id();
 
+    m_firstPass = false;
+
     // Return the DTO of the newly created Car as a Result object
     return Result<CarDTO>(carDTO);
 }
@@ -119,11 +120,7 @@ Result<CarDTO> CreateCarCommandHandler::restoreImpl()
 
     auto deleteResult = m_repository->remove(m_newEntity.value().id());
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting Car from repository:" << deleteResult.error().message();
-        return Result<CarDTO>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(CarDTO, deleteResult)
 
     emit carRemoved(deleteResult.value());
 

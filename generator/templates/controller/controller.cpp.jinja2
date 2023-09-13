@@ -24,6 +24,11 @@
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command.h"
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command_handler.h"
     {% endif -%}
+    {%if feature.crud.insert_into_relative -%}
+//#include "{{ feature_name_snake }}/commands/insert_{{ entity_name_snake }}_into_xxx_command.h"
+//#include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_into_xxx_command_handler.h"
+    {% endif -%}
+
 {% endif -%}
 {% for command in feature.custom_commands -%}
 #include "{{ feature_name_snake }}/commands/{{ command.name_snake }}_command.h"
@@ -183,6 +188,10 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::cr
     // connect
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, m_eventDispatcher->{{ feature_name_camel }}(),
                      &{{ entity_name_pascal }}Signals::created);
+    {% if feature.crud.has_owner %}
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}InsertedInto{{ feature.crud.owner_name_pascal }}{{ feature.crud.owner_field_name_pascal }}, m_eventDispatcher->{{ feature_name_camel }}(),
+                     &{{ entity_name_pascal }}Signals::insertedInto{{ feature.crud.owner_name_pascal }}{{ feature.crud.owner_field_name_pascal }});
+    {% endif %}
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, this, [this](int removedId) {
         emit m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << removedId);
     });
@@ -221,6 +230,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::up
     // connect
     QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, this,
                      [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->updated(dto); });
+    QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}DetailsUpdated, m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::detailsUpdated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<Update{{ entity_name_pascal }}CommandHandler, Update{{ entity_name_pascal }}Command>(

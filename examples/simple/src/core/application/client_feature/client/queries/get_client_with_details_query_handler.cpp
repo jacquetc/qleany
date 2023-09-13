@@ -28,7 +28,7 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handle(QPromise<R
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientWithDetailsDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientWithDetailsDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetClientQuery:" << ex.what();
     }
     return result;
@@ -42,10 +42,7 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromi
     // do
     auto clientResult = m_repository->getWithDetails(query.id);
 
-    if (Q_UNLIKELY(clientResult.isError()))
-    {
-        return Result<ClientWithDetailsDTO>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(ClientWithDetailsDTO, clientResult)
 
     Simple::Domain::Client client = clientResult.value();
 

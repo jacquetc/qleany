@@ -31,5 +31,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientSignals : public QObject
     void getAllReplied(QList<ClientDTO> dtoList);
     void created(ClientDTO dto);
     void updated(Contracts::DTO::Client::ClientDTO dto);
+    void detailsUpdated(int id);
 };
 } // namespace Simple::Controller

@@ -28,6 +28,7 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT UpdateCarCommandHandler : public QObj
 
   signals:
     void carUpdated(Simple::Contracts::DTO::Car::CarDTO carDto);
+    void carDetailsUpdated(int id);
 
   private:
     InterfaceCarRepository *m_repository;

@@ -30,7 +30,7 @@ Result<int> RemoveBrandCommandHandler::handle(QPromise<Result<void>> &progressPr
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveBrandCommand:" << ex.what();
     }
     return result;
@@ -46,7 +46,7 @@ Result<int> RemoveBrandCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveBrandCommand restore:" << ex.what();
     }
     return result;
@@ -59,22 +59,14 @@ Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progre
 
     Result<Simple::Domain::Brand> brandResult = m_repository->get(brandId);
 
-    if (Q_UNLIKELY(brandResult.hasError()))
-    {
-        qDebug() << "Error getting brand from repository:" << brandResult.error().message();
-        return Result<int>(brandResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, brandResult)
 
     // save old entity
     m_oldState = brandResult.value();
 
     auto deleteResult = m_repository->remove(brandId);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting brand from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     emit brandRemoved(deleteResult.value());
 
@@ -89,10 +81,7 @@ Result<int> RemoveBrandCommandHandler::restoreImpl()
     // Add the brand to the repository
     auto brandResult = m_repository->add(std::move(m_oldState));
 
-    if (Q_UNLIKELY(brandResult.hasError()))
-    {
-        return Result<int>(brandResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, brandResult)
 
     auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());
 

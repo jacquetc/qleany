@@ -26,7 +26,7 @@ Result<BrandDTO> GetBrandQueryHandler::handle(QPromise<Result<void>> &progressPr
     }
     catch (const std::exception &ex)
     {
-        result = Result<BrandDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetBrandQuery:" << ex.what();
     }
     return result;
@@ -39,10 +39,7 @@ Result<BrandDTO> GetBrandQueryHandler::handleImpl(QPromise<Result<void>> &progre
     // do
     auto brandResult = m_repository->get(query.id);
 
-    if (Q_UNLIKELY(brandResult.isError()))
-    {
-        return Result<BrandDTO>(brandResult.error());
-    }
+    QLN_RETURN_IF_ERROR(BrandDTO, brandResult)
 
     // map
     auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());

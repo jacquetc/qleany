@@ -34,7 +34,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handle(QPromise<Result<void>
     }
     catch (const std::exception &ex)
     {
-        result = Result<PassengerDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreatePassengerCommand:" << ex.what();
     }
     return result;
@@ -50,7 +50,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<PassengerDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreatePassengerCommand restore:" << ex.what();
     }
     return result;
@@ -61,23 +61,20 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 {
     qDebug() << "CreatePassengerCommandHandler::handleImpl called";
     Simple::Domain::Passenger passenger;
+    CreatePassengerDTO createDTO = request.req;
 
     QList<Simple::Domain::Passenger> ownerEntityPassengers;
 
     // Get the entities from owner
-    CreatePassengerDTO createDTO = request.req;
     int ownerId = createDTO.carId();
 
-    if (m_newEntity.isEmpty())
+    if (m_firstPass)
     {
         // Validate the create Passenger command using the validator
         auto validator = CreatePassengerCommandValidator(m_repository);
         Result<void> validatorResult = validator.validate(createDTO);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            return Result<PassengerDTO>(validatorResult.error());
-        }
+        QLN_RETURN_IF_ERROR(PassengerDTO, validatorResult);
 
         // Map the create Passenger command to a domain Passenger object and
         // generate a UUID
@@ -104,11 +101,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     m_repository->beginChanges();
     auto passengerResult = m_repository->add(std::move(passenger));
 
-    if (Q_UNLIKELY(passengerResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<PassengerDTO>(passengerResult.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION(PassengerDTO, passengerResult, m_repository->cancelChanges();)
 
     // Get the newly created Passenger entity
     passenger = passengerResult.value();
@@ -117,7 +110,9 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     //  Manage relation to owner
 
-    if (m_ownerPassengersNewState.isEmpty())
+    int position = -1;
+
+    if (m_firstPass)
     {
 
         auto originalOwnerPassengersResult = m_repository->getEntitiesInRelationOf(Car::schema, ownerId, "passengers");
@@ -132,7 +127,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
         // Insert to the right position
 
-        int position = createDTO.position();
+        position = createDTO.position();
         if (position == -1)
         {
             position = originalOwnerPassengers.count();
@@ -146,6 +141,8 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
             position = 0;
         }
 
+        m_position = position;
+
         originalOwnerPassengers.insert(position, passenger);
 
         m_ownerPassengersNewState = originalOwnerPassengers;
@@ -153,19 +150,15 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     }
     else
     {
-
         ownerEntityPassengers = m_ownerPassengersNewState;
+        position = m_position;
     }
 
     // Add the passenger to the owner entity
     Result<QList<Simple::Domain::Passenger>> updateResult =
         m_repository->updateEntitiesInRelationOf(Car::schema, ownerId, "passengers", ownerEntityPassengers);
 
-    if (Q_UNLIKELY(updateResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<PassengerDTO>(updateResult.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION(PassengerDTO, updateResult, m_repository->cancelChanges();)
 
     m_repository->saveChanges();
 
@@ -175,7 +168,14 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passengerResult.value());
     emit passengerCreated(passengerDTO);
 
+    // send an insertion signal
+    PassengerInsertedIntoRelativeDTO passengerInsertedIntoRelativeDto(passengerDTO, ownerId, position);
+
+    emit passengerInsertedIntoCarPassengers(passengerInsertedIntoRelativeDto);
+
     qDebug() << "Passenger added:" << passengerDTO.id();
+
+    m_firstPass = false;
 
     // Return the DTO of the newly created Passenger as a Result object
     return Result<PassengerDTO>(passengerDTO);
@@ -186,11 +186,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::restoreImpl()
 
     auto deleteResult = m_repository->remove(m_newEntity.value().id());
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting Passenger from repository:" << deleteResult.error().message();
-        return Result<PassengerDTO>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(PassengerDTO, deleteResult)
 
     emit passengerRemoved(deleteResult.value());
 

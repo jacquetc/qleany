@@ -38,6 +38,7 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QObj
 
     static bool s_mappingRegistered;
     void registerMappings();
+    bool m_firstPass = true;
 };
 
 } // namespace Simple::Application::Features::Car::Commands

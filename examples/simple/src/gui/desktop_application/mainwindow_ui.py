@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFormLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListView, QMainWindow, QMenuBar,
-    QPushButton, QSizePolicy, QSpinBox, QStatusBar,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFormLayout, QHBoxLayout,
+    QLabel, QLineEdit, QListView, QMainWindow,
+    QMenuBar, QPushButton, QSizePolicy, QSpinBox,
+    QStatusBar, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -38,6 +38,7 @@ class Ui_MainWindow(object):
 
         self.passengerListView = QListView(self.centralwidget)
         self.passengerListView.setObjectName(u"passengerListView")
+        self.passengerListView.setEditTriggers(QAbstractItemView.EditKeyPressed)
 
         self.verticalLayout.addWidget(self.passengerListView)
 

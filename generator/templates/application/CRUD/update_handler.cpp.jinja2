@@ -33,7 +33,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Update{{ entity_mappable_with_pascal }}Command:" << ex.what();
     }
     return result;
@@ -49,7 +49,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Update{{ entity_mappable_with_pascal }}Command restore:" << ex.what();
     }
     return result;
@@ -63,10 +63,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     auto validator               = Update{{ entity_mappable_with_pascal }}CommandValidator(m_repository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<{{ entity_mappable_with_pascal }}DTO>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, validatorResult)
 
     // map
     auto {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Update{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(request.req);
@@ -82,11 +79,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     {
         Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> saveResult = m_repository->get(request.req.id());
 
-        if (Q_UNLIKELY(saveResult.hasError()))
-        {
-            qDebug() << "Error getting {{ entity_mappable_with_camel }} from repository:" << saveResult.error().message();
-            return Result<{{ entity_mappable_with_pascal }}DTO>(saveResult.error());
-        }
+        QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, saveResult)
 
         // map
         m_newState = Result<{{ entity_mappable_with_pascal }}DTO>(Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>(saveResult.value()));
@@ -105,6 +98,11 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
 
     emit {{ entity_mappable_with_camel }}Updated({{ entity_mappable_with_camel }}Dto);
 
+    if(request.req.metaData().areDetailsSet()){
+        emit {{ entity_mappable_with_camel }}DetailsUpdated({{ entity_mappable_with_camel }}Dto.id());
+    }
+
+
     qDebug() << "Update{{ entity_mappable_with_pascal }}CommandHandler::handleImpl done";
 
     return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Dto);
@@ -120,10 +118,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     // do
     auto {{ entity_mappable_with_camel }}Result = m_repository->update(std::move({{ entity_mappable_with_camel }}));
 
-    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
-    {
-        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
-    }
+    QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, {{ entity_mappable_with_camel }}Result)
 
     // map
     auto {{ entity_mappable_with_camel }}Dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());

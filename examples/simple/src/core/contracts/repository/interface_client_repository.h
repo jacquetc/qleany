@@ -28,6 +28,8 @@ class SIMPLEEXAMPLE_CONTRACTS_EXPORT InterfaceClientRepository
 
     virtual Simple::Domain::Client::ClientLoader fetchClientLoader() = 0;
 
+    virtual Simple::Domain::Client::ClientFriendsLoader fetchClientFriendsLoader() = 0;
+
     virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
     virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
 };

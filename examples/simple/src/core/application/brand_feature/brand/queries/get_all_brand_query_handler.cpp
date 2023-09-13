@@ -28,7 +28,7 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handle(QPromise<Result<void>> &
     }
     catch (const std::exception &ex)
     {
-        result = Result<QList<BrandDTO>>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<QList<BrandDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllBrandQuery:" << ex.what();
     }
     return result;
@@ -41,10 +41,7 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handleImpl(QPromise<Result<void
     // do
     auto brandResult = m_repository->getAll();
 
-    if (Q_UNLIKELY(brandResult.isError()))
-    {
-        return Result<QList<BrandDTO>>(brandResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QList<BrandDTO>, brandResult)
 
     // map
     QList<BrandDTO> dtoList;

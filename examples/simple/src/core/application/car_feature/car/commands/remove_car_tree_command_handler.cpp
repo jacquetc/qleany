@@ -30,7 +30,7 @@ Result<int> RemoveCarTreeCommandHandler::handle(QPromise<Result<void>> &progress
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveCarTreeCommand:" << ex.what();
     }
     return result;
@@ -46,7 +46,7 @@ Result<int> RemoveCarTreeCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<int>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveCarTreeCommand restore:" << ex.what();
     }
     return result;
@@ -59,22 +59,14 @@ Result<int> RemoveCarTreeCommandHandler::handleImpl(QPromise<Result<void>> &prog
 
     Result<Simple::Domain::Car> carResult = m_repository->get(carId);
 
-    if (Q_UNLIKELY(carResult.hasError()))
-    {
-        qDebug() << "Error getting car from repository:" << carResult.error().message();
-        return Result<int>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, carResult)
 
     // save old entity
     m_oldState = carResult.value();
 
     auto deleteResult = m_repository->removeInCascade(QList<int>() << carId);
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting car from repository:" << deleteResult.error().message();
-        return Result<int>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(int, deleteResult)
 
     // repositories handle remove signals
     // emit carRemoved(deleteResult.value());

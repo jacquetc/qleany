@@ -11,6 +11,8 @@ set(SRC
     brand/brand_dto.h
     brand/create_brand_dto.h
     brand/update_brand_dto.h
+    brand/insert_brand_into_relative_dto.h
+    brand/brand_inserted_into_relative_dto.h
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 

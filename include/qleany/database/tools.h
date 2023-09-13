@@ -180,15 +180,15 @@ template <class T> Result<T> TableTools<T>::mapToEntity(const QHash<QString, QVa
                 bool success = destinationProperty.writeOnGadget(&entity, value);
                 if (!success)
                 {
-                    Result<T>(Error(Q_FUNC_INFO, Error::Fatal, "map_write_failed",
-                                    "Failed to write value to destination property", propertyName));
+                    Result<T>(QLN_ERROR_3(Q_FUNC_INFO, Error::Fatal, "map_write_failed",
+                                          "Failed to write value to destination property", propertyName));
                 }
             }
         }
         else
         {
-            Result<T>(Error(Q_FUNC_INFO, Error::Fatal, "map_missing_property", "Missing property in destination object",
-                            propertyName));
+            Result<T>(QLN_ERROR_3(Q_FUNC_INFO, Error::Fatal, "map_missing_property",
+                                  "Missing property in destination object", propertyName));
         }
         ++i;
     }

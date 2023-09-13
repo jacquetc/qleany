@@ -36,7 +36,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Create{{ feature_pascal_name }}Command:" << ex.what();
     }
     return result;
@@ -52,7 +52,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     }
     catch (const std::exception& ex)
     {
-        result = Result<{{ entity_mappable_with_pascal }}DTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Create{{ entity_mappable_with_pascal }}Command restore:" << ex.what();
     }
     return result;
@@ -62,28 +62,24 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 {
     qDebug() << "Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl called";
     {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }};
+    Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
     {% if has_owner %}
         {% if owner_field_is_list %}
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_pascal }};
+    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_name_pascal }};
     {% else %}
-        {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_pascal }};
+        {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_name_pascal }};
     {% endif %}
         // Get the entities from owner
-        Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
         int ownerId = createDTO.{{ owner_name_camel }}Id();
     {% endif %}
 
-    if (m_newEntity.isEmpty())
+    if (m_firstPass)
     {
         // Validate the create {{ entity_mappable_with_pascal }} command using the validator
         auto validator               = Create{{ entity_mappable_with_pascal }}CommandValidator(m_repository);
         Result<void> validatorResult = validator.validate(createDTO);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            return Result<{{ entity_mappable_with_pascal }}DTO>(validatorResult.error());
-        }
-
+        QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, validatorResult);
 
         // Map the create {{ entity_mappable_with_pascal }} command to a domain {{ entity_mappable_with_pascal }} object and
         // generate a UUID
@@ -112,11 +108,8 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     m_repository->beginChanges();
     auto {{ entity_mappable_with_camel }}Result = m_repository->add(std::move({{ entity_mappable_with_camel }}));
 
-    if (Q_UNLIKELY({{ entity_mappable_with_camel }}Result.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION({{ entity_mappable_with_pascal }}DTO, {{ entity_mappable_with_camel }}Result, m_repository->cancelChanges();)
+
 
     // Get the newly created {{ entity_mappable_with_pascal }} entity
     {{ entity_mappable_with_camel }} = {{ entity_mappable_with_camel }}Result.value();
@@ -124,84 +117,81 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
      m_newEntity = {{ entity_mappable_with_camel }}Result;
 
     //  Manage relation to owner
+    {% if has_owner %}
+    int position = -1;
     
-    if (m_owner{{ owner_field_pascal }}NewState.isEmpty())
+    if (m_firstPass)
     {
-        {% if has_owner %}
 
         {% if owner_field_is_list %}
-        auto originalOwner{{ owner_field_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}");
-        if (Q_UNLIKELY(originalOwner{{ owner_field_pascal }}Result.hasError()))
+        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}");
+        if (Q_UNLIKELY(originalOwner{{ owner_field_name_pascal }}Result.hasError()))
         {
-            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_pascal }}Result.error());
+            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_name_pascal }}Result.error());
         }
-        auto originalOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }}Result.value();
+        auto originalOwner{{ owner_field_name_pascal }} = originalOwner{{ owner_field_name_pascal }}Result.value();
 
         // save
-        m_oldOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
+        m_oldOwner{{ owner_field_name_pascal }} = originalOwner{{ owner_field_name_pascal }};
 
 
         {% if owner_field_is_ordered %}
         // Insert to the right position
 
-        int position = createDTO.position();
+        position = createDTO.position();
         if(position == -1){
-            position = originalOwner{{ owner_field_pascal }}.count();
+            position = originalOwner{{ owner_field_name_pascal }}.count();
         }
-        if(position >  originalOwner{{ owner_field_pascal }}.count()){
-            position =  originalOwner{{ owner_field_pascal }}.count();
+        if(position >  originalOwner{{ owner_field_name_pascal }}.count()){
+            position =  originalOwner{{ owner_field_name_pascal }}.count();
         }
         else if(position < 0){
             position = 0;
         }
 
-        originalOwner{{ owner_field_pascal }}.insert(position, {{ entity_mappable_with_camel }});
+        m_position = position;
+
+        originalOwner{{ owner_field_name_pascal }}.insert(position, {{ entity_mappable_with_camel }});
         {% else %}
-        originalOwner{{ owner_field_pascal }}.append({{ entity_mappable_with_camel }});
+        originalOwner{{ owner_field_name_pascal }}.append({{ entity_mappable_with_camel }});
         {% endif %}
 
 
         {% else %}
-        auto originalOwner{{ owner_field_pascal }}Result = m_repository->getEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}");
-        if (Q_UNLIKELY(originalOwner{{ owner_field_pascal }}Result.hasError()))
+        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}");
+        if (Q_UNLIKELY(originalOwner{{ owner_field_name_pascal }}Result.hasError()))
         {
-            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_pascal }}Result.error());
+            return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_name_pascal }}Result.error());
         }
-        auto originalOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }}Result.value();
+        auto originalOwner{{ owner_field_name_pascal }} = originalOwner{{ owner_field_name_pascal }}Result.value();
 
         // save
-        m_oldOwner{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
-        originalOwner{{ owner_field_pascal }} = {{ entity_mappable_with_camel }};
+        m_oldOwner{{ owner_field_name_pascal }} = originalOwner{{ owner_field_name_pascal }};
+        originalOwner{{ owner_field_name_pascal }} = {{ entity_mappable_with_camel }};
 
         {% endif %}
     
-        m_owner{{ owner_field_pascal }}NewState = originalOwner{{ owner_field_pascal }};
-        ownerEntity{{ owner_field_pascal }} = originalOwner{{ owner_field_pascal }};
-         {% endif %}
+        m_owner{{ owner_field_name_pascal }}NewState = originalOwner{{ owner_field_name_pascal }};
+        ownerEntity{{ owner_field_name_pascal }} = originalOwner{{ owner_field_name_pascal }};
  }
   else {
-    {% if has_owner %}
-    ownerEntity{{ owner_field_pascal }} = m_owner{{ owner_field_pascal }}NewState;
-    {% endif %}
+    ownerEntity{{ owner_field_name_pascal }} = m_owner{{ owner_field_name_pascal }}NewState;
+    position = m_position;
  }
+    {% endif %}
 
     {% if has_owner %}
 
     {% if owner_field_is_list %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+    Result<QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
 
     {% else %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_camel }}", ownerEntity{{ owner_field_pascal }});
+    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
 
     {% endif %}
-
-    if (Q_UNLIKELY(updateResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<{{ entity_mappable_with_pascal }}DTO>(updateResult.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION({{ entity_mappable_with_pascal }}DTO, updateResult, m_repository->cancelChanges();)
     {% endif %}
 
     m_repository->saveChanges();
@@ -211,8 +201,16 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
     emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
+    {% if has_owner %}
+    // send an insertion signal
+    {{ entity_mappable_with_pascal }}InsertedIntoRelativeDTO {{ entity_mappable_with_camel }}InsertedIntoRelativeDto({{ entity_mappable_with_camel }}DTO, ownerId, position);
+
+    emit {{ entity_mappable_with_camel }}InsertedInto{{ owner_name_pascal }}{{ owner_field_name_pascal }}( {{ entity_mappable_with_camel }}InsertedIntoRelativeDto);
+    {% endif %}
 
     qDebug() << "{{ entity_mappable_with_pascal }} added:" << {{ entity_mappable_with_camel }}DTO.id();
+
+    m_firstPass = false;
 
     // Return the DTO of the newly created {{ entity_mappable_with_pascal }} as a Result object
     return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}DTO);
@@ -223,11 +221,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     auto deleteResult = m_repository->remove(m_newEntity.value().id());
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting {{ entity_mappable_with_pascal }} from repository:" << deleteResult.error().message();
-        return Result<{{ entity_mappable_with_pascal }}DTO>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, deleteResult)
 
     emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
 

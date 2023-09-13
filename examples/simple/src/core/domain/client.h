@@ -19,6 +19,8 @@ class Client : public Entity
 
     Q_PROPERTY(Passenger client READ client WRITE setClient)
 
+    Q_PROPERTY(QList<Passenger> clientFriends READ clientFriends WRITE setClientFriends)
+
   public:
     struct MetaData
     {
@@ -26,11 +28,18 @@ class Client : public Entity
         bool clientSet = false;
         bool clientLoaded = false;
 
+        bool clientFriendsSet = false;
+        bool clientFriendsLoaded = false;
+
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "client")
             {
                 return clientSet;
+            }
+            if (fieldName == "clientFriends")
+            {
+                return clientFriendsSet;
             }
             return false;
         }
@@ -41,6 +50,10 @@ class Client : public Entity
             if (fieldName == "client")
             {
                 return clientLoaded;
+            }
+            if (fieldName == "clientFriends")
+            {
+                return clientFriendsLoaded;
             }
             return false;
         }
@@ -55,12 +68,13 @@ class Client : public Entity
     }
 
     Client(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-           const Passenger &client)
-        : Entity(id, uuid, creationDate, updateDate), m_client(client)
+           const Passenger &client, const QList<Passenger> &clientFriends)
+        : Entity(id, uuid, creationDate, updateDate), m_client(client), m_clientFriends(clientFriends)
     {
     }
 
-    Client(const Client &other) : Entity(other), m_metaData(other.m_metaData), m_client(other.m_client)
+    Client(const Client &other)
+        : Entity(other), m_metaData(other.m_metaData), m_client(other.m_client), m_clientFriends(other.m_clientFriends)
     {
     }
 
@@ -75,6 +89,7 @@ class Client : public Entity
         {
             Entity::operator=(other);
             m_client = other.m_client;
+            m_clientFriends = other.m_clientFriends;
 
             m_metaData = other.m_metaData;
         }
@@ -111,6 +126,32 @@ class Client : public Entity
         m_clientLoader = loader;
     }
 
+    // ------ clientFriends : -----
+
+    QList<Passenger> clientFriends()
+    {
+        if (!m_metaData.clientFriendsLoaded && m_clientFriendsLoader)
+        {
+            m_clientFriends = m_clientFriendsLoader(this->id());
+            m_metaData.clientFriendsLoaded = true;
+        }
+        return m_clientFriends;
+    }
+
+    void setClientFriends(const QList<Passenger> &clientFriends)
+    {
+        m_clientFriends = clientFriends;
+
+        m_metaData.clientFriendsSet = true;
+    }
+
+    using ClientFriendsLoader = std::function<QList<Passenger>(int entityId)>;
+
+    void setClientFriendsLoader(const ClientFriendsLoader &loader)
+    {
+        m_clientFriendsLoader = loader;
+    }
+
     static Qleany::Domain::EntitySchema schema;
 
     MetaData metaData() const
@@ -122,6 +163,8 @@ class Client : public Entity
     MetaData m_metaData;
     Passenger m_client;
     ClientLoader m_clientLoader;
+    QList<Passenger> m_clientFriends;
+    ClientFriendsLoader m_clientFriendsLoader;
 };
 
 inline bool operator==(const Client &lhs, const Client &rhs)
@@ -129,7 +172,7 @@ inline bool operator==(const Client &lhs, const Client &rhs)
 
     return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
 
-           lhs.m_client == rhs.m_client;
+           lhs.m_client == rhs.m_client && lhs.m_clientFriends == rhs.m_clientFriends;
 }
 
 inline uint qHash(const Client &entity, uint seed = 0) noexcept
@@ -139,6 +182,7 @@ inline uint qHash(const Client &entity, uint seed = 0) noexcept
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_client, seed);
+    hash ^= ::qHash(entity.m_clientFriends, seed);
 
     return hash;
 }
@@ -151,14 +195,18 @@ inline Qleany::Domain::EntitySchema Client::schema = {
     // relationships:
     {{Simple::Domain::Entities::EntityEnum::Client, "Client", Simple::Domain::Entities::EntityEnum::Passenger,
       "Passenger", "client", RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
-      RelationshipDirection::Forward}},
+      RelationshipDirection::Forward},
+     {Simple::Domain::Entities::EntityEnum::Client, "Client", Simple::Domain::Entities::EntityEnum::Passenger,
+      "Passenger", "clientFriends", RelationshipType::OneToMany, RelationshipStrength::Strong,
+      RelationshipCardinality::ManyUnordered, RelationshipDirection::Forward}},
 
     // fields:
     {{"id", FieldType::Integer, true, false},
      {"uuid", FieldType::Uuid, false, false},
      {"creationDate", FieldType::DateTime, false, false},
      {"updateDate", FieldType::DateTime, false, false},
-     {"client", FieldType::Entity, false, true}}};
+     {"client", FieldType::Entity, false, true},
+     {"clientFriends", FieldType::Entity, false, true}}};
 
 } // namespace Simple::Domain
 Q_DECLARE_METATYPE(Simple::Domain::Client)

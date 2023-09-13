@@ -73,11 +73,11 @@ template <class T, class U> Result<void> DummyDatabaseContext<T, U>::init()
         {
             if (!query.prepare(string))
             {
-                return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
             if (!query.exec())
             {
-                return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
         }
 
@@ -89,11 +89,11 @@ template <class T, class U> Result<void> DummyDatabaseContext<T, U>::init()
         {
             if (!query.prepare(string))
             {
-                return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
             if (!query.exec())
             {
-                return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
             }
         }
 

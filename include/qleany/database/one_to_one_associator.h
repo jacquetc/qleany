@@ -84,13 +84,13 @@ template <class RightEntity> Result<RightEntity> OneToOneAssociator<RightEntity>
     if (!query.exec())
     {
         return Result<RightEntity>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
     if (!query.exec())
     {
         return Result<RightEntity>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     if (!query.next())
     {
@@ -123,13 +123,13 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
         if (!deleteQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
         }
         deleteQuery.bindValue(":leftEntityId", leftEntityId);
         if (!deleteQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
         }
         return Result<RightEntity>();
     }
@@ -143,13 +143,13 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
     if (!query.exec())
     {
         return Result<RightEntity>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
     if (!query.exec())
     {
         return Result<RightEntity>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     if (!query.next())
     {
@@ -162,19 +162,19 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
         if (!insertQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
         }
         insertQuery.bindValue(":leftEntityId", leftEntityId);
         insertQuery.bindValue(":rightEntityId", rightEntity.id());
         if (!insertQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
         }
         if (insertQuery.lastError().isValid())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
         }
     }
     else
@@ -188,19 +188,19 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
         if (!updateQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
         }
         updateQuery.bindValue(":leftEntityId", leftEntityId);
         updateQuery.bindValue(":rightEntityId", rightEntity.id());
         if (!updateQuery.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
         }
         if (updateQuery.lastError().isValid())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
         }
     }
 
@@ -228,18 +228,18 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntityFromItsId(int
         if (!query.prepare(queryStr))
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         query.bindValue(":id", QVariant(rightEntityId));
         if (!query.exec())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
         if (query.lastError().isValid())
         {
             return Result<RightEntity>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
 
         while (query.next())
@@ -251,8 +251,8 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntityFromItsId(int
         }
         if (columnWithValues.isEmpty())
         {
-            return Result<RightEntity>(Error(Q_FUNC_INFO, Error::Critical, "sql_row_missing",
-                                             "No row with id " + QString::number(rightEntityId)));
+            return Result<RightEntity>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing",
+                                                   "No row with id " + QString::number(rightEntityId)));
         }
     }
 

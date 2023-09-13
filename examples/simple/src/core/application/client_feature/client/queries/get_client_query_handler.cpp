@@ -26,7 +26,7 @@ Result<ClientDTO> GetClientQueryHandler::handle(QPromise<Result<void>> &progress
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetClientQuery:" << ex.what();
     }
     return result;
@@ -40,10 +40,7 @@ Result<ClientDTO> GetClientQueryHandler::handleImpl(QPromise<Result<void>> &prog
     // do
     auto clientResult = m_repository->get(query.id);
 
-    if (Q_UNLIKELY(clientResult.isError()))
-    {
-        return Result<ClientDTO>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR(ClientDTO, clientResult)
 
     // map
     auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());

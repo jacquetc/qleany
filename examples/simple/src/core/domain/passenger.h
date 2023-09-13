@@ -137,7 +137,10 @@ inline Qleany::Domain::EntitySchema Passenger::schema = {
       RelationshipDirection::Backward},
      {Simple::Domain::Entities::EntityEnum::Client, "Client", Simple::Domain::Entities::EntityEnum::Passenger,
       "Passenger", "client", RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
-      RelationshipDirection::Backward}},
+      RelationshipDirection::Backward},
+     {Simple::Domain::Entities::EntityEnum::Client, "Client", Simple::Domain::Entities::EntityEnum::Passenger,
+      "Passenger", "clientFriends", RelationshipType::OneToMany, RelationshipStrength::Strong,
+      RelationshipCardinality::ManyUnordered, RelationshipDirection::Backward}},
 
     // fields:
     {{"id", FieldType::Integer, true, false},

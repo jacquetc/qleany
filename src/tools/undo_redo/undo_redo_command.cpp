@@ -48,8 +48,8 @@ void UndoRedoCommand::asyncRedo()
     emit redoing(m_scope, true);
     QFuture<Result<void>> future =
         QtConcurrent::run(&UndoRedoCommand::redo, this).onFailed([](const std::exception &e) {
-            return Result<void>(
-                Error(Q_FUNC_INFO, Error::Critical, "redo-error", "Redo failed: " + QString::fromStdString(e.what())));
+            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
+                                            "Redo failed: " + QString::fromStdString(e.what())));
         });
     m_watcher->setFuture(future);
 }

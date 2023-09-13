@@ -36,6 +36,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
 
     QString getTableCreationSql() const;
     Result<QList<RightEntity>> updateRightEntities(int leftEntityId, const QList<RightEntity> &rightEntities);
+    Result<void> removeTheseRightIds(QList<int> rightEntityIds);
 
     struct EntityShadow
     {
@@ -97,6 +98,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
         const QList<EntityShadow> &shadows) const;
 };
 
+// Contrary to other Associators, the foreign keys are on ON DELETE RESTRICT
 template <class RightEntity> QString OneToManyOrderedAssociator<RightEntity>::getTableCreationSql() const
 {
     return "CREATE TABLE IF NOT EXISTS " + m_junctionTableName +
@@ -105,8 +107,8 @@ template <class RightEntity> QString OneToManyOrderedAssociator<RightEntity>::ge
            m_junctionTableLeftEntityForeignKeyName + " INTEGER NOT NULL, " + m_junctionTableRightEntityForeignKeyName +
            " INTEGER NOT NULL ON CONFLICT ROLLBACK UNIQUE ON CONFLICT ROLLBACK, FOREIGN KEY (" +
            m_junctionTableLeftEntityForeignKeyName + ") REFERENCES " + m_leftEntityForeignTableName +
-           " (id) ON DELETE CASCADE, FOREIGN KEY (" + m_junctionTableRightEntityForeignKeyName + ") REFERENCES " +
-           m_rightEntityForeignTableName + " (id) ON DELETE CASCADE, " + "UNIQUE (" +
+           " (id) ON DELETE RESTRICT, FOREIGN KEY (" + m_junctionTableRightEntityForeignKeyName + ") REFERENCES " +
+           m_rightEntityForeignTableName + " (id) ON DELETE RESTRICT, " + "UNIQUE (" +
            m_junctionTableLeftEntityForeignKeyName + ", " + m_junctionTableRightEntityForeignKeyName +
            ") ON CONFLICT ROLLBACK" + ");";
 }
@@ -135,13 +137,14 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
     if (!query.prepare(queryStr))
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error_prepare", query.lastError().text()));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error_prepare", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
 
     if (!query.exec())
     {
-        return Result<QList<RightEntity>>(Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text()));
+        return Result<QList<RightEntity>>(
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     QList<int> rightEntityIds;
     while (query.next())
@@ -165,13 +168,13 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     QList<int> originalRightEntityIds;
     QList<EntityShadow> originalShadows;
@@ -210,7 +213,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
             if (!query.exec())
             {
                 return Result<QList<RightEntity>>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
             }
         }
         // remove old junction table rows
@@ -224,11 +227,11 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
             if (!query.exec())
             {
                 return Result<QList<RightEntity>>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
             }
         }
         // update junction table rows
-        if (shadow.updatePreviousOrNext && shadow.junctionTableId != -1)
+        if (shadow.updatePreviousOrNext)
         {
             queryStr = QString("UPDATE %1 SET previous = :previous, next = :next WHERE id = :junctionId")
                            .arg(m_junctionTableName);
@@ -239,7 +242,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
             if (!query.exec())
             {
                 return Result<QList<RightEntity>>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
             }
         }
     }
@@ -284,7 +287,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
     if (!query.prepare(queryStr))
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     for (int i = 0; i < rightEntityIds.count(); i++)
     {
@@ -293,12 +296,12 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     if (query.lastError().isValid())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
 
     while (query.next())
@@ -319,8 +322,8 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
             Q_ASSERT(false);
 
             return Result<QList<RightEntity>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error",
-                      "The right entities are not in the same order than the right entity ids", queryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                            "The right entities are not in the same order than the right entity ids", queryStr));
         }
     }
 
@@ -423,19 +426,19 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
             shadow.common = true;
         }
     }
-    for (auto &shadow : newShadowsClone)
+
+    // fill common newShadows of the information from originalShadows
+    for (auto &shadow : originalShadowsClone)
     {
-        if (originalShadowsClone.contains(shadow))
+
+        if (shadow.common)
         {
-            shadow.common = true;
-            // transfert members
-
-            const EntityShadow &tempShadow = newShadowsClone[newShadowsClone.indexOf(shadow)];
-
-            shadow.junctionTableId = tempShadow.junctionTableId;
-            shadow.entityId = tempShadow.entityId;
-            shadow.next = tempShadow.next;
-            shadow.previous = tempShadow.previous;
+            EntityShadow &tempShadow = newShadowsClone[newShadowsClone.indexOf(shadow)];
+            tempShadow.junctionTableId = shadow.junctionTableId;
+            tempShadow.entityId = shadow.entityId;
+            tempShadow.next = shadow.next;
+            tempShadow.previous = shadow.previous;
+            tempShadow.common = true;
         }
     }
 
@@ -524,6 +527,153 @@ QList<typename OneToManyOrderedAssociator<RightEntity>::EntityShadow> OneToManyO
     }
 
     return writtenShadows;
+}
+
+template <class RightEntity>
+Result<void> OneToManyOrderedAssociator<RightEntity>::removeTheseRightIds(QList<int> rightEntityIds)
+{
+    if (rightEntityIds.isEmpty())
+    {
+        return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "rigntentitty_empty", "rightEntityIds is empty"));
+    }
+
+    struct RemovalShadow
+    {
+        int id;
+        int rightEntityId;
+        int previous;
+        int next;
+        bool done = false;
+    };
+
+    struct RemovalShadowGroup
+    {
+        int rightEntityId = 0;
+        QList<RemovalShadow> shadows;
+        int previous = 0;
+        int next = 0;
+    };
+
+    QList<RemovalShadow> shadows;
+    shadows.reserve(rightEntityIds.size());
+
+    // fetch with SQL the previous and next for each line with rightEntityId
+
+    QSqlDatabase database = m_databaseContext->getConnection();
+    QSqlQuery query(database);
+    QString queryString = QString("SELECT id, %1, previous, next FROM %2 WHERE %1 IN (")
+                              .arg(m_junctionTableRightEntityForeignKeyName, m_junctionTableName);
+    for (int i = 0; i < rightEntityIds.size(); i++)
+    {
+        if (i != 0)
+        {
+            queryString += ", ";
+        }
+        queryString += QString::number(rightEntityIds[i]);
+    }
+    queryString += ")";
+    if (!query.exec(queryString))
+    {
+        return Result<void>(
+            QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error", query.lastError().text()));
+    }
+
+    // fill shadows with the fetched data
+    while (query.next())
+    {
+        shadows.append(
+            {query.value(0).toInt(), query.value(1).toInt(), query.value(2).toInt(), query.value(3).toInt()});
+    }
+
+    // divide RemovalShadow into RemovalShadowGroup by groups of adjacent RemovalShadows, an adjacent RemovalShadow is a
+    // RemovalShadow with next == id of the next RemovalShadow
+    QList<RemovalShadowGroup> shadowGroups;
+    shadowGroups.reserve(shadows.size());
+
+    for (int i = 0; i > shadows.size(); i++)
+    {
+        int previousToFind = 0;
+        int nextToFind = 0;
+
+        if (shadows[i].done == false)
+        {
+            shadowGroups.append({shadows[i].rightEntityId, {shadows[i]}, shadows[i].previous, shadows[i].next});
+            previousToFind = shadows[i].previous;
+            nextToFind = shadows[i].next;
+            shadows[i].done = true;
+
+            for (int k = 0; k > shadows.size(); k++)
+            {
+                if (shadows[k].done == false)
+                {
+                    if (shadows[k].previous == nextToFind && nextToFind != 0)
+                    {
+                        shadowGroups.last().shadows.append(shadows[k]);
+                        shadowGroups.last().next = shadows[k].next;
+                        shadows[k].done = true;
+                        nextToFind = shadows[k].next;
+                    }
+                    else if (shadows[k].next == previousToFind && previousToFind != 0)
+                    {
+                        shadowGroups.last().shadows.prepend(shadows[k]);
+                        shadowGroups.last().previous = shadows[k].previous;
+                        shadows[k].done = true;
+                        previousToFind = shadows[k].previous;
+                    }
+                }
+            }
+        }
+    }
+
+    // remove the shadows from the database
+
+    for (auto &shadowGroup : shadowGroups)
+    {
+        QString queryString = QString("DELETE FROM %1 WHERE id IN (").arg(m_junctionTableName);
+        for (int i = 0; i < shadowGroup.shadows.size(); i++)
+        {
+            if (i != 0)
+            {
+                queryString += ", ";
+            }
+            queryString += QString::number(shadowGroup.shadows[i].id);
+        }
+        queryString += ")";
+        if (!query.exec(queryString))
+        {
+            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                            query.lastError().text()));
+        }
+    }
+
+    // update the previous and next of the shadows in the database. Previous entity of a group must take the "next" of
+    // the group. Next entity of a group must take the "previous" of the group.
+
+    for (auto &shadowGroup : shadowGroups)
+    {
+
+        // previous :
+        QString queryString = QString("UPDATE %1 SET next = %2 WHERE id = %3")
+                                  .arg(m_junctionTableName)
+                                  .arg(shadowGroup.next, shadowGroup.previous);
+        if (!query.exec(queryString))
+        {
+            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                            query.lastError().text()));
+        }
+
+        // next :
+        queryString = QString("UPDATE %1 SET previous = %2 WHERE id = %3")
+                          .arg(m_junctionTableName)
+                          .arg(shadowGroup.previous, shadowGroup.next);
+        if (!query.exec(queryString))
+        {
+            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                            query.lastError().text()));
+        }
+    }
+
+    return Result<void>();
 }
 
 } // namespace Qleany::Database

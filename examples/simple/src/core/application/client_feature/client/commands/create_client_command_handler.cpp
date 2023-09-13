@@ -31,7 +31,7 @@ Result<ClientDTO> CreateClientCommandHandler::handle(QPromise<Result<void>> &pro
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateClientCommand:" << ex.what();
     }
     return result;
@@ -47,7 +47,7 @@ Result<ClientDTO> CreateClientCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<ClientDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateClientCommand restore:" << ex.what();
     }
     return result;
@@ -58,19 +58,15 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 {
     qDebug() << "CreateClientCommandHandler::handleImpl called";
     Simple::Domain::Client client;
+    CreateClientDTO createDTO = request.req;
 
-    if (m_newEntity.isEmpty())
+    if (m_firstPass)
     {
         // Validate the create Client command using the validator
         auto validator = CreateClientCommandValidator(m_repository);
-        Result<void> validatorResult = validator.validate(request.req);
+        Result<void> validatorResult = validator.validate(createDTO);
 
-        if (Q_UNLIKELY(validatorResult.hasError()))
-        {
-            return Result<ClientDTO>(validatorResult.error());
-        }
-
-        CreateClientDTO createDTO = request.req;
+        QLN_RETURN_IF_ERROR(ClientDTO, validatorResult);
 
         // Map the create Client command to a domain Client object and
         // generate a UUID
@@ -96,11 +92,14 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     m_repository->beginChanges();
     auto clientResult = m_repository->add(std::move(client));
 
-    if (Q_UNLIKELY(clientResult.hasError()))
-    {
-        m_repository->cancelChanges();
-        return Result<ClientDTO>(clientResult.error());
-    }
+    QLN_RETURN_IF_ERROR_WITH_ACTION(ClientDTO, clientResult, m_repository->cancelChanges();)
+
+    // Get the newly created Client entity
+    client = clientResult.value();
+    // Save the newly created entity
+    m_newEntity = clientResult;
+
+    //  Manage relation to owner
 
     m_repository->saveChanges();
 
@@ -112,6 +111,8 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
     qDebug() << "Client added:" << clientDTO.id();
 
+    m_firstPass = false;
+
     // Return the DTO of the newly created Client as a Result object
     return Result<ClientDTO>(clientDTO);
 }
@@ -121,11 +122,7 @@ Result<ClientDTO> CreateClientCommandHandler::restoreImpl()
 
     auto deleteResult = m_repository->remove(m_newEntity.value().id());
 
-    if (Q_UNLIKELY(deleteResult.hasError()))
-    {
-        qDebug() << "Error deleting Client from repository:" << deleteResult.error().message();
-        return Result<ClientDTO>(deleteResult.error());
-    }
+    QLN_RETURN_IF_ERROR(ClientDTO, deleteResult)
 
     emit clientRemoved(deleteResult.value());
 

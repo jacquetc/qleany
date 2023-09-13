@@ -6,6 +6,8 @@
 
 #include "passenger/passenger_dto.h"
 
+#include "passenger/passenger_inserted_into_relative_dto.h"
+
 #include <QObject>
 
 namespace Simple::Controller
@@ -28,5 +30,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerSignals : public QObject
     void getAllReplied(QList<PassengerDTO> dtoList);
     void created(PassengerDTO dto);
     void updated(Contracts::DTO::Passenger::PassengerDTO dto);
+    void detailsUpdated(int id);
+
+    void insertedIntoCarPassengers(Contracts::DTO::Passenger::PassengerInsertedIntoRelativeDTO dto);
 };
 } // namespace Simple::Controller

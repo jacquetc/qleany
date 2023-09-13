@@ -5,6 +5,12 @@
 #include <QList>
 #include <QString>
 
+#define QLN_ERROR_1(func_info, err_type, error_code) Error(func_info, err_type, error_code, __FILE__, __LINE__)
+#define QLN_ERROR_2(func_info, err_type, error_code, msg)                                                              \
+    Error(func_info, err_type, error_code, msg, __FILE__, __LINE__)
+#define QLN_ERROR_3(func_info, err_type, error_code, msg, data)                                                        \
+    Error(func_info, err_type, error_code, msg, data, __FILE__, __LINE__)
+
 namespace Qleany
 {
 /**
@@ -36,8 +42,8 @@ class QLEANY_EXPORT Error
      * @param status The error status.
      * @param code The error code.
      */
-    explicit Error(const QObject *object, const Error::Status &status, const QString &code)
-        : m_status(status), m_code(code), m_message("")
+    explicit Error(const QObject *object, const Error::Status &status, const QString &code, const char *file, int line)
+        : m_status(status), m_code(code), m_message(""), m_data(""), m_file(file), m_line(line)
     {
         m_className = object->metaObject()->className();
     }
@@ -50,36 +56,41 @@ class QLEANY_EXPORT Error
      * @param code The error code.
      * @param message The error message.
      */
-    explicit Error(const QObject *object, const Error::Status &status, const QString &code, const QString &message)
-        : m_status(status), m_code(code), m_message(message)
+    explicit Error(const QObject *object, const Error::Status &status, const QString &code, const QString &message,
+                   const char *file, int line)
+        : m_status(status), m_code(code), m_message(message), m_data(""), m_file(file), m_line(line)
     {
         m_className = object->metaObject()->className();
     }
 
     //--------------------------------------------------------------
     explicit Error(const QObject *object, const Error::Status &status, const QString &code, const QString &message,
-                   const QString data)
-        : m_status(status), m_code(code), m_message(message), m_data(data)
+                   const QString data, const char *file, int line)
+        : m_status(status), m_code(code), m_message(message), m_data(data), m_file(file), m_line(line)
     {
         m_className = object->metaObject()->className();
     }
 
     //--------------------------------------------------------------
-    explicit Error(const QString &className, const Error::Status &status, const QString &code)
-        : m_className(className), m_status(status), m_code(code)
-    {
-    }
-
-    //--------------------------------------------------------------
-    explicit Error(const QString &className, const Error::Status &status, const QString &code, const QString &message)
-        : m_className(className), m_status(status), m_code(code), m_message(message)
+    explicit Error(const QString &className, const Error::Status &status, const QString &code, const char *file,
+                   int line)
+        : m_className(className), m_status(status), m_code(code), m_message(""), m_data(""), m_file(file), m_line(line)
     {
     }
 
     //--------------------------------------------------------------
     explicit Error(const QString &className, const Error::Status &status, const QString &code, const QString &message,
-                   const QString data)
-        : m_className(className), m_status(status), m_code(code), m_message(message), m_data(data)
+                   const char *file, int line)
+        : m_className(className), m_status(status), m_code(code), m_message(message), m_data(""), m_file(file),
+          m_line(line)
+    {
+    }
+
+    //--------------------------------------------------------------
+    explicit Error(const QString &className, const Error::Status &status, const QString &code, const QString &message,
+                   const QString data, const char *file, int line)
+        : m_className(className), m_status(status), m_code(code), m_message(message), m_data(data), m_file(file),
+          m_line(line)
     {
     }
 
@@ -95,7 +106,7 @@ class QLEANY_EXPORT Error
     //--------------------------------------------------------------
     Error(const Error &other)
         : m_status(other.m_status), m_className(other.m_className), m_code(other.m_code), m_message(other.m_message),
-          m_data(other.m_data)
+          m_data(other.m_data), m_file(other.m_file), m_line(other.m_line)
     {
     }
 
@@ -129,6 +140,12 @@ class QLEANY_EXPORT Error
     {
         return m_data;
     }
+
+    QString stackTrace() const
+    {
+        return m_file + ":" + QString::number(m_line);
+    }
+
     /**
      * @brief Returns true if the error status is Ok, false otherwise.
      *
@@ -184,6 +201,8 @@ class QLEANY_EXPORT Error
     QString m_data;
     QString m_className;
     Error::Status m_status;
+    QString m_file;
+    int m_line;
 };
 
 inline QString Error::className() const

@@ -28,6 +28,7 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : public 
 
   signals:
     void brandUpdated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
+    void brandDetailsUpdated(int id);
 
   private:
     InterfaceBrandRepository *m_repository;

@@ -28,7 +28,7 @@ Result<CarWithDetailsDTO> GetCarWithDetailsQueryHandler::handle(QPromise<Result<
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarWithDetailsDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarWithDetailsDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetCarQuery:" << ex.what();
     }
     return result;
@@ -42,10 +42,7 @@ Result<CarWithDetailsDTO> GetCarWithDetailsQueryHandler::handleImpl(QPromise<Res
     // do
     auto carResult = m_repository->getWithDetails(query.id);
 
-    if (Q_UNLIKELY(carResult.isError()))
-    {
-        return Result<CarWithDetailsDTO>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(CarWithDetailsDTO, carResult)
 
     Simple::Domain::Car car = carResult.value();
 

@@ -31,7 +31,7 @@ Result<CarDTO> UpdateCarCommandHandler::handle(QPromise<Result<void>> &progressP
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateCarCommand:" << ex.what();
     }
     return result;
@@ -47,7 +47,7 @@ Result<CarDTO> UpdateCarCommandHandler::restore()
     }
     catch (const std::exception &ex)
     {
-        result = Result<CarDTO>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateCarCommand restore:" << ex.what();
     }
     return result;
@@ -62,10 +62,7 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     auto validator = UpdateCarCommandValidator(m_repository);
     Result<void> validatorResult = validator.validate(request.req);
 
-    if (Q_UNLIKELY(validatorResult.hasError()))
-    {
-        return Result<CarDTO>(validatorResult.error());
-    }
+    QLN_RETURN_IF_ERROR(CarDTO, validatorResult)
 
     // map
     auto car = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateCarDTO, Simple::Domain::Car>(request.req);
@@ -81,11 +78,7 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     {
         Result<Simple::Domain::Car> saveResult = m_repository->get(request.req.id());
 
-        if (Q_UNLIKELY(saveResult.hasError()))
-        {
-            qDebug() << "Error getting car from repository:" << saveResult.error().message();
-            return Result<CarDTO>(saveResult.error());
-        }
+        QLN_RETURN_IF_ERROR(CarDTO, saveResult)
 
         // map
         m_newState =
@@ -105,6 +98,11 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     emit carUpdated(carDto);
 
+    if (request.req.metaData().areDetailsSet())
+    {
+        emit carDetailsUpdated(carDto.id());
+    }
+
     qDebug() << "UpdateCarCommandHandler::handleImpl done";
 
     return Result<CarDTO>(carDto);
@@ -120,10 +118,7 @@ Result<CarDTO> UpdateCarCommandHandler::restoreImpl()
     // do
     auto carResult = m_repository->update(std::move(car));
 
-    if (Q_UNLIKELY(carResult.hasError()))
-    {
-        return Result<CarDTO>(carResult.error());
-    }
+    QLN_RETURN_IF_ERROR(CarDTO, carResult)
 
     // map
     auto carDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());

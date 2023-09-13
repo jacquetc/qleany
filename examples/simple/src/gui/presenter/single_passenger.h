@@ -1,8 +1,9 @@
 #pragma once
 
+#include "presenter_export.h"
 #include <QObject>
 
-class SinglePassenger : public QObject
+class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
 {
     Q_OBJECT
   public:

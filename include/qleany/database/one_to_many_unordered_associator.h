@@ -84,13 +84,13 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     QList<int> rightEntityIds;
     while (query.next())
@@ -114,13 +114,13 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::updateRigh
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     query.bindValue(":entityId", leftEntityId);
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     QList<int> rightEntityIds;
     while (query.next())
@@ -141,8 +141,8 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::updateRigh
             deleteQuery.bindValue(":rightEntityId", rightEntityId);
             if (!deleteQuery.exec())
             {
-                return Result<QList<RightEntity>>(
-                    Error(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
+                return Result<QList<RightEntity>>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                              deleteQuery.lastError().text(), deleteQueryStr));
             }
         }
     }
@@ -160,7 +160,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::updateRigh
         if (!insertQuery.exec())
         {
             return Result<QList<RightEntity>>(
-                Error(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
+                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
         }
     }
     return getRightEntities(leftEntityId);
@@ -198,7 +198,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
     if (!query.prepare(queryStr))
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     for (int i = 0; i < rightEntityIds.count(); i++)
     {
@@ -207,12 +207,12 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
     if (!query.exec())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
     if (query.lastError().isValid())
     {
         return Result<QList<RightEntity>>(
-            Error(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
 
     while (query.next())

@@ -42,5 +42,10 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT PassengerListModel : public QAbstractListMo
     void populate();
 
     QList<Simple::Contracts::DTO::Passenger::PassengerDTO> m_passengers;
+    QList<int> m_passengerIds;
     int m_carId = 0;
+
+    // QAbstractItemModel interface
+  public:
+    QHash<int, QByteArray> roleNames() const override;
 };

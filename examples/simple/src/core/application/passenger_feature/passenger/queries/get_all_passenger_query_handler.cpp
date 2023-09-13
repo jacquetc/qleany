@@ -29,7 +29,7 @@ Result<QList<PassengerDTO>> GetAllPassengerQueryHandler::handle(QPromise<Result<
     }
     catch (const std::exception &ex)
     {
-        result = Result<QList<PassengerDTO>>(Error(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
+        result = Result<QList<PassengerDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllPassengerQuery:" << ex.what();
     }
     return result;
@@ -42,10 +42,7 @@ Result<QList<PassengerDTO>> GetAllPassengerQueryHandler::handleImpl(QPromise<Res
     // do
     auto passengerResult = m_repository->getAll();
 
-    if (Q_UNLIKELY(passengerResult.isError()))
-    {
-        return Result<QList<PassengerDTO>>(passengerResult.error());
-    }
+    QLN_RETURN_IF_ERROR(QList<PassengerDTO>, passengerResult)
 
     // map
     QList<PassengerDTO> dtoList;
