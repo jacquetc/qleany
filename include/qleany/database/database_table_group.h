@@ -617,41 +617,37 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::remove(QList<int> i
     QSqlDatabase database = m_databaseContext->getConnection();
 
     // Generate the SQL DELETE statement
-    QString queryStr = "DELETE FROM " + entityName + " WHERE id IN (:ids)";
+    QString queryStr = "DELETE FROM " + entityName + " WHERE id IN (";
 
+    for (int id : ids)
     {
-        QSqlQuery query(database);
-        if (!query.prepare(queryStr))
-        {
-            return Result<QList<int>>(
-                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
-        }
+        queryStr += QString::number(id) + ",";
+    }
+    queryStr.chop(1);
+    queryStr += ")";
 
-        QString idsString;
-        for (int id : ids)
-        {
-            idsString += QString::number(id) + ",";
-            idsString.chop(1);
-        }
-        query.bindValue(":id", idsString);
+    QSqlQuery query(database);
+    if (!query.prepare(queryStr))
+    {
+        return Result<QList<int>>(
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+    }
+    // Execute the DELETE statement with the entity ID
+    if (!query.exec())
+    {
+        return Result<QList<int>>(
+            QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
+    }
 
-        // Execute the DELETE statement with the entity ID
-        if (!query.exec())
-        {
-            return Result<QList<int>>(
-                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
-        }
-
-        // Return an appropriate Result object based on the query execution result
-        if (query.numRowsAffected() == ids.count())
-        {
-            return Result<QList<int>>(ids);
-        }
-        else
-        {
-            return Result<QList<int>>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
-                                                  "Failed to delete row from database", QString::number(ids.count())));
-        }
+    // Return an appropriate Result object based on the query execution result
+    if (query.numRowsAffected() == ids.count())
+    {
+        return Result<QList<int>>(ids);
+    }
+    else
+    {
+        return Result<QList<int>>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_delete_failed",
+                                              "Failed to delete row from database", QString::number(ids.count())));
     }
 }
 

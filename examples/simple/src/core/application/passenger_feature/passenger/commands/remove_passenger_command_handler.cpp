@@ -65,11 +65,11 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
     // save old entity
     m_oldState = passengerResult.value();
 
-    auto deleteResult = m_repository->remove(passengerId);
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << passengerId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    emit passengerRemoved(deleteResult.value());
+    emit passengerRemoved(deleteResult.value().value(Simple::Domain::Entities::Passenger).first());
 
     qDebug() << "Passenger removed:" << passengerId;
 
