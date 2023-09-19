@@ -246,7 +246,7 @@ contracts:
   export_header_file: contracts_export.h
 
 presenter:
-  folder_path: src/core/contracts/presenter
+  folder_path: src/gui/presenter
   export: SIMPLEEXAMPLE_PRESENTER_EXPORT
   export_header_file: presenter_export.h
   create_undo_redo_single: false

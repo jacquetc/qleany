@@ -10,7 +10,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
 {
 
     connect(EventDispatcher::instance()->car(), &CarSignals::detailsUpdated, this, [this](int carId) {
-        if (carId == m_carId)
+        if (carId != m_carId)
         {
             return;
         }
@@ -33,6 +33,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
                     int row = m_passengers.size();
                     beginInsertRows(QModelIndex(), row, row);
                     m_passengers.append(passenger);
+                    m_passengerIds.append(passenger.id());
                     endInsertRows();
                 }
             }
@@ -46,6 +47,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
                     // remove the passenger
                     beginRemoveRows(QModelIndex(), i, i);
                     m_passengers.removeAt(i);
+                    m_passengerIds.removeAt(i);
                     endRemoveRows();
                 }
             }
@@ -59,6 +61,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
                     int row = newPassengers.indexOf(m_passengers[i]);
                     beginMoveRows(QModelIndex(), i, i, QModelIndex(), row);
                     m_passengers.move(i, row);
+                    m_passengerIds.move(i, row);
                     endMoveRows();
                 }
             }
@@ -98,8 +101,6 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::insertedIntoCarPassengers, this,
             [this](PassengerInsertedIntoRelativeDTO dto) {
                 // remove passenger from this model if dto.passenger().id() is here
-                // add passenger to this model if dto.relatedId() is here
-
                 int passengerId = dto.passenger().id();
                 if (m_passengerIds.contains(passengerId) && m_carId != dto.relatedId())
                 {
@@ -109,6 +110,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
                     m_passengerIds.removeAt(position);
                     endRemoveRows();
                 }
+                // add passenger to this model if dto.relatedId() is here
                 else if (!m_passengerIds.contains(passengerId) && m_carId == dto.relatedId())
                 {
                     int position = dto.position();
@@ -208,13 +210,13 @@ void PassengerListModel::populate()
 {
     if (m_carId == 0)
         return;
-    m_passengers.clear();
-    m_passengerIds.clear();
 
     auto task = Car::CarController::instance()->getWithDetails(m_carId);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
-        const QList<Simple::Contracts::DTO::Passenger::PassengerDTO> passengers = result.passengers();
+        const QList<Simple::Contracts::DTO::Passenger::PassengerDTO> &passengers = result.passengers();
         beginInsertRows(QModelIndex(), 0, passengers.size() - 1);
+        m_passengers.clear();
+        m_passengerIds.clear();
         m_passengers = passengers;
         // fill m_passengerIds
         for (const auto &passenger : passengers)

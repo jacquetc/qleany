@@ -581,8 +581,10 @@ Result<void> OneToManyOrderedAssociator<RightEntity>::removeTheseRightIds(QList<
     // fill shadows with the fetched data
     while (query.next())
     {
-        shadows.append(
-            {query.value(0).toInt(), query.value(1).toInt(), query.value(2).toInt(), query.value(3).toInt()});
+        shadows.append({.id = query.value(0).toInt(),
+                        .rightEntityId = query.value(1).toInt(),
+                        .previous = query.value(2).toInt(),
+                        .next = query.value(3).toInt()});
     }
 
     // divide RemovalShadow into RemovalShadowGroup by groups of adjacent RemovalShadows, an adjacent RemovalShadow is a
@@ -590,7 +592,7 @@ Result<void> OneToManyOrderedAssociator<RightEntity>::removeTheseRightIds(QList<
     QList<RemovalShadowGroup> shadowGroups;
     shadowGroups.reserve(shadows.size());
 
-    for (int i = 0; i > shadows.size(); i++)
+    for (int i = 0; i < shadows.size(); i++)
     {
         int previousToFind = 0;
         int nextToFind = 0;
@@ -648,28 +650,48 @@ Result<void> OneToManyOrderedAssociator<RightEntity>::removeTheseRightIds(QList<
 
     // update the previous and next of the shadows in the database. Previous entity of a group must take the "next" of
     // the group. Next entity of a group must take the "previous" of the group.
-
     for (auto &shadowGroup : shadowGroups)
     {
 
         // previous :
-        QString queryString = QString("UPDATE %1 SET next = %2 WHERE id = %3")
-                                  .arg(m_junctionTableName)
-                                  .arg(shadowGroup.next, shadowGroup.previous);
-        if (!query.exec(queryString))
+        if (shadowGroup.previous != 0)
         {
-            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
-                                            query.lastError().text()));
-        }
+            queryString = QString("UPDATE %1 SET next = :next WHERE id = :id").arg(m_junctionTableName);
+            if (!query.prepare(queryString))
+            {
+                return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                                query.lastError().text()));
+            }
+            query.bindValue(":next", shadowGroup.next == 0 ? QVariant(QMetaType::fromType<int>()) : shadowGroup.next);
+            query.bindValue(":id", shadowGroup.previous);
 
-        // next :
-        queryString = QString("UPDATE %1 SET previous = %2 WHERE id = %3")
-                          .arg(m_junctionTableName)
-                          .arg(shadowGroup.previous, shadowGroup.next);
-        if (!query.exec(queryString))
+            if (!query.exec())
+            {
+                qDebug() << query.lastQuery();
+                qDebug() << query.boundValues();
+                qDebug() << query.lastError();
+                return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                                query.lastError().text()));
+            }
+        }
+        if (shadowGroup.next != 0)
         {
-            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
-                                            query.lastError().text()));
+            // next :
+            queryString = QString("UPDATE %1 SET previous = :previous WHERE id = :id").arg(m_junctionTableName);
+            if (!query.prepare(queryString))
+            {
+                return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                                query.lastError().text()));
+            }
+            query.bindValue(":previous",
+                            shadowGroup.previous == 0 ? QVariant(QMetaType::fromType<int>()) : shadowGroup.previous);
+            query.bindValue(":id", shadowGroup.next);
+
+            if (!query.exec())
+            {
+                return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Status::Fatal, "association-removal-sql-error",
+                                                query.lastError().text()));
+            }
         }
     }
 
