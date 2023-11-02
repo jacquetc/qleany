@@ -12,10 +12,9 @@ set(SRC
     car/commands/create_car_command.h
     car/commands/update_car_command.h
     car/commands/remove_car_command.h
-    car/commands/remove_car_tree_command.h
     car/validators/create_car_command_validator.h
     car/validators/update_car_command_validator.h
-    car/validators/remove_car_tree_command_validator.h
+    car/validators/remove_car_command_validator.h
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 

@@ -49,7 +49,7 @@ QCoro::Task<ClientDTO> ClientController::get(int id)
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
@@ -82,7 +82,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
@@ -223,10 +223,7 @@ QCoro::Task<bool> ClientController::remove(int id)
     auto *handler = new RemoveClientCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveClientCommandHandler::clientCreated, this,
-                     [this](ClientDTO dto) { emit m_eventDispatcher->client()->created(dto); });
-    QObject::connect(handler, &RemoveClientCommandHandler::clientRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->client()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<RemoveClientCommandHandler, RemoveClientCommand>(
@@ -236,8 +233,8 @@ QCoro::Task<bool> ClientController::remove(int id)
     m_undo_redo_system->push(command, "client");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveClientCommandHandler::clientRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
 
     if (!optional_result.has_value())
     {

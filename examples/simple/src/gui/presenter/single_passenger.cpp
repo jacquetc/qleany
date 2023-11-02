@@ -35,14 +35,17 @@ void SinglePassenger::setId(int newId)
     // clear
     if (m_id == 0)
     {
-        setName("");
+        m_name = "";
     }
 
     // set
     else
     {
         Passenger::PassengerController::instance()->get(m_id).then(
-            [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) { setName(passenger.name()); });
+            [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+                m_name = passenger.name();
+                emit nameChanged();
+            });
     }
 }
 
@@ -66,6 +69,5 @@ void SinglePassenger::setName(const QString &newName)
     dto.setId(id());
     dto.setName(newName);
     Passenger::PassengerController::instance()->update(dto);
-
     emit nameChanged();
 }

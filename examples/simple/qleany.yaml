@@ -142,8 +142,6 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
           enabled: true
         change_active_status: 

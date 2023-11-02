@@ -27,53 +27,53 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
             // we have new passengers
             for (const auto &passenger : newPassengers)
             {
-                if (!m_passengers.contains(passenger))
+                if (!m_passengerList.contains(passenger))
                 {
                     // add the passenger
-                    int row = m_passengers.size();
+                    int row = m_passengerList.size();
                     beginInsertRows(QModelIndex(), row, row);
-                    m_passengers.append(passenger);
-                    m_passengerIds.append(passenger.id());
+                    m_passengerList.append(passenger);
+                    m_passengerIdList.append(passenger.id());
                     endInsertRows();
                 }
             }
 
             // then, remove the passengers that are not in the new list
 
-            for (int i = m_passengers.size() - 1; i >= 0; --i)
+            for (int i = m_passengerList.size() - 1; i >= 0; --i)
             {
-                if (!newPassengers.contains(m_passengers[i]))
+                if (!newPassengers.contains(m_passengerList[i]))
                 {
                     // remove the passenger
                     beginRemoveRows(QModelIndex(), i, i);
-                    m_passengers.removeAt(i);
-                    m_passengerIds.removeAt(i);
+                    m_passengerList.removeAt(i);
+                    m_passengerIdList.removeAt(i);
                     endRemoveRows();
                 }
             }
             // then, move the current passagers so the list is in the same order as the new list
 
-            for (int i = 0; i < m_passengers.size(); ++i)
+            for (int i = 0; i < m_passengerList.size(); ++i)
             {
-                if (m_passengers[i] != newPassengers[i])
+                if (m_passengerList[i] != newPassengers[i])
                 {
                     // move the passenger
-                    int row = newPassengers.indexOf(m_passengers[i]);
+                    int row = newPassengers.indexOf(m_passengerList[i]);
                     beginMoveRows(QModelIndex(), i, i, QModelIndex(), row);
-                    m_passengers.move(i, row);
-                    m_passengerIds.move(i, row);
+                    m_passengerList.move(i, row);
+                    m_passengerIdList.move(i, row);
                     endMoveRows();
                 }
             }
 
             // finally, update the passengers that are in both lists if the updateDateDate has changed
 
-            for (int i = 0; i < m_passengers.size(); ++i)
+            for (int i = 0; i < m_passengerList.size(); ++i)
             {
-                if (m_passengers[i].updateDate() != newPassengers[i].updateDate())
+                if (m_passengerList[i].updateDate() != newPassengers[i].updateDate())
                 {
                     // update the passenger
-                    m_passengers[i] = newPassengers[i];
+                    m_passengerList[i] = newPassengers[i];
                     QModelIndex topLeft = index(i, 0);
                     QModelIndex bottomRight = index(i, 0);
                     emit dataChanged(topLeft, bottomRight);
@@ -85,15 +85,28 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
     });
 
     // TODO: replace with relationRemoved
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::removed, this, [this](QList<int> dtoList) {
-        for (int dtoId : dtoList)
+    connect(EventDispatcher::instance()->car(), &CarSignals::relationRemoved, this, [this](CarRelationDTO dto) {
+        if (dto.relationField() != CarRelationDTO::RelationField::Passengers)
         {
-            int position = m_passengerIds.indexOf(dtoId);
-            if (position != -1)
+            return;
+        }
+
+        // remove the passenger list
+        QList<int> relatedIds = dto.relatedIds();
+
+        for (int id : relatedIds)
+        {
+            if (!m_passengerIdList.contains(id))
             {
-                beginRemoveRows(QModelIndex(), position, position);
-                m_passengers.removeAt(position);
-                m_passengerIds.removeAt(position);
+                continue;
+            }
+
+            int index = m_passengerIdList.indexOf(id);
+            if (index != -1)
+            {
+                beginRemoveRows(QModelIndex(), index, index);
+                m_passengerList.removeAt(index);
+                m_passengerIdList.removeAt(index);
                 endRemoveRows();
             }
         }
@@ -105,41 +118,37 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
             return;
         }
 
+        int position = dto.position();
+
+        // reverse dto.relatedIds()
+        QList<int> relatedIds = dto.relatedIds();
+        std::reverse(relatedIds.begin(), relatedIds.end());
+
         // fetch passengers from controller
-        QList<PassengerDTO> passengers;
-        for (int passengerId : dto.relatedIds())
+        for (int passengerId : relatedIds)
         {
             Passenger::PassengerController::instance()
                 ->get(passengerId)
-                .then([this, passengerId, &passengers](PassengerDTO passenger) {
+                .then([this, passengerId, position](PassengerDTO passenger) {
                     // add passengers to this model
-                    if (!m_passengerIds.contains(passengerId))
+                    if (!m_passengerIdList.contains(passengerId))
                     {
-                        passengers.append(passenger);
+                        beginInsertRows(QModelIndex(), position, position);
+                        m_passengerList.insert(position, passenger);
+                        m_passengerIdList.insert(position, passengerId);
+                        endInsertRows();
                     }
                 });
         }
-
-        int position = dto.position();
-
-        // add passengers to this model
-        beginInsertRows(QModelIndex(), position, position + passengers.size() - 1);
-        for (const auto &passenger : passengers)
-        {
-            m_passengers.insert(position, passenger);
-            m_passengerIds.insert(position, passenger.id());
-            position++;
-        }
-        endInsertRows();
     });
 
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
-        for (int i = 0; i < m_passengers.size(); ++i)
+        for (int i = 0; i < m_passengerList.size(); ++i)
         {
-            if (m_passengers.at(i).id() == dto.id())
+            if (m_passengerList.at(i).id() == dto.id())
             {
-                m_passengers[i] = dto;
-                m_passengerIds[i] = dto.id();
+                m_passengerList[i] = dto;
+                m_passengerIdList[i] = dto.id();
                 emit dataChanged(index(i), index(i));
                 break;
             }
@@ -159,7 +168,7 @@ int PassengerListModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_passengers.count();
+    return m_passengerList.count();
 }
 
 QVariant PassengerListModel::data(const QModelIndex &index, int role) const
@@ -168,18 +177,18 @@ QVariant PassengerListModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     int row = index.row();
-    if (row >= m_passengers.size())
+    if (row >= m_passengerList.size())
         return QVariant();
 
     if (role == Qt::DisplayRole)
     {
-        return m_passengers.at(row).name();
+        return m_passengerList.at(row).name();
     }
 
     if (role == Id)
-        return m_passengers.at(row).id();
+        return m_passengerList.at(row).id();
     if (role == Name)
-        return m_passengers.at(row).name();
+        return m_passengerList.at(row).name();
 
     return QVariant();
 }
@@ -198,16 +207,16 @@ bool PassengerListModel::setData(const QModelIndex &index, const QVariant &value
         return false;
 
     int row = index.row();
-    if (row >= m_passengers.size())
+    if (row >= m_passengerList.size())
         return false;
 
     if (role == Qt::EditRole)
     {
-        m_passengers[row].setName(value.toString());
+        m_passengerList[row].setName(value.toString());
 
         UpdatePassengerDTO dto;
-        dto.setId(m_passengers[row].id());
-        dto.setName(m_passengers[row].name());
+        dto.setId(m_passengerList[row].id());
+        dto.setName(m_passengerList[row].name());
 
         Passenger::PassengerController::instance()->update(dto);
 
@@ -227,13 +236,13 @@ void PassengerListModel::populate()
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<Simple::Contracts::DTO::Passenger::PassengerDTO> &passengers = result.passengers();
         beginInsertRows(QModelIndex(), 0, passengers.size() - 1);
-        m_passengers.clear();
-        m_passengerIds.clear();
-        m_passengers = passengers;
-        // fill m_passengerIds
+        m_passengerList.clear();
+        m_passengerIdList.clear();
+        m_passengerList = passengers;
+        // fill m_passengerIdList
         for (const auto &passenger : passengers)
         {
-            m_passengerIds.append(passenger.id());
+            m_passengerIdList.append(passenger.id());
         }
 
         endInsertRows();
@@ -254,8 +263,8 @@ void PassengerListModel::setCarId(int newCarId)
     if (m_carId == 0)
     {
         beginResetModel();
-        m_passengers.clear();
-        m_passengerIds.clear();
+        m_passengerList.clear();
+        m_passengerIdList.clear();
         endResetModel();
     }
     else

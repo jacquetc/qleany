@@ -143,38 +143,6 @@ def get_generation_dict(
                         entity_mappable_with
                     ),
                 }
-            remove_tree_data = crud_data.get("remove_tree", {})
-            if remove_tree_data.get("enabled", False) and remove_tree_data.get(
-                "generate", True
-            ):
-                crud_handlers["remove_tree"] = {
-                    "generate": True,
-                    "templates": [
-                        "remove_tree_handler.cpp.jinja2",
-                        "remove_tree_handler.h.jinja2",
-                    ],
-                    "files": [
-                        os.path.join(
-                            common_cmake_folder_path,
-                            feature_snake_name + "_feature",
-                            feature_snake_name,
-                            "commands",
-                            f"remove_{entity_mappable_with_snake}_tree_command_handler.cpp",
-                        ),
-                        os.path.join(
-                            common_cmake_folder_path,
-                            feature_snake_name + "_feature",
-                            feature_snake_name,
-                            "commands",
-                            f"remove_{entity_mappable_with_snake}_tree_command_handler.h",
-                        ),
-                    ],
-                    "entity_mappable_with_snake": entity_mappable_with_snake,
-                    "entity_mappable_with_pascal": entity_mappable_with_pascal,
-                    "entity_mappable_with_camel": stringcase.camelcase(
-                        entity_mappable_with
-                    ),
-                }
             update_data = crud_data.get("update", {})
             if update_data.get("enabled", False) and update_data.get("generate", True):
                 crud_handlers["update"] = {

@@ -32,6 +32,12 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     // error handling
     connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
             [dispatcher](Qleany::Error error) {
+                for (const auto &traceError : error.trace())
+                {
+                    qDebug() << "Trace error: " << traceError.status() << traceError.code() << traceError.message()
+                             << traceError.data() << traceError.stackTrace();
+                }
+
                 qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
                          << error.data() << error.stackTrace();
                 emit dispatcher->error()->errorSent(error);

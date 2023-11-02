@@ -76,7 +76,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         Get{{ entity_name_pascal }}Query query;
         query.id = id;
         auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
@@ -111,7 +111,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
 {
      auto queryCommand = new QueryCommand("getWithDetails");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         Get{{ entity_name_pascal }}Query query;
         query.id = id;
         auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
@@ -261,60 +261,20 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::up
     {%if feature.crud.remove %}
 QCoro::Task<bool> {{ feature_name_pascal }}Controller::remove(int id)
 {
-    Remove{{ entity_name_pascal }}Command query;
-
-    query.id = id;
-
-    auto repository = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
-
-    auto *handler = new Remove{{ entity_name_pascal }}CommandHandler(repository);
-
-    // connect
-    QObject::connect(handler, &Remove{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, this,
-                     [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->created(dto); });
-    QObject::connect(handler, &Remove{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, this,
-                     [this](int id) { emit m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << id); });
-
-    // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<Remove{{ entity_name_pascal }}CommandHandler, Remove{{ entity_name_pascal }}Command>(
-        {{ feature_name_pascal }}Controller::tr("Remove {{ entity_name_camel }}"), handler, query);
-
-    // push command
-    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
-
-    // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &Remove{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, std::chrono::milliseconds(200));
-
-    if (!optional_result.has_value())
-    {
-        co_return false;
-    }
-
-    co_return true;
-}
-
-    {% endif %}
-    {%if feature.crud.removeTree %}
-
-QCoro::Task<bool> {{ feature_name_pascal }}Controller::removeTree(int id)
-{
-        Remove{{ entity_name_pascal }}TreeCommand query;
+        Remove{{ entity_name_pascal }}Command query;
 
         query.id = id;
 
         auto repository = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
 
-        auto *handler = new Remove{{ entity_name_pascal }}TreeCommandHandler(repository);
+        auto *handler = new Remove{{ entity_name_pascal }}CommandHandler(repository);
 
         // connect
-        QObject::connect(handler, &Remove{{ entity_name_pascal }}TreeCommandHandler::{{ entity_name_camel }}Created, this,
-                         [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->created(dto); });
         // no need to connect to removed signal, because it will be emitted by the repository itself
 
         // Create specialized UndoRedoCommand
-        auto command = new AlterCommand<Remove{{ entity_name_pascal }}TreeCommandHandler, Remove{{ entity_name_pascal }}TreeCommand>(
-            {{ feature_name_pascal }}Controller::tr("Remove {{ entity_name_camel }} tree"), handler, query);
+        auto command = new AlterCommand<Remove{{ entity_name_pascal }}CommandHandler, Remove{{ entity_name_pascal }}Command>(
+            {{ feature_name_pascal }}Controller::tr("Remove {{ entity_name_camel }}"), handler, query);
 
         // push command
         m_undo_redo_system->push(command, "{{ feature_name_camel }}");
@@ -330,8 +290,10 @@ QCoro::Task<bool> {{ feature_name_pascal }}Controller::removeTree(int id)
 
     co_return true;
 }
+
     {% endif %}
     {%if feature.crud.create %}
+
 Create{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Controller::getCreateDTO()
 {
     return Create{{ entity_name_pascal }}DTO();
@@ -402,7 +364,7 @@ QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ quer
      
     Q_UNIMPLEMENTED();
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this](QPromise<Result<void>> &progressPromise) {
         {{ query.name }}Query query;
         {% if query.dto_in_enabled %}query.req = dto;{% endif %}
 

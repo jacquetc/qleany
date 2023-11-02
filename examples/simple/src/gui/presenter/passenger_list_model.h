@@ -41,8 +41,8 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT PassengerListModel : public QAbstractListMo
   private:
     void populate();
 
-    QList<Simple::Contracts::DTO::Passenger::PassengerDTO> m_passengers;
-    QList<int> m_passengerIds;
+    QList<Simple::Contracts::DTO::Passenger::PassengerDTO> m_passengerList;
+    QList<int> m_passengerIdList;
     int m_carId = 0;
 
     // QAbstractItemModel interface

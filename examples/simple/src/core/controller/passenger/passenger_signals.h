@@ -29,5 +29,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerSignals : public QObject
     void created(PassengerDTO dto);
     void updated(Contracts::DTO::Passenger::PassengerDTO dto);
     void allRelationsInvalidated(int id);
+    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller

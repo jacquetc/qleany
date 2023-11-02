@@ -37,5 +37,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarSignals : public QObject
 
     void relationInserted(CarRelationDTO dto);
     void relationRemoved(CarRelationDTO dto);
+    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller

@@ -46,7 +46,7 @@ QCoro::Task<PassengerDTO> PassengerController::get(int id)
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetPassengerQuery query;
         query.id = id;
         auto interface = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
@@ -200,10 +200,7 @@ QCoro::Task<bool> PassengerController::remove(int id)
     auto *handler = new RemovePassengerCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemovePassengerCommandHandler::passengerCreated, this,
-                     [this](PassengerDTO dto) { emit m_eventDispatcher->passenger()->created(dto); });
-    QObject::connect(handler, &RemovePassengerCommandHandler::passengerRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->passenger()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<RemovePassengerCommandHandler, RemovePassengerCommand>(
@@ -213,8 +210,8 @@ QCoro::Task<bool> PassengerController::remove(int id)
     m_undo_redo_system->push(command, "passenger");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemovePassengerCommandHandler::passengerRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
 
     if (!optional_result.has_value())
     {

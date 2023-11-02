@@ -39,6 +39,7 @@ class WriteRandomThingsCommandValidator
 
 
 
+
         // Return that is Ok :
         return Result<void>();
     }

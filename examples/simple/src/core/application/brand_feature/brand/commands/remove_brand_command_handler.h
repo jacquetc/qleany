@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT RemoveBrandCommandHandler : public 
     Result<int> restore();
 
   signals:
-    void brandCreated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
-    void brandRemoved(int id);
+    // repositories handle remove signals
+    // void brandRemoved(int id);
 
   private:
     InterfaceBrandRepository *m_repository;

@@ -68,9 +68,6 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {%if feature.crud.remove %}
     QCoro::Task<bool> remove(int id);
     {% endif %}
-    {%if feature.crud.removeTree %}
-    QCoro::Task<bool> removeTree(int id);
-    {% endif %}
 
     {% if feature.crud.create %}
     static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();

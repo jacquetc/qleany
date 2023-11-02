@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT RemovePassengerCommandHandler :
     Result<int> restore();
 
   signals:
-    void passengerCreated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
-    void passengerRemoved(int id);
+    // repositories handle remove signals
+    // void passengerRemoved(int id);
 
   private:
     InterfacePassengerRepository *m_repository;

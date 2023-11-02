@@ -46,7 +46,7 @@ QCoro::Task<BrandDTO> BrandController::get(int id)
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetBrandQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceBrandRepository *>(m_repositoryProvider->repository("Brand"));
@@ -198,10 +198,7 @@ QCoro::Task<bool> BrandController::remove(int id)
     auto *handler = new RemoveBrandCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveBrandCommandHandler::brandCreated, this,
-                     [this](BrandDTO dto) { emit m_eventDispatcher->brand()->created(dto); });
-    QObject::connect(handler, &RemoveBrandCommandHandler::brandRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->brand()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<RemoveBrandCommandHandler, RemoveBrandCommand>(BrandController::tr("Remove brand"),
@@ -211,8 +208,8 @@ QCoro::Task<bool> BrandController::remove(int id)
     m_undo_redo_system->push(command, "brand");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveBrandCommandHandler::brandRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
 
     if (!optional_result.has_value())
     {

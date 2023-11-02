@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QObj
     Result<int> restore();
 
   signals:
-    void carCreated(Simple::Contracts::DTO::Car::CarDTO carDto);
-    void carRemoved(int id);
+    // repositories handle remove signals
+    // void carRemoved(int id);
 
   private:
     InterfaceCarRepository *m_repository;

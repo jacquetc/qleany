@@ -12,8 +12,6 @@ set(SRC
     car/commands/create_car_command_handler.h
     car/commands/remove_car_command_handler.cpp
     car/commands/remove_car_command_handler.h
-    car/commands/remove_car_tree_command_handler.cpp
-    car/commands/remove_car_tree_command_handler.h
     car/commands/update_car_command_handler.cpp
     car/commands/update_car_command_handler.h
     car/queries/get_car_query_handler.cpp

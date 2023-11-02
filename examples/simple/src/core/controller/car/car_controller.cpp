@@ -48,7 +48,7 @@ QCoro::Task<CarDTO> CarController::get(int id)
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
@@ -81,7 +81,7 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
@@ -221,10 +221,7 @@ QCoro::Task<bool> CarController::remove(int id)
     auto *handler = new RemoveCarCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveCarCommandHandler::carCreated, this,
-                     [this](CarDTO dto) { emit m_eventDispatcher->car()->created(dto); });
-    QObject::connect(handler, &RemoveCarCommandHandler::carRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->car()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command =
@@ -234,8 +231,8 @@ QCoro::Task<bool> CarController::remove(int id)
     m_undo_redo_system->push(command, "car");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveCarCommandHandler::carRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
 
     if (!optional_result.has_value())
     {

@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT RemoveClientCommandHandler : publi
     Result<int> restore();
 
   signals:
-    void clientCreated(Simple::Contracts::DTO::Client::ClientDTO clientDto);
-    void clientRemoved(int id);
+    // repositories handle remove signals
+    // void clientRemoved(int id);
 
   private:
     InterfaceClientRepository *m_repository;

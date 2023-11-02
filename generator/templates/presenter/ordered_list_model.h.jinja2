@@ -48,8 +48,8 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
   private:
     void populate();
 
-    QList<{{ model.entity_name_pascal }}DTO> m_passengers;
-    QList<int> m_{{ model.entity_name_camel }}Ids;
+    QList<{{ model.entity_name_pascal }}DTO> m_passengerList;
+    QList<int> m_{{ model.entity_name_camel }}IdList;
     int m_{{ model.related_name_camel }}Id = 0;
 
 };

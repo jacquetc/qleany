@@ -27,13 +27,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     auto *singlePassenger = new SinglePassenger(this);
     connect(ui->passengerListView->selectionModel(), &QItemSelectionModel::currentChanged, singlePassenger,
             [singlePassenger](const QModelIndex &current, const QModelIndex &previous) {
-                if (!current.isValid())
-                    return;
-                singlePassenger->setId(current.data(PassengerListModel::Id).toInt());
+                if (current.isValid())
+                    singlePassenger->setId(current.data(PassengerListModel::Id).toInt());
+                else
+                    singlePassenger->setId(0);
             });
 
     // remove on double clicking on passengerListView
-    connect(ui->passengerListView, &QListView::doubleClicked, [this](const QModelIndex &index) {
+    connect(ui->passengerListView, &QListView::doubleClicked, [this, singlePassenger](const QModelIndex &index) {
         if (!index.isValid())
             return;
         auto id = index.data(PassengerListModel::Id).toInt();

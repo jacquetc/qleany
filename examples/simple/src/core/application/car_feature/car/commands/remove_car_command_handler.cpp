@@ -1,6 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_car_command_handler.h"
+#include "car/validators/remove_car_command_validator.h"
 #include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_car_repository.h"
 
@@ -9,6 +10,7 @@ using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Commands;
 using namespace Simple::Application::Features::Car::Commands;
+using namespace Simple::Contracts::CQRS::Car::Validators;
 
 RemoveCarCommandHandler::RemoveCarCommandHandler(InterfaceCarRepository *repository) : m_repository(repository)
 {
@@ -56,6 +58,12 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
 {
     int carId = request.id;
 
+    // Validate the command using the validator
+    auto validator = RemoveCarCommandValidator(m_repository);
+    Result<void> validatorResult = validator.validate(carId);
+
+    QLN_RETURN_IF_ERROR(int, validatorResult);
+
     Result<Simple::Domain::Car> carResult = m_repository->get(carId);
 
     QLN_RETURN_IF_ERROR(int, carResult)
@@ -63,11 +71,12 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
     // save old entity
     m_oldState = carResult.value();
 
-    auto deleteResult = m_repository->remove(carId);
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << carId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    emit carRemoved(deleteResult.value());
+    // repositories handle remove signals
+    // emit carRemoved(deleteResult.value());
 
     qDebug() << "Car removed:" << carId;
 
@@ -76,18 +85,7 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
 
 Result<int> RemoveCarCommandHandler::restoreImpl()
 {
-
-    // Add the car to the repository
-    auto carResult = m_repository->add(std::move(m_oldState));
-
-    QLN_RETURN_IF_ERROR(int, carResult)
-
-    auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());
-
-    emit carCreated(carDTO);
-    qDebug() << "Car added:" << carDTO.id();
-
-    // Return the UUID of the newly created car as a Result object
+    // no restore possible
     return Result<int>(0);
 }
 

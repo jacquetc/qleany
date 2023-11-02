@@ -1,6 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_passenger_command_handler.h"
+#include "passenger/validators/remove_passenger_command_validator.h"
 #include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_passenger_repository.h"
 
@@ -9,6 +10,7 @@ using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Commands;
 using namespace Simple::Application::Features::Passenger::Commands;
+using namespace Simple::Contracts::CQRS::Passenger::Validators;
 
 RemovePassengerCommandHandler::RemovePassengerCommandHandler(InterfacePassengerRepository *repository)
     : m_repository(repository)
@@ -58,6 +60,12 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
 {
     int passengerId = request.id;
 
+    // Validate the command using the validator
+    auto validator = RemovePassengerCommandValidator(m_repository);
+    Result<void> validatorResult = validator.validate(passengerId);
+
+    QLN_RETURN_IF_ERROR(int, validatorResult);
+
     Result<Simple::Domain::Passenger> passengerResult = m_repository->get(passengerId);
 
     QLN_RETURN_IF_ERROR(int, passengerResult)
@@ -65,11 +73,12 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
     // save old entity
     m_oldState = passengerResult.value();
 
-    auto deleteResult = m_repository->remove(passengerId);
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << passengerId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    emit passengerRemoved(deleteResult.value());
+    // repositories handle remove signals
+    // emit passengerRemoved(deleteResult.value());
 
     qDebug() << "Passenger removed:" << passengerId;
 
@@ -78,19 +87,7 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
 
 Result<int> RemovePassengerCommandHandler::restoreImpl()
 {
-
-    // Add the passenger to the repository
-    auto passengerResult = m_repository->add(std::move(m_oldState));
-
-    QLN_RETURN_IF_ERROR(int, passengerResult)
-
-    auto passengerDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passengerResult.value());
-
-    emit passengerCreated(passengerDTO);
-    qDebug() << "Passenger added:" << passengerDTO.id();
-
-    // Return the UUID of the newly created passenger as a Result object
+    // no restore possible
     return Result<int>(0);
 }
 

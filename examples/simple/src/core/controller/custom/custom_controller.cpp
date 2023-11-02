@@ -114,7 +114,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomController::GetCurrentTime()
 
     Q_UNIMPLEMENTED();
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this](QPromise<Result<void>> &progressPromise) {
         GetCurrentTimeQuery query;
 
         GetCurrentTimeQueryHandler handler;

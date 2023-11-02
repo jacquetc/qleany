@@ -191,9 +191,6 @@ def get_generation_dict(
             final_feature_dict["crud"]["remove"] = (
                 feature["CRUD"].get("remove", {}).get("enabled", False)
             )
-            final_feature_dict["crud"]["remove_tree"] = (
-                feature["CRUD"].get("remove_tree", {}).get("enabled", False)
-            )
             final_feature_dict["crud"]["insert_relation"] = (
                 feature["CRUD"].get("insert_relation", {}).get("enabled", False)
             )

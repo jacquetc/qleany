@@ -32,7 +32,7 @@ class {{ validator.name }}
 {% endif %}
     {
 
-{% if validator.check_if_exists %}
+{% if validator.validate_id_existence %}
 {% for repository in validator.repositories %}
 {% if validator.request_is_id %}
         Result<bool> existsResult = m_{{ repository.camel_name }}Repository->exists(id);
@@ -41,11 +41,24 @@ class {{ validator.name }}
 {% endif %}
         if (!existsResult.value())
         {
-            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_not_found"));
         }
 {% endfor %}
 {% endif %}
 
+{% if validator.validate_id_absence %}
+{% for repository in validator.repositories %}
+{% if validator.request_is_id %}
+        Result<bool> existsResult = m_{{ repository.camel_name }}Repository->exists(id);
+{% else %}
+        Result<bool> existsResult = m_{{ repository.camel_name }}Repository->exists(dto.id());
+{% endif %}
+        if (existsResult.value())
+        {
+            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+        }
+{% endfor %}
+{% endif %}
 
         // Return that is Ok :
         return Result<void>();

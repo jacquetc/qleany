@@ -26,8 +26,8 @@ class {{ export }} Remove{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<int> restore();
 
   signals:
-    void {{ entity_mappable_with_camel }}Created({{ application_cpp_domain_name }}::Contracts::DTO::{{ entity_mappable_with_pascal }}::{{ entity_mappable_with_pascal }}DTO {{ entity_mappable_with_camel }}Dto);
-    void {{ entity_mappable_with_camel }}Removed(int id);
+    // repositories handle remove signals
+    //void {{ entity_mappable_with_camel }}Removed(int id);
 
   private:
     Interface{{ entity_mappable_with_pascal }}Repository *m_repository;

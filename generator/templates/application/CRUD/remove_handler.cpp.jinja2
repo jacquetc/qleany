@@ -3,12 +3,14 @@
 #include "remove_{{ entity_mappable_with_snake }}_command_handler.h"
 #include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
+#include "{{ feature_snake_name }}/validators/remove_{{ entity_mappable_with_snake }}_command_validator.h"
 
 using namespace Qleany;
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Commands;
 using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands;
+using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Validators;
 
 Remove{{ entity_mappable_with_pascal }}CommandHandler::Remove{{ entity_mappable_with_pascal }}CommandHandler(Interface{{ entity_mappable_with_pascal }}Repository *repository)
     : m_repository(repository)
@@ -57,6 +59,13 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
 {   
     int {{ entity_mappable_with_camel }}Id = request.id;
 
+    // Validate the command using the validator
+    auto validator = Remove{{ entity_mappable_with_pascal }}CommandValidator(m_repository);
+    Result<void> validatorResult = validator.validate({{ entity_mappable_with_camel }}Id);
+
+    QLN_RETURN_IF_ERROR(int, validatorResult);
+
+
 
     Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> {{ entity_mappable_with_camel }}Result = m_repository->get({{ entity_mappable_with_camel }}Id);
 
@@ -65,11 +74,12 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
     // save old entity
     m_oldState = {{ entity_mappable_with_camel }}Result.value();
 
-    auto deleteResult = m_repository->remove({{ entity_mappable_with_camel }}Id);
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << {{ entity_mappable_with_camel }}Id);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+    // repositories handle remove signals
+    // emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
 
     qDebug() << "{{ entity_mappable_with_pascal }} removed:" << {{ entity_mappable_with_camel }}Id;
 
@@ -78,18 +88,7 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
 
 Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl()
 {
-    
-    // Add the {{ entity_mappable_with_camel }} to the repository
-    auto {{ entity_mappable_with_camel }}Result = m_repository->add(std::move(m_oldState));
-
-    QLN_RETURN_IF_ERROR(int, {{ entity_mappable_with_camel }}Result)
-
-    auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
-
-    emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
-    qDebug() << "{{ entity_mappable_with_pascal }} added:" << {{ entity_mappable_with_camel }}DTO.id();
-
-    // Return the UUID of the newly created {{ entity_mappable_with_camel }} as a Result object
+    // no restore possible
     return Result<int>(0);
 }
 

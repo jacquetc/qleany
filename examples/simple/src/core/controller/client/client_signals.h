@@ -37,5 +37,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientSignals : public QObject
 
     void relationInserted(ClientRelationDTO dto);
     void relationRemoved(ClientRelationDTO dto);
+    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller
