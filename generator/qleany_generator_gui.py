@@ -44,6 +44,7 @@ import controller_generator
 import application_generator
 import qml_generator
 import entity_relationship_viewer
+import presenter_generator
 
 # this little application is a GUI for the generator
 
@@ -281,6 +282,37 @@ class MainWindow(QMainWindow):
 
         self.btn_list_cqrs.clicked.connect(enable_cqrs_buttons)
 
+        # Generate application
+
+        self.generate_application_group_box = QGroupBox()
+        self.generate_application_group_box.setTitle("Generate Application")
+        self.generate_application_layout = QVBoxLayout()
+        self.generate_application_group_box.setLayout(self.generate_application_layout)
+
+        self.btn_list_application = QPushButton("List", self)
+        self.btn_list_application.clicked.connect(self.list_application)
+        self.generate_application_layout.addWidget(self.btn_list_application)
+
+        self.btn_preview_application = QPushButton("Preview", self)
+        self.btn_preview_application.clicked.connect(self.preview_application)
+        self.generate_application_layout.addWidget(self.btn_preview_application)
+
+        self.btn_generate_application = QPushButton("Generate", self)
+        self.btn_generate_application.clicked.connect(self.generate_application)
+        self.generate_application_layout.addWidget(self.btn_generate_application)
+
+        self.button_layout.addWidget(self.generate_application_group_box)
+
+        # disable preview and generate buttons if list button is not clicked once
+        self.btn_preview_application.setEnabled(False)
+        self.btn_generate_application.setEnabled(False)
+
+        def enable_application_buttons():
+            self.btn_preview_application.setEnabled(True)
+            self.btn_generate_application.setEnabled(True)
+
+        self.btn_list_application.clicked.connect(enable_application_buttons)
+
         # Generate Controllers
 
         self.generate_controllers_group_box = QGroupBox()
@@ -312,36 +344,36 @@ class MainWindow(QMainWindow):
 
         self.btn_list_controllers.clicked.connect(enable_controllers_buttons)
 
-        # Generate application
+        # Generate Presenters
 
-        self.generate_application_group_box = QGroupBox()
-        self.generate_application_group_box.setTitle("Generate Application")
-        self.generate_application_layout = QVBoxLayout()
-        self.generate_application_group_box.setLayout(self.generate_application_layout)
+        self.generate_presenters_group_box = QGroupBox()
+        self.generate_presenters_group_box.setTitle("Generate Presenters")
+        self.generate_presenters_layout = QVBoxLayout()
+        self.generate_presenters_group_box.setLayout(self.generate_presenters_layout)
 
-        self.btn_list_application = QPushButton("List", self)
-        self.btn_list_application.clicked.connect(self.list_application)
-        self.generate_application_layout.addWidget(self.btn_list_application)
+        self.btn_list_presenters = QPushButton("List", self)
+        self.btn_list_presenters.clicked.connect(self.list_presenters)
+        self.generate_presenters_layout.addWidget(self.btn_list_presenters)
 
-        self.btn_preview_application = QPushButton("Preview", self)
-        self.btn_preview_application.clicked.connect(self.preview_application)
-        self.generate_application_layout.addWidget(self.btn_preview_application)
+        self.btn_preview_presenters = QPushButton("Preview", self)
+        self.btn_preview_presenters.clicked.connect(self.preview_presenters)
+        self.generate_presenters_layout.addWidget(self.btn_preview_presenters)
 
-        self.btn_generate_application = QPushButton("Generate", self)
-        self.btn_generate_application.clicked.connect(self.generate_application)
-        self.generate_application_layout.addWidget(self.btn_generate_application)
+        self.btn_generate_presenters = QPushButton("Generate", self)
+        self.btn_generate_presenters.clicked.connect(self.generate_presenters)
+        self.generate_presenters_layout.addWidget(self.btn_generate_presenters)
 
-        self.button_layout.addWidget(self.generate_application_group_box)
+        self.button_layout.addWidget(self.generate_presenters_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
-        self.btn_preview_application.setEnabled(False)
-        self.btn_generate_application.setEnabled(False)
+        self.btn_preview_presenters.setEnabled(False)
+        self.btn_generate_presenters.setEnabled(False)
 
-        def enable_application_buttons():
-            self.btn_preview_application.setEnabled(True)
-            self.btn_generate_application.setEnabled(True)
+        def enable_presenters_buttons():
+            self.btn_preview_presenters.setEnabled(True)
+            self.btn_generate_presenters.setEnabled(True)
 
-        self.btn_list_application.clicked.connect(enable_application_buttons)
+        self.btn_list_presenters.clicked.connect(enable_presenters_buttons)
 
         # Generate QML
 
@@ -473,6 +505,7 @@ class MainWindow(QMainWindow):
             repositories_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(cqrs_generator.get_files_to_be_generated(self.temp_manifest_file))
+        list.extend(presenter_generator.get_files_to_be_generated(self.temp_manifest_file))
         list.extend(
             controller_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
@@ -505,6 +538,12 @@ class MainWindow(QMainWindow):
             self.uncrustify_config_file,
         )
         cqrs_generator.preview_cqrs_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
+        presenter_generator.preview_presenter_files(
             self.root_path,
             self.temp_manifest_file,
             self.file_list_view.fetch_file_states(),
@@ -551,6 +590,11 @@ class MainWindow(QMainWindow):
         )
         file_list.extend(
             controller_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        )
+        file_list.extend(
+            presenter_generator.get_files_to_be_generated(
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
@@ -775,6 +819,47 @@ class MainWindow(QMainWindow):
             )
             self.text_box.clear()
             self.text_box.setPlainText("CQRS generated")
+
+    # Presenters functions
+
+    def list_presenters(self):
+        list = presenter_generator.get_files_to_be_generated(self.temp_manifest_file)
+        self.text_box.clear()
+        self.text_box.setPlainText("Presenters:\n\n")
+        self.text_box.appendPlainText("\n".join(list))
+        self.file_list_view.list_files(list)
+
+    def preview_presenters(self):
+        self.list_presenters()
+        presenter_generator.preview_presenter_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
+        self.text_box.clear()
+        self.text_box.setPlainText(
+            f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
+        )
+        self.text_box.appendPlainText(
+            f" Presenters previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
+        )
+
+    def generate_presenters(self):
+        self.list_presenters()
+        if self.display_overwrite_confirmation(
+            presenter_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        ):
+            presenter_generator.generate_presenter_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+            self.text_box.clear()
+            self.text_box.setPlainText("Presenters generated")
 
     # Controllers functions
 
