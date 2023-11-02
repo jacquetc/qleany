@@ -9,7 +9,7 @@ using namespace Simple::Controller;
 PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(parent)
 {
 
-    connect(EventDispatcher::instance()->car(), &CarSignals::detailsUpdated, this, [this](int carId) {
+    connect(EventDispatcher::instance()->car(), &CarSignals::allRelationsInvalidated, this, [this](int carId) {
         if (carId != m_carId)
         {
             return;
@@ -84,6 +84,7 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
         });
     });
 
+    // TODO: replace with relationRemoved
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::removed, this, [this](QList<int> dtoList) {
         for (int dtoId : dtoList)
         {
@@ -98,28 +99,39 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
         }
     });
 
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::insertedIntoCarPassengers, this,
-            [this](PassengerInsertedIntoRelativeDTO dto) {
-                // remove passenger from this model if dto.passenger().id() is here
-                int passengerId = dto.passenger().id();
-                if (m_passengerIds.contains(passengerId) && m_carId != dto.relatedId())
-                {
-                    int position = m_passengerIds.indexOf(passengerId);
-                    beginRemoveRows(QModelIndex(), position, position);
-                    m_passengers.removeAt(position);
-                    m_passengerIds.removeAt(position);
-                    endRemoveRows();
-                }
-                // add passenger to this model if dto.relatedId() is here
-                else if (!m_passengerIds.contains(passengerId) && m_carId == dto.relatedId())
-                {
-                    int position = dto.position();
-                    beginInsertRows(QModelIndex(), position, position);
-                    m_passengers.insert(position, dto.passenger());
-                    m_passengerIds.insert(position, passengerId);
-                    endInsertRows();
-                }
-            });
+    connect(EventDispatcher::instance()->car(), &CarSignals::relationInserted, this, [this](CarRelationDTO dto) {
+        if (dto.id() != m_carId || dto.relationField() != CarRelationDTO::RelationField::Passengers)
+        {
+            return;
+        }
+
+        // fetch passengers from controller
+        QList<PassengerDTO> passengers;
+        for (int passengerId : dto.relatedIds())
+        {
+            Passenger::PassengerController::instance()
+                ->get(passengerId)
+                .then([this, passengerId, &passengers](PassengerDTO passenger) {
+                    // add passengers to this model
+                    if (!m_passengerIds.contains(passengerId))
+                    {
+                        passengers.append(passenger);
+                    }
+                });
+        }
+
+        int position = dto.position();
+
+        // add passengers to this model
+        beginInsertRows(QModelIndex(), position, position + passengers.size() - 1);
+        for (const auto &passenger : passengers)
+        {
+            m_passengers.insert(position, passenger);
+            m_passengerIds.insert(position, passenger.id());
+            position++;
+        }
+        endInsertRows();
+    });
 
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
         for (int i = 0; i < m_passengers.size(); ++i)

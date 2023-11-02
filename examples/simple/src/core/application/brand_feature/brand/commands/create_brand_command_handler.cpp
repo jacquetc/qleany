@@ -66,6 +66,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     // Get the entities from owner
     int ownerId = createDTO.carId();
+    m_ownerId = ownerId;
 
     if (m_firstPass)
     {
@@ -147,9 +148,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     emit brandCreated(brandDTO);
 
     // send an insertion signal
-    BrandInsertedIntoRelativeDTO brandInsertedIntoRelativeDto(brandDTO, ownerId, position);
-
-    emit brandInsertedIntoCarBrand(brandInsertedIntoRelativeDto);
+    emit relationWithOwnerInserted(brand.id(), ownerId, position);
 
     qDebug() << "Brand added:" << brandDTO.id();
 
@@ -161,14 +160,16 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
 Result<BrandDTO> CreateBrandCommandHandler::restoreImpl()
 {
-
-    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+    int entityId = m_newEntity.value().id();
+    auto deleteResult = m_repository->remove(entityId);
 
     QLN_RETURN_IF_ERROR(BrandDTO, deleteResult)
 
     emit brandRemoved(deleteResult.value());
 
     qDebug() << "Brand removed:" << deleteResult.value();
+
+    emit relationWithOwnerRemoved(entityId, m_ownerId);
 
     return Result<BrandDTO>(BrandDTO());
 }

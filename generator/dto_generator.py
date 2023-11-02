@@ -57,9 +57,9 @@ def get_dto_dict_and_feature_ordered_dict(
         for field in fields:
             field["pascal_name"] = stringcase.pascalcase(field["name"])
 
-            if isUniqueForeignEntity(
+            if is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or isListForeignEntity(field["type"], entities_by_name):
+            ) or is_list_foreign_entity(field["type"], entities_by_name):
                 field["is_foreign"] = True
 
                 # get foreign entity name
@@ -103,9 +103,9 @@ def get_dto_dict_and_feature_ordered_dict(
         for field in fields:
             field["pascal_name"] = stringcase.pascalcase(field["name"])
 
-            if isUniqueForeignEntity(
+            if is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or isListForeignEntity(field["type"], entities_by_name):
+            ) or is_list_foreign_entity(field["type"], entities_by_name):
                 continue
 
             else:
@@ -113,6 +113,53 @@ def get_dto_dict_and_feature_ordered_dict(
                 fields_without_foreign.append(field)
 
         return fields_without_foreign
+
+    def get_only_fields_with_foreign_entities(
+        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
+    ) -> list:
+        # make a deep copy of the fields
+        fields = copy.deepcopy(fields)
+
+        # get recursive fields from parent
+
+        parent_fields = []
+        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
+
+        while entity_parent:
+            parent_fields = (
+                get_entity_fields(entity_parent, entities_by_name) + parent_fields
+            )
+            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
+
+        fields = parent_fields + fields
+
+        # add fields without foreign entities
+        fields_with_foreign = []
+        for field in fields:
+            field["pascal_name"] = stringcase.pascalcase(field["name"])
+
+            if is_unique_foreign_entity(
+                field["type"], entities_by_name
+            ) or is_list_foreign_entity(field["type"], entities_by_name):
+                field["is_foreign"] = True
+
+                # get foreign entity name
+                foreign_entity_name = getEntityFromForeignFieldType(
+                    field["type"], entities_by_name
+                )
+                field["foreign_dto_type"] = f"{foreign_entity_name}DTO"
+                field["entity_type"] = field["type"]
+                field["type"] = (
+                    f"{foreign_entity_name}DTO"
+                    if field["type"].count(">") == 0
+                    else f"QList<{foreign_entity_name}DTO>"
+                )
+                fields_with_foreign.append(field)
+
+            else:
+                continue
+
+        return fields_with_foreign
 
     def determine_dto_dependencies_from_fields(fields: list) -> list:
         dto_dependencies = []
@@ -145,6 +192,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 "feature_name": stringcase.pascalcase(feature["name"]),
                 "entity_mappable_with": entity_mappable_with,
                 "file_name": f"{stringcase.snakecase(feature['name'])}_dto.h",
+                "is_relationship_dto": False,
                 "fields": [],
             }
 
@@ -160,7 +208,7 @@ def get_dto_dict_and_feature_ordered_dict(
 
         # create DTO entry with foreign DTOs (details)
 
-        if generate_dto_identical_to_entity and entityHaveForeignEntity(
+        if generate_dto_identical_to_entity and entity_have_foreign_entity(
             entity_mappable_with, entities_by_name
         ):
             dto_type_name = f"{stringcase.pascalcase(feature['name'])}WithDetailsDTO"
@@ -168,6 +216,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 "feature_name": stringcase.pascalcase(feature["name"]),
                 "entity_mappable_with": entity_mappable_with,
                 "file_name": f"{stringcase.snakecase(feature['name'])}_with_details_dto.h",
+                "is_relationship_dto": False,
                 "fields": [],
             }
 
@@ -197,8 +246,12 @@ def get_dto_dict_and_feature_ordered_dict(
             if crud_data["enabled"]:
                 generate_create = crud_data.get("create", {}).get("enabled", False)
                 generate_update = crud_data.get("update", {}).get("enabled", False)
-                generate_insert = crud_data.get("insert_into_relative", {}).get("enabled", False)
-                generate_move = crud_data.get("move_in_relative", {}).get("enabled", False)
+                generate_insert_relation = crud_data.get("insert_relation", {}).get(
+                    "enabled", False
+                )
+                generate_move = crud_data.get("move_in_relative", {}).get(
+                    "enabled", False
+                )
 
             if generate_create:
                 dto_type_name = f"Create{stringcase.pascalcase(feature['name'])}DTO"
@@ -206,6 +259,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": entity_mappable_with,
                     "file_name": f"create_{stringcase.snakecase(feature['name'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -243,7 +297,9 @@ def get_dto_dict_and_feature_ordered_dict(
                     owner = owner_dict.get("name", "")
                     owner_field = owner_dict.get("field", "")
 
-                    if owner_dict.get("is_list", False) and owner_dict.get("ordered", False):
+                    if owner_dict.get("is_list", False) and owner_dict.get(
+                        "ordered", False
+                    ):
                         dto_dict[dto_type_name]["fields"].append(
                             {
                                 "name": "position",
@@ -265,6 +321,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": entity_mappable_with,
                     "file_name": f"update_{stringcase.snakecase(feature['name'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -281,17 +338,17 @@ def get_dto_dict_and_feature_ordered_dict(
                     dto_dict[dto_type_name]["fields"]
                 )
 
-            if generate_insert:
-
+            if generate_insert_relation:
                 # DTO in
-                dto_type_name = f"Insert{stringcase.pascalcase(feature['name'])}IntoRelativeDTO"
+                dto_type_name = f"{stringcase.pascalcase(feature['name'])}RelationDTO"
                 dto_dict[dto_type_name] = {
                     "feature_name": stringcase.pascalcase(feature["name"]),
-                    "entity_mappable_with": entity_mappable_with,
-                    "file_name": f"insert_{stringcase.snakecase(feature['name'])}_into_relative_dto.h",
+                    "entity_mappable_with": "",
+                    "file_name": f"{stringcase.snakecase(feature['name'])}_relation_dto.h",
+                    "is_relation_dto": True,
                     "fields": [],
+                    "relation_fields": [],
                 }
-
 
                 # add fields
                 dto_dict[dto_type_name]["fields"].append(
@@ -304,53 +361,20 @@ def get_dto_dict_and_feature_ordered_dict(
                 )
                 dto_dict[dto_type_name]["fields"].append(
                     {
-                        "name": "position",
-                        "pascal_name": "Position",
+                        "name": "relationField",
+                        "pascal_name": "RelationshipField",
                         "is_foreign": False,
-                        "type": "int",
+                        "type": "RelationField",
                     }
                 )
                 dto_dict[dto_type_name]["fields"].append(
                     {
-                        "name": "relatedId",
+                        "name": "relatedIds",
                         "pascal_name": "RelatedId",
                         "is_foreign": False,
-                        "type": "int",
+                        "type": "QList<int>",
                     }
                 )
-
-                dto_dict[dto_type_name][
-                    "dto_dependencies"
-                ] = []
-
-                # DTO out
-                dto_type_name = f"{stringcase.pascalcase(feature['name'])}InsertedIntoRelativeDTO"
-                dto_dict[dto_type_name] = {
-                    "feature_name": stringcase.pascalcase(feature["name"]),
-                    "entity_mappable_with": entity_mappable_with,
-                    "file_name": f"{stringcase.snakecase(feature['name'])}_inserted_into_relative_dto.h",
-                    "fields": [],
-                }
-                # add fields
-                dto_dict[dto_type_name]["fields"].append(
-                    {
-                        "name": stringcase.camelcase(entity_mappable_with),
-                        "pascal_name": stringcase.pascalcase(entity_mappable_with),
-                        "is_foreign": True,
-                        "foreign_dto_type": f"{stringcase.pascalcase(entity_mappable_with)}DTO",
-                        "type": f"{stringcase.pascalcase(entity_mappable_with)}DTO",
-                    }
-                )
-
-                dto_dict[dto_type_name]["fields"].append(
-                    {
-                        "name": "relatedId",
-                        "pascal_name": "RelatedId",
-                        "is_foreign": False,
-                        "type": "int",
-                    }
-                )
-
                 dto_dict[dto_type_name]["fields"].append(
                     {
                         "name": "position",
@@ -359,12 +383,18 @@ def get_dto_dict_and_feature_ordered_dict(
                         "type": "int",
                     }
                 )
-                
+
+                # add relationship fields
+
                 dto_dict[dto_type_name][
-                    "dto_dependencies"
-                ] = determine_dto_dependencies_from_fields(
-                    dto_dict[dto_type_name]["fields"]
+                    "relation_fields"
+                ] = get_only_fields_with_foreign_entities(
+                    entities_by_name[entity_mappable_with]["fields"],
+                    entities_by_name,
+                    entity_mappable_with,
                 )
+
+                dto_dict[dto_type_name]["dto_dependencies"] = []
 
         # fetch command DTOs
         for command in feature.get("commands", []):
@@ -376,6 +406,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": "",
                     "file_name": f"{stringcase.snakecase(dto_in['type_prefix'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -396,6 +427,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": "",
                     "file_name": f"{stringcase.snakecase(dto_out['type_prefix'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -419,6 +451,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": "",
                     "file_name": f"{stringcase.snakecase(dto_in['type_prefix'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -439,6 +472,7 @@ def get_dto_dict_and_feature_ordered_dict(
                     "feature_name": stringcase.pascalcase(feature["name"]),
                     "entity_mappable_with": "",
                     "file_name": f"{stringcase.snakecase(dto_out['type_prefix'])}_dto.h",
+                    "is_relationship_dto": False,
                     "fields": [],
                 }
 
@@ -552,7 +586,7 @@ def get_dto_dict_and_feature_ordered_dict(
     return dto_dict, dto_ordered_dict
 
 
-def isUniqueForeignEntity(field_type: str, entities_by_name: dict) -> bool:
+def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
     for entity_name in entities_by_name:
         if entity_name == field_type:
             return True
@@ -560,7 +594,7 @@ def isUniqueForeignEntity(field_type: str, entities_by_name: dict) -> bool:
     return False
 
 
-def isListForeignEntity(field_type: str, entities_by_name: dict) -> bool:
+def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
     if "<" not in field_type:
         return False
 
@@ -595,7 +629,7 @@ def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
     return fields
 
 
-def entityHaveForeignEntity(entity_name: str, entities_by_name: dict) -> bool:
+def entity_have_foreign_entity(entity_name: str, entities_by_name: dict) -> bool:
     entity = entities_by_name.get(entity_name, None)
     if entity is None:
         return False
@@ -603,15 +637,15 @@ def entityHaveForeignEntity(entity_name: str, entities_by_name: dict) -> bool:
     fields = entity["fields"]
     for field in fields:
         field_type = field["type"]
-        if isUniqueForeignEntity(field_type, entities_by_name) or isListForeignEntity(
+        if is_unique_foreign_entity(
             field_type, entities_by_name
-        ):
+        ) or is_list_foreign_entity(field_type, entities_by_name):
             return True
 
     return False
 
 
-def isUniqueForeignDTO(dto_list: list, field_type: str) -> bool:
+def is_unique_foreign_dto(dto_list: list, field_type: str) -> bool:
     for dto_type in dto_list:
         if dto_type == field_type:
             return True
@@ -619,7 +653,7 @@ def isUniqueForeignDTO(dto_list: list, field_type: str) -> bool:
     return False
 
 
-def isListForeignDTO(dto_list: list, field_type: str) -> bool:
+def is_list_foreign_dto(dto_list: list, field_type: str) -> bool:
     if "<" not in field_type:
         return False
 
@@ -677,6 +711,8 @@ def generate_dto(
                 feature_pascal_name=dto_data["feature_name"],
                 dto_pascal_type=dto_type,
                 fields=fields,
+                is_relation_dto=dto_data.get("is_relation_dto", False),
+                relation_fields=dto_data.get("relation_fields", []),
                 headers=headers,
                 fields_init_values=fields_init_values,
                 application_cpp_domain_name=application_cpp_domain_name,
@@ -739,6 +775,7 @@ def generate_dto_files(
         "QUrl": "QUrl()",
         "QObject": "nullptr",
         "QList": "QList<>()",
+        "RelationField": "RelationField::Undefined",
     }
 
     dto_dict, feature_ordered_dict = get_dto_dict_and_feature_ordered_dict(
@@ -843,7 +880,6 @@ def generate_dto_files(
                 )
             print(f"Successfully wrote file {dto_common_cmakelists_file}")
 
-    
     # format the files
     for file, to_be_generated in files_to_be_generated.items():
         # if uncrustify_config_file and files_to_be_generated.get(file, False):

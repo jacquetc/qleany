@@ -9,8 +9,8 @@
 {% endif %}
 #include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_dto.h"
 {% endif %}
-{% if feature.crud.has_owner %}
-#include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_inserted_into_relative_dto.h"
+{% if feature.crud.entity_has_relation_fields %}
+#include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_relation_dto.h"
 {% endif %}
 {% for command in feature.custom_commands %}
 {% if command.dto_out_enabled %}#include "{{ feature.feature_name_snake }}/{{ command.dto_out_snake }}_dto.h"{% endif %}
@@ -53,10 +53,12 @@ class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
     {% endif -%}
     {%if feature.crud.update -%}
     void updated(Contracts::DTO::{{ feature.crud.entity_name_pascal }}::{{ feature.crud.entity_name_pascal }}DTO dto);
-    void detailsUpdated(int id);
+    void allRelationsInvalidated(int id);
     {% endif -%}
-    {% if feature.crud.has_owner %}
-    void insertedInto{{ feature.crud.owner_name_pascal }}{{ feature.crud.owner_field_name_pascal }}(Contracts::DTO::{{ feature.crud.entity_name_pascal }}::{{ feature.crud.entity_name_pascal }}InsertedIntoRelativeDTO dto);
+
+    {% if feature.crud.entity_has_relation_fields %}
+    void relationInserted({{ feature.crud.entity_name_pascal }}RelationDTO dto);
+    void relationRemoved({{ feature.crud.entity_name_pascal }}RelationDTO dto);
     {% endif -%}
     //TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 

@@ -66,11 +66,12 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     {% if has_owner %}
         {% if owner_field_is_list %}
     QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_name_pascal }};
-    {% else %}
+        {% else %}
         {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_name_pascal }};
-    {% endif %}
+        {% endif %}
         // Get the entities from owner
         int ownerId = createDTO.{{ owner_name_camel }}Id();
+        m_ownerId = ownerId;
     {% endif %}
 
     if (m_firstPass)
@@ -203,9 +204,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
     {% if has_owner %}
     // send an insertion signal
-    {{ entity_mappable_with_pascal }}InsertedIntoRelativeDTO {{ entity_mappable_with_camel }}InsertedIntoRelativeDto({{ entity_mappable_with_camel }}DTO, ownerId, position);
-
-    emit {{ entity_mappable_with_camel }}InsertedInto{{ owner_name_pascal }}{{ owner_field_name_pascal }}( {{ entity_mappable_with_camel }}InsertedIntoRelativeDto);
+    emit relationWithOwnerInserted( {{ entity_mappable_with_camel }}.id(), ownerId, position);
     {% endif %}
 
     qDebug() << "{{ entity_mappable_with_pascal }} added:" << {{ entity_mappable_with_camel }}DTO.id();
@@ -218,14 +217,19 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
 Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl()
 {
-
-    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+    int entityId = m_newEntity.value().id();
+    auto deleteResult = m_repository->remove(entityId);
 
     QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, deleteResult)
 
     emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
 
     qDebug() << "{{ entity_mappable_with_pascal }} removed:" << deleteResult.value();
+
+    {% if has_owner %}
+    emit relationWithOwnerRemoved(entityId, m_ownerId);
+    {% endif %}
+
 
     return Result<{{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_pascal }}DTO());
 }

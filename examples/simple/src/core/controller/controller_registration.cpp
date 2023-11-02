@@ -49,8 +49,12 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     SignalHolder *carSignalHolder = repositoryProvider->repository("Car")->signalHolder();
     emit carSignalHolder->removed(QList<int>() << 0);
+
+    // removal
     connect(carSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(),
             &CarSignals::removed);
+
+    // active status
     connect(repositoryProvider->repository("car")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->car(),
             &CarSignals::activeStatusChanged);
@@ -61,8 +65,20 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     SignalHolder *brandSignalHolder = repositoryProvider->repository("Brand")->signalHolder();
     emit brandSignalHolder->removed(QList<int>() << 0);
+
+    // removal
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
             &BrandSignals::removed);
+
+    // spread removal signal to all other entity signal holders so as to remove the relations
+
+    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
+            [dispatcher](QList<int> removedIds) {
+                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Brand, removedIds, -1);
+                emit dispatcher->car()->relationRemoved(dto);
+            });
+
+    // active status
     connect(repositoryProvider->repository("brand")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->brand(),
             &BrandSignals::activeStatusChanged);
@@ -73,8 +89,32 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     SignalHolder *passengerSignalHolder = repositoryProvider->repository("Passenger")->signalHolder();
     emit passengerSignalHolder->removed(QList<int>() << 0);
+
+    // removal
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
             &PassengerSignals::removed);
+
+    // spread removal signal to all other entity signal holders so as to remove the relations
+
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
+            [dispatcher](QList<int> removedIds) {
+                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Passengers, removedIds, -1);
+                emit dispatcher->car()->relationRemoved(dto);
+            });
+
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
+            [dispatcher](QList<int> removedIds) {
+                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::Client, removedIds, -1);
+                emit dispatcher->client()->relationRemoved(dto);
+            });
+
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
+            [dispatcher](QList<int> removedIds) {
+                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::ClientFriends, removedIds, -1);
+                emit dispatcher->client()->relationRemoved(dto);
+            });
+
+    // active status
     connect(repositoryProvider->repository("passenger")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->passenger(),
             &PassengerSignals::activeStatusChanged);
@@ -85,8 +125,12 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     SignalHolder *clientSignalHolder = repositoryProvider->repository("Client")->signalHolder();
     emit clientSignalHolder->removed(QList<int>() << 0);
+
+    // removal
     connect(clientSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->client(),
             &ClientSignals::removed);
+
+    // active status
     connect(repositoryProvider->repository("client")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->client(),
             &ClientSignals::activeStatusChanged);

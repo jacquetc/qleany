@@ -24,7 +24,7 @@
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command.h"
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command_handler.h"
     {% endif -%}
-    {%if feature.crud.insert_into_relative -%}
+    {%if feature.crud.insert_relation -%}
 //#include "{{ feature_name_snake }}/commands/insert_{{ entity_name_snake }}_into_xxx_command.h"
 //#include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_into_xxx_command_handler.h"
     {% endif -%}
@@ -189,8 +189,14 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::cr
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, m_eventDispatcher->{{ feature_name_camel }}(),
                      &{{ entity_name_pascal }}Signals::created);
     {% if feature.crud.has_owner %}
-    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}InsertedInto{{ feature.crud.owner_name_pascal }}{{ feature.crud.owner_field_name_pascal }}, m_eventDispatcher->{{ feature_name_camel }}(),
-                     &{{ entity_name_pascal }}Signals::insertedInto{{ feature.crud.owner_name_pascal }}{{ feature.crud.owner_field_name_pascal }});
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerInserted, this, [this](int id, int ownerId, int position){
+        auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, position);
+        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationInserted(dto);
+            });
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId){
+        auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, -1);
+        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationRemoved(dto);
+            });
     {% endif %}
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, this, [this](int removedId) {
         emit m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << removedId);
@@ -230,7 +236,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::up
     // connect
     QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, this,
                      [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->updated(dto); });
-    QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}DetailsUpdated, m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::detailsUpdated);
+    QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}DetailsUpdated, m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<Update{{ entity_name_pascal }}CommandHandler, Update{{ entity_name_pascal }}Command>(

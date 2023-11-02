@@ -9,8 +9,6 @@
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
 
-#include "passenger/passenger_inserted_into_relative_dto.h"
-
 using namespace Qleany;
 using namespace Simple::Domain;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -32,8 +30,8 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler :
     void passengerCreated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerRemoved(int id);
 
-    void passengerInsertedIntoCarPassengers(
-        Simple::Contracts::DTO::Passenger::PassengerInsertedIntoRelativeDTO passengerInsertedIntoRelativeDto);
+    void relationWithOwnerInserted(int id, int ownerId, int position);
+    void relationWithOwnerRemoved(int id, int ownerId);
 
   private:
     InterfacePassengerRepository *m_repository;
@@ -41,6 +39,7 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler :
     Result<PassengerDTO> restoreImpl();
     Result<Simple::Domain::Passenger> m_newEntity;
 
+    int m_ownerId = -1;
     int m_position = -1;
 
     QList<Simple::Domain::Passenger> m_oldOwnerPassengers;

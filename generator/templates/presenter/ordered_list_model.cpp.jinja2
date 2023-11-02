@@ -10,7 +10,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
 {{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QAbstractListModel(parent)
 {
 
-    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::detailsUpdated, this, [this](int {{ model.related_name_camel }}Id) {
+    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::allRelationsInvalidated, this, [this](int {{ model.related_name_camel }}Id) {
         if ({{ model.related_name_camel }}Id == m_{{ model.related_name_camel }}Id)
         {
             return;
@@ -96,10 +96,13 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
         }
     });
 
-    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::insertedInto{{ model.related_name_pascal }}{{ model.entity_name_pascal }}s, this,
-            [this]({{ model.entity_name_pascal }}InsertedIntoRelativeDTO dto) {
+    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::relationInserted, this,
+            [this]({{ model.related_name_pascal }}RelationDTO dto) {
+                if (dto.id() != m_{{ model.related_name_camel }}Id || dto.relationField() != {{ model.related_name_pascal }}RelationDTO::RelationField::P{{ model.related_field_name_pascal }}assengers)
+                {
+                    return;
+                }
                 // remove {{ model.entity_name_camel }} from this model if dto.{{ model.entity_name_camel }}().id() is here
-                // add {{ model.entity_name_camel }} to this model if dto.relatedId() is here
 
                 int {{ model.entity_name_camel }}Id = dto.{{ model.entity_name_camel }}().id();
                 if (m_{{ model.entity_name_camel }}Ids.contains({{ model.entity_name_camel }}Id) && m_{{ model.related_name_camel }}Id != dto.relatedId())
@@ -110,6 +113,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
                     m_{{ model.entity_name_camel }}Ids.removeAt(position);
                     endRemoveRows();
                 }
+                // add {{ model.entity_name_camel }} to this model if dto.relatedId() is here
                 else if (!m_{{ model.entity_name_camel }}Ids.contains({{ model.entity_name_camel }}Id) && m_{{ model.related_name_camel }}Id == dto.relatedId())
                 {
                     int position = dto.position();

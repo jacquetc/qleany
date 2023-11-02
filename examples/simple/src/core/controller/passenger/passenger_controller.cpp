@@ -10,8 +10,6 @@
 #include "passenger/commands/update_passenger_command_handler.h"
 #include "passenger/queries/get_all_passenger_query_handler.h"
 #include "passenger/queries/get_passenger_query_handler.h"
-// #include "passenger/commands/insert_passenger_into_xxx_command.h"
-// #include "passenger/commands/update_passenger_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -121,8 +119,17 @@ QCoro::Task<PassengerDTO> PassengerController::create(const CreatePassengerDTO &
     QObject::connect(handler, &CreatePassengerCommandHandler::passengerCreated, m_eventDispatcher->passenger(),
                      &PassengerSignals::created);
 
-    QObject::connect(handler, &CreatePassengerCommandHandler::passengerInsertedIntoCarPassengers,
-                     m_eventDispatcher->passenger(), &PassengerSignals::insertedIntoCarPassengers);
+    QObject::connect(handler, &CreatePassengerCommandHandler::relationWithOwnerInserted, this,
+                     [this](int id, int ownerId, int position) {
+                         auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers,
+                                                   QList<int>() << id, position);
+                         emit m_eventDispatcher->car()->relationInserted(dto);
+                     });
+    QObject::connect(
+        handler, &CreatePassengerCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
+            auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers, QList<int>() << id, -1);
+            emit m_eventDispatcher->car()->relationRemoved(dto);
+        });
 
     QObject::connect(handler, &CreatePassengerCommandHandler::passengerRemoved, this, [this](int removedId) {
         emit m_eventDispatcher->passenger()->removed(QList<int>() << removedId);
@@ -161,7 +168,7 @@ QCoro::Task<PassengerDTO> PassengerController::update(const UpdatePassengerDTO &
     QObject::connect(handler, &UpdatePassengerCommandHandler::passengerUpdated, this,
                      [this](PassengerDTO dto) { emit m_eventDispatcher->passenger()->updated(dto); });
     QObject::connect(handler, &UpdatePassengerCommandHandler::passengerDetailsUpdated, m_eventDispatcher->passenger(),
-                     &PassengerSignals::detailsUpdated);
+                     &PassengerSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<UpdatePassengerCommandHandler, UpdatePassengerCommand>(

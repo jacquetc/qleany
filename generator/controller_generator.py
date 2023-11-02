@@ -9,6 +9,88 @@ from pathlib import Path
 import clang_format
 
 
+def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
+    for entity_name in entities_by_name:
+        if entity_name == field_type:
+            return True
+
+    return False
+
+
+def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
+    if "<" not in field_type:
+        return False
+
+    type = field_type.split("<")[1].split(">")[0].strip()
+
+    for entity_name in entities_by_name:
+        if entity_name == type:
+            return True
+
+    return False
+
+def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict) -> bool:
+    entity = entities_by_name.get(entity_name, None)
+    if entity is None:
+        return False
+
+    fields = entity["fields"]
+    for field in fields:
+        field_type = field["type"]
+        if is_unique_foreign_entity(field_type, entities_by_name) or is_list_foreign_entity(
+            field_type, entities_by_name
+        ):
+            return True
+
+    return False
+
+def get_entity_from_foreign_field_type(field_type: str, entities_by_name: dict) -> str:
+    if "<" not in field_type:
+        return field_type
+
+    type = field_type.split("<")[1].split(">")[0].strip()
+
+    for entity_name in entities_by_name:
+        if entity_name == type:
+            return entity_name
+
+    return ""
+
+def get_other_entities_relation_fields(entity_name: str, entities_by_name: dict) -> list:
+    other_entities_relation_fields = []
+
+    entity = entities_by_name.get(entity_name, None)
+    if entity is None:
+        return []
+
+    for (entity, data)  in entities_by_name.items():
+        if entity == entity_name:
+            continue
+
+
+        fields = data["fields"]
+        for field in fields:
+            field_type = field["type"]
+            if is_unique_foreign_entity(field_type, entities_by_name) or is_list_foreign_entity(
+                field_type, entities_by_name
+            ):
+                if entity_name != get_entity_from_foreign_field_type(field_type, entities_by_name):
+                    continue
+                other_entities_relation_fields.append(
+                    {
+                        "name_snake": stringcase.snakecase(entity),
+                        "name_pascal": stringcase.pascalcase(entity),
+                        "name_spinal": stringcase.spinalcase(entity),
+                        "name_camel": stringcase.camelcase(entity),
+                        "field_name_snake": stringcase.snakecase(field["name"]),
+                        "field_name_pascal": stringcase.pascalcase(field["name"]),
+                        "field_name_spinal": stringcase.spinalcase(field["name"]),
+                        "field_name_camel": stringcase.camelcase(field["name"]),
+                    }
+                )
+
+    return other_entities_relation_fields
+
 def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
     owner_dict = {}
     for possible_owner_name, entity in entities_by_name.items():
@@ -25,6 +107,7 @@ def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
                     return owner_dict
 
     return owner_dict
+
 
 def get_generation_dict(
     folder_path: str,
@@ -88,6 +171,7 @@ def get_generation_dict(
             final_feature_dict["crud"]["entity_name_pascal"] = entity_pascal_name
             final_feature_dict["crud"]["entity_name_spinal"] = entity_spinal_name
             final_feature_dict["crud"]["entity_name_camel"] = entity_camel_name
+            final_feature_dict["crud"]["entity_has_relation_fields"] = does_entity_have_relation_fields(entity_name, entities_by_name)
 
             final_feature_dict["crud"]["get"] = (
                 feature["CRUD"].get("get", {}).get("enabled", False)
@@ -110,8 +194,8 @@ def get_generation_dict(
             final_feature_dict["crud"]["remove_tree"] = (
                 feature["CRUD"].get("remove_tree", {}).get("enabled", False)
             )
-            final_feature_dict["crud"]["insert_into_relative"] = (
-                feature["CRUD"].get("insert_into_relative", {}).get("enabled", False)
+            final_feature_dict["crud"]["insert_relation"] = (
+                feature["CRUD"].get("insert_relation", {}).get("enabled", False)
             )
 
             # has owner ?
@@ -136,6 +220,9 @@ def get_generation_dict(
             final_feature_dict["crud"]["owner_field_name_camel"] = stringcase.camelcase(owner_field_name)
             final_feature_dict["crud"]["owner_field_name_snake"] = stringcase.snakecase(owner_field_name)
             final_feature_dict["crud"]["owner_field_name_pascal"] = stringcase.pascalcase(owner_field_name)
+
+            # other entities relation fields
+            final_feature_dict["crud"]["other_entities_relation_fields"] = get_other_entities_relation_fields(entity_name, entities_by_name)
 
         # files :
         generation_dict["all_controller_files"].append(

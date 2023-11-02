@@ -11,6 +11,8 @@
 #include "car/queries/get_all_car_query_handler.h"
 #include "car/queries/get_car_query_handler.h"
 #include "car/queries/get_car_with_details_query_handler.h"
+// #include "car/commands/insert_car_into_xxx_command.h"
+// #include "car/commands/update_car_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -187,7 +189,7 @@ QCoro::Task<CarDTO> CarController::update(const UpdateCarDTO &dto)
     QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this,
                      [this](CarDTO dto) { emit m_eventDispatcher->car()->updated(dto); });
     QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(),
-                     &CarSignals::detailsUpdated);
+                     &CarSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command =

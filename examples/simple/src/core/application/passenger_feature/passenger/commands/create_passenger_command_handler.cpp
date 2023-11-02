@@ -67,6 +67,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     // Get the entities from owner
     int ownerId = createDTO.carId();
+    m_ownerId = ownerId;
 
     if (m_firstPass)
     {
@@ -169,9 +170,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     emit passengerCreated(passengerDTO);
 
     // send an insertion signal
-    PassengerInsertedIntoRelativeDTO passengerInsertedIntoRelativeDto(passengerDTO, ownerId, position);
-
-    emit passengerInsertedIntoCarPassengers(passengerInsertedIntoRelativeDto);
+    emit relationWithOwnerInserted(passenger.id(), ownerId, position);
 
     qDebug() << "Passenger added:" << passengerDTO.id();
 
@@ -183,14 +182,16 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
 Result<PassengerDTO> CreatePassengerCommandHandler::restoreImpl()
 {
-
-    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+    int entityId = m_newEntity.value().id();
+    auto deleteResult = m_repository->remove(entityId);
 
     QLN_RETURN_IF_ERROR(PassengerDTO, deleteResult)
 
     emit passengerRemoved(deleteResult.value());
 
     qDebug() << "Passenger removed:" << deleteResult.value();
+
+    emit relationWithOwnerRemoved(entityId, m_ownerId);
 
     return Result<PassengerDTO>(PassengerDTO());
 }

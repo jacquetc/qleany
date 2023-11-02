@@ -98,9 +98,9 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
+        update:
           enabled: true
-        update: 
+        insert_relation: 
           enabled: true
     - name: Brand
       DTO:
@@ -120,11 +120,7 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
-          enabled: true
-        insert_into_relative: 
           enabled: true
         change_active_status: 
           enabled: true
@@ -150,12 +146,6 @@ application:
           enabled: false
         update: 
           enabled: true
-        insert_into_relative: 
-          enabled: true
-        move_inside_relative: 
-          enabled: true
-        remove_from_relative: 
-          enabled: true
         change_active_status: 
           enabled: true
     - name: Client
@@ -176,10 +166,10 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
-          enabled: true        
+          enabled: true       
+        insert_relation: 
+          enabled: true 
     - name: Custom
       DTO:
         dto_identical_to_entity:

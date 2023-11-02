@@ -55,6 +55,20 @@ class {{ dto_pascal_type }}
         }
     };
 
+    {% if is_relation_dto %}
+        {% for relation_field in relation_fields -%}
+            {% if loop.first %}
+            enum RelationField {
+                Undefined,
+            {% endif -%}
+                {{ relation_field.pascal_name }}{% if not loop.last %},{% endif %}
+            {% if loop.last -%}
+            };
+            Q_ENUM(RelationField);
+            {% endif %}
+        {%- endfor %}
+    {% endif %}
+
     {{ dto_pascal_type }}() : {{ fields_init_values }}
     {
     }

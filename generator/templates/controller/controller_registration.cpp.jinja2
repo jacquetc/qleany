@@ -46,8 +46,22 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     SignalHolder *{{ feature.feature_name_camel }}SignalHolder = repositoryProvider->repository("{{ feature.feature_name_pascal }}")->signalHolder();
     emit {{ feature.feature_name_camel }}SignalHolder->removed(QList<int>() << 0);
+    
+    // removal
     connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::removed);
+    
+    {% for other_entity_relation_field in feature.crud.other_entities_relation_fields %}
+    {% if loop.first %}
+    // spread removal signal to all other entity signal holders so as to remove the relations
+    {% endif %}
+    connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds){    
+        {{ other_entity_relation_field.name_pascal }}RelationDTO dto(-1, {{ other_entity_relation_field.name_pascal }}RelationDTO::RelationField::{{ other_entity_relation_field.field_name_pascal }},removedIds, -1);
+        emit dispatcher->{{ other_entity_relation_field.name_camel }}()->relationRemoved(dto);
+    });
+    {% endfor %}
+
+    // active status
     connect(repositoryProvider->repository("{{ feature.feature_name_camel }}")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::activeStatusChanged);

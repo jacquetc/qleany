@@ -8,6 +8,8 @@
 
 #include "client/client_dto.h"
 
+#include "client/client_relation_dto.h"
+
 #include <QObject>
 
 namespace Simple::Controller
@@ -31,6 +33,9 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientSignals : public QObject
     void getAllReplied(QList<ClientDTO> dtoList);
     void created(ClientDTO dto);
     void updated(Contracts::DTO::Client::ClientDTO dto);
-    void detailsUpdated(int id);
+    void allRelationsInvalidated(int id);
+
+    void relationInserted(ClientRelationDTO dto);
+    void relationRemoved(ClientRelationDTO dto);
 };
 } // namespace Simple::Controller
