@@ -106,7 +106,7 @@ class QLEANY_EXPORT Error
     //--------------------------------------------------------------
     Error(const Error &other)
         : m_status(other.m_status), m_className(other.m_className), m_code(other.m_code), m_message(other.m_message),
-          m_data(other.m_data), m_file(other.m_file), m_line(other.m_line)
+          m_data(other.m_data), m_file(other.m_file), m_line(other.m_line), m_trace(other.m_trace)
     {
     }
 
@@ -195,6 +195,15 @@ class QLEANY_EXPORT Error
 
     QString className() const;
 
+    QList<Error> trace() const
+    {
+        return m_trace;
+    }
+    void setTrace(const QList<Error> &newTrace)
+    {
+        m_trace = newTrace;
+    }
+
   private:
     QString m_code;
     QString m_message;
@@ -203,6 +212,7 @@ class QLEANY_EXPORT Error
     Error::Status m_status;
     QString m_file;
     int m_line;
+    QList<Error> m_trace;
 };
 
 inline QString Error::className() const
