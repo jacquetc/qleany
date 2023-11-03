@@ -22,6 +22,12 @@ class Passenger : public Entity
   public:
     struct MetaData
     {
+        MetaData(Passenger *entity) : m_entity(entity)
+        {
+        }
+        MetaData(Passenger *entity, const MetaData &other) : m_entity(entity)
+        {
+        }
 
         bool getSet(const QString &fieldName) const
         {
@@ -29,7 +35,7 @@ class Passenger : public Entity
             {
                 return true;
             }
-            return false;
+            return m_entity->Entity::metaData().getSet(fieldName);
         }
 
         bool getLoaded(const QString &fieldName) const
@@ -39,11 +45,14 @@ class Passenger : public Entity
             {
                 return true;
             }
-            return false;
+            return m_entity->Entity::metaData().getLoaded(fieldName);
         }
+
+      private:
+        Passenger *m_entity = nullptr;
     };
 
-    Passenger() : Entity(), m_name(QString())
+    Passenger() : Entity(), m_name(QString()), m_metaData(this)
     {
     }
 
@@ -53,12 +62,13 @@ class Passenger : public Entity
 
     Passenger(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
               const QString &name)
-        : Entity(id, uuid, creationDate, updateDate), m_name(name)
+        : Entity(id, uuid, creationDate, updateDate), m_name(name), m_metaData(this)
     {
     }
 
     Passenger(const Passenger &other) : Entity(other), m_metaData(other.m_metaData), m_name(other.m_name)
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static Simple::Domain::Entities::EntityEnum enumValue()
@@ -73,7 +83,7 @@ class Passenger : public Entity
             Entity::operator=(other);
             m_name = other.m_name;
 
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
         }
         return *this;
     }
@@ -102,8 +112,10 @@ class Passenger : public Entity
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+
+  private:
     QString m_name;
 };
 

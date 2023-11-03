@@ -22,6 +22,12 @@ class Brand : public Entity
   public:
     struct MetaData
     {
+        MetaData(Brand *entity) : m_entity(entity)
+        {
+        }
+        MetaData(Brand *entity, const MetaData &other) : m_entity(entity)
+        {
+        }
 
         bool getSet(const QString &fieldName) const
         {
@@ -29,7 +35,7 @@ class Brand : public Entity
             {
                 return true;
             }
-            return false;
+            return m_entity->Entity::metaData().getSet(fieldName);
         }
 
         bool getLoaded(const QString &fieldName) const
@@ -39,11 +45,14 @@ class Brand : public Entity
             {
                 return true;
             }
-            return false;
+            return m_entity->Entity::metaData().getLoaded(fieldName);
         }
+
+      private:
+        Brand *m_entity = nullptr;
     };
 
-    Brand() : Entity(), m_name(QString())
+    Brand() : Entity(), m_name(QString()), m_metaData(this)
     {
     }
 
@@ -53,12 +62,13 @@ class Brand : public Entity
 
     Brand(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
           const QString &name)
-        : Entity(id, uuid, creationDate, updateDate), m_name(name)
+        : Entity(id, uuid, creationDate, updateDate), m_name(name), m_metaData(this)
     {
     }
 
     Brand(const Brand &other) : Entity(other), m_metaData(other.m_metaData), m_name(other.m_name)
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static Simple::Domain::Entities::EntityEnum enumValue()
@@ -73,7 +83,7 @@ class Brand : public Entity
             Entity::operator=(other);
             m_name = other.m_name;
 
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
         }
         return *this;
     }
@@ -102,8 +112,10 @@ class Brand : public Entity
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+
+  private:
     QString m_name;
 };
 

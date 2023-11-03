@@ -61,6 +61,35 @@ class WriteRandomThingsDTO
         return *this;
     }
 
+    WriteRandomThingsDTO &operator=(const WriteRandomThingsDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_randomCarName = other.m_randomCarName;
+        }
+        return *this;
+    }
+
+    WriteRandomThingsDTO &mergeWith(const WriteRandomThingsDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.randomCarNameSet)
+            {
+                m_randomCarName = other.m_randomCarName;
+                m_metaData.randomCarNameSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    WriteRandomThingsDTO &operator<<(const WriteRandomThingsDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const WriteRandomThingsDTO &lhs, const WriteRandomThingsDTO &rhs);
 
     friend uint qHash(const WriteRandomThingsDTO &dto, uint seed) noexcept;

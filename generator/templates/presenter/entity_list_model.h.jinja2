@@ -13,7 +13,6 @@ namespace {{ application_cpp_domain_name }}::Presenter
 class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(int {{ model.related_name_camel }}Id READ {{ model.related_name_camel }}Id WRITE set{{ model.related_name_pascal }}Id RESET reset{{ model.related_name_pascal }}Id NOTIFY {{ model.related_name_camel }}IdChanged FINAL)
 
   public:
     enum Roles
@@ -34,24 +33,17 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    int {{ model.related_name_camel }}Id() const;
-    void set{{ model.related_name_pascal }}Id(int new{{ model.related_name_pascal }}Id);
-    void reset{{ model.related_name_pascal }}Id();
-
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override;
 
   signals:
-    void {{ model.related_name_camel }}IdChanged();
 
   private:
     void populate();
 
     QList<{{ model.entity_name_pascal }}DTO> m_{{ model.entity_name_camel }}List;
     QList<int> m_{{ model.entity_name_camel }}IdList;
-    int m_{{ model.related_name_camel }}Id = 0;
-
 };
 
 } // namespace {{ application_cpp_domain_name }}::Presenter

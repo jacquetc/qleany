@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : publi
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restoreImpl();
     Result<ClientDTO> saveOldState();
-    Result<ClientDTO> m_newState;
+    Result<ClientDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

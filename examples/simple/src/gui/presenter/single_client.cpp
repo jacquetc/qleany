@@ -1,21 +1,21 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
-#include "single_passenger.h"
+#include "single_client.h"
+#include "client/client_controller.h"
 #include "event_dispatcher.h"
-#include "passenger/passenger_controller.h"
 
 using namespace Simple::Controller;
 using namespace Simple::Presenter;
 
-SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
+SingleClient::SingleClient(QObject *parent) : QObject{parent}
 {
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::removed, this, [this](QList<int> removedIds) {
+    connect(EventDispatcher::instance()->client(), &ClientSignals::removed, this, [this](QList<int> removedIds) {
         if (removedIds.contains(id()))
         {
             resetId();
         }
     });
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
+    connect(EventDispatcher::instance()->client(), &ClientSignals::updated, this, [this](ClientDTO dto) {
         if (dto.id() == id())
         {
 
@@ -39,21 +39,16 @@ SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
                 m_updateDate = dto.updateDate();
                 emit updateDateChanged();
             }
-            if (m_name != dto.name())
-            {
-                m_name = dto.name();
-                emit nameChanged();
-            }
         }
     });
 }
 
-int SinglePassenger::id() const
+int SingleClient::id() const
 {
     return m_id;
 }
 
-void SinglePassenger::setId(int newId)
+void SingleClient::setId(int newId)
 {
     if (m_id == newId)
         return;
@@ -72,51 +67,45 @@ void SinglePassenger::setId(int newId)
 
         m_updateDate = QDateTime();
         emit updateDateChanged();
-
-        m_name = QString();
-        emit nameChanged();
     }
 
     // set
     else
     {
-        Passenger::PassengerController::instance()->get(m_id).then(
-            [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-                m_uuid = passenger.uuid();
+        Client::ClientController::instance()->get(m_id).then(
+            [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
+                m_uuid = client.uuid();
                 emit uuidChanged();
 
-                m_creationDate = passenger.creationDate();
+                m_creationDate = client.creationDate();
                 emit creationDateChanged();
 
-                m_updateDate = passenger.updateDate();
+                m_updateDate = client.updateDate();
                 emit updateDateChanged();
-
-                m_name = passenger.name();
-                emit nameChanged();
             });
     }
 }
 
-void SinglePassenger::resetId()
+void SingleClient::resetId()
 {
     setId(0);
 }
 
-QString SinglePassenger::name() const
+QString SingleClient::name() const
 {
     return m_name;
 }
 
-void SinglePassenger::setName(const QString &newName)
+void SingleClient::setName(const QString &newName)
 {
     if (m_name == newName)
         return;
     m_name = newName;
 
-    UpdatePassengerDTO dto;
+    UpdateClientDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerController::instance()->update(dto);
+    Client::ClientController::instance()->update(dto);
 
     emit nameChanged();
 }

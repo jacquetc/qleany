@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT UpdateCarCommandHandler : public QObj
     Result<CarDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateCarCommand &request);
     Result<CarDTO> restoreImpl();
     Result<CarDTO> saveOldState();
-    Result<CarDTO> m_newState;
+    Result<CarDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

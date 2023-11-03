@@ -24,6 +24,20 @@ class {{ name }} : public {{ parent }}
 
   public:
     struct MetaData {
+        MetaData({{ name }} *entity) : m_entity(entity)
+        {
+        }
+        MetaData({{ name }} *entity, const MetaData &other) : m_entity(entity)
+        {
+            {% for field in fields -%}
+            {% if field.need_lazy_loader -%}
+            this->{{ field.name }}Set = other.{{ field.name }}Set;
+            this->{{ field.name }}Loaded = other.{{ field.name }}Loaded;
+            {% endif -%}
+            {%- endfor %}
+
+        }
+
     {% for field in fields -%}
     {% if field.need_lazy_loader %}
         bool {{ field.name }}Set = false;
@@ -42,7 +56,7 @@ class {{ name }} : public {{ parent }}
             {% endif -%}
         }
         {%- endfor %}
-        return false;
+        return m_entity->{{ parent }}::metaData().getSet(fieldName);
     }
 
     bool getLoaded(const QString &fieldName) const
@@ -57,12 +71,14 @@ class {{ name }} : public {{ parent }}
             {% endif -%}
         }
         {%- endfor %}
-        return false;
+        return m_entity->{{ parent }}::metaData().getLoaded(fieldName);
     }
+      private:
+        {{ name }} *m_entity = nullptr;
     };
 
 
-    {{ name }}() : {{ parent }}() {{ fields_init_values }}
+    {{ name }}() : {{ parent }}() {{ fields_init_values }}, m_metaData(this)
     {
     }
 
@@ -70,13 +86,14 @@ class {{ name }} : public {{ parent }}
     {
     }
 
-   {{ name }}( {% for field in parent_fields %} const {{ field.type }} &{{ field.name }}, {% endfor %} {% for field in fields %}{% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
-        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
+   {{ name }}( {% for field in parent_fields %} const {{ field.type }} &{{ field.name }}, {% endfor %} {% for field in fields %}{% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
+        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}, m_metaData(this)
     {
     }
 
     {{ name }}(const {{ name }} &other) : {{ parent }}(other), m_metaData(other.m_metaData){% for field in fields %}, m_{{ field.name }}(other.m_{{ field.name }}){% endfor %}
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum enumValue()
@@ -92,7 +109,7 @@ class {{ name }} : public {{ parent }}
             {% for field in fields -%}
             m_{{ field.name }} = other.m_{{ field.name }};
             {% endfor %}
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
     }
         return *this;
     }
@@ -118,7 +135,7 @@ class {{ name }} : public {{ parent }}
         return m_{{ field.name }};
     }
 
-    void set{{ field.name_pascal }}({% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
+    void set{{ field.name_pascal }}({% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
     {
         m_{{ field.name }} = {{ field.name }};
       {% if field.need_lazy_loader %}
@@ -143,8 +160,10 @@ class {{ name }} : public {{ parent }}
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+    
+  private:
 {% for field in fields -%}
     {{ field.type }} m_{{ field.name }};
     {% if field.need_lazy_loader -%}

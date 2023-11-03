@@ -24,6 +24,16 @@ class Client : public Entity
   public:
     struct MetaData
     {
+        MetaData(Client *entity) : m_entity(entity)
+        {
+        }
+        MetaData(Client *entity, const MetaData &other) : m_entity(entity)
+        {
+            this->clientSet = other.clientSet;
+            this->clientLoaded = other.clientLoaded;
+            this->clientFriendsSet = other.clientFriendsSet;
+            this->clientFriendsLoaded = other.clientFriendsLoaded;
+        }
 
         bool clientSet = false;
         bool clientLoaded = false;
@@ -41,7 +51,7 @@ class Client : public Entity
             {
                 return clientFriendsSet;
             }
-            return false;
+            return m_entity->Entity::metaData().getSet(fieldName);
         }
 
         bool getLoaded(const QString &fieldName) const
@@ -55,11 +65,14 @@ class Client : public Entity
             {
                 return clientFriendsLoaded;
             }
-            return false;
+            return m_entity->Entity::metaData().getLoaded(fieldName);
         }
+
+      private:
+        Client *m_entity = nullptr;
     };
 
-    Client() : Entity()
+    Client() : Entity(), m_metaData(this)
     {
     }
 
@@ -69,13 +82,14 @@ class Client : public Entity
 
     Client(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
            const Passenger &client, const QList<Passenger> &clientFriends)
-        : Entity(id, uuid, creationDate, updateDate), m_client(client), m_clientFriends(clientFriends)
+        : Entity(id, uuid, creationDate, updateDate), m_client(client), m_clientFriends(clientFriends), m_metaData(this)
     {
     }
 
     Client(const Client &other)
         : Entity(other), m_metaData(other.m_metaData), m_client(other.m_client), m_clientFriends(other.m_clientFriends)
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static Simple::Domain::Entities::EntityEnum enumValue()
@@ -91,7 +105,7 @@ class Client : public Entity
             m_client = other.m_client;
             m_clientFriends = other.m_clientFriends;
 
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
         }
         return *this;
     }
@@ -159,8 +173,10 @@ class Client : public Entity
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+
+  private:
     Passenger m_client;
     ClientLoader m_clientLoader;
     QList<Passenger> m_clientFriends;

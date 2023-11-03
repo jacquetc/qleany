@@ -84,7 +84,6 @@ PassengerListModel::PassengerListModel(QObject *parent) : QAbstractListModel(par
         });
     });
 
-    // TODO: replace with relationRemoved
     connect(EventDispatcher::instance()->car(), &CarSignals::relationRemoved, this, [this](CarRelationDTO dto) {
         if (dto.relationField() != CarRelationDTO::RelationField::Passengers)
         {

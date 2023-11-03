@@ -65,25 +65,27 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     QLN_RETURN_IF_ERROR(BrandDTO, validatorResult)
 
-    // map
-    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateBrandDTO, Simple::Domain::Brand>(request.req);
-
-    // set update timestamp only on first pass
-    if (m_newState.isEmpty())
-    {
-        brand.setUpdateDate(QDateTime::currentDateTime());
-    }
-
     // save old state
-    if (m_newState.isEmpty())
+    if (m_undoState.isEmpty())
     {
-        Result<Simple::Domain::Brand> saveResult = m_repository->get(request.req.id());
+        Result<Simple::Domain::Brand> currentResult = m_repository->get(request.req.id());
 
-        QLN_RETURN_IF_ERROR(BrandDTO, saveResult)
+        QLN_RETURN_IF_ERROR(BrandDTO, currentResult)
 
         // map
-        m_newState = Result<BrandDTO>(
-            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(saveResult.value()));
+        m_undoState = Result<BrandDTO>(
+            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(currentResult.value()));
+    }
+    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<BrandDTO, UpdateBrandDTO>(m_undoState.value());
+    updateDto << request.req;
+
+    // map
+    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateBrandDTO, Simple::Domain::Brand>(updateDto);
+
+    // set update timestamp only on first pass
+    if (m_undoState.isEmpty())
+    {
+        brand.setUpdateDate(QDateTime::currentDateTime());
     }
 
     // do
@@ -111,10 +113,10 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
 Result<BrandDTO> UpdateBrandCommandHandler::restoreImpl()
 {
-    qDebug() << "UpdateBrandCommandHandler::restoreImpl called with id" << m_newState.value().uuid();
+    qDebug() << "UpdateBrandCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<BrandDTO, Simple::Domain::Brand>(m_newState.value());
+    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<BrandDTO, Simple::Domain::Brand>(m_undoState.value());
 
     // do
     auto brandResult = m_repository->update(std::move(brand));
@@ -137,6 +139,8 @@ void UpdateBrandCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
         true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO,
+                                                           Contracts::DTO::Brand::BrandDTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO,
                                                            Simple::Domain::Brand>();
 }

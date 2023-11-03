@@ -2,7 +2,7 @@
 
 using namespace Qleany::Domain;
 
-EntityBase::EntityBase() : m_id(0)
+EntityBase::EntityBase() : m_id(0), m_metaData(this)
 {
 }
 
@@ -10,20 +10,21 @@ EntityBase::~EntityBase()
 {
 }
 
-EntityBase::EntityBase(int id) : m_id(id)
+EntityBase::EntityBase(int id) : m_id(id), m_metaData(this)
 {
 }
 
-EntityBase::EntityBase(const EntityBase &other) : m_id(other.m_id)
+EntityBase::EntityBase(const EntityBase &other) : m_id(other.m_id), m_metaData(MetaData(this))
 {
+    m_metaData = MetaData(this, other.metaData());
 }
 
 EntityBase &EntityBase::operator=(const EntityBase &other)
 {
     if (this != &other)
     {
-
         m_id = other.m_id;
+        m_metaData = MetaData(this, other.metaData());
     }
     return *this;
 }

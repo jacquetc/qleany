@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "{{ model.entity_name_snake }}/"{{ model.entity_name_snake }}_dto.h"
+#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_dto.h"
 #include "{{ export_header_file }}"
 #include <QAbstractListModel>
 
@@ -18,9 +18,9 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
   public:
     enum Roles
     {
-        {{ for field in model.fields }}
+        {% for field in model.fields %}
         {{ field.name_pascal }}Role = Qt::UserRole + {{ loop.index0 }}{{ "," if not loop.last }}  
-        {{ endfor }}      
+        {%- endfor %}      
     };
     Q_ENUM(Roles)
 
@@ -48,7 +48,7 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
   private:
     void populate();
 
-    QList<{{ model.entity_name_pascal }}DTO> m_passengerList;
+    QList<{{ model.entity_name_pascal }}DTO> m_{{ model.entity_name_camel }}List;
     QList<int> m_{{ model.entity_name_camel }}IdList;
     int m_{{ model.related_name_camel }}Id = 0;
 

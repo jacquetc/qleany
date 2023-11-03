@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : public 
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request);
     Result<BrandDTO> restoreImpl();
     Result<BrandDTO> saveOldState();
-    Result<BrandDTO> m_newState;
+    Result<BrandDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

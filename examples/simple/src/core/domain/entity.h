@@ -27,6 +27,12 @@ class Entity : public EntityBase
   public:
     struct MetaData
     {
+        MetaData(Entity *entity) : m_entity(entity)
+        {
+        }
+        MetaData(Entity *entity, const MetaData &other) : m_entity(entity)
+        {
+        }
 
         bool getSet(const QString &fieldName) const
         {
@@ -42,7 +48,7 @@ class Entity : public EntityBase
             {
                 return true;
             }
-            return false;
+            return m_entity->EntityBase::metaData().getSet(fieldName);
         }
 
         bool getLoaded(const QString &fieldName) const
@@ -60,11 +66,14 @@ class Entity : public EntityBase
             {
                 return true;
             }
-            return false;
+            return m_entity->EntityBase::metaData().getLoaded(fieldName);
         }
+
+      private:
+        Entity *m_entity = nullptr;
     };
 
-    Entity() : EntityBase(), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
+    Entity() : EntityBase(), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_metaData(this)
     {
     }
 
@@ -73,7 +82,7 @@ class Entity : public EntityBase
     }
 
     Entity(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate)
-        : EntityBase(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate)
+        : EntityBase(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_metaData(this)
     {
     }
 
@@ -81,6 +90,7 @@ class Entity : public EntityBase
         : EntityBase(other), m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
           m_updateDate(other.m_updateDate)
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static Simple::Domain::Entities::EntityEnum enumValue()
@@ -97,7 +107,7 @@ class Entity : public EntityBase
             m_creationDate = other.m_creationDate;
             m_updateDate = other.m_updateDate;
 
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
         }
         return *this;
     }
@@ -152,8 +162,10 @@ class Entity : public EntityBase
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+
+  private:
     QUuid m_uuid;
     QDateTime m_creationDate;
     QDateTime m_updateDate;

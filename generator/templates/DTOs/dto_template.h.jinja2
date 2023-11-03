@@ -77,7 +77,7 @@ class {{ dto_pascal_type }}
     {
     }
 
-    {{ dto_pascal_type }}({% for field in fields %}{% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
+    {{ dto_pascal_type }}({% for field in fields %}{% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
         : {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
     {
     }
@@ -105,10 +105,44 @@ class {{ dto_pascal_type }}
         return *this;
     }
 
+    {{ dto_pascal_type }} &operator=(const {{ dto_pascal_type }} &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            {% for field in fields -%}
+            m_{{ field.name }} = other.m_{{ field.name }};
+            {% endfor %}
+        }
+        return *this;
+    }
+
+    {{ dto_pascal_type }} &mergeWith(const {{ dto_pascal_type }} &other)
+    {
+        if (this != &other)
+        {
+            {% for field in fields -%}
+            if (other.m_metaData.{{ field.name }}Set)
+            {
+                m_{{ field.name }} = other.m_{{ field.name }};
+                m_metaData.{{ field.name }}Set = true;
+            }
+            {% endfor %}
+        }
+        return *this;
+    }
+
+    //import operator
+    {{ dto_pascal_type }} &operator<<(const {{ dto_pascal_type }} &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const {{ dto_pascal_type }} &lhs, const {{ dto_pascal_type }} &rhs);
 
 
     friend uint qHash(const {{ dto_pascal_type }} &dto, uint seed) noexcept;
+
 
 
 {% for field in fields %}
@@ -119,7 +153,7 @@ class {{ dto_pascal_type }}
         return m_{{ field.name }};
     }
 
-    void set{{ field.pascal_name }}({% if field.type in ['int', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
+    void set{{ field.pascal_name }}({% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %})
     {
         m_{{ field.name }} = {{ field.name }};
         m_metaData.{{ field.name }}Set = true;

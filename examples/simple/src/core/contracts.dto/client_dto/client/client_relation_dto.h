@@ -96,6 +96,53 @@ class ClientRelationDTO
         return *this;
     }
 
+    ClientRelationDTO &operator=(const ClientRelationDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_relationField = other.m_relationField;
+            m_relatedIds = other.m_relatedIds;
+            m_position = other.m_position;
+        }
+        return *this;
+    }
+
+    ClientRelationDTO &mergeWith(const ClientRelationDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.relationFieldSet)
+            {
+                m_relationField = other.m_relationField;
+                m_metaData.relationFieldSet = true;
+            }
+            if (other.m_metaData.relatedIdsSet)
+            {
+                m_relatedIds = other.m_relatedIds;
+                m_metaData.relatedIdsSet = true;
+            }
+            if (other.m_metaData.positionSet)
+            {
+                m_position = other.m_position;
+                m_metaData.positionSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    ClientRelationDTO &operator<<(const ClientRelationDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const ClientRelationDTO &lhs, const ClientRelationDTO &rhs);
 
     friend uint qHash(const ClientRelationDTO &dto, uint seed) noexcept;

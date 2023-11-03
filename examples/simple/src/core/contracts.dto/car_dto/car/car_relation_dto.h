@@ -96,6 +96,53 @@ class CarRelationDTO
         return *this;
     }
 
+    CarRelationDTO &operator=(const CarRelationDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_relationField = other.m_relationField;
+            m_relatedIds = other.m_relatedIds;
+            m_position = other.m_position;
+        }
+        return *this;
+    }
+
+    CarRelationDTO &mergeWith(const CarRelationDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.relationFieldSet)
+            {
+                m_relationField = other.m_relationField;
+                m_metaData.relationFieldSet = true;
+            }
+            if (other.m_metaData.relatedIdsSet)
+            {
+                m_relatedIds = other.m_relatedIds;
+                m_metaData.relatedIdsSet = true;
+            }
+            if (other.m_metaData.positionSet)
+            {
+                m_position = other.m_position;
+                m_metaData.positionSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    CarRelationDTO &operator<<(const CarRelationDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const CarRelationDTO &lhs, const CarRelationDTO &rhs);
 
     friend uint qHash(const CarRelationDTO &dto, uint seed) noexcept;

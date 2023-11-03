@@ -2,33 +2,39 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "{{ single.class_name_snake }}.h"
 #include "event_dispatcher.h"
-#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_controller.h"
+#include "{{ single.entity_name_snake }}/{{ single.entity_name_snake }}_controller.h"
 
 using namespace {{ application_cpp_domain_name }}::Controller;
 using namespace {{ application_cpp_domain_name }}::Presenter;
 
-{{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QObject{parent}
+{{ single.class_name_pascal }}::{{ single.class_name_pascal }}(QObject *parent) : QObject{parent}
 {
-    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::removed, this, [this](QList<int> removedIds) {
+    connect(EventDispatcher::instance()->{{ single.entity_name_camel }}(), &{{ single.entity_name_pascal }}Signals::removed, this, [this](QList<int> removedIds) {
         if (removedIds.contains(id()))
         {
             resetId();
         }
     });
-    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::updated, this, [this]({{ model.entity_name_pascal }}DTO dto) {
+    connect(EventDispatcher::instance()->{{ single.entity_name_camel }}(), &{{ single.entity_name_pascal }}Signals::updated, this, [this]({{ single.entity_name_pascal }}DTO dto) {
         if (dto.id() == id())
         {
-            setName(dto.name());
+        {% for field in single.fields %}
+        if (m_{{ field.name_camel }} != dto.{{ field.name_camel }}()){
+            m_{{ field.name_camel }} = dto.{{ field.name_camel }}();
+            emit {{ field.name_camel }}Changed();
+            }
+        {%- endfor %}
+
         }
     });
 }
 
-int {{ model.class_name_pascal }}::id() const
+int {{ single.class_name_pascal }}::id() const
 {
     return m_id;
 }
 
-void {{ model.class_name_pascal }}::setId(int newId)
+void {{ single.class_name_pascal }}::setId(int newId)
 {
     if (m_id == newId)
         return;
@@ -38,37 +44,49 @@ void {{ model.class_name_pascal }}::setId(int newId)
     // clear
     if (m_id == 0)
     {
-        setName("");
+        {% for field in single.fields %}
+        {% if field.name_camel != "id" %}
+            m_{{ field.name_camel }} = {{ field.type }}();
+            emit {{ field.name_camel }}Changed();
+        {% endif %}
+        {%- endfor %}
     }
 
     // set
     else
     {
-        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->get(m_id).then(
-            [this](const Simple::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }}) { setName({{ model.entity_name_camel }}.name()); });
+        {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->get(m_id).then(
+            [this](const Simple::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) { 
+                {% for field in single.fields %}
+                {% if field.name_camel != "id" %}
+                    m_{{ field.name_camel }} = {{ single.entity_name_camel }}.{{ field.name_camel }}();
+                    emit {{ field.name_camel }}Changed();
+                {% endif %}
+                {%- endfor %}
+                });
     }
 }
 
-void {{ model.class_name_pascal }}::resetId()
+void {{ single.class_name_pascal }}::resetId()
 {
     setId(0);
 }
 
-QString {{ model.class_name_pascal }}::name() const
+QString {{ single.class_name_pascal }}::name() const
 {
     return m_name;
 }
 
-void {{ model.class_name_pascal }}::setName(const QString &newName)
+void {{ single.class_name_pascal }}::setName(const QString &newName)
 {
     if (m_name == newName)
         return;
     m_name = newName;
 
-    Update{{ model.entity_name_pascal }}DTO dto;
+    Update{{ single.entity_name_pascal }}DTO dto;
     dto.setId(id());
     dto.setName(newName);
-    {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto);
+    {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->update(dto);
 
     emit nameChanged();
 }

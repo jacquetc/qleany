@@ -7,14 +7,14 @@
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
+class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
 
   public:
-    explicit SinglePassenger(QObject *parent = nullptr);
+    explicit SingleCar(QObject *parent = nullptr);
 
     int id() const;
     void setId(int newId);
@@ -29,8 +29,8 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
     QDateTime updateDate() const;
     void setUpdateDate(const QDateTime &newUpdateDate);
 
-    QString name() const;
-    void setName(const QString &newName);
+    QString content() const;
+    void setContent(const QString &newContent);
 
   signals:
 
@@ -42,7 +42,7 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
 
     void updateDateChanged();
 
-    void nameChanged();
+    void contentChanged();
 
   private:
     int m_id;
@@ -53,7 +53,7 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
 
     QDateTime m_updateDate;
 
-    QString m_name;
+    QString m_content;
 };
 
 } // namespace Simple::Presenter

@@ -28,6 +28,16 @@ class Car : public Entity
   public:
     struct MetaData
     {
+        MetaData(Car *entity) : m_entity(entity)
+        {
+        }
+        MetaData(Car *entity, const MetaData &other) : m_entity(entity)
+        {
+            this->brandSet = other.brandSet;
+            this->brandLoaded = other.brandLoaded;
+            this->passengersSet = other.passengersSet;
+            this->passengersLoaded = other.passengersLoaded;
+        }
 
         bool brandSet = false;
         bool brandLoaded = false;
@@ -49,7 +59,7 @@ class Car : public Entity
             {
                 return passengersSet;
             }
-            return false;
+            return m_entity->Entity::metaData().getSet(fieldName);
         }
 
         bool getLoaded(const QString &fieldName) const
@@ -67,11 +77,14 @@ class Car : public Entity
             {
                 return passengersLoaded;
             }
-            return false;
+            return m_entity->Entity::metaData().getLoaded(fieldName);
         }
+
+      private:
+        Car *m_entity = nullptr;
     };
 
-    Car() : Entity(), m_content(QString())
+    Car() : Entity(), m_content(QString()), m_metaData(this)
     {
     }
 
@@ -81,7 +94,8 @@ class Car : public Entity
 
     Car(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
         const QString &content, const Brand &brand, const QList<Passenger> &passengers)
-        : Entity(id, uuid, creationDate, updateDate), m_content(content), m_brand(brand), m_passengers(passengers)
+        : Entity(id, uuid, creationDate, updateDate), m_content(content), m_brand(brand), m_passengers(passengers),
+          m_metaData(this)
     {
     }
 
@@ -89,6 +103,7 @@ class Car : public Entity
         : Entity(other), m_metaData(other.m_metaData), m_content(other.m_content), m_brand(other.m_brand),
           m_passengers(other.m_passengers)
     {
+        m_metaData = MetaData(this, other.metaData());
     }
 
     static Simple::Domain::Entities::EntityEnum enumValue()
@@ -105,7 +120,7 @@ class Car : public Entity
             m_brand = other.m_brand;
             m_passengers = other.m_passengers;
 
-            m_metaData = other.m_metaData;
+            m_metaData = MetaData(this, other.metaData());
         }
         return *this;
     }
@@ -186,8 +201,10 @@ class Car : public Entity
         return m_metaData;
     }
 
-  private:
+  protected:
     MetaData m_metaData;
+
+  private:
     QString m_content;
     Brand m_brand;
     BrandLoader m_brandLoader;

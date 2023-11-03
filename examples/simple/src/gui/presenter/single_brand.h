@@ -7,14 +7,14 @@
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
+class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleBrand : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
 
   public:
-    explicit SinglePassenger(QObject *parent = nullptr);
+    explicit SingleBrand(QObject *parent = nullptr);
 
     int id() const;
     void setId(int newId);

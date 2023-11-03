@@ -241,19 +241,19 @@ presenter:
   singles:
     - name: SingleCar
       entity: Car
-    - name: SingleBrand
+    - name: auto
       entity: Brand
-    - name: SinglePassenger
+    - name: auto
       entity: Passenger
-    - name: SingleClient
+    - name: auto
       entity: Client
   list_models:
-    - name: CarListModel
-      entity: Car
     - name: PassengerListModelFromCarPassengers
       entity: Passenger
       in_relation_of: Car
-      relation_field_name: passengers  
+      relation_field_name: passengers
+    - name: CarListModel
+      entity: Car  
       
 
 qml:

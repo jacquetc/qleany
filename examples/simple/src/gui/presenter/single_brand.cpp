@@ -1,21 +1,21 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
-#include "single_passenger.h"
+#include "single_brand.h"
+#include "brand/brand_controller.h"
 #include "event_dispatcher.h"
-#include "passenger/passenger_controller.h"
 
 using namespace Simple::Controller;
 using namespace Simple::Presenter;
 
-SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
+SingleBrand::SingleBrand(QObject *parent) : QObject{parent}
 {
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::removed, this, [this](QList<int> removedIds) {
+    connect(EventDispatcher::instance()->brand(), &BrandSignals::removed, this, [this](QList<int> removedIds) {
         if (removedIds.contains(id()))
         {
             resetId();
         }
     });
-    connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
+    connect(EventDispatcher::instance()->brand(), &BrandSignals::updated, this, [this](BrandDTO dto) {
         if (dto.id() == id())
         {
 
@@ -48,12 +48,12 @@ SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
     });
 }
 
-int SinglePassenger::id() const
+int SingleBrand::id() const
 {
     return m_id;
 }
 
-void SinglePassenger::setId(int newId)
+void SingleBrand::setId(int newId)
 {
     if (m_id == newId)
         return;
@@ -80,43 +80,43 @@ void SinglePassenger::setId(int newId)
     // set
     else
     {
-        Passenger::PassengerController::instance()->get(m_id).then(
-            [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-                m_uuid = passenger.uuid();
+        Brand::BrandController::instance()->get(m_id).then(
+            [this](const Simple::Contracts::DTO::Brand::BrandDTO &brand) {
+                m_uuid = brand.uuid();
                 emit uuidChanged();
 
-                m_creationDate = passenger.creationDate();
+                m_creationDate = brand.creationDate();
                 emit creationDateChanged();
 
-                m_updateDate = passenger.updateDate();
+                m_updateDate = brand.updateDate();
                 emit updateDateChanged();
 
-                m_name = passenger.name();
+                m_name = brand.name();
                 emit nameChanged();
             });
     }
 }
 
-void SinglePassenger::resetId()
+void SingleBrand::resetId()
 {
     setId(0);
 }
 
-QString SinglePassenger::name() const
+QString SingleBrand::name() const
 {
     return m_name;
 }
 
-void SinglePassenger::setName(const QString &newName)
+void SingleBrand::setName(const QString &newName)
 {
     if (m_name == newName)
         return;
     m_name = newName;
 
-    UpdatePassengerDTO dto;
+    UpdateBrandDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerController::instance()->update(dto);
+    Brand::BrandController::instance()->update(dto);
 
     emit nameChanged();
 }

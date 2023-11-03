@@ -127,6 +127,71 @@ class UpdateCarDTO
         return *this;
     }
 
+    UpdateCarDTO &operator=(const UpdateCarDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_content = other.m_content;
+            m_brand = other.m_brand;
+            m_passengers = other.m_passengers;
+        }
+        return *this;
+    }
+
+    UpdateCarDTO &mergeWith(const UpdateCarDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.contentSet)
+            {
+                m_content = other.m_content;
+                m_metaData.contentSet = true;
+            }
+            if (other.m_metaData.brandSet)
+            {
+                m_brand = other.m_brand;
+                m_metaData.brandSet = true;
+            }
+            if (other.m_metaData.passengersSet)
+            {
+                m_passengers = other.m_passengers;
+                m_metaData.passengersSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    UpdateCarDTO &operator<<(const UpdateCarDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const UpdateCarDTO &lhs, const UpdateCarDTO &rhs);
 
     friend uint qHash(const UpdateCarDTO &dto, uint seed) noexcept;
