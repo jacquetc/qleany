@@ -5,13 +5,23 @@
 #include "presenter_export.h"
 #include <QObject>
 
+#include <QDateTime>
+
+#include <QDateTime>
+
+#include <QUuid>
+
 namespace Simple::Presenter
 {
 class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+
+    Q_PROPERTY(QUuid uuid READ uuid WRITE setUuid NOTIFY uuidChanged FINAL)
+    Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate NOTIFY creationDateChanged FINAL)
+    Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate NOTIFY updateDateChanged FINAL)
+    Q_PROPERTY(QString content READ content WRITE setContent NOTIFY contentChanged FINAL)
 
   public:
     explicit SingleCar(QObject *parent = nullptr);
@@ -37,22 +47,16 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
     void idChanged();
 
     void uuidChanged();
-
     void creationDateChanged();
-
     void updateDateChanged();
-
     void contentChanged();
 
   private:
     int m_id;
 
     QUuid m_uuid;
-
     QDateTime m_creationDate;
-
     QDateTime m_updateDate;
-
     QString m_content;
 };
 

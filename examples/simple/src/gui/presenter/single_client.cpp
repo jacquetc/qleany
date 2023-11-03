@@ -91,21 +91,59 @@ void SingleClient::resetId()
     setId(0);
 }
 
-QString SingleClient::name() const
+QUuid SingleClient::uuid() const
 {
-    return m_name;
+    return m_uuid;
 }
 
-void SingleClient::setName(const QString &newName)
+void SingleClient::setUuid(const QUuid &newUuid)
 {
-    if (m_name == newName)
+    if (m_uuid == newUuid)
         return;
-    m_name = newName;
+    m_uuid = newUuid;
 
     UpdateClientDTO dto;
     dto.setId(id());
-    dto.setName(newName);
+    dto.setUuid(newUuid);
     Client::ClientController::instance()->update(dto);
 
-    emit nameChanged();
+    emit uuidChanged();
+}
+
+QDateTime SingleClient::creationDate() const
+{
+    return m_creationDate;
+}
+
+void SingleClient::setCreationDate(const QDateTime &newCreationDate)
+{
+    if (m_creationDate == newCreationDate)
+        return;
+    m_creationDate = newCreationDate;
+
+    UpdateClientDTO dto;
+    dto.setId(id());
+    dto.setCreationDate(newCreationDate);
+    Client::ClientController::instance()->update(dto);
+
+    emit creationDateChanged();
+}
+
+QDateTime SingleClient::updateDate() const
+{
+    return m_updateDate;
+}
+
+void SingleClient::setUpdateDate(const QDateTime &newUpdateDate)
+{
+    if (m_updateDate == newUpdateDate)
+        return;
+    m_updateDate = newUpdateDate;
+
+    UpdateClientDTO dto;
+    dto.setId(id());
+    dto.setUpdateDate(newUpdateDate);
+    Client::ClientController::instance()->update(dto);
+
+    emit updateDateChanged();
 }

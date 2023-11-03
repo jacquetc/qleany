@@ -187,9 +187,16 @@ QVariant {{ model.class_name_pascal }}::data(const QModelIndex &index, int role)
         return QVariant();
 
     const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List.at(index.row());
+
+    if (role == Qt::DisplayRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
+    if (role == Qt::EditRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
     
     {% for field in model.fields %}
-    {{ "else" if not loop.first }} if (role == {{ field.name_pascal }}Role)
+    else if (role == {{ field.name_pascal }}Role)
         return {{ model.entity_name_camel }}.{{ field.name_camel }}();
     {%- endfor %}      
 
@@ -212,6 +219,11 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
     int row = index.row();
     if (row >= m_{{ model.entity_name_camel }}List.size())
         return false;
+        
+    else if (role == Qt::EditRole)
+    {
+        return this->setData(index, value, {{ model.displayed_field_pascal }}Role);    
+    }
 
     {% for field in model.fields %}
     else if (role == {{ field.name_pascal }}Role)

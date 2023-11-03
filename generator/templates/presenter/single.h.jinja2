@@ -4,6 +4,38 @@
 
 #include "{{ export_header_file }}"
 #include <QObject>
+{% for field in single.fields %}
+{% if field.type == "QDate" %}
+#include <QDate>
+{%- else %}{% endif %}
+{%- endfor %}
+{% for field in single.fields %}
+{% if field.type == "QTime" %}
+#include <QTime>
+{%- else %}{% endif %}
+{%- endfor %}
+{% for field in single.fields %}
+{% if field.type == "QDateTime" %}
+#include <QDateTime>
+{%- else %}{% endif %}
+{%- endfor %}
+{% for field in single.fields %}
+{% if field.type == "QUrl" %}
+#include <QUrl>
+{%- else %}{% endif %}
+{%- endfor %}
+{% for field in single.fields %}
+{% if field.type == "QByteArray" %}
+#include <QByteArray>
+{%- else %}{% endif %}
+{%- endfor %}
+{% for field in single.fields %}
+{% if field.type == "QUuid" %}
+#include <QUuid>
+{%- else %}{% endif %}
+{%- endfor %}
+
+
 
 namespace {{ application_cpp_domain_name }}::Presenter
 {
@@ -11,7 +43,11 @@ class {{ export }} {{ single.class_name_pascal }} : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    {% for field in single.fields %}
+    {%- if field.name_camel != "id" %}
+    Q_PROPERTY({{ field.type }} {{ field.name_camel }} READ {{ field.name_camel }} WRITE set{{ field.name_pascal }} NOTIFY {{ field.name_camel }}Changed FINAL)
+    {%- endif %}
+    {%- endfor %}
 
   public:
     explicit {{ single.class_name_pascal }}(QObject *parent = nullptr);
@@ -31,18 +67,18 @@ class {{ export }} {{ single.class_name_pascal }} : public QObject
 
     void idChanged();
     {% for field in single.fields %}
-    {% if field.name_camel != "id" %}
+    {%- if field.name_camel != "id" %}
     void {{ field.name_camel }}Changed();
-    {% endif %}
+    {%- endif %}
     {%- endfor %}
 
   private:
     int m_id;
     
     {% for field in single.fields %}
-    {% if field.name_camel != "id" %}
+    {%- if field.name_camel != "id" %}
     {{ field.type }} m_{{ field.name_camel }};
-    {% endif %}
+    {%- endif %}
     {%- endfor %}
 };
 

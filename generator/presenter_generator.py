@@ -159,6 +159,13 @@ def get_generation_dict(
         entity_name_spinal = stringcase.spinalcase(entity_name)
         entity_name_camel = stringcase.camelcase(entity_name)
 
+        # displayed_field
+        displayed_field = model.get("displayed_field", "id")
+        displayed_field_snake = stringcase.snakecase(displayed_field)
+        displayed_field_pascal = stringcase.pascalcase(displayed_field)
+        displayed_field_spinal = stringcase.spinalcase(displayed_field)
+        displayed_field_camel = stringcase.camelcase(displayed_field)
+
         related_name = model.get("in_relation_of", "")
         related_name_snake = stringcase.snakecase(related_name)
         related_name_pascal = stringcase.pascalcase(related_name)
@@ -203,6 +210,10 @@ def get_generation_dict(
                 "entity_name_pascal": entity_name_pascal,
                 "entity_name_spinal": entity_name_spinal,
                 "entity_name_camel": entity_name_camel,
+                "displayed_field_snake": displayed_field_snake,
+                "displayed_field_pascal": displayed_field_pascal,
+                "displayed_field_spinal": displayed_field_spinal,
+                "displayed_field_camel": displayed_field_camel,
                 "related_name_snake": related_name_snake,
                 "related_name_pascal": related_name_pascal,
                 "related_name_spinal": related_name_spinal,

@@ -10,10 +10,9 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
-    auto *domainRegistratoin = new Simple::Domain::DomainRegistration(&a);
+    new Simple::Domain::DomainRegistration(&a);
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&a);
-    auto *controllerRegistration =
-        new Simple::Controller::ControllerRegistration(&a, persistenceRegistration->repositoryProvider());
+    new Simple::Controller::ControllerRegistration(&a, persistenceRegistration->repositoryProvider());
 
     MainWindow w;
     w.show();

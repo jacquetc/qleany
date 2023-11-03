@@ -5,13 +5,21 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 
 set(LIBRARY_NAME simple-example-presenter)
 
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 include(presenters.cmake)
 
 set(SRCS
     presenter_export.h
 )
 
-qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${PRESENTER_LIST})
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${PRESENTER_LIST})
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PRESENTER_LIBRARY)
 

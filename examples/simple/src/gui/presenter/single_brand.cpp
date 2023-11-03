@@ -102,6 +102,63 @@ void SingleBrand::resetId()
     setId(0);
 }
 
+QUuid SingleBrand::uuid() const
+{
+    return m_uuid;
+}
+
+void SingleBrand::setUuid(const QUuid &newUuid)
+{
+    if (m_uuid == newUuid)
+        return;
+    m_uuid = newUuid;
+
+    UpdateBrandDTO dto;
+    dto.setId(id());
+    dto.setUuid(newUuid);
+    Brand::BrandController::instance()->update(dto);
+
+    emit uuidChanged();
+}
+
+QDateTime SingleBrand::creationDate() const
+{
+    return m_creationDate;
+}
+
+void SingleBrand::setCreationDate(const QDateTime &newCreationDate)
+{
+    if (m_creationDate == newCreationDate)
+        return;
+    m_creationDate = newCreationDate;
+
+    UpdateBrandDTO dto;
+    dto.setId(id());
+    dto.setCreationDate(newCreationDate);
+    Brand::BrandController::instance()->update(dto);
+
+    emit creationDateChanged();
+}
+
+QDateTime SingleBrand::updateDate() const
+{
+    return m_updateDate;
+}
+
+void SingleBrand::setUpdateDate(const QDateTime &newUpdateDate)
+{
+    if (m_updateDate == newUpdateDate)
+        return;
+    m_updateDate = newUpdateDate;
+
+    UpdateBrandDTO dto;
+    dto.setId(id());
+    dto.setUpdateDate(newUpdateDate);
+    Brand::BrandController::instance()->update(dto);
+
+    emit updateDateChanged();
+}
+
 QString SingleBrand::name() const
 {
     return m_name;

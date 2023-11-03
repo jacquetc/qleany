@@ -72,7 +72,16 @@ QVariant CarListModel::data(const QModelIndex &index, int role) const
 
     const CarDTO &car = m_carList.at(index.row());
 
-    if (role == IdRole)
+    if (role == Qt::DisplayRole)
+    {
+        return car.content();
+    }
+    if (role == Qt::EditRole)
+    {
+        return car.content();
+    }
+
+    else if (role == IdRole)
         return car.id();
     else if (role == UuidRole)
         return car.uuid();
@@ -102,6 +111,11 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
     int row = index.row();
     if (row >= m_carList.size())
         return false;
+
+    else if (role == Qt::EditRole)
+    {
+        return this->setData(index, value, ContentRole);
+    }
 
     else if (role == IdRole)
     {

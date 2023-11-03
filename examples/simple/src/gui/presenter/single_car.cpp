@@ -101,21 +101,78 @@ void SingleCar::resetId()
     setId(0);
 }
 
-QString SingleCar::name() const
+QUuid SingleCar::uuid() const
 {
-    return m_name;
+    return m_uuid;
 }
 
-void SingleCar::setName(const QString &newName)
+void SingleCar::setUuid(const QUuid &newUuid)
 {
-    if (m_name == newName)
+    if (m_uuid == newUuid)
         return;
-    m_name = newName;
+    m_uuid = newUuid;
 
     UpdateCarDTO dto;
     dto.setId(id());
-    dto.setName(newName);
+    dto.setUuid(newUuid);
     Car::CarController::instance()->update(dto);
 
-    emit nameChanged();
+    emit uuidChanged();
+}
+
+QDateTime SingleCar::creationDate() const
+{
+    return m_creationDate;
+}
+
+void SingleCar::setCreationDate(const QDateTime &newCreationDate)
+{
+    if (m_creationDate == newCreationDate)
+        return;
+    m_creationDate = newCreationDate;
+
+    UpdateCarDTO dto;
+    dto.setId(id());
+    dto.setCreationDate(newCreationDate);
+    Car::CarController::instance()->update(dto);
+
+    emit creationDateChanged();
+}
+
+QDateTime SingleCar::updateDate() const
+{
+    return m_updateDate;
+}
+
+void SingleCar::setUpdateDate(const QDateTime &newUpdateDate)
+{
+    if (m_updateDate == newUpdateDate)
+        return;
+    m_updateDate = newUpdateDate;
+
+    UpdateCarDTO dto;
+    dto.setId(id());
+    dto.setUpdateDate(newUpdateDate);
+    Car::CarController::instance()->update(dto);
+
+    emit updateDateChanged();
+}
+
+QString SingleCar::content() const
+{
+    return m_content;
+}
+
+void SingleCar::setContent(const QString &newContent)
+{
+    if (m_content == newContent)
+        return;
+    m_content = newContent;
+
+    UpdateCarDTO dto;
+    dto.setId(id());
+    dto.setContent(newContent);
+    Car::CarController::instance()->update(dto);
+
+    emit contentChanged();
 }

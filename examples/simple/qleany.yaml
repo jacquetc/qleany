@@ -250,10 +250,12 @@ presenter:
   list_models:
     - name: PassengerListModelFromCarPassengers
       entity: Passenger
+      displayed_field: name
       in_relation_of: Car
       relation_field_name: passengers
     - name: CarListModel
       entity: Car  
+      displayed_field: content
       
 
 qml:

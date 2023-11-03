@@ -102,6 +102,63 @@ void SinglePassenger::resetId()
     setId(0);
 }
 
+QUuid SinglePassenger::uuid() const
+{
+    return m_uuid;
+}
+
+void SinglePassenger::setUuid(const QUuid &newUuid)
+{
+    if (m_uuid == newUuid)
+        return;
+    m_uuid = newUuid;
+
+    UpdatePassengerDTO dto;
+    dto.setId(id());
+    dto.setUuid(newUuid);
+    Passenger::PassengerController::instance()->update(dto);
+
+    emit uuidChanged();
+}
+
+QDateTime SinglePassenger::creationDate() const
+{
+    return m_creationDate;
+}
+
+void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
+{
+    if (m_creationDate == newCreationDate)
+        return;
+    m_creationDate = newCreationDate;
+
+    UpdatePassengerDTO dto;
+    dto.setId(id());
+    dto.setCreationDate(newCreationDate);
+    Passenger::PassengerController::instance()->update(dto);
+
+    emit creationDateChanged();
+}
+
+QDateTime SinglePassenger::updateDate() const
+{
+    return m_updateDate;
+}
+
+void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
+{
+    if (m_updateDate == newUpdateDate)
+        return;
+    m_updateDate = newUpdateDate;
+
+    UpdatePassengerDTO dto;
+    dto.setId(id());
+    dto.setUpdateDate(newUpdateDate);
+    Passenger::PassengerController::instance()->update(dto);
+
+    emit updateDateChanged();
+}
+
 QString SinglePassenger::name() const
 {
     return m_name;

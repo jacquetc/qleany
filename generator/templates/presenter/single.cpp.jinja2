@@ -72,21 +72,25 @@ void {{ single.class_name_pascal }}::resetId()
     setId(0);
 }
 
-QString {{ single.class_name_pascal }}::name() const
+{% for field in single.fields %}
+{% if field.name_camel != "id" %}
+{{ field.type }} {{ single.class_name_pascal }}::{{ field.name_camel }}() const
 {
-    return m_name;
+    return m_{{ field.name_camel }};
 }
 
-void {{ single.class_name_pascal }}::setName(const QString &newName)
+void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type in ['int', 'double', 'float', 'bool'] %}{{ field.type }} new{{ field.name_pascal }}{% else %} const {{ field.type }} &new{{ field.name_pascal }}{% endif %})
 {
-    if (m_name == newName)
+    if (m_{{ field.name_camel }} == new{{ field.name_pascal }})
         return;
-    m_name = newName;
+    m_{{ field.name_camel }} = new{{ field.name_pascal }};
 
     Update{{ single.entity_name_pascal }}DTO dto;
     dto.setId(id());
-    dto.setName(newName);
+    dto.set{{ field.name_pascal }}(new{{ field.name_pascal }});
     {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->update(dto);
 
-    emit nameChanged();
+    emit {{ field.name_camel }}Changed();
 }
+{% endif %}
+{%- endfor %}

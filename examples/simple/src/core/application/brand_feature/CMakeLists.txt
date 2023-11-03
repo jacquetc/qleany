@@ -5,6 +5,14 @@ find_package(Qt6 COMPONENTS Core  REQUIRED)
 
 set(LIBRARY_NAME simple-example-application-feature-brand)
 
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 set(SRC
 
     
@@ -20,13 +28,15 @@ set(SRC
     brand/queries/get_all_brand_query_handler.h
     application_brand_export.h
 )
-qt_add_library(${LIBRARY_NAME} SHARED ${SRC})
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_APPLICATION_BRAND_LIBRARY)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-domain)
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-persistence)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-cqrs-brand)
 
 target_link_libraries(${LIBRARY_NAME}

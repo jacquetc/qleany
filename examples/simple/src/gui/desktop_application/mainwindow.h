@@ -1,6 +1,7 @@
 #pragma once
 
-#include "passenger_list_model.h"
+#include "car_list_model.h"
+#include "passenger_list_model_from_car_passengers.h"
 #include <QCoroTask>
 #include <QMainWindow>
 
@@ -20,5 +21,6 @@ class MainWindow : public QMainWindow
 
   private:
     Ui::MainWindow *ui;
-    PassengerListModel *m_passengerModel;
+    Simple::Presenter::PassengerListModelFromCarPassengers *m_passengerModelFromCarPassengers;
+    Simple::Presenter::CarListModel *m_carModel;
 };

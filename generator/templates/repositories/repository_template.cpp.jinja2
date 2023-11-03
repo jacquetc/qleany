@@ -109,7 +109,7 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
     return [this](int entityId) {
 
     {% if value["is_list"] %}
-          auto foreignEntitiesResult = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }}::schema, entityId, "{{ value["related_field_name"] }}");
+          auto foreignEntitiesResult = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Domain::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
 
         if (foreignEntitiesResult.isError())
         {
@@ -120,7 +120,7 @@ Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> {{ name }}Reposito
         return foreignEntitiesResult.value();
     {% else %}
 
-        auto foreignEntityResult = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }}::schema, entityId, "{{ value["related_field_name"] }}");
+        auto foreignEntityResult = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Domain::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
 
         if (foreignEntityResult.isError())
         {
@@ -159,8 +159,16 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> 
             // get foreign entities
             {% if value["is_list"] %}
             QList<{{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);            
+            if(foreign{{ value["related_field_pascal_name"] }}.isEmpty()){
+                continue;
+            }
+
             {% else %}
             {{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
+            if(!foreign{{ value["related_field_pascal_name"] }}.isValid()){
+                continue;
+            }
+
             {% endif %}
 
             QList<int> foreignIds;
@@ -219,8 +227,16 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
             // get foreign entities
             {% if value["is_list"] %}
             QList<{{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);            
+            if(foreign{{ value["related_field_pascal_name"] }}.isEmpty()){
+                continue;
+            }
+
             {% else %}
             {{ application_cpp_domain_name }}::Domain::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
+            if(!foreign{{ value["related_field_pascal_name"] }}.isValid()){
+                continue;
+            }
+            
             {% endif %}
 
             QList<int> foreignIds;

@@ -124,7 +124,7 @@ Simple::Domain::Car::BrandLoader CarRepository::fetchBrandLoader()
 
     return [this](int entityId) {
         auto foreignEntityResult =
-            m_brandRepository->getEntityInRelationOf(Simple::Domain::Brand::schema, entityId, "brand");
+            m_brandRepository->getEntityInRelationOf(Simple::Domain::Car::schema, entityId, "brand");
 
         if (foreignEntityResult.isError())
         {
@@ -151,7 +151,7 @@ Simple::Domain::Car::PassengersLoader CarRepository::fetchPassengersLoader()
 
     return [this](int entityId) {
         auto foreignEntitiesResult =
-            m_passengerRepository->getEntitiesInRelationOf(Simple::Domain::Passenger::schema, entityId, "passengers");
+            m_passengerRepository->getEntitiesInRelationOf(Simple::Domain::Car::schema, entityId, "passengers");
 
         if (foreignEntitiesResult.isError())
         {
@@ -188,6 +188,10 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
             // get foreign entities
 
             Simple::Domain::Brand foreignBrand = this->fetchBrandLoader().operator()(entityId);
+            if (!foreignBrand.isValid())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -219,6 +223,10 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
             // get foreign entities
 
             QList<Simple::Domain::Passenger> foreignPassengers = this->fetchPassengersLoader().operator()(entityId);
+            if (foreignPassengers.isEmpty())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -272,6 +280,10 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
             // get foreign entities
 
             Simple::Domain::Brand foreignBrand = this->fetchBrandLoader().operator()(entityId);
+            if (!foreignBrand.isValid())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -304,6 +316,10 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
             // get foreign entities
 
             QList<Simple::Domain::Passenger> foreignPassengers = this->fetchPassengersLoader().operator()(entityId);
+            if (foreignPassengers.isEmpty())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 

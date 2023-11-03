@@ -185,7 +185,16 @@ QVariant PassengerListModelFromCarPassengers::data(const QModelIndex &index, int
 
     const PassengerDTO &passenger = m_passengerList.at(index.row());
 
-    if (role == IdRole)
+    if (role == Qt::DisplayRole)
+    {
+        return passenger.name();
+    }
+    if (role == Qt::EditRole)
+    {
+        return passenger.name();
+    }
+
+    else if (role == IdRole)
         return passenger.id();
     else if (role == UuidRole)
         return passenger.uuid();
@@ -215,6 +224,11 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
     int row = index.row();
     if (row >= m_passengerList.size())
         return false;
+
+    else if (role == Qt::EditRole)
+    {
+        return this->setData(index, value, NameRole);
+    }
 
     else if (role == IdRole)
     {

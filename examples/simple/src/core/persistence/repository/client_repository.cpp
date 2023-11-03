@@ -123,7 +123,7 @@ Simple::Domain::Client::ClientLoader ClientRepository::fetchClientLoader()
 
     return [this](int entityId) {
         auto foreignEntityResult =
-            m_passengerRepository->getEntityInRelationOf(Simple::Domain::Passenger::schema, entityId, "client");
+            m_passengerRepository->getEntityInRelationOf(Simple::Domain::Client::schema, entityId, "client");
 
         if (foreignEntityResult.isError())
         {
@@ -149,8 +149,8 @@ Simple::Domain::Client::ClientFriendsLoader ClientRepository::fetchClientFriends
 #endif
 
     return [this](int entityId) {
-        auto foreignEntitiesResult = m_passengerRepository->getEntitiesInRelationOf(Simple::Domain::Passenger::schema,
-                                                                                    entityId, "clientFriends");
+        auto foreignEntitiesResult =
+            m_passengerRepository->getEntitiesInRelationOf(Simple::Domain::Client::schema, entityId, "clientFriends");
 
         if (foreignEntitiesResult.isError())
         {
@@ -187,6 +187,10 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
             // get foreign entities
 
             Simple::Domain::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+            if (!foreignClient.isValid())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -220,6 +224,10 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
             QList<Simple::Domain::Passenger> foreignClientFriends =
                 this->fetchClientFriendsLoader().operator()(entityId);
+            if (foreignClientFriends.isEmpty())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -273,6 +281,10 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
             // get foreign entities
 
             Simple::Domain::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+            if (!foreignClient.isValid())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
@@ -307,6 +319,10 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
             QList<Simple::Domain::Passenger> foreignClientFriends =
                 this->fetchClientFriendsLoader().operator()(entityId);
+            if (foreignClientFriends.isEmpty())
+            {
+                continue;
+            }
 
             QList<int> foreignIds;
 
