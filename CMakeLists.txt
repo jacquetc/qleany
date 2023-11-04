@@ -22,6 +22,12 @@ if(QLEANY_BUILD_WITH_QT_GUI)
     add_compile_definitions(QLEANY_BUILD_WITH_QT_GUI=1)
 endif()
 
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 # Add Qt components
 find_package(Qt6 COMPONENTS Core Sql Concurrent REQUIRED)
 qt_standard_project_setup()
@@ -78,7 +84,7 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/database/interface_database_context.h
 )
 
-add_library(Qleany SHARED
+add_library(Qleany ${LIB_TYPE}
     ${LIB_PUBLIC_HEADERS}
         src/tools/undo_redo/alter_command.cpp
         src/tools/undo_redo/query_command.cpp

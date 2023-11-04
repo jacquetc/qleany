@@ -338,8 +338,10 @@ void PassengerListModelFromCarPassengers::populate()
 {
     if (m_carId == 0)
         return;
+    beginResetModel();
     m_passengerList.clear();
     m_passengerIdList.clear();
+    endResetModel();
 
     auto task = Car::CarController::instance()->getWithDetails(m_carId);
     QCoro::connect(std::move(task), this, [this](auto &&result) {

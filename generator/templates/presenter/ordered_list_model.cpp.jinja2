@@ -257,8 +257,10 @@ void {{ model.class_name_pascal }}::populate()
 {
     if (m_{{ model.related_name_camel }}Id == 0)
         return;
+    beginResetModel();
     m_{{ model.entity_name_camel }}List.clear();
     m_{{ model.entity_name_camel }}IdList.clear();
+    endResetModel();
 
     auto task = {{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails(m_{{ model.related_name_camel }}Id);
     QCoro::connect(std::move(task), this, [this](auto &&result) {

@@ -140,8 +140,10 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
 
 void {{ model.class_name_pascal }}::populate()
 {
+    beginResetModel();
     m_{{ model.entity_name_camel }}List.clear();
     m_{{ model.entity_name_camel }}IdList.clear();
+    endResetModel();
 
     auto task = {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->getAll();
     QCoro::connect(std::move(task), this, [this](auto &&result) {

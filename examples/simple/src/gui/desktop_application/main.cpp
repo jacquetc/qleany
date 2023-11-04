@@ -3,7 +3,6 @@
 #include "mainwindow.h"
 #include "persistence_registration.h"
 #include <QApplication>
-#include <QCoroTask>
 
 int main(int argc, char *argv[])
 {

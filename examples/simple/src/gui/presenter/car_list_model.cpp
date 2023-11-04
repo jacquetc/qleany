@@ -223,8 +223,10 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
 
 void CarListModel::populate()
 {
+    beginResetModel();
     m_carList.clear();
     m_carIdList.clear();
+    endResetModel();
 
     auto task = Car::CarController::instance()->getAll();
     QCoro::connect(std::move(task), this, [this](auto &&result) {
