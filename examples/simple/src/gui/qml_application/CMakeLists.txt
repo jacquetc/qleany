@@ -14,7 +14,7 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 COMPONENTS Core Gui Qml Quick Concurrent)
 
-find_package(QCoro6 REQUIRED COMPONENTS Core)
+find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
 
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
@@ -38,7 +38,7 @@ target_link_libraries(${APP_NAME} PUBLIC simple-example-domain)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-persistence)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-controller)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-presenter)
-target_link_libraries(${APP_NAME} PRIVATE QCoro::Core)
+target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
 
 target_link_libraries(${APP_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core

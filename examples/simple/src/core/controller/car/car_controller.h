@@ -31,13 +31,13 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarController : public QObject
 
     static CarController *instance();
 
+    Q_INVOKABLE QCoro::Task<CarDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<CarWithDetailsDTO> getWithDetails(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<CarDTO>> getAll() const;
+
   public slots:
-
-    QCoro::Task<CarDTO> get(int id);
-
-    QCoro::Task<CarWithDetailsDTO> getWithDetails(int id);
-
-    QCoro::Task<QList<CarDTO>> getAll();
 
     QCoro::Task<CarDTO> create(const CreateCarDTO &dto);
 

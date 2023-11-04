@@ -72,7 +72,7 @@ QScopedPointer<{{ feature_name_pascal }}Controller> {{ feature_name_pascal }}Con
 
 {% if feature.crud.enabled %}
     {%if feature.crud.get %}
-QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::get(int id)
+QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
@@ -107,7 +107,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
     {% endif %}
     {%if feature.crud.get_with_details %}
 
- QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO> {{ feature_name_pascal }}Controller::getWithDetails(int id)
+ QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO> {{ feature_name_pascal }}Controller::getWithDetails(int id) const
 {
      auto queryCommand = new QueryCommand("getWithDetails");
 
@@ -143,7 +143,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
     {% endif %}
     {%if feature.crud.get_all %}
 
-QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Controller::getAll()
+QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Controller::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 
@@ -358,7 +358,7 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
 
 {% for query in custom_queries %}
 
-QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %})
+QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
 {
     auto queryCommand = new QueryCommand("{{ query.name }}");
      

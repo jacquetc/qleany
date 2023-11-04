@@ -47,18 +47,24 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
 
     static {{ feature_name_pascal }}Controller *instance();
 
+{% if feature.crud.enabled %}
+    {%if feature.crud.get %}
+    Q_INVOKABLE QCoro::Task<{{ entity_name_pascal }}DTO> get(int id) const;
+    {% endif %}
+    {%if feature.crud.get_with_details %}
+    Q_INVOKABLE QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO>  getWithDetails(int id) const;
+    {% endif %}
+    {%if feature.crud.get_all %}
+    Q_INVOKABLE QCoro::Task<QList<{{ entity_name_pascal }}DTO>> getAll() const;
+    {% endif %}
+{% endif %}
+
+    {% for query in feature.custom_queries %}
+    Q_INVOKABLE QCoro::Task<{{ query.dto_out }}DTO> {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const;
+    {% endfor %}
   public slots:
 
 {% if feature.crud.enabled %}
-    {%if feature.crud.get %}
-    QCoro::Task<{{ entity_name_pascal }}DTO> get(int id);
-    {% endif %}
-    {%if feature.crud.get_with_details %}
-    QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO>  getWithDetails(int id);
-    {% endif %}
-    {%if feature.crud.get_all %}
-    QCoro::Task<QList<{{ entity_name_pascal }}DTO>> getAll();
-    {% endif %}
     {%if feature.crud.create %}
     QCoro::Task<{{ entity_name_pascal }}DTO> create(const Create{{ entity_name_pascal }}DTO &dto);
     {% endif %}
@@ -79,9 +85,6 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
 
     {% for command in feature.custom_commands %}
     QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
-    {% endfor %}
-    {% for query in feature.custom_queries %}
-    QCoro::Task<{{ query.dto_out }}DTO> {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %});
     {% endfor %}
 
   private:

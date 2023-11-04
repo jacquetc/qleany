@@ -42,7 +42,7 @@ BrandController *BrandController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<BrandDTO> BrandController::get(int id)
+QCoro::Task<BrandDTO> BrandController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
@@ -75,7 +75,7 @@ QCoro::Task<BrandDTO> BrandController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<BrandDTO>> BrandController::getAll()
+QCoro::Task<QList<BrandDTO>> BrandController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 

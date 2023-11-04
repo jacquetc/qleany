@@ -34,6 +34,9 @@ class QLEANY_EXPORT UndoRedoSystem : public QThread
     Q_INVOKABLE void push(Qleany::Tools::UndoRedo::UndoRedoCommand *command, const QString &commandScope,
                           const QUuid &stackId = QUuid());
 
+    Q_INVOKABLE void push(Qleany::Tools::UndoRedo::UndoRedoCommand *command, const QString &commandScope,
+                          const QUuid &stackId = QUuid()) const;
+
     Q_INVOKABLE void clear();
 
     Q_INVOKABLE void setUndoLimit(int limit);

@@ -32,13 +32,13 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientController : public QObject
 
     static ClientController *instance();
 
+    Q_INVOKABLE QCoro::Task<ClientDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<ClientWithDetailsDTO> getWithDetails(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<ClientDTO>> getAll() const;
+
   public slots:
-
-    QCoro::Task<ClientDTO> get(int id);
-
-    QCoro::Task<ClientWithDetailsDTO> getWithDetails(int id);
-
-    QCoro::Task<QList<ClientDTO>> getAll();
 
     QCoro::Task<ClientDTO> create(const CreateClientDTO &dto);
 

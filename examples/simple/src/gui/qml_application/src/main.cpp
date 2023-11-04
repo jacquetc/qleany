@@ -6,6 +6,7 @@
 #include "domain_registration.h"
 #include "import_qml_plugins.h"
 #include "persistence_registration.h"
+#include <QCoroQml>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
@@ -30,6 +31,8 @@ int main(int argc, char *argv[])
 
     engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
     engine.addImportPath(":/");
+
+    QCoro::Qml::registerTypes();
 
     engine.load(url);
 

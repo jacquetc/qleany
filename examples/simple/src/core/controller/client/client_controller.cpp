@@ -45,7 +45,7 @@ ClientController *ClientController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<ClientDTO> ClientController::get(int id)
+QCoro::Task<ClientDTO> ClientController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
@@ -78,7 +78,7 @@ QCoro::Task<ClientDTO> ClientController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
+QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id) const
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
@@ -111,7 +111,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<ClientDTO>> ClientController::getAll()
+QCoro::Task<QList<ClientDTO>> ClientController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 

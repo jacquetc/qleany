@@ -30,11 +30,11 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandController : public QObject
 
     static BrandController *instance();
 
+    Q_INVOKABLE QCoro::Task<BrandDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<BrandDTO>> getAll() const;
+
   public slots:
-
-    QCoro::Task<BrandDTO> get(int id);
-
-    QCoro::Task<QList<BrandDTO>> getAll();
 
     QCoro::Task<BrandDTO> create(const CreateBrandDTO &dto);
 

@@ -193,6 +193,11 @@ void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope,
     emit stateChanged();
 }
 
+void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId) const
+{
+    push(const_cast<UndoRedoCommand *>(command), commandScope, stackId);
+}
+
 /*!
  * \brief Clears the UndoRedoSystem command history.
  */

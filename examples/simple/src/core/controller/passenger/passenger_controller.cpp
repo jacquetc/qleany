@@ -42,7 +42,7 @@ PassengerController *PassengerController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<PassengerDTO> PassengerController::get(int id)
+QCoro::Task<PassengerDTO> PassengerController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
@@ -75,7 +75,7 @@ QCoro::Task<PassengerDTO> PassengerController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<PassengerDTO>> PassengerController::getAll()
+QCoro::Task<QList<PassengerDTO>> PassengerController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 

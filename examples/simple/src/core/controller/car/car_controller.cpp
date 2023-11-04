@@ -44,7 +44,7 @@ CarController *CarController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<CarDTO> CarController::get(int id)
+QCoro::Task<CarDTO> CarController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
@@ -77,7 +77,7 @@ QCoro::Task<CarDTO> CarController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
+QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id) const
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
@@ -110,7 +110,7 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<CarDTO>> CarController::getAll()
+QCoro::Task<QList<CarDTO>> CarController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 

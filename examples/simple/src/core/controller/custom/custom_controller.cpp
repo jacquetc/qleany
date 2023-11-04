@@ -108,7 +108,7 @@ QCoro::Task<> CustomController::CloseSystem()
     co_return;
 }
 
-QCoro::Task<GetCurrentTimeReplyDTO> CustomController::GetCurrentTime()
+QCoro::Task<GetCurrentTimeReplyDTO> CustomController::GetCurrentTime() const
 {
     auto queryCommand = new QueryCommand("GetCurrentTime");
 

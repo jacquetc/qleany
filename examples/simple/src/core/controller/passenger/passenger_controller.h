@@ -31,11 +31,11 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 
     static PassengerController *instance();
 
+    Q_INVOKABLE QCoro::Task<PassengerDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<PassengerDTO>> getAll() const;
+
   public slots:
-
-    QCoro::Task<PassengerDTO> get(int id);
-
-    QCoro::Task<QList<PassengerDTO>> getAll();
 
     QCoro::Task<PassengerDTO> create(const CreatePassengerDTO &dto);
 

@@ -123,6 +123,16 @@ void ThreadedUndoRedoSystem::push(UndoRedoCommand *command, const QString &comma
     QMetaObject::invokeMethod(m_undoRedoSystemWorker, "push", Qt::QueuedConnection, Q_ARG(UndoRedoCommand *, command),
                               Q_ARG(QString, commandScope), Q_ARG(QUuid, stackId));
 }
+/*!
+ * \brief Adds a new command to the command history with the specified \a scope.
+ */
+void ThreadedUndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId) const
+{
+    QMutexLocker locker(&m_mutex);
+    command->moveToThread(m_undoRedoSystemWorker->thread());
+    QMetaObject::invokeMethod(m_undoRedoSystemWorker, "push", Qt::QueuedConnection, Q_ARG(UndoRedoCommand *, command),
+                              Q_ARG(QString, commandScope), Q_ARG(QUuid, stackId));
+}
 
 /*!
  * \brief Clears the command history.

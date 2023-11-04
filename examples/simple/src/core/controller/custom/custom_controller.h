@@ -30,13 +30,13 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CustomController : public QObject
 
     static CustomController *instance();
 
+    Q_INVOKABLE QCoro::Task<GetCurrentTimeReplyDTO> GetCurrentTime() const;
+
   public slots:
 
     QCoro::Task<> WriteRandomThings(WriteRandomThingsDTO dto);
 
     QCoro::Task<> CloseSystem();
-
-    QCoro::Task<GetCurrentTimeReplyDTO> GetCurrentTime();
 
   private:
     static QScopedPointer<CustomController> s_instance;
