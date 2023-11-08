@@ -7,7 +7,8 @@ EventDispatcher *EventDispatcher::s_instance = nullptr;
 EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
 {
     m_errorSignals = new ErrorSignals(this);
-{% for feature in features%}
+    m_progressSignals = new ProgressSignals(this);
+{% for feature in features -%}
     m_{{ feature.feature_name_camel }}Signals = new {{ feature.feature_name_pascal }}Signals(this);
 {% endfor %}
 
@@ -29,4 +30,9 @@ EventDispatcher *EventDispatcher::instance()
 ErrorSignals *EventDispatcher::error() const
 {
     return m_errorSignals;
+}
+
+ProgressSignals *EventDispatcher::progress() const
+{
+    return m_progressSignals;
 }

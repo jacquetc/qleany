@@ -6,8 +6,8 @@
 {% for foreign_repository_header in foreign_repository_header_list %}
 #include {{ foreign_repository_header }}
 {% endfor %}
-#include "qleany/contracts/database/interface_database_table_group.h"
-#include "qleany/repository/generic_repository.h"
+#include <qleany/contracts/database/interface_database_table_group.h>
+#include <qleany/repository/generic_repository.h>
 #include "repository/interface_{{ snake_name }}_repository.h"
 #include "{{ export_header_file }}"
 #include <QReadWriteLock>

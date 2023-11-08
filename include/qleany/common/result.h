@@ -1,5 +1,6 @@
 #pragma once
 #include "QtCore/quuid.h"
+#include "QtCore/qvariant.h"
 #include "qleany/common/error.h"
 #include "qleany/qleany_global.h"
 #include <QMetaType>
@@ -38,7 +39,31 @@ template <> class QLEANY_EXPORT Result<void>
     {
     }
 
+    explicit Result(const Result<void> &result) : m_error(result.m_error)
+    {
+        m_trace = result.m_trace;
+        m_error.setTrace(m_trace);
+    }
+
+    explicit Result(Result<void> &&result) : m_error(std::move(result.m_error))
+    {
+        m_trace = std::move(result.m_trace);
+        m_error.setTrace(m_trace);
+    }
+
+    // convert form Result<T> to Result<void>
+    template <typename T> Result(const Result<T> &result) : m_error(result.error())
+    {
+        m_trace = result.trace();
+        m_error.setTrace(m_trace);
+    }
+
     explicit Result(const Error &error) : m_error(error)
+    {
+        m_trace.append(error);
+    }
+
+    explicit Result(Error &&error) : m_error(std::move(error))
     {
         m_trace.append(error);
     }
@@ -121,6 +146,11 @@ template <> class QLEANY_EXPORT Result<void>
     {
         return m_error.message() + " (" + m_error.code() + ")" + " [" + m_error.className() + "]" + " [" +
                m_error.data() + "]";
+    }
+
+    QList<Error> trace() const
+    {
+        return m_trace;
     }
 
   private:
@@ -305,6 +335,11 @@ template <typename T> class Result
                m_error.data() + "]";
     }
 
+    QList<Error> trace() const
+    {
+        return m_trace;
+    }
+
   private:
     T m_value;     /**< The value contained in the Result object. */
     Error m_error; /**< The error message contained in the Result object. */
@@ -317,3 +352,4 @@ Q_DECLARE_METATYPE(Qleany::Result<void>)
 Q_DECLARE_METATYPE(Qleany::Result<int>)
 Q_DECLARE_METATYPE(Qleany::Result<QString>)
 Q_DECLARE_METATYPE(Qleany::Result<QUuid>)
+Q_DECLARE_METATYPE(Qleany::Result<QVariant>)

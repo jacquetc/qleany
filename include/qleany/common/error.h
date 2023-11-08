@@ -20,6 +20,11 @@ namespace Qleany
 class QLEANY_EXPORT Error
 {
     Q_GADGET
+    Q_PROPERTY(Status status READ status)
+    Q_PROPERTY(QString code READ code)
+    Q_PROPERTY(QString message READ message)
+    Q_PROPERTY(QString data READ data)
+    Q_PROPERTY(QString className READ className)
 
   public:
     /**
@@ -127,7 +132,7 @@ class QLEANY_EXPORT Error
      *
      * @return The error message.
      */
-    QString message() const
+    Q_INVOKABLE QString message() const
     {
         return m_message;
     }
@@ -136,7 +141,7 @@ class QLEANY_EXPORT Error
      *
      * @return The error data.
      */
-    QString data() const
+    Q_INVOKABLE QString data() const
     {
         return m_data;
     }
@@ -188,12 +193,12 @@ class QLEANY_EXPORT Error
 
     //--------------------------------------------------------------
 
-    QString code() const
+    Q_INVOKABLE QString code() const
     {
         return m_code;
     }
 
-    QString className() const;
+    Q_INVOKABLE QString className() const;
 
     QList<Error> trace() const
     {
@@ -221,3 +226,4 @@ inline QString Error::className() const
 }
 
 }; // namespace Qleany
+Q_DECLARE_METATYPE(Qleany::Error)

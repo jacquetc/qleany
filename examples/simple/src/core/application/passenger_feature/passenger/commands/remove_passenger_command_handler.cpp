@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_passenger_command_handler.h"
 #include "passenger/validators/remove_passenger_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_passenger_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -36,6 +36,7 @@ Result<int> RemovePassengerCommandHandler::handle(QPromise<Result<void>> &progre
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemovePassengerCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

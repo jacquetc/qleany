@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_passenger_command_handler.h"
 #include "passenger/validators/create_passenger_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 
 #include "car.h"
 
@@ -37,6 +37,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handle(QPromise<Result<void>
         result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreatePassengerCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

@@ -5,9 +5,9 @@
 #include "application_passenger_export.h"
 #include "passenger/commands/create_passenger_command.h"
 #include "passenger/passenger_dto.h"
-#include "qleany/common/result.h"
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Domain;

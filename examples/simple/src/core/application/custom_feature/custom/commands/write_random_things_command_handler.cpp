@@ -3,8 +3,8 @@
 #include "write_random_things_command_handler.h"
 #include "custom/validators/write_random_things_command_validator.h"
 #include "custom/write_random_things_dto.h"
-#include "qleany/tools/automapper/automapper.h"
 #include <QDebug>
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Custom;
@@ -40,6 +40,7 @@ Result<void> WriteRandomThingsCommandHandler::handle(QPromise<Result<void>> &pro
         result = Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling WriteRandomThingsCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

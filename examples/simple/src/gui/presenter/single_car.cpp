@@ -64,16 +64,16 @@ void SingleCar::setId(int newId)
     if (m_id == 0)
     {
 
-        m_uuid = QUuid();
+        m_uuid = QUuid{};
         emit uuidChanged();
 
-        m_creationDate = QDateTime();
+        m_creationDate = QDateTime{};
         emit creationDateChanged();
 
-        m_updateDate = QDateTime();
+        m_updateDate = QDateTime{};
         emit updateDateChanged();
 
-        m_content = QString();
+        m_content = QString{};
         emit contentChanged();
     }
 
@@ -81,6 +81,12 @@ void SingleCar::setId(int newId)
     else
     {
         Car::CarController::instance()->get(m_id).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+            if (car.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid carId";
+                return;
+            }
+
             m_uuid = car.uuid();
             emit uuidChanged();
 
@@ -110,14 +116,19 @@ void SingleCar::setUuid(const QUuid &newUuid)
 {
     if (m_uuid == newUuid)
         return;
-    m_uuid = newUuid;
 
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Car::CarController::instance()->update(dto);
-
-    emit uuidChanged();
+    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+        if (car.isInvalid())
+        {
+            qCritical() << Q_FUNC_INFO << "Invalid carId";
+            return;
+        }
+        m_uuid = car.uuid();
+        emit uuidChanged();
+    });
 }
 
 QDateTime SingleCar::creationDate() const
@@ -129,14 +140,19 @@ void SingleCar::setCreationDate(const QDateTime &newCreationDate)
 {
     if (m_creationDate == newCreationDate)
         return;
-    m_creationDate = newCreationDate;
 
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Car::CarController::instance()->update(dto);
-
-    emit creationDateChanged();
+    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+        if (car.isInvalid())
+        {
+            qCritical() << Q_FUNC_INFO << "Invalid carId";
+            return;
+        }
+        m_creationDate = car.creationDate();
+        emit creationDateChanged();
+    });
 }
 
 QDateTime SingleCar::updateDate() const
@@ -148,14 +164,19 @@ void SingleCar::setUpdateDate(const QDateTime &newUpdateDate)
 {
     if (m_updateDate == newUpdateDate)
         return;
-    m_updateDate = newUpdateDate;
 
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Car::CarController::instance()->update(dto);
-
-    emit updateDateChanged();
+    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+        if (car.isInvalid())
+        {
+            qCritical() << Q_FUNC_INFO << "Invalid carId";
+            return;
+        }
+        m_updateDate = car.updateDate();
+        emit updateDateChanged();
+    });
 }
 
 QString SingleCar::content() const
@@ -167,12 +188,17 @@ void SingleCar::setContent(const QString &newContent)
 {
     if (m_content == newContent)
         return;
-    m_content = newContent;
 
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setContent(newContent);
-    Car::CarController::instance()->update(dto);
-
-    emit contentChanged();
+    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+        if (car.isInvalid())
+        {
+            qCritical() << Q_FUNC_INFO << "Invalid carId";
+            return;
+        }
+        m_content = car.content();
+        emit contentChanged();
+    });
 }

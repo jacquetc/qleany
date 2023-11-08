@@ -96,9 +96,19 @@ class UpdateClientDTO
     {
     }
 
-    bool isValid()
+    Q_INVOKABLE bool isValid() const
     {
         return m_id > 0;
+    }
+
+    Q_INVOKABLE bool isNull() const
+    {
+        return !isValid();
+    }
+
+    Q_INVOKABLE bool isInvalid() const
+    {
+        return !isValid();
     }
 
     UpdateClientDTO &operator=(const UpdateClientDTO &other)

@@ -17,25 +17,21 @@ template <class Handler, class Request> class AlterCommand : public UndoRedoComm
         : UndoRedoCommand(text), m_handler(handler), m_request(request)
     {
         this->setType(Type::AlterCommand);
+        this->setUndoFunction([this]() { return Result<void>(m_handler->restore().error()); });
+        this->setRedoFunction([this](QPromise<Result<void>> &progressPromise) {
+            return Result<void>(m_handler->handle(progressPromise, m_request));
+        });
+        this->setMergeWithFunction([this](const UndoRedoCommand *other) {
+            //            if (other->type() == Type::AlterCommand)
+            //            {
+            //                const AlterCommand *alterCommand = static_cast<const AlterCommand *>(other);
+            //                return m_handler->merge(alterCommand->m_request);
+            //            }
+            return false;
+        });
     }
     // UndoRedoCommand interface
   public:
-    Result<void> undo() override
-    {
-        return Result<void>(m_handler->restore().error());
-    }
-    void redo(QPromise<Result<void>> &progressPromise) override
-    {
-        progressPromise.addResult(Result<void>(m_handler->handle(progressPromise, m_request).error()));
-    }
-
-    bool mergeWith(const UndoRedoCommand *other) override
-    {
-        // Nothing to do
-
-        return false;
-    }
-
   private:
     Handler *m_handler;
     Request m_request;

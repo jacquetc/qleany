@@ -4,7 +4,9 @@
 set_source_files_properties(Constants.qml
     PROPERTIES
         QT_QML_SINGLETON_TYPE true
-    )
+)
+
+
 
 qt_add_library(SimpleExampleQML STATIC)
 qt6_add_qml_module(SimpleExampleQML
@@ -12,8 +14,9 @@ qt6_add_qml_module(SimpleExampleQML
     VERSION 1.0
     RESOURCE_PREFIX "/qt/qml"
     QML_FILES
+        EventListSimulator.qml
+        EventListModel.qml
         Constants.qml
         DirectoryFontLoader.qml
-        EventListModel.qml
-        EventListSimulator.qml
+
 )

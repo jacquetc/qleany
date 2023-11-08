@@ -4,9 +4,9 @@
 
 #include <QString>
 
-#include "qleany/domain/entity_schema.h"
 #include "dummy_entity.h"
 #include "entities.h"
+#include "qleany/domain/entity_schema.h"
 
 using namespace Qleany::Domain;
 

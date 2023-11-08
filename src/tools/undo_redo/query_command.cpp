@@ -30,21 +30,6 @@ QueryCommand::QueryCommand(const QString &text) : UndoRedoCommand(text)
 void QueryCommand::setQueryFunction(const std::function<Result<void>(QPromise<Result<void>> &promise)> &function)
 {
     m_queryFunction = function;
-}
-
-Result<void> QueryCommand::undo()
-{
-    // Nothing to undo
-    return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Fatal, "unreachable", "unreachable"));
-}
-
-void QueryCommand::redo(QPromise<Result<void>> &progressPromise)
-{
-    if (m_queryFunction)
-    {
-        progressPromise.addResult(Result<void>(m_queryFunction(progressPromise).error()));
-        return;
-    }
-    progressPromise.addResult(
-        Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "no_m_queryFunction", "no m_queryFunction")));
+    this->setRedoFunction(
+        [this](QPromise<Result<void>> &progressPromise) { return Result<void>(m_queryFunction(progressPromise)); });
 }

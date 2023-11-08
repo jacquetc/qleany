@@ -10,6 +10,7 @@ set(SRC
     
     custom/queries/get_current_time_query.h
     custom/commands/write_random_things_command.h
+    custom/commands/run_long_operation_command.h
     custom/commands/close_system_command.h
     custom/validators/write_random_things_command_validator.h
 )

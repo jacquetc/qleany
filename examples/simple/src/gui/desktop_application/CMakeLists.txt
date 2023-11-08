@@ -1,3 +1,4 @@
+project(SimpleExampleDesktopApp LANGUAGES CXX)
 
 set(APP_NAME simple-example-desktop-application)
 

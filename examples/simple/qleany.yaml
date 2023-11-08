@@ -192,6 +192,16 @@ application:
                   name: randomCarName
             out:
               enabled: false
+        - name: RunLongOperation
+          validator: 
+            enabled: False
+          undo: False
+          minimum_progress_time: 1000
+          dto:
+            in:
+              enabled: false
+            out:
+              enabled: false
         - name: CloseSystem
           entities:
             - Car

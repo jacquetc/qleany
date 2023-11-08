@@ -64,7 +64,7 @@ QCoro::Task<PassengerDTO> PassengerController::get(int id) const
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->passenger(), &PassengerSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->passenger(), &PassengerSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -94,7 +94,7 @@ QCoro::Task<QList<PassengerDTO>> PassengerController::getAll() const
 
     // async wait for result signal
     const std::optional<QList<PassengerDTO>> optional_result = co_await qCoro(
-        m_eventDispatcher->passenger(), &PassengerSignals::getAllReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher->passenger(), &PassengerSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -144,7 +144,7 @@ QCoro::Task<PassengerDTO> PassengerController::create(const CreatePassengerDTO &
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
-        co_await qCoro(handler, &CreatePassengerCommandHandler::passengerCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreatePassengerCommandHandler::passengerCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -179,7 +179,7 @@ QCoro::Task<PassengerDTO> PassengerController::update(const UpdatePassengerDTO &
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
-        co_await qCoro(handler, &UpdatePassengerCommandHandler::passengerUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdatePassengerCommandHandler::passengerUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -211,7 +211,7 @@ QCoro::Task<bool> PassengerController::remove(int id)
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

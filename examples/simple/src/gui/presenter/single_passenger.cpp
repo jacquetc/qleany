@@ -64,16 +64,16 @@ void SinglePassenger::setId(int newId)
     if (m_id == 0)
     {
 
-        m_uuid = QUuid();
+        m_uuid = QUuid{};
         emit uuidChanged();
 
-        m_creationDate = QDateTime();
+        m_creationDate = QDateTime{};
         emit creationDateChanged();
 
-        m_updateDate = QDateTime();
+        m_updateDate = QDateTime{};
         emit updateDateChanged();
 
-        m_name = QString();
+        m_name = QString{};
         emit nameChanged();
     }
 
@@ -82,6 +82,12 @@ void SinglePassenger::setId(int newId)
     {
         Passenger::PassengerController::instance()->get(m_id).then(
             [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+                if (passenger.isInvalid())
+                {
+                    qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                    return;
+                }
+
                 m_uuid = passenger.uuid();
                 emit uuidChanged();
 
@@ -111,14 +117,20 @@ void SinglePassenger::setUuid(const QUuid &newUuid)
 {
     if (m_uuid == newUuid)
         return;
-    m_uuid = newUuid;
 
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Passenger::PassengerController::instance()->update(dto);
-
-    emit uuidChanged();
+    Passenger::PassengerController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+            if (passenger.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                return;
+            }
+            m_uuid = passenger.uuid();
+            emit uuidChanged();
+        });
 }
 
 QDateTime SinglePassenger::creationDate() const
@@ -130,14 +142,20 @@ void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
 {
     if (m_creationDate == newCreationDate)
         return;
-    m_creationDate = newCreationDate;
 
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Passenger::PassengerController::instance()->update(dto);
-
-    emit creationDateChanged();
+    Passenger::PassengerController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+            if (passenger.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                return;
+            }
+            m_creationDate = passenger.creationDate();
+            emit creationDateChanged();
+        });
 }
 
 QDateTime SinglePassenger::updateDate() const
@@ -149,14 +167,20 @@ void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
 {
     if (m_updateDate == newUpdateDate)
         return;
-    m_updateDate = newUpdateDate;
 
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Passenger::PassengerController::instance()->update(dto);
-
-    emit updateDateChanged();
+    Passenger::PassengerController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+            if (passenger.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                return;
+            }
+            m_updateDate = passenger.updateDate();
+            emit updateDateChanged();
+        });
 }
 
 QString SinglePassenger::name() const
@@ -168,12 +192,18 @@ void SinglePassenger::setName(const QString &newName)
 {
     if (m_name == newName)
         return;
-    m_name = newName;
 
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerController::instance()->update(dto);
-
-    emit nameChanged();
+    Passenger::PassengerController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+            if (passenger.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                return;
+            }
+            m_name = passenger.name();
+            emit nameChanged();
+        });
 }

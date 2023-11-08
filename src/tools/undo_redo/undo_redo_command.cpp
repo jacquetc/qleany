@@ -20,6 +20,10 @@ using namespace Qleany::Tools::UndoRedo;
  */
 UndoRedoCommand::UndoRedoCommand(const QString &text) : QObject(nullptr), m_text(text), m_status(Status::Waiting)
 {
+    m_progressTimer = new QTimer(this);
+    m_progressTimer->setInterval(100);
+    connect(m_progressTimer, &QTimer::timeout, this, &UndoRedoCommand::progressTimerTimeout);
+
     m_watcher = new QFutureWatcher<Result<void>>(this);
     connect(m_watcher, &QFutureWatcher<void>::finished, this, &UndoRedoCommand::onFinished);
     connect(m_watcher, &QFutureWatcher<void>::finished, this, &UndoRedoCommand::progressFinished);
@@ -28,14 +32,34 @@ UndoRedoCommand::UndoRedoCommand(const QString &text) : QObject(nullptr), m_text
     connect(m_watcher, &QFutureWatcher<void>::progressValueChanged, this, &UndoRedoCommand::progressValueChanged);
 }
 
+void UndoRedoCommand::setUndoFunction(const std::function<Result<void>()> &function)
+{
+    m_undoFunction = function;
+}
+
+void UndoRedoCommand::setRedoFunction(const std::function<Result<void>(QPromise<Result<void>> &)> &function)
+{
+    m_redoFunction = function;
+}
+
+void UndoRedoCommand::setMergeWithFunction(const std::function<bool(const UndoRedoCommand *)> &function)
+{
+    m_mergeWithFunction = function;
+}
+
 /*!
  * \brief Constructs an UndoRedoCommand with the specified \a text.
  */
 void UndoRedoCommand::asyncUndo()
 {
+    if (!m_undoFunction)
+    {
+        throw std::runtime_error("No undo function set");
+    }
+
     m_status = Status::Running;
     emit undoing(m_scope, true);
-    QFuture<Result<void>> future = QtConcurrent::run(&UndoRedoCommand::undo, this);
+    QFuture<Result<void>> future = QtConcurrent::run(m_undoFunction);
     m_watcher->setFuture(future);
 }
 
@@ -44,14 +68,18 @@ void UndoRedoCommand::asyncUndo()
  */
 void UndoRedoCommand::asyncRedo()
 {
+
     m_status = Status::Running;
     emit redoing(m_scope, true);
-    QFuture<Result<void>> future =
-        QtConcurrent::run(&UndoRedoCommand::redo, this).onFailed([](const std::exception &e) {
-            return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
-                                            "Redo failed: " + QString::fromStdString(e.what())));
-        });
+    QFuture<Result<void>> future = QtConcurrent::run(m_redoFunction).onFailed([](const std::exception &e) {
+        return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
+                                        "Redo failed: " + QString::fromStdString(e.what())));
+    });
     m_watcher->setFuture(future);
+
+    // start timer to update progress
+    m_startTime = QDateTime::currentDateTime();
+    m_progressTimer->start();
 }
 
 /*!
@@ -75,6 +103,9 @@ bool UndoRedoCommand::isFinished() const
  */
 void UndoRedoCommand::onFinished()
 {
+
+    m_progressTimer->stop();
+
     Result<void> result = m_watcher->result();
     if (result.hasError())
     {
@@ -95,6 +126,15 @@ void UndoRedoCommand::onFinished()
     emit finished(result.isOk());
 }
 
+void UndoRedoCommand::progressTimerTimeout()
+{
+    if (m_progressMinimumDuration >= 0 && m_startTime.msecsTo(QDateTime::currentDateTime()) > m_progressMinimumDuration)
+    {
+        emit progressStarted();
+        m_progressTimer->stop();
+    }
+}
+
 QUuid UndoRedoCommand::stackId() const
 {
     return m_stackId;
@@ -113,6 +153,29 @@ bool UndoRedoCommand::isAlterCommand() const
 bool UndoRedoCommand::isQueryCommand() const
 {
     return m_type == Type::QueryCommand;
+}
+
+/*!
+ * \brief Set the minimum duration of the command before the progress bar must be shown.
+ * \param minimumDuration The minimum duration in milliseconds. -1 to disable. 0 to always show. Default is 500.
+ */
+void UndoRedoCommand::setProgressMinimumDuration(int minimumDuration)
+{
+    m_progressMinimumDuration = minimumDuration;
+}
+
+/*!
+ * \brief UndoRedoCommand::progressMinimumDuration
+ * \return
+ */
+int UndoRedoCommand::progressMinimumDuration() const
+{
+    return m_progressMinimumDuration;
+}
+
+UndoRedoCommand::Type UndoRedoCommand::type() const
+{
+    return m_type;
 }
 
 void UndoRedoCommand::setType(Type newType)

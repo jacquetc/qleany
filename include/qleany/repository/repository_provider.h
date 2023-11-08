@@ -1,12 +1,12 @@
 #pragma once
 
-#include "qleany/contracts/repository/interface_repository.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
 #include "qleany/qleany_global.h"
 #include <QDebug>
 #include <QHash>
 #include <QMutex>
 #include <QObject>
+#include <qleany/contracts/repository/interface_repository.h>
+#include <qleany/contracts/repository/interface_repository_provider.h>
 #include <type_traits>
 
 using namespace Qleany::Contracts::Repository;

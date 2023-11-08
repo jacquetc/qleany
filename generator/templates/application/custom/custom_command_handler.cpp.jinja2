@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "{{ command.snake_name }}_command_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 {% if command.dto_in_is_enabled %}#include "{{ feature_snake_name }}/{{ command.dto_in_snake_name }}.h"{% endif %}
 {% if validator_enabled %}#include "{{ feature_snake_name }}/validators/{{ command.snake_name }}_command_validator.h"{% endif %}
 #include <QDebug>
@@ -37,6 +37,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
         result = Result<{{ command.dto_out_pascal_name }}>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling {{ command.pascal_name }}Command:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

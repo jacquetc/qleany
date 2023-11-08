@@ -16,10 +16,12 @@ Rectangle {
     id: rectangle
 
     color: Constants.backgroundColor
+    property alias runLongOperationButton: runLongOperationButton
     property alias carPassengersListView: carPassengersListView
     property alias carListView: carListView
     property alias addCarButton: addCarButton
     property alias addPassengerInCarButton: addPassengerInCarButton
+    property alias carLabel: carLabel
     ColumnLayout {
         id: columnLayout
         anchors.fill: parent
@@ -43,8 +45,18 @@ Rectangle {
                 id: addCarButton
                 text: qsTr("Add car")
             }
+
+            Button {
+                id: runLongOperationButton
+                text: qsTr("Run long operation")
+            }
             Layout.fillWidth: true
             Layout.fillHeight: true
+        }
+
+        Label {
+            id: carLabel
+            color: "black"
         }
 
         RowLayout {

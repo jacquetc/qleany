@@ -42,7 +42,7 @@ namespace {{ application_cpp_domain_name }}::Presenter
 class {{ export }} {{ single.class_name_pascal }} : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
+    Q_PROPERTY(int itemId READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
     {% for field in single.fields %}
     {%- if field.name_camel != "id" %}
     Q_PROPERTY({{ field.type }} {{ field.name_camel }} READ {{ field.name_camel }} WRITE set{{ field.name_pascal }} NOTIFY {{ field.name_camel }}Changed FINAL)

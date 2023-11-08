@@ -12,12 +12,13 @@ qt6_add_qml_module(${PLUGIN_NAME}
     
     foreign_passenger_controller.h
     foreign_car_controller.h
-    SOURCES foreign_event_dispatcher.h
+    foreign_event_dispatcher.h
+    foreign_custom_controller.h
 
 )
 
 target_link_libraries(${PLUGIN_NAME} PRIVATE simple-example-controller)
-target_link_libraries(${PLUGIN_NAME} PRIVATE QCoro::Core)
+target_link_libraries(${PLUGIN_NAME} PRIVATE QCoro::Core QCoro::Qml)
 
 target_link_libraries(${PLUGIN_NAME}
     PRIVATE Qt6::Quick Qt6::Core Qt6::Qml

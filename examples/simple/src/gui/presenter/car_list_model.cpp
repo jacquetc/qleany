@@ -128,11 +128,17 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         const CarDTO &car = m_carList[row];
 
         UpdateCarDTO dto;
-        dto.setId(m_carList[row].id());
+        dto.setId(car.id());
         dto.setId(value.value<int>());
 
         Car::CarController::instance()->update(dto).then([this, index, role](auto &&result) {
+            if (result.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return false;
+            }
             emit dataChanged(index, index, {role});
+            return true;
         });
 
         return true;
@@ -148,11 +154,17 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         const CarDTO &car = m_carList[row];
 
         UpdateCarDTO dto;
-        dto.setId(m_carList[row].id());
+        dto.setId(car.id());
         dto.setUuid(value.value<QUuid>());
 
         Car::CarController::instance()->update(dto).then([this, index, role](auto &&result) {
+            if (result.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return false;
+            }
             emit dataChanged(index, index, {role});
+            return true;
         });
 
         return true;
@@ -168,11 +180,17 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         const CarDTO &car = m_carList[row];
 
         UpdateCarDTO dto;
-        dto.setId(m_carList[row].id());
+        dto.setId(car.id());
         dto.setCreationDate(value.value<QDateTime>());
 
         Car::CarController::instance()->update(dto).then([this, index, role](auto &&result) {
+            if (result.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return false;
+            }
             emit dataChanged(index, index, {role});
+            return true;
         });
 
         return true;
@@ -188,11 +206,17 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         const CarDTO &car = m_carList[row];
 
         UpdateCarDTO dto;
-        dto.setId(m_carList[row].id());
+        dto.setId(car.id());
         dto.setUpdateDate(value.value<QDateTime>());
 
         Car::CarController::instance()->update(dto).then([this, index, role](auto &&result) {
+            if (result.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return false;
+            }
             emit dataChanged(index, index, {role});
+            return true;
         });
 
         return true;
@@ -208,11 +232,17 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         const CarDTO &car = m_carList[row];
 
         UpdateCarDTO dto;
-        dto.setId(m_carList[row].id());
+        dto.setId(car.id());
         dto.setContent(value.value<QString>());
 
         Car::CarController::instance()->update(dto).then([this, index, role](auto &&result) {
+            if (result.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return false;
+            }
             emit dataChanged(index, index, {role});
+            return true;
         });
 
         return true;
@@ -231,6 +261,14 @@ void CarListModel::populate()
     auto task = Car::CarController::instance()->getAll();
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<Simple::Contracts::DTO::Car::CarDTO> carList = result;
+        for (const auto &car : carList)
+        {
+            if (car.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid ";
+                return;
+            }
+        }
         beginInsertRows(QModelIndex(), 0, carList.size() - 1);
         m_carList = carList;
         // fill m_carIdList

@@ -6,9 +6,9 @@
 #include "passenger/commands/remove_passenger_command.h"
 #include "passenger/passenger_dto.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;

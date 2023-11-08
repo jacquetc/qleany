@@ -1,42 +1,43 @@
 #pragma once
 #include "car/car_controller.h"
+#include <QCoroQml>
+#include <QCoroQmlTask>
 #include <QQmlEngine>
 
-struct ForeignCarController
+using namespace Simple::Controller::Car;
+
+class ForeignCarController : public QObject
 {
-    Q_GADGET
-    QML_FOREIGN(Simple::Controller::Car::CarController)
+    Q_OBJECT
     QML_SINGLETON
     QML_NAMED_ELEMENT(CarController)
 
   public:
-    // Initialize this singleton instance with the given engine.
-
-    inline static Simple::Controller::Car::CarController *s_singletonInstance = nullptr;
-
-    static Simple::Controller::Car::CarController *create(QQmlEngine *, QJSEngine *engine)
+    ForeignCarController(QObject *parent = nullptr) : QObject(parent)
     {
-        s_singletonInstance = Simple::Controller::Car::CarController::instance();
+        s_singletonInstance = CarController::instance();
+    }
 
-        // The instance has to exist before it is used. We cannot replace it.
-        Q_ASSERT(s_singletonInstance);
+    Q_INVOKABLE QCoro::QmlTask get(int id) const
+    {
+        return s_singletonInstance->get(id);
+    }
 
-        // The engine has to have the same thread affinity as the singleton.
-        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
+    Q_INVOKABLE QCoro::QmlTask create(const CreateCarDTO &dto)
+    {
+        return s_singletonInstance->create(dto);
+    }
 
-        // There can only be one engine accessing the singleton.
-        if (s_engine)
-            Q_ASSERT(engine == s_engine);
-        else
-            s_engine = engine;
+    Q_INVOKABLE CreateCarDTO getCreateDTO()
+    {
+        return s_singletonInstance->getCreateDTO();
+    }
 
-        // Explicitly specify C++ ownership so that the engine doesn't delete
-        // the instance.
-        QJSEngine::setObjectOwnership(s_singletonInstance, QJSEngine::CppOwnership);
-
-        return s_singletonInstance;
+    Q_INVOKABLE UpdateCarDTO getUpdateDTO()
+    {
+        return s_singletonInstance->getUpdateDTO();
     }
 
   private:
-    inline static QJSEngine *s_engine = nullptr;
+    Simple::Controller::Car::CarController *s_singletonInstance = nullptr;
 };

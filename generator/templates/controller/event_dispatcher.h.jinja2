@@ -2,6 +2,7 @@
 
 #include "{{ export_header_file }}"
 #include "error_signals.h"
+#include "progress_signals.h"
 {% for feature in features%}
 #include "{{ feature.feature_name_snake }}/{{ feature.feature_name_snake }}_signals.h"
 {% endfor %}
@@ -16,14 +17,16 @@ class {{ export }} EventDispatcher : public QObject
     explicit EventDispatcher(QObject *parent);
     static EventDispatcher *instance();
 
-    ErrorSignals *error() const;
+    Q_INVOKABLE ErrorSignals *error() const;
+    Q_INVOKABLE ProgressSignals *progress() const;
 {% for feature in features%}
-    {{ feature.feature_name_pascal }}Signals *{{ feature.feature_name_camel }}() const;
+    Q_INVOKABLE {{ feature.feature_name_pascal }}Signals *{{ feature.feature_name_camel }}() const;
 {% endfor %}
 
   private:
     static EventDispatcher *s_instance;
     ErrorSignals *m_errorSignals;
+    ProgressSignals *m_progressSignals;
 {% for feature in features%}
     {{ feature.feature_name_pascal }}Signals *m_{{ feature.feature_name_camel }}Signals;
 {% endfor %}

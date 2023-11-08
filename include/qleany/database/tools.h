@@ -1,10 +1,10 @@
 #pragma once
 
-#include "qleany/common/result.h"
-#include "qleany/domain/entity_schema.h"
 #include <QMetaProperty>
 #include <QSqlQuery>
 #include <QStringList>
+#include <qleany/common/result.h>
+#include <qleany/domain/entity_schema.h>
 
 namespace Qleany::Database
 {

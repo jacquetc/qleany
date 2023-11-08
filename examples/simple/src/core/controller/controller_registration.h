@@ -1,8 +1,8 @@
 #pragma once
 
 #include "controller_export.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
 #include <QObject>
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
 namespace Simple::Controller
 {

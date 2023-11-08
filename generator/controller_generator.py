@@ -29,6 +29,7 @@ def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
 
     return False
 
+
 def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict) -> bool:
     entity = entities_by_name.get(entity_name, None)
     if entity is None:
@@ -37,12 +38,13 @@ def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict) -
     fields = entity["fields"]
     for field in fields:
         field_type = field["type"]
-        if is_unique_foreign_entity(field_type, entities_by_name) or is_list_foreign_entity(
+        if is_unique_foreign_entity(
             field_type, entities_by_name
-        ):
+        ) or is_list_foreign_entity(field_type, entities_by_name):
             return True
 
     return False
+
 
 def get_entity_from_foreign_field_type(field_type: str, entities_by_name: dict) -> str:
     if "<" not in field_type:
@@ -56,25 +58,29 @@ def get_entity_from_foreign_field_type(field_type: str, entities_by_name: dict) 
 
     return ""
 
-def get_other_entities_relation_fields(entity_name: str, entities_by_name: dict) -> list:
+
+def get_other_entities_relation_fields(
+    entity_name: str, entities_by_name: dict
+) -> list:
     other_entities_relation_fields = []
 
     entity = entities_by_name.get(entity_name, None)
     if entity is None:
         return []
 
-    for (entity, data)  in entities_by_name.items():
+    for entity, data in entities_by_name.items():
         if entity == entity_name:
             continue
-
 
         fields = data["fields"]
         for field in fields:
             field_type = field["type"]
-            if is_unique_foreign_entity(field_type, entities_by_name) or is_list_foreign_entity(
+            if is_unique_foreign_entity(
                 field_type, entities_by_name
-            ):
-                if entity_name != get_entity_from_foreign_field_type(field_type, entities_by_name):
+            ) or is_list_foreign_entity(field_type, entities_by_name):
+                if entity_name != get_entity_from_foreign_field_type(
+                    field_type, entities_by_name
+                ):
                     continue
                 other_entities_relation_fields.append(
                     {
@@ -91,14 +97,12 @@ def get_other_entities_relation_fields(entity_name: str, entities_by_name: dict)
 
     return other_entities_relation_fields
 
+
 def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
     owner_dict = {}
     for possible_owner_name, entity in entities_by_name.items():
         for field in entity["fields"]:
-            if (
-                field["type"] == entity_name
-                or field["type"] == f"QList<{entity_name}>"
-            ):
+            if field["type"] == entity_name or field["type"] == f"QList<{entity_name}>":
                 if field.get("strong", False):
                     owner_dict["name"] = possible_owner_name
                     owner_dict["field"] = field["name"]
@@ -171,7 +175,9 @@ def get_generation_dict(
             final_feature_dict["crud"]["entity_name_pascal"] = entity_pascal_name
             final_feature_dict["crud"]["entity_name_spinal"] = entity_spinal_name
             final_feature_dict["crud"]["entity_name_camel"] = entity_camel_name
-            final_feature_dict["crud"]["entity_has_relation_fields"] = does_entity_have_relation_fields(entity_name, entities_by_name)
+            final_feature_dict["crud"][
+                "entity_has_relation_fields"
+            ] = does_entity_have_relation_fields(entity_name, entities_by_name)
 
             final_feature_dict["crud"]["get"] = (
                 feature["CRUD"].get("get", {}).get("enabled", False)
@@ -199,27 +205,37 @@ def get_generation_dict(
             owner_dict = determine_owner(entity_name, entities_by_name)
 
             final_feature_dict["crud"]["has_owner"] = owner_dict != {}
-            owner_name = owner_dict.get(
-                "name", "Undefined"
-            )           
-            owner_field_name = owner_dict.get(
-                "field", "Undefined"
-            )
+            owner_name = owner_dict.get("name", "Undefined")
+            owner_field_name = owner_dict.get("field", "Undefined")
             final_feature_dict["crud"]["owner_is_list"] = owner_dict.get(
                 "is_list", False
             )
             final_feature_dict["crud"]["owner_is_ordered"] = owner_dict.get(
                 "ordered", False
             )
-            final_feature_dict["crud"]["owner_name_camel"] = stringcase.camelcase(owner_name)
-            final_feature_dict["crud"]["owner_name_snake"] = stringcase.snakecase(owner_name)
-            final_feature_dict["crud"]["owner_name_pascal"] = stringcase.pascalcase(owner_name)
-            final_feature_dict["crud"]["owner_field_name_camel"] = stringcase.camelcase(owner_field_name)
-            final_feature_dict["crud"]["owner_field_name_snake"] = stringcase.snakecase(owner_field_name)
-            final_feature_dict["crud"]["owner_field_name_pascal"] = stringcase.pascalcase(owner_field_name)
+            final_feature_dict["crud"]["owner_name_camel"] = stringcase.camelcase(
+                owner_name
+            )
+            final_feature_dict["crud"]["owner_name_snake"] = stringcase.snakecase(
+                owner_name
+            )
+            final_feature_dict["crud"]["owner_name_pascal"] = stringcase.pascalcase(
+                owner_name
+            )
+            final_feature_dict["crud"]["owner_field_name_camel"] = stringcase.camelcase(
+                owner_field_name
+            )
+            final_feature_dict["crud"]["owner_field_name_snake"] = stringcase.snakecase(
+                owner_field_name
+            )
+            final_feature_dict["crud"][
+                "owner_field_name_pascal"
+            ] = stringcase.pascalcase(owner_field_name)
 
             # other entities relation fields
-            final_feature_dict["crud"]["other_entities_relation_fields"] = get_other_entities_relation_fields(entity_name, entities_by_name)
+            final_feature_dict["crud"][
+                "other_entities_relation_fields"
+            ] = get_other_entities_relation_fields(entity_name, entities_by_name)
 
         # files :
         generation_dict["all_controller_files"].append(
@@ -674,6 +690,39 @@ def generate_error_signals_file(
             print(f"Successfully wrote file {error_signals_header_file}")
 
 
+def generate_progress_signals_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("progress_signals.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_progress_signals_header_file = os.path.join(
+        folder_path,
+        f"progress_signals.h",
+    )
+    progress_signals_header_file = os.path.join(
+        root_path, relative_progress_signals_header_file
+    )
+
+    if files_to_be_generated.get(relative_progress_signals_header_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(progress_signals_header_file), exist_ok=True)
+
+        with open(progress_signals_header_file, "w") as f:
+            f.write(
+                template.render(
+                    export_header_file=generation_dict["export_header"],
+                    export=generation_dict["export"],
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {progress_signals_header_file}")
+
+
 def generate_signal_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
@@ -780,6 +829,7 @@ def generate_controller_files(
         root_path, generation_dict, files_to_be_generated
     )
     generate_error_signals_file(root_path, generation_dict, files_to_be_generated)
+    generate_progress_signals_file(root_path, generation_dict, files_to_be_generated)
 
     # format the files
     for file, to_be_generated in files_to_be_generated.items():
@@ -862,6 +912,12 @@ def get_files_to_be_generated(
         os.path.join(
             folder_path,
             "error_signals.h",
+        )
+    )
+    files.append(
+        os.path.join(
+            folder_path,
+            "progress_signals.h",
         )
     )
     files.append(

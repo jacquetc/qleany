@@ -6,8 +6,8 @@
 #include "custom/get_current_time_reply_dto.h"
 #include "custom/queries/get_current_time_query.h"
 
-#include "qleany/common/result.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Custom;

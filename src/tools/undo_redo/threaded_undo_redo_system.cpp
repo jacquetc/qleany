@@ -1,9 +1,9 @@
 // Copyright (c) 2023 Cyril Jacquet
 // This file is part of Qleany which is released under MIT License.
 // See file LICENSE for full license details.
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoreApplication>
 #include <QDeadlineTimer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -255,7 +255,7 @@ void ThreadedUndoRedoSystem::quitGracefully()
     QMutexLocker locker(&m_mutex);
     m_undoRedoSystemWorker->requestInterruption();
     // let the thread exit gracefully
-    if (m_undoRedoSystemWorker->wait(QDeadlineTimer(10s)))
+    if (m_undoRedoSystemWorker->wait(QDeadlineTimer(60s)))
     {
         m_undoRedoSystemWorker->quit();
         m_undoRedoSystemWorker->wait();

@@ -6,9 +6,9 @@
 #include "client/client_dto.h"
 #include "client/commands/remove_client_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_client_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Client;

@@ -94,7 +94,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
-        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -130,7 +130,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::ge
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}WithDetailsDTO> optional_result =
         co_await qCoro(m_eventDispatcher.get()->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getWithDetailsReplied,
-        std::chrono::milliseconds(200));
+        std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -162,7 +162,7 @@ QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Control
 
     // async wait for result signal
     const std::optional<QList<{{ entity_name_pascal }}DTO>> optional_result = co_await qCoro(
-        m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getAllReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -211,7 +211,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::cr
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
-        co_await qCoro(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -247,7 +247,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::up
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
-        co_await qCoro(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -281,7 +281,7 @@ QCoro::Task<bool> {{ feature_name_pascal }}Controller::remove(int id)
 
         // async wait for result signal
         const std::optional<QList<int>> optional_result =
-            co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
+            co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
         if (!optional_result.has_value())
         {
@@ -308,7 +308,7 @@ Update{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Controller::getUpdate
 {% endif %}
 
 {% for command in custom_commands %}
-QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ feature_name_pascal }}Controller::{{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %})
+QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ feature_name_pascal }}Controller::{{ command.name_camel }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %})
 {
     {{ command.name }}Command query;
 
@@ -336,13 +336,17 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
     auto command = new AlterCommand<{{ command.name }}CommandHandler, {{ command.name }}Command>(
         {{ feature_name_pascal }}Controller::tr("Doing {{ command.name }}"), handler, query);
 
+    // set progress minimum duration    
+    command->setProgressMinimumDuration(1000);
+    m_eventDispatcher->progress()->bindToProgressSignals(command);
+
     // push command
     m_undo_redo_system->push(command, "{{ feature_name_camel }}");
 
     {% if command.dto_out_enabled %}
     // async wait for result signal
     const std::optional<{{ command.dto_out }}DTO> optional_result =
-        co_await qCoro(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -358,7 +362,7 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
 
 {% for query in custom_queries %}
 
-QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
+QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
 {
     auto queryCommand = new QueryCommand("{{ query.name }}");
      
@@ -387,7 +391,7 @@ QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Controller::{{ quer
 
     // async wait for result signal
     const std::optional<{{ query.dto_out }}DTO> optional_result =
-        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ feature_name_pascal }}Signals::{{ query.name_camel }}Replied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ feature_name_pascal }}Signals::{{ query.name_camel }}Replied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

@@ -4,7 +4,7 @@
 
 #include "{{ export_header_file }}"
 #include "event_dispatcher.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 {% if feature.crud.enabled -%}
 #include "{{ feature_name_snake }}/{{ entity_name_snake }}_dto.h"
     {% if feature.crud.get_with_details -%}
@@ -25,7 +25,7 @@
 {% if query.dto_in_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_in_snake }}_dto.h"{% endif %}
 {% if query.dto_out_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_out_snake }}_dto.h"{% endif %}
 {% endfor -%}
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
@@ -60,8 +60,18 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
 {% endif %}
 
     {% for query in feature.custom_queries %}
-    Q_INVOKABLE QCoro::Task<{{ query.dto_out }}DTO> {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const;
+    Q_INVOKABLE QCoro::Task<{{ query.dto_out }}DTO> {{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const;
     {% endfor %}
+
+{% if feature.crud.enabled %}
+    {% if feature.crud.create %}
+    Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
+    {% endif %}
+    {% if feature.crud.update %}
+    Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
+    {% endif %}
+{% endif %}
+
   public slots:
 
 {% if feature.crud.enabled %}
@@ -75,16 +85,10 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     QCoro::Task<bool> remove(int id);
     {% endif %}
 
-    {% if feature.crud.create %}
-    static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
-    {% endif %}
-    {% if feature.crud.update %}
-    static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
-    {% endif %}
 {% endif %}
 
     {% for command in feature.custom_commands %}
-    QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
+    QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name_camel }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
     {% endfor %}
 
   private:

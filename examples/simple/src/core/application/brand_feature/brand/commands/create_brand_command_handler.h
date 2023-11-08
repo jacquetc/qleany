@@ -5,9 +5,9 @@
 #include "application_brand_export.h"
 #include "brand/brand_dto.h"
 #include "brand/commands/create_brand_command.h"
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Domain;

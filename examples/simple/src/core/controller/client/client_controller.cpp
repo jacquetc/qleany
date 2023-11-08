@@ -67,7 +67,7 @@ QCoro::Task<ClientDTO> ClientController::get(int id) const
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -100,7 +100,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id) const
 
     // async wait for result signal
     const std::optional<ClientWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -130,7 +130,7 @@ QCoro::Task<QList<ClientDTO>> ClientController::getAll() const
 
     // async wait for result signal
     const std::optional<QList<ClientDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -167,7 +167,7 @@ QCoro::Task<ClientDTO> ClientController::create(const CreateClientDTO &dto)
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -202,7 +202,7 @@ QCoro::Task<ClientDTO> ClientController::update(const UpdateClientDTO &dto)
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -234,7 +234,7 @@ QCoro::Task<bool> ClientController::remove(int id)
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

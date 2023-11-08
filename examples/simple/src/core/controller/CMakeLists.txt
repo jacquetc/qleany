@@ -22,6 +22,7 @@ set(SRCS
     event_dispatcher.cpp
     controller_registration.h
     error_signals.h
+    progress_signals.h
     controller_registration.cpp
 )
 

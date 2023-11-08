@@ -6,12 +6,12 @@
 
 #include "custom/commands/write_random_things_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include "repository/interface_car_repository.h"
 #include "repository/interface_client_repository.h"
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 

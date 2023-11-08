@@ -121,14 +121,17 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
         const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List[row];
 
         Update{{ model.entity_name_pascal }}DTO dto;
-        dto.setId(m_{{ model.entity_name_camel }}List[row].id());
+        dto.setId({{ model.entity_name_camel }}.id());
         dto.set{{ field.name_pascal }}(value.value<{{ field.type }}>());
 
         {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto)
             .then([this, index, role](auto &&result) {
-
-                    emit dataChanged(index, index, {role});
-
+                if(result.isInvalid()){
+                    qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
+                    return false;
+                }
+                emit dataChanged(index, index, {role});
+                return true;
             });
                                 
         return true;
@@ -148,6 +151,13 @@ void {{ model.class_name_pascal }}::populate()
     auto task = {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->getAll();
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<{{ application_cpp_domain_name }}::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO> {{ model.entity_name_camel }}List = result;
+        for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)
+        {
+            if({{ model.entity_name_camel }}.isInvalid()){
+                qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
+                return;
+            }
+        }
         beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
         m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;
         // fill m_{{ model.entity_name_camel }}IdList

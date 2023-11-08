@@ -16,7 +16,7 @@ namespace Simple::Presenter
 class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int id READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
+    Q_PROPERTY(int itemId READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
 
     Q_PROPERTY(QUuid uuid READ uuid WRITE setUuid NOTIFY uuidChanged FINAL)
     Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate NOTIFY creationDateChanged FINAL)

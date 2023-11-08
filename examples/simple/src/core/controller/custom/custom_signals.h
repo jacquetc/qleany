@@ -25,6 +25,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CustomSignals : public QObject
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
     void writeRandomThingsChanged();
+    void runLongOperationChanged();
     void closeSystemChanged();
     void getCurrentTimeReplied(GetCurrentTimeReplyDTO dto);
 };

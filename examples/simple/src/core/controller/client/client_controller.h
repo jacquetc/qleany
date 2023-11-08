@@ -8,12 +8,12 @@
 #include "client/update_client_dto.h"
 #include "controller_export.h"
 #include "event_dispatcher.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -38,6 +38,10 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientController : public QObject
 
     Q_INVOKABLE QCoro::Task<QList<ClientDTO>> getAll() const;
 
+    Q_INVOKABLE static Contracts::DTO::Client::CreateClientDTO getCreateDTO();
+
+    Q_INVOKABLE static Contracts::DTO::Client::UpdateClientDTO getUpdateDTO();
+
   public slots:
 
     QCoro::Task<ClientDTO> create(const CreateClientDTO &dto);
@@ -45,10 +49,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientController : public QObject
     QCoro::Task<ClientDTO> update(const UpdateClientDTO &dto);
 
     QCoro::Task<bool> remove(int id);
-
-    static Contracts::DTO::Client::CreateClientDTO getCreateDTO();
-
-    static Contracts::DTO::Client::UpdateClientDTO getUpdateDTO();
 
   private:
     static QScopedPointer<ClientController> s_instance;

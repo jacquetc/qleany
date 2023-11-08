@@ -1,8 +1,8 @@
 #pragma once
 
 #include "controller_export.h"
-#include "qleany/common/error.h"
 #include <QObject>
+#include <qleany/common/error.h>
 
 namespace Simple::Controller
 {

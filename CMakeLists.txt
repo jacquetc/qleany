@@ -84,9 +84,10 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/database/interface_database_context.h
 )
 
+# Create the library target
+
 add_library(Qleany ${LIB_TYPE}
     ${LIB_PUBLIC_HEADERS}
-        src/tools/undo_redo/alter_command.cpp
         src/tools/undo_redo/query_command.cpp
         src/tools/undo_redo/undo_redo_stack.cpp
         src/tools/undo_redo/threaded_undo_redo_system.cpp
@@ -101,7 +102,7 @@ add_library(Qleany ${LIB_TYPE}
 )
 target_include_directories(Qleany PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include> # <prefix>/include
 )
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 

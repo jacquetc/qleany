@@ -5,10 +5,10 @@
 #include "brand.h"
 
 #include "persistence_export.h"
-#include "qleany/contracts/database/interface_database_table_group.h"
-#include "qleany/repository/generic_repository.h"
 #include "repository/interface_brand_repository.h"
 #include <QReadWriteLock>
+#include <qleany/contracts/database/interface_database_table_group.h>
+#include <qleany/repository/generic_repository.h>
 
 using namespace Qleany;
 using namespace Qleany::Contracts::Repository;

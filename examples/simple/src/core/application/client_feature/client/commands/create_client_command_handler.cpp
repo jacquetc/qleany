@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_client_command_handler.h"
 #include "client/validators/create_client_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Domain;
@@ -34,6 +34,7 @@ Result<ClientDTO> CreateClientCommandHandler::handle(QPromise<Result<void>> &pro
         result = Result<ClientDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateClientCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

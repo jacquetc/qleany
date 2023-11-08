@@ -2,6 +2,7 @@
 
 #include "controller_export.h"
 #include "error_signals.h"
+#include "progress_signals.h"
 
 #include "car/car_signals.h"
 
@@ -24,21 +25,23 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
     explicit EventDispatcher(QObject *parent);
     static EventDispatcher *instance();
 
-    ErrorSignals *error() const;
+    Q_INVOKABLE ErrorSignals *error() const;
+    Q_INVOKABLE ProgressSignals *progress() const;
 
-    CarSignals *car() const;
+    Q_INVOKABLE CarSignals *car() const;
 
-    BrandSignals *brand() const;
+    Q_INVOKABLE BrandSignals *brand() const;
 
-    PassengerSignals *passenger() const;
+    Q_INVOKABLE PassengerSignals *passenger() const;
 
-    ClientSignals *client() const;
+    Q_INVOKABLE ClientSignals *client() const;
 
-    CustomSignals *custom() const;
+    Q_INVOKABLE CustomSignals *custom() const;
 
   private:
     static EventDispatcher *s_instance;
     ErrorSignals *m_errorSignals;
+    ProgressSignals *m_progressSignals;
 
     CarSignals *m_carSignals;
 

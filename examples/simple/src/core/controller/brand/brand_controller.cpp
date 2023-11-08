@@ -64,7 +64,7 @@ QCoro::Task<BrandDTO> BrandController::get(int id) const
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -94,7 +94,7 @@ QCoro::Task<QList<BrandDTO>> BrandController::getAll() const
 
     // async wait for result signal
     const std::optional<QList<BrandDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -142,7 +142,7 @@ QCoro::Task<BrandDTO> BrandController::create(const CreateBrandDTO &dto)
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(handler, &CreateBrandCommandHandler::brandCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateBrandCommandHandler::brandCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -177,7 +177,7 @@ QCoro::Task<BrandDTO> BrandController::update(const UpdateBrandDTO &dto)
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(handler, &UpdateBrandCommandHandler::brandUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateBrandCommandHandler::brandUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -209,7 +209,7 @@ QCoro::Task<bool> BrandController::remove(int id)
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

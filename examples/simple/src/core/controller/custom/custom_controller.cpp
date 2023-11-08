@@ -4,6 +4,8 @@
 
 #include "custom/commands/close_system_command.h"
 #include "custom/commands/close_system_command_handler.h"
+#include "custom/commands/run_long_operation_command.h"
+#include "custom/commands/run_long_operation_command_handler.h"
 #include "custom/commands/write_random_things_command.h"
 #include "custom/commands/write_random_things_command_handler.h"
 #include "custom/queries/get_current_time_query.h"
@@ -40,7 +42,7 @@ CustomController *CustomController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<> CustomController::WriteRandomThings(WriteRandomThingsDTO dto)
+QCoro::Task<> CustomController::writeRandomThings(WriteRandomThingsDTO dto)
 {
     WriteRandomThingsCommand query;
 
@@ -69,13 +71,42 @@ QCoro::Task<> CustomController::WriteRandomThings(WriteRandomThingsDTO dto)
     auto command = new AlterCommand<WriteRandomThingsCommandHandler, WriteRandomThingsCommand>(
         CustomController::tr("Doing WriteRandomThings"), handler, query);
 
+    // set progress minimum duration
+    command->setProgressMinimumDuration(1000);
+    m_eventDispatcher->progress()->bindToProgressSignals(command);
+
     // push command
     m_undo_redo_system->push(command, "custom");
 
     co_return;
 }
 
-QCoro::Task<> CustomController::CloseSystem()
+QCoro::Task<> CustomController::runLongOperation()
+{
+    RunLongOperationCommand query;
+
+    auto *handler = new RunLongOperationCommandHandler();
+
+    // connect
+
+    QObject::connect(handler, &RunLongOperationCommandHandler::runLongOperationChanged, m_eventDispatcher->custom(),
+                     &CustomSignals::runLongOperationChanged);
+
+    // Create specialized UndoRedoCommand
+    auto command = new AlterCommand<RunLongOperationCommandHandler, RunLongOperationCommand>(
+        CustomController::tr("Doing RunLongOperation"), handler, query);
+
+    // set progress minimum duration
+    command->setProgressMinimumDuration(1000);
+    m_eventDispatcher->progress()->bindToProgressSignals(command);
+
+    // push command
+    m_undo_redo_system->push(command, "custom");
+
+    co_return;
+}
+
+QCoro::Task<> CustomController::closeSystem()
 {
     CloseSystemCommand query;
 
@@ -102,13 +133,17 @@ QCoro::Task<> CustomController::CloseSystem()
     auto command = new AlterCommand<CloseSystemCommandHandler, CloseSystemCommand>(
         CustomController::tr("Doing CloseSystem"), handler, query);
 
+    // set progress minimum duration
+    command->setProgressMinimumDuration(1000);
+    m_eventDispatcher->progress()->bindToProgressSignals(command);
+
     // push command
     m_undo_redo_system->push(command, "custom");
 
     co_return;
 }
 
-QCoro::Task<GetCurrentTimeReplyDTO> CustomController::GetCurrentTime() const
+QCoro::Task<GetCurrentTimeReplyDTO> CustomController::getCurrentTime() const
 {
     auto queryCommand = new QueryCommand("GetCurrentTime");
 
@@ -131,7 +166,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomController::GetCurrentTime() const
 
     // async wait for result signal
     const std::optional<GetCurrentTimeReplyDTO> optional_result = co_await qCoro(
-        m_eventDispatcher->custom(), &CustomSignals::getCurrentTimeReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher->custom(), &CustomSignals::getCurrentTimeReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

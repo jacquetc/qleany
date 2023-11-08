@@ -18,12 +18,6 @@ class QLEANY_EXPORT QueryCommand : public UndoRedoCommand
     void setQueryFunction(const std::function<Result<void>(QPromise<Result<void>> &promise)> &function);
 
   private:
-    // Overrides the redo() method of UndoRedoCommand
-    void redo(QPromise<Result<void>> &progressPromise) override;
-
-    // Overrides the undo() method of UndoRedoCommand
-    Result<void> undo() override;
-
   private:
     std::function<Result<void>(QPromise<Result<void>> &promise)>
         m_queryFunction; /*!< The function to be executed asynchronously when the redo() method is called. */

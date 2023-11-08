@@ -1,12 +1,10 @@
 #include "controller_registration.h"
 #include "event_dispatcher.h"
 {% for feature in features -%}
-{% if feature.crud.enabled %}
 #include "{{ feature.feature_name_snake }}/{{ feature.feature_name_snake }}_controller.h"
-{% endif %}
 {% endfor -%}
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
-#include "qleany/tools/undo_redo/undo_redo_scopes.h"
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include <qleany/tools/undo_redo/undo_redo_scopes.h>
 #include <QSharedPointer>
 
 using namespace {{ application_cpp_domain_name }}::Controller;
@@ -39,14 +37,14 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
             });
 
 {% for feature in features%}
-{% if feature.crud.enabled %}
     // {{ feature.feature_name_pascal }}Controller
 
     new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
+{% if feature.crud.enabled %}
+
     SignalHolder *{{ feature.feature_name_camel }}SignalHolder = repositoryProvider->repository("{{ feature.feature_name_pascal }}")->signalHolder();
-    emit {{ feature.feature_name_camel }}SignalHolder->removed(QList<int>() << 0);
-    
+
     // removal
     connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::removed);
@@ -65,9 +63,12 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     connect(repositoryProvider->repository("{{ feature.feature_name_camel }}")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::activeStatusChanged);
-            
+
+
 {% endif %}
 {% endfor %}
+
+
 
 }
 

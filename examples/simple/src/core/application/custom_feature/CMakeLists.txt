@@ -18,6 +18,8 @@ set(SRC
     
     custom/commands/write_random_things_command_handler.h
     custom/commands/write_random_things_command_handler.cpp
+    custom/commands/run_long_operation_command_handler.h
+    custom/commands/run_long_operation_command_handler.cpp
     custom/commands/close_system_command_handler.h
     custom/commands/close_system_command_handler.cpp
     custom/queries/get_current_time_query_handler.h

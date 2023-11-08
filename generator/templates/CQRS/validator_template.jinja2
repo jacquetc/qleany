@@ -8,7 +8,7 @@
 {% for repository in validator.repositories %}
 #include "repository/interface_{{ repository.snake_name }}_repository.h"
 {% endfor %}
-#include "qleany/common/result.h"
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 {% if validator.repositories|length %}

@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&app);
     new Simple::Controller::ControllerRegistration(&app, persistenceRegistration->repositoryProvider());
 
+    QCoro::Qml::registerTypes();
+
     QQmlApplicationEngine engine;
     const QUrl url(u"qrc:/qt/qml/Main/main.qml"_qs);
     QObject::connect(
@@ -31,8 +33,6 @@ int main(int argc, char *argv[])
 
     engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
     engine.addImportPath(":/");
-
-    QCoro::Qml::registerTypes();
 
     engine.load(url);
 

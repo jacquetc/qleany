@@ -1,4 +1,5 @@
 Module Controllers
 singleton EventDispatcher 1.0 EventDispatcher.qml
 singleton CarController 1.0 CarController.qml
+singleton CarSignals 1.0 CarSignals.qml
 singleton PassengerController 1.0 PassengerController.qml

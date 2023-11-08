@@ -1,17 +1,13 @@
 #include "controller_registration.h"
-#include "event_dispatcher.h"
-
-#include "car/car_controller.h"
-
 #include "brand/brand_controller.h"
-
-#include "passenger/passenger_controller.h"
-
+#include "car/car_controller.h"
 #include "client/client_controller.h"
-
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
-#include "qleany/tools/undo_redo/undo_redo_scopes.h"
+#include "custom/custom_controller.h"
+#include "event_dispatcher.h"
+#include "passenger/passenger_controller.h"
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include <qleany/tools/undo_redo/undo_redo_scopes.h>
 
 using namespace Simple::Controller;
 
@@ -48,7 +44,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     new Car::CarController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *carSignalHolder = repositoryProvider->repository("Car")->signalHolder();
-    emit carSignalHolder->removed(QList<int>() << 0);
 
     // removal
     connect(carSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(),
@@ -64,7 +59,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     new Brand::BrandController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *brandSignalHolder = repositoryProvider->repository("Brand")->signalHolder();
-    emit brandSignalHolder->removed(QList<int>() << 0);
 
     // removal
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
@@ -88,7 +82,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     new Passenger::PassengerController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *passengerSignalHolder = repositoryProvider->repository("Passenger")->signalHolder();
-    emit passengerSignalHolder->removed(QList<int>() << 0);
 
     // removal
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
@@ -124,7 +117,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     new Client::ClientController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *clientSignalHolder = repositoryProvider->repository("Client")->signalHolder();
-    emit clientSignalHolder->removed(QList<int>() << 0);
 
     // removal
     connect(clientSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->client(),
@@ -134,6 +126,10 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     connect(repositoryProvider->repository("client")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->client(),
             &ClientSignals::activeStatusChanged);
+
+    // CustomController
+
+    new Custom::CustomController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
 }
 
 ControllerRegistration::~ControllerRegistration()

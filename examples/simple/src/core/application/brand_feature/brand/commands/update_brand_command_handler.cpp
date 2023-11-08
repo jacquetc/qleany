@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_brand_command_handler.h"
 #include "brand/validators/update_brand_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_brand_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Brand;
@@ -35,6 +35,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::handle(QPromise<Result<void>> &progr
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateBrandCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

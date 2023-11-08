@@ -46,7 +46,7 @@ void {{ single.class_name_pascal }}::setId(int newId)
     {
         {% for field in single.fields %}
         {% if field.name_camel != "id" %}
-            m_{{ field.name_camel }} = {{ field.type }}();
+            m_{{ field.name_camel }} = {{ field.type }}{};
             emit {{ field.name_camel }}Changed();
         {% endif %}
         {%- endfor %}
@@ -57,6 +57,10 @@ void {{ single.class_name_pascal }}::setId(int newId)
     {
         {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->get(m_id).then(
             [this](const Simple::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) { 
+                if({{ single.entity_name_camel }}.isInvalid()){
+                    qCritical() << Q_FUNC_INFO << "Invalid {{ single.entity_name_camel }}Id";
+                    return;
+                }
                 {% for field in single.fields %}
                 {% if field.name_camel != "id" %}
                     m_{{ field.name_camel }} = {{ single.entity_name_camel }}.{{ field.name_camel }}();
@@ -83,14 +87,19 @@ void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type
 {
     if (m_{{ field.name_camel }} == new{{ field.name_pascal }})
         return;
-    m_{{ field.name_camel }} = new{{ field.name_pascal }};
 
     Update{{ single.entity_name_pascal }}DTO dto;
     dto.setId(id());
     dto.set{{ field.name_pascal }}(new{{ field.name_pascal }});
-    {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->update(dto);
-
-    emit {{ field.name_camel }}Changed();
+    {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->update(dto).then(
+            [this](const Simple::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) {   
+                if({{ single.entity_name_camel }}.isInvalid()){
+                    qCritical() << Q_FUNC_INFO << "Invalid {{ single.entity_name_camel }}Id";
+                    return;
+                }
+                m_{{ field.name_camel }} = {{ single.entity_name_camel }}.{{ field.name_camel }}();
+                emit {{ field.name_camel }}Changed();
+            });
 }
 {% endif %}
 {%- endfor %}

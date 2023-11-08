@@ -66,7 +66,7 @@ QCoro::Task<CarDTO> CarController::get(int id) const
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -99,7 +99,7 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id) const
 
     // async wait for result signal
     const std::optional<CarWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -129,7 +129,7 @@ QCoro::Task<QList<CarDTO>> CarController::getAll() const
 
     // async wait for result signal
     const std::optional<QList<CarDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -165,7 +165,7 @@ QCoro::Task<CarDTO> CarController::create(const CreateCarDTO &dto)
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -200,7 +200,7 @@ QCoro::Task<CarDTO> CarController::update(const UpdateCarDTO &dto)
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -232,7 +232,7 @@ QCoro::Task<bool> CarController::remove(int id)
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(200));
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

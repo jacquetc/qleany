@@ -6,9 +6,9 @@
 #include "brand/brand_dto.h"
 #include "brand/commands/update_brand_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Brand;

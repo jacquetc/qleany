@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_car_command_handler.h"
 #include "car/validators/remove_car_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_car_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Car;
@@ -34,6 +34,7 @@ Result<int> RemoveCarCommandHandler::handle(QPromise<Result<void>> &progressProm
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveCarCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

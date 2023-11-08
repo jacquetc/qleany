@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_{{ entity_mappable_with_snake }}_command_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 #include "{{ feature_snake_name }}/validators/update_{{ entity_mappable_with_snake }}_command_validator.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
 
@@ -36,6 +36,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
         result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Update{{ entity_mappable_with_pascal }}Command:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

@@ -59,13 +59,13 @@ void SingleClient::setId(int newId)
     if (m_id == 0)
     {
 
-        m_uuid = QUuid();
+        m_uuid = QUuid{};
         emit uuidChanged();
 
-        m_creationDate = QDateTime();
+        m_creationDate = QDateTime{};
         emit creationDateChanged();
 
-        m_updateDate = QDateTime();
+        m_updateDate = QDateTime{};
         emit updateDateChanged();
     }
 
@@ -74,6 +74,12 @@ void SingleClient::setId(int newId)
     {
         Client::ClientController::instance()->get(m_id).then(
             [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
+                if (client.isInvalid())
+                {
+                    qCritical() << Q_FUNC_INFO << "Invalid clientId";
+                    return;
+                }
+
                 m_uuid = client.uuid();
                 emit uuidChanged();
 
@@ -100,14 +106,20 @@ void SingleClient::setUuid(const QUuid &newUuid)
 {
     if (m_uuid == newUuid)
         return;
-    m_uuid = newUuid;
 
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Client::ClientController::instance()->update(dto);
-
-    emit uuidChanged();
+    Client::ClientController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
+            if (client.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid clientId";
+                return;
+            }
+            m_uuid = client.uuid();
+            emit uuidChanged();
+        });
 }
 
 QDateTime SingleClient::creationDate() const
@@ -119,14 +131,20 @@ void SingleClient::setCreationDate(const QDateTime &newCreationDate)
 {
     if (m_creationDate == newCreationDate)
         return;
-    m_creationDate = newCreationDate;
 
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Client::ClientController::instance()->update(dto);
-
-    emit creationDateChanged();
+    Client::ClientController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
+            if (client.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid clientId";
+                return;
+            }
+            m_creationDate = client.creationDate();
+            emit creationDateChanged();
+        });
 }
 
 QDateTime SingleClient::updateDate() const
@@ -138,12 +156,18 @@ void SingleClient::setUpdateDate(const QDateTime &newUpdateDate)
 {
     if (m_updateDate == newUpdateDate)
         return;
-    m_updateDate = newUpdateDate;
 
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Client::ClientController::instance()->update(dto);
-
-    emit updateDateChanged();
+    Client::ClientController::instance()->update(dto).then(
+        [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
+            if (client.isInvalid())
+            {
+                qCritical() << Q_FUNC_INFO << "Invalid clientId";
+                return;
+            }
+            m_updateDate = client.updateDate();
+            emit updateDateChanged();
+        });
 }

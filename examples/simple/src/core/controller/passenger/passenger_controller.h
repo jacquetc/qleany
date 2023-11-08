@@ -7,12 +7,12 @@
 #include "passenger/create_passenger_dto.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/update_passenger_dto.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -35,6 +35,10 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 
     Q_INVOKABLE QCoro::Task<QList<PassengerDTO>> getAll() const;
 
+    Q_INVOKABLE static Contracts::DTO::Passenger::CreatePassengerDTO getCreateDTO();
+
+    Q_INVOKABLE static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();
+
   public slots:
 
     QCoro::Task<PassengerDTO> create(const CreatePassengerDTO &dto);
@@ -42,10 +46,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
     QCoro::Task<PassengerDTO> update(const UpdatePassengerDTO &dto);
 
     QCoro::Task<bool> remove(int id);
-
-    static Contracts::DTO::Passenger::CreatePassengerDTO getCreateDTO();
-
-    static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();
 
   private:
     static QScopedPointer<PassengerController> s_instance;

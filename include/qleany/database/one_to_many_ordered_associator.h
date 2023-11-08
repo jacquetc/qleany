@@ -1,13 +1,13 @@
 #pragma once
 
-#include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
-#include "qleany/domain/entity_schema.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <qleany/common/result.h>
+#include <qleany/domain/entity_schema.h>
 
 using namespace Qleany::Contracts::Database;
 

@@ -4,10 +4,10 @@
 
 #include "contracts_export.h"
 #include "passenger.h"
-#include "qleany/common/result.h"
-#include "qleany/contracts/repository/interface_generic_repository.h"
-#include "qleany/contracts/repository/interface_repository.h"
 #include <QObject>
+#include <qleany/common/result.h>
+#include <qleany/contracts/repository/interface_generic_repository.h>
+#include <qleany/contracts/repository/interface_repository.h>
 
 using namespace Qleany;
 
