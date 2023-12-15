@@ -14,7 +14,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 {
 
     auto dispatcher =
-        QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
+        QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
     Scopes scopes(QStringList() 
@@ -39,7 +39,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 {% for feature in features%}
     // {{ feature.feature_name_pascal }}Controller
 
-    new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(repositoryProvider, undoRedoSystem, dispatcher);
 
 {% if feature.crud.enabled %}
 

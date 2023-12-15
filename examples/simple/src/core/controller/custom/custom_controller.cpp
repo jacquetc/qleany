@@ -23,10 +23,10 @@ using namespace Qleany::Contracts::Repository;
 
 QScopedPointer<CustomController> CustomController::s_instance = QScopedPointer<CustomController>(nullptr);
 
-CustomController::CustomController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+CustomController::CustomController(InterfaceRepositoryProvider *repositoryProvider,
                                    ThreadedUndoRedoSystem *undo_redo_system,
                                    QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 

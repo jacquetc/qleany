@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarController : public QObject
 {
     Q_OBJECT
   public:
-    explicit CarController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                           ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher);
+    explicit CarController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                           QSharedPointer<EventDispatcher> eventDispatcher);
 
     static CarController *instance();
 

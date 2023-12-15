@@ -14,7 +14,7 @@ class {{ export }} EventDispatcher : public QObject
 {
     Q_OBJECT
   public:
-    explicit EventDispatcher(QObject *parent);
+    explicit EventDispatcher();
     static EventDispatcher *instance();
 
     Q_INVOKABLE ErrorSignals *error() const;
@@ -31,7 +31,6 @@ class {{ export }} EventDispatcher : public QObject
     {{ feature.feature_name_pascal }}Signals *m_{{ feature.feature_name_camel }}Signals;
 {% endfor %}
 
-    EventDispatcher() = delete;
     EventDispatcher(const EventDispatcher &) = delete;
     EventDispatcher &operator=(const EventDispatcher &) = delete;
 };

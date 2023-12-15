@@ -24,8 +24,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CustomController : public QObject
 {
     Q_OBJECT
   public:
-    explicit CustomController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                              ThreadedUndoRedoSystem *undo_redo_system,
+    explicit CustomController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
                               QSharedPointer<EventDispatcher> eventDispatcher);
 
     static CustomController *instance();

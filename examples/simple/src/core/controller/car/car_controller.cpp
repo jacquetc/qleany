@@ -26,9 +26,9 @@ using namespace Qleany::Contracts::Repository;
 
 QScopedPointer<CarController> CarController::s_instance = QScopedPointer<CarController>(nullptr);
 
-CarController::CarController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                             ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+CarController::CarController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                             QSharedPointer<EventDispatcher> eventDispatcher)
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 

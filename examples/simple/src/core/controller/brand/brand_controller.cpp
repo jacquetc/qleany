@@ -23,10 +23,10 @@ using namespace Qleany::Contracts::Repository;
 
 QScopedPointer<BrandController> BrandController::s_instance = QScopedPointer<BrandController>(nullptr);
 
-BrandController::BrandController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+BrandController::BrandController(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 

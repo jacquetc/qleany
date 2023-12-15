@@ -22,7 +22,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
 {
     Q_OBJECT
   public:
-    explicit EventDispatcher(QObject *parent);
+    explicit EventDispatcher();
     static EventDispatcher *instance();
 
     Q_INVOKABLE ErrorSignals *error() const;
@@ -53,7 +53,6 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
 
     CustomSignals *m_customSignals;
 
-    EventDispatcher() = delete;
     EventDispatcher(const EventDispatcher &) = delete;
     EventDispatcher &operator=(const EventDispatcher &) = delete;
 };

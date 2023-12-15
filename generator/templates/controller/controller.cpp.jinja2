@@ -51,10 +51,10 @@ using namespace Qleany::Contracts::Repository;
 
 QScopedPointer<{{ feature_name_pascal }}Controller> {{ feature_name_pascal }}Controller::s_instance = QScopedPointer<{{ feature_name_pascal }}Controller>(nullptr);
 
-{{ feature_name_pascal }}Controller::{{ feature_name_pascal }}Controller(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+{{ feature_name_pascal }}Controller::{{ feature_name_pascal }}Controller(InterfaceRepositoryProvider *repositoryProvider,
                                          ThreadedUndoRedoSystem *undo_redo_system,
                                          QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 

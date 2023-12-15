@@ -15,7 +15,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     : QObject{parent}
 {
 
-    auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
+    auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
     Scopes scopes(QStringList() << "car"
@@ -41,7 +41,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     // CarController
 
-    new Car::CarController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new Car::CarController(repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *carSignalHolder = repositoryProvider->repository("Car")->signalHolder();
 
@@ -56,7 +56,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     // BrandController
 
-    new Brand::BrandController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new Brand::BrandController(repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *brandSignalHolder = repositoryProvider->repository("Brand")->signalHolder();
 
@@ -79,7 +79,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     // PassengerController
 
-    new Passenger::PassengerController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new Passenger::PassengerController(repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *passengerSignalHolder = repositoryProvider->repository("Passenger")->signalHolder();
 
@@ -114,7 +114,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     // ClientController
 
-    new Client::ClientController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new Client::ClientController(repositoryProvider, undoRedoSystem, dispatcher);
 
     SignalHolder *clientSignalHolder = repositoryProvider->repository("Client")->signalHolder();
 
@@ -129,7 +129,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 
     // CustomController
 
-    new Custom::CustomController(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new Custom::CustomController(repositoryProvider, undoRedoSystem, dispatcher);
 }
 
 ControllerRegistration::~ControllerRegistration()

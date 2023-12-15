@@ -25,7 +25,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 {
     Q_OBJECT
   public:
-    explicit PassengerController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+    explicit PassengerController(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher);
 

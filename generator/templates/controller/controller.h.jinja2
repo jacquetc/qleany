@@ -41,7 +41,7 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
 {
     Q_OBJECT
   public:
-    explicit {{ feature_name_pascal }}Controller(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+    explicit {{ feature_name_pascal }}Controller(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher);
 

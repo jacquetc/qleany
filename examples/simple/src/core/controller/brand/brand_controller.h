@@ -25,8 +25,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandController : public QObject
 {
     Q_OBJECT
   public:
-    explicit BrandController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                             ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher);
+    explicit BrandController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                             QSharedPointer<EventDispatcher> eventDispatcher);
 
     static BrandController *instance();
 

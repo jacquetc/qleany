@@ -26,8 +26,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientController : public QObject
 {
     Q_OBJECT
   public:
-    explicit ClientController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                              ThreadedUndoRedoSystem *undo_redo_system,
+    explicit ClientController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
                               QSharedPointer<EventDispatcher> eventDispatcher);
 
     static ClientController *instance();

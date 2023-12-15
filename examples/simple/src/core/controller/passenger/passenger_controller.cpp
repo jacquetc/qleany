@@ -23,10 +23,10 @@ using namespace Qleany::Contracts::Repository;
 
 QScopedPointer<PassengerController> PassengerController::s_instance = QScopedPointer<PassengerController>(nullptr);
 
-PassengerController::PassengerController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+PassengerController::PassengerController(InterfaceRepositoryProvider *repositoryProvider,
                                          ThreadedUndoRedoSystem *undo_redo_system,
                                          QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 
