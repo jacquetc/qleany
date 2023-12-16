@@ -2,7 +2,6 @@
 // This file is part of Qleany which is released under MIT License.
 // See file LICENSE for full license details.
 #include "qleany/tools/undo_redo/undo_redo_system.h"
-#include "qleany/tools/undo_redo/query_command.h"
 
 #include <QDebug>
 #include <QEventLoop>
@@ -33,7 +32,6 @@ UndoRedoSystem::UndoRedoSystem(QObject *parent, Scopes scopes) : QThread(parent)
  */
 void UndoRedoSystem::run()
 {
-    // Create an event loop for the thread
     QEventLoop eventLoop;
 
     // Create a QTimer to periodically check the size of the hashes.
@@ -56,14 +54,16 @@ void UndoRedoSystem::run()
 
 bool UndoRedoSystem::areQueuesEmpty() const
 {
-    for (const auto& queue : m_scopedCommandQueueHash)
+    for (const auto &queue : m_scopedCommandQueueHash)
     {
-        if (!queue.isEmpty()) return false;
+        if (!queue.isEmpty())
+            return false;
     }
 
-    for (const auto& command : m_currentCommandHash)
+    for (const auto &command : m_currentCommandHash)
     {
-        if (!command.isNull()) return false;
+        if (!command.isNull())
+            return false;
     }
     return true;
 }
@@ -75,7 +75,7 @@ bool UndoRedoSystem::canUndo() const
 {
     bool hasACommandRunning = false;
 
-    for (const auto& command : m_activeStack->queue())
+    for (const auto &command : m_activeStack->queue())
     {
         if (command->isRunning())
         {
@@ -156,7 +156,7 @@ void UndoRedoSystem::redo()
 /*!
  * \brief Adds an \a command to the UndoRedoSystem with the specified \a scope.
  */
-void UndoRedoSystem::push(UndoRedoCommand *command, const QString& commandScope, const QUuid& stackId)
+void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId)
 {
     // forbids new commands while in the process of quitting
     if (QThread::currentThread()->isInterruptionRequested())
@@ -183,7 +183,7 @@ void UndoRedoSystem::push(UndoRedoCommand *command, const QString& commandScope,
     {
         if (scope.hasScopeFlag(scopeFlag))
         {
-            QQueue<QSharedPointer<UndoRedoCommand> >& commandQueue = m_scopedCommandQueueHash[scopeFlag];
+            QQueue<QSharedPointer<UndoRedoCommand>> &commandQueue = m_scopedCommandQueueHash[scopeFlag];
             commandQueue.enqueue(commandSharedPointer);
 
             // If the system is not currently executing a command for the given
@@ -200,7 +200,7 @@ void UndoRedoSystem::push(UndoRedoCommand *command, const QString& commandScope,
     emit stateChanged();
 }
 
-void UndoRedoSystem::push(UndoRedoCommand *command, const QString& commandScope, const QUuid& stackId) const
+void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId) const
 {
     push(const_cast<UndoRedoCommand *>(command), commandScope, stackId);
 }
@@ -294,9 +294,10 @@ QStringList UndoRedoSystem::undoRedoTextList() const
 {
     QStringList resultList;
 
-    for (const auto& command : m_activeStack->queue())
+    for (const auto &command : m_activeStack->queue())
     {
-        if (!command.isNull()) resultList << command->text();
+        if (!command.isNull())
+            resultList << command->text();
     }
     return resultList;
 }
@@ -327,7 +328,8 @@ void UndoRedoSystem::setCurrentIndex(int index)
     // desired index waiting for the redo to finish each time.
     // If the desired index is equal to the current index, we do nothing.
 
-    if (index == m_activeStack->currentIndex()) return;
+    if (index == m_activeStack->currentIndex())
+        return;
 
     if (index >= m_activeStack->queue().size())
     {
@@ -435,7 +437,7 @@ void UndoRedoSystem::executeNextCommandRedo()
     }
 }
 
-void UndoRedoSystem::setActiveStack(const QUuid& stackId)
+void UndoRedoSystem::setActiveStack(const QUuid &stackId)
 {
     // if stackId is not in the stack hash, create one
     if (!m_stackHash.contains(stackId))
@@ -475,7 +477,7 @@ bool UndoRedoSystem::isRunning() const
 
     for (auto stack : std::as_const(m_stackHash))
     {
-        for (const auto& command : stack->queue())
+        for (const auto &command : stack->queue())
         {
             if (command->isRunning())
             {
@@ -492,15 +494,27 @@ bool UndoRedoSystem::isRunning() const
     return false;
 }
 
-QStringList UndoRedoSystem::queuedCommandTextListByScope(const QString& scopeFlagString) const
+int UndoRedoSystem::numberOfCommands() const
+{
+    int result = 0;
+
+    for (auto stack : std::as_const(m_stackHash))
+    {
+        result += stack->queue().size();
+    }
+
+    return result;
+}
+
+QStringList UndoRedoSystem::queuedCommandTextListByScope(const QString &scopeFlagString) const
 {
     QStringList resultList;
 
     ScopeFlag scopeFlag = m_scopes.flags(scopeFlagString);
 
-    const QQueue<QSharedPointer<UndoRedoCommand> >& queue = m_scopedCommandQueueHash[scopeFlag];
+    const QQueue<QSharedPointer<UndoRedoCommand>> &queue = m_scopedCommandQueueHash[scopeFlag];
 
-    for (const QSharedPointer<UndoRedoCommand>& command : queue)
+    for (const QSharedPointer<UndoRedoCommand> &command : queue)
     {
         resultList << command->text();
     }
@@ -510,18 +524,18 @@ QStringList UndoRedoSystem::queuedCommandTextListByScope(const QString& scopeFla
 void UndoRedoSystem::onCommandUndoFinished(bool isSuccessful)
 {
     auto *senderObject = QObject::sender();
-    auto *command      = dynamic_cast<UndoRedoCommand *>(senderObject);
+    auto *command = dynamic_cast<UndoRedoCommand *>(senderObject);
 
     if (command == nullptr)
     {
         qFatal("Command pointer is null!");
     }
-    const Scope& commandScope = command->scope();
-    const QUuid& stackId      = command->stackId();
-    auto stack                = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
+    const Scope &commandScope = command->scope();
+    const QUuid &stackId = command->stackId();
+    auto stack = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
 
     // Remove the command from the current command hash
-    for (const ScopeFlag& scopeFlag : commandScope.flags())
+    for (const ScopeFlag &scopeFlag : commandScope.flags())
     {
         m_currentCommandHash.insert(scopeFlag, QSharedPointer<UndoRedoCommand>());
     }
@@ -539,18 +553,18 @@ void UndoRedoSystem::onCommandUndoFinished(bool isSuccessful)
 void UndoRedoSystem::onCommandRedoFinished(bool isSuccessful)
 {
     auto *senderObject = QObject::sender();
-    auto *command      = dynamic_cast<UndoRedoCommand *>(senderObject);
+    auto *command = dynamic_cast<UndoRedoCommand *>(senderObject);
 
     if (command == nullptr)
     {
         qFatal("Command pointer is null!");
     }
-    const Scope& commandScope = command->scope();
-    const QUuid& stackId      = command->stackId();
-    auto stack                = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
+    const Scope &commandScope = command->scope();
+    const QUuid &stackId = command->stackId();
+    auto stack = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
 
     // Remove the command from the current command hash
-    for (const ScopeFlag& scopeFlag : commandScope.flags())
+    for (const ScopeFlag &scopeFlag : commandScope.flags())
     {
         m_currentCommandHash.insert(scopeFlag, QSharedPointer<UndoRedoCommand>());
     }
@@ -573,18 +587,18 @@ void UndoRedoSystem::onCommandRedoFinished(bool isSuccessful)
 void UndoRedoSystem::onCommandDoFinished(bool isSuccessful)
 {
     auto *senderObject = QObject::sender();
-    auto *command      = dynamic_cast<UndoRedoCommand *>(senderObject);
+    auto *command = dynamic_cast<UndoRedoCommand *>(senderObject);
 
     if (command == nullptr)
     {
         qFatal("Command pointer is null!");
     }
-    const Scope& commandScope = command->scope();
-    const QUuid& stackId      = command->stackId();
-    auto stack                = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
+    const Scope &commandScope = command->scope();
+    const QUuid &stackId = command->stackId();
+    auto stack = m_stackHash.value(stackId, QSharedPointer<UndoRedoStack>());
 
     // Remove the command from the current command hash
-    for (const ScopeFlag& scopeFlag : commandScope.flags())
+    for (const ScopeFlag &scopeFlag : commandScope.flags())
     {
         m_currentCommandHash.insert(scopeFlag, QSharedPointer<UndoRedoCommand>());
     }
@@ -625,11 +639,11 @@ void UndoRedoSystem::onCommandDoFinished(bool isSuccessful)
 /*!
  * \brief Executes the next command in the queue for the specified \a scope.
  */
-void UndoRedoSystem::executeNextCommandDo(const ScopeFlag& scopeFlag, const QUuid& stackId)
+void UndoRedoSystem::executeNextCommandDo(const ScopeFlag &scopeFlag, const QUuid &stackId)
 {
     // Dequeue the next command
-    QQueue<QSharedPointer<UndoRedoCommand> >& queue = m_scopedCommandQueueHash[scopeFlag];
-    QSharedPointer<UndoRedoCommand> command         = queue.dequeue();
+    QQueue<QSharedPointer<UndoRedoCommand>> &queue = m_scopedCommandQueueHash[scopeFlag];
+    QSharedPointer<UndoRedoCommand> command = queue.dequeue();
 
     m_currentCommandHash.insert(scopeFlag, command);
     bool allowedToRun = isCommandAllowedToRun(command, scopeFlag);
@@ -647,7 +661,7 @@ void UndoRedoSystem::executeNextCommandDo(const ScopeFlag& scopeFlag, const QUui
 
         // Connect the errorSent signal to the errorSent signal
         connect(command.data(), &UndoRedoCommand::warningSent, this, &UndoRedoSystem::warningSent);
-        connect(command.data(), &UndoRedoCommand::errorSent,   this, &UndoRedoSystem::errorSent);
+        connect(command.data(), &UndoRedoCommand::errorSent, this, &UndoRedoSystem::errorSent);
 
         // Execute the command asynchronously
         command->asyncRedo();
@@ -704,10 +718,10 @@ void UndoRedoSystem::executeNextCommandDo(const ScopeFlag& scopeFlag, const QUui
  * corresponding to the command scope have
  * this command as current, allowing it to be run.
  */
-bool UndoRedoSystem::isCommandAllowedToRun(QSharedPointer<UndoRedoCommand>command, const ScopeFlag& currentScopeFlag)
+bool UndoRedoSystem::isCommandAllowedToRun(QSharedPointer<UndoRedoCommand> command, const ScopeFlag &currentScopeFlag)
 {
     // get command scopes
-    const Scope& commandScope = command->scope();
+    const Scope &commandScope = command->scope();
 
     if (commandScope.flags().count() == 1)
     {

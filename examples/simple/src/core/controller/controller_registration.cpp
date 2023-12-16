@@ -14,7 +14,6 @@ using namespace Simple::Controller;
 ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceRepositoryProvider *repositoryProvider)
     : QObject{parent}
 {
-
     auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
@@ -26,18 +25,20 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling
-    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
-            [dispatcher](Qleany::Error error) {
-                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
-                         << error.data() << error.stackTrace();
-                emit dispatcher->error()->errorSent(error);
-            });
-    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
-            [dispatcher](Qleany::Error error) {
-                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
-                         << error.data() << error.stackTrace();
-                emit dispatcher->error()->warningSent(error);
-            });
+    QObject::connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, dispatcher.data(),
+                     [dispatcher](Qleany::Error error) {
+        qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
+                 << error.data() << error.stackTrace();
+        emit dispatcher->error()->errorSent(error);
+    }, Qt::QueuedConnection);
+    QObject::connect(undoRedoSystem,
+                     &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent,
+                     dispatcher.data(),
+                     [dispatcher](Qleany::Error error) {
+        qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
+                 << error.data() << error.stackTrace();
+        emit dispatcher->error()->warningSent(error);
+    }, Qt::QueuedConnection);
 
     // CarController
 
@@ -64,13 +65,14 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
             &BrandSignals::removed);
 
-    // spread removal signal to all other entity signal holders so as to remove the relations
+    // spread removal signal to all other entity signal holders so as to remove
+    // the relations
 
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Brand, removedIds, -1);
-                emit dispatcher->car()->relationRemoved(dto);
-            });
+            [dispatcher](QList<int>removedIds) {
+        CarRelationDTO dto(-1, CarRelationDTO::RelationField::Brand, removedIds, -1);
+        emit dispatcher->car()->relationRemoved(dto);
+    });
 
     // active status
     connect(repositoryProvider->repository("brand")->signalHolder(),
@@ -87,25 +89,26 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
             &PassengerSignals::removed);
 
-    // spread removal signal to all other entity signal holders so as to remove the relations
+    // spread removal signal to all other entity signal holders so as to remove
+    // the relations
 
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Passengers, removedIds, -1);
-                emit dispatcher->car()->relationRemoved(dto);
-            });
+            [dispatcher](QList<int>removedIds) {
+        CarRelationDTO dto(-1, CarRelationDTO::RelationField::Passengers, removedIds, -1);
+        emit dispatcher->car()->relationRemoved(dto);
+    });
 
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::Client, removedIds, -1);
-                emit dispatcher->client()->relationRemoved(dto);
-            });
+            [dispatcher](QList<int>removedIds) {
+        ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::Client, removedIds, -1);
+        emit dispatcher->client()->relationRemoved(dto);
+    });
 
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::ClientFriends, removedIds, -1);
-                emit dispatcher->client()->relationRemoved(dto);
-            });
+            [dispatcher](QList<int>removedIds) {
+        ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::ClientFriends, removedIds, -1);
+        emit dispatcher->client()->relationRemoved(dto);
+    });
 
     // active status
     connect(repositoryProvider->repository("passenger")->signalHolder(),
@@ -133,5 +136,4 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 }
 
 ControllerRegistration::~ControllerRegistration()
-{
-}
+{}

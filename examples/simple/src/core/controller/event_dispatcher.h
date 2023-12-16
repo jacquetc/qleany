@@ -15,6 +15,7 @@
 #include "custom/custom_signals.h"
 
 #include <QObject>
+#include <QPointer>
 
 namespace Simple::Controller
 {
@@ -39,7 +40,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
     Q_INVOKABLE CustomSignals *custom() const;
 
   private:
-    static EventDispatcher *s_instance;
+    static QPointer<EventDispatcher> s_instance;
     ErrorSignals *m_errorSignals;
     ProgressSignals *m_progressSignals;
 

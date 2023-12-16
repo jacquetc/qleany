@@ -4,37 +4,43 @@
 #pragma once
 #include "undo_redo_command.h"
 
-namespace Qleany::Tools::UndoRedo
-{
+namespace Qleany::Tools::UndoRedo {
 ///
 /// \brief The AlterCommand class
-/// Used for commands doing actions, in opposition to QueryCommand which for read-only requests
-template <class Handler, class Request> class AlterCommand : public UndoRedoCommand
-{
+/// Used for commands doing actions, in opposition to QueryCommand which for
+// read-only requests
+template<class Handler, class Request>class AlterCommand : public UndoRedoCommand {
+public:
 
-  public:
-    AlterCommand(const QString &text, Handler *handler, const Request &request)
+    AlterCommand(const QString& text, Handler *handler, const Request& request)
         : UndoRedoCommand(text), m_handler(handler), m_request(request)
     {
         this->setType(Type::AlterCommand);
-        this->setUndoFunction([this]() { return Result<void>(m_handler->restore().error()); });
-        this->setRedoFunction([this](QPromise<Result<void>> &progressPromise) {
-            return Result<void>(m_handler->handle(progressPromise, m_request));
-        });
+        this->setUndoFunction([this]() {
+                return Result<void>(m_handler->restore().error());
+            });
+        this->setRedoFunction([this](QPromise<Result<void> >& progressPromise) {
+                m_handler->handle(progressPromise, m_request);
+            });
         this->setMergeWithFunction([this](const UndoRedoCommand *other) {
-            //            if (other->type() == Type::AlterCommand)
-            //            {
-            //                const AlterCommand *alterCommand = static_cast<const AlterCommand *>(other);
-            //                return m_handler->merge(alterCommand->m_request);
-            //            }
-            return false;
-        });
+                //            if (other->type() == Type::AlterCommand)
+                //            {
+                //                const AlterCommand *alterCommand =
+                // static_cast<const AlterCommand *>(other);
+                //                return
+                // m_handler->merge(alterCommand->m_request);
+                //            }
+                return false;
+            });
     }
+
     // UndoRedoCommand interface
-  public:
-  private:
+
+public:
+
+private:
+
     Handler *m_handler;
     Request m_request;
 };
-
 } // namespace Qleany::Tools::UndoRedo

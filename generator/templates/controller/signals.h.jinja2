@@ -60,7 +60,6 @@ class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
     void relationInserted({{ feature.crud.entity_name_pascal }}RelationDTO dto);
     void relationRemoved({{ feature.crud.entity_name_pascal }}RelationDTO dto);
     {% endif -%}
-    //TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 
 {% endif -%}
 

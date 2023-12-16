@@ -21,7 +21,7 @@ using namespace Simple::Application::Features::Brand::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<BrandController> BrandController::s_instance = QScopedPointer<BrandController>(nullptr);
+QPointer<BrandController> BrandController::s_instance = nullptr;
 
 BrandController::BrandController(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
@@ -34,7 +34,7 @@ BrandController::BrandController(InterfaceRepositoryProvider *repositoryProvider
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 BrandController *BrandController::instance()

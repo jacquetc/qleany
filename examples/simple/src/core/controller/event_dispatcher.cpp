@@ -2,7 +2,7 @@
 
 using namespace Simple::Controller;
 
-EventDispatcher *EventDispatcher::s_instance = nullptr;
+QPointer<EventDispatcher> EventDispatcher::s_instance = nullptr;
 
 EventDispatcher::EventDispatcher() : QObject{nullptr}
 {

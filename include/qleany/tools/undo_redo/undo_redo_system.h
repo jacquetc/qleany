@@ -6,6 +6,7 @@
 #include "qleany/qleany_global.h"
 #include "undo_redo_command.h"
 #include "undo_redo_stack.h"
+#include <QEventLoop>
 #include <QHash>
 #include <QObject>
 #include <QQueue>
@@ -14,10 +15,10 @@
 
 namespace Qleany::Tools::UndoRedo
 {
-
 class QLEANY_EXPORT UndoRedoSystem : public QThread
 {
     Q_OBJECT
+
   public:
     UndoRedoSystem(QObject *parent, Scopes scopes);
 
@@ -57,29 +58,38 @@ class QLEANY_EXPORT UndoRedoSystem : public QThread
 
     Q_INVOKABLE QUuid activeStackId() const;
 
-    QStringList queuedCommandTextListByScope(const QString &scopeFlagString) const;
-    bool isRunning() const;
+    Q_INVOKABLE QStringList queuedCommandTextListByScope(const QString &scopeFlagString) const;
+
+    Q_INVOKABLE bool isRunning() const;
+
+    Q_INVOKABLE int numberOfCommands() const;
+
   private slots:
+
     void executeNextCommandUndo();
     void executeNextCommandRedo();
     void onCommandDoFinished(bool isSuccessful);
 
     void onCommandUndoFinished(bool isSuccessful);
     void onCommandRedoFinished(bool isSuccessful);
+
   signals:
 
     void stateChanged();
 
-    void finished();
     void warningSent(Error error);
     void errorSent(Error error);
+
     /*!
-     * \brief A signal that is emitted when the undo redo system is about to start redoing.
+     * \brief A signal that is emitted when the undo redo system is about to
+     * start redoing.
      * actions.
      */
     void redoing(Scope scope, bool active);
+
     /*!
-     * \brief A signal that is emitted when the undo redo system is about to start undoing.
+     * \brief A signal that is emitted when the undo redo system is about to
+     * start undoing.
      * actions.
      */
     void undoing(Scope scope, bool active);
@@ -89,7 +99,8 @@ class QLEANY_EXPORT UndoRedoSystem : public QThread
     bool isCommandAllowedToRun(QSharedPointer<UndoRedoCommand> command, const ScopeFlag &currentScopeFlag);
     bool areQueuesEmpty() const;
 
-    int m_undoLimit; /*!< The maximum number of undo commands that can be stored in the undo-redo system. */
+    int m_undoLimit; /*!< The maximum number of undo commands that can be stored
+                        in the undo-redo system. */
     Scopes m_scopes;
     QSharedPointer<UndoRedoStack> m_activeStack;
     QHash<QUuid, QSharedPointer<UndoRedoStack>> m_stackHash;

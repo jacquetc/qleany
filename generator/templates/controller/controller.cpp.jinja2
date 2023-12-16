@@ -49,7 +49,7 @@ using namespace {{ application_cpp_domain_name }}::Application::Features::{{ fea
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<{{ feature_name_pascal }}Controller> {{ feature_name_pascal }}Controller::s_instance = QScopedPointer<{{ feature_name_pascal }}Controller>(nullptr);
+QPointer<{{ feature_name_pascal }}Controller> {{ feature_name_pascal }}Controller::s_instance = nullptr;
 
 {{ feature_name_pascal }}Controller::{{ feature_name_pascal }}Controller(InterfaceRepositoryProvider *repositoryProvider,
                                          ThreadedUndoRedoSystem *undo_redo_system,
@@ -62,7 +62,7 @@ QScopedPointer<{{ feature_name_pascal }}Controller> {{ feature_name_pascal }}Con
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 {{ feature_name_pascal }}Controller *{{ feature_name_pascal }}Controller::instance()

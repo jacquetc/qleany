@@ -24,7 +24,7 @@ using namespace Simple::Application::Features::Car::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<CarController> CarController::s_instance = QScopedPointer<CarController>(nullptr);
+QPointer<CarController> CarController::s_instance = nullptr;
 
 CarController::CarController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
                              QSharedPointer<EventDispatcher> eventDispatcher)
@@ -36,7 +36,7 @@ CarController::CarController(InterfaceRepositoryProvider *repositoryProvider, Th
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 CarController *CarController::instance()

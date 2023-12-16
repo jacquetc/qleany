@@ -1,6 +1,6 @@
 find_package(Qt6 COMPONENTS Core Quick Qml REQUIRED)
 
-set(PLUGIN_NAME simple-example-models)
+set(PLUGIN_NAME simple-example-qml-models)
 
 qt_add_library(${PLUGIN_NAME} STATIC)
 qt6_add_qml_module(${PLUGIN_NAME}

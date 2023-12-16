@@ -10,6 +10,7 @@
 #include "custom/get_current_time_reply_dto.h"
 #include <QCoroTask>
 #include <QObject>
+#include <QPointer>
 #include <QSharedPointer>
 #include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
@@ -40,7 +41,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CustomController : public QObject
     QCoro::Task<> closeSystem();
 
   private:
-    static QScopedPointer<CustomController> s_instance;
+    static QPointer<CustomController> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

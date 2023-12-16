@@ -21,7 +21,7 @@ using namespace Simple::Application::Features::Passenger::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<PassengerController> PassengerController::s_instance = QScopedPointer<PassengerController>(nullptr);
+QPointer<PassengerController> PassengerController::s_instance = nullptr;
 
 PassengerController::PassengerController(InterfaceRepositoryProvider *repositoryProvider,
                                          ThreadedUndoRedoSystem *undo_redo_system,
@@ -34,7 +34,7 @@ PassengerController::PassengerController(InterfaceRepositoryProvider *repository
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 PassengerController *PassengerController::instance()

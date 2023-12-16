@@ -7,12 +7,15 @@
 #include <QFuture>
 
 using namespace Qleany::Tools::UndoRedo;
+
 /*!
  * \class UndoRedoCommand
  * \inmodule Presenter::UndoRedo
  * \brief A base class for implementing undo and redo commands.
- * Represents a base class for undo-redo commands in the application. Derived classes should implement undo() and redo()
- * methods to define the behavior of the command during undo and redo operations.
+ * Represents a base class for undo-redo commands in the application. Derived
+ * classes should implement undo() and redo()
+ * methods to define the behavior of the command during undo and redo
+ * operations.
  */
 
 /*!
@@ -25,11 +28,13 @@ UndoRedoCommand::UndoRedoCommand(const QString &text) : QObject(nullptr), m_text
     connect(m_progressTimer, &QTimer::timeout, this, &UndoRedoCommand::progressTimerTimeout);
 
     m_watcher = new QFutureWatcher<Result<void>>(this);
-    connect(m_watcher, &QFutureWatcher<void>::finished, this, &UndoRedoCommand::onFinished);
-    connect(m_watcher, &QFutureWatcher<void>::finished, this, &UndoRedoCommand::progressFinished);
-    connect(m_watcher, &QFutureWatcher<void>::progressRangeChanged, this, &UndoRedoCommand::progressRangeChanged);
-    connect(m_watcher, &QFutureWatcher<void>::progressTextChanged, this, &UndoRedoCommand::progressTextChanged);
-    connect(m_watcher, &QFutureWatcher<void>::progressValueChanged, this, &UndoRedoCommand::progressValueChanged);
+    connect(m_watcher, &QFutureWatcher<Result<void>>::finished, this, &UndoRedoCommand::onFinished);
+    connect(m_watcher, &QFutureWatcher<Result<void>>::finished, this, &UndoRedoCommand::progressFinished);
+    connect(m_watcher, &QFutureWatcher<Result<void>>::progressRangeChanged, this,
+            &UndoRedoCommand::progressRangeChanged);
+    connect(m_watcher, &QFutureWatcher<Result<void>>::progressTextChanged, this, &UndoRedoCommand::progressTextChanged);
+    connect(m_watcher, &QFutureWatcher<Result<void>>::progressValueChanged, this,
+            &UndoRedoCommand::progressValueChanged);
 }
 
 void UndoRedoCommand::setUndoFunction(const std::function<Result<void>()> &function)
@@ -37,7 +42,7 @@ void UndoRedoCommand::setUndoFunction(const std::function<Result<void>()> &funct
     m_undoFunction = function;
 }
 
-void UndoRedoCommand::setRedoFunction(const std::function<Result<void>(QPromise<Result<void>> &)> &function)
+void UndoRedoCommand::setRedoFunction(const std::function<void(QPromise<Result<void>> &)> &function)
 {
     m_redoFunction = function;
 }
@@ -59,8 +64,7 @@ void UndoRedoCommand::asyncUndo()
 
     m_status = Status::Running;
     emit undoing(m_scope, true);
-    QFuture<Result<void>> future = QtConcurrent::run(m_undoFunction);
-    m_watcher->setFuture(future);
+    m_watcher->setFuture(QtConcurrent::run(m_undoFunction));
 }
 
 /*!
@@ -68,14 +72,12 @@ void UndoRedoCommand::asyncUndo()
  */
 void UndoRedoCommand::asyncRedo()
 {
-
     m_status = Status::Running;
     emit redoing(m_scope, true);
-    QFuture<Result<void>> future = QtConcurrent::run(m_redoFunction).onFailed([](const std::exception &e) {
+    m_watcher->setFuture(QtConcurrent::run(m_redoFunction).onFailed([](const std::exception &e) {
         return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
                                         "Redo failed: " + QString::fromStdString(e.what())));
-    });
-    m_watcher->setFuture(future);
+    }));
 
     // start timer to update progress
     m_startTime = QDateTime::currentDateTime();
@@ -89,27 +91,31 @@ bool UndoRedoCommand::isRunning() const
 {
     return m_status == Status::Running;
 }
+
 bool UndoRedoCommand::isWaiting() const
 {
     return m_status == Status::Waiting;
 }
+
 bool UndoRedoCommand::isFinished() const
 {
     return m_status == Status::Finished;
 }
 
 /*!
- * \brief Handles the finished signal from the asynchronous undo or redo operation.
+ * \brief Handles the finished signal from the asynchronous undo or redo
+ * operation.
  */
 void UndoRedoCommand::onFinished()
 {
-
     m_progressTimer->stop();
 
     Result<void> result = m_watcher->result();
+
     if (result.hasError())
     {
         this->setObsolete(true);
+
         if (result.error().status() == Error::Warning)
         {
             emit warningSent(result.error());
@@ -128,7 +134,8 @@ void UndoRedoCommand::onFinished()
 
 void UndoRedoCommand::progressTimerTimeout()
 {
-    if (m_progressMinimumDuration >= 0 && m_startTime.msecsTo(QDateTime::currentDateTime()) > m_progressMinimumDuration)
+    if ((m_progressMinimumDuration >= 0) &&
+        (m_startTime.msecsTo(QDateTime::currentDateTime()) > m_progressMinimumDuration))
     {
         emit progressStarted();
         m_progressTimer->stop();
@@ -156,8 +163,10 @@ bool UndoRedoCommand::isQueryCommand() const
 }
 
 /*!
- * \brief Set the minimum duration of the command before the progress bar must be shown.
- * \param minimumDuration The minimum duration in milliseconds. -1 to disable. 0 to always show. Default is 500.
+ * \brief Set the minimum duration of the command before the progress bar must
+ * be shown.
+ * \param minimumDuration The minimum duration in milliseconds. -1 to disable. 0
+ * to always show. Default is 500.
  */
 void UndoRedoCommand::setProgressMinimumDuration(int minimumDuration)
 {
@@ -211,8 +220,10 @@ void UndoRedoCommand::setObsolete(bool newObsolete)
 }
 
 /*!
- * \brief Merge with another command. Redo of current command must becomes the equivalent of both redoes. Same for
- * undoes.  Returns true if the command can be merged with \a other, otherwise false. To be implemented if needed.
+ * \brief Merge with another command. Redo of current command must becomes the
+ * equivalent of both redoes. Same for
+ * undoes.  Returns true if the command can be merged with \a other, otherwise
+ * false. To be implemented if needed.
  */
 bool UndoRedoCommand::mergeWith(const UndoRedoCommand *other)
 {

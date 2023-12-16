@@ -29,6 +29,7 @@
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
+#include <QPointer>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -92,7 +93,7 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {% endfor %}
 
   private:
-    static QScopedPointer<{{ feature_name_pascal }}Controller> s_instance;
+    static QPointer<{{ feature_name_pascal }}Controller> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

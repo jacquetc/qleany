@@ -24,7 +24,7 @@ using namespace Simple::Application::Features::Client::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<ClientController> ClientController::s_instance = QScopedPointer<ClientController>(nullptr);
+QPointer<ClientController> ClientController::s_instance = nullptr;
 
 ClientController::ClientController(InterfaceRepositoryProvider *repositoryProvider,
                                    ThreadedUndoRedoSystem *undo_redo_system,
@@ -37,7 +37,7 @@ ClientController::ClientController(InterfaceRepositoryProvider *repositoryProvid
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 ClientController *ClientController::instance()

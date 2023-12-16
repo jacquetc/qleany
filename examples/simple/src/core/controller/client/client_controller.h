@@ -12,6 +12,7 @@
 
 #include <QCoroTask>
 #include <QObject>
+#include <QPointer>
 #include <QSharedPointer>
 #include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
@@ -50,7 +51,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT ClientController : public QObject
     QCoro::Task<bool> remove(int id);
 
   private:
-    static QScopedPointer<ClientController> s_instance;
+    static QPointer<ClientController> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;
