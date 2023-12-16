@@ -12,10 +12,10 @@
 
 using namespace Qleany::Tools::UndoRedo;
 
-namespace {{ application_cpp_domain_name }}::Controller::UndoRedo
+namespace Simple::Controller::UndoRedo
 {
 
-class {{ export }} UndoRedoController : public QObject
+class SIMPLEEXAMPLE_CONTROLLER_EXPORT UndoRedoController : public QObject
 {
     Q_OBJECT
   public:
@@ -68,4 +68,4 @@ class {{ export }} UndoRedoController : public QObject
     UndoRedoController &operator=(const UndoRedoController &) = delete;
 };
 
-} // namespace {{ application_cpp_domain_name }}::Controller::UndoRedo
+} // namespace Simple::Controller::UndoRedo

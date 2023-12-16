@@ -122,6 +122,7 @@ def get_generation_dict(
     controller_by_name: dict,
     export: str,
     export_header_file: str,
+    create_undo_redo_controller: bool,
 ) -> dict:
     generation_dict = {}
 
@@ -355,6 +356,37 @@ def get_generation_dict(
 
         generation_dict["features"].append(final_feature_dict)
 
+    # add undo redo controller
+    generation_dict["create_undo_redo_controller"] = create_undo_redo_controller
+    if create_undo_redo_controller:
+        h_file = os.path.join(
+            folder_path,
+            "undo_redo",
+            f"undo_redo_controller.h",
+        )
+
+        cpp_file = os.path.join(
+            folder_path,
+            "undo_redo",
+            f"undo_redo_controller.cpp",
+        )
+
+        signals_file = os.path.join(
+            folder_path,
+            "undo_redo",
+            f"undo_redo_signals.h",
+        )
+
+        generation_dict["all_controller_files"].append(h_file)
+
+        generation_dict["all_controller_files"].append(cpp_file)
+        generation_dict["all_controller_files"].append(signals_file)
+        generation_dict["undo_redo_controller_files"] = [
+            h_file,
+            cpp_file,
+            signals_file,
+        ]
+
     return generation_dict
 
 
@@ -454,6 +486,7 @@ def generate_event_dispatcher_files(
             export=generation_dict["export"],
             features=generation_dict["features"],
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+            undo_redo_signals=generation_dict["create_undo_redo_controller"],
         )
 
         with open(event_dispatcher_file, "w") as fh:
@@ -481,6 +514,7 @@ def generate_event_dispatcher_files(
         rendered_template = template.render(
             features=generation_dict["features"],
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+            undo_redo_signals=generation_dict["create_undo_redo_controller"],
         )
 
         with open(event_dispatcher_file, "w") as fh:
@@ -497,7 +531,6 @@ def generate_controller_h_and_cpp_files(
         template = template_env.get_template("controller.h.jinja2")
 
         folder_path = generation_dict["folder_path"]
-        all_controller_files = generation_dict["all_controller_files"]
 
         relative_controller_file = os.path.join(
             folder_path,
@@ -572,6 +605,61 @@ def generate_controller_h_and_cpp_files(
                 print(f"Successfully wrote file {controller_file}")
 
 
+def generate_undo_redo_controller_h_and_cpp_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    #  controller h
+    template = template_env.get_template("undo_redo_controller.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_controller_file = os.path.join(
+        folder_path,
+        "undo_redo",
+        f"undo_redo_controller.h",
+    )
+    controller_file = os.path.join(root_path, relative_controller_file)
+
+    # write the controller header file
+
+    if files_to_be_generated.get(relative_controller_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+        rendered_template = template.render(
+            export_header_file=generation_dict["export_header"],
+            export=generation_dict["export"],
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+        )
+
+        with open(controller_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {controller_file}")
+
+    #  controller cpp
+    template = template_env.get_template("undo_redo_controller.cpp.jinja2")
+    relative_controller_file = os.path.join(
+        folder_path,
+        "undo_redo",
+        f"undo_redo_controller.cpp",
+    )
+    controller_file = os.path.join(root_path, relative_controller_file)
+
+    # write the controller cpp file
+
+    if files_to_be_generated.get(relative_controller_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+
+        rendered_template = template.render(
+            application_cpp_domain_name=generation_dict["application_cpp_domain_name"]
+        )
+        with open(controller_file, "w") as fh:
+            fh.write(rendered_template)
+            print(f"Successfully wrote file {controller_file}")
+
+
 def generate_controller_registration_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
@@ -580,7 +668,6 @@ def generate_controller_registration_files(
     template = template_env.get_template("controller_registration.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
-    all_controller_files = generation_dict["all_controller_files"]
 
     relative_controller_file = os.path.join(
         folder_path,
@@ -688,6 +775,40 @@ def generate_error_signals_file(
                 )
             )
             print(f"Successfully wrote file {error_signals_header_file}")
+
+
+def generate_undo_redo_signals_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template = template_env.get_template("undo_redo_signals.h.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    relative_undo_redo_signals_header_file = os.path.join(
+        folder_path,
+        "undo_redo",
+        f"undo_redo_signals.h",
+    )
+    undo_redo_signals_header_file = os.path.join(
+        root_path, relative_undo_redo_signals_header_file
+    )
+
+    if files_to_be_generated.get(relative_undo_redo_signals_header_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(undo_redo_signals_header_file), exist_ok=True)
+
+        with open(undo_redo_signals_header_file, "w") as f:
+            f.write(
+                template.render(
+                    export_header_file=generation_dict["export_header"],
+                    export=generation_dict["export"],
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {undo_redo_signals_header_file}")
 
 
 def generate_progress_signals_file(
@@ -815,6 +936,7 @@ def generate_controller_files(
         controller_by_name,
         export,
         export_header_file,
+        create_undo_redo_controller,
     )
 
     generate_event_dispatcher_files(root_path, generation_dict, files_to_be_generated)
@@ -825,6 +947,13 @@ def generate_controller_files(
     generate_controller_h_and_cpp_files(
         root_path, generation_dict, files_to_be_generated
     )
+    if create_undo_redo_controller:
+        generate_undo_redo_controller_h_and_cpp_files(
+            root_path, generation_dict, files_to_be_generated
+        )
+        generate_undo_redo_signals_file(
+            root_path, generation_dict, files_to_be_generated
+        )
     generate_controller_registration_files(
         root_path, generation_dict, files_to_be_generated
     )
@@ -852,6 +981,9 @@ def get_files_to_be_generated(
         manifest_data = yaml.safe_load(fh)
 
     controller_data = manifest_data.get("controller", {})
+    create_undo_redo_controller = controller_data.get(
+        "create_undo_redo_controller", False
+    )
     folder_path = controller_data["folder_path"]
     export_header_file = controller_data.get("export_header_file", "Undefined")
 
@@ -879,6 +1011,32 @@ def get_files_to_be_generated(
                 folder_path,
                 feature_name_snake,
                 f"{feature_name_snake}_signals.h",
+            )
+        )
+
+    # add undo redo controller
+    if create_undo_redo_controller:
+        files.append(
+            os.path.join(
+                folder_path,
+                "undo_redo",
+                f"undo_redo_controller.h",
+            )
+        )
+
+        files.append(
+            os.path.join(
+                folder_path,
+                "undo_redo",
+                f"undo_redo_controller.cpp",
+            )
+        )
+
+        files.append(
+            os.path.join(
+                folder_path,
+                "undo_redo",
+                f"undo_redo_signals.h",
             )
         )
 

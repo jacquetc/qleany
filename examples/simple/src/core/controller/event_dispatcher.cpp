@@ -8,6 +8,9 @@ EventDispatcher::EventDispatcher() : QObject{nullptr}
 {
     m_errorSignals = new ErrorSignals(this);
     m_progressSignals = new ProgressSignals(this);
+
+    m_undoRedoSignals = new UndoRedoSignals(this);
+
     m_carSignals = new CarSignals(this);
     m_brandSignals = new BrandSignals(this);
     m_passengerSignals = new PassengerSignals(this);
@@ -55,4 +58,9 @@ ErrorSignals *EventDispatcher::error() const
 ProgressSignals *EventDispatcher::progress() const
 {
     return m_progressSignals;
+}
+
+UndoRedoSignals *EventDispatcher::undoRedo() const
+{
+    return m_undoRedoSignals;
 }

@@ -16,4 +16,7 @@ set(CONTROLLER_LIST
     custom/custom_controller.h
     custom/custom_controller.cpp
     custom/custom_signals.h
+    undo_redo/undo_redo_controller.h
+    undo_redo/undo_redo_controller.cpp
+    undo_redo/undo_redo_signals.h
 )

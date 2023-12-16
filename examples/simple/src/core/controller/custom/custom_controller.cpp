@@ -24,26 +24,26 @@ using namespace Qleany::Contracts::Repository;
 
 QPointer<CustomController> CustomController::s_instance = nullptr;
 
-CustomController::CustomController(InterfaceRepositoryProvider   *repositoryProvider,
-                                   ThreadedUndoRedoSystem        *undo_redo_system,
-                                   QSharedPointer<EventDispatcher>eventDispatcher)
+CustomController::CustomController(InterfaceRepositoryProvider *repositoryProvider,
+                                   ThreadedUndoRedoSystem *undo_redo_system,
+                                   QSharedPointer<EventDispatcher> eventDispatcher)
     : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 
     // connections for undo commands:
     m_undo_redo_system = undo_redo_system;
-    m_eventDispatcher  = eventDispatcher;
+    m_eventDispatcher = eventDispatcher;
 
     s_instance = this;
 }
 
-CustomController * CustomController::instance()
+CustomController *CustomController::instance()
 {
     return s_instance.data();
 }
 
-QCoro::Task<>CustomController::writeRandomThings(WriteRandomThingsDTO dto)
+QCoro::Task<> CustomController::writeRandomThings(WriteRandomThingsDTO dto)
 {
     WriteRandomThingsCommand query;
 
@@ -82,12 +82,11 @@ QCoro::Task<>CustomController::writeRandomThings(WriteRandomThingsDTO dto)
     co_return;
 }
 
-QCoro::Task<>CustomController::runLongOperation()
+QCoro::Task<> CustomController::runLongOperation()
 {
     RunLongOperationCommand query;
 
     auto *handler = new RunLongOperationCommandHandler();
-
 
     // connect
 
@@ -108,7 +107,7 @@ QCoro::Task<>CustomController::runLongOperation()
     co_return;
 }
 
-QCoro::Task<>CustomController::closeSystem()
+QCoro::Task<> CustomController::closeSystem()
 {
     CloseSystemCommand query;
 
@@ -145,13 +144,13 @@ QCoro::Task<>CustomController::closeSystem()
     co_return;
 }
 
-QCoro::Task<GetCurrentTimeReplyDTO>CustomController::getCurrentTime() const
+QCoro::Task<GetCurrentTimeReplyDTO> CustomController::getCurrentTime() const
 {
     auto queryCommand = new QueryCommand("GetCurrentTime");
 
     Q_UNIMPLEMENTED();
 
-    queryCommand->setQueryFunction([this](QPromise<Result<void> >& progressPromise) {
+    queryCommand->setQueryFunction([this](QPromise<Result<void>> &progressPromise) {
         GetCurrentTimeQuery query;
 
         GetCurrentTimeQueryHandler handler;

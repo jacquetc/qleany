@@ -4,8 +4,8 @@
 
 #include <QCoroSignal>
 
-using namespace {{ application_cpp_domain_name }}::Controller;
-using namespace {{ application_cpp_domain_name }}::Controller::UndoRedo;
+using namespace Simple::Controller;
+using namespace Simple::Controller::UndoRedo;
 using namespace Qleany::Tools::UndoRedo;
 
 QPointer<UndoRedoController> UndoRedoController::s_instance = nullptr;

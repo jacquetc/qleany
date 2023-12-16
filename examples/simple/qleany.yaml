@@ -75,7 +75,7 @@ controller:
   folder_path: src/core/controller/
   export: SIMPLEEXAMPLE_CONTROLLER_EXPORT
   export_header_file: controller_export.h
-  create_undo_redo_controller: false
+  create_undo_redo_controller: true
 
 application:
   common_cmake_folder_path: src/core/application

@@ -4,6 +4,8 @@
 #include "error_signals.h"
 #include "progress_signals.h"
 
+#include "undo_redo/undo_redo_signals.h"
+
 #include "car/car_signals.h"
 
 #include "brand/brand_signals.h"
@@ -29,6 +31,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
     Q_INVOKABLE ErrorSignals *error() const;
     Q_INVOKABLE ProgressSignals *progress() const;
 
+    Q_INVOKABLE UndoRedoSignals *undoRedo() const;
+
     Q_INVOKABLE CarSignals *car() const;
 
     Q_INVOKABLE BrandSignals *brand() const;
@@ -43,6 +47,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT EventDispatcher : public QObject
     static QPointer<EventDispatcher> s_instance;
     ErrorSignals *m_errorSignals;
     ProgressSignals *m_progressSignals;
+
+    UndoRedoSignals *m_undoRedoSignals;
 
     CarSignals *m_carSignals;
 
