@@ -20,7 +20,11 @@ The framework acknowledges the repetitive nature of file creation in Clean Archi
 
 ## Framework Structure
 
-Qleany offers a unique implementation of the Clean Architecture, structured as follows:
+Many developers are likely familiar with the following depiction of Clean Architecture:
+
+![Alt text](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*D1EvAeK74Gry46JMZM4oOQ.png)
+
+It's important to note that this conceptual representation needs to be tailored to fit the specific requirements of the language and project at hand. Qleany presents a distinct interpretation of Clean Architecture, uniquely adapted and structured to suit its specific use cases and environment.
 
 - **Domain**: Contains entities and is encapsulated in a library named `domain`.
 - **Application**: Groups use cases by functionalities, organized within a library called `application`.
@@ -32,10 +36,6 @@ Qleany offers a unique implementation of the Clean Architecture, structured as f
 - **Controller**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
 - **Presenter**: Maintains Qt models and representations of unique entities (referred to as `Singles`), enhancing their integration and usage within the GUI.
 - **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `controller`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
-
-The structure is one of many implementations of the Clean Architecture. Most developers would have seen this representation of the clean architecture:
-
-![Alt text](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*D1EvAeK74Gry46JMZM4oOQ.png)
 
 Project dependencies:
 ![Alt text](doc/qleany_project_dep.drawio.png)
@@ -247,6 +247,7 @@ qml:
 
 ## Utilizing the Qleany GUI Interface
 
+Python modules pyside6, clang_format, jinja2 must be installed using pip.
 To access Qleany's user-friendly graphical interface, execute the script `generator/qleany_generator_ui.py`. This interface allows developers to efficiently manage file generation. 
 
 ![Alt text](doc/qleany_generator_gui.png)
