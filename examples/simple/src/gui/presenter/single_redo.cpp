@@ -1,8 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_redo.h"
+#include "event_dispatcher.h"
 #include "undo_redo/undo_redo_controller.h"
 
+using namespace Simple::Controller;
 using namespace Simple::Controller::UndoRedo;
 using namespace Simple::Presenter;
 
@@ -25,6 +27,13 @@ SingleRedo::SingleRedo(QObject *parent) : QObject{parent}
             return;
         m_text = newText;
         emit textChanged();
+    });
+
+    connect(EventDispatcher::instance()->undoRedo(), &UndoRedoSignals::redoing, this, [this](Scope scope, bool active) {
+        if (m_enabled == active)
+            return;
+        m_enabled = active;
+        emit enabledChanged();
     });
 }
 
