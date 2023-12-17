@@ -1,14 +1,16 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "remove_client_command_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include "client/validators/remove_client_command_validator.h"
 #include "repository/interface_client_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Client;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Client::Commands;
 using namespace Simple::Application::Features::Client::Commands;
+using namespace Simple::Contracts::CQRS::Client::Validators;
 
 RemoveClientCommandHandler::RemoveClientCommandHandler(InterfaceClientRepository *repository) : m_repository(repository)
 {
@@ -33,6 +35,7 @@ Result<int> RemoveClientCommandHandler::handle(QPromise<Result<void>> &progressP
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveClientCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 
@@ -57,6 +60,12 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
 {
     int clientId = request.id;
 
+    // Validate the command using the validator
+    auto validator = RemoveClientCommandValidator(m_repository);
+    Result<void> validatorResult = validator.validate(clientId);
+
+    QLN_RETURN_IF_ERROR(int, validatorResult);
+
     Result<Simple::Domain::Client> clientResult = m_repository->get(clientId);
 
     QLN_RETURN_IF_ERROR(int, clientResult)
@@ -64,11 +73,12 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
     // save old entity
     m_oldState = clientResult.value();
 
-    auto deleteResult = m_repository->remove(clientId);
+    auto deleteResult = m_repository->removeInCascade(QList<int>() << clientId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    emit clientRemoved(deleteResult.value());
+    // repositories handle remove signals
+    // emit clientRemoved(deleteResult.value());
 
     qDebug() << "Client removed:" << clientId;
 
@@ -77,19 +87,7 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
 Result<int> RemoveClientCommandHandler::restoreImpl()
 {
-
-    // Add the client to the repository
-    auto clientResult = m_repository->add(std::move(m_oldState));
-
-    QLN_RETURN_IF_ERROR(int, clientResult)
-
-    auto clientDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());
-
-    emit clientCreated(clientDTO);
-    qDebug() << "Client added:" << clientDTO.id();
-
-    // Return the UUID of the newly created client as a Result object
+    // no restore possible
     return Result<int>(0);
 }
 

@@ -6,10 +6,11 @@ import stringcase
 import shutil
 import uncrustify
 from pathlib import Path
+import copy
+import clang_format
 
 
-
-def get_generation_dict(
+def _get_generation_dict(
     folder_path: str,
     application_name: str,
     application_cpp_domain_name: str,
@@ -19,33 +20,275 @@ def get_generation_dict(
     list_models_list: list,
     export: str,
     export_header_file: str,
+    create_undo_and_redo_singles: bool,
 ) -> dict:
+    def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
+        if entity_name == "EntityBase":
+            return [
+                {"name": "id", "type": "int", "pascal_name": "Id", "is_foreign": False}
+            ]
+
+        entity_data = entities_by_name[entity_name]
+        fields = entity_data["fields"]
+        return fields
+
+    def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
+        for entity_name in entities_by_name:
+            if entity_name == field_type:
+                return True
+
+        return False
+
+    def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
+        if "<" not in field_type:
+            return False
+
+        type = field_type.split("<")[1].split(">")[0].strip()
+
+        for entity_name in entities_by_name:
+            if entity_name == type:
+                return True
+
+        return False
+
+    def get_fields_without_foreign_entities(
+        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
+    ) -> list:
+        # make a deep copy of the fields
+        fields = copy.deepcopy(fields)
+
+        # get recursive fields from parent
+
+        parent_fields = []
+        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
+
+        while entity_parent:
+            parent_fields = (
+                get_entity_fields(entity_parent, entities_by_name) + parent_fields
+            )
+            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
+
+        fields = parent_fields + fields
+
+        # add fields without foreign entities
+        fields_without_foreign = []
+        for field in fields:
+            field["name_pascal"] = stringcase.pascalcase(field["name"])
+            field["name_snake"] = stringcase.snakecase(field["name"])
+            field["name_spinal"] = stringcase.spinalcase(field["name"])
+            field["name_camel"] = stringcase.camelcase(field["name"])
+
+            if is_unique_foreign_entity(
+                field["type"], entities_by_name
+            ) or is_list_foreign_entity(field["type"], entities_by_name):
+                continue
+
+            else:
+                field["is_foreign"] = False
+                fields_without_foreign.append(field)
+
+        return fields_without_foreign
+
     generation_dict = {}
-    for feature_name, feature in feature_by_name.items():
-        feature_snake_name = stringcase.snakecase(feature_name)
-        feature_pascal_name = stringcase.pascalcase(feature_name)
-        feature_spinal_name = stringcase.spinalcase(feature_name)
-        feature_camel_name = stringcase.camelcase(feature_name)
-        generation_dict[feature_pascal_name] = {
-            "feature_snake_name": feature_snake_name,
-            "feature_pascal_name": feature_pascal_name,
-            "feature_spinal_name": feature_spinal_name,
-            "feature_camel_name": feature_camel_name,
-        }
-        # add export_header
-        export_header = f"application_{feature_snake_name}_export.h"
-        generation_dict[feature_pascal_name]["export_header"] = export_header
-        generation_dict[feature_pascal_name]["export_header_file"] = os.path.join(
-            common_cmake_folder_patholder_path,
-            feature_snake_name + "_feature",
-            export_header,
+
+    generation_dict["folder_path"] = folder_path
+    generation_dict["application_name"] = application_name
+    generation_dict["application_spinalcase_name"] = stringcase.spinalcase(
+        application_name
+    )
+    generation_dict["application_uppercase_name"] = application_name.upper()
+    generation_dict["application_cpp_domain_name"] = application_cpp_domain_name
+    generation_dict["export_header_file"] = export_header_file
+    generation_dict["export"] = export
+
+    generation_dict["all_presenter_files"] = []
+    generation_dict["singles_list"] = []
+
+    for single in singles_list:
+        entity_name = single["entity"]
+        entity_name_snake = stringcase.snakecase(entity_name)
+        entity_name_pascal = stringcase.pascalcase(entity_name)
+        entity_name_spinal = stringcase.spinalcase(entity_name)
+        entity_name_camel = stringcase.camelcase(entity_name)
+
+        class_name = single["name"]
+        if class_name == "auto":
+            class_name = "Single" + entity_name_pascal
+
+        class_name_snake = stringcase.snakecase(class_name)
+        class_name_pascal = stringcase.pascalcase(class_name)
+        class_name_spinal = stringcase.spinalcase(class_name)
+        class_name_camel = stringcase.camelcase(class_name)
+
+        generation_dict["singles_list"].append(
+            {
+                "entity_name_snake": entity_name_snake,
+                "entity_name_pascal": entity_name_pascal,
+                "entity_name_spinal": entity_name_spinal,
+                "entity_name_camel": entity_name_camel,
+                "class_name_snake": class_name_snake,
+                "class_name_pascal": class_name_pascal,
+                "class_name_spinal": class_name_spinal,
+                "class_name_camel": class_name_camel,
+                "fields": get_fields_without_foreign_entities(
+                    entities_by_name[single["entity"]]["fields"],
+                    entities_by_name,
+                    single["entity"],
+                ),
+            }
         )
-        generation_dict[feature_pascal_name][
-            "export"
-        ] = f"{stringcase.uppercase(application_name)}_APPLICATION_{stringcase.uppercase(feature_snake_name)}_EXPORT"
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                f"{class_name_snake}.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                f"{class_name_snake}.cpp",
+            )
+        )
+
+    # list models
+
+    generation_dict["list_models"] = []
+
+    for model in list_models_list:
+        entity_name = model["entity"]
+        entity_name_snake = stringcase.snakecase(entity_name)
+        entity_name_pascal = stringcase.pascalcase(entity_name)
+        entity_name_spinal = stringcase.spinalcase(entity_name)
+        entity_name_camel = stringcase.camelcase(entity_name)
+
+        # displayed_field
+        displayed_field = model.get("displayed_field", "id")
+        displayed_field_snake = stringcase.snakecase(displayed_field)
+        displayed_field_pascal = stringcase.pascalcase(displayed_field)
+        displayed_field_spinal = stringcase.spinalcase(displayed_field)
+        displayed_field_camel = stringcase.camelcase(displayed_field)
+
+        related_name = model.get("in_relation_of", "")
+        related_name_snake = stringcase.snakecase(related_name)
+        related_name_pascal = stringcase.pascalcase(related_name)
+        related_name_spinal = stringcase.spinalcase(related_name)
+        related_name_camel = stringcase.camelcase(related_name)
+
+        related_field_name = model.get("relation_field_name", "")
+        related_field_name_snake = stringcase.snakecase(related_field_name)
+        related_field_name_pascal = stringcase.pascalcase(related_field_name)
+        related_field_name_spinal = stringcase.spinalcase(related_field_name)
+        related_field_name_camel = stringcase.camelcase(related_field_name)
+
+        is_related_list = related_name != "" and related_field_name != ""
+
+        related_fields = (
+            get_entity_fields(related_name, entities_by_name) if is_related_list else []
+        )
+        is_ordered_list = False
+        for field in related_fields:
+            if field["name"] == related_field_name:
+                is_ordered_list = field.get("ordered", False)
+                break
+
+        class_name = model["name"]
+        if class_name == "auto":
+            if is_related_list:
+                class_name = (
+                    entity_name_pascal
+                    + "ListModelFrom"
+                    + related_name_pascal
+                    + related_field_name_pascal
+                )
+            else:
+                class_name = entity_name_pascal + "ListModel"
+
+        class_name_snake = stringcase.snakecase(class_name)
+        class_name_pascal = stringcase.pascalcase(class_name)
+        class_name_spinal = stringcase.spinalcase(class_name)
+        class_name_camel = stringcase.camelcase(class_name)
+
+        generation_dict["list_models"].append(
+            {
+                "entity_name_snake": entity_name_snake,
+                "entity_name_pascal": entity_name_pascal,
+                "entity_name_spinal": entity_name_spinal,
+                "entity_name_camel": entity_name_camel,
+                "displayed_field_snake": displayed_field_snake,
+                "displayed_field_pascal": displayed_field_pascal,
+                "displayed_field_spinal": displayed_field_spinal,
+                "displayed_field_camel": displayed_field_camel,
+                "related_name_snake": related_name_snake,
+                "related_name_pascal": related_name_pascal,
+                "related_name_spinal": related_name_spinal,
+                "related_name_camel": related_name_camel,
+                "related_field_name_snake": related_field_name_snake,
+                "related_field_name_pascal": related_field_name_pascal,
+                "related_field_name_spinal": related_field_name_spinal,
+                "related_field_name_camel": related_field_name_camel,
+                "class_name_snake": class_name_snake,
+                "class_name_pascal": class_name_pascal,
+                "class_name_spinal": class_name_spinal,
+                "class_name_camel": class_name_camel,
+                "fields": get_fields_without_foreign_entities(
+                    entities_by_name[model["entity"]]["fields"],
+                    entities_by_name,
+                    model["entity"],
+                ),
+                "is_ordered_list": is_ordered_list,
+                "is_related_list": is_related_list,
+            }
+        )
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                f"{class_name_snake}.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                f"{class_name_snake}.cpp",
+            )
+        )
+
+    # add undo redo
+    generation_dict["create_undo_and_redo_singles"] = create_undo_and_redo_singles
+    if create_undo_and_redo_singles:
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_undo.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_undo.cpp",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_redo.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_redo.cpp",
+            )
+        )
+
+    return generation_dict
 
 
-def generate_cmakelists(
+def _generate_cmakelists(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -63,19 +306,19 @@ def generate_cmakelists(
         with open(cmakelists_file, "w") as f:
             f.write(
                 template.render(
-                    export_header_file=generation_dict["export_header"],
+                    export_header_file=generation_dict["export_header_file"],
                     application_spinalcase_name=generation_dict[
                         "application_spinalcase_name"
                     ],
                     application_uppercase_name=generation_dict[
                         "application_uppercase_name"
                     ],
-                    features=generation_dict["features"],
                 )
             )
             print(f"Successfully wrote file {cmakelists_file}")
 
-def generate_cmake_file(
+
+def _generate_cmake_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -107,6 +350,228 @@ def generate_cmake_file(
         with open(cmake_file, "w") as fh:
             fh.write(rendered_template)
             print(f"Successfully wrote file {cmake_file}")
+
+
+def _generate_single_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    h_template = template_env.get_template("single.h.jinja2")
+    cpp_template = template_env.get_template("single.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+    singles_list = generation_dict["singles_list"]
+
+    for single in singles_list:
+        h_relative_single_file = os.path.join(
+            folder_path, f"{single['class_name_snake']}.h"
+        )
+        h_single_file = os.path.join(root_path, h_relative_single_file)
+
+        if files_to_be_generated.get(h_relative_single_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(h_single_file), exist_ok=True)
+
+            with open(h_single_file, "w") as f:
+                f.write(
+                    h_template.render(
+                        single=single,
+                        application_cpp_domain_name=generation_dict[
+                            "application_cpp_domain_name"
+                        ],
+                        export_header_file=generation_dict["export_header_file"],
+                        export=generation_dict["export"],
+                    )
+                )
+                print(f"Successfully wrote file {h_single_file}")
+
+        cpp_relative_single_file = os.path.join(
+            folder_path, f"{single['class_name_snake']}.cpp"
+        )
+        cpp_single_file = os.path.join(root_path, cpp_relative_single_file)
+
+        if files_to_be_generated.get(cpp_relative_single_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(cpp_single_file), exist_ok=True)
+
+            with open(cpp_single_file, "w") as f:
+                f.write(
+                    cpp_template.render(
+                        single=single,
+                        application_cpp_domain_name=generation_dict[
+                            "application_cpp_domain_name"
+                        ],
+                    )
+                )
+                print(f"Successfully wrote file {cpp_single_file}")
+
+
+def _generate_undo_single_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    h_template = template_env.get_template("single_undo.h.jinja2")
+    cpp_template = template_env.get_template("single_undo.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    h_relative_single_file = os.path.join(folder_path, "single_undo.h")
+    h_single_file = os.path.join(root_path, h_relative_single_file)
+
+    if files_to_be_generated.get(h_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(h_single_file), exist_ok=True)
+
+        with open(h_single_file, "w") as f:
+            f.write(
+                h_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                    export_header_file=generation_dict["export_header_file"],
+                    export=generation_dict["export"],
+                )
+            )
+            print(f"Successfully wrote file {h_single_file}")
+
+    cpp_relative_single_file = os.path.join(folder_path, "single_undo.cpp")
+    cpp_single_file = os.path.join(root_path, cpp_relative_single_file)
+
+    if files_to_be_generated.get(cpp_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cpp_single_file), exist_ok=True)
+
+        with open(cpp_single_file, "w") as f:
+            f.write(
+                cpp_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {cpp_single_file}")
+
+
+def _generate_redo_single_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    h_template = template_env.get_template("single_redo.h.jinja2")
+    cpp_template = template_env.get_template("single_redo.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    h_relative_single_file = os.path.join(folder_path, "single_redo.h")
+    h_single_file = os.path.join(root_path, h_relative_single_file)
+
+    if files_to_be_generated.get(h_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(h_single_file), exist_ok=True)
+
+        with open(h_single_file, "w") as f:
+            f.write(
+                h_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                    export_header_file=generation_dict["export_header_file"],
+                    export=generation_dict["export"],
+                )
+            )
+            print(f"Successfully wrote file {h_single_file}")
+
+    cpp_relative_single_file = os.path.join(folder_path, "single_redo.cpp")
+    cpp_single_file = os.path.join(root_path, cpp_relative_single_file)
+
+    if files_to_be_generated.get(cpp_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cpp_single_file), exist_ok=True)
+
+        with open(cpp_single_file, "w") as f:
+            f.write(
+                cpp_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {cpp_single_file}")
+
+
+def _generate_list_model_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    not_ordered_h_template = template_env.get_template("list_model.h.jinja2")
+    not_ordered_cpp_template = template_env.get_template("list_model.cpp.jinja2")
+    ordered_h_template = template_env.get_template("ordered_list_model.h.jinja2")
+    ordered_cpp_template = template_env.get_template("ordered_list_model.cpp.jinja2")
+    not_related_h_template = template_env.get_template("entity_list_model.h.jinja2")
+    not_related_cpp_template = template_env.get_template("entity_list_model.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+    list_models = generation_dict["list_models"]
+
+    for list_model in list_models:
+        h_template = (
+            ordered_h_template
+            if list_model["is_ordered_list"]
+            else not_ordered_h_template
+        )
+        cpp_template = (
+            ordered_cpp_template
+            if list_model["is_ordered_list"]
+            else not_ordered_cpp_template
+        )
+
+        h_template = (
+            h_template if list_model["is_related_list"] else not_related_h_template
+        )
+        cpp_template = (
+            cpp_template if list_model["is_related_list"] else not_related_cpp_template
+        )
+
+        h_relative_list_model_file = os.path.join(
+            folder_path, f"{list_model['class_name_snake']}.h"
+        )
+        h_list_model_file = os.path.join(root_path, h_relative_list_model_file)
+
+        if files_to_be_generated.get(h_relative_list_model_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(h_list_model_file), exist_ok=True)
+
+            with open(h_list_model_file, "w") as f:
+                f.write(
+                    h_template.render(
+                        model=list_model,
+                        application_cpp_domain_name=generation_dict[
+                            "application_cpp_domain_name"
+                        ],
+                        export_header_file=generation_dict["export_header_file"],
+                        export=generation_dict["export"],
+                    )
+                )
+                print(f"Successfully wrote file {h_list_model_file}")
+
+        cpp_relative_list_model_file = os.path.join(
+            folder_path, f"{list_model['class_name_snake']}.cpp"
+        )
+        cpp_list_model_file = os.path.join(root_path, cpp_relative_list_model_file)
+
+        if files_to_be_generated.get(cpp_relative_list_model_file, False):
+            # Create the directory if it does not exist
+            os.makedirs(os.path.dirname(cpp_list_model_file), exist_ok=True)
+
+            with open(cpp_list_model_file, "w") as f:
+                f.write(
+                    cpp_template.render(
+                        model=list_model,
+                        application_cpp_domain_name=generation_dict[
+                            "application_cpp_domain_name"
+                        ],
+                    )
+                )
+                print(f"Successfully wrote file {cpp_list_model_file}")
 
 
 def generate_presenter_files(
@@ -144,16 +609,19 @@ def generate_presenter_files(
 
     # Organize entities by name for easier lookup
     entities_by_name = {entity["name"]: entity for entity in entities_list}
-    
+
     presenter_data = manifest_data.get("presenter", {})
     singles_presenter_list = presenter_data.get("singles", [])
     list_models_list = presenter_data.get("list_models", [])
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
 
     folder_path = presenter_data.get("folder_path", "Undefined")
     export = presenter_data.get("export", "Undefined")
     export_header_file = presenter_data.get("export_header_file", "Undefined")
 
-    generation_dict = get_generation_dict(
+    generation_dict = _get_generation_dict(
         folder_path,
         application_name,
         application_cpp_domain_name,
@@ -163,7 +631,27 @@ def generate_presenter_files(
         list_models_list,
         export,
         export_header_file,
+        create_undo_and_redo_singles,
     )
+
+    _generate_single_file(root_path, generation_dict, files_to_be_generated)
+    _generate_list_model_file(root_path, generation_dict, files_to_be_generated)
+    if create_undo_and_redo_singles:
+        _generate_undo_single_files(
+            root_path, generation_dict, files_to_be_generated
+        )
+        _generate_redo_single_files(
+            root_path, generation_dict, files_to_be_generated
+        )
+    _generate_cmake_file(root_path, generation_dict, files_to_be_generated)
+    _generate_cmakelists(root_path, generation_dict, files_to_be_generated)
+
+    # format the files
+    for file, to_be_generated in files_to_be_generated.items():
+        # if uncrustify_config_file and files_to_be_generated.get(file, False):
+        #     uncrustify.run_uncrustify(file, uncrustify_config_file)
+        if to_be_generated and file.endswith(".h") or file.endswith(".cpp"):
+            clang_format.run_clang_format(os.path.join(root_path, file))
 
 
 def get_files_to_be_generated(
@@ -174,34 +662,79 @@ def get_files_to_be_generated(
     """
     Get the list of files that need to be generated based on the manifest file
     """
-    # Read the manifest file
-    with open(manifest_file, "r") as fh:
-        manifest = yaml.safe_load(fh)
+    with open(manifest_file, "r") as stream:
+        try:
+            manifest_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return
 
-    folder_path = manifest["presenter"]["folder_path"]
+    application_name = manifest_data.get("global", {}).get(
+        "application_name", "example"
+    )
 
-    # Get the list of files to be generated
+    application_data = manifest_data.get("application", [])
+    feature_list = application_data.get("features", [])
+
+    # Organize feature_list by name for easier lookup
+    feature_by_name = {feature["name"]: feature for feature in feature_list}
+
+    global_data = manifest_data.get("global", [])
+    application_cpp_domain_name = global_data.get(
+        "application_cpp_domain_name", "Undefined"
+    )
+
+    entities_data = manifest_data.get("entities", [])
+    entities_list = entities_data.get("list", [])
+    # remove entities that are not to be generated
+    entities_list = [entity for entity in entities_list]
+
+    # Organize entities by name for easier lookup
+    entities_by_name = {entity["name"]: entity for entity in entities_list}
+
+    presenter_data = manifest_data.get("presenter", {})
+    singles_presenter_list = presenter_data.get("singles", [])
+    list_models_list = presenter_data.get("list_models", [])
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
+
+    folder_path = presenter_data.get("folder_path", "Undefined")
+    export = presenter_data.get("export", "Undefined")
+    export_header_file = presenter_data.get("export_header_file", "Undefined")
+
+    generation_dict = _get_generation_dict(
+        folder_path,
+        application_name,
+        application_cpp_domain_name,
+        feature_by_name,
+        entities_by_name,
+        singles_presenter_list,
+        list_models_list,
+        export,
+        export_header_file,
+        create_undo_and_redo_singles,
+    )
+
     files = []
-    for presenter in manifest["presenter"]["list"]:
-        presenter_name = presenter["name"]
-        files.append(
-            os.path.join(
-                folder_path,
-                f"{stringcase.snakecase(presenter_name)}_presenter.h",
-            )
-        )
-        files.append(
-            os.path.join(
-                folder_path,
-                f"{stringcase.snakecase(presenter_name)}_presenter.cpp",
-            )
-        )
+
+    # add presenter files:
+    for presenter_file in generation_dict["all_presenter_files"]:
+        files.append(presenter_file)
 
     # add list_file:
     files.append(
         os.path.join(
             folder_path,
             "presenters.cmake",
+        )
+    )
+
+    # add CMakeLists.txt
+    files.append(
+        os.path.join(
+            folder_path,
+            "CMakeLists.txt",
         )
     )
 
@@ -231,10 +764,10 @@ def preview_presenter_files(
         manifest = yaml.safe_load(fh)
 
     # remove .. from the path and add preview before the folder name
-    manifest["presenter"]["folder_path"] = manifest["presenter"][
-        "folder_path"
-    ].replace("..", "")
-    
+    manifest["presenter"]["folder_path"] = manifest["presenter"]["folder_path"].replace(
+        "..", ""
+    )
+
     # write the modified manifest file
     with open(manifest_preview_file, "w") as fh:
         yaml.dump(manifest, fh)

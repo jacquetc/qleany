@@ -1,26 +1,21 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-
-
 #include "repository/interface_car_repository.h"
 
-#include "common/result.h"
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 
 using namespace Simple::Contracts::Repository;
-
-
 
 namespace Simple::Contracts::CQRS::Car::Validators
 {
 class RemoveCarCommandValidator
 {
   public:
-    RemoveCarCommandValidator(InterfaceCarRepository *carRepository)
-        :  m_carRepository(carRepository)
+    RemoveCarCommandValidator(InterfaceCarRepository *carRepository) : m_carRepository(carRepository)
     {
     }
 
@@ -28,26 +23,18 @@ class RemoveCarCommandValidator
 
     {
 
-
-
-
         Result<bool> existsResult = m_carRepository->exists(id);
 
         if (!existsResult.value())
         {
-            return Result<void>(Error(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_not_found"));
         }
-
-
-
 
         // Return that is Ok :
         return Result<void>();
     }
 
   private:
-
     InterfaceCarRepository *m_carRepository;
-
 };
 } // namespace Simple::Contracts::CQRS::Car::Validators

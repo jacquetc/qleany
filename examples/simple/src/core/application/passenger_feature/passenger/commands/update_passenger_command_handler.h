@@ -6,9 +6,9 @@
 #include "passenger/commands/update_passenger_command.h"
 #include "passenger/passenger_dto.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT UpdatePassengerCommandHandler :
     Result<PassengerDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdatePassengerCommand &request);
     Result<PassengerDTO> restoreImpl();
     Result<PassengerDTO> saveOldState();
-    Result<PassengerDTO> m_newState;
+    Result<PassengerDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

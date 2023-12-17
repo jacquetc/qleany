@@ -79,9 +79,19 @@ class BrandDTO
     {
     }
 
-    bool isValid()
+    Q_INVOKABLE bool isValid() const
     {
         return m_id > 0;
+    }
+
+    Q_INVOKABLE bool isNull() const
+    {
+        return !isValid();
+    }
+
+    Q_INVOKABLE bool isInvalid() const
+    {
+        return !isValid();
     }
 
     BrandDTO &operator=(const BrandDTO &other)
@@ -96,6 +106,59 @@ class BrandDTO
             m_name = other.m_name;
         }
         return *this;
+    }
+
+    BrandDTO &operator=(const BrandDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_name = other.m_name;
+        }
+        return *this;
+    }
+
+    BrandDTO &mergeWith(const BrandDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.nameSet)
+            {
+                m_name = other.m_name;
+                m_metaData.nameSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    BrandDTO &operator<<(const BrandDTO &other)
+    {
+        return mergeWith(other);
     }
 
     friend bool operator==(const BrandDTO &lhs, const BrandDTO &rhs);

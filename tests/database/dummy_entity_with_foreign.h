@@ -2,12 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "dummy_other_entity.h"
-#include <QString>
-
-#include "qleany/domain/entity_schema.h"
 #include "dummy_entity.h"
+#include "dummy_other_entity.h"
 #include "entities.h"
+#include "qleany/domain/entity_schema.h"
+#include <QString>
 
 using namespace Qleany::Domain;
 

@@ -10,30 +10,35 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
 {{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QAbstractListModel(parent)
 {
 
-    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::detailsUpdated, this, [this](int {{ model.related_name_camel }}Id) {
+    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::allRelationsInvalidated, this, [this](int {{ model.related_name_camel }}Id) {
         if ({{ model.related_name_camel }}Id == m_{{ model.related_name_camel }}Id)
         {
             return;
         }
-        auto task = {{ model.entity_name_pascal }}::Controller::{{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails({{ model.related_name_camel }}Id);
+        auto task = {{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails({{ model.related_name_camel }}Id);
         QCoro::connect(std::move(task), this, [this, {{ model.related_name_camel }}Id](auto &&{{ model.related_name_camel }}Details) {
-            if (!{{ model.related_name_camel }}Details.isValid())
+            if ({{ model.related_name_camel }}Details.isInvalid())
             {
+                qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}Id";
                 return;
             }
             QList<{{ model.entity_name_pascal }}DTO> new{{ model.entity_name_pascal }}List = {{ model.related_name_camel }}Details.{{ model.related_field_name_camel }}();
-
-            // first, add the missing {{ model.related_field_name_camel }}
-
-            // we have new {{ model.related_field_name_camel }}
+            QList<int> new{{ model.entity_name_pascal }}IdList;
             for (const auto &{{ model.entity_name_camel }} : new{{ model.entity_name_pascal }}List)
             {
-                if (!m_{{ model.entity_name_camel }}List.contains({{ model.entity_name_camel }}))
+                new{{ model.entity_name_pascal }}IdList.append({{ model.entity_name_camel }}.id());
+            }
+
+            // first, add the missing {{ model.related_field_name_camel }}
+            for (const auto &{{ model.entity_name_camel }} : new{{ model.entity_name_pascal }}List)
+            {
+                if (!m_{{ model.entity_name_camel }}IdList.contains({{ model.entity_name_camel }}.id()))
                 {
                     // add the {{ model.entity_name_camel }}
                     int row = m_{{ model.entity_name_camel }}List.size();
                     beginInsertRows(QModelIndex(), row, row);
                     m_{{ model.entity_name_camel }}List.append({{ model.entity_name_camel }});
+                    m_{{ model.entity_name_camel }}IdList.append({{ model.entity_name_camel }}.id());
                     endInsertRows();
                 }
             }
@@ -42,11 +47,12 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
 
             for (int i = m_{{ model.entity_name_camel }}List.size() - 1; i >= 0; --i)
             {
-                if (!new{{ model.entity_name_pascal }}List.contains(m_{{ model.entity_name_camel }}List[i]))
+                if (!new{{ model.entity_name_pascal }}IdList.contains(m_{{ model.entity_name_camel }}List[i].id()))
                 {
                     // remove the {{ model.entity_name_camel }}
                     beginRemoveRows(QModelIndex(), i, i);
                     m_{{ model.entity_name_camel }}List.removeAt(i);
+                    m_{{ model.entity_name_camel }}IdList.removeAt(i);
                     endRemoveRows();
                 }
             }
@@ -54,12 +60,13 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
 
             for (int i = 0; i < m_{{ model.entity_name_camel }}List.size(); ++i)
             {
-                if (m_{{ model.entity_name_camel }}List[i] != new{{ model.entity_name_pascal }}List[i])
+                if (m_{{ model.entity_name_camel }}IdList[i] != new{{ model.entity_name_pascal }}List[i].id())
                 {
                     // move the {{ model.entity_name_camel }}
                     int row = new{{ model.entity_name_pascal }}List.indexOf(m_{{ model.entity_name_camel }}List[i]);
                     beginMoveRows(QModelIndex(), i, i, QModelIndex(), row);
                     m_{{ model.entity_name_camel }}List.move(i, row);
+                    m_{{ model.entity_name_camel }}IdList.move(i, row);
                     endMoveRows();
                 }
             }
@@ -82,51 +89,73 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
         });
     });
 
-    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::removed, this, [this](QList<int> dtoList) {
-        for (int dtoId : dtoList)
+    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::relationRemoved, this, 
+            [this]({{ model.related_name_pascal }}RelationDTO dto) {
+
+        if (dto.relationField() != {{ model.related_name_pascal }}RelationDTO::RelationField::{{ model.related_field_name_pascal }})
         {
-            int position = m_{{ model.entity_name_camel }}Ids.indexOf(dtoId);
-            if (position != -1)
+            return;
+        }
+                     
+        // remove the {{ model.entity_name_camel }} list
+        QList<int> relatedIds = dto.relatedIds();
+
+        for (int id : relatedIds)
+        {
+            if(!m_{{ model.entity_name_camel }}IdList.contains(id))
             {
-                beginRemoveRows(QModelIndex(), position, position);
-                m_{{ model.entity_name_camel }}List.removeAt(position);
-                m_{{ model.entity_name_camel }}Ids.removeAt(position);
+                continue;
+            }
+
+            int index = m_{{ model.entity_name_camel }}IdList.indexOf(id);
+            if (index != -1)
+            {
+                beginRemoveRows(QModelIndex(), index, index);
+                m_{{ model.entity_name_camel }}List.removeAt(index);
+                m_{{ model.entity_name_camel }}IdList.removeAt(index);
                 endRemoveRows();
             }
         }
     });
 
-    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::insertedInto{{ model.related_name_pascal }}{{ model.entity_name_pascal }}s, this,
-            [this]({{ model.entity_name_pascal }}InsertedIntoRelativeDTO dto) {
-                // remove {{ model.entity_name_camel }} from this model if dto.{{ model.entity_name_camel }}().id() is here
-                // add {{ model.entity_name_camel }} to this model if dto.relatedId() is here
-
-                int {{ model.entity_name_camel }}Id = dto.{{ model.entity_name_camel }}().id();
-                if (m_{{ model.entity_name_camel }}Ids.contains({{ model.entity_name_camel }}Id) && m_{{ model.related_name_camel }}Id != dto.relatedId())
+    connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::relationInserted, this,
+            [this]({{ model.related_name_pascal }}RelationDTO dto) {
+                if (dto.id() != m_{{ model.related_name_camel }}Id || dto.relationField() != {{ model.related_name_pascal }}RelationDTO::RelationField::{{ model.related_field_name_pascal }})
                 {
-                    int position = m_{{ model.entity_name_camel }}Ids.indexOf({{ model.entity_name_camel }}Id);
-                    beginRemoveRows(QModelIndex(), position, position);
-                    m_{{ model.entity_name_camel }}List.removeAt(position);
-                    m_{{ model.entity_name_camel }}Ids.removeAt(position);
-                    endRemoveRows();
+                    return;
                 }
-                else if (!m_{{ model.entity_name_camel }}Ids.contains({{ model.entity_name_camel }}Id) && m_{{ model.related_name_camel }}Id == dto.relatedId())
+                        
+                int position = dto.position();
+
+                // reverse dto.relatedIds()
+                QList<int> relatedIds = dto.relatedIds();
+                std::reverse(relatedIds.begin(), relatedIds.end());
+
+                // fetch {{ model.entity_name_camel }} list from controller
+                for (int {{ model.entity_name_camel }}Id : relatedIds)
                 {
-                    int position = dto.position();
-                    beginInsertRows(QModelIndex(), position, position);
-                    m_{{ model.entity_name_camel }}List.insert(position, dto.{{ model.entity_name_camel }}());
-                    m_{{ model.entity_name_camel }}Ids.insert(position, {{ model.entity_name_camel }}Id);
-                    endInsertRows();
+                    {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()
+                        ->get({{ model.entity_name_camel }}Id)
+                        .then([this, {{ model.entity_name_camel }}Id, position]({{ model.entity_name_pascal }}DTO {{ model.entity_name_camel }}) {
+                            // add {{ model.entity_name_camel }} to this model
+                            if (!m_{{ model.entity_name_camel }}IdList.contains({{ model.entity_name_camel }}Id))
+                            {
+                                beginInsertRows(QModelIndex(), position, position);
+                                m_{{ model.entity_name_camel }}List.insert(position, {{ model.entity_name_camel }});
+                                m_{{ model.entity_name_camel }}IdList.insert(position, {{ model.entity_name_camel }}Id);
+                                endInsertRows();
+                            }
+                        });
                 }
             });
 
     connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::updated, this, [this]({{ model.entity_name_pascal }}DTO dto) {
         for (int i = 0; i < m_{{ model.entity_name_camel }}List.size(); ++i)
         {
-            if (m_{{ model.entity_name_camel }}List.at(i).id() == dto.id())
+            if (m_{{ model.entity_name_camel }}IdList.at(i) == dto.id())
             {
                 m_{{ model.entity_name_camel }}List[i] = dto;
-                m_{{ model.entity_name_camel }}Ids[i] = dto.id();
+                m_{{ model.entity_name_camel }}IdList[i] = dto.id();
                 emit dataChanged(index(i), index(i));
                 break;
             }
@@ -158,15 +187,19 @@ QVariant {{ model.class_name_pascal }}::data(const QModelIndex &index, int role)
     if (row >= m_{{ model.entity_name_camel }}List.size())
         return QVariant();
 
-    if (role == Qt::DisplayRole)
-    {
-        return m_{{ model.entity_name_camel }}List.at(row).name();
-    }
+    const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List.at(index.row());
 
-    if (role == Id)
-        return m_{{ model.entity_name_camel }}List.at(row).id();
-    if (role == Name)
-        return m_{{ model.entity_name_camel }}List.at(row).name();
+    if (role == Qt::DisplayRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
+    if (role == Qt::EditRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
+    
+    {% for field in model.fields %}
+    else if (role == {{ field.name_pascal }}Role)
+        return {{ model.entity_name_camel }}.{{ field.name_camel }}();
+    {%- endfor %}      
 
     return QVariant();
 }
@@ -187,20 +220,40 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
     int row = index.row();
     if (row >= m_{{ model.entity_name_camel }}List.size())
         return false;
-
-    if (role == Qt::EditRole)
+        
+    else if (role == Qt::EditRole)
     {
-        m_{{ model.entity_name_camel }}List[row].setName(value.toString());
+        return this->setData(index, value, {{ model.displayed_field_pascal }}Role);    
+    }
+
+    {% for field in model.fields %}
+    else if (role == {{ field.name_pascal }}Role)
+    {
+        if(value.canConvert<{{ field.type }}>() == false){
+            qCritical() << "Cannot convert value to {{ field.type }}";
+            return false;
+        }
+
+        const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List[row];
 
         Update{{ model.entity_name_pascal }}DTO dto;
-        dto.setId(m_{{ model.entity_name_camel }}List[row].id());
-        dto.setName(m_{{ model.entity_name_camel }}List[row].name());
+        dto.setId({{ model.entity_name_camel }}.id());
+        dto.set{{ field.name_pascal }}(value.value<{{ field.type }}>());
 
-        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto);
+        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto)
+            .then([this, index, role](auto &&result) {
 
-        emit dataChanged(index, index, {role});
+                if(result.isInvalid()){
+                    qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
+                    return false;
+                }
+                emit dataChanged(index, index, {role});
+                return true;
+            });
+                                
         return true;
     }
+    {%- endfor %}      
 
     return false;
 }
@@ -209,18 +262,27 @@ void {{ model.class_name_pascal }}::populate()
 {
     if (m_{{ model.related_name_camel }}Id == 0)
         return;
+    beginResetModel();
     m_{{ model.entity_name_camel }}List.clear();
-    m_{{ model.entity_name_camel }}Ids.clear();
+    m_{{ model.entity_name_camel }}IdList.clear();
+    endResetModel();
 
     auto task = {{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails(m_{{ model.related_name_camel }}Id);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
-        const QList<{{ model.class_name_pascal }}::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO> {{ model.entity_name_camel }}List = result.{{ model.entity_name_camel }}List();
-        beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
-        m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;
-        // fill m_{{ model.entity_name_camel }}Ids
+        const QList<{{ application_cpp_domain_name }}::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO> {{ model.entity_name_camel }}List = result.{{ model.related_field_name_camel }}();
         for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)
         {
-            m_{{ model.entity_name_camel }}Ids.append({{ model.entity_name_camel }}.id());
+            if({{ model.entity_name_camel }}.isInvalid()){
+                qCritical() << Q_FUNC_INFO << "Invalid {{ model.entity_name_camel }}";
+                return;
+            }
+        }
+        beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
+        m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;
+        // fill m_{{ model.entity_name_camel }}IdList
+        for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)
+        {
+            m_{{ model.entity_name_camel }}IdList.append({{ model.entity_name_camel }}.id());
         }
 
         endInsertRows();
@@ -242,7 +304,7 @@ void {{ model.class_name_pascal }}::set{{ model.related_name_pascal }}Id(int new
     {
         beginResetModel();
         m_{{ model.entity_name_camel }}List.clear();
-        m_{{ model.entity_name_camel }}Ids.clear();
+        m_{{ model.entity_name_camel }}IdList.clear();
         endResetModel();
     }
     else
@@ -260,7 +322,13 @@ void {{ model.class_name_pascal }}::reset{{ model.related_name_pascal }}Id()
 QHash<int, QByteArray> {{ model.class_name_pascal }}::roleNames() const
 {
     QHash<int, QByteArray> names;
-    names[Id] = "itemId";
-    names[Name] = "name";
+    {% for field in model.fields %}
+        {%- if field.name_pascal == "Id" %}
+        // renaming id to itemId to avoid conflict with QML's id
+    names[{{ field.name_pascal }}Role] = "itemId";
+        {%- else %}
+    names[{{ field.name_pascal }}Role] = "{{ field.name_camel }}";
+        {%- endif %}
+    {%- endfor %}
     return names;
 }

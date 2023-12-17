@@ -2,12 +2,16 @@
 
 using namespace {{ application_cpp_domain_name }}::Controller;
 
-EventDispatcher *EventDispatcher::s_instance = nullptr;
+QPointer<EventDispatcher> EventDispatcher::s_instance = nullptr;
 
-EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
+EventDispatcher::EventDispatcher() : QObject{nullptr}
 {
     m_errorSignals = new ErrorSignals(this);
-{% for feature in features%}
+    m_progressSignals = new ProgressSignals(this);
+{% if undo_redo_signals %}
+    m_undoRedoSignals = new UndoRedoSignals(this);
+{% endif %}
+{% for feature in features -%}
     m_{{ feature.feature_name_camel }}Signals = new {{ feature.feature_name_pascal }}Signals(this);
 {% endfor %}
 
@@ -30,3 +34,15 @@ ErrorSignals *EventDispatcher::error() const
 {
     return m_errorSignals;
 }
+
+ProgressSignals *EventDispatcher::progress() const
+{
+    return m_progressSignals;
+}
+
+{% if undo_redo_signals %}
+UndoRedoSignals *EventDispatcher::undoRedo() const
+{
+    return m_undoRedoSignals;
+}
+{% endif %}

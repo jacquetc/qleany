@@ -104,6 +104,65 @@ class CreatePassengerDTO
         return *this;
     }
 
+    CreatePassengerDTO &operator=(const CreatePassengerDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_name = other.m_name;
+            m_carId = other.m_carId;
+            m_position = other.m_position;
+        }
+        return *this;
+    }
+
+    CreatePassengerDTO &mergeWith(const CreatePassengerDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.nameSet)
+            {
+                m_name = other.m_name;
+                m_metaData.nameSet = true;
+            }
+            if (other.m_metaData.carIdSet)
+            {
+                m_carId = other.m_carId;
+                m_metaData.carIdSet = true;
+            }
+            if (other.m_metaData.positionSet)
+            {
+                m_position = other.m_position;
+                m_metaData.positionSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    CreatePassengerDTO &operator<<(const CreatePassengerDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const CreatePassengerDTO &lhs, const CreatePassengerDTO &rhs);
 
     friend uint qHash(const CreatePassengerDTO &dto, uint seed) noexcept;

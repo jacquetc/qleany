@@ -1,0 +1,185 @@
+#include "{{ model.class_name_snake }}.h"
+#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_controller.h"
+#include "event_dispatcher.h"
+#include <QCoroTask>
+
+using namespace {{ application_cpp_domain_name }}::Controller;
+using namespace {{ application_cpp_domain_name }}::Presenter;
+
+{{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QAbstractListModel(parent)
+{
+    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::created, this, [this]({{ model.entity_name_pascal }}DTO dto) {
+        beginInsertRows(QModelIndex(), m_{{ model.entity_name_camel }}List.size(), m_{{ model.entity_name_camel }}List.size());
+        m_{{ model.entity_name_camel }}List.append(dto);
+        m_{{ model.entity_name_camel }}IdList.append(dto.id());
+        endInsertRows();
+    });
+
+    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::removed, this, [this](QList<int> ids) {
+
+        for (int i = 0; i < ids.size(); ++i)
+        {
+            for (int j = 0; j < m_{{ model.entity_name_camel }}List.size(); ++j)
+            {
+                if (m_{{ model.entity_name_camel }}List.at(j).id() == ids.at(i))
+                {
+                    beginRemoveRows(QModelIndex(), j, j);
+                    m_{{ model.entity_name_camel }}List.removeAt(j);
+                    m_{{ model.entity_name_camel }}IdList.removeAt(j);
+                    endRemoveRows();
+                    break;
+                }
+            }
+        }
+    });
+
+    connect(EventDispatcher::instance()->{{ model.entity_name_camel }}(), &{{ model.entity_name_pascal }}Signals::updated, this, [this]({{ model.entity_name_pascal }}DTO dto) {
+        for (int i = 0; i < m_{{ model.entity_name_camel }}List.size(); ++i)
+        {
+            if (m_{{ model.entity_name_camel }}List.at(i).id() == dto.id())
+            {
+                m_{{ model.entity_name_camel }}List[i] = dto;
+                m_{{ model.entity_name_camel }}IdList[i] = dto.id();
+                emit dataChanged(index(i), index(i));
+                break;
+            }
+        }
+    });
+}
+
+QVariant {{ model.class_name_pascal }}::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    return QVariant();
+}
+
+int {{ model.class_name_pascal }}::rowCount(const QModelIndex &parent) const
+{
+    // For list models only the root node (an invalid parent) should return the list's size. For all
+    // other (valid) parents, rowCount() should return 0 so that it does not become a tree model.
+    if (parent.isValid())
+        return 0;
+
+    return m_{{ model.entity_name_camel }}List.count();
+}
+
+QVariant {{ model.class_name_pascal }}::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+
+    int row = index.row();
+    if (row >= m_{{ model.entity_name_camel }}List.size())
+        return QVariant();
+
+    const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List.at(index.row());
+    
+    if (role == Qt::DisplayRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
+    if (role == Qt::EditRole){
+        return {{ model.entity_name_camel }}.{{ model.displayed_field_camel }}();
+    }
+    
+    {% for field in model.fields %}
+    else if (role == {{ field.name_pascal }}Role)
+        return {{ model.entity_name_camel }}.{{ field.name_camel }}();
+    {%- endfor %}      
+
+    return QVariant();
+}
+
+Qt::ItemFlags {{ model.class_name_pascal }}::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::NoItemFlags;
+
+    return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+}
+
+bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+
+    int row = index.row();
+    if (row >= m_{{ model.entity_name_camel }}List.size())
+        return false;
+
+    else if (role == Qt::EditRole)
+    {
+        return this->setData(index, value, {{ model.displayed_field_pascal }}Role);    
+    }
+
+    {% for field in model.fields %}
+    else if (role == {{ field.name_pascal }}Role)
+    {
+        if(value.canConvert<{{ field.type }}>() == false){
+            qCritical() << "Cannot convert value to {{ field.type }}";
+            return false;
+        }
+
+        const {{ model.entity_name_pascal }}DTO &{{ model.entity_name_camel }} = m_{{ model.entity_name_camel }}List[row];
+
+        Update{{ model.entity_name_pascal }}DTO dto;
+        dto.setId({{ model.entity_name_camel }}.id());
+        dto.set{{ field.name_pascal }}(value.value<{{ field.type }}>());
+
+        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto)
+            .then([this, index, role](auto &&result) {
+                if(result.isInvalid()){
+                    qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
+                    return false;
+                }
+                emit dataChanged(index, index, {role});
+                return true;
+            });
+                                
+        return true;
+    }
+    {%- endfor %}      
+
+    return false;
+}
+
+void {{ model.class_name_pascal }}::populate()
+{
+    beginResetModel();
+    m_{{ model.entity_name_camel }}List.clear();
+    m_{{ model.entity_name_camel }}IdList.clear();
+    endResetModel();
+
+    auto task = {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->getAll();
+    QCoro::connect(std::move(task), this, [this](auto &&result) {
+        const QList<{{ application_cpp_domain_name }}::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO> {{ model.entity_name_camel }}List = result;
+        for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)
+        {
+            if({{ model.entity_name_camel }}.isInvalid()){
+                qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
+                return;
+            }
+        }
+        beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
+        m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;
+        // fill m_{{ model.entity_name_camel }}IdList
+        for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)
+        {
+            m_{{ model.entity_name_camel }}IdList.append({{ model.entity_name_camel }}.id());
+        }
+
+        endInsertRows();
+    });
+}
+
+QHash<int, QByteArray> {{ model.class_name_pascal }}::roleNames() const
+{
+    QHash<int, QByteArray> names;
+    {% for field in model.fields %}
+        {%- if field.name_pascal == "Id" %}
+        // renaming id to itemId to avoid conflict with QML's id
+    names[{{ field.name_pascal }}Role] = "itemId";
+        {%- else %}
+    names[{{ field.name_pascal }}Role] = "{{ field.name_camel }}";
+        {%- endif %}
+    {%- endfor %}
+    return names;
+}

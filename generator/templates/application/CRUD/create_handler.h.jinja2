@@ -6,11 +6,8 @@
 #include "{{ feature_snake_name }}/{{ entity_mappable_with_snake }}_dto.h"
 #include "{{ feature_snake_name }}/commands/create_{{ entity_mappable_with_snake }}_command.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
-#include "qleany/common/result.h"
+#include <qleany/common/result.h>
 #include <QPromise>
-{% if has_owner %}
-#include "{{ feature_snake_name }}/{{ entity_mappable_with_snake }}_inserted_into_relative_dto.h"
-{% endif %}
 
 using namespace Qleany;
 using namespace {{ application_cpp_domain_name }}::Domain;
@@ -33,7 +30,8 @@ class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : publ
     void {{ entity_mappable_with_camel }}Created({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO {{ entity_mappable_with_camel }}Dto);
     void {{ entity_mappable_with_camel }}Removed(int id);
     {% if has_owner %}
-    void {{ entity_mappable_with_camel }}InsertedInto{{ owner_name_pascal }}{{ owner_field_name_pascal }}({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}InsertedIntoRelativeDTO {{ entity_mappable_with_camel }}InsertedIntoRelativeDto);
+    void relationWithOwnerInserted(int id, int ownerId, int position);
+    void relationWithOwnerRemoved(int id, int ownerId);
     {% endif %}
 
 
@@ -43,6 +41,7 @@ class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<{{ entity_mappable_with_pascal }}DTO> restoreImpl();
     Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_newEntity;
     {% if has_owner %}
+    int m_ownerId = -1;
     int m_position = -1;
         {% if owner_field_is_list %}
     QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_oldOwner{{ owner_field_name_pascal }};

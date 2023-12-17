@@ -7,7 +7,7 @@
 #include "{{ feature_snake_name }}/commands/update_{{ entity_mappable_with_snake }}_command.h"
 
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
-#include "qleany/common/result.h"
+#include <qleany/common/result.h>
 #include <QPromise>
 
 using namespace Qleany;
@@ -35,7 +35,7 @@ class {{ export }} Update{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<{{ entity_mappable_with_pascal }}DTO> handleImpl(QPromise<Result<void> >   & progressPromise, const Update{{ entity_mappable_with_pascal }}Command &request);
     Result<{{ entity_mappable_with_pascal }}DTO> restoreImpl();
     Result<{{ entity_mappable_with_pascal }}DTO> saveOldState();
-    Result<{{ entity_mappable_with_pascal }}DTO> m_newState;
+    Result<{{ entity_mappable_with_pascal }}DTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

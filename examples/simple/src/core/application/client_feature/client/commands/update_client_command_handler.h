@@ -6,9 +6,9 @@
 #include "client/client_dto.h"
 #include "client/commands/update_client_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_client_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Client;
@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : publi
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restoreImpl();
     Result<ClientDTO> saveOldState();
-    Result<ClientDTO> m_newState;
+    Result<ClientDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

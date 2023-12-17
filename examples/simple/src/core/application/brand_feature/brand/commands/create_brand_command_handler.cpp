@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_brand_command_handler.h"
 #include "brand/validators/create_brand_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 
 #include "car.h"
 
@@ -36,6 +36,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handle(QPromise<Result<void>> &progr
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateBrandCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 
@@ -66,6 +67,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     // Get the entities from owner
     int ownerId = createDTO.carId();
+    m_ownerId = ownerId;
 
     if (m_firstPass)
     {
@@ -147,9 +149,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     emit brandCreated(brandDTO);
 
     // send an insertion signal
-    BrandInsertedIntoRelativeDTO brandInsertedIntoRelativeDto(brandDTO, ownerId, position);
-
-    emit brandInsertedIntoCarBrand(brandInsertedIntoRelativeDto);
+    emit relationWithOwnerInserted(brand.id(), ownerId, position);
 
     qDebug() << "Brand added:" << brandDTO.id();
 
@@ -161,14 +161,16 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
 Result<BrandDTO> CreateBrandCommandHandler::restoreImpl()
 {
-
-    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+    int entityId = m_newEntity.value().id();
+    auto deleteResult = m_repository->remove(entityId);
 
     QLN_RETURN_IF_ERROR(BrandDTO, deleteResult)
 
     emit brandRemoved(deleteResult.value());
 
     qDebug() << "Brand removed:" << deleteResult.value();
+
+    emit relationWithOwnerRemoved(entityId, m_ownerId);
 
     return Result<BrandDTO>(BrandDTO());
 }

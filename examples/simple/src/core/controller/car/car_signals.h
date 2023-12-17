@@ -8,6 +8,8 @@
 
 #include "car/car_dto.h"
 
+#include "car/car_relation_dto.h"
+
 #include <QObject>
 
 namespace Simple::Controller
@@ -31,6 +33,10 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarSignals : public QObject
     void getAllReplied(QList<CarDTO> dtoList);
     void created(CarDTO dto);
     void updated(Contracts::DTO::Car::CarDTO dto);
-    void detailsUpdated(int id);
+    void allRelationsInvalidated(int id);
+
+    void relationInserted(CarRelationDTO dto);
+    void relationRemoved(CarRelationDTO dto);
+    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller

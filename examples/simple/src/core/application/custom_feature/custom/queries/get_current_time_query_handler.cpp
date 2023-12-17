@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_current_time_query_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 
 #include <QDebug>
 
@@ -34,6 +34,7 @@ Result<GetCurrentTimeReplyDTO> GetCurrentTimeQueryHandler::handle(QPromise<Resul
         result = Result<GetCurrentTimeReplyDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetCurrentTimeQuery:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

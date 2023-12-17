@@ -6,9 +6,9 @@
 #include "client/client_dto.h"
 #include "client/commands/remove_client_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_client_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Client;
@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT RemoveClientCommandHandler : publi
     Result<int> restore();
 
   signals:
-    void clientCreated(Simple::Contracts::DTO::Client::ClientDTO clientDto);
-    void clientRemoved(int id);
+    // repositories handle remove signals
+    // void clientRemoved(int id);
 
   private:
     InterfaceClientRepository *m_repository;

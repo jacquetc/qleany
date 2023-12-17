@@ -5,11 +5,9 @@
 #include "application_brand_export.h"
 #include "brand/brand_dto.h"
 #include "brand/commands/create_brand_command.h"
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
-
-#include "brand/brand_inserted_into_relative_dto.h"
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Domain;
@@ -32,8 +30,8 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public 
     void brandCreated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandRemoved(int id);
 
-    void brandInsertedIntoCarBrand(
-        Simple::Contracts::DTO::Brand::BrandInsertedIntoRelativeDTO brandInsertedIntoRelativeDto);
+    void relationWithOwnerInserted(int id, int ownerId, int position);
+    void relationWithOwnerRemoved(int id, int ownerId);
 
   private:
     InterfaceBrandRepository *m_repository;
@@ -41,6 +39,7 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public 
     Result<BrandDTO> restoreImpl();
     Result<Simple::Domain::Brand> m_newEntity;
 
+    int m_ownerId = -1;
     int m_position = -1;
 
     Simple::Domain::Brand m_oldOwnerBrand;

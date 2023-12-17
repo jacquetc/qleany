@@ -12,6 +12,38 @@ class QLEANY_EXPORT EntityBase
     Q_PROPERTY(int id READ id WRITE setId)
 
   public:
+    struct MetaData
+    {
+        MetaData(EntityBase *entity) : m_entity(entity)
+        {
+        }
+        MetaData(EntityBase *entity, const MetaData &other) : m_entity(entity)
+        {
+        }
+
+        bool getSet(const QString &fieldName) const
+        {
+            if (fieldName == "id")
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool getLoaded(const QString &fieldName) const
+        {
+
+            if (fieldName == "id")
+            {
+                return true;
+            }
+            return false;
+        }
+
+      private:
+        EntityBase *m_entity = nullptr;
+    };
+
     EntityBase();
 
     ~EntityBase();
@@ -32,6 +64,14 @@ class QLEANY_EXPORT EntityBase
     int id() const;
 
     void setId(int id);
+
+    MetaData metaData() const
+    {
+        return m_metaData;
+    }
+
+  protected:
+    MetaData m_metaData;
 
   private:
     int m_id;

@@ -61,6 +61,35 @@ class GetCurrentTimeReplyDTO
         return *this;
     }
 
+    GetCurrentTimeReplyDTO &operator=(const GetCurrentTimeReplyDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_currentDateTime = other.m_currentDateTime;
+        }
+        return *this;
+    }
+
+    GetCurrentTimeReplyDTO &mergeWith(const GetCurrentTimeReplyDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.currentDateTimeSet)
+            {
+                m_currentDateTime = other.m_currentDateTime;
+                m_metaData.currentDateTimeSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    GetCurrentTimeReplyDTO &operator<<(const GetCurrentTimeReplyDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const GetCurrentTimeReplyDTO &lhs, const GetCurrentTimeReplyDTO &rhs);
 
     friend uint qHash(const GetCurrentTimeReplyDTO &dto, uint seed) noexcept;

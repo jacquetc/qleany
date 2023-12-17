@@ -1,13 +1,13 @@
 #pragma once
 
-#include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
-#include "qleany/domain/entity_schema.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <qleany/common/result.h>
+#include <qleany/domain/entity_schema.h>
 
 using namespace Qleany::Contracts::Database;
 
@@ -190,7 +190,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::updateRightE
     QList<EntityShadow> newShadows;
     for (int i = 0; i < rightEntities.size(); ++i)
     {
-        newShadows.append(EntityShadow(-1, rightEntities[i].id(), i, -1, -1));
+        newShadows.append(EntityShadow(0, rightEntities[i].id(), i, 0, 0));
     }
 
     // merge shadows list, setting create, remove, updatePrevious, updateNext
@@ -311,20 +311,6 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
             columnWithValues.insert(columns.at(i), query.value(i));
         }
         rightEntities.append(TableTools<RightEntity>::mapToEntity(columnWithValues).value());
-    }
-
-    // verify that the rightEntities are in the same order than the rightEntityIds
-    for (int i = 0; i < rightEntityIds.count(); i++)
-    {
-        if (rightEntities.at(i).id() != rightEntityIds.at(i))
-        {
-            // add assert only in debug
-            Q_ASSERT(false);
-
-            return Result<QList<RightEntity>>(
-                QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
-                            "The right entities are not in the same order than the right entity ids", queryStr));
-        }
     }
 
     return Result<QList<RightEntity>>(rightEntities);

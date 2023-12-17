@@ -3,8 +3,8 @@
 #pragma once
 
 #include "persistence_export.h"
-#include "qleany/repository/repository_provider.h"
 #include <QObject>
+#include <qleany/repository/repository_provider.h>
 
 namespace Simple::Persistence
 {

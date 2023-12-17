@@ -1,12 +1,10 @@
 #include "controller_registration.h"
 #include "event_dispatcher.h"
 {% for feature in features -%}
-{% if feature.crud.enabled %}
 #include "{{ feature.feature_name_snake }}/{{ feature.feature_name_snake }}_controller.h"
-{% endif %}
 {% endfor -%}
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
-#include "qleany/tools/undo_redo/undo_redo_scopes.h"
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include <qleany/tools/undo_redo/undo_redo_scopes.h>
 #include <QSharedPointer>
 
 using namespace {{ application_cpp_domain_name }}::Controller;
@@ -16,7 +14,7 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
 {
 
     auto dispatcher =
-        QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
+        QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
     Scopes scopes(QStringList() 
@@ -39,21 +37,38 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
             });
 
 {% for feature in features%}
-{% if feature.crud.enabled %}
     // {{ feature.feature_name_pascal }}Controller
 
-    new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(nullptr, repositoryProvider, undoRedoSystem, dispatcher);
+    new {{ feature.feature_name_pascal }}::{{ feature.feature_name_pascal }}Controller(repositoryProvider, undoRedoSystem, dispatcher);
+
+{% if feature.crud.enabled %}
 
     SignalHolder *{{ feature.feature_name_camel }}SignalHolder = repositoryProvider->repository("{{ feature.feature_name_pascal }}")->signalHolder();
-    emit {{ feature.feature_name_camel }}SignalHolder->removed(QList<int>() << 0);
+
+    // removal
     connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::removed);
+    
+    {% for other_entity_relation_field in feature.crud.other_entities_relation_fields %}
+    {% if loop.first %}
+    // spread removal signal to all other entity signal holders so as to remove the relations
+    {% endif %}
+    connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds){    
+        {{ other_entity_relation_field.name_pascal }}RelationDTO dto(-1, {{ other_entity_relation_field.name_pascal }}RelationDTO::RelationField::{{ other_entity_relation_field.field_name_pascal }},removedIds, -1);
+        emit dispatcher->{{ other_entity_relation_field.name_camel }}()->relationRemoved(dto);
+    });
+    {% endfor %}
+
+    // active status
     connect(repositoryProvider->repository("{{ feature.feature_name_camel }}")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->{{ feature.feature_name_camel }}(),
             &{{ feature.feature_name_pascal }}Signals::activeStatusChanged);
-            
+
+
 {% endif %}
 {% endfor %}
+
+
 
 }
 

@@ -6,9 +6,9 @@
 #include "passenger/commands/remove_passenger_command.h"
 #include "passenger/passenger_dto.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT RemovePassengerCommandHandler :
     Result<int> restore();
 
   signals:
-    void passengerCreated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
-    void passengerRemoved(int id);
+    // repositories handle remove signals
+    // void passengerRemoved(int id);
 
   private:
     InterfacePassengerRepository *m_repository;

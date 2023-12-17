@@ -2,8 +2,8 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_passenger_command_handler.h"
 #include "passenger/validators/update_passenger_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_passenger_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Passenger;
@@ -36,6 +36,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handle(QPromise<Result<void>
         result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdatePassengerCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 
@@ -66,26 +67,28 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     QLN_RETURN_IF_ERROR(PassengerDTO, validatorResult)
 
-    // map
-    auto passenger =
-        Qleany::Tools::AutoMapper::AutoMapper::map<UpdatePassengerDTO, Simple::Domain::Passenger>(request.req);
-
-    // set update timestamp only on first pass
-    if (m_newState.isEmpty())
-    {
-        passenger.setUpdateDate(QDateTime::currentDateTime());
-    }
-
     // save old state
-    if (m_newState.isEmpty())
+    if (m_undoState.isEmpty())
     {
-        Result<Simple::Domain::Passenger> saveResult = m_repository->get(request.req.id());
+        Result<Simple::Domain::Passenger> currentResult = m_repository->get(request.req.id());
 
-        QLN_RETURN_IF_ERROR(PassengerDTO, saveResult)
+        QLN_RETURN_IF_ERROR(PassengerDTO, currentResult)
 
         // map
-        m_newState = Result<PassengerDTO>(
-            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(saveResult.value()));
+        m_undoState = Result<PassengerDTO>(
+            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(currentResult.value()));
+    }
+    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<PassengerDTO, UpdatePassengerDTO>(m_undoState.value());
+    updateDto << request.req;
+
+    // map
+    auto passenger =
+        Qleany::Tools::AutoMapper::AutoMapper::map<UpdatePassengerDTO, Simple::Domain::Passenger>(updateDto);
+
+    // set update timestamp only on first pass
+    if (m_undoState.isEmpty())
+    {
+        passenger.setUpdateDate(QDateTime::currentDateTime());
     }
 
     // do
@@ -114,11 +117,11 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
 Result<PassengerDTO> UpdatePassengerCommandHandler::restoreImpl()
 {
-    qDebug() << "UpdatePassengerCommandHandler::restoreImpl called with id" << m_newState.value().uuid();
+    qDebug() << "UpdatePassengerCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
     auto passenger =
-        Qleany::Tools::AutoMapper::AutoMapper::map<PassengerDTO, Simple::Domain::Passenger>(m_newState.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<PassengerDTO, Simple::Domain::Passenger>(m_undoState.value());
 
     // do
     auto passengerResult = m_repository->update(std::move(passenger));
@@ -141,6 +144,8 @@ bool UpdatePassengerCommandHandler::s_mappingRegistered = false;
 void UpdatePassengerCommandHandler::registerMappings()
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
+                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
                                                            Contracts::DTO::Passenger::PassengerDTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
                                                            Simple::Domain::Passenger>();

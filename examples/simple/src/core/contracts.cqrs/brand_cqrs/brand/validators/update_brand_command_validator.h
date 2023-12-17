@@ -1,14 +1,12 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-
 #include "brand/update_brand_dto.h"
-
 
 #include "repository/interface_brand_repository.h"
 
-#include "qleany/common/result.h"
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 
@@ -21,8 +19,7 @@ namespace Simple::Contracts::CQRS::Brand::Validators
 class UpdateBrandCommandValidator
 {
   public:
-    UpdateBrandCommandValidator(InterfaceBrandRepository *brandRepository)
-        :  m_brandRepository(brandRepository)
+    UpdateBrandCommandValidator(InterfaceBrandRepository *brandRepository) : m_brandRepository(brandRepository)
     {
     }
 
@@ -30,26 +27,18 @@ class UpdateBrandCommandValidator
 
     {
 
-
-
-
         Result<bool> existsResult = m_brandRepository->exists(dto.id());
 
         if (!existsResult.value())
         {
-            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_already_exists"));
+            return Result<void>(QLN_ERROR_1(Q_FUNC_INFO, Error::Critical, "id_not_found"));
         }
-
-
-
 
         // Return that is Ok :
         return Result<void>();
     }
 
   private:
-
     InterfaceBrandRepository *m_brandRepository;
-
 };
 } // namespace Simple::Contracts::CQRS::Brand::Validators

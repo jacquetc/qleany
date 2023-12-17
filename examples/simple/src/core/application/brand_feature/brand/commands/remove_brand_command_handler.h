@@ -6,9 +6,9 @@
 #include "brand/brand_dto.h"
 #include "brand/commands/remove_brand_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Brand;
@@ -26,8 +26,8 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT RemoveBrandCommandHandler : public 
     Result<int> restore();
 
   signals:
-    void brandCreated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
-    void brandRemoved(int id);
+    // repositories handle remove signals
+    // void brandRemoved(int id);
 
   private:
     InterfaceBrandRepository *m_repository;

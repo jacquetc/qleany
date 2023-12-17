@@ -22,6 +22,12 @@ if(QLEANY_BUILD_WITH_QT_GUI)
     add_compile_definitions(QLEANY_BUILD_WITH_QT_GUI=1)
 endif()
 
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 # Add Qt components
 find_package(Qt6 COMPONENTS Core Sql Concurrent REQUIRED)
 qt_standard_project_setup()
@@ -78,9 +84,10 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/database/interface_database_context.h
 )
 
-add_library(Qleany SHARED
+# Create the library target
+
+add_library(Qleany ${LIB_TYPE}
     ${LIB_PUBLIC_HEADERS}
-        src/tools/undo_redo/alter_command.cpp
         src/tools/undo_redo/query_command.cpp
         src/tools/undo_redo/undo_redo_stack.cpp
         src/tools/undo_redo/threaded_undo_redo_system.cpp
@@ -95,7 +102,7 @@ add_library(Qleany SHARED
 )
 target_include_directories(Qleany PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include> # <prefix>/include
 )
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 

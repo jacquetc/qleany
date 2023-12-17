@@ -11,8 +11,6 @@ set(SRC
     passenger/passenger_dto.h
     passenger/create_passenger_dto.h
     passenger/update_passenger_dto.h
-    passenger/insert_passenger_into_relative_dto.h
-    passenger/passenger_inserted_into_relative_dto.h
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 

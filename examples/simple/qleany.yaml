@@ -75,7 +75,7 @@ controller:
   folder_path: src/core/controller/
   export: SIMPLEEXAMPLE_CONTROLLER_EXPORT
   export_header_file: controller_export.h
-  create_undo_redo_controller: false
+  create_undo_redo_controller: true
 
 application:
   common_cmake_folder_path: src/core/application
@@ -98,9 +98,9 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
+        update:
           enabled: true
-        update: 
+        insert_relation: 
           enabled: true
     - name: Brand
       DTO:
@@ -120,11 +120,7 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
-          enabled: true
-        insert_into_relative: 
           enabled: true
         change_active_status: 
           enabled: true
@@ -146,15 +142,7 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
-          enabled: true
-        insert_into_relative: 
-          enabled: true
-        move_inside_relative: 
-          enabled: true
-        remove_from_relative: 
           enabled: true
         change_active_status: 
           enabled: true
@@ -176,10 +164,10 @@ application:
           enabled: true
         remove: 
           enabled: true
-        remove_tree: 
-          enabled: false
         update: 
-          enabled: true        
+          enabled: true       
+        insert_relation: 
+          enabled: true 
     - name: Custom
       DTO:
         dto_identical_to_entity:
@@ -202,6 +190,16 @@ application:
               fields:
                 - type: QString
                   name: randomCarName
+            out:
+              enabled: false
+        - name: RunLongOperation
+          validator: 
+            enabled: False
+          undo: False
+          minimum_progress_time: 1000
+          dto:
+            in:
+              enabled: false
             out:
               enabled: false
         - name: CloseSystem
@@ -249,23 +247,25 @@ presenter:
   folder_path: src/gui/presenter
   export: SIMPLEEXAMPLE_PRESENTER_EXPORT
   export_header_file: presenter_export.h
-  create_undo_redo_single: false
+  create_undo_and_redo_singles: true
   singles:
     - name: SingleCar
       entity: Car
-    - name: SingleBrand
+    - name: auto
       entity: Brand
-    - name: SinglePassenger
+    - name: auto
       entity: Passenger
-    - name: SingleClient
+    - name: auto
       entity: Client
   list_models:
-    - name: CarListModel
-      entity: Car
     - name: PassengerListModelFromCarPassengers
       entity: Passenger
+      displayed_field: name
       in_relation_of: Car
-      relation_field_name: passengers  
+      relation_field_name: passengers
+    - name: CarListModel
+      entity: Car  
+      displayed_field: content
       
 
 qml:

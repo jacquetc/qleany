@@ -6,8 +6,6 @@
 
 #include "brand/brand_dto.h"
 
-#include "brand/brand_inserted_into_relative_dto.h"
-
 #include <QObject>
 
 namespace Simple::Controller
@@ -30,8 +28,7 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandSignals : public QObject
     void getAllReplied(QList<BrandDTO> dtoList);
     void created(BrandDTO dto);
     void updated(Contracts::DTO::Brand::BrandDTO dto);
-    void detailsUpdated(int id);
-
-    void insertedIntoCarBrand(Contracts::DTO::Brand::BrandInsertedIntoRelativeDTO dto);
+    void allRelationsInvalidated(int id);
+    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller

@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_passenger_query_handler.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_passenger_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Passenger::Queries;
@@ -30,6 +30,7 @@ Result<PassengerDTO> GetPassengerQueryHandler::handle(QPromise<Result<void>> &pr
         result = Result<PassengerDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetPassengerQuery:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_car_command_handler.h"
 #include "car/validators/create_car_command_validator.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Domain;
@@ -33,6 +33,7 @@ Result<CarDTO> CreateCarCommandHandler::handle(QPromise<Result<void>> &progressP
         result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateCarCommand:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 
@@ -117,8 +118,8 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
 Result<CarDTO> CreateCarCommandHandler::restoreImpl()
 {
-
-    auto deleteResult = m_repository->remove(m_newEntity.value().id());
+    int entityId = m_newEntity.value().id();
+    auto deleteResult = m_repository->remove(entityId);
 
     QLN_RETURN_IF_ERROR(CarDTO, deleteResult)
 

@@ -95,6 +95,59 @@ class CreateBrandDTO
         return *this;
     }
 
+    CreateBrandDTO &operator=(const CreateBrandDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_name = other.m_name;
+            m_carId = other.m_carId;
+        }
+        return *this;
+    }
+
+    CreateBrandDTO &mergeWith(const CreateBrandDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.nameSet)
+            {
+                m_name = other.m_name;
+                m_metaData.nameSet = true;
+            }
+            if (other.m_metaData.carIdSet)
+            {
+                m_carId = other.m_carId;
+                m_metaData.carIdSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    CreateBrandDTO &operator<<(const CreateBrandDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const CreateBrandDTO &lhs, const CreateBrandDTO &rhs);
 
     friend uint qHash(const CreateBrandDTO &dto, uint seed) noexcept;

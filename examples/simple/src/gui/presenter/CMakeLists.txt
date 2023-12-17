@@ -1,27 +1,36 @@
+# This file was generated automatically by Qleany's generator, edit at your own risk! 
+# If you do, be careful to not overwrite it when you run the generator again.
+
+find_package(Qt6 COMPONENTS Core REQUIRED)
 
 set(LIBRARY_NAME simple-example-presenter)
 
-set(SRC
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
+include(presenters.cmake)
+
+set(SRCS
     presenter_export.h
-    passenger_list_model.cpp
-    passenger_list_model.h
-
 )
-qt_add_library(${LIBRARY_NAME} SHARED ${SRC}
-    single_passenger.h single_passenger.cpp)
 
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${PRESENTER_LIST})
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PRESENTER_LIBRARY)
 
-add_dependencies(${LIBRARY_NAME} simple-example-controller)
+target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-controller)
 
-target_link_libraries(${LIBRARY_NAME}
-    PRIVATE Qt6::Core Qt6::Gui
-)
+target_link_libraries(${LIBRARY_NAME} PRIVATE
+    Qt6::Core Qt::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
+target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-controller)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

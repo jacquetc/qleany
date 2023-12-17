@@ -96,9 +96,19 @@ class UpdateClientDTO
     {
     }
 
-    bool isValid()
+    Q_INVOKABLE bool isValid() const
     {
         return m_id > 0;
+    }
+
+    Q_INVOKABLE bool isNull() const
+    {
+        return !isValid();
+    }
+
+    Q_INVOKABLE bool isInvalid() const
+    {
+        return !isValid();
     }
 
     UpdateClientDTO &operator=(const UpdateClientDTO &other)
@@ -114,6 +124,65 @@ class UpdateClientDTO
             m_clientFriends = other.m_clientFriends;
         }
         return *this;
+    }
+
+    UpdateClientDTO &operator=(const UpdateClientDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_client = other.m_client;
+            m_clientFriends = other.m_clientFriends;
+        }
+        return *this;
+    }
+
+    UpdateClientDTO &mergeWith(const UpdateClientDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.clientSet)
+            {
+                m_client = other.m_client;
+                m_metaData.clientSet = true;
+            }
+            if (other.m_metaData.clientFriendsSet)
+            {
+                m_clientFriends = other.m_clientFriends;
+                m_metaData.clientFriendsSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    UpdateClientDTO &operator<<(const UpdateClientDTO &other)
+    {
+        return mergeWith(other);
     }
 
     friend bool operator==(const UpdateClientDTO &lhs, const UpdateClientDTO &rhs);

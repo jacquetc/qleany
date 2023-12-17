@@ -1,0 +1,10 @@
+#pragma once
+#include "{{ single.class_name_snake}}.h"
+#include <QQmlEngine>
+
+struct Foreign{{ single.class_name_pascal}}
+{
+    Q_GADGET
+    QML_FOREIGN(Simple::Presenter::{{ single.class_name_pascal}})
+    QML_NAMED_ELEMENT({{ single.class_name_pascal}})
+};

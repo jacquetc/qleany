@@ -6,9 +6,9 @@
 #include "brand/brand_dto.h"
 #include "brand/commands/update_brand_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Brand;
@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : public 
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request);
     Result<BrandDTO> restoreImpl();
     Result<BrandDTO> saveOldState();
-    Result<BrandDTO> m_newState;
+    Result<BrandDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

@@ -54,7 +54,7 @@ def get_cqrs_dict(
     #                     "repository_entity_pascal": "MyEntity",
     #                     "repository_entity_snake": "my_entity",
     #                     "repository_entity_camel": "myEntity",
-    #                     "check_if_exists": True,
+    #                     "validate_id_existence": True,
     #                 }
     #             },
     #             "cmake_folder_path": os.path.join(cqrs_common_cmake_folder_path, "MyFeature"),
@@ -163,7 +163,8 @@ def get_cqrs_dict(
                     "dto_snake": "create_" + entity_mappable_with_snake + "_dto",
                     "request_is_id": False,
                     "has_dto_in": True,
-                    "check_if_exists": False,
+                    "validate_id_existence": False,
+                    "validate_id_absence": False,
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
                     "application_cpp_domain_name": application_cpp_domain_name,
@@ -214,7 +215,8 @@ def get_cqrs_dict(
                     "dto_snake": "update_" + entity_mappable_with_snake + "_dto",
                     "request_is_id": False,
                     "has_dto_in": True,
-                    "check_if_exists": True,
+                    "validate_id_existence": True,
+                    "validate_id_absence": False,
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
                     "application_cpp_domain_name": application_cpp_domain_name,
@@ -265,58 +267,8 @@ def get_cqrs_dict(
                     "dto_snake": "remove_" + entity_mappable_with_snake + "_dto",
                     "request_is_id": True,
                     "has_dto_in": False,
-                    "check_if_exists": True,
-                    "feature_name_snake": feature_name_snake,
-                    "feature_name_pascal": feature_name_pascal,
-                    "application_cpp_domain_name": application_cpp_domain_name,
-                    "repositories": [
-                        {
-                            "pascal_name": entity_mappable_with,
-                            "snake_name": entity_mappable_with_snake,
-                            "camel_name": stringcase.camelcase(entity_mappable_with),
-                        }
-                    ],
-                }
-
-            # remove tree
-            if feature.get("CRUD", {}).get("remove_tree", {}).get("enabled", False):
-                generation_dict["features"][feature_name]["commands"][
-                    "Remove" + entity_mappable_with_pascal + "Tree"
-                ] = {
-                    "file": os.path.join(
-                        cqrs_common_cmake_folder_path,
-                        feature_name_snake + "_cqrs",
-                        feature_name_snake,
-                        "commands",
-                        "remove_" + entity_mappable_with_snake + "_tree_command.h",
-                    ),
-                    "name": "Remove" + entity_mappable_with_pascal + "TreeCommand",
-                    "dto_pascal": "Remove" + entity_mappable_with + "TreeDTO",
-                    "dto_snake": "remove_" + entity_mappable_with_snake + "_tree_dto",
-                    "request_is_id": True,
-                    "has_dto_in": False,
-                    "feature_name_snake": feature_name_snake,
-                    "feature_name_pascal": feature_name_pascal,
-                    "application_cpp_domain_name": application_cpp_domain_name,
-                }
-
-                # add validator
-                generation_dict["features"][feature_name]["validators"][
-                    "Remove" + entity_mappable_with_pascal
-                ] = {
-                    "file": os.path.join(
-                        cqrs_common_cmake_folder_path,
-                        feature_name_snake + "_cqrs",
-                        feature_name_snake,
-                        "validators",
-                        "remove_" + entity_mappable_with_snake + "_tree_command_validator.h",
-                    ),
-                    "name": "Remove" + entity_mappable_with + "TreeCommandValidator",
-                    "dto_pascal": "Remove" + entity_mappable_with + "TreeDTO",
-                    "dto_snake": "remove_" + entity_mappable_with_snake + "_tree_dto",
-                    "request_is_id": True,
-                    "has_dto_in": False,
-                    "check_if_exists": True,
+                    "validate_id_existence": True,
+                    "validate_id_absence": False,
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
                     "application_cpp_domain_name": application_cpp_domain_name,
@@ -353,7 +305,9 @@ def get_cqrs_dict(
                     "dto_pascal": stringcase.pascalcase(dto_in_type_prefix + "DTO"),
                     "dto_snake": stringcase.snakecase(dto_in_type_prefix + "_dto"),
                     "request_is_id": custom_query.get("request_is_id", False),
-                    "has_dto_in": custom_query.get("dto", {}).get("in", {}).get("enabled", True),
+                    "has_dto_in": custom_query.get("dto", {})
+                    .get("in", {})
+                    .get("enabled", True),
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
                     "application_cpp_domain_name": application_cpp_domain_name,
@@ -384,9 +338,14 @@ def get_cqrs_dict(
                     "dto_pascal": stringcase.pascalcase(dto_in_type_prefix + "DTO"),
                     "dto_snake": stringcase.snakecase(dto_in_type_prefix + "_dto"),
                     "request_is_id": custom_query.get("request_is_id", False),
-                    "has_dto_in": custom_query.get("dto", {}).get("in", {}).get("enabled", True),
-                    "check_if_exists": custom_query.get("validator", {}).get(
-                        "check_if_exists", False
+                    "has_dto_in": custom_query.get("dto", {})
+                    .get("in", {})
+                    .get("enabled", True),
+                    "validate_id_existence": custom_query.get("validator", {}).get(
+                        "validate_id_existence", False
+                    ),
+                    "validate_id_absence": custom_query.get("validator", {}).get(
+                        "validate_id_absence", False
                     ),
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
@@ -417,7 +376,9 @@ def get_cqrs_dict(
                     "dto_pascal": stringcase.pascalcase(dto_in_type_prefix + "DTO"),
                     "dto_snake": stringcase.snakecase(dto_in_type_prefix + "_dto"),
                     "request_is_id": custom_command.get("request_is_id", False),
-                    "has_dto_in": custom_command.get("dto", {}).get("in", {}).get("enabled", True),
+                    "has_dto_in": custom_command.get("dto", {})
+                    .get("in", {})
+                    .get("enabled", True),
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,
                     "application_cpp_domain_name": application_cpp_domain_name,
@@ -448,9 +409,14 @@ def get_cqrs_dict(
                     "dto_pascal": stringcase.pascalcase(dto_in_type_prefix + "DTO"),
                     "dto_snake": stringcase.snakecase(dto_in_type_prefix + "_dto"),
                     "request_is_id": custom_command.get("request_is_id", False),
-                    "has_dto_in": custom_command.get("dto", {}).get("in", {}).get("enabled", True),
-                    "check_if_exists": custom_command.get("validator", {}).get(
-                        "check_if_exists", False
+                    "has_dto_in": custom_command.get("dto", {})
+                    .get("in", {})
+                    .get("enabled", True),
+                    "validate_id_existence": custom_command.get("validator", {}).get(
+                        "validate_id_existence", False
+                    ),
+                    "validate_id_absence": custom_command.get("validator", {}).get(
+                        "validate_id_absence", False
                     ),
                     "feature_name_snake": feature_name_snake,
                     "feature_name_pascal": feature_name_pascal,

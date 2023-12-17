@@ -1,0 +1,57 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_dto.h"
+#include "{{ export_header_file }}"
+#include <QAbstractListModel>
+
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ model.entity_name_pascal }};
+
+namespace {{ application_cpp_domain_name }}::Presenter
+{
+class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY(int {{ model.related_name_camel }}Id READ {{ model.related_name_camel }}Id WRITE set{{ model.related_name_pascal }}Id RESET reset{{ model.related_name_pascal }}Id NOTIFY {{ model.related_name_camel }}IdChanged FINAL)
+
+  public:
+    enum Roles
+    {
+        {% for field in model.fields %}
+        {{ field.name_pascal }}Role = Qt::UserRole + {{ loop.index0 }}{{ "," if not loop.last }}  
+        {%- endfor %}      
+    };
+    Q_ENUM(Roles)
+
+    explicit {{ model.class_name_pascal }}(QObject *parent = nullptr);
+
+    // Header:
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+    // Basic functionality:
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+    int {{ model.related_name_camel }}Id() const;
+    void set{{ model.related_name_pascal }}Id(int new{{ model.related_name_pascal }}Id);
+    void reset{{ model.related_name_pascal }}Id();
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    QHash<int, QByteArray> roleNames() const override;
+
+  signals:
+    void {{ model.related_name_camel }}IdChanged();
+
+  private:
+    void populate();
+
+    QList<{{ model.entity_name_pascal }}DTO> m_{{ model.entity_name_camel }}List;
+    QList<int> m_{{ model.entity_name_camel }}IdList;
+    int m_{{ model.related_name_camel }}Id = 0;
+
+};
+
+} // namespace {{ application_cpp_domain_name }}::Presenter

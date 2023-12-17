@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "update_{{ entity_mappable_with_snake }}_command_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 #include "{{ feature_snake_name }}/validators/update_{{ entity_mappable_with_snake }}_command_validator.h"
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
 
@@ -36,6 +36,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
         result = Result<{{ entity_mappable_with_pascal }}DTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling Update{{ entity_mappable_with_pascal }}Command:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 
@@ -65,25 +66,28 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
 
     QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, validatorResult)
 
+    // save old state
+    if (m_undoState.isEmpty())
+    {
+        Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> currentResult = m_repository->get(request.req.id());
+
+        QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, currentResult)
+
+        // map
+        m_undoState = Result<{{ entity_mappable_with_pascal }}DTO>(Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>(currentResult.value()));
+    }
+    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ entity_mappable_with_pascal }}DTO, Update{{ entity_mappable_with_pascal }}DTO>(m_undoState.value());
+    updateDto << request.req;
+
     // map
-    auto {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Update{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(request.req);
+    auto {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Update{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(updateDto);
 
     // set update timestamp only on first pass
-    if (m_newState.isEmpty())
+    if (m_undoState.isEmpty())
     {
         {{ entity_mappable_with_camel }}.setUpdateDate(QDateTime::currentDateTime());
     }
 
-    // save old state
-    if (m_newState.isEmpty())
-    {
-        Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> saveResult = m_repository->get(request.req.id());
-
-        QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, saveResult)
-
-        // map
-        m_newState = Result<{{ entity_mappable_with_pascal }}DTO>(Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>(saveResult.value()));
-    }
 
     // do
     auto {{ entity_mappable_with_camel }}Result = m_repository->update(std::move({{ entity_mappable_with_camel }}));
@@ -110,10 +114,10 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
 
 Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl()
 {
-    qDebug() << "Update{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl called with id" << m_newState.value().uuid();
+    qDebug() << "Update{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(m_newState.value());
+    auto {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(m_undoState.value());
 
     // do
     auto {{ entity_mappable_with_camel }}Result = m_repository->update(std::move({{ entity_mappable_with_camel }}));
@@ -135,5 +139,6 @@ bool Update{{ entity_mappable_with_pascal }}CommandHandler::s_mappingRegistered 
 void Update{{ entity_mappable_with_pascal }}CommandHandler::registerMappings() 
 {
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Update{{ entity_mappable_with_pascal }}DTO, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Update{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>();
 }

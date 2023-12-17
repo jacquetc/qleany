@@ -104,6 +104,59 @@ class CreateClientDTO
         return *this;
     }
 
+    CreateClientDTO &operator=(const CreateClientDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+            m_client = other.m_client;
+            m_clientFriends = other.m_clientFriends;
+        }
+        return *this;
+    }
+
+    CreateClientDTO &mergeWith(const CreateClientDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+            if (other.m_metaData.clientSet)
+            {
+                m_client = other.m_client;
+                m_metaData.clientSet = true;
+            }
+            if (other.m_metaData.clientFriendsSet)
+            {
+                m_clientFriends = other.m_clientFriends;
+                m_metaData.clientFriendsSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    CreateClientDTO &operator<<(const CreateClientDTO &other)
+    {
+        return mergeWith(other);
+    }
+
     friend bool operator==(const CreateClientDTO &lhs, const CreateClientDTO &rhs);
 
     friend uint qHash(const CreateClientDTO &dto, uint seed) noexcept;

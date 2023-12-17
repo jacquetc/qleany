@@ -11,9 +11,9 @@
 
 #include "custom/custom_controller.h"
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
-#include "qleany/tools/undo_redo/undo_redo_scopes.h"
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include <qleany/tools/undo_redo/undo_redo_scopes.h>
 
 using namespace Simple::Controller;
 
@@ -21,23 +21,22 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     : QObject{parent}
 {
 
-    auto dispatcher =
-        QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
+    auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher(nullptr));
 
     // Undo Redo System
-    Scopes scopes(QStringList() 
+    Scopes scopes(QStringList()
 
-                                << "car"
+                  << "car"
 
-                                << "brand"
+                  << "brand"
 
-                                << "passenger"
+                  << "passenger"
 
-                                << "client"
+                  << "client"
 
-                                << "custom"
+                  << "custom"
 
-                                );
+    );
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling
@@ -51,7 +50,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
                 qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message();
                 emit dispatcher->error()->warningSent(error);
             });
-
 
     // CarController
 
@@ -112,8 +110,6 @@ ControllerRegistration::ControllerRegistration(QObject *parent, InterfaceReposit
     connect(repositoryProvider->repository("custom")->signalHolder(),
             &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->custom(),
             &customSignals::activeStatusChanged);
-
-
 }
 
 ControllerRegistration::~ControllerRegistration()

@@ -12,6 +12,7 @@ set(SRC
     client/client_with_details_dto.h
     client/create_client_dto.h
     client/update_client_dto.h
+    client/client_relation_dto.h
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 

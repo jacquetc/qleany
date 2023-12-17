@@ -6,9 +6,9 @@
 #include "car/car_dto.h"
 #include "car/commands/update_car_command.h"
 
-#include "qleany/common/result.h"
 #include "repository/interface_car_repository.h"
 #include <QPromise>
+#include <qleany/common/result.h>
 
 using namespace Qleany;
 using namespace Simple::Contracts::DTO::Car;
@@ -35,7 +35,7 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT UpdateCarCommandHandler : public QObj
     Result<CarDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateCarCommand &request);
     Result<CarDTO> restoreImpl();
     Result<CarDTO> saveOldState();
-    Result<CarDTO> m_newState;
+    Result<CarDTO> m_undoState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

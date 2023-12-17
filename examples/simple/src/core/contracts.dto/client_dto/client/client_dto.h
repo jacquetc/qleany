@@ -72,9 +72,19 @@ class ClientDTO
     {
     }
 
-    bool isValid()
+    Q_INVOKABLE bool isValid() const
     {
         return m_id > 0;
+    }
+
+    Q_INVOKABLE bool isNull() const
+    {
+        return !isValid();
+    }
+
+    Q_INVOKABLE bool isInvalid() const
+    {
+        return !isValid();
     }
 
     ClientDTO &operator=(const ClientDTO &other)
@@ -88,6 +98,53 @@ class ClientDTO
             m_updateDate = other.m_updateDate;
         }
         return *this;
+    }
+
+    ClientDTO &operator=(const ClientDTO &&other)
+    {
+        if (this != &other)
+        {
+            m_metaData = other.m_metaData;
+            m_id = other.m_id;
+            m_uuid = other.m_uuid;
+            m_creationDate = other.m_creationDate;
+            m_updateDate = other.m_updateDate;
+        }
+        return *this;
+    }
+
+    ClientDTO &mergeWith(const ClientDTO &other)
+    {
+        if (this != &other)
+        {
+            if (other.m_metaData.idSet)
+            {
+                m_id = other.m_id;
+                m_metaData.idSet = true;
+            }
+            if (other.m_metaData.uuidSet)
+            {
+                m_uuid = other.m_uuid;
+                m_metaData.uuidSet = true;
+            }
+            if (other.m_metaData.creationDateSet)
+            {
+                m_creationDate = other.m_creationDate;
+                m_metaData.creationDateSet = true;
+            }
+            if (other.m_metaData.updateDateSet)
+            {
+                m_updateDate = other.m_updateDate;
+                m_metaData.updateDateSet = true;
+            }
+        }
+        return *this;
+    }
+
+    // import operator
+    ClientDTO &operator<<(const ClientDTO &other)
+    {
+        return mergeWith(other);
     }
 
     friend bool operator==(const ClientDTO &lhs, const ClientDTO &rhs);

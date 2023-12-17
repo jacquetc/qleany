@@ -11,6 +11,8 @@
 #include "car/queries/get_all_car_query_handler.h"
 #include "car/queries/get_car_query_handler.h"
 #include "car/queries/get_car_with_details_query_handler.h"
+// #include "car/commands/insert_car_into_xxx_command.h"
+// #include "car/commands/update_car_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -22,11 +24,11 @@ using namespace Simple::Application::Features::Car::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<CarController> CarController::s_instance = QScopedPointer<CarController>(nullptr);
+QPointer<CarController> CarController::s_instance = nullptr;
 
-CarController::CarController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                             ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+CarController::CarController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                             QSharedPointer<EventDispatcher> eventDispatcher)
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 
@@ -34,7 +36,7 @@ CarController::CarController(QObject *parent, InterfaceRepositoryProvider *repos
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 CarController *CarController::instance()
@@ -42,11 +44,11 @@ CarController *CarController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<CarDTO> CarController::get(int id)
+QCoro::Task<CarDTO> CarController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
@@ -64,7 +66,7 @@ QCoro::Task<CarDTO> CarController::get(int id)
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -75,11 +77,11 @@ QCoro::Task<CarDTO> CarController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
+QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id) const
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
@@ -97,7 +99,7 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
 
     // async wait for result signal
     const std::optional<CarWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -108,7 +110,7 @@ QCoro::Task<CarWithDetailsDTO> CarController::getWithDetails(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<CarDTO>> CarController::getAll()
+QCoro::Task<QList<CarDTO>> CarController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 
@@ -127,7 +129,7 @@ QCoro::Task<QList<CarDTO>> CarController::getAll()
 
     // async wait for result signal
     const std::optional<QList<CarDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -163,7 +165,7 @@ QCoro::Task<CarDTO> CarController::create(const CreateCarDTO &dto)
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -187,7 +189,7 @@ QCoro::Task<CarDTO> CarController::update(const UpdateCarDTO &dto)
     QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this,
                      [this](CarDTO dto) { emit m_eventDispatcher->car()->updated(dto); });
     QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(),
-                     &CarSignals::detailsUpdated);
+                     &CarSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command =
@@ -198,7 +200,7 @@ QCoro::Task<CarDTO> CarController::update(const UpdateCarDTO &dto)
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -219,10 +221,7 @@ QCoro::Task<bool> CarController::remove(int id)
     auto *handler = new RemoveCarCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveCarCommandHandler::carCreated, this,
-                     [this](CarDTO dto) { emit m_eventDispatcher->car()->created(dto); });
-    QObject::connect(handler, &RemoveCarCommandHandler::carRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->car()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command =
@@ -232,8 +231,8 @@ QCoro::Task<bool> CarController::remove(int id)
     m_undo_redo_system->push(command, "car");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveCarCommandHandler::carRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

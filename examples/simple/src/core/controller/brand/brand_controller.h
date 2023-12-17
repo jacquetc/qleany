@@ -7,12 +7,13 @@
 #include "brand/update_brand_dto.h"
 #include "controller_export.h"
 #include "event_dispatcher.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
+#include <QPointer>
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -25,16 +26,20 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandController : public QObject
 {
     Q_OBJECT
   public:
-    explicit BrandController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                             ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher);
+    explicit BrandController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                             QSharedPointer<EventDispatcher> eventDispatcher);
 
     static BrandController *instance();
 
+    Q_INVOKABLE QCoro::Task<BrandDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<BrandDTO>> getAll() const;
+
+    Q_INVOKABLE static Contracts::DTO::Brand::CreateBrandDTO getCreateDTO();
+
+    Q_INVOKABLE static Contracts::DTO::Brand::UpdateBrandDTO getUpdateDTO();
+
   public slots:
-
-    QCoro::Task<BrandDTO> get(int id);
-
-    QCoro::Task<QList<BrandDTO>> getAll();
 
     QCoro::Task<BrandDTO> create(const CreateBrandDTO &dto);
 
@@ -42,12 +47,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandController : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-    static Contracts::DTO::Brand::CreateBrandDTO getCreateDTO();
-
-    static Contracts::DTO::Brand::UpdateBrandDTO getUpdateDTO();
-
   private:
-    static QScopedPointer<BrandController> s_instance;
+    static QPointer<BrandController> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

@@ -17,8 +17,7 @@ target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_CONTRACTS_LIBRA
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_dependencies(${LIBRARY_NAME} simple-example-domain)
-target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-domain)
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-domain)
 
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql

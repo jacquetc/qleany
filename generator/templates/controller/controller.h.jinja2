@@ -4,7 +4,7 @@
 
 #include "{{ export_header_file }}"
 #include "event_dispatcher.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 {% if feature.crud.enabled -%}
 #include "{{ feature_name_snake }}/{{ entity_name_snake }}_dto.h"
     {% if feature.crud.get_with_details -%}
@@ -25,10 +25,11 @@
 {% if query.dto_in_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_in_snake }}_dto.h"{% endif %}
 {% if query.dto_out_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_out_snake }}_dto.h"{% endif %}
 {% endfor -%}
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
+#include <QPointer>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -41,24 +42,40 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
 {
     Q_OBJECT
   public:
-    explicit {{ feature_name_pascal }}Controller(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+    explicit {{ feature_name_pascal }}Controller(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher);
 
     static {{ feature_name_pascal }}Controller *instance();
 
+{% if feature.crud.enabled %}
+    {%if feature.crud.get %}
+    Q_INVOKABLE QCoro::Task<{{ entity_name_pascal }}DTO> get(int id) const;
+    {% endif %}
+    {%if feature.crud.get_with_details %}
+    Q_INVOKABLE QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO>  getWithDetails(int id) const;
+    {% endif %}
+    {%if feature.crud.get_all %}
+    Q_INVOKABLE QCoro::Task<QList<{{ entity_name_pascal }}DTO>> getAll() const;
+    {% endif %}
+{% endif %}
+
+    {% for query in feature.custom_queries %}
+    Q_INVOKABLE QCoro::Task<{{ query.dto_out }}DTO> {{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const;
+    {% endfor %}
+
+{% if feature.crud.enabled %}
+    {% if feature.crud.create %}
+    Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
+    {% endif %}
+    {% if feature.crud.update %}
+    Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
+    {% endif %}
+{% endif %}
+
   public slots:
 
 {% if feature.crud.enabled %}
-    {%if feature.crud.get %}
-    QCoro::Task<{{ entity_name_pascal }}DTO> get(int id);
-    {% endif %}
-    {%if feature.crud.get_with_details %}
-    QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO>  getWithDetails(int id);
-    {% endif %}
-    {%if feature.crud.get_all %}
-    QCoro::Task<QList<{{ entity_name_pascal }}DTO>> getAll();
-    {% endif %}
     {%if feature.crud.create %}
     QCoro::Task<{{ entity_name_pascal }}DTO> create(const Create{{ entity_name_pascal }}DTO &dto);
     {% endif %}
@@ -68,27 +85,15 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {%if feature.crud.remove %}
     QCoro::Task<bool> remove(int id);
     {% endif %}
-    {%if feature.crud.removeTree %}
-    QCoro::Task<bool> removeTree(int id);
-    {% endif %}
 
-    {% if feature.crud.create %}
-    static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
-    {% endif %}
-    {% if feature.crud.update %}
-    static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
-    {% endif %}
 {% endif %}
 
     {% for command in feature.custom_commands %}
-    QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
-    {% endfor %}
-    {% for query in feature.custom_queries %}
-    QCoro::Task<{{ query.dto_out }}DTO> {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %});
+    QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name_camel }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
     {% endfor %}
 
   private:
-    static QScopedPointer<{{ feature_name_pascal }}Controller> s_instance;
+    static QPointer<{{ feature_name_pascal }}Controller> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

@@ -8,12 +8,13 @@
 #include "car/update_car_dto.h"
 #include "controller_export.h"
 #include "event_dispatcher.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
+#include <QPointer>
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -26,18 +27,22 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarController : public QObject
 {
     Q_OBJECT
   public:
-    explicit CarController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
-                           ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher);
+    explicit CarController(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+                           QSharedPointer<EventDispatcher> eventDispatcher);
 
     static CarController *instance();
 
+    Q_INVOKABLE QCoro::Task<CarDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<CarWithDetailsDTO> getWithDetails(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<CarDTO>> getAll() const;
+
+    Q_INVOKABLE static Contracts::DTO::Car::CreateCarDTO getCreateDTO();
+
+    Q_INVOKABLE static Contracts::DTO::Car::UpdateCarDTO getUpdateDTO();
+
   public slots:
-
-    QCoro::Task<CarDTO> get(int id);
-
-    QCoro::Task<CarWithDetailsDTO> getWithDetails(int id);
-
-    QCoro::Task<QList<CarDTO>> getAll();
 
     QCoro::Task<CarDTO> create(const CreateCarDTO &dto);
 
@@ -45,12 +50,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT CarController : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-    static Contracts::DTO::Car::CreateCarDTO getCreateDTO();
-
-    static Contracts::DTO::Car::UpdateCarDTO getUpdateDTO();
-
   private:
-    static QScopedPointer<CarController> s_instance;
+    static QPointer<CarController> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

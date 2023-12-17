@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "{{ query.snake_name }}_query_handler.h"
-#include "qleany/tools/automapper/automapper.h"
+#include <qleany/tools/automapper/automapper.h>
 {% if query.dto_in_is_enabled %}#include "{{ feature_snake_name }}/{{ query.dto_in_snake_name }}.h"{% endif %}
 {% if validator_enabled %}#include "{{ feature_snake_name }}/validators/{{ query.snake_name }}_query_validator.h"{% endif %}
 #include <QDebug>
@@ -37,6 +37,7 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
         result = Result<{{ query.dto_out_pascal_name }}>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling {{ query.pascal_name }}Query:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

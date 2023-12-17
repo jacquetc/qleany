@@ -11,6 +11,8 @@
 #include "client/queries/get_all_client_query_handler.h"
 #include "client/queries/get_client_query_handler.h"
 #include "client/queries/get_client_with_details_query_handler.h"
+// #include "client/commands/insert_client_into_xxx_command.h"
+// #include "client/commands/update_client_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -22,12 +24,12 @@ using namespace Simple::Application::Features::Client::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<ClientController> ClientController::s_instance = QScopedPointer<ClientController>(nullptr);
+QPointer<ClientController> ClientController::s_instance = nullptr;
 
-ClientController::ClientController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+ClientController::ClientController(InterfaceRepositoryProvider *repositoryProvider,
                                    ThreadedUndoRedoSystem *undo_redo_system,
                                    QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 
@@ -35,7 +37,7 @@ ClientController::ClientController(QObject *parent, InterfaceRepositoryProvider 
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 ClientController *ClientController::instance()
@@ -43,11 +45,11 @@ ClientController *ClientController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<ClientDTO> ClientController::get(int id)
+QCoro::Task<ClientDTO> ClientController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
@@ -65,7 +67,7 @@ QCoro::Task<ClientDTO> ClientController::get(int id)
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -76,11 +78,11 @@ QCoro::Task<ClientDTO> ClientController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
+QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id) const
 {
     auto queryCommand = new QueryCommand("getWithDetails");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
@@ -98,7 +100,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
 
     // async wait for result signal
     const std::optional<ClientWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(200));
+        m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -109,7 +111,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientController::getWithDetails(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<ClientDTO>> ClientController::getAll()
+QCoro::Task<QList<ClientDTO>> ClientController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 
@@ -128,7 +130,7 @@ QCoro::Task<QList<ClientDTO>> ClientController::getAll()
 
     // async wait for result signal
     const std::optional<QList<ClientDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -165,7 +167,7 @@ QCoro::Task<ClientDTO> ClientController::create(const CreateClientDTO &dto)
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -189,7 +191,7 @@ QCoro::Task<ClientDTO> ClientController::update(const UpdateClientDTO &dto)
     QObject::connect(handler, &UpdateClientCommandHandler::clientUpdated, this,
                      [this](ClientDTO dto) { emit m_eventDispatcher->client()->updated(dto); });
     QObject::connect(handler, &UpdateClientCommandHandler::clientDetailsUpdated, m_eventDispatcher->client(),
-                     &ClientSignals::detailsUpdated);
+                     &ClientSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<UpdateClientCommandHandler, UpdateClientCommand>(
@@ -200,7 +202,7 @@ QCoro::Task<ClientDTO> ClientController::update(const UpdateClientDTO &dto)
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -221,10 +223,7 @@ QCoro::Task<bool> ClientController::remove(int id)
     auto *handler = new RemoveClientCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveClientCommandHandler::clientCreated, this,
-                     [this](ClientDTO dto) { emit m_eventDispatcher->client()->created(dto); });
-    QObject::connect(handler, &RemoveClientCommandHandler::clientRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->client()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<RemoveClientCommandHandler, RemoveClientCommand>(
@@ -234,8 +233,8 @@ QCoro::Task<bool> ClientController::remove(int id)
     m_undo_redo_system->push(command, "client");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveClientCommandHandler::clientRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

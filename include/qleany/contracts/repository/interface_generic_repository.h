@@ -1,10 +1,10 @@
 #pragma once
-#include "qleany/common/result.h"
 #include "qleany/database/types.h"
-#include "qleany/domain/entity_schema.h"
 #include <QCoreApplication>
 #include <QFuture>
 #include <QUuid>
+#include <qleany/common/result.h>
+#include <qleany/domain/entity_schema.h>
 
 namespace Qleany::Contracts::Repository
 {

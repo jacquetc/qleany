@@ -2,20 +2,19 @@
 
 using namespace Simple::Controller;
 
-EventDispatcher *EventDispatcher::s_instance = nullptr;
+QPointer<EventDispatcher> EventDispatcher::s_instance = nullptr;
 
-EventDispatcher::EventDispatcher(QObject *parent) : QObject{parent}
+EventDispatcher::EventDispatcher() : QObject{nullptr}
 {
     m_errorSignals = new ErrorSignals(this);
+    m_progressSignals = new ProgressSignals(this);
+
+    m_undoRedoSignals = new UndoRedoSignals(this);
 
     m_carSignals = new CarSignals(this);
-
     m_brandSignals = new BrandSignals(this);
-
     m_passengerSignals = new PassengerSignals(this);
-
     m_clientSignals = new ClientSignals(this);
-
     m_customSignals = new CustomSignals(this);
 
     s_instance = this;
@@ -54,4 +53,14 @@ CustomSignals *EventDispatcher::custom() const
 ErrorSignals *EventDispatcher::error() const
 {
     return m_errorSignals;
+}
+
+ProgressSignals *EventDispatcher::progress() const
+{
+    return m_progressSignals;
+}
+
+UndoRedoSignals *EventDispatcher::undoRedo() const
+{
+    return m_undoRedoSignals;
 }

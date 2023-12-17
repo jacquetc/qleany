@@ -1,8 +1,8 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_brand_query_handler.h"
-#include "qleany/tools/automapper/automapper.h"
 #include "repository/interface_brand_repository.h"
+#include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
 using namespace Simple::Application::Features::Brand::Queries;
@@ -29,6 +29,7 @@ Result<BrandDTO> GetBrandQueryHandler::handle(QPromise<Result<void>> &progressPr
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetBrandQuery:" << ex.what();
     }
+    progressPromise.addResult(Result<void>(result.error()));
     return result;
 }
 

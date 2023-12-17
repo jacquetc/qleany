@@ -5,13 +5,21 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 
 set(LIBRARY_NAME {{ application_spinalcase_name }}-presenter)
 
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 include(presenters.cmake)
 
 set(SRCS
     {{ export_header_file }}
 )
 
-qt_add_library(${LIBRARY_NAME} SHARED ${SRCS} ${PRESENTER_LIST})
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${PRESENTER_LIST})
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_PRESENTER_LIBRARY)
 
@@ -22,6 +30,7 @@ target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
 target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-controller)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

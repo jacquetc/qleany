@@ -7,7 +7,7 @@
 #include "undo_redo_system.h"
 #ifdef QLEANY_BUILD_WITH_QT_GUI
 #include <QAction>
-#endif
+#endif // ifdef QLEANY_BUILD_WITH_QT_GUI
 #include <QMutex>
 #include <QObject>
 #include <QThread>
@@ -19,6 +19,7 @@ namespace Qleany::Tools::UndoRedo
 class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
 {
     Q_OBJECT
+
   public:
     ThreadedUndoRedoSystem(QObject *parent, const Scopes &scopes);
 
@@ -35,6 +36,7 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
     void redo();
 
     void push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId = QUuid());
+    void push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId = QUuid()) const;
 
     void clear();
 
@@ -58,29 +60,43 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
 
     void quitGracefully();
 
+    QStringList queuedCommandTextListByScope(const QString &scopeFlagString) const;
+
+    bool isRunning() const;
+
+    int numberOfCommands() const;
+
 #ifdef QLEANY_BUILD_WITH_QT_GUI
     QAction *createUndoAction(QObject *parent, const QString &prefix = QString()) const;
     QAction *createRedoAction(QObject *parent, const QString &prefix = QString()) const;
-#endif
+#endif // ifdef QLEANY_BUILD_WITH_QT_GUI
+
   signals:
+
     /*!
-     * \brief A signal that is emitted when the undo redo system state has changed. Useful for the undo and redo
+     * \brief A signal that is emitted when the undo redo system state has
+     *changed. Useful for the undo and redo
      * actions.
      */
     void stateChanged();
+
     /*!
      * \brief A signal that is emitted when a command results in an error.
      * actions.
      */
     void warningSent(Qleany::Error error);
     void errorSent(Qleany::Error error);
+
     /*!
-     * \brief A signal that is emitted when the undo redo system is about to start redoing.
+     * \brief A signal that is emitted when the undo redo system is about to
+     *start redoing.
      * actions.
      */
     void redoing(Scope scope, bool active);
+
     /*!
-     * \brief A signal that is emitted when the undo redo system is about to start undoing.
+     * \brief A signal that is emitted when the undo redo system is about to
+     *start undoing.
      * actions.
      */
     void undoing(Scope scope, bool active);

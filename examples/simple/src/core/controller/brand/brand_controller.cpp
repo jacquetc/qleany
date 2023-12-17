@@ -10,8 +10,6 @@
 #include "brand/commands/update_brand_command_handler.h"
 #include "brand/queries/get_all_brand_query_handler.h"
 #include "brand/queries/get_brand_query_handler.h"
-// #include "brand/commands/insert_brand_into_xxx_command.h"
-// #include "brand/commands/update_brand_into_xxx_command_handler.h"
 #include "qleany/tools/undo_redo/alter_command.h"
 #include "qleany/tools/undo_redo/query_command.h"
 #include <QCoroSignal>
@@ -23,12 +21,12 @@ using namespace Simple::Application::Features::Brand::Queries;
 using namespace Qleany::Tools::UndoRedo;
 using namespace Qleany::Contracts::Repository;
 
-QScopedPointer<BrandController> BrandController::s_instance = QScopedPointer<BrandController>(nullptr);
+QPointer<BrandController> BrandController::s_instance = nullptr;
 
-BrandController::BrandController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+BrandController::BrandController(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher)
-    : QObject{parent}
+    : QObject{nullptr}
 {
     m_repositoryProvider = repositoryProvider;
 
@@ -36,7 +34,7 @@ BrandController::BrandController(QObject *parent, InterfaceRepositoryProvider *r
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;
 
-    s_instance.reset(this);
+    s_instance = this;
 }
 
 BrandController *BrandController::instance()
@@ -44,11 +42,11 @@ BrandController *BrandController::instance()
     return s_instance.data();
 }
 
-QCoro::Task<BrandDTO> BrandController::get(int id)
+QCoro::Task<BrandDTO> BrandController::get(int id) const
 {
     auto queryCommand = new QueryCommand("get");
 
-    queryCommand->setQueryFunction([=](QPromise<Result<void>> &progressPromise) {
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetBrandQuery query;
         query.id = id;
         auto interface = static_cast<InterfaceBrandRepository *>(m_repositoryProvider->repository("Brand"));
@@ -66,7 +64,7 @@ QCoro::Task<BrandDTO> BrandController::get(int id)
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -77,7 +75,7 @@ QCoro::Task<BrandDTO> BrandController::get(int id)
     co_return optional_result.value();
 }
 
-QCoro::Task<QList<BrandDTO>> BrandController::getAll()
+QCoro::Task<QList<BrandDTO>> BrandController::getAll() const
 {
     auto queryCommand = new QueryCommand("getAll");
 
@@ -96,7 +94,7 @@ QCoro::Task<QList<BrandDTO>> BrandController::getAll()
 
     // async wait for result signal
     const std::optional<QList<BrandDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getAllReplied, std::chrono::milliseconds(200));
+        co_await qCoro(m_eventDispatcher->brand(), &BrandSignals::getAllReplied, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -121,8 +119,16 @@ QCoro::Task<BrandDTO> BrandController::create(const CreateBrandDTO &dto)
     QObject::connect(handler, &CreateBrandCommandHandler::brandCreated, m_eventDispatcher->brand(),
                      &BrandSignals::created);
 
-    QObject::connect(handler, &CreateBrandCommandHandler::brandInsertedIntoCarBrand, m_eventDispatcher->brand(),
-                     &BrandSignals::insertedIntoCarBrand);
+    QObject::connect(handler, &CreateBrandCommandHandler::relationWithOwnerInserted, this,
+                     [this](int id, int ownerId, int position) {
+                         auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Brand, QList<int>() << id,
+                                                   position);
+                         emit m_eventDispatcher->car()->relationInserted(dto);
+                     });
+    QObject::connect(handler, &CreateBrandCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
+        auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Brand, QList<int>() << id, -1);
+        emit m_eventDispatcher->car()->relationRemoved(dto);
+    });
 
     QObject::connect(handler, &CreateBrandCommandHandler::brandRemoved, this,
                      [this](int removedId) { emit m_eventDispatcher->brand()->removed(QList<int>() << removedId); });
@@ -136,7 +142,7 @@ QCoro::Task<BrandDTO> BrandController::create(const CreateBrandDTO &dto)
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(handler, &CreateBrandCommandHandler::brandCreated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &CreateBrandCommandHandler::brandCreated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -160,7 +166,7 @@ QCoro::Task<BrandDTO> BrandController::update(const UpdateBrandDTO &dto)
     QObject::connect(handler, &UpdateBrandCommandHandler::brandUpdated, this,
                      [this](BrandDTO dto) { emit m_eventDispatcher->brand()->updated(dto); });
     QObject::connect(handler, &UpdateBrandCommandHandler::brandDetailsUpdated, m_eventDispatcher->brand(),
-                     &BrandSignals::detailsUpdated);
+                     &BrandSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<UpdateBrandCommandHandler, UpdateBrandCommand>(BrandController::tr("Update brand"),
@@ -171,7 +177,7 @@ QCoro::Task<BrandDTO> BrandController::update(const UpdateBrandDTO &dto)
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
-        co_await qCoro(handler, &UpdateBrandCommandHandler::brandUpdated, std::chrono::milliseconds(200));
+        co_await qCoro(handler, &UpdateBrandCommandHandler::brandUpdated, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {
@@ -192,10 +198,7 @@ QCoro::Task<bool> BrandController::remove(int id)
     auto *handler = new RemoveBrandCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &RemoveBrandCommandHandler::brandCreated, this,
-                     [this](BrandDTO dto) { emit m_eventDispatcher->brand()->created(dto); });
-    QObject::connect(handler, &RemoveBrandCommandHandler::brandRemoved, this,
-                     [this](int id) { emit m_eventDispatcher->brand()->removed(QList<int>() << id); });
+    // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<RemoveBrandCommandHandler, RemoveBrandCommand>(BrandController::tr("Remove brand"),
@@ -205,8 +208,8 @@ QCoro::Task<bool> BrandController::remove(int id)
     m_undo_redo_system->push(command, "brand");
 
     // async wait for result signal
-    const std::optional<int> optional_result =
-        co_await qCoro(handler, &RemoveBrandCommandHandler::brandRemoved, std::chrono::milliseconds(200));
+    const std::optional<QList<int>> optional_result =
+        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
     if (!optional_result.has_value())
     {

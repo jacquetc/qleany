@@ -7,12 +7,13 @@
 #include "passenger/create_passenger_dto.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/update_passenger_dto.h"
-#include "qleany/contracts/repository/interface_repository_provider.h"
+#include <qleany/contracts/repository/interface_repository_provider.h>
 
-#include "qleany/tools/undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
+#include <QPointer>
 #include <QSharedPointer>
+#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
 using namespace Qleany::Contracts::Repository;
 using namespace Qleany::Tools::UndoRedo;
@@ -25,17 +26,21 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 {
     Q_OBJECT
   public:
-    explicit PassengerController(QObject *parent, InterfaceRepositoryProvider *repositoryProvider,
+    explicit PassengerController(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher);
 
     static PassengerController *instance();
 
+    Q_INVOKABLE QCoro::Task<PassengerDTO> get(int id) const;
+
+    Q_INVOKABLE QCoro::Task<QList<PassengerDTO>> getAll() const;
+
+    Q_INVOKABLE static Contracts::DTO::Passenger::CreatePassengerDTO getCreateDTO();
+
+    Q_INVOKABLE static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();
+
   public slots:
-
-    QCoro::Task<PassengerDTO> get(int id);
-
-    QCoro::Task<QList<PassengerDTO>> getAll();
 
     QCoro::Task<PassengerDTO> create(const CreatePassengerDTO &dto);
 
@@ -43,12 +48,8 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT PassengerController : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-    static Contracts::DTO::Passenger::CreatePassengerDTO getCreateDTO();
-
-    static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();
-
   private:
-    static QScopedPointer<PassengerController> s_instance;
+    static QPointer<PassengerController> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;
