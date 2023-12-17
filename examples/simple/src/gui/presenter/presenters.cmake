@@ -13,4 +13,8 @@ set(PRESENTER_LIST
     passenger_list_model_from_car_passengers.cpp
     car_list_model.h
     car_list_model.cpp
+    single_undo.h
+    single_undo.cpp
+    single_redo.h
+    single_redo.cpp
 )

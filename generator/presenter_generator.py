@@ -10,7 +10,7 @@ import copy
 import clang_format
 
 
-def get_generation_dict(
+def _get_generation_dict(
     folder_path: str,
     application_name: str,
     application_cpp_domain_name: str,
@@ -20,6 +20,7 @@ def get_generation_dict(
     list_models_list: list,
     export: str,
     export_header_file: str,
+    create_undo_and_redo_singles: bool,
 ) -> dict:
     def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
         if entity_name == "EntityBase":
@@ -130,7 +131,9 @@ def get_generation_dict(
                 "class_name_spinal": class_name_spinal,
                 "class_name_camel": class_name_camel,
                 "fields": get_fields_without_foreign_entities(
-                    entities_by_name[single["entity"]]["fields"], entities_by_name, single["entity"]
+                    entities_by_name[single["entity"]]["fields"],
+                    entities_by_name,
+                    single["entity"],
                 ),
             }
         )
@@ -180,7 +183,9 @@ def get_generation_dict(
 
         is_related_list = related_name != "" and related_field_name != ""
 
-        related_fields = get_entity_fields(related_name, entities_by_name) if is_related_list else []
+        related_fields = (
+            get_entity_fields(related_name, entities_by_name) if is_related_list else []
+        )
         is_ordered_list = False
         for field in related_fields:
             if field["name"] == related_field_name:
@@ -227,7 +232,9 @@ def get_generation_dict(
                 "class_name_spinal": class_name_spinal,
                 "class_name_camel": class_name_camel,
                 "fields": get_fields_without_foreign_entities(
-                    entities_by_name[model["entity"]]["fields"], entities_by_name, model["entity"]
+                    entities_by_name[model["entity"]]["fields"],
+                    entities_by_name,
+                    model["entity"],
                 ),
                 "is_ordered_list": is_ordered_list,
                 "is_related_list": is_related_list,
@@ -247,10 +254,41 @@ def get_generation_dict(
             )
         )
 
+    # add undo redo
+    generation_dict["create_undo_and_redo_singles"] = create_undo_and_redo_singles
+    if create_undo_and_redo_singles:
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_undo.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_undo.cpp",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_redo.h",
+            )
+        )
+
+        generation_dict["all_presenter_files"].append(
+            os.path.join(
+                folder_path,
+                "single_redo.cpp",
+            )
+        )
+
     return generation_dict
 
 
-def generate_cmakelists(
+def _generate_cmakelists(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -280,7 +318,7 @@ def generate_cmakelists(
             print(f"Successfully wrote file {cmakelists_file}")
 
 
-def generate_cmake_file(
+def _generate_cmake_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -314,7 +352,7 @@ def generate_cmake_file(
             print(f"Successfully wrote file {cmake_file}")
 
 
-def generate_single_file(
+def _generate_single_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -367,7 +405,100 @@ def generate_single_file(
                 )
                 print(f"Successfully wrote file {cpp_single_file}")
 
-def generate_list_model_file(
+
+def _generate_undo_single_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    h_template = template_env.get_template("single_undo.h.jinja2")
+    cpp_template = template_env.get_template("single_undo.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    h_relative_single_file = os.path.join(folder_path, "single_undo.h")
+    h_single_file = os.path.join(root_path, h_relative_single_file)
+
+    if files_to_be_generated.get(h_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(h_single_file), exist_ok=True)
+
+        with open(h_single_file, "w") as f:
+            f.write(
+                h_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                    export_header_file=generation_dict["export_header_file"],
+                    export=generation_dict["export"],
+                )
+            )
+            print(f"Successfully wrote file {h_single_file}")
+
+    cpp_relative_single_file = os.path.join(folder_path, "single_undo.cpp")
+    cpp_single_file = os.path.join(root_path, cpp_relative_single_file)
+
+    if files_to_be_generated.get(cpp_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cpp_single_file), exist_ok=True)
+
+        with open(cpp_single_file, "w") as f:
+            f.write(
+                cpp_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {cpp_single_file}")
+
+
+def _generate_redo_single_files(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
+):
+    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
+    h_template = template_env.get_template("single_redo.h.jinja2")
+    cpp_template = template_env.get_template("single_redo.cpp.jinja2")
+
+    folder_path = generation_dict["folder_path"]
+
+    h_relative_single_file = os.path.join(folder_path, "single_redo.h")
+    h_single_file = os.path.join(root_path, h_relative_single_file)
+
+    if files_to_be_generated.get(h_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(h_single_file), exist_ok=True)
+
+        with open(h_single_file, "w") as f:
+            f.write(
+                h_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                    export_header_file=generation_dict["export_header_file"],
+                    export=generation_dict["export"],
+                )
+            )
+            print(f"Successfully wrote file {h_single_file}")
+
+    cpp_relative_single_file = os.path.join(folder_path, "single_redo.cpp")
+    cpp_single_file = os.path.join(root_path, cpp_relative_single_file)
+
+    if files_to_be_generated.get(cpp_relative_single_file, False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(cpp_single_file), exist_ok=True)
+
+        with open(cpp_single_file, "w") as f:
+            f.write(
+                cpp_template.render(
+                    application_cpp_domain_name=generation_dict[
+                        "application_cpp_domain_name"
+                    ],
+                )
+            )
+            print(f"Successfully wrote file {cpp_single_file}")
+
+
+def _generate_list_model_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/presenter"))
@@ -382,11 +513,23 @@ def generate_list_model_file(
     list_models = generation_dict["list_models"]
 
     for list_model in list_models:
-        h_template = ordered_h_template if list_model["is_ordered_list"] else not_ordered_h_template
-        cpp_template = ordered_cpp_template if list_model["is_ordered_list"] else not_ordered_cpp_template
+        h_template = (
+            ordered_h_template
+            if list_model["is_ordered_list"]
+            else not_ordered_h_template
+        )
+        cpp_template = (
+            ordered_cpp_template
+            if list_model["is_ordered_list"]
+            else not_ordered_cpp_template
+        )
 
-        h_template = h_template if list_model["is_related_list"] else not_related_h_template
-        cpp_template = cpp_template if list_model["is_related_list"] else not_related_cpp_template
+        h_template = (
+            h_template if list_model["is_related_list"] else not_related_h_template
+        )
+        cpp_template = (
+            cpp_template if list_model["is_related_list"] else not_related_cpp_template
+        )
 
         h_relative_list_model_file = os.path.join(
             folder_path, f"{list_model['class_name_snake']}.h"
@@ -470,12 +613,15 @@ def generate_presenter_files(
     presenter_data = manifest_data.get("presenter", {})
     singles_presenter_list = presenter_data.get("singles", [])
     list_models_list = presenter_data.get("list_models", [])
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
 
     folder_path = presenter_data.get("folder_path", "Undefined")
     export = presenter_data.get("export", "Undefined")
     export_header_file = presenter_data.get("export_header_file", "Undefined")
 
-    generation_dict = get_generation_dict(
+    generation_dict = _get_generation_dict(
         folder_path,
         application_name,
         application_cpp_domain_name,
@@ -485,12 +631,20 @@ def generate_presenter_files(
         list_models_list,
         export,
         export_header_file,
+        create_undo_and_redo_singles,
     )
 
-    generate_single_file(root_path, generation_dict, files_to_be_generated)
-    generate_list_model_file(root_path, generation_dict, files_to_be_generated)
-    generate_cmake_file(root_path, generation_dict, files_to_be_generated)
-    generate_cmakelists(root_path, generation_dict, files_to_be_generated)
+    _generate_single_file(root_path, generation_dict, files_to_be_generated)
+    _generate_list_model_file(root_path, generation_dict, files_to_be_generated)
+    if create_undo_and_redo_singles:
+        _generate_undo_single_files(
+            root_path, generation_dict, files_to_be_generated
+        )
+        _generate_redo_single_files(
+            root_path, generation_dict, files_to_be_generated
+        )
+    _generate_cmake_file(root_path, generation_dict, files_to_be_generated)
+    _generate_cmakelists(root_path, generation_dict, files_to_be_generated)
 
     # format the files
     for file, to_be_generated in files_to_be_generated.items():
@@ -498,6 +652,7 @@ def generate_presenter_files(
         #     uncrustify.run_uncrustify(file, uncrustify_config_file)
         if to_be_generated and file.endswith(".h") or file.endswith(".cpp"):
             clang_format.run_clang_format(os.path.join(root_path, file))
+
 
 def get_files_to_be_generated(
     manifest_file: str,
@@ -540,12 +695,15 @@ def get_files_to_be_generated(
     presenter_data = manifest_data.get("presenter", {})
     singles_presenter_list = presenter_data.get("singles", [])
     list_models_list = presenter_data.get("list_models", [])
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
 
     folder_path = presenter_data.get("folder_path", "Undefined")
     export = presenter_data.get("export", "Undefined")
     export_header_file = presenter_data.get("export_header_file", "Undefined")
 
-    generation_dict = get_generation_dict(
+    generation_dict = _get_generation_dict(
         folder_path,
         application_name,
         application_cpp_domain_name,
@@ -555,6 +713,7 @@ def get_files_to_be_generated(
         list_models_list,
         export,
         export_header_file,
+        create_undo_and_redo_singles,
     )
 
     files = []
@@ -562,7 +721,6 @@ def get_files_to_be_generated(
     # add presenter files:
     for presenter_file in generation_dict["all_presenter_files"]:
         files.append(presenter_file)
-
 
     # add list_file:
     files.append(
