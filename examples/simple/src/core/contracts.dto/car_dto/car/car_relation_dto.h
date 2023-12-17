@@ -13,7 +13,7 @@ class CarRelationDTO
 
     Q_PROPERTY(int id READ id WRITE setId)
     Q_PROPERTY(RelationField relationField READ relationField WRITE setRelationshipField)
-    Q_PROPERTY(QList<int> relatedIds READ relatedIds WRITE setRelatedId)
+    Q_PROPERTY(QList<int> relatedIds READ relatedIds WRITE setRelatedIds)
     Q_PROPERTY(int position READ position WRITE setPosition)
 
   public:
@@ -190,7 +190,7 @@ class CarRelationDTO
         return m_relatedIds;
     }
 
-    void setRelatedId(const QList<int> &relatedIds)
+    void setRelatedIds(const QList<int> &relatedIds)
     {
         m_relatedIds = relatedIds;
         m_metaData.relatedIdsSet = true;

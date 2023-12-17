@@ -370,7 +370,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 dto_dict[dto_type_name]["fields"].append(
                     {
                         "name": "relatedIds",
-                        "pascal_name": "RelatedId",
+                        "pascal_name": "RelatedIds",
                         "is_foreign": False,
                         "type": "QList<int>",
                     }

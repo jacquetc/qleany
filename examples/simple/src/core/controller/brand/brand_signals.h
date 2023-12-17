@@ -29,6 +29,5 @@ class SIMPLEEXAMPLE_CONTROLLER_EXPORT BrandSignals : public QObject
     void created(BrandDTO dto);
     void updated(Contracts::DTO::Brand::BrandDTO dto);
     void allRelationsInvalidated(int id);
-    // TODO: add a signal insertInto[Relative][field] for each relative field in other entities
 };
 } // namespace Simple::Controller
