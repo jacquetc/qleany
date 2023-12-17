@@ -18,6 +18,9 @@ class {{ export }} SingleRedo : public QObject
     bool enabled() const;
     QString text() const;
 
+  public slots:
+    void redo();
+
   signals:
     void enabledChanged();
     void textChanged();

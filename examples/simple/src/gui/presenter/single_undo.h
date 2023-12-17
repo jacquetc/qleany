@@ -18,6 +18,9 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleUndo : public QObject
     bool enabled() const;
     QString text() const;
 
+  public slots:
+    void undo();
+
   signals:
     void enabledChanged();
     void textChanged();

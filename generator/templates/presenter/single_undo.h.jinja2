@@ -17,6 +17,9 @@ class {{ export }} SingleUndo : public QObject
 
     bool enabled() const;
     QString text() const;
+    
+  public slots:
+    void undo();
 
   signals:
     void enabledChanged();

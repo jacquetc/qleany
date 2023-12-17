@@ -46,3 +46,8 @@ QString SingleUndo::text() const
 {
     return m_text;
 }
+
+void SingleUndo::undo()
+{
+    UndoRedoController::instance()->undo();
+}
