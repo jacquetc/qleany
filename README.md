@@ -244,8 +244,32 @@ qml:
   real_imports_folder_path: path/to/real/imports
 
 ```
-### 
 
-```yaml
+## Utilizing the Qleany GUI Interface
 
-```
+To access Qleany's user-friendly graphical interface, execute the script `generator/qleany_generator_ui.py`. This interface allows developers to efficiently manage file generation. 
+
+![Alt text](doc/qleany_generator_gui.png)
+
+1. **Run the Qleany GUI**:
+   - Launch Qleany's graphical user interface by executing the script `generator/qleany_generator_ui.py`.
+
+2. **Select the `qleany.yaml` File**:
+   - Begin by choosing your project's `qleany.yaml` file. This configuration file is essential for the GUI to operate correctly.
+
+3. **List Available Files**:
+   - In the GUI, use the "list" button for each component. This will generate a list of files that can be created for that component.
+
+4. **Select Files to Generate**:
+   - Choose the files you want to generate from the provided list, depending on your project requirements.
+
+5. **Preview Files**:
+   - Opt for the "preview" feature to generate and inspect the selected files in a "preview" folder. The location of this folder is defined in your `qleany.yaml` file.
+
+6. **Generate Files**:
+   - After previewing, proceed to generate the files by clicking the "generate" button. This will create the files in their designated locations within your project.
+
+7. **Overwrite Confirmation**:
+   - Should the file generation process require overwriting existing files, a warning message will appear. This alert ensures you are informed about and agree to the upcoming changes to your current files.
+
+Alternatively, you can list and generate all the files of the project.
