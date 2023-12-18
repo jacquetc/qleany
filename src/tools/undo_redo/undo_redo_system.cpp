@@ -10,12 +10,6 @@
 using namespace Qleany::Tools::UndoRedo;
 
 /*!
- * \class UndoRedoSystem
- * \inmodule Presenter::UndoRedo
- * \brief A QObject that manages the undo and redo command history.
- */
-
-/*!
  * \brief Constructs an UndoRedoSystem with the specified \a parent.
  */
 UndoRedoSystem::UndoRedoSystem(QObject *parent, Scopes scopes) : QThread(parent), m_undoLimit(10), m_scopes(scopes)

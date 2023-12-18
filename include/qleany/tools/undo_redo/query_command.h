@@ -9,6 +9,14 @@
 namespace Qleany::Tools::UndoRedo
 {
 
+/*!
+ * \brief The QueryCommand class
+ * \ingroup UndoRedo
+ *
+ * Invisible command dedicated to queries. QueryCommands will not be stored in UndoRedoSystem as done with
+ * UndoRedoCommand, but they will run asynchronously respecting the execution queue of its scope.
+ */
+
 class QLEANY_EXPORT QueryCommand : public UndoRedoCommand
 {
     Q_OBJECT

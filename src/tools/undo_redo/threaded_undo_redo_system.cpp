@@ -11,19 +11,6 @@ using namespace Qleany::Tools::UndoRedo;
 
 ThreadedUndoRedoSystem *ThreadedUndoRedoSystem::m_instance = nullptr;
 
-/*!
- * \class ThreadedUndoRedoSystem
- * \inmodule Presenter::UndoRedo
- * \brief A QObject encapsulating a threaded UndoRedoSystem that manages the
- * undo and redo command history
- * asynchronously.
- *
- * Implements a threaded undo-redo system by encapsulating the UndoRedoSystem
- * functionality in a
- * separate thread. This class ensures that undo and redo operations are
- * performed asynchronously without blocking the
- * main thread.
- */
 
 /*!
  * \brief Constructs an ThreadedUndoRedoSystem with the specified \a parent.

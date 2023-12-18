@@ -6,15 +6,6 @@
 using namespace Qleany::Tools::UndoRedo;
 
 /*!
- * \class QueryCommand
- * \brief The QueryCommand class
- * \ingroup Presenter::UndoRedo
- *
- * Invisible command dedicated to queries. QueryCommands will not be stored in UndoRedoSystem as done with
- * UndoRedoCommand, but they will run asynchronously respecting the execution queue of its scope.
- */
-
-/*!
  * \brief Constructs a QueryCommand instance with the specified text for logging purposes.
  * \param text A QString representing the message for logging purposes.
  */

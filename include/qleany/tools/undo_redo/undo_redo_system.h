@@ -13,8 +13,16 @@
 #include <QSharedPointer>
 #include <QTimer>
 
+/*!
+    \defgroup UndoRedo
+*/
 namespace Qleany::Tools::UndoRedo
 {
+/*!
+ * \brief A QObject that manages the undo and redo command history.
+ * \ingroup UndoRedo
+ */
+
 class QLEANY_EXPORT UndoRedoSystem : public QThread
 {
     Q_OBJECT

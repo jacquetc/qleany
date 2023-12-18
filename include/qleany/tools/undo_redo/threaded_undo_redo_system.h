@@ -16,6 +16,18 @@ using namespace Qleany;
 
 namespace Qleany::Tools::UndoRedo
 {
+/*!
+ * \ingroup UndoRedo
+ * \brief A QObject encapsulating a threaded UndoRedoSystem that manages the
+ * undo and redo command history
+ * asynchronously.
+ *
+ * Implements a threaded undo-redo system by encapsulating the UndoRedoSystem
+ * functionality in a
+ * separate thread. This class ensures that undo and redo operations are
+ * performed asynchronously without blocking the
+ * main thread.
+ */
 class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
 {
     Q_OBJECT

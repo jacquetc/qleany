@@ -8,15 +8,6 @@
 
 using namespace Qleany::Tools::UndoRedo;
 
-/*!
- * \class UndoRedoCommand
- * \inmodule Presenter::UndoRedo
- * \brief A base class for implementing undo and redo commands.
- * Represents a base class for undo-redo commands in the application. Derived
- * classes should implement undo() and redo()
- * methods to define the behavior of the command during undo and redo
- * operations.
- */
 
 /*!
  * \brief Constructs an UndoRedoCommand with the specified \a text.

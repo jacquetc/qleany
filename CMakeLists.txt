@@ -35,23 +35,17 @@ qt_standard_project_setup()
 if(QLEANY_BUILD_WITH_QT_GUI)
     find_package(Qt6 COMPONENTS Gui REQUIRED)
 endif()
+
 if(QLEANY_BUILD_EXAMPLES)
     find_package(Qt6 COMPONENTS Widgets REQUIRED)
 endif()
 
-
 find_package(QCoro6 REQUIRED COMPONENTS Core)
+
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
 
-
-
-
-
-
-
 # Create a library target for the Qleany framework
-
 set(LIB_PUBLIC_HEADERS
     include/qleany/tools/undo_redo/alter_command.h
     include/qleany/tools/undo_redo/query_command.h
@@ -85,25 +79,34 @@ set(LIB_PUBLIC_HEADERS
 )
 
 # Create the library target
-
 add_library(Qleany ${LIB_TYPE}
+
     ${LIB_PUBLIC_HEADERS}
-        src/tools/undo_redo/query_command.cpp
-        src/tools/undo_redo/undo_redo_stack.cpp
-        src/tools/undo_redo/threaded_undo_redo_system.cpp
-        src/tools/undo_redo/undo_redo_system.cpp
-        src/tools/undo_redo/undo_redo_command.cpp
-        src/tools/automapper/automapper.cpp
-        src/tools/undo_redo/undo_redo_scopes.cpp
-        src/repository/repository_provider.cpp
-        src/database/database_context.cpp
-        src/domain/entity_base.cpp
-        src/contracts/repository/signal_holder.cpp
 )
+
+target_sources(Qleany PRIVATE
+    src/tools/undo_redo/query_command.cpp
+    src/tools/undo_redo/undo_redo_stack.cpp
+    src/tools/undo_redo/threaded_undo_redo_system.cpp
+    src/tools/undo_redo/undo_redo_system.cpp
+    src/tools/undo_redo/undo_redo_command.cpp
+    src/tools/automapper/automapper.cpp
+    src/tools/undo_redo/undo_redo_scopes.cpp
+    src/repository/repository_provider.cpp
+    src/database/database_context.cpp
+    src/domain/entity_base.cpp
+    src/contracts/repository/signal_holder.cpp
+)
+
 target_include_directories(Qleany PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include> # <prefix>/include
 )
+
+set_target_properties(Qleany PROPERTIES CXX_STANDARD 20)
+string(TOLOWER Qleany PROJECT_NAME_LOWER)
+set_target_properties(Qleany PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
+
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 
 if(QLEANY_BUILD_WITH_QT_GUI)
@@ -113,7 +116,6 @@ endif()
 target_compile_definitions(Qleany PRIVATE QLEANY_LIBRARY)
 
 # Specify where to install the library and headers
-
 install(TARGETS Qleany
     EXPORT QleanyTargets
     LIBRARY DESTINATION lib
@@ -132,17 +134,11 @@ install(DIRECTORY include/
     DESTINATION include
 )
 
-
-
-
-
-
-
 # Subdirectories that contain CMakeLists.txt for the framework tests and example
 if(QLEANY_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
 if(QLEANY_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
-

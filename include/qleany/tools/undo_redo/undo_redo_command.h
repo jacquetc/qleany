@@ -15,6 +15,14 @@ using namespace Qleany;
 
 namespace Qleany::Tools::UndoRedo
 {
+/*!
+ * \ingroup UndoRedo
+ * \brief A base class for implementing undo and redo commands.
+ * Represents a base class for undo-redo commands in the application. Derived
+ * classes should implement undo() and redo()
+ * methods to define the behavior of the command during undo and redo
+ * operations.
+ */
 class QLEANY_EXPORT UndoRedoCommand : public QObject
 {
     Q_OBJECT
