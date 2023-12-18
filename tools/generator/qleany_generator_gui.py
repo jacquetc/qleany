@@ -36,6 +36,14 @@ import yaml
 import shutil
 from pathlib import Path
 
+full_path = Path(__file__).resolve().parent
+full_path = f"{full_path}"
+# add the current directory to the path so that we can import the generated files
+sys.path.append(full_path)
+
+# set the current directory to the generator directory
+os.chdir(full_path)
+
 import entities_generator
 import dto_generator
 import repositories_generator
@@ -92,10 +100,11 @@ class MainWindow(QMainWindow):
         self.manifest_file_layout = QHBoxLayout()
         # set entity relationship window launch button
 
-        self.entity_relationship_window_button = QPushButton("Entity Relationship Viewer")
+        self.entity_relationship_window_button = QPushButton(
+            "Entity Relationship Viewer"
+        )
         self.entity_relationship_window_button.clicked.connect(
             self.open_entity_relationship_window
-            
         )
         self.manifest_file_layout.addWidget(self.entity_relationship_window_button)
 
@@ -488,9 +497,10 @@ class MainWindow(QMainWindow):
         self.load_data()
         self.load_settings()
 
-
     def open_entity_relationship_window(self):
-        self.relationship_viewer_window = entity_relationship_viewer.EntityRelationshipWindow(self.manifest_file)
+        self.relationship_viewer_window = (
+            entity_relationship_viewer.EntityRelationshipWindow(self.manifest_file)
+        )
         self.relationship_viewer_window.show()
 
     # all
@@ -505,7 +515,9 @@ class MainWindow(QMainWindow):
             repositories_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(cqrs_generator.get_files_to_be_generated(self.temp_manifest_file))
-        list.extend(presenter_generator.get_files_to_be_generated(self.temp_manifest_file))
+        list.extend(
+            presenter_generator.get_files_to_be_generated(self.temp_manifest_file)
+        )
         list.extend(
             controller_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
@@ -1266,6 +1278,14 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    full_path = Path(__file__).resolve().parent
+
+    # add the current directory to the path so that we can import the generated files
+    sys.path.append(full_path)
+
+    # set the current directory to the generator directory
+    os.chdir(full_path)
+
     app = QApplication(sys.argv)
 
     QCoreApplication.setOrganizationName("qleany-generator")

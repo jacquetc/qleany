@@ -164,7 +164,9 @@ def generate_entity_files(
 
     global_data = manifest_data.get("global", [])
     application_name = global_data.get("application_name", "")
-    application_cpp_domain_name = global_data.get("application_cpp_domain_name", "Undefined")
+    application_cpp_domain_name = global_data.get(
+        "application_cpp_domain_name", "Undefined"
+    )
 
     export = entities_data.get("export", "")
     export_header_file = entities_data.get("export_header_file", "")
@@ -234,7 +236,10 @@ def generate_entity_files(
                     else:
                         other_entity_name = field["type"]
 
-                    if entity_name  != other_entity_name  and entity_name != entity["name"]:
+                    if (
+                        entity_name != other_entity_name
+                        and entity_name != entity["name"]
+                    ):
                         continue
 
                     # Determine the cardinality of the relationship
@@ -328,7 +333,6 @@ def generate_entity_files(
 
         # remove duplicates
         headers = list(set(headers))
-
 
         parent_header = f'"{stringcase.snakecase(parent)}.h"'
         if parent == "EntityBase":

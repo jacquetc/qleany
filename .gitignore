@@ -54,8 +54,8 @@ compile_commands.json
 *_qmlcache.qrc
 
 # Qleany
-generator/preview
-generator/temp/
+tools/generator/preview
+tools/generator/temp
 *_rc.py
 qleany_preview
 

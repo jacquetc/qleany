@@ -637,12 +637,8 @@ def generate_presenter_files(
     _generate_single_file(root_path, generation_dict, files_to_be_generated)
     _generate_list_model_file(root_path, generation_dict, files_to_be_generated)
     if create_undo_and_redo_singles:
-        _generate_undo_single_files(
-            root_path, generation_dict, files_to_be_generated
-        )
-        _generate_redo_single_files(
-            root_path, generation_dict, files_to_be_generated
-        )
+        _generate_undo_single_files(root_path, generation_dict, files_to_be_generated)
+        _generate_redo_single_files(root_path, generation_dict, files_to_be_generated)
     _generate_cmake_file(root_path, generation_dict, files_to_be_generated)
     _generate_cmakelists(root_path, generation_dict, files_to_be_generated)
 

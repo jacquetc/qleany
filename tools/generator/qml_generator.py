@@ -222,7 +222,9 @@ def generate_real_cmakelists_file(
     relative_files = []
     for file in files:
         relative_files.append(
-            os.path.relpath(os.path.join(root_path, file), os.path.dirname(output_file)).replace("\\", "/")
+            os.path.relpath(
+                os.path.join(root_path, file), os.path.dirname(output_file)
+            ).replace("\\", "/")
         )
 
     # Render the template
