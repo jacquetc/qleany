@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "qleany"
+version = "0.0.0"
+license = "MIT"
+description = "Python tool for Qleany"
+authors = ["Cyril Jacquet <cyril.jacquet@skribisto.eu>"]
+readme = "README.md"
+packages = [{ include = "tools" }]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.13"
+pyside6 = "^6.6.1"
+clang-format = "^17.0.6"
+stringcase = "^1.2.0"
+
+
+[build-system]
+requires = ["poetry-core", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry.scripts]
+qleany = "tools.__main__:main"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
+format-jinja = """
+    {%- if distance == 0 -%}
+        {{- base -}}
+    {%- else -%}
+        {{- base }}.dev{{ distance }}+g{{commit}}
+    {%- endif -%}
+"""
+format-jinja-imports = [{ module = "datetime", item = "datetime" }]
