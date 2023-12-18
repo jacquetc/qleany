@@ -4,8 +4,9 @@ version = "0.0.0"
 license = "MIT"
 description = "Python tool for Qleany"
 authors = ["Cyril Jacquet <cyril.jacquet@skribisto.eu>"]
-readme = "README.md"
-packages = [{ include = "tools" }]
+repository = "https://github.com/jacquetc/qleany"
+readme = ["README.md", "LICENSE"]
+packages = [{ include = "qleany", from = "tools" }]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
@@ -19,7 +20,7 @@ requires = ["poetry-core", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry.scripts]
-qleany = "tools.__main__:main"
+qleany = "qleany.__main__:main"
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -33,3 +34,7 @@ format-jinja = """
     {%- endif -%}
 """
 format-jinja-imports = [{ module = "datetime", item = "datetime" }]
+
+[virtualenvs]
+create = true
+in-project = true
