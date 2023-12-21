@@ -1,42 +1,60 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 #include "passenger/passenger_controller.h"
+#include <QCoroQml>
+#include <QCoroQmlTask>
 #include <QQmlEngine>
 
-struct ForeignPassengerController
+using namespace Simple::Controller::Passenger;
+
+class ForeignPassengerController : public QObject
 {
-    Q_GADGET
-    QML_FOREIGN(Simple::Controller::Passenger::PassengerController)
+    Q_OBJECT
     QML_SINGLETON
     QML_NAMED_ELEMENT(PassengerController)
 
-public:
-
-    // Initialize this singleton instance with the given engine.
-
-    inline static Simple::Controller::Passenger::PassengerController *s_singletonInstance = nullptr;
-
-    static Simple::Controller::Passenger::PassengerController* create(QQmlEngine *, QJSEngine *engine)
+  public:
+    ForeignPassengerController(QObject *parent = nullptr) : QObject(parent)
     {
-        s_singletonInstance = Simple::Controller::Passenger::PassengerController::instance();
-
-        // The instance has to exist before it is used. We cannot replace it.
-        Q_ASSERT(s_singletonInstance);
-
-        // The engine has to have the same thread affinity as the singleton.
-        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
-
-        // There can only be one engine accessing the singleton.
-        if (s_engine) Q_ASSERT(engine == s_engine);
-        else s_engine = engine;
-
-        // Explicitly specify C++ ownership so that the engine doesn't delete
-        // the instance.
-        QJSEngine::setObjectOwnership(s_singletonInstance, QJSEngine::CppOwnership);
-
-        return s_singletonInstance;
+        s_controllerInstance = PassengerController::instance();
     }
 
-private:
+    Q_INVOKABLE QCoro::QmlTask get(int id) const
+    {
+        return s_controllerInstance->get(id);
+    }
 
-    inline static QJSEngine *s_engine = nullptr;
+    Q_INVOKABLE QCoro::QmlTask getAll() const
+    {
+        return s_controllerInstance->getAll();
+    }
+
+    Q_INVOKABLE CreatePassengerDTO getCreateDTO()
+    {
+        return s_controllerInstance->getCreateDTO();
+    }
+
+    Q_INVOKABLE UpdatePassengerDTO getUpdateDTO()
+    {
+        return s_controllerInstance->getUpdateDTO();
+    }
+
+    Q_INVOKABLE QCoro::QmlTask create(const CreatePassengerDTO &dto)
+    {
+        return s_controllerInstance->create(dto);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask update(const UpdatePassengerDTO &dto)
+    {
+        return s_controllerInstance->update(dto);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask remove(int id)
+    {
+        return s_controllerInstance->remove(id);
+    }
+
+  private:
+    PassengerController *s_controllerInstance = nullptr;
 };

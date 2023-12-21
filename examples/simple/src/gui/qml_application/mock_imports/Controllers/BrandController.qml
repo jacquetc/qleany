@@ -9,7 +9,7 @@ QtObject {
 
     function getCreateDTO() {
         return {
-            "content": "Car 1"
+            "content": "Brand 1"
         }
     }
 
@@ -26,7 +26,7 @@ QtObject {
                                timer.triggered.connect(() => {
                                                            const result = dto;
                                                            if (result) {
-                                                               EventDispatcher.car().created(dto);
+                                                               EventDispatcher.brand().created(dto);
                                                                resolve(result);
                                                            } else {
                                                                reject(new Error(`No value found for ${dto}`));
@@ -46,27 +46,7 @@ QtObject {
                                timer.triggered.connect(() => {
                                                            const result = dto;
                                                            if (result) {
-                                                               EventDispatcher.car().getReplied(id);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${id}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
-    }
-
-    function getWithDetails(id) {
-        // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dto;
-                                                           if (result) {
-                                                               EventDispatcher.car().getWithDetailsReplied(id);
+                                                               EventDispatcher.brand().getReplied(id);
                                                                resolve(result);
                                                            } else {
                                                                reject(new Error(`No value found for ${id}`));
@@ -90,7 +70,7 @@ QtObject {
                                timer.triggered.connect(() => {
                                                            const result = dtos;
                                                            if (result) {
-                                                               EventDispatcher.car().getAllReplied(dtos);
+                                                               EventDispatcher.brand().getAllReplied(dtos);
                                                                resolve(result);
                                                            } else {
                                                                reject(new Error(`No value found for ${dtos}`));
@@ -120,8 +100,8 @@ QtObject {
                                timer.triggered.connect(() => {
                                                            const result = dto;
                                                            if (result) {
-                                                               EventDispatcher.car().updated(dto);
-                                                               EventDispatcher.car().allRelationsInvalidated(dto.id);
+                                                               EventDispatcher.brand().updated(dto);
+                                                               EventDispatcher.brand().allRelationsInvalidated(dto.id);
                                                                resolve(result);
                                                            } else {
                                                                reject(new Error(`No value found for ${dto}`));
@@ -132,7 +112,7 @@ QtObject {
                            });
     }
 
-    signal carRemoved(int id)
+    signal brandRemoved(int id)
     function remove(id) {
         
         // mocking QCoro::Task
@@ -143,7 +123,7 @@ QtObject {
                                timer.triggered.connect(() => {
                                                            const result = true;
                                                            if (result) {
-                                                               EventDispatcher.car().removed(id);
+                                                               EventDispatcher.brand().removed(id);
                                                                resolve(result);
                                                            } else {
                                                                reject(new Error(`No value found for ${id}`));

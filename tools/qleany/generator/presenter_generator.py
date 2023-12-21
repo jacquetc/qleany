@@ -8,6 +8,7 @@ import uncrustify
 from pathlib import Path
 import copy
 import clang_format
+import generation_dict_tools as tools
 
 
 def _get_generation_dict(
@@ -31,25 +32,6 @@ def _get_generation_dict(
         entity_data = entities_by_name[entity_name]
         fields = entity_data["fields"]
         return fields
-
-    def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
-        for entity_name in entities_by_name:
-            if entity_name == field_type:
-                return True
-
-        return False
-
-    def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
-        if "<" not in field_type:
-            return False
-
-        type = field_type.split("<")[1].split(">")[0].strip()
-
-        for entity_name in entities_by_name:
-            if entity_name == type:
-                return True
-
-        return False
 
     def get_fields_without_foreign_entities(
         fields: list, entities_by_name: dict, entity_mappable_with: str = ""
@@ -78,9 +60,9 @@ def _get_generation_dict(
             field["name_spinal"] = stringcase.spinalcase(field["name"])
             field["name_camel"] = stringcase.camelcase(field["name"])
 
-            if is_unique_foreign_entity(
+            if tools.is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or is_list_foreign_entity(field["type"], entities_by_name):
+            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
                 continue
 
             else:

@@ -8,6 +8,7 @@ import uncrustify
 import clang_format
 from pathlib import Path
 from copy import deepcopy
+import generation_dict_tools as tools
 
 
 def generate_export_header_file(
@@ -164,27 +165,6 @@ def generate_repository_files(
     generated_files = []
     interface_generated_files = []
 
-    def is_unique_foreign_entity(field_type: str) -> bool:
-        for entity in entities_list:
-            name = entity["name"]
-            if name == field_type:
-                return True
-
-        return False
-
-    def is_list_foreign_entity(field_type: str) -> bool:
-        if "<" not in field_type:
-            return False
-
-        type = field_type.split("<")[1].split(">")[0].strip()
-
-        for entity in entities_list:
-            name = entity["name"]
-            if name == type:
-                return True
-
-        return False
-
     all_repository_files = []
     all_interface_files = []
 
@@ -200,11 +180,11 @@ def generate_repository_files(
         for field in entities_by_name[name]["fields"]:
             field_type = field["type"]
             field_name = field["name"]
-            if is_unique_foreign_entity(field_type):
+            if tools.is_unique_foreign_entity(field_type, entities_by_name):
                 foreign_entities[f"{field_type}__{field_name}"] = deepcopy(
                     entities_by_name[field_type]
                 )
-            elif is_list_foreign_entity(field_type):
+            elif tools.is_list_foreign_entity(field_type, entities_by_name):
                 foreign_entities[f"{field_type}__{field_name}"] = deepcopy(
                     entities_by_name[field_type.split("<")[1].split(">")[0].strip()]
                 )
@@ -217,7 +197,7 @@ def generate_repository_files(
             field_name = key.split("__")[1]
             value["is_list"] = field_type.split("<")[
                 0
-            ] == "QList" and is_list_foreign_entity(field_type)
+            ] == "QList" and tools.is_list_foreign_entity(field_type, entities_by_name)
             if value["is_list"]:
                 value["type_camel_name"] = stringcase.camelcase(
                     field_type.split("<")[1].split(">")[0].strip()
@@ -478,9 +458,9 @@ def generate_repository_files(
         direct_children = []
         for field in entity["fields"]:
             field_type = field["type"]
-            if is_unique_foreign_entity(field_type):
+            if tools.is_unique_foreign_entity(field_type, entities_by_name):
                 direct_children.append(field_type)
-            elif is_list_foreign_entity(field_type):
+            elif tools.is_list_foreign_entity(field_type, entities_by_name):
                 direct_children.append(field_type.split("<")[1].split(">")[0].strip())
 
         # alphabetize the list

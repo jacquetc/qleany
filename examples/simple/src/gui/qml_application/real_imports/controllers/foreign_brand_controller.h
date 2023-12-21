@@ -1,31 +1,26 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "car/car_controller.h"
+#include "brand/brand_controller.h"
 #include <QCoroQml>
 #include <QCoroQmlTask>
 #include <QQmlEngine>
 
-using namespace Simple::Controller::Car;
+using namespace Simple::Controller::Brand;
 
-class ForeignCarController : public QObject
+class ForeignBrandController : public QObject
 {
     Q_OBJECT
     QML_SINGLETON
-    QML_NAMED_ELEMENT(CarController)
+    QML_NAMED_ELEMENT(BrandController)
 
   public:
-    ForeignCarController(QObject *parent = nullptr) : QObject(parent)
+    ForeignBrandController(QObject *parent = nullptr) : QObject(parent)
     {
-        s_controllerInstance = CarController::instance();
+        s_controllerInstance = BrandController::instance();
     }
 
     Q_INVOKABLE QCoro::QmlTask get(int id) const
-    {
-        return s_controllerInstance->get(id);
-    }
-
-    Q_INVOKABLE QCoro::QmlTask getWithDetails(int id) const
     {
         return s_controllerInstance->get(id);
     }
@@ -35,22 +30,22 @@ class ForeignCarController : public QObject
         return s_controllerInstance->getAll();
     }
 
-    Q_INVOKABLE CreateCarDTO getCreateDTO()
+    Q_INVOKABLE CreateBrandDTO getCreateDTO()
     {
         return s_controllerInstance->getCreateDTO();
     }
 
-    Q_INVOKABLE UpdateCarDTO getUpdateDTO()
+    Q_INVOKABLE UpdateBrandDTO getUpdateDTO()
     {
         return s_controllerInstance->getUpdateDTO();
     }
 
-    Q_INVOKABLE QCoro::QmlTask create(const CreateCarDTO &dto)
+    Q_INVOKABLE QCoro::QmlTask create(const CreateBrandDTO &dto)
     {
         return s_controllerInstance->create(dto);
     }
 
-    Q_INVOKABLE QCoro::QmlTask update(const UpdateCarDTO &dto)
+    Q_INVOKABLE QCoro::QmlTask update(const UpdateBrandDTO &dto)
     {
         return s_controllerInstance->update(dto);
     }
@@ -61,5 +56,5 @@ class ForeignCarController : public QObject
     }
 
   private:
-    CarController *s_controllerInstance = nullptr;
+    BrandController *s_controllerInstance = nullptr;
 };

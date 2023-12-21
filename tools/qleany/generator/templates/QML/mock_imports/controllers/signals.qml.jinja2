@@ -1,0 +1,40 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+pragma Singleton
+
+import QtQuick
+
+QtObject {
+{%- if controller.crud.enabled %}
+{%- if controller.crud.get %}
+    signal getReplied(var dto)
+{%- endif %}
+{%- if controller.crud.get_with_details %}
+    signal getWithDetailsReplied(var dto)
+{%- endif %}
+{%- if controller.crud.get_all %}
+    signal getAllReplied(list<var> dto)
+{%- endif %}
+{%- if controller.crud.remove %}
+    signal removed(list<int> removedIds)
+{%- endif %}
+{%- if controller.crud.create %}
+    signal created(var dto)
+{%- endif %}
+{%- if controller.crud.update %}
+    signal updated(var dto)
+    signal allRelationsInvalidated(int itemId)
+{%- endif %}
+{%- if controller.crud.entity_has_relation_fields %}
+    signal relationInserted(var relationDto)
+    signal relationRemoved(var relationDto)
+{%- endif %}
+{%- endif -%}
+
+{%- for command in controller.custom_commands %}
+    signal {{ command.camel_name }}Changed(var dto)
+{%- endfor %}
+{%- for query in controller.custom_queries %}
+    signal {{ query.camel_name }}Replied(var dto)
+{%- endfor %}
+}

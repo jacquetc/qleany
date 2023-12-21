@@ -1,23 +1,23 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "car/car_controller.h"
+#include "client/client_controller.h"
 #include <QCoroQml>
 #include <QCoroQmlTask>
 #include <QQmlEngine>
 
-using namespace Simple::Controller::Car;
+using namespace Simple::Controller::Client;
 
-class ForeignCarController : public QObject
+class ForeignClientController : public QObject
 {
     Q_OBJECT
     QML_SINGLETON
-    QML_NAMED_ELEMENT(CarController)
+    QML_NAMED_ELEMENT(ClientController)
 
   public:
-    ForeignCarController(QObject *parent = nullptr) : QObject(parent)
+    ForeignClientController(QObject *parent = nullptr) : QObject(parent)
     {
-        s_controllerInstance = CarController::instance();
+        s_controllerInstance = ClientController::instance();
     }
 
     Q_INVOKABLE QCoro::QmlTask get(int id) const
@@ -35,22 +35,22 @@ class ForeignCarController : public QObject
         return s_controllerInstance->getAll();
     }
 
-    Q_INVOKABLE CreateCarDTO getCreateDTO()
+    Q_INVOKABLE CreateClientDTO getCreateDTO()
     {
         return s_controllerInstance->getCreateDTO();
     }
 
-    Q_INVOKABLE UpdateCarDTO getUpdateDTO()
+    Q_INVOKABLE UpdateClientDTO getUpdateDTO()
     {
         return s_controllerInstance->getUpdateDTO();
     }
 
-    Q_INVOKABLE QCoro::QmlTask create(const CreateCarDTO &dto)
+    Q_INVOKABLE QCoro::QmlTask create(const CreateClientDTO &dto)
     {
         return s_controllerInstance->create(dto);
     }
 
-    Q_INVOKABLE QCoro::QmlTask update(const UpdateCarDTO &dto)
+    Q_INVOKABLE QCoro::QmlTask update(const UpdateClientDTO &dto)
     {
         return s_controllerInstance->update(dto);
     }
@@ -61,5 +61,5 @@ class ForeignCarController : public QObject
     }
 
   private:
-    CarController *s_controllerInstance = nullptr;
+    ClientController *s_controllerInstance = nullptr;
 };

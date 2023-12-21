@@ -9,28 +9,12 @@ import uncrustify
 import clang_format
 from pathlib import Path
 from collections import OrderedDict
+import generation_dict_tools as tools
 
 
 def get_dto_dict_and_feature_ordered_dict(
     feature_by_name: dict, entities_by_name: dict
 ) -> tuple[dict, OrderedDict]:
-    def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
-        owner_dict = {}
-        for possible_owner_name, entity in entities_by_name.items():
-            for field in entity["fields"]:
-                if (
-                    field["type"] == entity_name
-                    or field["type"] == f"QList<{entity_name}>"
-                ):
-                    if field.get("strong", False):
-                        owner_dict["name"] = possible_owner_name
-                        owner_dict["field"] = field["name"]
-                        owner_dict["ordered"] = field.get("ordered", False)
-                        owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
-                        return owner_dict
-
-        return owner_dict
-
     def get_fields_with_foreign_entities(
         fields: list, entities_by_name: dict, entity_mappable_with: str = ""
     ) -> list:
@@ -57,9 +41,9 @@ def get_dto_dict_and_feature_ordered_dict(
         for field in fields:
             field["pascal_name"] = stringcase.pascalcase(field["name"])
 
-            if is_unique_foreign_entity(
+            if tools.is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or is_list_foreign_entity(field["type"], entities_by_name):
+            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
                 field["is_foreign"] = True
 
                 # get foreign entity name
@@ -103,9 +87,9 @@ def get_dto_dict_and_feature_ordered_dict(
         for field in fields:
             field["pascal_name"] = stringcase.pascalcase(field["name"])
 
-            if is_unique_foreign_entity(
+            if tools.is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or is_list_foreign_entity(field["type"], entities_by_name):
+            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
                 continue
 
             else:
@@ -138,9 +122,9 @@ def get_dto_dict_and_feature_ordered_dict(
         for field in fields:
             field["pascal_name"] = stringcase.pascalcase(field["name"])
 
-            if is_unique_foreign_entity(
+            if tools.is_unique_foreign_entity(
                 field["type"], entities_by_name
-            ) or is_list_foreign_entity(field["type"], entities_by_name):
+            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
                 field["is_foreign"] = True
 
                 # get foreign entity name
@@ -208,7 +192,7 @@ def get_dto_dict_and_feature_ordered_dict(
 
         # create DTO entry with foreign DTOs (details)
 
-        if generate_dto_identical_to_entity and entity_have_foreign_entity(
+        if generate_dto_identical_to_entity and tools.does_entity_have_relation_fields(
             entity_mappable_with, entities_by_name
         ):
             dto_type_name = f"{stringcase.pascalcase(feature['name'])}WithDetailsDTO"
@@ -278,7 +262,9 @@ def get_dto_dict_and_feature_ordered_dict(
                 ]
 
                 # add owner id
-                owner_dict = determine_owner(entity_mappable_with, entities_by_name)
+                owner_dict = tools.determine_owner(
+                    entity_mappable_with, entities_by_name
+                )
                 if owner_dict:
                     owner_name_pascal = stringcase.pascalcase(
                         owner_dict.get("name", "")
@@ -586,27 +572,6 @@ def get_dto_dict_and_feature_ordered_dict(
     return dto_dict, dto_ordered_dict
 
 
-def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
-    for entity_name in entities_by_name:
-        if entity_name == field_type:
-            return True
-
-    return False
-
-
-def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
-    if "<" not in field_type:
-        return False
-
-    type = field_type.split("<")[1].split(">")[0].strip()
-
-    for entity_name in entities_by_name:
-        if entity_name == type:
-            return True
-
-    return False
-
-
 def getEntityFromForeignFieldType(field_type: str, entities_by_name: dict) -> str:
     if "<" not in field_type:
         return field_type
@@ -627,22 +592,6 @@ def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
     entity_data = entities_by_name[entity_name]
     fields = entity_data["fields"]
     return fields
-
-
-def entity_have_foreign_entity(entity_name: str, entities_by_name: dict) -> bool:
-    entity = entities_by_name.get(entity_name, None)
-    if entity is None:
-        return False
-
-    fields = entity["fields"]
-    for field in fields:
-        field_type = field["type"]
-        if is_unique_foreign_entity(
-            field_type, entities_by_name
-        ) or is_list_foreign_entity(field_type, entities_by_name):
-            return True
-
-    return False
 
 
 def is_unique_foreign_dto(dto_list: list, field_type: str) -> bool:

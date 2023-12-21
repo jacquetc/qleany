@@ -11,31 +11,15 @@ QtObject {
     function error() {
         return ErrorSignals;
     }
-
+{% if has_undo_redo %}
     function undoRedo() {
         return UndoRedoSignals;
     }
+{% endif %}
 
-
-
-    function car() {
-        return CarSignals;
+{% for feature_name, controller in controllers.items() %}
+    function {{ controller.feature_camel_name }}() {
+        return {{ controller.feature_pascal_name }}Signals;
     }
-
-    function brand() {
-        return BrandSignals;
-    }
-
-    function passenger() {
-        return PassengerSignals;
-    }
-
-    function client() {
-        return ClientSignals;
-    }
-
-    function custom() {
-        return CustomSignals;
-    }
-
+{% endfor %}
 }

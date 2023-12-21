@@ -1,3 +1,5 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 #include "custom/custom_controller.h"
 #include <QCoroQml>
@@ -15,14 +17,29 @@ class ForeignCustomController : public QObject
   public:
     ForeignCustomController(QObject *parent = nullptr) : QObject(parent)
     {
-        s_singletonInstance = CustomController::instance();
+        s_controllerInstance = CustomController::instance();
     }
 
-    Q_INVOKABLE QCoro::QmlTask runLongOperation() const
+    Q_INVOKABLE QCoro::QmlTask getCurrentTime() const
     {
-        return s_singletonInstance->runLongOperation();
+        return s_controllerInstance->getCurrentTime();
+    }
+
+    Q_INVOKABLE QCoro::QmlTask writeRandomThings(WriteRandomThingsDTO dto)
+    {
+        return s_controllerInstance->writeRandomThings(dto);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask runLongOperation()
+    {
+        return s_controllerInstance->runLongOperation();
+    }
+
+    Q_INVOKABLE QCoro::QmlTask closeSystem()
+    {
+        return s_controllerInstance->closeSystem();
     }
 
   private:
-    Simple::Controller::Custom::CustomController *s_singletonInstance = nullptr;
+    CustomController *s_controllerInstance = nullptr;
 };

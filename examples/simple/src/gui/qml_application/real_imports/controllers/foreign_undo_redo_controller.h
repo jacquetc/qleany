@@ -1,25 +1,26 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-
-#include "event_dispatcher.h"
+#include "undo_redo/undo_redo_controller.h"
 #include <QQmlEngine>
 
-struct ForeignEventDispatcher
+using namespace Simple::Controller::UndoRedo;
+
+class ForeignUndoRedoController : public QObject
 {
     Q_GADGET
-    QML_FOREIGN(Simple::Controller::EventDispatcher)
+    QML_FOREIGN(Simple::Controller::UndoRedo::UndoRedoController)
     QML_SINGLETON
-    QML_NAMED_ELEMENT(EventDispatcher)
+    QML_NAMED_ELEMENT(UndoRedoController)
 
   public:
     // Initialize this singleton instance with the given engine.
 
-    inline static Simple::Controller::EventDispatcher *s_singletonInstance = nullptr;
+    inline static UndoRedoController *s_singletonInstance = nullptr;
 
-    static Simple::Controller::EventDispatcher *create(QQmlEngine *, QJSEngine *engine)
+    static UndoRedoController *create(QQmlEngine *, QJSEngine *engine)
     {
-        s_singletonInstance = Simple::Controller::EventDispatcher::instance();
+        s_singletonInstance = UndoRedoController::instance();
 
         // The instance has to exist before it is used. We cannot replace it.
         Q_ASSERT(s_singletonInstance);

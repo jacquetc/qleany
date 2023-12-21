@@ -6,9 +6,10 @@
 #include <QCoroQmlTask>
 #include <QQmlEngine>
 
+
 using namespace {{ application_cpp_domain_name }}::Controller::{{ controller.feature_pascal_name }};
 
-class Foreign{{ controller.feature_pascal_name }}Controller
+class Foreign{{ controller.feature_pascal_name }}Controller : public QObject
 {
     Q_OBJECT
     QML_SINGLETON
@@ -16,72 +17,72 @@ class Foreign{{ controller.feature_pascal_name }}Controller
 
 public:
 
-    ForeignCarController(QObject *parent = nullptr) : QObject(parent)
+    Foreign{{ controller.feature_pascal_name }}Controller(QObject *parent = nullptr) : QObject(parent)
     {
         s_controllerInstance = {{ controller.feature_pascal_name }}Controller::instance();
     }
 
-{% if feature.crud.enabled %}
-    {%if feature.crud.get %}
+{% if controller.crud.enabled %}
+    {%if controller.crud.get %}
     Q_INVOKABLE QCoro::QmlTask get(int id) const
     {
         return s_controllerInstance->get(id);
     }
     {% endif %}
 
-    {%if feature.crud.get_with_details %}
+    {%if controller.crud.get_with_details %}
     Q_INVOKABLE QCoro::QmlTask getWithDetails(int id) const
     {
         return s_controllerInstance->get(id);
     }
     {% endif %}
 
-    {%if feature.crud.get_all %}
+    {%if controller.crud.get_all %}
     Q_INVOKABLE QCoro::QmlTask getAll() const
     {
         return s_controllerInstance->getAll();
     }
     {% endif %}
 
-    {%if feature.crud.create %}
-    Q_INVOKABLE CreateCarDTO getCreateDTO()
+    {%if controller.crud.create %}
+    Q_INVOKABLE Create{{ controller.feature_pascal_name }}DTO getCreateDTO()
     {
         return s_controllerInstance->getCreateDTO();
     }
     {% endif %}
 
-    {%if feature.crud.update %}
-    Q_INVOKABLE UpdateCarDTO getUpdateDTO()
+    {%if controller.crud.update %}
+    Q_INVOKABLE Update{{ controller.feature_pascal_name }}DTO getUpdateDTO()
     {
         return s_controllerInstance->getUpdateDTO();
     }
     {% endif %}
 {% endif %}
 
-    {% for query in feature.custom_queries %}
-    Q_INVOKABLE QCoro::QmlTask {{ query.name }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
+    {% for query in controller.custom_queries %}
+    Q_INVOKABLE QCoro::QmlTask {{ query.camel_name }}({% if query.dto_in_enabled %}{{ query.dto_in_pascal_type_prefix }}DTO dto{% endif %}) const
     {
-        return s_controllerInstance->{{ query.name }}({% if query.dto_in_enabled %}dto{% endif %});
+        return s_controllerInstance->{{ query.camel_name }}({% if query.dto_in_enabled %}dto{% endif %});
     }
     {% endfor %}
 
-{% if feature.crud.enabled %}
-    {% if feature.crud.create %}
+{% if controller.crud.enabled %}
+    {% if controller.crud.create %}
 
-    Q_INVOKABLE QCoro::QmlTask create(const CreateCarDTO &dto)
+    Q_INVOKABLE QCoro::QmlTask create(const Create{{ controller.feature_pascal_name }}DTO &dto)
     {
         return s_controllerInstance->create(dto);
     }
     {% endif %}
 
-    {% if feature.crud.update %}
-    Q_INVOKABLE QCoro::QmlTask update(const UpdateCarDTO &dto)
+    {% if controller.crud.update %}
+    Q_INVOKABLE QCoro::QmlTask update(const Update{{ controller.feature_pascal_name }}DTO &dto)
     {
         return s_controllerInstance->update(dto);
     }
     {% endif %}
 
-    {%if feature.crud.remove %}
+    {%if controller.crud.remove %}
     Q_INVOKABLE QCoro::QmlTask remove(int id)
     {
         return s_controllerInstance->remove(id);
@@ -89,10 +90,10 @@ public:
     {% endif %}
 {% endif %}
 
-    {% for command in feature.custom_commands %}
-    Q_INVOKABLE QCoro::QmlTask {{ command.name }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %})
+    {% for command in controller.custom_commands %}
+    Q_INVOKABLE QCoro::QmlTask {{ command.camel_name }}({% if command.dto_in_enabled %}{{ command.dto_in_pascal_type_prefix }}DTO dto{% endif %})
     {
-        return s_controllerInstance->{{ command.name }}({% if command.dto_in_enabled %}dto{% endif %});
+        return s_controllerInstance->{{ command.camel_name }}({% if command.dto_in_enabled %}dto{% endif %});
     }
     {% endfor %}
 

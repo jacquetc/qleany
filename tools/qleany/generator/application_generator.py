@@ -7,6 +7,7 @@ import shutil
 import uncrustify
 import clang_format
 from pathlib import Path
+import generation_dict_tools as tools
 
 
 def get_generation_dict(
@@ -58,7 +59,7 @@ def get_generation_dict(
             if create_data.get("enabled", False) and create_data.get("generate", True):
                 # find out if the owner field is a list
 
-                owner_dict = determine_owner(
+                owner_dict = tools.determine_owner(
                     entity_mappable_with_pascal, entities_by_name
                 )
 
@@ -506,42 +507,7 @@ def get_generation_dict(
     return generation_dict
 
 
-def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
-    owner_dict = {}
-    for possible_owner_name, entity in entities_by_name.items():
-        for field in entity["fields"]:
-            if field["type"] == entity_name or field["type"] == f"QList<{entity_name}>":
-                if field.get("strong", False):
-                    owner_dict["name"] = possible_owner_name
-                    owner_dict["field"] = field["name"]
-                    owner_dict["ordered"] = field.get("ordered", False)
-                    owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
-                    return owner_dict
-    return owner_dict
-
-
 def get_lazy_loading_fields(entity_mappable_with: str, entities_by_name: dict) -> list:
-    def is_unique_foreign_entity(field_type: str) -> bool:
-        for entity_name, entity in entities_by_name.items():
-            name = entity["name"]
-            if name == field_type:
-                return True
-
-        return False
-
-    def is_list_foreign_entity(field_type: str) -> bool:
-        if "<" not in field_type:
-            return False
-
-        type = field_type.split("<")[1].split(">")[0].strip()
-
-        for entity_name, entity in entities_by_name.items():
-            name = entity["name"]
-            if name == type:
-                return True
-
-        return False
-
     entity_mappable_with_pascal = stringcase.pascalcase(entity_mappable_with)
 
     # create a list of foreign entities
@@ -549,9 +515,9 @@ def get_lazy_loading_fields(entity_mappable_with: str, entities_by_name: dict) -
     for field in entities_by_name[entity_mappable_with_pascal]["fields"]:
         field_type = field["type"]
         field_name = field["name"]
-        if is_unique_foreign_entity(field_type):
+        if tools.is_unique_foreign_entity(field_type, entities_by_name):
             lazy_loading_fields += [stringcase.pascalcase(field_name)]
-        if is_list_foreign_entity(field_type):
+        if tools.is_list_foreign_entity(field_type, entities_by_name):
             lazy_loading_fields += [stringcase.pascalcase(field_name)]
 
     return lazy_loading_fields
