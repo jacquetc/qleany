@@ -253,7 +253,7 @@ presenter:
   folder_path: path/to/presenter/folder
   export: EXPORT_MACRO_NAME
   export_header_file: header_file_name.h
-  create_undo_and_redo_singles: true/false
+  create_undo_and_redo_singles: true/false (default false)
   singles:
     - name: SingleName
       entity: EntityName

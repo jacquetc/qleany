@@ -16,6 +16,9 @@ def _get_generation_dict(
     feature_by_name: dict,
     entities_by_name: dict,
     has_undo_redo: bool,
+    create_undo_and_redo_singles: bool,
+    list_models: list,
+    singles: list,
     application_name: str,
     application_cpp_domain_name: str,
 ) -> dict:
@@ -132,15 +135,17 @@ def _get_generation_dict(
                 ] += [stringcase.camelcase(query["name"])]
 
     # add qmldir:
-    qmldir_file = os.path.join(mock_imports_folder_path, "Controllers", "qmldir")
+    controller_qmldir_file = os.path.join(
+        mock_imports_folder_path, "Controllers", "qmldir"
+    )
 
-    generation_dict["qmldir_file"] = qmldir_file
+    generation_dict["controller_qmldir_file"] = controller_qmldir_file
 
     # add CMakelists.txt:
-    common_cmake_file = os.path.join(
+    controller_cmakelists_file = os.path.join(
         real_imports_folder_path, "controllers", "CMakeLists.txt"
     )
-    generation_dict["common_cmake_file"] = common_cmake_file
+    generation_dict["controller_cmakelists_file"] = controller_cmakelists_file
 
     # add "mock_controller_file" and "real_controller_file" to the generation_dict["real_controller_files"] list
     generation_dict["real_controller_files"] = []
@@ -213,12 +218,112 @@ def _get_generation_dict(
     # QCoro::QmlTask mock
     qcoro_qmltask_file = os.path.join(
         mock_imports_folder_path, "Controllers", "QCoroQmlTask.qml"
-    )  
+    )
     generation_dict["mock_controller_files"].append(qcoro_qmltask_file)
     generation_dict["qcoro_qmltask_file"] = qcoro_qmltask_file
 
     # add models
-    generation_dict["models"] = {}
+    generation_dict["models"] = []
+    generation_dict["mock_model_files"] = []
+    generation_dict["real_model_files"] = []
+
+    generation_dict["create_undo_and_redo_singles"] = create_undo_and_redo_singles
+
+    for list_model in list_models:
+        list_model_name = list_model["name"]
+
+        entity_name = list_model["entity"]
+        entity_name_snake = stringcase.snakecase(entity_name)
+        entity_name_pascal = stringcase.pascalcase(entity_name)
+        entity_name_spinal = stringcase.spinalcase(entity_name)
+        entity_name_camel = stringcase.camelcase(entity_name)
+
+        # displayed_field
+        displayed_field = list_model.get("displayed_field", "id")
+        displayed_field_snake = stringcase.snakecase(displayed_field)
+        displayed_field_pascal = stringcase.pascalcase(displayed_field)
+        displayed_field_spinal = stringcase.spinalcase(displayed_field)
+        displayed_field_camel = stringcase.camelcase(displayed_field)
+
+        related_name = list_model.get("in_relation_of", "")
+        related_name_snake = stringcase.snakecase(related_name)
+        related_name_pascal = stringcase.pascalcase(related_name)
+        related_name_spinal = stringcase.spinalcase(related_name)
+        related_name_camel = stringcase.camelcase(related_name)
+
+        related_field_name = list_model.get("relation_field_name", "")
+        related_field_name_snake = stringcase.snakecase(related_field_name)
+        related_field_name_pascal = stringcase.pascalcase(related_field_name)
+        related_field_name_spinal = stringcase.spinalcase(related_field_name)
+        related_field_name_camel = stringcase.camelcase(related_field_name)
+        is_related_list = related_name != "" and related_field_name != ""
+
+        list_model_name = list_model["name"]
+        if list_model_name == "auto":
+            if is_related_list:
+                list_model_name = (
+                    entity_name_pascal
+                    + "ListModelFrom"
+                    + related_name_pascal
+                    + related_field_name_pascal
+                )
+            else:
+                list_model_name = entity_name_pascal + "ListModel"
+
+        list_model_pascal_name = stringcase.pascalcase(list_model_name)
+        list_model_snake_name = stringcase.snakecase(list_model_name)
+        list_model_spinal_name = stringcase.spinalcase(list_model_name)
+        list_model_camel_name = stringcase.camelcase(list_model_name)
+
+        mock_model_file = os.path.join(
+            mock_imports_folder_path,
+            "Models",
+            f"{list_model_pascal_name}.qml",
+        )
+        generation_dict["mock_model_files"].append(mock_model_file)
+        real_model_file = os.path.join(
+            real_imports_folder_path,
+            "models",
+            f"foreign_{list_model_snake_name}_model.h",
+        )
+        generation_dict["real_model_files"].append(real_model_file)
+
+        generation_dict["models"].append(
+            {
+                "mock_model_file": mock_model_file,
+                "mock_template_path": "QML/mock_imports/models/",
+                "mock_template": "list_model.qml.jinja2",
+                "real_model_file": real_model_file,
+                "real_template_path": "QML/real_imports/models/",
+                "real_template": "foreign_model.h.jinja2",
+                "list_model_pascal_name": list_model_pascal_name,
+                "list_model_snake_name": list_model_snake_name,
+                "list_model_spinal_name": list_model_spinal_name,
+                "list_model_camel_name": list_model_camel_name,
+                "relation_name_camel": stringcase.camelcase(
+                    list_model.get("in_relation_of", "")
+                ),
+                "is_in_relation_of_another_entity": bool(
+                    list_model.get("in_relation_of", False)
+                ),
+                "fields": tools.get_fields_without_foreign_entities(
+                    entities_by_name[list_model["entity"]]["fields"],
+                    entities_by_name,
+                    list_model["entity"],
+                ),
+            }
+        )
+
+    # add qmldir:
+    model_qmldir_file = os.path.join(mock_imports_folder_path, "Models", "qmldir")
+
+    generation_dict["model_qmldir_file"] = model_qmldir_file
+
+    # add CMakelists.txt:
+    model_cmakelists_file = os.path.join(
+        real_imports_folder_path, "models", "CMakeLists.txt"
+    )
+    generation_dict["model_cmakelists_file"] = model_cmakelists_file
 
     # add application_name
     generation_dict["application_name"] = application_name
@@ -468,8 +573,9 @@ def _generate_mock_event_dispatcher_file(
 
     print(f"Successfully wrote file {event_dispatcher_file}")
 
+
 def _generate_mock_qcoro_qmltask_file(
-    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] 
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
 ):
     # generate the mock qcoro qmltask file if in the files_to_be_generated dict the value is True
     qcoro_qmltask_file = generation_dict["qcoro_qmltask_file"]
@@ -500,11 +606,12 @@ def _generate_mock_qcoro_qmltask_file(
 
     print(f"Successfully wrote file {qcoro_qmltask_file}")
 
+
 def _generate_mock_controllers_qmldir_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
 ):
     # generate the mock qmldir file if in the files_to_be_generated dict the value is True
-    if not files_to_be_generated.get(generation_dict["qmldir_file"], False):
+    if not files_to_be_generated.get(generation_dict["controller_qmldir_file"], False):
         return
 
     # Create the jinja2 environment
@@ -521,18 +628,19 @@ def _generate_mock_controllers_qmldir_file(
         singleton_list.append(f"singleton {name}Signals 1.0 {name}Signals.qml")
 
     if generation_dict["has_undo_redo"]:
-        singleton_list.append(f"singleton UndoRedoController 1.0 UndoRedoController.qml")
+        singleton_list.append(
+            f"singleton UndoRedoController 1.0 UndoRedoController.qml"
+        )
         singleton_list.append(f"singleton UndoRedoSignals 1.0 UndoRedoSignals.qml")
     singleton_list.append(f"singleton ProgressSignals 1.0 ProgressSignals.qml")
     singleton_list.append(f"singleton ErrorSignals 1.0 ErrorSignals.qml")
     singleton_list.append(f"singleton EventDispatcher 1.0 EventDispatcher.qml")
     singleton_list.append(f"QCoroQmlTask 1.0 QCoroQmlTask.qml")
 
-
     # Render the template
     output = template.render(singleton_list=singleton_list)
 
-    output_file = os.path.join(root_path, generation_dict["qmldir_file"])
+    output_file = os.path.join(root_path, generation_dict["controller_qmldir_file"])
 
     # Create the directory if it does not exist
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -666,13 +774,13 @@ def _generate_real_event_dispatcher_file(
 def _generate_real_controllers_cmakelists_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
 ):
-    common_cmake_file = generation_dict["common_cmake_file"]
+    controller_cmakelists_file = generation_dict["controller_cmakelists_file"]
 
     # generate the real cmakelists file if in the files_to_be_generated dict the value is True
-    if not files_to_be_generated.get(common_cmake_file, False):
+    if not files_to_be_generated.get(controller_cmakelists_file, False):
         return
 
-    output_file = os.path.join(root_path, common_cmake_file)
+    output_file = os.path.join(root_path, controller_cmakelists_file)
 
     # Create the jinja2 environment
     env = Environment(
@@ -705,31 +813,152 @@ def _generate_real_controllers_cmakelists_file(
 
     print(f"Successfully wrote file {output_file}")
 
+
 def _generate_mock_model_file(
     root_path: str,
     model: dict,
     generation_dict: dict,
     files_to_be_generated: dict[str, bool],
 ):
-    pass
+    # generate the mock model file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(model["mock_model_file"], False):
+        return
+
+    # Create the jinja2 environment
+    template_path = os.path.join("templates", model["mock_template_path"])
+    env = Environment(loader=FileSystemLoader(template_path))
+    # Load the template
+    template = env.get_template(model["mock_template"])
+
+    # Render the template
+    output = template.render(
+        model=model,
+    )
+
+    output_file = os.path.join(root_path, model["mock_model_file"])
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
 
 def _generate_real_model_file(
     root_path: str,
     model: dict,
-    generation_dict: dict,  
+    generation_dict: dict,
     files_to_be_generated: dict[str, bool],
 ):
-    pass
+    # generate the real model file if in the files_to_be_generated dict the value is True
+    real_model_file = model["real_model_file"]
+
+    if not files_to_be_generated.get(real_model_file, False):
+        return
+
+    # Create the jinja2 environment
+    template_path = os.path.join("templates", model["real_template_path"])
+    env = Environment(loader=FileSystemLoader(template_path))
+    # Load the template
+    template = env.get_template(model["real_template"])
+
+    # Render the template
+    output = template.render(
+        model=model,
+        application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+    )
+
+    output_file = os.path.join(root_path, real_model_file)
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    # if uncrustify_config_file:
+    #     uncrustify.run_uncrustify(real_model_file, uncrustify_config_file)
+    clang_format.run_clang_format(output_file)
+
+    print(f"Successfully wrote file {output_file}")
+
 
 def _generate_mock_models_qmldir_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
 ):
-    pass
+    # generate the mock qmldir file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(generation_dict["model_qmldir_file"], False):
+        return
+
+    # Create the jinja2 environment
+    env = Environment(loader=FileSystemLoader("templates/QML/mock_imports/models/"))
+    # Load the template
+    template = env.get_template("qmldir_template.jinja2")
+
+    models_to_declare_list = []
+    for model in generation_dict["models"]:
+        name = model["list_model_pascal_name"]
+        models_to_declare_list.append(f"{name} 1.0 {name}.qml")
+
+    # Render the template
+    output = template.render(models_to_declare_list=models_to_declare_list)
+
+    output_file = os.path.join(root_path, generation_dict["model_qmldir_file"])
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
 
 def _generate_real_models_cmakelists_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
 ):
-    pass
+    controller_cmakelists_file = generation_dict["model_cmakelists_file"]
+
+    # generate the real cmakelists file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(controller_cmakelists_file, False):
+        return
+
+    output_file = os.path.join(root_path, controller_cmakelists_file)
+
+    # Create the jinja2 environment
+    env = Environment(loader=FileSystemLoader("templates/QML/real_imports/models/"))
+    # Load the template
+    template = env.get_template("cmakelists.txt.jinja2")
+
+    files = generation_dict["real_model_files"]
+    relative_files = []
+    for file in files:
+        relative_files.append(
+            os.path.relpath(
+                os.path.join(root_path, file), os.path.dirname(output_file)
+            ).replace("\\", "/")
+        )
+
+    # Render the template
+    output = template.render(
+        files=relative_files,
+        application_name=generation_dict["application_name"],
+    )
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
 
 def generate_qml_files(
     root_path: str,
@@ -770,6 +999,13 @@ def generate_qml_files(
     controller_data = manifest_data.get("controller", {})
     has_undo_redo = controller_data.get("create_undo_redo_controller", False)
 
+    presenter_data = manifest_data.get("presenter", {})
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
+    list_models = presenter_data.get("list_models", [])
+    singles = presenter_data.get("singles", [])
+
     qml_data = manifest_data.get("qml", [])
 
     generation_dict = _get_generation_dict(
@@ -778,6 +1014,9 @@ def generate_qml_files(
         feature_by_name,
         entities_by_name,
         has_undo_redo,
+        create_undo_and_redo_singles,
+        list_models,
+        singles,
         application_name,
         application_cpp_domain_name,
     )
@@ -805,16 +1044,14 @@ def generate_qml_files(
     _generate_mock_progress_signals_file(
         root_path, generation_dict, files_to_be_generated
     )
-    _generate_mock_error_signals_file(
-        root_path, generation_dict, files_to_be_generated
-    )
+    _generate_mock_error_signals_file(root_path, generation_dict, files_to_be_generated)
 
-    _generate_mock_qcoro_qmltask_file(
-        root_path, generation_dict, files_to_be_generated
-    )
+    _generate_mock_qcoro_qmltask_file(root_path, generation_dict, files_to_be_generated)
 
     # generate mock qmldir file
-    _generate_mock_controllers_qmldir_file(root_path, generation_dict, files_to_be_generated)
+    _generate_mock_controllers_qmldir_file(
+        root_path, generation_dict, files_to_be_generated
+    )
 
     # generate real files
     for _, controller in generation_dict["controllers"].items():
@@ -836,18 +1073,24 @@ def generate_qml_files(
         )
 
     # generate real CMakeLists.txt file
-    _generate_real_controllers_cmakelists_file(root_path, generation_dict, files_to_be_generated)
-
+    _generate_real_controllers_cmakelists_file(
+        root_path, generation_dict, files_to_be_generated
+    )
 
     # models
     for model in generation_dict["models"]:
-        _generate_mock_model_file(root_path, model, generation_dict, files_to_be_generated)
-        _generate_real_model_file(root_path, model, generation_dict, files_to_be_generated)
-    
+        _generate_mock_model_file(
+            root_path, model, generation_dict, files_to_be_generated
+        )
+        _generate_real_model_file(
+            root_path, model, generation_dict, files_to_be_generated
+        )
+
     # generate mock qmldir file
     _generate_mock_models_qmldir_file(root_path, generation_dict, files_to_be_generated)
-    _generate_real_models_cmakelists_file(root_path, generation_dict, files_to_be_generated)
-
+    _generate_real_models_cmakelists_file(
+        root_path, generation_dict, files_to_be_generated
+    )
 
 
 def get_files_to_be_generated(
@@ -888,6 +1131,14 @@ def get_files_to_be_generated(
 
     feature_list = application_data.get("features", [])
 
+    presenter_data = manifest_data.get("presenter", {})
+    create_undo_and_redo_singles = presenter_data.get(
+        "create_undo_and_redo_singles", False
+    )
+
+    list_models = presenter_data.get("list_models", [])
+    singles = presenter_data.get("singles", [])
+
     # Organize feature_list by name for easier lookup
     feature_by_name = {feature["name"]: feature for feature in feature_list}
 
@@ -900,6 +1151,9 @@ def get_files_to_be_generated(
         feature_by_name,
         entities_by_name,
         has_undo_redo,
+        create_undo_and_redo_singles,
+        list_models,
+        singles,
         application_name,
         application_cpp_domain_name,
     )
@@ -910,12 +1164,24 @@ def get_files_to_be_generated(
     #     files += feature["real_controller_files"]
 
     # # add CMakelists.txt:
-    common_cmake_file = generation_dict["common_cmake_file"]
-    files.append(common_cmake_file)
+    controller_cmakelists_file = generation_dict["controller_cmakelists_file"]
+    files.append(controller_cmakelists_file)
 
     # # add qmldir:
-    qmldir_file = generation_dict["qmldir_file"]
-    files.append(qmldir_file)
+    controller_qmldir_file = generation_dict["controller_qmldir_file"]
+    files.append(controller_qmldir_file)
+
+    # list models 
+    files += generation_dict["real_model_files"]
+    files += generation_dict["mock_model_files"]
+
+    # # add CMakelists.txt:
+    model_cmakelists_file = generation_dict["model_cmakelists_file"]
+    files.append(model_cmakelists_file)
+
+    # # add qmldir:
+    model_qmldir_file = generation_dict["model_qmldir_file"]
+    files.append(model_qmldir_file)
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:

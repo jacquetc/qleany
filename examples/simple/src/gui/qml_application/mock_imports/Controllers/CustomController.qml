@@ -5,6 +5,7 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    id: controller
 
 
     function writeRandomThings(dto) {

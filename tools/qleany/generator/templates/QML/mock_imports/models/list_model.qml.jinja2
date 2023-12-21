@@ -1,0 +1,20 @@
+import QtQuick
+
+ListModel {
+
+    {% if model.is_in_relation_of_another_entity %}
+    property int {{ model.relation_name_camel }}Id: 1
+    {% endif %}
+
+{% for element in range(1, 6) %}
+    ListElement {
+        itemId: {{ loop.index }}
+    {% for field in model.fields %}
+        {%- if field.camel_name != "id" %}
+        {{ field.camel_name }}: {{ field.default_value_for_qml }}
+        {%- endif %}
+    {%- endfor %}
+    }
+{% endfor %}
+
+}

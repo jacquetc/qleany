@@ -1,12 +1,12 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "{{ model.class_name_snake}}.h"
+#include "{{ model.list_model_snake_name}}.h"
 #include <QQmlEngine>
 
-struct Foreign{{ model.class_name_pascal}}
+struct Foreign{{ model.list_model_pascal_name}}
 {
     Q_GADGET
-    QML_FOREIGN(Simple::Presenter::{{ model.class_name_pascal}})
-    QML_NAMED_ELEMENT({{ model.class_name_pascal}})
+    QML_FOREIGN(Simple::Presenter::{{ model.list_model_pascal_name}})
+    QML_NAMED_ELEMENT({{ model.list_model_pascal_name}})
 };

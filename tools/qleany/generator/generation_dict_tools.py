@@ -1,3 +1,7 @@
+import stringcase
+import copy
+
+
 def is_unique_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
     for entity_name, _ in entities_by_name.items():
         if entity_name == field_type:
@@ -61,3 +65,194 @@ def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
                     return owner_dict
 
     return owner_dict
+
+
+def get_fields_with_foreign_entities(
+    fields: list, entities_by_name: dict, target_entity: str = ""
+) -> list:
+    if fields is None:
+        return []
+
+    # make a deep copy of the fields
+    fields = copy.deepcopy(fields)
+
+    # get recursive fields from parent
+
+    parent_fields = []
+    entity_parent = entities_by_name.get(target_entity, {}).get("parent", "")
+
+    while entity_parent:
+        parent_fields = (
+            get_entity_fields(entity_parent, entities_by_name) + parent_fields
+        )
+        entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
+
+    fields = parent_fields + fields
+
+    # add fields with foreign entities
+    for field in fields:
+        field["pascal_name"] = stringcase.pascalcase(field["name"])
+
+        if is_unique_foreign_entity(
+            field["type"], entities_by_name
+        ) or is_list_foreign_entity(field["type"], entities_by_name):
+            field["is_foreign"] = True
+
+            # get foreign entity name
+            foreign_entity_name = get_entity_from_foreign_field_type(
+                field["type"], entities_by_name
+            )
+            field["foreign_dto_type"] = f"{foreign_entity_name}DTO"
+            field["entity_type"] = field["type"]
+            field["type"] = (
+                f"{foreign_entity_name}DTO"
+                if field["type"].count(">") == 0
+                else f"QList<{foreign_entity_name}DTO>"
+            )
+
+        else:
+            field["is_foreign"] = False
+
+    return fields
+
+
+def get_fields_without_foreign_entities(
+    fields: list, entities_by_name: dict, target_entity: str = ""
+) -> list:
+    # make a deep copy of the fields
+    fields = copy.deepcopy(fields)
+
+    # get recursive fields from parent
+
+    parent_fields = []
+    entity_parent = entities_by_name.get(target_entity, {}).get("parent", "")
+
+    while entity_parent:
+        parent_fields = (
+            get_entity_fields(entity_parent, entities_by_name) + parent_fields
+        )
+        entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
+
+    fields = parent_fields + fields
+
+    # add fields without foreign entities
+    fields_without_foreign = []
+    for field in fields:
+        field["pascal_name"] = stringcase.pascalcase(field["name"])
+        field["camel_name"] = stringcase.camelcase(field["name"])
+
+        if is_unique_foreign_entity(
+            field["type"], entities_by_name
+        ) or is_list_foreign_entity(field["type"], entities_by_name):
+            continue
+
+        else:
+            field["default_value_for_qml"] = get_default_value_for_qml(field["type"])
+            field["is_foreign"] = False
+            fields_without_foreign.append(field)
+
+    return fields_without_foreign
+
+def get_default_value_for_qml(type: str):
+    if type == "int":
+        return "0"
+    elif type == "double":
+        return "0.0"
+    elif type == "bool":
+        return "false"
+    elif type == "QString":
+        return '"example"'
+    elif type == "QDate":
+        return "new Date()"
+    elif type == "QTime":
+        return "new Date()"
+    elif type == "QDateTime":
+        return "new Date()"
+    elif type == "QUrl":
+        return '""'
+    elif type == "QUuid":
+        return '""'
+    elif type == "QByteArray":
+        return '""'
+    elif type == "QVariant":
+        return '""'
+    elif type == "QList<int>":
+        return "[]"
+    elif type == "QList<double>":
+        return "[]"
+    elif type == "QList<bool>":
+        return "[]"
+    elif type == "QList<QString>":
+        return "[]"
+    elif type == "QList<QDate>":
+        return "[]"
+    elif type == "QList<QTime>":
+        return "[]"
+    elif type == "QList<QDateTime>":
+        return "[]"
+    elif type == "QList<QUrl>":
+        return "[]"
+    elif type == "QList<QByteArray>":
+        return "[]"
+    elif type == "QList<QVariant>":
+        return "[]"
+    else:
+        return "null"
+    
+
+
+def get_only_fields_with_foreign_entities(
+    fields: list, entities_by_name: dict, target_entity: str = ""
+) -> list:
+    # make a deep copy of the fields
+    fields = copy.deepcopy(fields)
+
+    # get recursive fields from parent
+
+    parent_fields = []
+    entity_parent = entities_by_name.get(target_entity, {}).get("parent", "")
+
+    while entity_parent:
+        parent_fields = (
+            get_entity_fields(entity_parent, entities_by_name) + parent_fields
+        )
+        entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
+
+    fields = parent_fields + fields
+
+    # add fields without foreign entities
+    fields_with_foreign = []
+    for field in fields:
+        field["pascal_name"] = stringcase.pascalcase(field["name"])
+
+        if is_unique_foreign_entity(
+            field["type"], entities_by_name
+        ) or is_list_foreign_entity(field["type"], entities_by_name):
+            field["is_foreign"] = True
+
+            # get foreign entity name
+            foreign_entity_name = get_entity_from_foreign_field_type(
+                field["type"], entities_by_name
+            )
+            field["foreign_dto_type"] = f"{foreign_entity_name}DTO"
+            field["entity_type"] = field["type"]
+            field["type"] = (
+                f"{foreign_entity_name}DTO"
+                if field["type"].count(">") == 0
+                else f"QList<{foreign_entity_name}DTO>"
+            )
+            fields_with_foreign.append(field)
+
+        else:
+            continue
+
+    return fields_with_foreign
+
+
+def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
+    if entity_name == "EntityBase":
+        return [{"name": "id", "type": "int", "pascal_name": "Id", "is_foreign": False}]
+
+    entity_data = entities_by_name[entity_name]
+    fields = entity_data["fields"]
+    return fields

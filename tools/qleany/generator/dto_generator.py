@@ -15,135 +15,6 @@ import generation_dict_tools as tools
 def get_dto_dict_and_feature_ordered_dict(
     feature_by_name: dict, entities_by_name: dict
 ) -> tuple[dict, OrderedDict]:
-    def get_fields_with_foreign_entities(
-        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
-    ) -> list:
-        if fields is None:
-            return []
-
-        # make a deep copy of the fields
-        fields = copy.deepcopy(fields)
-
-        # get recursive fields from parent
-
-        parent_fields = []
-        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
-
-        while entity_parent:
-            parent_fields = (
-                get_entity_fields(entity_parent, entities_by_name) + parent_fields
-            )
-            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
-
-        fields = parent_fields + fields
-
-        # add fields with foreign entities
-        for field in fields:
-            field["pascal_name"] = stringcase.pascalcase(field["name"])
-
-            if tools.is_unique_foreign_entity(
-                field["type"], entities_by_name
-            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
-                field["is_foreign"] = True
-
-                # get foreign entity name
-                foreign_entity_name = getEntityFromForeignFieldType(
-                    field["type"], entities_by_name
-                )
-                field["foreign_dto_type"] = f"{foreign_entity_name}DTO"
-                field["entity_type"] = field["type"]
-                field["type"] = (
-                    f"{foreign_entity_name}DTO"
-                    if field["type"].count(">") == 0
-                    else f"QList<{foreign_entity_name}DTO>"
-                )
-
-            else:
-                field["is_foreign"] = False
-
-        return fields
-
-    def get_fields_without_foreign_entities(
-        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
-    ) -> list:
-        # make a deep copy of the fields
-        fields = copy.deepcopy(fields)
-
-        # get recursive fields from parent
-
-        parent_fields = []
-        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
-
-        while entity_parent:
-            parent_fields = (
-                get_entity_fields(entity_parent, entities_by_name) + parent_fields
-            )
-            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
-
-        fields = parent_fields + fields
-
-        # add fields without foreign entities
-        fields_without_foreign = []
-        for field in fields:
-            field["pascal_name"] = stringcase.pascalcase(field["name"])
-
-            if tools.is_unique_foreign_entity(
-                field["type"], entities_by_name
-            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
-                continue
-
-            else:
-                field["is_foreign"] = False
-                fields_without_foreign.append(field)
-
-        return fields_without_foreign
-
-    def get_only_fields_with_foreign_entities(
-        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
-    ) -> list:
-        # make a deep copy of the fields
-        fields = copy.deepcopy(fields)
-
-        # get recursive fields from parent
-
-        parent_fields = []
-        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
-
-        while entity_parent:
-            parent_fields = (
-                get_entity_fields(entity_parent, entities_by_name) + parent_fields
-            )
-            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
-
-        fields = parent_fields + fields
-
-        # add fields without foreign entities
-        fields_with_foreign = []
-        for field in fields:
-            field["pascal_name"] = stringcase.pascalcase(field["name"])
-
-            if tools.is_unique_foreign_entity(
-                field["type"], entities_by_name
-            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
-                field["is_foreign"] = True
-
-                # get foreign entity name
-                foreign_entity_name = getEntityFromForeignFieldType(
-                    field["type"], entities_by_name
-                )
-                field["foreign_dto_type"] = f"{foreign_entity_name}DTO"
-                field["entity_type"] = field["type"]
-                field["type"] = (
-                    f"{foreign_entity_name}DTO"
-                    if field["type"].count(">") == 0
-                    else f"QList<{foreign_entity_name}DTO>"
-                )
-                fields_with_foreign.append(field)
-
-            else:
-                continue
-
-        return fields_with_foreign
 
     def determine_dto_dependencies_from_fields(fields: list) -> list:
         dto_dependencies = []
@@ -182,7 +53,7 @@ def get_dto_dict_and_feature_ordered_dict(
 
             # add fields without foreign entities
 
-            dto_dict[dto_type_name]["fields"] = get_fields_without_foreign_entities(
+            dto_dict[dto_type_name]["fields"] = tools.get_fields_without_foreign_entities(
                 entities_by_name[entity_mappable_with]["fields"],
                 entities_by_name,
                 entity_mappable_with,
@@ -205,7 +76,7 @@ def get_dto_dict_and_feature_ordered_dict(
             }
 
             # add fields with foreign entities
-            dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+            dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                 entities_by_name[entity_mappable_with]["fields"],
                 entities_by_name,
                 entity_mappable_with,
@@ -248,7 +119,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities but without id
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     entities_by_name[entity_mappable_with]["fields"],
                     entities_by_name,
                     entity_mappable_with,
@@ -312,7 +183,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     entities_by_name[entity_mappable_with]["fields"],
                     entities_by_name,
                     entity_mappable_with,
@@ -374,7 +245,7 @@ def get_dto_dict_and_feature_ordered_dict(
 
                 dto_dict[dto_type_name][
                     "relation_fields"
-                ] = get_only_fields_with_foreign_entities(
+                ] = tools.get_only_fields_with_foreign_entities(
                     entities_by_name[entity_mappable_with]["fields"],
                     entities_by_name,
                     entity_mappable_with,
@@ -397,7 +268,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     dto_in["fields"], entities_by_name
                 )
                 dto_dict[dto_type_name][
@@ -418,7 +289,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     dto_out["fields"], entities_by_name
                 )
                 dto_dict[dto_type_name][
@@ -442,7 +313,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     dto_in["fields"], entities_by_name
                 )
                 dto_dict[dto_type_name][
@@ -463,7 +334,7 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = get_fields_with_foreign_entities(
+                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
                     dto_out["fields"], entities_by_name
                 )
                 dto_dict[dto_type_name][
@@ -583,15 +454,6 @@ def getEntityFromForeignFieldType(field_type: str, entities_by_name: dict) -> st
             return entity_name
 
     return ""
-
-
-def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
-    if entity_name == "EntityBase":
-        return [{"name": "id", "type": "int", "pascal_name": "Id", "is_foreign": False}]
-
-    entity_data = entities_by_name[entity_name]
-    fields = entity_data["fields"]
-    return fields
 
 
 def is_unique_foreign_dto(dto_list: list, field_type: str) -> bool:
