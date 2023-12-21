@@ -153,6 +153,7 @@ def get_fields_without_foreign_entities(
 
     return fields_without_foreign
 
+
 def get_default_value_for_qml(type: str):
     if type == "int":
         return "0"
@@ -163,11 +164,11 @@ def get_default_value_for_qml(type: str):
     elif type == "QString":
         return '"example"'
     elif type == "QDate":
-        return "new Date()"
-    elif type == "QTime":
-        return "new Date()"
+        # format "YYYY-MM-DD"
+        return '"2020-01-01"'
     elif type == "QDateTime":
-        return "new Date()"
+        # format "YYYY-MM-DDThh:mm:ss"
+        return '"2020-01-01T00:00:00"'
     elif type == "QUrl":
         return '""'
     elif type == "QUuid":
@@ -198,7 +199,6 @@ def get_default_value_for_qml(type: str):
         return "[]"
     else:
         return "null"
-    
 
 
 def get_only_fields_with_foreign_entities(
