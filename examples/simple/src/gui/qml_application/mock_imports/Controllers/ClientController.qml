@@ -15,7 +15,7 @@ QtObject {
 
     function create(dto) {
         // create random id
-        newId = Math.floor(Math.random() * 1000000);
+        var newId = Math.floor(Math.random() * 1000000);
         dto["id"] = newId;
 
         // mocking QCoro::Task
@@ -80,7 +80,7 @@ QtObject {
     function getAll() {
 
         // fill it with whatever you want to return
-        dtos = []
+        var dtos = []
 
         // mocking QCoro::Task
         return new Promise((resolve, reject) => {

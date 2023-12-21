@@ -1,6 +1,6 @@
 # This file was generated automatically by Qleany's generator, edit at your own risk! 
 # If you do, be careful to not overwrite it when you run the generator again.
-Module Controller
+Module Controllers
 singleton CarController 1.0 CarController.qml
 singleton CarSignals 1.0 CarSignals.qml
 singleton BrandController 1.0 BrandController.qml
@@ -15,3 +15,4 @@ singleton UndoRedoController 1.0 UndoRedoController.qml
 singleton UndoRedoSignals 1.0 UndoRedoSignals.qml
 singleton ProgressSignals 1.0 ProgressSignals.qml
 singleton ErrorSignals 1.0 ErrorSignals.qml
+singleton EventDispatcher 1.0 EventDispatcher.qml

@@ -487,6 +487,7 @@ def _generate_mock_controllers_qmldir_file(
         singleton_list.append(f"singleton UndoRedoSignals 1.0 UndoRedoSignals.qml")
     singleton_list.append(f"singleton ProgressSignals 1.0 ProgressSignals.qml")
     singleton_list.append(f"singleton ErrorSignals 1.0 ErrorSignals.qml")
+    singleton_list.append(f"singleton EventDispatcher 1.0 EventDispatcher.qml")
 
 
     # Render the template

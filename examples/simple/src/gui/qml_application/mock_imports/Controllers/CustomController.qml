@@ -10,7 +10,7 @@ QtObject {
     function writeRandomThings(dto) {
     // change this function to return the correct signal name, dto in and dto out
 
-    reply_dto = {
+    var reply_dto = {
         "id": 0,
         "content": ""
     }
@@ -38,7 +38,7 @@ QtObject {
     function runLongOperation(dto) {
     // change this function to return the correct signal name, dto in and dto out
 
-    reply_dto = {
+    var reply_dto = {
         "id": 0,
         "content": ""
     }
@@ -66,7 +66,7 @@ QtObject {
     function closeSystem(dto) {
     // change this function to return the correct signal name, dto in and dto out
 
-    reply_dto = {
+    var reply_dto = {
         "id": 0,
         "content": ""
     }
@@ -94,7 +94,7 @@ QtObject {
     function getCurrentTime(dto) {
     // change this function to return the correct signal name, dto in and dto out
 
-    reply_dto = {
+    var reply_dto = {
         "id": 0,
         "content": ""
     }
