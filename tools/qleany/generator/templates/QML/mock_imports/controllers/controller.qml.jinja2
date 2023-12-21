@@ -5,7 +5,53 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    id: controller
 {% if controller.crud.enabled %}
+{% if controller.crud.get %}
+    function get(id) {
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getReplied(id)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.get_with_details %}
+    function getWithDetails(id) {
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getWithDetailsReplied(id)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.get_all %}
+    function getAll() {
+        // fill it with whatever you want to return
+        var dtos = []
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dtos);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getAllReplied(dtos)})
+        }
+
+        return task
+    }
+{% endif -%}
 {% if controller.crud.create %}
     function getCreateDTO() {
         return {
@@ -19,90 +65,15 @@ QtObject {
         dto["id"] = newId;
 
         // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dto;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().created(dto);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${dto}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
-    }
-{% endif -%}
-{% if controller.crud.get %}
-    function get(id) {
-        // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dto;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().getReplied(id);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${id}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
-    }
-{% endif -%}
-{% if controller.crud.get_with_details %}
-    function getWithDetails(id) {
-        // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dto;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().getWithDetailsReplied(id);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${id}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
-    }
-{% endif -%}
-{% if controller.crud.get_all %}
-    function getAll() {
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().created(dto)})
+        }
 
-        // fill it with whatever you want to return
-        var dtos = []
-
-        // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dtos;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().getAllReplied(dtos);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${dtos}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
-
+        return task
     }
 {% endif -%}
 {% if controller.crud.update %}
@@ -115,48 +86,36 @@ QtObject {
 
     function update(dto) {
 
-
         // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = dto;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().updated(dto);
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().allRelationsInvalidated(dto.id);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${dto}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().updated(dto);
+                EventDispatcher.{{ controller.feature_camel_name }}().allRelationsInvalidated(dto.id);
+            })
+        }
+
+        return task
     }
 {% endif -%}
 {% if controller.crud.remove %}
     signal {{ controller.feature_camel_name }}Removed(int id)
     function remove(id) {
-        
         // mocking QCoro::Task
-        return new Promise((resolve, reject) => {
-                               var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                               timer.interval = 50; // delay
-                               timer.repeat = false;
-                               timer.triggered.connect(() => {
-                                                           const result = true;
-                                                           if (result) {
-                                                               EventDispatcher.{{ controller.feature_camel_name }}().removed(id);
-                                                               resolve(result);
-                                                           } else {
-                                                               reject(new Error(`No value found for ${id}`));
-                                                           }
-                                                           timer.destroy(); // Clean up the timer
-                                                       });
-                               timer.start();
-                           });
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().removed(id);
+            })
+        }
+
+        return task
     }
 {% endif -%}
 {% endif -%}
@@ -164,60 +123,48 @@ QtObject {
 {%- for command in controller.custom_commands %}
 
     function {{ command.camel_name }}(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.{{ controller.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 {% endfor %}
 
 {%- for query in controller.custom_queries %}
 
     function {{ query.camel_name }}(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.{{ controller.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 {% endfor %}
 

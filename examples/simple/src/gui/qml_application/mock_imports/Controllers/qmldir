@@ -16,3 +16,4 @@ singleton UndoRedoSignals 1.0 UndoRedoSignals.qml
 singleton ProgressSignals 1.0 ProgressSignals.qml
 singleton ErrorSignals 1.0 ErrorSignals.qml
 singleton EventDispatcher 1.0 EventDispatcher.qml
+QCoroQmlTask 1.0 QCoroQmlTask.qml

@@ -8,114 +8,90 @@ QtObject {
 
 
     function writeRandomThings(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.custom().writeRandomThingsChanged(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.custom().writeRandomThingsChanged(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 
 
     function runLongOperation(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.custom().runLongOperationChanged(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.custom().runLongOperationChanged(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 
 
     function closeSystem(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.custom().closeSystemChanged(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.custom().closeSystemChanged(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 
 
     function getCurrentTime(dto) {
-    // change this function to return the correct signal name, dto in and dto out
+        // change this function to return the correct signal name, dto in and dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
 
-    var reply_dto = {
-        "id": 0,
-        "content": ""
-    }
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.custom().getCurrentTimeReplied(reply_dto);
+            })
+        }
 
-    // mocking QCoro::Task
-    return new Promise((resolve, reject) => {
-                            var timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', Qt.application);
-                            timer.interval = 50; // delay
-                            timer.repeat = false;
-                            timer.triggered.connect(() => {
-                                                        const result = reply_dto;
-                                                        if (result) {
-                                                            EventDispatcher.custom().getCurrentTimeReplied(reply_dto);
-                                                            resolve(result);
-                                                        } else {
-                                                            reject(new Error(`No value found for ${reply_dto}`));
-                                                        }
-                                                        timer.destroy(); // Clean up the timer
-                                                    });
-                            timer.start();
-                        });
+        return task
     }
 
 

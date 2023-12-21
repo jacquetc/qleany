@@ -210,6 +210,13 @@ def _get_generation_dict(
     generation_dict["mock_controller_files"].append(mock_error_signals_file)
     generation_dict["mock_error_signals_file"] = mock_error_signals_file
 
+    # QCoro::QmlTask mock
+    qcoro_qmltask_file = os.path.join(
+        mock_imports_folder_path, "Controllers", "QCoroQmlTask.qml"
+    )  
+    generation_dict["mock_controller_files"].append(qcoro_qmltask_file)
+    generation_dict["qcoro_qmltask_file"] = qcoro_qmltask_file
+
     # add models
     generation_dict["models"] = {}
 
@@ -461,6 +468,37 @@ def _generate_mock_event_dispatcher_file(
 
     print(f"Successfully wrote file {event_dispatcher_file}")
 
+def _generate_mock_qcoro_qmltask_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] 
+):
+    # generate the mock qcoro qmltask file if in the files_to_be_generated dict the value is True
+    qcoro_qmltask_file = generation_dict["qcoro_qmltask_file"]
+
+    if not files_to_be_generated.get(qcoro_qmltask_file, False):
+        return
+
+    qcoro_qmltask_file = os.path.join(
+        root_path,
+        qcoro_qmltask_file,
+    )
+
+    # Create the jinja2 environment
+    template_path = os.path.join("templates", "QML", "mock_imports", "controllers")
+    env = Environment(loader=FileSystemLoader(template_path))
+    # Load the template
+    template = env.get_template("qcoro_qmltask.qml.jinja2")
+
+    # Render the template
+    output = template.render()
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(qcoro_qmltask_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(qcoro_qmltask_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {qcoro_qmltask_file}")
 
 def _generate_mock_controllers_qmldir_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
@@ -488,6 +526,7 @@ def _generate_mock_controllers_qmldir_file(
     singleton_list.append(f"singleton ProgressSignals 1.0 ProgressSignals.qml")
     singleton_list.append(f"singleton ErrorSignals 1.0 ErrorSignals.qml")
     singleton_list.append(f"singleton EventDispatcher 1.0 EventDispatcher.qml")
+    singleton_list.append(f"QCoroQmlTask 1.0 QCoroQmlTask.qml")
 
 
     # Render the template
@@ -767,6 +806,10 @@ def generate_qml_files(
         root_path, generation_dict, files_to_be_generated
     )
     _generate_mock_error_signals_file(
+        root_path, generation_dict, files_to_be_generated
+    )
+
+    _generate_mock_qcoro_qmltask_file(
         root_path, generation_dict, files_to_be_generated
     )
 

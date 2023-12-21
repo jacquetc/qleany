@@ -11,6 +11,8 @@ Window {
 
     visible: true
     title: "SimpleExampleQML"
+    minimumHeight: 400
+    minimumWidth: 400
 
     // message box component
     ColumnLayout {
