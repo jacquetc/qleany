@@ -12,10 +12,9 @@ import SimpleExampleQML
 import QtQuick.Layouts
 import Models
 
-Rectangle {
+Pane {
     id: rectangle
 
-    color: Constants.backgroundColor
     property alias runLongOperationButton: runLongOperationButton
     property alias carPassengersListView: carPassengersListView
     property alias carListView: carListView

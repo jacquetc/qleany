@@ -1,5 +1,29 @@
 cmake_minimum_required(VERSION 3.18)
-project(Qleany)
+
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+# get version from git
+
+include(VersionFromGit)
+version_from_git(
+LOG       ON
+)
+add_compile_definitions(QLEANY_VERSION_SEMANTIC="${SEMVER}")
+set(QLEANY_VERSION_SEMANTIC ${SEMVER})
+add_compile_definitions(QLEANY_VERSION="${VERSION}")
+set(QLEANY_VERSION ${VERSION})
+add_compile_definitions(QLEANY_VERSION_MAJOR=${VERSION_MAJOR})
+set(QLEANY_VERSION_MAJOR ${VERSION_MAJOR})
+add_compile_definitions(QLEANY_VERSION_MINOR=${VERSION_MINOR})
+set(QLEANY_VERSION_MINOR ${VERSION_MINOR})
+add_compile_definitions(QLEANY_VERSION_PATCH=${VERSION_PATCH})
+set(QLEANY_VERSION_PATCH ${VERSION_PATCH})
+
+
+
+project(Qleany VERSION ${QLEANY_VERSION} LANGUAGES CXX DESCRIPTION "Qleany is a light framework for Clean Architecture with Qt6")
+string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
 # Compiler settings
 set(CMAKE_CXX_STANDARD 20)
@@ -9,8 +33,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(QT_MIN_VERSION "6.4.0")
 set(QT_DEFAULT_MAJOR_VERSION 6)
 set(CMAKE_AUTOMOC ON)
-
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/ ${CMAKE_SOURCE_DIR}/cmake/3rdparty/ ${CMAKE_MODULE_PATH})
 
 # options
 option(QLEANY_BUILD_EXAMPLES "Build examples" ON)
@@ -78,34 +100,27 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/database/interface_database_context.h
 )
 
+# configure the library
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/*.h")
+
+message(STATUS "PUBLIC_HEADERS: ${PUBLIC_HEADERS}")
+
 # Create the library target
 add_library(Qleany ${LIB_TYPE}
-
-    ${LIB_PUBLIC_HEADERS}
+    ${SOURCES}
+    ${PUBLIC_HEADERS}
 )
 
-target_sources(Qleany PRIVATE
-    src/tools/undo_redo/query_command.cpp
-    src/tools/undo_redo/undo_redo_stack.cpp
-    src/tools/undo_redo/threaded_undo_redo_system.cpp
-    src/tools/undo_redo/undo_redo_system.cpp
-    src/tools/undo_redo/undo_redo_command.cpp
-    src/tools/automapper/automapper.cpp
-    src/tools/undo_redo/undo_redo_scopes.cpp
-    src/repository/repository_provider.cpp
-    src/database/database_context.cpp
-    src/domain/entity_base.cpp
-    src/contracts/repository/signal_holder.cpp
-)
-
-target_include_directories(Qleany PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qleany>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include> # <prefix>/include
 )
 
 set_target_properties(Qleany PROPERTIES CXX_STANDARD 20)
-string(TOLOWER Qleany PROJECT_NAME_LOWER)
+
 set_target_properties(Qleany PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${PUBLIC_HEADERS})
 
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 
@@ -115,23 +130,45 @@ endif()
 
 target_compile_definitions(Qleany PRIVATE QLEANY_LIBRARY)
 
-# Specify where to install the library and headers
-install(TARGETS Qleany
-    EXPORT QleanyTargets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
+
+# Install library
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        PUBLIC_HEADER  DESTINATION include/qleany
 )
 
-install(EXPORT QleanyTargets
-    FILE QleanyTargets.cmake
-    NAMESPACE Qleany::
-    DESTINATION lib/cmake/Qleany
-)
+# Install public headers
+install(DIRECTORY include/${PROJECT_NAME_LOWER} DESTINATION include)
 
-install(DIRECTORY include/
-    DESTINATION include
+
+# install license
+install(FILES LICENSE DESTINATION share/${PROJECT_NAME_LOWER})
+
+
+# Create and install keygen-licenserConfig.cmake
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${PROJECT_NAME_LOWER}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME_LOWER}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Config.cmake
+    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME_LOWER})
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}ConfigVersion.cmake
+        DESTINATION lib/cmake/${PROJECT_NAME_LOWER})
+
+# Install the export set for use with the install-tree
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME_LOWER}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION lib/cmake/${PROJECT_NAME_LOWER}
 )
 
 # Subdirectories that contain CMakeLists.txt for the framework tests and example

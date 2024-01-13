@@ -7,47 +7,49 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.Controls 6.5
 
-Window {
+ApplicationWindow {
+
 
     visible: true
     title: "SimpleExampleQML"
     minimumHeight: 400
     minimumWidth: 400
 
-    // message box component
-    ColumnLayout {
-        id: columnLayout
-        anchors.fill: parent
+        // message box component
+        ColumnLayout {
+            id: columnLayout
+            anchors.fill: parent
 
-        Screen01 {
-            id: mainScreen
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-        }
+            Screen01 {
+                id: mainScreen
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
 
-        Rectangle {
-            id: progressBarRectangle
-            Layout.fillWidth: true
-            Layout.minimumHeight: 40
-            visible: false
+            Rectangle {
+                id: progressBarRectangle
+                Layout.fillWidth: true
+                Layout.minimumHeight: 40
+                visible: false
 
-            ColumnLayout {
-                id: columnLayout2
-                anchors.fill: parent
+                ColumnLayout {
+                    id: columnLayout2
+                    anchors.fill: parent
 
-                Label {
-                    id: progressBarText
-                    Layout.fillWidth: true
-                    Layout.minimumHeight: 20
-                }
-                ProgressBar {
-                    id: progressBar
+                    Label {
+                        id: progressBarText
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 20
+                    }
+                    ProgressBar {
+                        id: progressBar
 
-                    Layout.fillWidth: true
-                    Layout.minimumHeight: 20
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 20
+                    }
                 }
             }
-        }
+
     }
     Connections {
         target: EventDispatcher.progress()

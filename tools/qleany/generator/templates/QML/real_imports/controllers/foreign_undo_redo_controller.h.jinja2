@@ -7,7 +7,7 @@
 
 using namespace {{ application_cpp_domain_name }}::Controller::UndoRedo;
 
-class ForeignUndoRedoController : public QObject
+struct ForeignUndoRedoController
 {
     Q_GADGET
     QML_FOREIGN({{ application_cpp_domain_name }}::Controller::UndoRedo::UndoRedoController)

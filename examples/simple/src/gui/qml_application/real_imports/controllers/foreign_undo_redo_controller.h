@@ -6,12 +6,11 @@
 
 using namespace Simple::Controller::UndoRedo;
 
-class ForeignUndoRedoController : public QObject
+struct ForeignUndoRedoController
 {
     Q_GADGET
-    QML_FOREIGN(Simple::Controller::UndoRedo::UndoRedoController)
+    QML_FOREIGN(UndoRedoController)
     QML_SINGLETON
-    QML_NAMED_ELEMENT(UndoRedoController)
 
   public:
     // Initialize this singleton instance with the given engine.
