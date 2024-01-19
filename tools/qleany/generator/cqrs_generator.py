@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 from pathlib import Path
 
 
@@ -658,7 +658,7 @@ def generate_cqrs_files(
             # if uncrustify_config_file and files_to_be_generated.get(file, False):
             #     uncrustify.run_uncrustify(file, uncrustify_config_file)
             if files_to_be_generated.get(file, False):
-                clang_format.run_clang_format(file)
+                clang_format_runner.run_clang_format(file)
 
         # generate feature CMakeLists.txt
         generate_feature_cmake(

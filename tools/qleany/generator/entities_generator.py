@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 from pathlib import Path
 
 
@@ -451,7 +451,7 @@ def generate_entity_files(
 
         # if uncrustify_config_file:
         #     uncrustify.run_uncrustify(output_file, uncrustify_config_file)
-        clang_format.run_clang_format(output_file)
+        clang_format_runner.run_clang_format(output_file)
 
     # generate entities cmake file
 

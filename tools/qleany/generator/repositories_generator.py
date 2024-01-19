@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 from pathlib import Path
 from copy import deepcopy
 import generation_dict_tools as tools
@@ -307,7 +307,7 @@ def generate_repository_files(
 
             # if uncrustify_config_file:
             #     uncrustify.run_uncrustify(output_file, uncrustify_config_file)
-            clang_format.run_clang_format(output_file)
+            clang_format_runner.run_clang_format(output_file)
 
         # prepare the fields init values
 
@@ -348,7 +348,7 @@ def generate_repository_files(
 
             # if uncrustify_config_file:
             #     uncrustify.run_uncrustify(output_file, uncrustify_config_file)
-            clang_format.run_clang_format(output_file)
+            clang_format_runner.run_clang_format(output_file)
 
         # loader functions like     Domain::Book::ChaptersLoader fetchChaptersLoader();
 
@@ -386,7 +386,7 @@ def generate_repository_files(
 
             # if uncrustify_config_file:
             #     uncrustify.run_uncrustify(output_file, uncrustify_config_file)
-            clang_format.run_clang_format(output_file)
+            clang_format_runner.run_clang_format(output_file)
 
     # write the repository cmake list file
 
@@ -596,7 +596,7 @@ def generate_repository_files(
             fh.write(rendered_template)
             print(f"Successfully wrote file {output_file}")
 
-        clang_format.run_clang_format(output_file)
+        clang_format_runner.run_clang_format(output_file)
 
     # write persistence_registration.cpp file
 
@@ -658,7 +658,7 @@ def generate_repository_files(
             fh.write(rendered_template)
             print(f"Successfully wrote file {output_file}")
 
-        clang_format.run_clang_format(output_file)
+        clang_format_runner.run_clang_format(output_file)
 
     # write the CMakeLists.txt file
 

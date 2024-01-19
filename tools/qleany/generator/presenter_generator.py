@@ -7,7 +7,7 @@ import shutil
 import uncrustify
 from pathlib import Path
 import copy
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 import generation_dict_tools as tools
 
 
@@ -629,7 +629,7 @@ def generate_presenter_files(
         # if uncrustify_config_file and files_to_be_generated.get(file, False):
         #     uncrustify.run_uncrustify(file, uncrustify_config_file)
         if to_be_generated and file.endswith(".h") or file.endswith(".cpp"):
-            clang_format.run_clang_format(os.path.join(root_path, file))
+            clang_format_runner.run_clang_format(os.path.join(root_path, file))
 
 
 def get_files_to_be_generated(

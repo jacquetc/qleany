@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 import generation_dict_tools as tools
 from pathlib import Path
 
@@ -688,7 +688,7 @@ def _generate_real_controller_file(
 
     # if uncrustify_config_file:
     #     uncrustify.run_uncrustify(real_controller_file, uncrustify_config_file)
-    clang_format.run_clang_format(output_file)
+    clang_format_runner.run_clang_format(output_file)
 
     print(f"Successfully wrote file {output_file}")
 
@@ -727,7 +727,7 @@ def _generate_real_undo_redo_controller_file(
 
     # if uncrustify_config_file:
     #     uncrustify.run_uncrustify(undo_redo_controller_file, uncrustify_config_file)
-    clang_format.run_clang_format(undo_redo_controller_file)
+    clang_format_runner.run_clang_format(undo_redo_controller_file)
 
     print(f"Successfully wrote file {undo_redo_controller_file}")
 
@@ -766,7 +766,7 @@ def _generate_real_event_dispatcher_file(
 
     # if uncrustify_config_file:
     #     uncrustify.run_uncrustify(event_dispatcher_file, uncrustify_config_file)
-    clang_format.run_clang_format(event_dispatcher_file)
+    clang_format_runner.run_clang_format(event_dispatcher_file)
 
     print(f"Successfully wrote file {event_dispatcher_file}")
 
@@ -882,7 +882,7 @@ def _generate_real_model_file(
 
     # if uncrustify_config_file:
     #     uncrustify.run_uncrustify(real_model_file, uncrustify_config_file)
-    clang_format.run_clang_format(output_file)
+    clang_format_runner.run_clang_format(output_file)
 
     print(f"Successfully wrote file {output_file}")
 

@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import clang_format
+import tools.qleany.generator.clang_format_runner as clang_format_runner
 from pathlib import Path
 import generation_dict_tools as tools
 
@@ -680,7 +680,7 @@ def generate_crud_handler(
 
         # if uncrustify_config_file:
         #     uncrustify.run_uncrustify(file_path, uncrustify_config_file)
-        clang_format.run_clang_format(file_path)
+        clang_format_runner.run_clang_format(file_path)
 
 
 def generate_custom_command_handler(
@@ -724,7 +724,7 @@ def generate_custom_command_handler(
 
         # if uncrustify_config_file:
         #     uncrustify.run_uncrustify(file_path, uncrustify_config_file)
-        clang_format.run_clang_format(file_path)
+        clang_format_runner.run_clang_format(file_path)
 
 
 def generate_custom_query_handler(
@@ -769,7 +769,7 @@ def generate_custom_query_handler(
 
         # if uncrustify_config_file:
         #     uncrustify.run_uncrustify(file_path, uncrustify_config_file)
-        clang_format.run_clang_format(file_path)
+        clang_format_runner.run_clang_format(file_path)
 
 
 def generate_application_files(
