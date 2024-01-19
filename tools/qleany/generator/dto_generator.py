@@ -762,7 +762,7 @@ def get_files_to_be_generated(
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:
         for path, generate in files_to_be_generated.items():
-            if not generate:
+            if not generate and path in files:
                 files.remove(path)
 
     return files
