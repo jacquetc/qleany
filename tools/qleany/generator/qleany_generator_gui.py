@@ -524,6 +524,8 @@ class MainWindow(QMainWindow):
         list.extend(
             application_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
+        list.extend(qml_generator.get_files_to_be_generated(self.temp_manifest_file))
+        self.text_box.clear()
         self.text_box.setPlainText("All files:\n\n")
         self.text_box.appendPlainText("\n".join(list))
         self.file_list_view.list_files(list)
