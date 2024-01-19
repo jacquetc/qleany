@@ -2,6 +2,7 @@
 # If you do, be careful to not overwrite it when you run the generator again.
 
 find_package(Qt6 COMPONENTS Core Sql REQUIRED)
+find_package(qleany CONFIG REQUIRED)
 
 set(LIBRARY_NAME {{ application_spinalcase_name }}-persistence)
 
@@ -33,3 +34,4 @@ target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql
 )
+target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)

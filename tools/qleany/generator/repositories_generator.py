@@ -11,7 +11,7 @@ from copy import deepcopy
 import generation_dict_tools as tools
 
 
-def generate_export_header_file(
+def _generate_export_header_file(
     root_path: str,
     path: str,
     application_name: str,
@@ -46,7 +46,7 @@ def generate_export_header_file(
         print(f"Successfully wrote file {export_header_file}")
 
 
-def generate_cmakelists(
+def _generate_cmakelists(
     root_path: str,
     path: str,
     application_name: str,
@@ -79,7 +79,7 @@ def generate_cmakelists(
         print(f"Successfully wrote file {cmakelists_file}")
 
 
-def generate_contracts_cmakelists(
+def _generate_contracts_cmakelists(
     root_path: str,
     path: str,
     application_name: str,
@@ -230,16 +230,15 @@ def generate_repository_files(
             value["related_field_pascal_name"] = stringcase.pascalcase(field_name)
 
         foreign_repository_constructor_arguments = []
-        if generate_lazy_loaders:
-            for key, value in foreign_entities.items():
-                new_constructor_argument = f"Interface{value['type_pascal_name']}Repository *{value['type_camel_name']}Repository"
-                if (
+        for key, value in foreign_entities.items():
+            new_constructor_argument = f"Interface{value['type_pascal_name']}Repository *{value['type_camel_name']}Repository"
+            if (
+                new_constructor_argument
+                not in foreign_repository_constructor_arguments
+            ):
+                foreign_repository_constructor_arguments.append(
                     new_constructor_argument
-                    not in foreign_repository_constructor_arguments
-                ):
-                    foreign_repository_constructor_arguments.append(
-                        new_constructor_argument
-                    )
+                )
 
         foreign_repository_constructor_arguments_string = ", ".join(
             foreign_repository_constructor_arguments
@@ -250,21 +249,19 @@ def generate_repository_files(
             else foreign_repository_constructor_arguments_string
         )
 
-        loader_private_member_list = []
-        if generate_lazy_loaders:
-            for key, value in foreign_entities.items():
-                loader_private_member_list.append(
-                    f"Interface{value['type_pascal_name']}Repository *m_{value['type_camel_name']}Repository;"
-                )
+        foreign_entities_private_member_list = []
+        for key, value in foreign_entities.items():
+            foreign_entities_private_member_list.append(
+                f"Interface{value['type_pascal_name']}Repository *m_{value['type_camel_name']}Repository;"
+            )
         # remove duplicates :
-        loader_private_member_list = list(dict.fromkeys(loader_private_member_list))
+        loader_private_member_list = list(dict.fromkeys(foreign_entities_private_member_list))
 
         foreign_repository_header_list = []
-        if generate_lazy_loaders:
-            for key, value in foreign_entities.items():
-                foreign_repository_header_list.append(
-                    f"\"repository/interface_{value['type_snake_name']}_repository.h\""
-                )
+        for key, value in foreign_entities.items():
+            foreign_repository_header_list.append(
+                f"\"repository/interface_{value['type_snake_name']}_repository.h\""
+            )
         # remove duplicates :
         foreign_repository_header_list = list(
             dict.fromkeys(foreign_repository_header_list)
@@ -285,8 +282,10 @@ def generate_repository_files(
             pascal_name=pascal_name,
             snake_name=snake_name,
             camel_name=camel_name,
+            generate_lazy_loaders=generate_lazy_loaders,
+            foreign_entities=foreign_entities,
             foreign_repository_constructor_arguments_string=foreign_repository_constructor_arguments_string,
-            loader_private_member_list=loader_private_member_list,
+            foreign_entities_private_member_list=foreign_entities_private_member_list,
             loader_function_list=loader_function_list,
             export=export,
             export_header_file=export_header_file,
@@ -329,6 +328,7 @@ def generate_repository_files(
             pascal_name=pascal_name,
             snake_name=snake_name,
             camel_name=camel_name,
+            generate_lazy_loaders=generate_lazy_loaders,
             foreign_entities=foreign_entities,
             foreign_repository_constructor_arguments_string=foreign_repository_constructor_arguments_string,
             fields_init_values=fields_init_values,
@@ -364,6 +364,7 @@ def generate_repository_files(
             name=name,
             snake_name=snake_name,
             camel_name=camel_name,
+            foreign_entities=foreign_entities,
             inverted_app_domain=inverted_app_domain,
             contracts_export=contracts_export,
             contracts_export_header_file=contracts_export_header_file,
@@ -662,7 +663,7 @@ def generate_repository_files(
 
     # write the CMakeLists.txt file
 
-    generate_cmakelists(
+    _generate_cmakelists(
         root_path,
         base_path,
         application_name,
@@ -672,7 +673,7 @@ def generate_repository_files(
 
     # write the interface CMakeLists.txt file
 
-    generate_contracts_cmakelists(
+    _generate_contracts_cmakelists(
         root_path,
         contracts_folder_path,
         application_name,
@@ -682,7 +683,7 @@ def generate_repository_files(
 
     # write the export header file
 
-    generate_export_header_file(
+    _generate_export_header_file(
         root_path,
         base_path,
         application_name,
@@ -692,7 +693,7 @@ def generate_repository_files(
         files_to_be_generated,
     )
 
-    generate_export_header_file(
+    _generate_export_header_file(
         root_path,
         contracts_folder_path,
         application_name,

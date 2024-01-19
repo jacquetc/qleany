@@ -3,9 +3,9 @@
 #pragma once
 
 #include "{{ snake_name }}.h"
-{% for foreign_repository_header in foreign_repository_header_list %}
+{% for foreign_repository_header in foreign_repository_header_list -%}
 #include {{ foreign_repository_header }}
-{% endfor %}
+{% endfor -%}
 #include <qleany/contracts/database/interface_database_table_group.h>
 #include <qleany/repository/generic_repository.h>
 #include "repository/interface_{{ snake_name }}_repository.h"
@@ -27,10 +27,10 @@ class {{ export }} {{ name }}Repository  final : public Qleany::Repository::Gene
     explicit {{ name }}Repository(InterfaceDatabaseTableGroup<{{ application_cpp_domain_name }}::Domain::{{ name }}> *{{ camel_name }}Database{{ foreign_repository_constructor_arguments_string }});
 
     SignalHolder *signalHolder() override;
-    {% if loader_function_list %}
+    {% if foreign_entities %}
     Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> update({{ application_cpp_domain_name }}::Domain::{{ name }} &&entity) override;
     Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> getWithDetails(int entityId) override;
-    {% endif %}
+    {% endif %}    
     {% for loader_function in loader_function_list %}
     {{ loader_function }}
     {% endfor %}
@@ -39,9 +39,9 @@ class {{ export }} {{ name }}Repository  final : public Qleany::Repository::Gene
 
 
   private:
-    {% for loader_private_member in loader_private_member_list %}
-    {{ loader_private_member }}
-    {% endfor %}
+    {% for foreign_entities_private_member in foreign_entities_private_member_list -%}
+    {{ foreign_entities_private_member }}
+    {% endfor -%}
     QScopedPointer<SignalHolder> m_signalHolder;
     QReadWriteLock m_lock;
 
