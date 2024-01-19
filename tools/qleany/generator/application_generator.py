@@ -5,7 +5,7 @@ import sys
 import stringcase
 import shutil
 import uncrustify
-import tools.qleany.generator.clang_format_runner as clang_format_runner
+import clang_format_runner as clang_format_runner
 from pathlib import Path
 import generation_dict_tools as tools
 

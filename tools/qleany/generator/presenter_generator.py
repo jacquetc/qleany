@@ -7,7 +7,7 @@ import shutil
 import uncrustify
 from pathlib import Path
 import copy
-import tools.qleany.generator.clang_format_runner as clang_format_runner
+import clang_format_runner as clang_format_runner
 import generation_dict_tools as tools
 
 
