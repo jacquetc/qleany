@@ -11,8 +11,7 @@ from pathlib import Path
 
 
 def _get_generation_dict(
-    real_imports_folder_path: str,
-    mock_imports_folder_path: str,
+    folder_path,
     feature_by_name: dict,
     entities_by_name: dict,
     has_undo_redo: bool,
@@ -22,6 +21,10 @@ def _get_generation_dict(
     application_name: str,
     application_cpp_domain_name: str,
 ) -> dict:
+    
+    real_imports_folder_path = os.path.join(folder_path, "real_imports")
+    mock_imports_folder_path = os.path.join(folder_path, "mock_imports")
+
     # generating controller files
 
     generation_dict = {}
@@ -140,6 +143,18 @@ def _get_generation_dict(
     )
 
     generation_dict["controller_qmldir_file"] = controller_qmldir_file
+
+    # add common real CmakeLists.txt file
+    common_real_cmakelists_file = os.path.join(
+        real_imports_folder_path, "CMakeLists.txt"
+    )
+    generation_dict["common_real_cmakelists_file"] = common_real_cmakelists_file
+
+    # add realqmlmodules.cmake file
+    real_qml_modules_file = os.path.join(
+        folder_path, "realqmlmodules.cmake"
+    )
+    generation_dict["real_qml_modules_file"] = real_qml_modules_file
 
     # add CMakelists.txt:
     controller_cmakelists_file = os.path.join(
@@ -770,6 +785,69 @@ def _generate_real_event_dispatcher_file(
 
     print(f"Successfully wrote file {event_dispatcher_file}")
 
+def _generate_real_common_cmakelists_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    common_real_cmakelists_file = generation_dict["common_real_cmakelists_file"]
+
+    # generate the real cmakelists file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(common_real_cmakelists_file, False):
+        return
+
+    output_file = os.path.join(root_path, common_real_cmakelists_file)
+
+    # Create the jinja2 environment
+    env = Environment(
+        loader=FileSystemLoader("templates/QML/real_imports/")
+    )
+    # Load the template
+    template = env.get_template("cmakelists.txt.jinja2")
+
+    # Render the template
+    output = template.render()
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
+
+def _generate_real_qml_modules_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    real_qml_modules_file = generation_dict["real_qml_modules_file"]
+
+    # generate the real cmakelists file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(real_qml_modules_file, False):
+        return
+
+    output_file = os.path.join(root_path, real_qml_modules_file)
+
+    # Create the jinja2 environment
+    env = Environment(
+        loader=FileSystemLoader("templates/QML/")
+    )
+    # Load the template
+    template = env.get_template("realqmlmodules.cmake.jinja2")
+
+    # Render the template
+    output = template.render(
+        application_name=generation_dict["application_name"],
+    )
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
 
 def _generate_real_controllers_cmakelists_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
@@ -1007,10 +1085,10 @@ def generate_qml_files(
     singles = presenter_data.get("singles", [])
 
     qml_data = manifest_data.get("qml", [])
+    folder_path = qml_data["folder_path"]
 
     generation_dict = _get_generation_dict(
-        qml_data["real_imports_folder_path"],
-        qml_data["mock_imports_folder_path"],
+        folder_path,
         feature_by_name,
         entities_by_name,
         has_undo_redo,
@@ -1071,6 +1149,16 @@ def generate_qml_files(
         _generate_real_undo_redo_controller_file(
             root_path, generation_dict, files_to_be_generated
         )
+
+    # generate real common CMakeLists.txt file
+    _generate_real_common_cmakelists_file(
+        root_path, generation_dict, files_to_be_generated
+    )
+
+    # generate real qmlmodules.cmake file
+    _generate_real_qml_modules_file(
+        root_path, generation_dict, files_to_be_generated
+    )
 
     # generate real CMakeLists.txt file
     _generate_real_controllers_cmakelists_file(
@@ -1143,11 +1231,11 @@ def get_files_to_be_generated(
     feature_by_name = {feature["name"]: feature for feature in feature_list}
 
     qml_data = manifest_data.get("qml", [])
+    folder_path = qml_data["folder_path"]
 
     files = []
     generation_dict = _get_generation_dict(
-        qml_data["real_imports_folder_path"],
-        qml_data["mock_imports_folder_path"],
+        folder_path,
         feature_by_name,
         entities_by_name,
         has_undo_redo,
@@ -1157,6 +1245,7 @@ def get_files_to_be_generated(
         application_name,
         application_cpp_domain_name,
     )
+
     files += generation_dict["real_controller_files"]
     files += generation_dict["mock_controller_files"]
 
@@ -1182,6 +1271,14 @@ def get_files_to_be_generated(
     # # add qmldir:
     model_qmldir_file = generation_dict["model_qmldir_file"]
     files.append(model_qmldir_file)
+
+    # add common real CMakeLists.txt file
+    common_real_cmakelists_file = generation_dict["common_real_cmakelists_file"]
+    files.append(common_real_cmakelists_file)
+
+    # add realqmlmodules.cmake file
+    real_qml_modules_file = generation_dict["real_qml_modules_file"]
+    files.append(real_qml_modules_file)
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:
@@ -1209,11 +1306,8 @@ def preview_qml_files(
         manifest = yaml.safe_load(fh)
 
     # remove .. from the path
-    manifest["qml"]["mock_imports_folder_path"] = manifest["qml"][
-        "mock_imports_folder_path"
-    ].replace("..", "")
-    manifest["qml"]["real_imports_folder_path"] = manifest["qml"][
-        "real_imports_folder_path"
+    manifest["qml"]["folder_path"] = manifest["qml"][
+        "folder_path"
     ].replace("..", "")
 
     # write the modified manifest file

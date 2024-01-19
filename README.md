@@ -270,11 +270,10 @@ presenter:
 
 ### QML Configuration
 
-Specifies paths for QML mock and real imports.
+Specifies paths for QML folder. The folders mock_imports and real_imports will be created in it.
 
 ```yaml
 qml:
-  mock_imports_folder_path: path/to/mock/imports
-  real_imports_folder_path: path/to/real/imports
+  folder_path: path/to/qml/folder
 
 ```

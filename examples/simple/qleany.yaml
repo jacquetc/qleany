@@ -269,5 +269,4 @@ presenter:
       
 
 qml:
-  mock_imports_folder_path: src/gui/qml_application/mock_imports/
-  real_imports_folder_path: src/gui/qml_application/real_imports/
+  folder_path: src/gui/qml_application/
