@@ -224,7 +224,7 @@ inline Qleany::Domain::EntitySchema {{ name }}::schema = {
         {% for field in parent_fields -%}
         { 
             "{{ field.name }}",
-            FieldType::{% if field.type == "bool" %}Boolean{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
+            FieldType::{% if field.type == "bool" %}Bool{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
             {% if field.is_primary_key %}true{% else %}false{%endif %},
             {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}
         },
@@ -232,7 +232,7 @@ inline Qleany::Domain::EntitySchema {{ name }}::schema = {
         {% for field in fields -%}
         { 
             "{{ field.name }}",
-            FieldType::{% if field.type == "bool" %}Boolean{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
+            FieldType::{% if field.type == "bool" %}Bool{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
             {% if field.is_primary_key %}true{% else %}false{%endif %},
             {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}
         }{% if not loop.last %},{% endif %}
