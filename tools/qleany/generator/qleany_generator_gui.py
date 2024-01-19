@@ -44,6 +44,7 @@ sys.path.append(full_path)
 # set the current directory to the generator directory
 os.chdir(full_path)
 
+import __version__
 import entities_generator
 import dto_generator
 import repositories_generator
@@ -88,7 +89,7 @@ class MainWindow(QMainWindow):
         # geometry
 
         self.setGeometry(100, 100, 800, 600)
-        self.setWindowTitle("Qleany, the Qt Clean Architecture Generator")
+        self.setWindowTitle(f"Qleany, the Qt Clean Architecture Generator, version {__version__.__version__}")
 
         # UI
         self.manifest_refreshed_displayed = False

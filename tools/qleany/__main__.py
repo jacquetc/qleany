@@ -1,5 +1,6 @@
 import sys
 import os
+import __version__
 from pathlib import Path
 
 full_path = Path(__file__).resolve().parent
@@ -14,7 +15,12 @@ from generator.qleany_generator_gui import main as gui_main
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+    # -v or --version
+    if len(sys.argv) > 1 and sys.argv[1] in ["-v", "--version"]:
+        print("qleany version:")
+        print(__version__.__version__)
+
+    elif len(sys.argv) > 1 and sys.argv[1] == "gui":
         gui_main()
     else:
         gui_main()
