@@ -1,7 +1,8 @@
 # This file was generated automatically by Qleany's generator, edit at your own risk! 
 # If you do, be careful to not overwrite it when you run the generator again.
 
-find_package(Qt6 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui REQUIRED)
+find_package(QCoro6 REQUIRED COMPONENTS Core)
 
 set(LIBRARY_NAME {{ application_spinalcase_name }}-presenter)
 
@@ -27,7 +28,7 @@ target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE
-    Qt6::Core Qt::Gui)
+    Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
 target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-controller)
