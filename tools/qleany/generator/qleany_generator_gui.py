@@ -573,6 +573,12 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
+        qml_generator.preview_qml_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
 
         self.text_box.setPlainText(
             f"Preview folder cleared beforehand. All files previewed at {Path(self.root_path,).resolve()}/qleany_preview/ folder"
