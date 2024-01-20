@@ -41,7 +41,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(QLEANY_BUILD_WITH_QT_GUI "Build with Qt GUI" ON)
 
 if(QLEANY_BUILD_WITH_QT_GUI)
-    add_compile_definitions(QLEANY_BUILD_WITH_QT_GUI=1)
+    add_compile_definitions(QLEANY_BUILD_WITH_QT_GUI=true)
 endif()
 
 if(BUILD_SHARED_LIBS)

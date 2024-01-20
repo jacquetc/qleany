@@ -1,5 +1,6 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
+
 #include "{{ feature_name_snake }}_controller.h"
 
 {% if feature.crud.enabled -%}
@@ -9,7 +10,7 @@
     {%if feature.crud.get_with_details -%}
 #include "{{ feature_name_snake }}/queries/get_{{ entity_name_snake }}_with_details_query_handler.h"
     {% endif -%}
-    {%if feature.crud.create -%}
+    {%if feature.crud.get_all -%}
 #include "{{ feature_name_snake }}/queries/get_all_{{ entity_name_snake }}_query_handler.h"
     {% endif -%}
     {%if feature.crud.create -%}

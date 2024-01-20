@@ -662,6 +662,12 @@ class MainWindow(QMainWindow):
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
+            presenter_generator.generate_presenter_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
             application_generator.generate_application_files(
                 self.root_path,
                 self.temp_manifest_file,
