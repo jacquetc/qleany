@@ -146,7 +146,7 @@ def get_generation_dict(
                 }
             update_data = crud_data.get("update", {})
             if update_data.get("enabled", False) and update_data.get("generate", True):
-                crud_handlers["update"] = {
+                crud_handlers["update_"] = {
                     "generate": True,
                     "templates": [
                         "update_handler.cpp.jinja2",

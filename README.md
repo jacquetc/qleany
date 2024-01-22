@@ -107,16 +107,19 @@ entities:
         # basic:
         - type: DataType
           name: fieldName
+          hidden: true/false (default: false)
         # one-to-one relationship:
         - type: OtherEntityName
           name: fieldName
           strong: true/false
+          hidden: true/false (default: false)
         # one-to-many relationship:
         - type: QList<OtherEntityName>
           name: fieldName
           strong: true/false
           ordered: true/false
-        # other fields
+          hidden: true/false (default: false)
+        # other fields ...
     # other entities
   export: EXPORT_MACRO_NAME
   export_header_file: header_file_name.h
@@ -255,8 +258,9 @@ presenter:
   export_header_file: header_file_name.h
   create_undo_and_redo_singles: true/false (default false)
   singles:
-    - name: SingleName
+    - name: SingleName (or "auto")
       entity: EntityName
+      read_only: true/false (default: false)
     # Additional singles...
   list_models:
     - name: ListModelName (or auto)
@@ -264,6 +268,7 @@ presenter:
       displayed_field: fieldName
       in_relation_of: RelationEntity
       relation_field_name: relationFieldName
+      read_only: true/false (default: false)
     # Additional list models...
 
 ```

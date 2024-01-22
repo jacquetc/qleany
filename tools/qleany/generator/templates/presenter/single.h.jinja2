@@ -45,7 +45,7 @@ class {{ export }} {{ single.class_name_pascal }} : public QObject
     Q_PROPERTY(int itemId READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)
     {% for field in single.fields %}
     {%- if field.name_camel != "id" %}
-    Q_PROPERTY({{ field.type }} {{ field.name_camel }} READ {{ field.name_camel }} WRITE set{{ field.name_pascal }} NOTIFY {{ field.name_camel }}Changed FINAL)
+    Q_PROPERTY({{ field.type }} {{ field.name_camel }} READ {{ field.name_camel }} {% if not single.read_only %}WRITE set{{ field.name_pascal }}{% endif %} NOTIFY {{ field.name_camel }}Changed FINAL)
     {%- endif %}
     {%- endfor %}
 
@@ -57,10 +57,12 @@ class {{ export }} {{ single.class_name_pascal }} : public QObject
     void resetId();
 
     {% for field in single.fields %}
-    {% if field.name_camel != "id" %}
+    {% if field.name_camel != "id" -%}
     {{ field.type }} {{ field.name_camel }}() const;
+    {% if not single.read_only -%}
     void set{{ field.name_pascal }}({% if field.type in ['int', 'double', 'float', 'bool'] %}{{ field.type }} new{{ field.name_pascal }}{% else %} const {{ field.type }} &new{{ field.name_pascal }}{% endif %});
-    {% endif %}
+    {% endif -%}
+    {% endif -%}
     {%- endfor %}
 
   signals:

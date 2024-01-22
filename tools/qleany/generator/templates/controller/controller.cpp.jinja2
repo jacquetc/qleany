@@ -21,7 +21,7 @@
 #include "{{ feature_name_snake }}/commands/remove_{{ entity_name_snake }}_command.h"
 #include "{{ feature_name_snake }}/commands/remove_{{ entity_name_snake }}_command_handler.h"
     {% endif -%}
-    {%if feature.crud.update -%}
+    {%if feature.crud.update_ -%}
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command.h"
 #include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command_handler.h"
     {% endif -%}
@@ -222,7 +222,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::cr
     co_return optional_result.value();
 }
     {% endif %}
-    {%if feature.crud.update %}
+    {%if feature.crud.update_ %}
 
 QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Controller::update(const Update{{ entity_name_pascal }}DTO &dto)
 {
@@ -300,7 +300,7 @@ Create{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Controller::getCreate
     return Create{{ entity_name_pascal }}DTO();
 }
     {% endif %}
-    {%if feature.crud.update %}
+    {%if feature.crud.update_ %}
 Update{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Controller::getUpdateDTO()
 {
     return Update{{ entity_name_pascal }}DTO();

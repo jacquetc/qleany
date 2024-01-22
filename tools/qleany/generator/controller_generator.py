@@ -25,6 +25,8 @@ def get_other_entities_relation_fields(
 
         fields = data["fields"]
         for field in fields:
+            if field.get("hidden", False):
+                continue
             field_type = field["type"]
             if tools.is_unique_foreign_entity(
                 field_type, entities_by_name
@@ -116,7 +118,7 @@ def get_generation_dict(
             final_feature_dict["crud"]["entity_name_camel"] = entity_camel_name
             final_feature_dict["crud"][
                 "entity_has_relation_fields"
-            ] = tools.does_entity_have_relation_fields(entity_name, entities_by_name)
+            ] = tools.does_entity_have_relation_fields(entity_name, entities_by_name, False)
 
             final_feature_dict["crud"]["get"] = (
                 feature["CRUD"].get("get", {}).get("enabled", False)
@@ -130,7 +132,7 @@ def get_generation_dict(
             final_feature_dict["crud"]["create"] = (
                 feature["CRUD"].get("create", {}).get("enabled", False)
             )
-            final_feature_dict["crud"]["update"] = (
+            final_feature_dict["crud"]["update_"] = (
                 feature["CRUD"].get("update", {}).get("enabled", False)
             )
             final_feature_dict["crud"]["remove"] = (
@@ -460,7 +462,7 @@ def generate_event_dispatcher_files(
             print(f"Successfully wrote file {event_dispatcher_file}")
 
 
-def generate_controller_h_and_cpp_files(
+def _generate_controller_h_and_cpp_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
     template_env = Environment(loader=FileSystemLoader("templates/controller"))
@@ -882,7 +884,7 @@ def generate_controller_files(
     generate_cmakelists(root_path, generation_dict, files_to_be_generated)
     generate_export_header_file(root_path, generation_dict, files_to_be_generated)
     generate_signal_files(root_path, generation_dict, files_to_be_generated)
-    generate_controller_h_and_cpp_files(
+    _generate_controller_h_and_cpp_files(
         root_path, generation_dict, files_to_be_generated
     )
     if create_undo_redo_controller:

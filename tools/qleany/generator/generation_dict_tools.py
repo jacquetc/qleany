@@ -23,7 +23,7 @@ def is_list_foreign_entity(field_type: str, entities_by_name: dict) -> bool:
     return False
 
 
-def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict) -> bool:
+def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict, keep_hidden: bool = True) -> bool:
     entity = entities_by_name.get(entity_name, None)
     if entity is None:
         return False
@@ -31,6 +31,8 @@ def does_entity_have_relation_fields(entity_name: str, entities_by_name: dict) -
     fields = entity["fields"]
     for field in fields:
         field_type = field["type"]
+        if keep_hidden is False and field.get("hidden", False):
+            continue
         if is_unique_foreign_entity(
             field_type, entities_by_name
         ) or is_list_foreign_entity(field_type, entities_by_name):
@@ -61,6 +63,7 @@ def determine_owner(entity_name: str, entities_by_name: dict) -> dict:
                     owner_dict["name"] = possible_owner_name
                     owner_dict["field"] = field["name"]
                     owner_dict["ordered"] = field.get("ordered", False)
+                    owner_dict["hidden"] = field.get("hidden", False)
                     owner_dict["is_list"] = field["type"] == f"QList<{entity_name}>"
                     return owner_dict
 
@@ -92,6 +95,7 @@ def get_fields_with_foreign_entities(
     # add fields with foreign entities
     for field in fields:
         field["pascal_name"] = stringcase.pascalcase(field["name"])
+        field["hidden"] = field.get("hidden", False)
 
         if is_unique_foreign_entity(
             field["type"], entities_by_name
@@ -140,6 +144,7 @@ def get_fields_without_foreign_entities(
     for field in fields:
         field["pascal_name"] = stringcase.pascalcase(field["name"])
         field["camel_name"] = stringcase.camelcase(field["name"])
+        field["hidden"] = field.get("hidden", False)
 
         if is_unique_foreign_entity(
             field["type"], entities_by_name

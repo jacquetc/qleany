@@ -13,7 +13,7 @@
     {% if feature.crud.create -%}
 #include "{{ feature_name_snake }}/create_{{ entity_name_snake }}_dto.h"
     {% endif -%}
-    {% if feature.crud.update -%}
+    {% if feature.crud.update_ -%}
 #include "{{ feature_name_snake }}/update_{{ entity_name_snake }}_dto.h"
     {% endif -%}
 {% endif -%}
@@ -68,7 +68,7 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {% if feature.crud.create %}
     Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Create{{ entity_name_pascal }}DTO getCreateDTO();
     {% endif %}
-    {% if feature.crud.update %}
+    {% if feature.crud.update_ %}
     Q_INVOKABLE static Contracts::DTO::{{ entity_name_pascal }}::Update{{ entity_name_pascal }}DTO getUpdateDTO();
     {% endif %}
 {% endif %}
@@ -79,7 +79,7 @@ class {{ export }} {{ feature_name_pascal }}Controller : public QObject
     {%if feature.crud.create %}
     QCoro::Task<{{ entity_name_pascal }}DTO> create(const Create{{ entity_name_pascal }}DTO &dto);
     {% endif %}
-    {%if feature.crud.update %}
+    {%if feature.crud.update_ %}
     QCoro::Task<{{ entity_name_pascal }}DTO> update(const Update{{ entity_name_pascal }}DTO &dto);
     {% endif %}
     {%if feature.crud.remove %}

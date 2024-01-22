@@ -93,9 +93,10 @@ Qt::ItemFlags {{ model.class_name_pascal }}::flags(const QModelIndex &index) con
     if (!index.isValid())
         return Qt::NoItemFlags;
 
-    return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    return {% if not model.read_only %}Qt::ItemIsEditable | {% endif %}QAbstractItemModel::flags(index);
 }
 
+{% if not model.read_only %}
 bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (!index.isValid())
@@ -140,6 +141,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
 
     return false;
 }
+{% endif %}
 
 void {{ model.class_name_pascal }}::populate()
 {

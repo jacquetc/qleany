@@ -39,7 +39,9 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
     void reset{{ model.related_name_pascal }}Id();
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+    {% if not model.read_only %}
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    {% endif %}
     QHash<int, QByteArray> roleNames() const override;
 
   signals:

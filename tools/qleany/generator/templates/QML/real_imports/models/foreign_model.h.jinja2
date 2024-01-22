@@ -7,6 +7,6 @@
 struct Foreign{{ model.list_model_pascal_name}}
 {
     Q_GADGET
-    QML_FOREIGN(Simple::Presenter::{{ model.list_model_pascal_name}})
+    QML_FOREIGN({{ application_cpp_domain_name }}::Presenter::{{ model.list_model_pascal_name}})
     QML_NAMED_ELEMENT({{ model.list_model_pascal_name}})
 };

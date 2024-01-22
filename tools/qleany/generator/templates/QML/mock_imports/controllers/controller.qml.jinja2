@@ -76,7 +76,7 @@ QtObject {
         return task
     }
 {% endif -%}
-{% if controller.crud.update %}
+{% if controller.crud.update_ %}
     function getUpdateDTO() {
         return {
             "id": 0,

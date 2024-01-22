@@ -21,7 +21,7 @@ QtObject {
 {%- if controller.crud.create %}
     signal created(var dto)
 {%- endif %}
-{%- if controller.crud.update %}
+{%- if controller.crud.update_ %}
     signal updated(var dto)
     signal allRelationsInvalidated(int itemId)
 {%- endif %}

@@ -87,6 +87,8 @@ def _get_generation_dict(
     generation_dict["singles_list"] = []
 
     for single in singles_list:
+        read_only = single.get("read_only", False)
+
         entity_name = single["entity"]
         entity_name_snake = stringcase.snakecase(entity_name)
         entity_name_pascal = stringcase.pascalcase(entity_name)
@@ -117,6 +119,7 @@ def _get_generation_dict(
                     entities_by_name,
                     single["entity"],
                 ),
+                "read_only": read_only,
             }
         )
         generation_dict["all_presenter_files"].append(
@@ -138,6 +141,8 @@ def _get_generation_dict(
     generation_dict["list_models"] = []
 
     for model in list_models_list:
+        read_only = model.get("read_only", False)
+
         entity_name = model["entity"]
         entity_name_snake = stringcase.snakecase(entity_name)
         entity_name_pascal = stringcase.pascalcase(entity_name)
@@ -220,6 +225,8 @@ def _get_generation_dict(
                 ),
                 "is_ordered_list": is_ordered_list,
                 "is_related_list": is_related_list,
+                "read_only": read_only,
+
             }
         )
         generation_dict["all_presenter_files"].append(

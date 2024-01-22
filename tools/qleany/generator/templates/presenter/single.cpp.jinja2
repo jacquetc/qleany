@@ -56,7 +56,7 @@ void {{ single.class_name_pascal }}::setId(int newId)
     else
     {
         {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->get(m_id).then(
-            [this](const Simple::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) { 
+            [this](const {{ application_cpp_domain_name }}::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) { 
                 if({{ single.entity_name_camel }}.isInvalid()){
                     qCritical() << Q_FUNC_INFO << "Invalid {{ single.entity_name_camel }}Id";
                     return;
@@ -83,6 +83,7 @@ void {{ single.class_name_pascal }}::resetId()
     return m_{{ field.name_camel }};
 }
 
+{% if not single.read_only -%}
 void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type in ['int', 'double', 'float', 'bool'] %}{{ field.type }} new{{ field.name_pascal }}{% else %} const {{ field.type }} &new{{ field.name_pascal }}{% endif %})
 {
     if (m_{{ field.name_camel }} == new{{ field.name_pascal }})
@@ -92,7 +93,7 @@ void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type
     dto.setId(id());
     dto.set{{ field.name_pascal }}(new{{ field.name_pascal }});
     {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Controller::instance()->update(dto).then(
-            [this](const Simple::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) {   
+            [this](const {{ application_cpp_domain_name }}::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) {   
                 if({{ single.entity_name_camel }}.isInvalid()){
                     qCritical() << Q_FUNC_INFO << "Invalid {{ single.entity_name_camel }}Id";
                     return;
@@ -101,5 +102,6 @@ void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type
                 emit {{ field.name_camel }}Changed();
             });
 }
+{% endif %}
 {% endif %}
 {%- endfor %}

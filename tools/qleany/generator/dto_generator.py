@@ -52,12 +52,15 @@ def get_dto_dict_and_feature_ordered_dict(
             }
 
             # add fields without foreign entities
-
-            dto_dict[dto_type_name]["fields"] = tools.get_fields_without_foreign_entities(
+            fields = tools.get_fields_without_foreign_entities(
                 entities_by_name[entity_mappable_with]["fields"],
                 entities_by_name,
                 entity_mappable_with,
             )
+            # remove if hidden
+            fields = [field for field in fields if not field["hidden"]]
+
+            dto_dict[dto_type_name]["fields"] = fields
 
             dto_dict[dto_type_name]["dto_dependencies"] = []
 
@@ -76,12 +79,15 @@ def get_dto_dict_and_feature_ordered_dict(
             }
 
             # add fields with foreign entities
-            dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+            fields = tools.get_fields_with_foreign_entities(
                 entities_by_name[entity_mappable_with]["fields"],
                 entities_by_name,
                 entity_mappable_with,
             )
+            # remove if hidden
+            fields = [field for field in fields if not field["hidden"]]
 
+            dto_dict[dto_type_name]["fields"] = fields
             dto_dict[dto_type_name][
                 "dto_dependencies"
             ] = determine_dto_dependencies_from_fields(
@@ -101,8 +107,8 @@ def get_dto_dict_and_feature_ordered_dict(
             if crud_data["enabled"]:
                 generate_create = crud_data.get("create", {}).get("enabled", False)
                 generate_update = crud_data.get("update", {}).get("enabled", False)
-                generate_insert_relation = crud_data.get("insert_relation", {}).get(
-                    "enabled", False
+                generate_insert_relation = tools.does_entity_have_relation_fields(
+                    entity_mappable_with, entities_by_name, False
                 )
                 generate_move = crud_data.get("move_in_relative", {}).get(
                     "enabled", False
@@ -119,11 +125,14 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities but without id
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     entities_by_name[entity_mappable_with]["fields"],
                     entities_by_name,
                     entity_mappable_with,
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+                dto_dict[dto_type_name]["fields"] = fields
 
                 # remove id field
                 dto_dict[dto_type_name]["fields"] = [
@@ -183,11 +192,15 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     entities_by_name[entity_mappable_with]["fields"],
                     entities_by_name,
                     entity_mappable_with,
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+
+                dto_dict[dto_type_name]["fields"] = fields
 
                 dto_dict[dto_type_name][
                     "dto_dependencies"
@@ -239,7 +252,7 @@ def get_dto_dict_and_feature_ordered_dict(
                         "is_foreign": False,
                         "type": "int",
                     }
-                )
+                )       
 
                 # add relationship fields
 
@@ -268,9 +281,13 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     dto_in["fields"], entities_by_name
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+                dto_dict[dto_type_name]["fields"] = fields
+
                 dto_dict[dto_type_name][
                     "dto_dependencies"
                 ] = determine_dto_dependencies_from_fields(
@@ -289,9 +306,12 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     dto_out["fields"], entities_by_name
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+                dto_dict[dto_type_name]["fields"] = fields
                 dto_dict[dto_type_name][
                     "dto_dependencies"
                 ] = determine_dto_dependencies_from_fields(
@@ -313,9 +333,13 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     dto_in["fields"], entities_by_name
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+                dto_dict[dto_type_name]["fields"] = fields
+
                 dto_dict[dto_type_name][
                     "dto_dependencies"
                 ] = determine_dto_dependencies_from_fields(
@@ -334,9 +358,12 @@ def get_dto_dict_and_feature_ordered_dict(
                 }
 
                 # add fields with foreign entities
-                dto_dict[dto_type_name]["fields"] = tools.get_fields_with_foreign_entities(
+                fields = tools.get_fields_with_foreign_entities(
                     dto_out["fields"], entities_by_name
                 )
+                # remove hidden fields
+                fields = [field for field in fields if not field["hidden"]]
+                dto_dict[dto_type_name]["fields"] = fields
                 dto_dict[dto_type_name][
                     "dto_dependencies"
                 ] = determine_dto_dependencies_from_fields(

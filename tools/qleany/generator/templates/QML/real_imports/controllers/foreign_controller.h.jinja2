@@ -51,7 +51,7 @@ public:
     }
     {% endif %}
 
-    {%if controller.crud.update %}
+    {%if controller.crud.update_ %}
     Q_INVOKABLE Update{{ controller.feature_pascal_name }}DTO getUpdateDTO()
     {
         return s_controllerInstance->getUpdateDTO();
@@ -75,7 +75,7 @@ public:
     }
     {% endif %}
 
-    {% if controller.crud.update %}
+    {% if controller.crud.update_ %}
     Q_INVOKABLE QCoro::QmlTask update(const Update{{ controller.feature_pascal_name }}DTO &dto)
     {
         return s_controllerInstance->update(dto);

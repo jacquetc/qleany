@@ -107,10 +107,10 @@ def _get_generation_dict(
                 "get_with_details": get_with_details_enabled,
                 "get_all": get_all_enabled,
                 "create": create_enabled,
-                "update": update_enabled,
+                "update_": update_enabled,
                 "remove": remove_enabled,
                 "entity_has_relation_fields": tools.does_entity_have_relation_fields(
-                    feature_pascal_name, entities_by_name
+                    feature_pascal_name, entities_by_name, False
                 ),
             },
             "custom_commands": custom_commands,

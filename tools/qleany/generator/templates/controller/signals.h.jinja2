@@ -35,10 +35,13 @@ class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
     }
 
   signals:
-    void removed(QList<int> removedIds);
-    void activeStatusChanged(QList<int> changedIds, bool isActive);
     
 {%- if feature.crud.enabled %}
+    void removed(QList<int> removedIds);
+    void activeStatusChanged(QList<int> changedIds, bool isActive);
+    void created({{ feature.crud.entity_name_pascal }}DTO dto);
+    void updated({{ feature.crud.entity_name_pascal }}DTO dto);
+    void allRelationsInvalidated(int id);
     {%if feature.crud.get -%}
     void getReplied({{ feature.crud.entity_name_pascal }}DTO dto);
     {% endif -%}
@@ -48,13 +51,7 @@ class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
     {%if feature.crud.get_all -%}
     void getAllReplied(QList<{{ feature.crud.entity_name_pascal }}DTO> dtoList);
     {% endif -%}
-    {%if feature.crud.create -%}
-    void created({{ feature.crud.entity_name_pascal }}DTO dto);
-    {% endif -%}
-    {%if feature.crud.update -%}
-    void updated(Contracts::DTO::{{ feature.crud.entity_name_pascal }}::{{ feature.crud.entity_name_pascal }}DTO dto);
-    void allRelationsInvalidated(int id);
-    {% endif -%}
+
 
     {% if feature.crud.entity_has_relation_fields %}
     void relationInserted({{ feature.crud.entity_name_pascal }}RelationDTO dto);
