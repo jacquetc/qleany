@@ -1,0 +1,72 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ export_header_file }}"
+{% if feature.crud.enabled %}
+{% if feature.crud.get_with_details %}
+#include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_with_details_dto.h"
+{% endif %}
+#include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_dto.h"
+{% endif %}
+{% if feature.crud.entity_has_relation_fields %}
+#include "{{ feature.crud.entity_name_snake }}/{{ feature.crud.entity_name_snake }}_relation_dto.h"
+{% endif %}
+{% for command in feature.custom_commands %}
+{% if command.dto_out_enabled %}#include "{{ feature.feature_name_snake }}/{{ command.dto_out_snake }}_dto.h"{% endif %}
+{% endfor %}
+{% for query in feature.custom_queries %}
+#include "{{ feature.feature_name_snake }}/{{ query.dto_out_snake }}_dto.h"
+{% endfor %}
+
+#include <QObject>
+
+namespace {{ application_cpp_domain_name }}::Interactor
+{
+
+using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature.feature_name_pascal }};
+
+class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit {{ feature.feature_name_pascal }}Signals(QObject *parent = nullptr) : QObject{parent}
+    {
+    }
+
+  signals:
+    
+{%- if feature.crud.enabled %}
+    void removed(QList<int> removedIds);
+    void activeStatusChanged(QList<int> changedIds, bool isActive);
+    void created({{ feature.crud.entity_name_pascal }}DTO dto);
+    void updated({{ feature.crud.entity_name_pascal }}DTO dto);
+    void allRelationsInvalidated(int id);
+    {%if feature.crud.get -%}
+    void getReplied({{ feature.crud.entity_name_pascal }}DTO dto);
+    {% endif -%}
+    {%if feature.crud.get_with_details -%}
+    void getWithDetailsReplied({{ feature.crud.entity_name_pascal }}WithDetailsDTO dto);
+    {% endif -%}
+    {%if feature.crud.get_all -%}
+    void getAllReplied(QList<{{ feature.crud.entity_name_pascal }}DTO> dtoList);
+    {% endif -%}
+
+
+    {% if feature.crud.entity_has_relation_fields %}
+    void relationInserted({{ feature.crud.entity_name_pascal }}RelationDTO dto);
+    void relationRemoved({{ feature.crud.entity_name_pascal }}RelationDTO dto);
+    {% endif -%}
+
+{% endif -%}
+
+    {% for command in feature.custom_commands %}
+    void {{ command.name_camel }}Changed({% if command.dto_out_enabled %}{{ command.dto_out }}DTO dto{% endif %});
+    {%- endfor -%}
+
+    {% for query in feature.custom_queries %}
+    void {{ query.name_camel }}Replied({{ query.dto_out }}DTO dto);
+    {%- endfor -%}
+
+};
+} // namespace {{ application_cpp_domain_name }}::Interactor

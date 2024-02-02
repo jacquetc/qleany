@@ -71,11 +71,11 @@ repositories:
   repository_folder_path: src/core/persistence/repository/
   base_folder_path: src/core/persistence/
 
-controller: 
-  folder_path: src/core/controller/
-  export: SIMPLEEXAMPLE_CONTROLLER_EXPORT
-  export_header_file: controller_export.h
-  create_undo_redo_controller: true
+interactor: 
+  folder_path: src/core/interactor/
+  export: SIMPLEEXAMPLE_INTERACTOR_EXPORT
+  export_header_file: interactor_export.h
+  create_undo_redo_interactor: true
 
 application:
   common_cmake_folder_path: src/core/application

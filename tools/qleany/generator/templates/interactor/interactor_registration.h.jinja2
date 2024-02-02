@@ -1,0 +1,24 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+
+#pragma once
+
+#include "{{ export_header_file }}"
+#include <qleany/contracts/repository/interface_repository_provider.h>
+#include <QObject>
+
+namespace {{ application_cpp_domain_name }}::Interactor
+{
+
+class {{ export }} InteractorRegistration : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit InteractorRegistration(QObject *parent,
+                                    Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
+    ~InteractorRegistration();
+
+  private:
+};
+
+} // namespace {{ application_cpp_domain_name }}::Interactor

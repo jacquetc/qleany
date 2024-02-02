@@ -1,10 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_car.h"
-#include "car/car_controller.h"
+#include "car/car_interactor.h"
 #include "event_dispatcher.h"
 
-using namespace Simple::Controller;
+using namespace Simple::Interactor;
 using namespace Simple::Presenter;
 
 SingleCar::SingleCar(QObject *parent) : QObject{parent}
@@ -80,7 +80,7 @@ void SingleCar::setId(int newId)
     // set
     else
     {
-        Car::CarController::instance()->get(m_id).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+        Car::CarInteractor::instance()->get(m_id).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
             if (car.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid carId";
@@ -120,7 +120,7 @@ void SingleCar::setUuid(const QUuid &newUuid)
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+    Car::CarInteractor::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
         if (car.isInvalid())
         {
             qCritical() << Q_FUNC_INFO << "Invalid carId";
@@ -144,7 +144,7 @@ void SingleCar::setCreationDate(const QDateTime &newCreationDate)
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+    Car::CarInteractor::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
         if (car.isInvalid())
         {
             qCritical() << Q_FUNC_INFO << "Invalid carId";
@@ -168,7 +168,7 @@ void SingleCar::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+    Car::CarInteractor::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
         if (car.isInvalid())
         {
             qCritical() << Q_FUNC_INFO << "Invalid carId";
@@ -192,7 +192,7 @@ void SingleCar::setContent(const QString &newContent)
     UpdateCarDTO dto;
     dto.setId(id());
     dto.setContent(newContent);
-    Car::CarController::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
+    Car::CarInteractor::instance()->update(dto).then([this](const Simple::Contracts::DTO::Car::CarDTO &car) {
         if (car.isInvalid())
         {
             qCritical() << Q_FUNC_INFO << "Invalid carId";

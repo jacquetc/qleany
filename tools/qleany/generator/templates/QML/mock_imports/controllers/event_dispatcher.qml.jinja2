@@ -17,9 +17,9 @@ QtObject {
     }
 {% endif %}
 
-{% for feature_name, controller in controllers.items() %}
-    function {{ controller.feature_camel_name }}() {
-        return {{ controller.feature_pascal_name }}Signals;
+{% for feature_name, interactor in interactors.items() %}
+    function {{ interactor.feature_camel_name }}() {
+        return {{ interactor.feature_pascal_name }}Signals;
     }
 {% endfor %}
 }

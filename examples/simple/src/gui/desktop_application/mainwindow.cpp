@@ -1,6 +1,6 @@
 #include "mainwindow.h"
-#include "car/car_controller.h"
-#include "passenger/passenger_controller.h"
+#include "car/car_interactor.h"
+#include "passenger/passenger_interactor.h"
 #include "single_passenger.h"
 #include "ui_mainwindow.h"
 
@@ -18,19 +18,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->carListView->setModel(m_carModel);
 
     connect(ui->addCarPushButton, &QPushButton::clicked, this, []() {
-        auto *carController = Simple::Controller::Car::CarController::instance();
-        auto create_DTO = carController->getCreateDTO();
+        auto *carInteractor = Simple::Interactor::Car::CarInteractor::instance();
+        auto create_DTO = carInteractor->getCreateDTO();
         create_DTO.setContent(QString("Example car %1").arg(QDateTime::currentMSecsSinceEpoch()));
 
-        Simple::Controller::Car::CarController::instance()->create(create_DTO);
+        Simple::Interactor::Car::CarInteractor::instance()->create(create_DTO);
     });
 
     connect(ui->removeCarPushButton, &QPushButton::clicked, this, [this]() {
-        auto *carController = Simple::Controller::Car::CarController::instance();
+        auto *carInteractor = Simple::Interactor::Car::CarInteractor::instance();
         if (!ui->carListView->currentIndex().isValid())
             return;
         auto id = ui->carListView->currentIndex().data(Simple::Presenter::CarListModel::IdRole).toInt();
-        carController->remove(id);
+        carInteractor->remove(id);
     });
 
     // passengers
@@ -38,13 +38,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->passengerListView->setModel(m_passengerModelFromCarPassengers);
 
     connect(ui->addPassengerPushButton, &QPushButton::clicked, this, []() {
-        auto *passengerController = Simple::Controller::Passenger::PassengerController::instance();
-        auto create_DTO = passengerController->getCreateDTO();
+        auto *passengerInteractor = Simple::Interactor::Passenger::PassengerInteractor::instance();
+        auto create_DTO = passengerInteractor->getCreateDTO();
         create_DTO.setName(QString("Example passenger %1").arg(QDateTime::currentMSecsSinceEpoch()));
         create_DTO.setCarId(1);
         create_DTO.setPosition(-1);
 
-        Simple::Controller::Passenger::PassengerController::instance()->create(create_DTO);
+        Simple::Interactor::Passenger::PassengerInteractor::instance()->create(create_DTO);
     });
 
     // remove on double clicking on passengerListView
@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if (!index.isValid())
             return;
         auto id = index.data(Simple::Presenter::PassengerListModelFromCarPassengers::IdRole).toInt();
-        Simple::Controller::Passenger::PassengerController::instance()->remove(id);
+        Simple::Interactor::Passenger::PassengerInteractor::instance()->remove(id);
     });
 
     // one passenger details
@@ -91,16 +91,16 @@ MainWindow::~MainWindow()
 
 QCoro::Task<> MainWindow::init()
 {
-    auto *carController = Simple::Controller::Car::CarController::instance();
-    auto createCarDTO = carController->getCreateDTO();
+    auto *carInteractor = Simple::Interactor::Car::CarInteractor::instance();
+    auto createCarDTO = carInteractor->getCreateDTO();
     createCarDTO.setContent("Example car 1");
-    const auto &carDto = co_await carController->create(createCarDTO);
+    const auto &carDto = co_await carInteractor->create(createCarDTO);
 
-    auto *passengerController = Simple::Controller::Passenger::PassengerController::instance();
-    auto create_DTO = passengerController->getCreateDTO();
+    auto *passengerInteractor = Simple::Interactor::Passenger::PassengerInteractor::instance();
+    auto create_DTO = passengerInteractor->getCreateDTO();
     create_DTO.setName("Example passenger 1");
     create_DTO.setCarId(1);
-    const auto &passengerDto = co_await passengerController->create(create_DTO);
+    const auto &passengerDto = co_await passengerInteractor->create(create_DTO);
 
     m_passengerModelFromCarPassengers->setCarId(carDto.id());
 }

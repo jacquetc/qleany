@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0
 
 #include "app_environment.h"
-#include "controller_registration.h"
+#include "interactor_registration.h"
 #include "domain_registration.h"
 #include "import_qml_plugins.h"
 #include "persistence_registration.h"
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     new Simple::Domain::DomainRegistration(&app);
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&app);
-    new Simple::Controller::ControllerRegistration(&app, persistenceRegistration->repositoryProvider());
+    new Simple::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());
 
     QCoro::Qml::registerTypes();
 

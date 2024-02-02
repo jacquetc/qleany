@@ -1,27 +1,27 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "undo_redo/undo_redo_controller.h"
+#include "undo_redo/undo_redo_interactor.h"
 #include <QQmlEngine>
 
 
-using namespace {{ application_cpp_domain_name }}::Controller::UndoRedo;
+using namespace {{ application_cpp_domain_name }}::Interactor::UndoRedo;
 
-struct ForeignUndoRedoController
+struct ForeignUndoRedoInteractor
 {
     Q_GADGET
-    QML_FOREIGN({{ application_cpp_domain_name }}::Controller::UndoRedo::UndoRedoController)
+    QML_FOREIGN({{ application_cpp_domain_name }}::Interactor::UndoRedo::UndoRedoInteractor)
     QML_SINGLETON
-    QML_NAMED_ELEMENT(UndoRedoController)
+    QML_NAMED_ELEMENT(UndoRedoInteractor)
 
   public:
     // Initialize this singleton instance with the given engine.
 
-    inline static UndoRedoController *s_singletonInstance = nullptr;
+    inline static UndoRedoInteractor *s_singletonInstance = nullptr;
 
-    static UndoRedoController *create(QQmlEngine *, QJSEngine *engine)
+    static UndoRedoInteractor *create(QQmlEngine *, QJSEngine *engine)
     {
-        s_singletonInstance = UndoRedoController::instance();
+        s_singletonInstance = UndoRedoInteractor::instance();
 
         // The instance has to exist before it is used. We cannot replace it.
         Q_ASSERT(s_singletonInstance);

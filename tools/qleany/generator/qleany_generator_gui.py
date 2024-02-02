@@ -49,7 +49,7 @@ import entities_generator
 import dto_generator
 import repositories_generator
 import cqrs_generator
-import controller_generator
+import interactor_generator
 import application_generator
 import qml_generator
 import entity_relationship_viewer
@@ -323,36 +323,36 @@ class MainWindow(QMainWindow):
 
         self.btn_list_application.clicked.connect(enable_application_buttons)
 
-        # Generate Controllers
+        # Generate Interactors
 
-        self.generate_controllers_group_box = QGroupBox()
-        self.generate_controllers_group_box.setTitle("Generate Controllers")
-        self.generate_controllers_layout = QVBoxLayout()
-        self.generate_controllers_group_box.setLayout(self.generate_controllers_layout)
+        self.generate_interactors_group_box = QGroupBox()
+        self.generate_interactors_group_box.setTitle("Generate Interactors")
+        self.generate_interactors_layout = QVBoxLayout()
+        self.generate_interactors_group_box.setLayout(self.generate_interactors_layout)
 
-        self.btn_list_controllers = QPushButton("List", self)
-        self.btn_list_controllers.clicked.connect(self.list_controllers)
-        self.generate_controllers_layout.addWidget(self.btn_list_controllers)
+        self.btn_list_interactors = QPushButton("List", self)
+        self.btn_list_interactors.clicked.connect(self.list_interactors)
+        self.generate_interactors_layout.addWidget(self.btn_list_interactors)
 
-        self.btn_preview_controllers = QPushButton("Preview", self)
-        self.btn_preview_controllers.clicked.connect(self.preview_controllers)
-        self.generate_controllers_layout.addWidget(self.btn_preview_controllers)
+        self.btn_preview_interactors = QPushButton("Preview", self)
+        self.btn_preview_interactors.clicked.connect(self.preview_interactors)
+        self.generate_interactors_layout.addWidget(self.btn_preview_interactors)
 
-        self.btn_generate_controllers = QPushButton("Generate", self)
-        self.btn_generate_controllers.clicked.connect(self.generate_controllers)
-        self.generate_controllers_layout.addWidget(self.btn_generate_controllers)
+        self.btn_generate_interactors = QPushButton("Generate", self)
+        self.btn_generate_interactors.clicked.connect(self.generate_interactors)
+        self.generate_interactors_layout.addWidget(self.btn_generate_interactors)
 
-        self.button_layout.addWidget(self.generate_controllers_group_box)
+        self.button_layout.addWidget(self.generate_interactors_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
-        self.btn_preview_controllers.setEnabled(False)
-        self.btn_generate_controllers.setEnabled(False)
+        self.btn_preview_interactors.setEnabled(False)
+        self.btn_generate_interactors.setEnabled(False)
 
-        def enable_controllers_buttons():
-            self.btn_preview_controllers.setEnabled(True)
-            self.btn_generate_controllers.setEnabled(True)
+        def enable_interactors_buttons():
+            self.btn_preview_interactors.setEnabled(True)
+            self.btn_generate_interactors.setEnabled(True)
 
-        self.btn_list_controllers.clicked.connect(enable_controllers_buttons)
+        self.btn_list_interactors.clicked.connect(enable_interactors_buttons)
 
         # Generate Presenters
 
@@ -520,7 +520,7 @@ class MainWindow(QMainWindow):
             presenter_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(
-            controller_generator.get_files_to_be_generated(self.temp_manifest_file)
+            interactor_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(
             application_generator.get_files_to_be_generated(self.temp_manifest_file)
@@ -564,7 +564,7 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
-        controller_generator.preview_controller_files(
+        interactor_generator.preview_interactor_files(
             self.root_path,
             self.temp_manifest_file,
             self.file_list_view.fetch_file_states(),
@@ -610,7 +610,7 @@ class MainWindow(QMainWindow):
             )
         )
         file_list.extend(
-            controller_generator.get_files_to_be_generated(
+            interactor_generator.get_files_to_be_generated(
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
@@ -656,7 +656,7 @@ class MainWindow(QMainWindow):
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
-            controller_generator.generate_controller_files(
+            interactor_generator.generate_interactor_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -888,18 +888,18 @@ class MainWindow(QMainWindow):
             self.text_box.clear()
             self.text_box.setPlainText("Presenters generated")
 
-    # Controllers functions
+    # Interactors functions
 
-    def list_controllers(self):
-        list = controller_generator.get_files_to_be_generated(self.temp_manifest_file)
+    def list_interactors(self):
+        list = interactor_generator.get_files_to_be_generated(self.temp_manifest_file)
         self.text_box.clear()
-        self.text_box.setPlainText("Controllers to be generated:\n\n")
+        self.text_box.setPlainText("Interactors to be generated:\n\n")
         self.text_box.appendPlainText("\n".join(list))
         self.file_list_view.list_files(list)
 
-    def preview_controllers(self):
-        self.list_controllers()
-        controller_generator.preview_controller_files(
+    def preview_interactors(self):
+        self.list_interactors()
+        interactor_generator.preview_interactor_files(
             self.root_path,
             self.temp_manifest_file,
             self.file_list_view.fetch_file_states(),
@@ -910,24 +910,24 @@ class MainWindow(QMainWindow):
             f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
         )
         self.text_box.appendPlainText(
-            f" Controllers previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
+            f" Interactors previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
         )
 
-    def generate_controllers(self):
-        self.list_controllers()
+    def generate_interactors(self):
+        self.list_interactors()
         if self.display_overwrite_confirmation(
-            controller_generator.get_files_to_be_generated(
+            interactor_generator.get_files_to_be_generated(
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
-            controller_generator.generate_controller_files(
+            interactor_generator.generate_interactor_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
             self.text_box.clear()
-            self.text_box.setPlainText("Controllers generated")
+            self.text_box.setPlainText("Interactors generated")
 
     # Application functions
 

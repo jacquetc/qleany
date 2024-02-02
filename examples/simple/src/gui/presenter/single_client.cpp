@@ -1,10 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_client.h"
-#include "client/client_controller.h"
+#include "client/client_interactor.h"
 #include "event_dispatcher.h"
 
-using namespace Simple::Controller;
+using namespace Simple::Interactor;
 using namespace Simple::Presenter;
 
 SingleClient::SingleClient(QObject *parent) : QObject{parent}
@@ -72,7 +72,7 @@ void SingleClient::setId(int newId)
     // set
     else
     {
-        Client::ClientController::instance()->get(m_id).then(
+        Client::ClientInteractor::instance()->get(m_id).then(
             [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
                 if (client.isInvalid())
                 {
@@ -110,7 +110,7 @@ void SingleClient::setUuid(const QUuid &newUuid)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Client::ClientController::instance()->update(dto).then(
+    Client::ClientInteractor::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
             if (client.isInvalid())
             {
@@ -135,7 +135,7 @@ void SingleClient::setCreationDate(const QDateTime &newCreationDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Client::ClientController::instance()->update(dto).then(
+    Client::ClientInteractor::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
             if (client.isInvalid())
             {
@@ -160,7 +160,7 @@ void SingleClient::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Client::ClientController::instance()->update(dto).then(
+    Client::ClientInteractor::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Client::ClientDTO &client) {
             if (client.isInvalid())
             {

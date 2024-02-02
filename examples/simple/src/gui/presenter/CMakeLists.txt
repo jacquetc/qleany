@@ -30,7 +30,7 @@ target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
 target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
-target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-controller)
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-interactor)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

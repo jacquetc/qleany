@@ -5,37 +5,37 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    id: controller
-{% if controller.crud.enabled %}
-{% if controller.crud.get %}
+    id: interactor
+{% if interactor.crud.enabled %}
+{% if interactor.crud.get %}
     function get(id) {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dto);
             task.setDelay(50);
-            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getReplied(id)})
+            task.setSignalFn(function(){EventDispatcher.{{ interactor.feature_camel_name }}().getReplied(id)})
         }
 
         return task
     }
 {% endif -%}
-{% if controller.crud.get_with_details %}
+{% if interactor.crud.get_with_details %}
     function getWithDetails(id) {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dto);
             task.setDelay(50);
-            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getWithDetailsReplied(id)})
+            task.setSignalFn(function(){EventDispatcher.{{ interactor.feature_camel_name }}().getWithDetailsReplied(id)})
         }
 
         return task
     }
 {% endif -%}
-{% if controller.crud.get_all %}
+{% if interactor.crud.get_all %}
     function getAll() {
         // fill it with whatever you want to return
         var dtos = []
@@ -43,19 +43,19 @@ QtObject {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dtos);
             task.setDelay(50);
-            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getAllReplied(dtos)})
+            task.setSignalFn(function(){EventDispatcher.{{ interactor.feature_camel_name }}().getAllReplied(dtos)})
         }
 
         return task
     }
 {% endif -%}
-{% if controller.crud.create %}
+{% if interactor.crud.create %}
     function getCreateDTO() {
         return {
-            "content": "{{ controller.feature_pascal_name }} 1"
+            "content": "{{ interactor.feature_pascal_name }} 1"
         }
     }
 
@@ -67,16 +67,16 @@ QtObject {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dto);
             task.setDelay(50);
-            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().created(dto)})
+            task.setSignalFn(function(){EventDispatcher.{{ interactor.feature_camel_name }}().created(dto)})
         }
 
         return task
     }
 {% endif -%}
-{% if controller.crud.update_ %}
+{% if interactor.crud.update_ %}
     function getUpdateDTO() {
         return {
             "id": 0,
@@ -89,29 +89,29 @@ QtObject {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dto);
             task.setDelay(50);
             task.setSignalFn(function(){
-                EventDispatcher.{{ controller.feature_camel_name }}().updated(dto);
-                EventDispatcher.{{ controller.feature_camel_name }}().allRelationsInvalidated(dto.id);
+                EventDispatcher.{{ interactor.feature_camel_name }}().updated(dto);
+                EventDispatcher.{{ interactor.feature_camel_name }}().allRelationsInvalidated(dto.id);
             })
         }
 
         return task
     }
 {% endif -%}
-{% if controller.crud.remove %}
-    signal {{ controller.feature_camel_name }}Removed(int id)
+{% if interactor.crud.remove %}
+    signal {{ interactor.feature_camel_name }}Removed(int id)
     function remove(id) {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(dto);
             task.setDelay(50);
             task.setSignalFn(function(){
-                EventDispatcher.{{ controller.feature_camel_name }}().removed(id);
+                EventDispatcher.{{ interactor.feature_camel_name }}().removed(id);
             })
         }
 
@@ -120,7 +120,7 @@ QtObject {
 {% endif -%}
 {% endif -%}
 
-{%- for command in controller.custom_commands %}
+{%- for command in interactor.custom_commands %}
 
     function {{ command.camel_name }}(dto) {
         // change this function to return the correct signal name, dto in and dto out
@@ -132,11 +132,11 @@ QtObject {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
-                EventDispatcher.{{ controller.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
+                EventDispatcher.{{ interactor.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
             })
         }
 
@@ -144,7 +144,7 @@ QtObject {
     }
 {% endfor %}
 
-{%- for query in controller.custom_queries %}
+{%- for query in interactor.custom_queries %}
 
     function {{ query.camel_name }}(dto) {
         // change this function to return the correct signal name, dto in and dto out
@@ -156,11 +156,11 @@ QtObject {
         // mocking QCoro::Task
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
-            var task = component.createObject(controller);
+            var task = component.createObject(interactor);
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
-                EventDispatcher.{{ controller.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
+                EventDispatcher.{{ interactor.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
             })
         }
 

@@ -1,0 +1,22 @@
+#pragma once
+
+#include <qleany/common/error.h>
+#include "{{ export_header_file }}"
+#include <QObject>
+
+namespace {{ application_cpp_domain_name }}::Interactor
+{
+
+class {{ export }} ErrorSignals : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit ErrorSignals(QObject *parent = nullptr) : QObject{parent}
+    {
+    }
+
+  signals:
+    void warningSent(const Qleany::Error &error);
+    void errorSent(const Qleany::Error &error);
+};
+} // namespace {{ application_cpp_domain_name }}::Interactor

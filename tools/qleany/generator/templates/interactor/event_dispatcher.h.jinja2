@@ -1,0 +1,47 @@
+#pragma once
+
+#include "{{ export_header_file }}"
+#include "error_signals.h"
+#include "progress_signals.h"
+{% if undo_redo_signals %}
+#include "undo_redo/undo_redo_signals.h"
+{% endif %}
+{% for feature in features%}
+#include "{{ feature.feature_name_snake }}/{{ feature.feature_name_snake }}_signals.h"
+{% endfor %}
+#include <QObject>
+#include <QPointer>
+
+namespace {{ application_cpp_domain_name }}::Interactor
+{
+class {{ export }} EventDispatcher : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit EventDispatcher();
+    static EventDispatcher *instance();
+
+    Q_INVOKABLE ErrorSignals *error() const;
+    Q_INVOKABLE ProgressSignals *progress() const;
+{% if undo_redo_signals %}
+    Q_INVOKABLE UndoRedoSignals *undoRedo() const;
+{% endif %}
+{% for feature in features%}
+    Q_INVOKABLE {{ feature.feature_name_pascal }}Signals *{{ feature.feature_name_camel }}() const;
+{% endfor %}
+
+  private:
+    static QPointer<EventDispatcher> s_instance;
+    ErrorSignals *m_errorSignals;
+    ProgressSignals *m_progressSignals;
+{% if undo_redo_signals %}
+    UndoRedoSignals *m_undoRedoSignals;
+{% endif %}
+{% for feature in features%}
+    {{ feature.feature_name_pascal }}Signals *m_{{ feature.feature_name_camel }}Signals;
+{% endfor %}
+
+    EventDispatcher(const EventDispatcher &) = delete;
+    EventDispatcher &operator=(const EventDispatcher &) = delete;
+};
+} // namespace {{ application_cpp_domain_name }}::Interactor

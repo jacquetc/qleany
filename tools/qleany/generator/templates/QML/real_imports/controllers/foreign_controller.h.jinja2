@@ -1,104 +1,104 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "{{ controller.feature_snake_name }}/{{ controller.feature_snake_name }}_controller.h"
+#include "{{ interactor.feature_snake_name }}/{{ interactor.feature_snake_name }}_interactor.h"
 #include <QCoroQml>
 #include <QCoroQmlTask>
 #include <QQmlEngine>
 
 
-using namespace {{ application_cpp_domain_name }}::Controller::{{ controller.feature_pascal_name }};
+using namespace {{ application_cpp_domain_name }}::Interactor::{{ interactor.feature_pascal_name }};
 
-class Foreign{{ controller.feature_pascal_name }}Controller : public QObject
+class Foreign{{ interactor.feature_pascal_name }}Interactor : public QObject
 {
     Q_OBJECT
     QML_SINGLETON
-    QML_NAMED_ELEMENT({{ controller.feature_pascal_name }}Controller)
+    QML_NAMED_ELEMENT({{ interactor.feature_pascal_name }}Interactor)
 
 public:
 
-    Foreign{{ controller.feature_pascal_name }}Controller(QObject *parent = nullptr) : QObject(parent)
+    Foreign{{ interactor.feature_pascal_name }}Interactor(QObject *parent = nullptr) : QObject(parent)
     {
-        s_controllerInstance = {{ controller.feature_pascal_name }}Controller::instance();
+        s_interactorInstance = {{ interactor.feature_pascal_name }}Interactor::instance();
     }
 
-{% if controller.crud.enabled %}
-    {%if controller.crud.get %}
+{% if interactor.crud.enabled %}
+    {%if interactor.crud.get %}
     Q_INVOKABLE QCoro::QmlTask get(int id) const
     {
-        return s_controllerInstance->get(id);
+        return s_interactorInstance->get(id);
     }
     {% endif %}
 
-    {%if controller.crud.get_with_details %}
+    {%if interactor.crud.get_with_details %}
     Q_INVOKABLE QCoro::QmlTask getWithDetails(int id) const
     {
-        return s_controllerInstance->get(id);
+        return s_interactorInstance->get(id);
     }
     {% endif %}
 
-    {%if controller.crud.get_all %}
+    {%if interactor.crud.get_all %}
     Q_INVOKABLE QCoro::QmlTask getAll() const
     {
-        return s_controllerInstance->getAll();
+        return s_interactorInstance->getAll();
     }
     {% endif %}
 
-    {%if controller.crud.create %}
-    Q_INVOKABLE Create{{ controller.feature_pascal_name }}DTO getCreateDTO()
+    {%if interactor.crud.create %}
+    Q_INVOKABLE Create{{ interactor.feature_pascal_name }}DTO getCreateDTO()
     {
-        return s_controllerInstance->getCreateDTO();
+        return s_interactorInstance->getCreateDTO();
     }
     {% endif %}
 
-    {%if controller.crud.update_ %}
-    Q_INVOKABLE Update{{ controller.feature_pascal_name }}DTO getUpdateDTO()
+    {%if interactor.crud.update_ %}
+    Q_INVOKABLE Update{{ interactor.feature_pascal_name }}DTO getUpdateDTO()
     {
-        return s_controllerInstance->getUpdateDTO();
+        return s_interactorInstance->getUpdateDTO();
     }
     {% endif %}
 {% endif %}
 
-    {% for query in controller.custom_queries %}
+    {% for query in interactor.custom_queries %}
     Q_INVOKABLE QCoro::QmlTask {{ query.camel_name }}({% if query.dto_in_enabled %}{{ query.dto_in_pascal_type_prefix }}DTO dto{% endif %}) const
     {
-        return s_controllerInstance->{{ query.camel_name }}({% if query.dto_in_enabled %}dto{% endif %});
+        return s_interactorInstance->{{ query.camel_name }}({% if query.dto_in_enabled %}dto{% endif %});
     }
     {% endfor %}
 
-{% if controller.crud.enabled %}
-    {% if controller.crud.create %}
+{% if interactor.crud.enabled %}
+    {% if interactor.crud.create %}
 
-    Q_INVOKABLE QCoro::QmlTask create(const Create{{ controller.feature_pascal_name }}DTO &dto)
+    Q_INVOKABLE QCoro::QmlTask create(const Create{{ interactor.feature_pascal_name }}DTO &dto)
     {
-        return s_controllerInstance->create(dto);
+        return s_interactorInstance->create(dto);
     }
     {% endif %}
 
-    {% if controller.crud.update_ %}
-    Q_INVOKABLE QCoro::QmlTask update(const Update{{ controller.feature_pascal_name }}DTO &dto)
+    {% if interactor.crud.update_ %}
+    Q_INVOKABLE QCoro::QmlTask update(const Update{{ interactor.feature_pascal_name }}DTO &dto)
     {
-        return s_controllerInstance->update(dto);
+        return s_interactorInstance->update(dto);
     }
     {% endif %}
 
-    {%if controller.crud.remove %}
+    {%if interactor.crud.remove %}
     Q_INVOKABLE QCoro::QmlTask remove(int id)
     {
-        return s_controllerInstance->remove(id);
+        return s_interactorInstance->remove(id);
     }
     {% endif %}
 {% endif %}
 
-    {% for command in controller.custom_commands %}
+    {% for command in interactor.custom_commands %}
     Q_INVOKABLE QCoro::QmlTask {{ command.camel_name }}({% if command.dto_in_enabled %}{{ command.dto_in_pascal_type_prefix }}DTO dto{% endif %})
     {
-        return s_controllerInstance->{{ command.camel_name }}({% if command.dto_in_enabled %}dto{% endif %});
+        return s_interactorInstance->{{ command.camel_name }}({% if command.dto_in_enabled %}dto{% endif %});
     }
     {% endfor %}
 
 
 private:
 
-    {{ controller.feature_pascal_name }}Controller *s_controllerInstance = nullptr;
+    {{ interactor.feature_pascal_name }}Interactor *s_interactorInstance = nullptr;
 };

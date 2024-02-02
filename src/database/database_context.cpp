@@ -146,7 +146,7 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
 
         // execute each optimization option as a single query within the transaction
 
-        for (const QString &string : qAsConst(optimization))
+        for (const QString &string : std::as_const(optimization))
         {
             query.prepare(string);
             query.exec();

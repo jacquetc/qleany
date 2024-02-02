@@ -59,10 +59,10 @@ def get_generation_dict(
     application_cpp_domain_name: str,
     feature_by_name: dict,
     entities_by_name: dict,
-    controller_by_name: dict,
+    interactor_by_name: dict,
     export: str,
     export_header_file: str,
-    create_undo_redo_controller: bool,
+    create_undo_redo_interactor: bool,
 ) -> dict:
     generation_dict = {}
 
@@ -70,7 +70,7 @@ def get_generation_dict(
     generation_dict["export_header"] = export_header_file
     generation_dict["export"] = export
     generation_dict["folder_path"] = folder_path
-    generation_dict["all_controller_files"] = []
+    generation_dict["all_interactor_files"] = []
 
     # add application name
     generation_dict["application_cpp_domain_name"] = application_cpp_domain_name
@@ -179,21 +179,21 @@ def get_generation_dict(
             ] = get_other_entities_relation_fields(entity_name, entities_by_name)
 
         # files :
-        generation_dict["all_controller_files"].append(
+        generation_dict["all_interactor_files"].append(
             os.path.join(
                 folder_path,
                 feature_snake_name,
-                f"{feature_snake_name}_controller.h",
+                f"{feature_snake_name}_interactor.h",
             )
         )
-        generation_dict["all_controller_files"].append(
+        generation_dict["all_interactor_files"].append(
             os.path.join(
                 folder_path,
                 feature_snake_name,
-                f"{feature_snake_name}_controller.cpp",
+                f"{feature_snake_name}_interactor.cpp",
             )
         )
-        generation_dict["all_controller_files"].append(
+        generation_dict["all_interactor_files"].append(
             os.path.join(
                 folder_path,
                 feature_snake_name,
@@ -296,19 +296,19 @@ def get_generation_dict(
 
         generation_dict["features"].append(final_feature_dict)
 
-    # add undo redo controller
-    generation_dict["create_undo_redo_controller"] = create_undo_redo_controller
-    if create_undo_redo_controller:
+    # add undo redo interactor
+    generation_dict["create_undo_redo_interactor"] = create_undo_redo_interactor
+    if create_undo_redo_interactor:
         h_file = os.path.join(
             folder_path,
             "undo_redo",
-            f"undo_redo_controller.h",
+            f"undo_redo_interactor.h",
         )
 
         cpp_file = os.path.join(
             folder_path,
             "undo_redo",
-            f"undo_redo_controller.cpp",
+            f"undo_redo_interactor.cpp",
         )
 
         signals_file = os.path.join(
@@ -317,11 +317,11 @@ def get_generation_dict(
             f"undo_redo_signals.h",
         )
 
-        generation_dict["all_controller_files"].append(h_file)
+        generation_dict["all_interactor_files"].append(h_file)
 
-        generation_dict["all_controller_files"].append(cpp_file)
-        generation_dict["all_controller_files"].append(signals_file)
-        generation_dict["undo_redo_controller_files"] = [
+        generation_dict["all_interactor_files"].append(cpp_file)
+        generation_dict["all_interactor_files"].append(signals_file)
+        generation_dict["undo_redo_interactor_files"] = [
             h_file,
             cpp_file,
             signals_file,
@@ -333,7 +333,7 @@ def get_generation_dict(
 def generate_cmakelists(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("cmakelists_template.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -364,30 +364,30 @@ def generate_cmakelists(
 def generate_cmake_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
-    template = template_env.get_template("controllers.cmake.jinja2")
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
+    template = template_env.get_template("interactors.cmake.jinja2")
 
     folder_path = generation_dict["folder_path"]
-    all_controller_files = generation_dict["all_controller_files"]
+    all_interactor_files = generation_dict["all_interactor_files"]
 
-    relative_cmake_file = os.path.join(folder_path, "controllers.cmake")
+    relative_cmake_file = os.path.join(folder_path, "interactors.cmake")
     cmake_file = os.path.join(root_path, relative_cmake_file)
 
-    # write the controller cmake list file
+    # write the interactor cmake list file
 
     if files_to_be_generated.get(relative_cmake_file, False):
-        controller_files = []
-        for controller_file in all_controller_files:
+        interactor_files = []
+        for interactor_file in all_interactor_files:
             relative_path = os.path.relpath(
-                os.path.join(root_path, controller_file), os.path.dirname(cmake_file)
+                os.path.join(root_path, interactor_file), os.path.dirname(cmake_file)
             )
-            controller_files.append(relative_path.replace("\\", "/"))
+            interactor_files.append(relative_path.replace("\\", "/"))
 
         # Create the directory if it does not exist
         os.makedirs(os.path.dirname(cmake_file), exist_ok=True)
 
         rendered_template = template.render(
-            controller_files=controller_files,
+            interactor_files=interactor_files,
         )
 
         with open(cmake_file, "w") as fh:
@@ -398,12 +398,12 @@ def generate_cmake_file(
 def generate_event_dispatcher_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     #  event dispatcher h
     template = template_env.get_template("event_dispatcher.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
-    all_controller_files = generation_dict["all_controller_files"]
+    all_interactor_files = generation_dict["all_interactor_files"]
 
     relative_event_dispatcher_file = os.path.join(folder_path, "event_dispatcher.h")
     event_dispatcher_file = os.path.join(root_path, relative_event_dispatcher_file)
@@ -411,12 +411,12 @@ def generate_event_dispatcher_files(
     # write the event dispatcher header file
 
     if files_to_be_generated.get(relative_event_dispatcher_file, False):
-        controller_files = []
-        for controller_file in all_controller_files:
+        interactor_files = []
+        for interactor_file in all_interactor_files:
             relative_path = os.path.relpath(
-                controller_file, os.path.dirname(event_dispatcher_file)
+                interactor_file, os.path.dirname(event_dispatcher_file)
             )
-            controller_files.append(relative_path.replace("\\", "/"))
+            interactor_files.append(relative_path.replace("\\", "/"))
 
         # Create the directory if it does not exist
         os.makedirs(os.path.dirname(event_dispatcher_file), exist_ok=True)
@@ -426,7 +426,7 @@ def generate_event_dispatcher_files(
             export=generation_dict["export"],
             features=generation_dict["features"],
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
-            undo_redo_signals=generation_dict["create_undo_redo_controller"],
+            undo_redo_signals=generation_dict["create_undo_redo_interactor"],
         )
 
         with open(event_dispatcher_file, "w") as fh:
@@ -441,12 +441,12 @@ def generate_event_dispatcher_files(
     # write the event dispatcher cpp file
 
     if files_to_be_generated.get(relative_event_dispatcher_file, False):
-        controller_files = []
-        for controller_file in all_controller_files:
+        interactor_files = []
+        for interactor_file in all_interactor_files:
             relative_path = os.path.relpath(
-                controller_file, os.path.dirname(event_dispatcher_file)
+                interactor_file, os.path.dirname(event_dispatcher_file)
             )
-            controller_files.append(relative_path.replace("\\", "/"))
+            interactor_files.append(relative_path.replace("\\", "/"))
 
         # Create the directory if it does not exist
         os.makedirs(os.path.dirname(event_dispatcher_file), exist_ok=True)
@@ -454,7 +454,7 @@ def generate_event_dispatcher_files(
         rendered_template = template.render(
             features=generation_dict["features"],
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
-            undo_redo_signals=generation_dict["create_undo_redo_controller"],
+            undo_redo_signals=generation_dict["create_undo_redo_interactor"],
         )
 
         with open(event_dispatcher_file, "w") as fh:
@@ -462,28 +462,28 @@ def generate_event_dispatcher_files(
             print(f"Successfully wrote file {event_dispatcher_file}")
 
 
-def _generate_controller_h_and_cpp_files(
+def _generate_interactor_h_and_cpp_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     for feature in generation_dict["features"]:
-        #  controller h
-        template = template_env.get_template("controller.h.jinja2")
+        #  interactor h
+        template = template_env.get_template("interactor.h.jinja2")
 
         folder_path = generation_dict["folder_path"]
 
-        relative_controller_file = os.path.join(
+        relative_interactor_file = os.path.join(
             folder_path,
             feature["feature_name_snake"],
-            f"{feature['feature_name_snake']}_controller.h",
+            f"{feature['feature_name_snake']}_interactor.h",
         )
-        controller_file = os.path.join(root_path, relative_controller_file)
+        interactor_file = os.path.join(root_path, relative_interactor_file)
 
-        # write the controller header file
+        # write the interactor header file
 
-        if files_to_be_generated.get(relative_controller_file, False):
+        if files_to_be_generated.get(relative_interactor_file, False):
             # Create the directory if it does not exist
-            os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+            os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
             rendered_template = template.render(
                 export_header_file=generation_dict["export_header"],
@@ -504,24 +504,24 @@ def _generate_controller_h_and_cpp_files(
                 feature_name_camel=feature["feature_name_camel"],
             )
 
-            with open(controller_file, "w") as fh:
+            with open(interactor_file, "w") as fh:
                 fh.write(rendered_template)
-                print(f"Successfully wrote file {controller_file}")
+                print(f"Successfully wrote file {interactor_file}")
 
-        #  controller cpp
-        template = template_env.get_template("controller.cpp.jinja2")
-        relative_controller_file = os.path.join(
+        #  interactor cpp
+        template = template_env.get_template("interactor.cpp.jinja2")
+        relative_interactor_file = os.path.join(
             folder_path,
             feature["feature_name_snake"],
-            f"{feature['feature_name_snake']}_controller.cpp",
+            f"{feature['feature_name_snake']}_interactor.cpp",
         )
-        controller_file = os.path.join(root_path, relative_controller_file)
+        interactor_file = os.path.join(root_path, relative_interactor_file)
 
-        # write the controller cpp file
+        # write the interactor cpp file
 
-        if files_to_be_generated.get(relative_controller_file, False):
+        if files_to_be_generated.get(relative_interactor_file, False):
             # Create the directory if it does not exist
-            os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+            os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
             rendered_template = template.render(
                 feature=feature,
@@ -540,32 +540,32 @@ def _generate_controller_h_and_cpp_files(
                 feature_name_camel=feature["feature_name_camel"],
             )
 
-            with open(controller_file, "w") as fh:
+            with open(interactor_file, "w") as fh:
                 fh.write(rendered_template)
-                print(f"Successfully wrote file {controller_file}")
+                print(f"Successfully wrote file {interactor_file}")
 
 
-def generate_undo_redo_controller_h_and_cpp_files(
+def generate_undo_redo_interactor_h_and_cpp_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
-    #  controller h
-    template = template_env.get_template("undo_redo_controller.h.jinja2")
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
+    #  interactor h
+    template = template_env.get_template("undo_redo_interactor.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
 
-    relative_controller_file = os.path.join(
+    relative_interactor_file = os.path.join(
         folder_path,
         "undo_redo",
-        f"undo_redo_controller.h",
+        f"undo_redo_interactor.h",
     )
-    controller_file = os.path.join(root_path, relative_controller_file)
+    interactor_file = os.path.join(root_path, relative_interactor_file)
 
-    # write the controller header file
+    # write the interactor header file
 
-    if files_to_be_generated.get(relative_controller_file, False):
+    if files_to_be_generated.get(relative_interactor_file, False):
         # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+        os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
         rendered_template = template.render(
             export_header_file=generation_dict["export_header"],
@@ -573,53 +573,53 @@ def generate_undo_redo_controller_h_and_cpp_files(
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
         )
 
-        with open(controller_file, "w") as fh:
+        with open(interactor_file, "w") as fh:
             fh.write(rendered_template)
-            print(f"Successfully wrote file {controller_file}")
+            print(f"Successfully wrote file {interactor_file}")
 
-    #  controller cpp
-    template = template_env.get_template("undo_redo_controller.cpp.jinja2")
-    relative_controller_file = os.path.join(
+    #  interactor cpp
+    template = template_env.get_template("undo_redo_interactor.cpp.jinja2")
+    relative_interactor_file = os.path.join(
         folder_path,
         "undo_redo",
-        f"undo_redo_controller.cpp",
+        f"undo_redo_interactor.cpp",
     )
-    controller_file = os.path.join(root_path, relative_controller_file)
+    interactor_file = os.path.join(root_path, relative_interactor_file)
 
-    # write the controller cpp file
+    # write the interactor cpp file
 
-    if files_to_be_generated.get(relative_controller_file, False):
+    if files_to_be_generated.get(relative_interactor_file, False):
         # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+        os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
         rendered_template = template.render(
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"]
         )
-        with open(controller_file, "w") as fh:
+        with open(interactor_file, "w") as fh:
             fh.write(rendered_template)
-            print(f"Successfully wrote file {controller_file}")
+            print(f"Successfully wrote file {interactor_file}")
 
 
-def generate_controller_registration_files(
+def generate_interactor_registration_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
-    #  controller_registration.h
-    template = template_env.get_template("controller_registration.h.jinja2")
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
+    #  interactor_registration.h
+    template = template_env.get_template("interactor_registration.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
 
-    relative_controller_file = os.path.join(
+    relative_interactor_file = os.path.join(
         folder_path,
-        "controller_registration.h",
+        "interactor_registration.h",
     )
-    controller_file = os.path.join(root_path, relative_controller_file)
+    interactor_file = os.path.join(root_path, relative_interactor_file)
 
-    # write the controller header file
+    # write the interactor header file
 
-    if files_to_be_generated.get(relative_controller_file, False):
+    if files_to_be_generated.get(relative_interactor_file, False):
         # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+        os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
         rendered_template = template.render(
             export_header_file=generation_dict["export_header"],
@@ -627,38 +627,38 @@ def generate_controller_registration_files(
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
         )
 
-        with open(controller_file, "w") as fh:
+        with open(interactor_file, "w") as fh:
             fh.write(rendered_template)
-            print(f"Successfully wrote file {controller_file}")
+            print(f"Successfully wrote file {interactor_file}")
 
-    #  controller_registration.cpp
-    template = template_env.get_template("controller_registration.cpp.jinja2")
-    relative_controller_file = os.path.join(
+    #  interactor_registration.cpp
+    template = template_env.get_template("interactor_registration.cpp.jinja2")
+    relative_interactor_file = os.path.join(
         folder_path,
-        "controller_registration.cpp",
+        "interactor_registration.cpp",
     )
-    controller_file = os.path.join(root_path, relative_controller_file)
+    interactor_file = os.path.join(root_path, relative_interactor_file)
 
-    # write the controller cpp file
+    # write the interactor cpp file
 
-    if files_to_be_generated.get(relative_controller_file, False):
+    if files_to_be_generated.get(relative_interactor_file, False):
         # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(controller_file), exist_ok=True)
+        os.makedirs(os.path.dirname(interactor_file), exist_ok=True)
 
         rendered_template = template.render(
             features=generation_dict["features"],
             application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
         )
 
-        with open(controller_file, "w") as fh:
+        with open(interactor_file, "w") as fh:
             fh.write(rendered_template)
-            print(f"Successfully wrote file {controller_file}")
+            print(f"Successfully wrote file {interactor_file}")
 
 
 def generate_export_header_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("export_template.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -687,7 +687,7 @@ def generate_export_header_file(
 def generate_error_signals_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("error_signals.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -720,7 +720,7 @@ def generate_error_signals_file(
 def generate_undo_redo_signals_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("undo_redo_signals.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -754,7 +754,7 @@ def generate_undo_redo_signals_file(
 def generate_progress_signals_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("progress_signals.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -787,7 +787,7 @@ def generate_progress_signals_file(
 def generate_signal_files(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
-    template_env = Environment(loader=FileSystemLoader("templates/controller"))
+    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
     template = template_env.get_template("signals.h.jinja2")
 
     folder_path = generation_dict["folder_path"]
@@ -818,7 +818,7 @@ def generate_signal_files(
                 print(f"Successfully wrote file {signal_header_file}")
 
 
-def generate_controller_files(
+def generate_interactor_files(
     root_path: str,
     manifest_file: str,
     files_to_be_generated: dict[str, bool] = None,
@@ -854,17 +854,17 @@ def generate_controller_files(
     # Organize entities by name for easier lookup
     entities_by_name = {entity["name"]: entity for entity in entities_list}
 
-    controller_data = manifest_data.get("controller", {})
-    controller_list = controller_data.get("features", [])
-    controller_by_name = {
-        controller["name"]: controller for controller in controller_list
+    interactor_data = manifest_data.get("interactor", {})
+    interactor_list = interactor_data.get("features", [])
+    interactor_by_name = {
+        interactor["name"]: interactor for interactor in interactor_list
     }
 
-    folder_path = controller_data.get("folder_path", "Undefined")
-    export = controller_data.get("export", "Undefined")
-    export_header_file = controller_data.get("export_header_file", "Undefined")
-    create_undo_redo_controller = controller_data.get(
-        "create_undo_redo_controller", False
+    folder_path = interactor_data.get("folder_path", "Undefined")
+    export = interactor_data.get("export", "Undefined")
+    export_header_file = interactor_data.get("export_header_file", "Undefined")
+    create_undo_redo_interactor = interactor_data.get(
+        "create_undo_redo_interactor", False
     )
 
     generation_dict = get_generation_dict(
@@ -873,10 +873,10 @@ def generate_controller_files(
         application_cpp_domain_name,
         feature_by_name,
         entities_by_name,
-        controller_by_name,
+        interactor_by_name,
         export,
         export_header_file,
-        create_undo_redo_controller,
+        create_undo_redo_interactor,
     )
 
     generate_event_dispatcher_files(root_path, generation_dict, files_to_be_generated)
@@ -884,17 +884,17 @@ def generate_controller_files(
     generate_cmakelists(root_path, generation_dict, files_to_be_generated)
     generate_export_header_file(root_path, generation_dict, files_to_be_generated)
     generate_signal_files(root_path, generation_dict, files_to_be_generated)
-    _generate_controller_h_and_cpp_files(
+    _generate_interactor_h_and_cpp_files(
         root_path, generation_dict, files_to_be_generated
     )
-    if create_undo_redo_controller:
-        generate_undo_redo_controller_h_and_cpp_files(
+    if create_undo_redo_interactor:
+        generate_undo_redo_interactor_h_and_cpp_files(
             root_path, generation_dict, files_to_be_generated
         )
         generate_undo_redo_signals_file(
             root_path, generation_dict, files_to_be_generated
         )
-    generate_controller_registration_files(
+    generate_interactor_registration_files(
         root_path, generation_dict, files_to_be_generated
     )
     generate_error_signals_file(root_path, generation_dict, files_to_be_generated)
@@ -920,12 +920,12 @@ def get_files_to_be_generated(
     with open(manifest_file, "r") as fh:
         manifest_data = yaml.safe_load(fh)
 
-    controller_data = manifest_data.get("controller", {})
-    create_undo_redo_controller = controller_data.get(
-        "create_undo_redo_controller", False
+    interactor_data = manifest_data.get("interactor", {})
+    create_undo_redo_interactor = interactor_data.get(
+        "create_undo_redo_interactor", False
     )
-    folder_path = controller_data["folder_path"]
-    export_header_file = controller_data.get("export_header_file", "Undefined")
+    folder_path = interactor_data["folder_path"]
+    export_header_file = interactor_data.get("export_header_file", "Undefined")
 
     # Get the list of files to be generated
     files = []
@@ -936,14 +936,14 @@ def get_files_to_be_generated(
             os.path.join(
                 folder_path,
                 feature_name_snake,
-                f"{feature_name_snake}_controller.h",
+                f"{feature_name_snake}_interactor.h",
             )
         )
         files.append(
             os.path.join(
                 folder_path,
                 feature_name_snake,
-                f"{feature_name_snake}_controller.cpp",
+                f"{feature_name_snake}_interactor.cpp",
             )
         )
         files.append(
@@ -954,13 +954,13 @@ def get_files_to_be_generated(
             )
         )
 
-    # add undo redo controller
-    if create_undo_redo_controller:
+    # add undo redo interactor
+    if create_undo_redo_interactor:
         files.append(
             os.path.join(
                 folder_path,
                 "undo_redo",
-                f"undo_redo_controller.h",
+                f"undo_redo_interactor.h",
             )
         )
 
@@ -968,7 +968,7 @@ def get_files_to_be_generated(
             os.path.join(
                 folder_path,
                 "undo_redo",
-                f"undo_redo_controller.cpp",
+                f"undo_redo_interactor.cpp",
             )
         )
 
@@ -984,7 +984,7 @@ def get_files_to_be_generated(
     files.append(
         os.path.join(
             folder_path,
-            "controllers.cmake",
+            "interactors.cmake",
         )
     )
     files.append(
@@ -1027,14 +1027,14 @@ def get_files_to_be_generated(
     files.append(
         os.path.join(
             folder_path,
-            "controller_registration.h",
+            "interactor_registration.h",
         )
     )
 
     files.append(
         os.path.join(
             folder_path,
-            "controller_registration.cpp",
+            "interactor_registration.cpp",
         )
     )
 
@@ -1048,7 +1048,7 @@ def get_files_to_be_generated(
 
 
 # generate the files into the preview folder
-def preview_controller_files(
+def preview_interactor_files(
     root_path: str,
     manifest_file: str,
     files_to_be_generated: dict[str, bool] = None,
@@ -1064,7 +1064,7 @@ def preview_controller_files(
         manifest = yaml.safe_load(fh)
 
     # remove .. from the path and add preview before the folder name
-    manifest["controller"]["folder_path"] = manifest["controller"][
+    manifest["interactor"]["folder_path"] = manifest["interactor"][
         "folder_path"
     ].replace("..", "")
 
@@ -1080,7 +1080,7 @@ def preview_controller_files(
         for path, value in files_to_be_generated.items():
             preview_files_to_be_generated[path.replace("..", "")] = value
 
-        generate_controller_files(
+        generate_interactor_files(
             root_path,
             manifest_preview_file,
             preview_files_to_be_generated,
@@ -1088,7 +1088,7 @@ def preview_controller_files(
         )
 
     else:
-        generate_controller_files(
+        generate_interactor_files(
             root_path, manifest_preview_file, {}, uncrustify_config_file
         )
 
@@ -1110,9 +1110,9 @@ if __name__ == "__main__":
             root_path = Path(manifest_file).parent
 
             if len(sys.argv) > 2 and sys.argv[2] == "--preview":
-                preview_controller_files(root_path, manifest_file)
+                preview_interactor_files(root_path, manifest_file)
             else:
-                generate_controller_files(root_path, manifest_file)
+                generate_interactor_files(root_path, manifest_file)
         else:
             print("Error: Manifest file must be named 'qleany.yaml' or 'qleany.yml'")
     else:

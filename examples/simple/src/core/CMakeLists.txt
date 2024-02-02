@@ -11,4 +11,4 @@ add_subdirectory(contracts.cqrs)
 # handles the use cases
 add_subdirectory(application)
 # handles the interaction between the system's inner layers (use cases, DTOs) and the external world 
-add_subdirectory(controller)
+add_subdirectory(interactor)

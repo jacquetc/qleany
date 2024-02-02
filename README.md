@@ -34,12 +34,12 @@ It's important to note that this conceptual representation needs to be tailored 
 - **Application**: Groups use cases by functionalities, organized within a library called `application`.
 - **Persistence**: Manages internal data persistence. It includes a 'repository' wrapper for SQLite database interactions, with each entity having its repository in the `RepositoryProvider` class.
 - **Contracts**: A common library for most other components, housing all interfaces from `persistence`, `gateway`, and `infrastructure`. This design minimizes tight coupling and circular dependencies.
-- **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as controllers.
+- **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as interactors.
 - **Gateway**: Optional library for handling remote connections and services. It can be manually added by the developer and is used similarly to repositories in use cases.
 - **Infrastructure**: Optional. Handles actions like file management, local settings, and system queries. It's injected into use cases similar to repositories and gateways.
-- **Controller**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
+- **Interactor**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
 - **Presenter**: Maintains Qt models and representations of unique entities (referred to as `Singles`), enhancing their integration and usage within the GUI.
-- **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `controller`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
+- **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `interactor`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
 
 Project dependencies:
 ![Alt text](doc/qleany_project_dep.drawio.png)
@@ -143,16 +143,16 @@ repositories:
   base_folder_path: path/to/base/folder
 ```
 
-### Controller Settings
+### Interactor Settings
 
-Configures controller-specific settings.
+Configures interactor-specific settings.
 
 ```yaml
-controller: 
-  folder_path: path/to/controller/folder
+interactor: 
+  folder_path: path/to/interactor/folder
   export: EXPORT_MACRO_NAME
   export_header_file: header_file_name.h
-  create_undo_redo_controller: true/false
+  create_undo_redo_interactor: true/false
 ```
 ### Application Layer Configuration
 

@@ -1,0 +1,405 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+
+#include "{{ feature_name_snake }}_interactor.h"
+
+{% if feature.crud.enabled -%}
+    {%if feature.crud.get -%}
+#include "{{ feature_name_snake }}/queries/get_{{ entity_name_snake }}_query_handler.h"
+    {% endif -%}
+    {%if feature.crud.get_with_details -%}
+#include "{{ feature_name_snake }}/queries/get_{{ entity_name_snake }}_with_details_query_handler.h"
+    {% endif -%}
+    {%if feature.crud.get_all -%}
+#include "{{ feature_name_snake }}/queries/get_all_{{ entity_name_snake }}_query_handler.h"
+    {% endif -%}
+    {%if feature.crud.create -%}
+#include "{{ feature_name_snake }}/commands/create_{{ entity_name_snake }}_command.h"
+#include "{{ feature_name_snake }}/commands/create_{{ entity_name_snake }}_command_handler.h"
+    {% endif -%}
+    {%if feature.crud.remove -%}
+#include "{{ feature_name_snake }}/commands/remove_{{ entity_name_snake }}_command.h"
+#include "{{ feature_name_snake }}/commands/remove_{{ entity_name_snake }}_command_handler.h"
+    {% endif -%}
+    {%if feature.crud.update_ -%}
+#include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command.h"
+#include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_command_handler.h"
+    {% endif -%}
+    {%if feature.crud.insert_relation -%}
+//#include "{{ feature_name_snake }}/commands/insert_{{ entity_name_snake }}_into_xxx_command.h"
+//#include "{{ feature_name_snake }}/commands/update_{{ entity_name_snake }}_into_xxx_command_handler.h"
+    {% endif -%}
+
+{% endif -%}
+{% for command in feature.custom_commands -%}
+#include "{{ feature_name_snake }}/commands/{{ command.name_snake }}_command.h"
+#include "{{ feature_name_snake }}/commands/{{ command.name_snake }}_command_handler.h"
+{% endfor -%}
+{% for query in feature.custom_queries -%}
+#include "{{ feature_name_snake }}/queries/{{ query.name_snake }}_query.h"
+#include "{{ feature_name_snake }}/queries/{{ query.name_snake }}_query_handler.h"
+{% endfor -%}
+#include "qleany/tools/undo_redo/alter_command.h"
+#include "qleany/tools/undo_redo/query_command.h"
+#include <QCoroSignal>
+
+using namespace {{ application_cpp_domain_name }}::Interactor;
+using namespace {{ application_cpp_domain_name }}::Interactor::{{ feature_name_pascal }};
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_name_pascal }}::Commands;
+using namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_name_pascal }}::Queries;
+using namespace Qleany::Tools::UndoRedo;
+using namespace Qleany::Contracts::Repository;
+
+QPointer<{{ feature_name_pascal }}Interactor> {{ feature_name_pascal }}Interactor::s_instance = nullptr;
+
+{{ feature_name_pascal }}Interactor::{{ feature_name_pascal }}Interactor(InterfaceRepositoryProvider *repositoryProvider,
+                                         ThreadedUndoRedoSystem *undo_redo_system,
+                                         QSharedPointer<EventDispatcher> eventDispatcher)
+    : QObject{nullptr}
+{
+    m_repositoryProvider = repositoryProvider;
+
+    // connections for undo commands:
+    m_undo_redo_system = undo_redo_system;
+    m_eventDispatcher = eventDispatcher;
+
+    s_instance = this;
+}
+
+{{ feature_name_pascal }}Interactor *{{ feature_name_pascal }}Interactor::instance()
+{
+    return s_instance.data();
+}
+
+{% if feature.crud.enabled %}
+    {%if feature.crud.get %}
+QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::get(int id) const
+{
+    auto queryCommand = new QueryCommand("get");
+
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
+        Get{{ entity_name_pascal }}Query query;
+        query.id = id;
+        auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+        Get{{ entity_name_pascal }}QueryHandler handler(interface);
+        auto result = handler.handle(progressPromise, query);
+
+        if (result.isSuccess())
+        {
+            emit m_eventDispatcher->{{ feature_name_camel }}()->getReplied(result.value());
+        }
+        return Result<void>(result.error());
+    });
+
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<{{ entity_name_pascal }}DTO> optional_result =
+        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getReplied, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        // for now, I insert one invalid item to the list to show that there was an error
+        co_return {{ entity_name_pascal }}DTO();
+    }
+
+    co_return optional_result.value();
+}
+    {% endif %}
+    {%if feature.crud.get_with_details %}
+
+ QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO> {{ feature_name_pascal }}Interactor::getWithDetails(int id) const
+{
+     auto queryCommand = new QueryCommand("getWithDetails");
+
+    queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
+        Get{{ entity_name_pascal }}Query query;
+        query.id = id;
+        auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+        Get{{ entity_name_pascal }}WithDetailsQueryHandler handler(interface);
+        auto result = handler.handle(progressPromise, query);
+
+        if (result.isSuccess())
+        {
+            emit m_eventDispatcher->{{ feature_name_camel }}()->getWithDetailsReplied(result.value());
+        }
+        return Result<void>(result.error());
+    });
+
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<{{ entity_name_pascal }}WithDetailsDTO> optional_result =
+        co_await qCoro(m_eventDispatcher.get()->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getWithDetailsReplied,
+        std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        // for now, I insert one invalid item to the list to show that there was an error
+        co_return {{ entity_name_pascal }}WithDetailsDTO();
+    }
+
+    co_return optional_result.value();
+}
+    {% endif %}
+    {%if feature.crud.get_all %}
+
+QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Interactor::getAll() const
+{
+    auto queryCommand = new QueryCommand("getAll");
+
+    queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
+        auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+        GetAll{{ entity_name_pascal }}QueryHandler handler(interface);
+        auto result = handler.handle(progressPromise);
+
+        if (result.isSuccess())
+        {
+            emit m_eventDispatcher->{{ feature_name_camel }}()->getAllReplied(result.value());
+        }
+        return Result<void>(result.error());
+    });
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<QList<{{ entity_name_pascal }}DTO>> optional_result = co_await qCoro(
+        m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::getAllReplied, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        // for now, I insert one invalid item to the list to show that there was an error
+        co_return QList<{{ entity_name_pascal }}DTO>() << {{ entity_name_pascal }}DTO();
+    }
+
+    co_return optional_result.value();
+}
+
+    {% endif %}
+    {%if feature.crud.create %}
+QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::create(const Create{{ entity_name_pascal }}DTO &dto)
+{
+    Create{{ entity_name_pascal }}Command query;
+
+    query.req = dto;
+
+    auto repository = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+
+    auto *handler = new Create{{ entity_name_pascal }}CommandHandler(repository);
+
+    // connect
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, m_eventDispatcher->{{ feature_name_camel }}(),
+                     &{{ entity_name_pascal }}Signals::created);
+    {% if feature.crud.has_owner %}
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerInserted, this, [this](int id, int ownerId, int position){
+        auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, position);
+        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationInserted(dto);
+            });
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId){
+        auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, -1);
+        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationRemoved(dto);
+            });
+    {% endif %}
+    QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, this, [this](int removedId) {
+        emit m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << removedId);
+    });
+
+    // Create specialized UndoRedoCommand
+    auto command = new AlterCommand<Create{{ entity_name_pascal }}CommandHandler, Create{{ entity_name_pascal }}Command>(
+        {{ feature_name_pascal }}Interactor::tr("Create {{ entity_name_camel }}"), handler, query);
+
+    // push command
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<{{ entity_name_pascal }}DTO> optional_result =
+        co_await qCoro(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Created, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        co_return {{ entity_name_pascal }}DTO();
+    }
+
+    co_return optional_result.value();
+}
+    {% endif %}
+    {%if feature.crud.update_ %}
+
+QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::update(const Update{{ entity_name_pascal }}DTO &dto)
+{
+    Update{{ entity_name_pascal }}Command query;
+
+    query.req = dto;
+
+    auto repository = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+
+    auto *handler = new Update{{ entity_name_pascal }}CommandHandler(repository);
+
+    // connect
+    QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, this,
+                     [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->updated(dto); });
+    QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}DetailsUpdated, m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::allRelationsInvalidated);
+
+    // Create specialized UndoRedoCommand
+    auto command = new AlterCommand<Update{{ entity_name_pascal }}CommandHandler, Update{{ entity_name_pascal }}Command>(
+        {{ feature_name_pascal }}Interactor::tr("Update {{ entity_name_camel }}"), handler, query);
+
+    // push command
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<{{ entity_name_pascal }}DTO> optional_result =
+        co_await qCoro(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        co_return {{ entity_name_pascal }}DTO();
+    }
+
+    co_return optional_result.value();
+}
+
+    {% endif %}
+    {%if feature.crud.remove %}
+QCoro::Task<bool> {{ feature_name_pascal }}Interactor::remove(int id)
+{
+        Remove{{ entity_name_pascal }}Command query;
+
+        query.id = id;
+
+        auto repository = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
+
+        auto *handler = new Remove{{ entity_name_pascal }}CommandHandler(repository);
+
+        // connect
+        // no need to connect to removed signal, because it will be emitted by the repository itself
+
+        // Create specialized UndoRedoCommand
+        auto command = new AlterCommand<Remove{{ entity_name_pascal }}CommandHandler, Remove{{ entity_name_pascal }}Command>(
+            {{ feature_name_pascal }}Interactor::tr("Remove {{ entity_name_camel }}"), handler, query);
+
+        // push command
+        m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+
+        // async wait for result signal
+        const std::optional<QList<int>> optional_result =
+            co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
+
+        if (!optional_result.has_value())
+        {
+            co_return false;
+        }
+
+    co_return true;
+}
+
+    {% endif %}
+    {%if feature.crud.create %}
+
+Create{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Interactor::getCreateDTO()
+{
+    return Create{{ entity_name_pascal }}DTO();
+}
+    {% endif %}
+    {%if feature.crud.update_ %}
+Update{{ entity_name_pascal }}DTO {{ feature_name_pascal }}Interactor::getUpdateDTO()
+{
+    return Update{{ entity_name_pascal }}DTO();
+}
+    {% endif %}
+{% endif %}
+
+{% for command in custom_commands %}
+QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ feature_name_pascal }}Interactor::{{ command.name_camel }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %})
+{
+    {{ command.name }}Command query;
+
+    {% if command.dto_in_enabled %}query.req = dto;{% endif %}
+
+    {% for repository in command.repositories %}
+    auto {{ repository.name_camel }}Repository = static_cast<Interface{{ repository.name_pascal }}Repository *>(m_repositoryProvider->repository("{{ repository.name_pascal }}"));
+    {% endfor %}
+
+    auto *handler = new {{ command.name }}CommandHandler({% for repository in command.repositories %}
+ {{ repository.name_camel }}Repository{% if not loop.last %},{% endif %}{% endfor %});
+
+    Q_UNIMPLEMENTED();
+
+    // connect
+    {% if command.dto_out_enabled %}
+    QObject::connect(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, this,
+                     [this]({{ command.dto_out }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->{{ command.name_camel }}Changed(dto); });
+    {% else %}
+    QObject::connect(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, m_eventDispatcher->{{ feature_name_camel }}(),
+                     &{{ feature_name_pascal }}Signals::{{ command.name_camel }}Changed);
+    {% endif %}
+
+    // Create specialized UndoRedoCommand
+    auto command = new AlterCommand<{{ command.name }}CommandHandler, {{ command.name }}Command>(
+        {{ feature_name_pascal }}Interactor::tr("Doing {{ command.name }}"), handler, query);
+
+    // set progress minimum duration    
+    command->setProgressMinimumDuration(1000);
+    m_eventDispatcher->progress()->bindToProgressSignals(command);
+
+    // push command
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+
+    {% if command.dto_out_enabled %}
+    // async wait for result signal
+    const std::optional<{{ command.dto_out }}DTO> optional_result =
+        co_await qCoro(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        co_return {{ command.dto_out }}DTO();
+    }
+
+    co_return optional_result.value();
+    {% else %}
+    co_return;
+    {% endif %}
+}
+{% endfor %}
+
+{% for query in custom_queries %}
+
+QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Interactor::{{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
+{
+    auto queryCommand = new QueryCommand("{{ query.name }}");
+     
+    Q_UNIMPLEMENTED();
+
+    queryCommand->setQueryFunction([this](QPromise<Result<void>> &progressPromise) {
+        {{ query.name }}Query query;
+        {% if query.dto_in_enabled %}query.req = dto;{% endif %}
+
+        {% for repository in query.repositories %}
+        auto {{ repository.name_camel }}Repository = static_cast<Interface{{ repository.name_pascal }}Repository *>(m_repositoryProvider->repository("{{ repository.name_pascal }}"));
+        {% endfor %}
+
+        {{ query.name }}QueryHandler handler{% if query.repositories %}({% for repository in query.repositories %}
+ {{ repository.name_camel }}Repository{% if not loop.last %},{% endif %}{% endfor %}){% endif %};
+        auto result = handler.handle(progressPromise, query);
+
+        if (result.isSuccess())
+        {
+            emit m_eventDispatcher->{{ feature_name_camel }}()->{{ query.name_camel }}Replied(result.value());
+        }
+        return Result<void>(result.error());
+    });
+
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+
+    // async wait for result signal
+    const std::optional<{{ query.dto_out }}DTO> optional_result =
+        co_await qCoro(m_eventDispatcher->{{ feature_name_camel }}(), &{{ feature_name_pascal }}Signals::{{ query.name_camel }}Replied, std::chrono::milliseconds(1000));
+
+    if (!optional_result.has_value())
+    {
+        // for now, I insert one invalid item to the list to show that there was an error
+        co_return {{ query.dto_out }}DTO();
+    }
+
+    co_return optional_result.value();
+}
+{% endfor %}

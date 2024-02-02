@@ -1,0 +1,48 @@
+#include "event_dispatcher.h"
+
+using namespace {{ application_cpp_domain_name }}::Interactor;
+
+QPointer<EventDispatcher> EventDispatcher::s_instance = nullptr;
+
+EventDispatcher::EventDispatcher() : QObject{nullptr}
+{
+    m_errorSignals = new ErrorSignals(this);
+    m_progressSignals = new ProgressSignals(this);
+{% if undo_redo_signals %}
+    m_undoRedoSignals = new UndoRedoSignals(this);
+{% endif %}
+{% for feature in features -%}
+    m_{{ feature.feature_name_camel }}Signals = new {{ feature.feature_name_pascal }}Signals(this);
+{% endfor %}
+
+    s_instance = this;
+}
+
+EventDispatcher *EventDispatcher::instance()
+{
+    return s_instance;
+}
+
+{% for feature in features%}
+{{ feature.feature_name_pascal }}Signals *EventDispatcher::{{ feature.feature_name_camel }}() const
+{
+    return m_{{ feature.feature_name_camel }}Signals;
+}
+{% endfor %}
+
+ErrorSignals *EventDispatcher::error() const
+{
+    return m_errorSignals;
+}
+
+ProgressSignals *EventDispatcher::progress() const
+{
+    return m_progressSignals;
+}
+
+{% if undo_redo_signals %}
+UndoRedoSignals *EventDispatcher::undoRedo() const
+{
+    return m_undoRedoSignals;
+}
+{% endif %}
