@@ -1,6 +1,5 @@
 import sys
 import os
-import __version__
 from pathlib import Path
 
 full_path = Path(__file__).resolve().parent
@@ -10,6 +9,8 @@ sys.path.append(full_path)
 
 # set the current directory to the generator directory
 os.chdir(full_path)
+
+import __version__
 
 from generator.qleany_generator_gui import main as gui_main
 
