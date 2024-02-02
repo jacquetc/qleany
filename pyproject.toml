@@ -37,6 +37,12 @@ format-jinja = """
 """
 format-jinja-imports = [{ module = "datetime", item = "datetime" }]
 
+[tool.poetry-dynamic-versioning.substitution]
+folders = [
+  { path = "tools/generator"}, 
+  { path = "tools"}
+]
+
 [virtualenvs]
 create = true
 in-project = true
