@@ -47,10 +47,39 @@ Project dependencies:
 Example of project structure:
 ![Alt text](doc/qleany_project_structure.drawio.png)
 
+## Installing the Qleany library
+
+### Manually
+
+Prerequisites:
+- Qt 6.5 (dev packages) 
+- QCoro (dev packages)
+- Cmake and extra-cmake-modules
+
+The use of sccache is optional. Also, adapt the -j6 to your number of CPU minus one.
+
+CMake options are:
+- QLEANY_BUILD_EXAMPLES
+- QLEANY_BUILD_TESTS
+- BUILD_SHARED_LIBS
+- QLEANY_BUILD_WITH_QT_GUI
+
+```bash
+git clone https://github.com/jacquetc/qleany.git
+cd qleany
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DQLEANY_BUILD_WITH_QT_GUI=on -DQLEANY_BUILD_EXAMPLES=off -DQLEANY_BUILD_TESTS -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ..
+cmake --build . -- -j6
+sudo cmake --install .
+```
+
+## Installing the Qleany GUI Interface
+
+Qleany tooling can be installed using `pip install qleany`. Alternatively, you can install it using `pipx run qleany` if you have pipx installed.
+
 
 ## Utilizing the Qleany GUI Interface
-
-Qleany tooling can be installed using `pip install qleany`.
 
 To access Qleany's user-friendly graphical interface, run `qleany` in a terminal. This interface allows developers to efficiently manage file generation. This is the recommended way to generate files.
 

@@ -112,9 +112,9 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
   private slots:
 
     void onFinished();
+    void progressTimerTimeout();
 
   private:
-    void progressTimerTimeout();
     std::function<Result<void>()> m_undoFunction;
     std::function<void(QPromise<Result<void>> &promise)> m_redoFunction;
     std::function<bool(const UndoRedoCommand *other)> m_mergeWithFunction;

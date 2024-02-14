@@ -9,11 +9,99 @@ application:
       create:
         enabled: true
       enabled: true
-      entity_mappable_with: Car
+      entity_mappable_with: User
+      get:
+        enabled: true
+      get_all:
+        enabled: false
+      get_with_details:
+        enabled: false
+      insert_relation:
+        enabled: false
+      remove:
+        enabled: false
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: User
+    name: User
+  - CRUD:
+      create:
+        enabled: false
+      enabled: true
+      entity_mappable_with: Book
+      get:
+        enabled: true
+      get_all:
+        enabled: false
+      get_with_details:
+        enabled: true
+      insert_relation:
+        enabled: true
+      remove:
+        enabled: false
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Book
+    name: Book
+  - CRUD:
+      create:
+        enabled: false
+      enabled: true
+      entity_mappable_with: Workspace
       get:
         enabled: true
       get_all:
         enabled: true
+      get_with_details:
+        enabled: true
+      insert_relation:
+        enabled: true
+      remove:
+        enabled: false
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Workspace
+    name: Workspace
+  - CRUD:
+      create:
+        enabled: false
+      enabled: true
+      entity_mappable_with: Atelier
+      get:
+        enabled: true
+      get_all:
+        enabled: false
+      get_with_details:
+        enabled: true
+      insert_relation:
+        enabled: false
+      remove:
+        enabled: false
+      update:
+        enabled: false
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Atelier
+    name: Atelier
+  - CRUD:
+      create:
+        enabled: true
+      enabled: true
+      entity_mappable_with: Chapter
+      get:
+        enabled: true
+      get_all:
+        enabled: false
       get_with_details:
         enabled: true
       insert_relation:
@@ -25,61 +113,17 @@ application:
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: Car
-    name: Car
+        entity_mappable_with: Chapter
+    name: Chapter
   - CRUD:
-      change_active_status:
-        enabled: true
       create:
         enabled: true
       enabled: true
-      entity_mappable_with: Brand
+      entity_mappable_with: Scene
       get:
         enabled: true
       get_all:
-        enabled: true
-      get_with_details:
         enabled: false
-      remove:
-        enabled: true
-      update:
-        enabled: true
-    DTO:
-      dto_identical_to_entity:
-        enabled: true
-        entity_mappable_with: Brand
-    name: Brand
-  - CRUD:
-      change_active_status:
-        enabled: true
-      create:
-        enabled: true
-      enabled: true
-      entity_mappable_with: Passenger
-      get:
-        enabled: true
-      get_all:
-        enabled: true
-      get_with_details:
-        enabled: false
-      remove:
-        enabled: true
-      update:
-        enabled: true
-    DTO:
-      dto_identical_to_entity:
-        enabled: true
-        entity_mappable_with: Passenger
-    name: Passenger
-  - CRUD:
-      create:
-        enabled: true
-      enabled: true
-      entity_mappable_with: Client
-      get:
-        enabled: true
-      get_all:
-        enabled: true
       get_with_details:
         enabled: true
       insert_relation:
@@ -91,8 +135,30 @@ application:
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: Client
-    name: Client
+        entity_mappable_with: Scene
+    name: Scene
+  - CRUD:
+      create:
+        enabled: true
+      enabled: true
+      entity_mappable_with: SceneParagraph
+      get:
+        enabled: true
+      get_all:
+        enabled: false
+      get_with_details:
+        enabled: false
+      insert_relation:
+        enabled: false
+      remove:
+        enabled: true
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: SceneParagraph
+    name: SceneParagraph
   - CRUD:
       enabled: false
     DTO:
@@ -102,17 +168,48 @@ application:
     - dto:
         in:
           fields:
-          - name: randomCarName
+          - name: path
             type: QString
-          type_prefix: WriteRandomThings
+          - name: folderName
+            type: QString
+          - name: atelierName
+            type: QString
+          type_prefix: CreateNewAtelier
         out:
           enabled: false
       entities:
-      - Car
-      - Passenger
-      - Brand
-      - Client
-      name: WriteRandomThings
+      - RecentAtelier
+      - Atelier
+      - Git
+      - Workspace
+      - File
+      - Book
+      - Chapter
+      - Scene
+      - SceneParagraph
+      name: CreateNewAtelier
+      undo: false
+      validator:
+        enabled: true
+    - dto:
+        in:
+          fields:
+          - name: path
+            type: QString
+          type_prefix: LoadAtelier
+        out:
+          enabled: false
+      entities:
+      - RecentAtelier
+      - Atelier
+      - Git
+      - Workspace
+      - File
+      - Book
+      - Chapter
+      - Scene
+      - SceneParagraph
+      name: LoadAtelier
       undo: false
       validator:
         enabled: true
@@ -121,8 +218,18 @@ application:
           enabled: false
         out:
           enabled: false
+      entities:
+      - RecentAtelier
+      - Atelier
+      - Git
+      - Workspace
+      - File
+      - Book
+      - Chapter
+      - Scene
+      - SceneParagraph
       minimum_progress_time: 1000
-      name: RunLongOperation
+      name: SaveAtelier
       undo: false
       validator:
         enabled: false
@@ -132,15 +239,19 @@ application:
         out:
           enabled: false
       entities:
-      - Car
-      - Passenger
-      - Brand
-      - Client
-      name: CloseSystem
+      - RecentAtelier
+      - Atelier
+      - Git
+      - Workspace
+      - File
+      - Book
+      - Chapter
+      - Scene
+      name: CloseAtelier
       undo: false
       validator:
         enabled: false
-    name: Custom
+    name: System
     queries:
     - dto:
         in:
@@ -155,17 +266,17 @@ application:
       validator:
         enabled: false
 contracts:
-  export: SIMPLEEXAMPLE_CONTRACTS_EXPORT
+  export: SKRIBISTO_CONTRACTS_EXPORT
   export_header_file: contracts_export.h
   folder_path: src/core/contracts
-  inverted_app_domain: eu.qleany
-controller:
-  create_undo_redo_controller: true
-  export: SIMPLEEXAMPLE_CONTROLLER_EXPORT
-  export_header_file: controller_export.h
-  folder_path: src/core/controller/
+  inverted_app_domain: eu.skribisto
+interactor:
+  create_undo_redo_interactor: true
+  export: SKRIBISTO_INTERACTOR_EXPORT
+  export_header_file: interactor_export.h
+  folder_path: src/core/interactor/
 entities:
-  export: SIMPLEEXAMPLE_DOMAIN_EXPORT
+  export: SKRIBISTO_DOMAIN_EXPORT
   export_header_file: domain_export.h
   folder_path: src/core/domain/
   list:
@@ -180,80 +291,160 @@ entities:
     only_for_heritage: true
     parent: EntityBase
   - fields:
-    - name: content
+    - name: name
       type: QString
-    - name: brand
+    - name: path
+      type: QString
+    - name: isReachable
+      type: bool
+    name: RecentAtelier
+    parent: Entity
+  - fields:
+    - name: name
+      type: QString
+    - name: email
+      type: QString
+    name: User
+    parent: Entity
+  - fields:
+    - name: path
+      type: bool
+    - hidden: true
+      name: git
       strong: true
-      type: Brand
-    - name: passengers
+      type: Git
+    - name: workspaces
+      ordered: false
+      strong: true
+      type: QList<Workspace>
+    name: Atelier
+    parent: Entity
+  - fields:
+    - name: remoteGitRepositoryUrl
+      type: QString
+    - name: isGitHub
+      type: bool
+    name: Git
+    parent: Entity
+  - fields:
+    - name: name
+      type: QString
+    - name: checkPointHash
+      type: QString
+    - name: userOwned
+      type: bool
+    - name: isCommonWorkSpace
+      type: bool
+    - hidden: true
+      name: files
+      type: QList<File>
+    name: Workspace
+    parent: Entity
+  - fields:
+    - name: path
+      type: QString
+    - name: hash
+      type: QString
+    name: File
+    parent: Entity
+  - fields:
+    - name: title
+      type: QString
+    - name: chapters
       ordered: true
       strong: true
-      type: QList<Passenger>
-    name: Car
+      type: QList<Chapter>
+    name: Book
     parent: Entity
   - fields:
-    - name: name
+    - name: title
       type: QString
-    name: Brand
-    parent: Entity
-  - fields:
-    - name: name
+    - name: label
       type: QString
-    name: Passenger
+    - name: scenes
+      ordered: true
+      strong: true
+      type: QList<Scene>
+    name: Chapter
     parent: Entity
   - fields:
-    - name: client
-      ordered: false
-      strong: false
-      type: Passenger
-    - name: clientFriends
-      type: QList<Passenger>
-    name: Client
+    - name: title
+      type: QString
+    - name: label
+      type: QString
+    - name: paragraphs
+      ordered: true
+      strong: true
+      type: QList<SceneParagraph>
+    name: Scene
+    parent: Entity
+  - fields:
+    - name: content
+      type: QString
+    - name: wordCount
+      type: int
+    name: SceneParagraph
     parent: Entity
 global:
-  application_cpp_domain_name: Simple
-  application_name: SimpleExample
+  application_cpp_domain_name: Skribisto
+  application_name: Skribisto
   organisation:
-    domain: qleany.eu
-    name: simpleexample
+    domain: skribisto.eu
+    name: skribisto
 presenter:
   create_undo_and_redo_singles: true
-  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
+  export: SKRIBISTO_PRESENTER_EXPORT
   export_header_file: presenter_export.h
   folder_path: src/gui/presenter
   list_models:
+  - displayed_field: title
+    entity: Chapter
+    in_relation_of: Book
+    name: auto
+    relation_field_name: chapters
   - displayed_field: name
-    entity: Passenger
-    in_relation_of: Car
-    name: PassengerListModelFromCarPassengers
-    relation_field_name: passengers
-  - displayed_field: content
-    entity: Car
-    name: CarListModel
+    entity: Workspace
+    name: auto
+  - displayed_field: title
+    entity: Scene
+    in_relation_of: Chapter
+    name: auto
+    relation_field_name: scenes
   singles:
-  - entity: Car
-    name: SingleCar
-  - entity: Brand
+  - entity: Book
     name: auto
-  - entity: Passenger
+  - entity: User
     name: auto
-  - entity: Client
+  - entity: Git
+    name: auto
+  - entity: Atelier
     name: auto
 qml:
-  mock_imports_folder_path: src/gui/qml_application/mock_imports/
-  real_imports_folder_path: src/gui/qml_application/real_imports/
+  folder_path: src/gui/qml
 repositories:
   base_folder_path: src/core/persistence/
-  export: SIMPLEEXAMPLE_PERSISTENCE_EXPORT
+  export: SKRIBISTO_PERSISTENCE_EXPORT
   export_header_file: persistence_export.h
   interface_path: src/core/contracts/repository/
   list:
-  - entity_name: Car
+  - entity_name: RecentAtelier
     lazy_loaders: true
-  - entity_name: Brand
+  - entity_name: Atelier
     lazy_loaders: true
-  - entity_name: Passenger
+  - entity_name: User
     lazy_loaders: true
-  - entity_name: Client
+  - entity_name: Git
+    lazy_loaders: true
+  - entity_name: Workspace
+    lazy_loaders: true
+  - entity_name: File
+    lazy_loaders: true
+  - entity_name: Book
+    lazy_loaders: true
+  - entity_name: Chapter
+    lazy_loaders: true
+  - entity_name: Scene
+    lazy_loaders: true
+  - entity_name: SceneParagraph
     lazy_loaders: true
   repository_folder_path: src/core/persistence/repository/
