@@ -86,6 +86,13 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/database/one_to_one_associator.h
     include/qleany/database/one_to_many_unordered_associator.h
     include/qleany/database/one_to_many_ordered_associator.h
+    include/qleany/immutable_database/types.h
+    include/qleany/immutable_database/database_context.h
+    include/qleany/immutable_database/database_table_group.h
+    include/qleany/immutable_database/tools.h
+    include/qleany/immutable_database/one_to_one_associator.h
+    include/qleany/immutable_database/one_to_many_unordered_associator.h
+    include/qleany/immutable_database/one_to_many_ordered_associator.h
     include/qleany/qleany_global.h
     include/qleany/repository/generic_repository.h
     include/qleany/repository/repository_provider.h
@@ -96,8 +103,9 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/contracts/repository/interface_repository.h
     include/qleany/contracts/repository/signal_holder.h
     include/qleany/contracts/database/interface_database_table_group.h
-    include/qleany/contracts/database/interface_foreign_entity.h
     include/qleany/contracts/database/interface_database_context.h
+    include/qleany/contracts/immutable_database/interface_database_table_group.h
+    include/qleany/contracts/immutable_database/interface_database_context.h
 )
 
 # configure the library

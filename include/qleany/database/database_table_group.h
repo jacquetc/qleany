@@ -23,6 +23,9 @@
 
 using namespace Qleany::Contracts::Database;
 
+namespace Qleany::Database
+{
+
 struct QLEANY_EXPORT PropertyWithList
 {
     Q_GADGET
@@ -39,9 +42,6 @@ struct QLEANY_EXPORT PropertyWithList
     QString listTableName;
     ListType listType;
 };
-
-namespace Qleany::Database
-{
 
 template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTableGroup<T>
 {

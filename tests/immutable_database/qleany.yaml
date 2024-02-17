@@ -1,0 +1,50 @@
+---
+
+global:
+  application_name: ImmutableDatabaseTest
+  application_cpp_domain_name: ImmutableDatabaseTest
+
+entities:
+  list:
+    - name: DummyEntity
+      parent: EntityBase
+      only_for_heritage: true
+      fields:
+        - type: QUuid
+          name: uuid
+        - type: QDateTime
+          name: creationDate
+        - type: QDateTime
+          name: updateDate
+    - name: DummyBasicEntity
+      parent: DummyEntity
+      fields:
+        - type: QString
+          name: name
+        - type: QString
+          name: author
+    - name: DummyOtherEntity
+      parent: DummyEntity
+      fields:
+        - type: QString
+          name: name
+    - name: DummyEntityWithForeign
+      parent: DummyEntity
+      fields:
+        - type: QString
+          name: name
+        - type: DummyOtherEntity
+          name: unique
+          ordered: false
+          strong: false
+        - type: QList<DummyOtherEntity>
+          name: unorderedList
+          ordered: false
+          strong: false
+        - type: QList<DummyOtherEntity>
+          name: orderedList
+          ordered: true
+          strong: false
+  export: ""
+  export_header_file: domain_export.h
+  folder_path: ./

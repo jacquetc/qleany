@@ -6,7 +6,7 @@
 #include <QUuid>
 
 #include "entities.h"
-#include "qleany/domain/entity_base.h"
+#include <qleany/domain/entity_base.h>
 #include <qleany/domain/entity_schema.h>
 
 using namespace Qleany::Domain;
