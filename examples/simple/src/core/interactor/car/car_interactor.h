@@ -6,8 +6,8 @@
 #include "car/car_with_details_dto.h"
 #include "car/create_car_dto.h"
 #include "car/update_car_dto.h"
-#include "interactor_export.h"
 #include "event_dispatcher.h"
+#include "simple_example_interactor_export.h"
 #include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include <QCoroTask>
@@ -23,7 +23,7 @@ using namespace Simple::Contracts::DTO::Car;
 namespace Simple::Interactor::Car
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
 {
     Q_OBJECT
   public:

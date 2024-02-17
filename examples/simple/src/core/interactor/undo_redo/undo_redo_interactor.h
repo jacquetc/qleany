@@ -2,9 +2,10 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
 #include "event_dispatcher.h"
+#include "simple_example_interactor_export.h"
 
+#include <QAction>
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
@@ -15,7 +16,7 @@ using namespace Qleany::Tools::UndoRedo;
 namespace Simple::Interactor::UndoRedo
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
 {
     Q_OBJECT
   public:

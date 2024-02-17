@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_passenger_export.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/queries/get_passenger_query.h"
+#include "simple_example_application_passenger_export.h"
 
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
@@ -16,7 +16,7 @@ using namespace Simple::Contracts::CQRS::Passenger::Queries;
 
 namespace Simple::Application::Features::Passenger::Queries
 {
-class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT GetPassengerQueryHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT GetPassengerQueryHandler : public QObject
 {
     Q_OBJECT
   public:

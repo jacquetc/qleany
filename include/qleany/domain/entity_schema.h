@@ -1,6 +1,6 @@
 #pragma once
 
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QList>
 #include <QString>
 

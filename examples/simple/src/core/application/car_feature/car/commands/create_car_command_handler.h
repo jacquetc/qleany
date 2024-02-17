@@ -2,10 +2,10 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_car_export.h"
 #include "car/car_dto.h"
 #include "car/commands/create_car_command.h"
 #include "repository/interface_car_repository.h"
+#include "simple_example_application_car_export.h"
 #include <QPromise>
 #include <qleany/common/result.h>
 
@@ -17,7 +17,7 @@ using namespace Simple::Contracts::CQRS::Car::Commands;
 
 namespace Simple::Application::Features::Car::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QObject
 {
     Q_OBJECT
   public:

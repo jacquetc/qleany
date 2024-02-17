@@ -1,6 +1,6 @@
 #pragma once
 #include "qleany/common/result.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QSqlDatabase>
 #include <QThreadPool>
 

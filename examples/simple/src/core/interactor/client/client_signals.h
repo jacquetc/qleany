@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
+#include "simple_example_interactor_export.h"
 
 #include "client/client_with_details_dto.h"
 
@@ -17,7 +17,7 @@ namespace Simple::Interactor
 
 using namespace Simple::Contracts::DTO::Client;
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT ClientSignals : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT ClientSignals : public QObject
 {
     Q_OBJECT
   public:
@@ -28,12 +28,12 @@ class SIMPLEEXAMPLE_INTERACTOR_EXPORT ClientSignals : public QObject
   signals:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
+    void created(ClientDTO dto);
+    void updated(ClientDTO dto);
+    void allRelationsInvalidated(int id);
     void getReplied(ClientDTO dto);
     void getWithDetailsReplied(ClientWithDetailsDTO dto);
     void getAllReplied(QList<ClientDTO> dtoList);
-    void created(ClientDTO dto);
-    void updated(Contracts::DTO::Client::ClientDTO dto);
-    void allRelationsInvalidated(int id);
 
     void relationInserted(ClientRelationDTO dto);
     void relationRemoved(ClientRelationDTO dto);

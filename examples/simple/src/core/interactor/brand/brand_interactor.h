@@ -5,8 +5,8 @@
 #include "brand/brand_dto.h"
 #include "brand/create_brand_dto.h"
 #include "brand/update_brand_dto.h"
-#include "interactor_export.h"
 #include "event_dispatcher.h"
+#include "simple_example_interactor_export.h"
 #include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include <QCoroTask>
@@ -22,7 +22,7 @@ using namespace Simple::Contracts::DTO::Brand;
 namespace Simple::Interactor::Brand
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
 {
     Q_OBJECT
   public:

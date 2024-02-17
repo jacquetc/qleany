@@ -179,8 +179,6 @@ Configures interactor-specific settings.
 ```yaml
 interactor: 
   folder_path: path/to/interactor/folder
-  export: EXPORT_MACRO_NAME
-  export_header_file: header_file_name.h
   create_undo_redo_interactor: true/false
 ```
 ### Application Layer Configuration

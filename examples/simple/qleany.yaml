@@ -73,8 +73,6 @@ repositories:
 
 interactor: 
   folder_path: src/core/interactor/
-  export: SIMPLEEXAMPLE_INTERACTOR_EXPORT
-  export_header_file: interactor_export.h
   create_undo_redo_interactor: true
 
 application:

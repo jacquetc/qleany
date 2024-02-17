@@ -86,7 +86,6 @@ set(LIB_PUBLIC_HEADERS
     include/qleany/database/one_to_one_associator.h
     include/qleany/database/one_to_many_unordered_associator.h
     include/qleany/database/one_to_many_ordered_associator.h
-    include/qleany/qleany_global.h
     include/qleany/repository/generic_repository.h
     include/qleany/repository/repository_provider.h
     include/qleany/domain/entity_schema.h
@@ -112,15 +111,28 @@ add_library(Qleany ${LIB_TYPE}
     ${PUBLIC_HEADERS}
 )
 
+# Generate export header
+message(STATUS "Generating export header")
+
+include(GenerateExportHeader)
+generate_export_header(Qleany
+    EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qleany>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 
 set_target_properties(Qleany PROPERTIES CXX_STANDARD 20)
 
 set_target_properties(Qleany PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${PUBLIC_HEADERS})
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS};${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h")
 
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 
@@ -128,8 +140,15 @@ if(QLEANY_BUILD_WITH_QT_GUI)
     target_link_libraries(Qleany PRIVATE Qt::Gui)
 endif()
 
-target_compile_definitions(Qleany PRIVATE QLEANY_LIBRARY)
+# state that Qleany need PIC when the default is shared libraries
+set_target_properties(Qleany PROPERTIES
+                      POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                      )
 
+
+# configure the install location
+message(STATUS "Configuring install location")
+include(GNUInstallDirs)
 
 # Install library
 install(TARGETS ${PROJECT_NAME}
@@ -147,7 +166,14 @@ install(DIRECTORY include/${PROJECT_NAME_LOWER} DESTINATION include)
 install(FILES LICENSE DESTINATION share/${PROJECT_NAME_LOWER})
 
 
-# Create and install keygen-licenserConfig.cmake
+# Install the export set for use with the install-tree
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME_LOWER}Targets.cmake
+    DESTINATION lib/cmake/${PROJECT_NAME_LOWER}
+)  
+
+# Create and install qleanyConfig.cmake
+message(STATUS "Creating and installing qleanyConfig.cmake")
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     ${PROJECT_NAME_LOWER}ConfigVersion.cmake
@@ -164,12 +190,12 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}ConfigVersion.cmake
         DESTINATION lib/cmake/${PROJECT_NAME_LOWER})
 
-# Install the export set for use with the install-tree
-install(EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME_LOWER}Targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION lib/cmake/${PROJECT_NAME_LOWER}
-)
+# Export the targets to a script
+message(STATUS "Exporting targets to a script")
+message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+export(EXPORT ${PROJECT_NAME}Targets
+       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Targets.cmake)
+
 
 # Subdirectories that contain CMakeLists.txt for the framework tests and example
 if(QLEANY_BUILD_TESTS)

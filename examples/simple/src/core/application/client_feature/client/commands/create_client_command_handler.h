@@ -2,10 +2,10 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_client_export.h"
 #include "client/client_dto.h"
 #include "client/commands/create_client_command.h"
 #include "repository/interface_client_repository.h"
+#include "simple_example_application_client_export.h"
 #include <QPromise>
 #include <qleany/common/result.h>
 
@@ -17,7 +17,7 @@ using namespace Simple::Contracts::CQRS::Client::Commands;
 
 namespace Simple::Application::Features::Client::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : public QObject
 {
     Q_OBJECT
   public:

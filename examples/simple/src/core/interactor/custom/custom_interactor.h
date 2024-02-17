@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
 #include "custom/write_random_things_dto.h"
 #include "event_dispatcher.h"
+#include "simple_example_interactor_export.h"
 #include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include "custom/get_current_time_reply_dto.h"
@@ -21,7 +21,7 @@ using namespace Simple::Contracts::DTO::Custom;
 namespace Simple::Interactor::Custom
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT CustomInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT CustomInteractor : public QObject
 {
     Q_OBJECT
   public:

@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_car_export.h"
 #include "car/car_with_details_dto.h"
 #include "car/queries/get_car_query.h"
+#include "simple_example_application_car_export.h"
 
 #include "repository/interface_car_repository.h"
 #include <QPromise>
@@ -16,7 +16,7 @@ using namespace Simple::Contracts::CQRS::Car::Queries;
 
 namespace Simple::Application::Features::Car::Queries
 {
-class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT GetCarWithDetailsQueryHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT GetCarWithDetailsQueryHandler : public QObject
 {
     Q_OBJECT
   public:

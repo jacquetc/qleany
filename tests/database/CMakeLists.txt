@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.18)
 
 #-----------------------------------------------------------------------------------
 
@@ -15,7 +15,6 @@ set(CMAKE_AUTOMOC ON)
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Test Core Sql CONFIG REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test Core Sql REQUIRED)
 
 # set(QRC ${CMAKE_SOURCE_DIR}/resources/test/testfiles.qrc)

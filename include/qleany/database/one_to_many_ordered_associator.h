@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <qleany/common/result.h>
 #include <qleany/domain/entity_schema.h>
+#include <qleany/domain/entity_base.h>
 
 using namespace Qleany::Contracts::Database;
 

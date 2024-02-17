@@ -1,7 +1,7 @@
 #pragma once
 
 #include "qleany/contracts/database/interface_database_context.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>

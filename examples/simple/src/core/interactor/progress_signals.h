@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interactor_export.h"
+#include "simple_example_interactor_export.h"
 #include <QObject>
 #include <qleany/common/error.h>
 #include <qleany/tools/undo_redo/undo_redo_command.h>
@@ -8,7 +8,7 @@
 namespace Simple::Interactor
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT ProgressSignals : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT ProgressSignals : public QObject
 {
     Q_OBJECT
   public:

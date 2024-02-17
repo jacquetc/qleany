@@ -28,13 +28,18 @@ set(SRC
     client/queries/get_all_client_query_handler.h
     client/queries/get_client_with_details_query_handler.cpp
     client/queries/get_client_with_details_query_handler.h
-    application_client_export.h
+    simple_example_application_client_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+${CMAKE_CURRENT_SOURCE_DIR}
+${CMAKE_CURRENT_BINARY_DIR}
+)
 
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_APPLICATION_CLIENT_LIBRARY)
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME simple_example_application_client)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-domain)

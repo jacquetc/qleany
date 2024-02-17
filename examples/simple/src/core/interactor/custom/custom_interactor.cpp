@@ -1,6 +1,6 @@
-// This file was generated automatically by Qleany's generator, edit at your own
-// risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
+
 #include "custom_interactor.h"
 
 #include "custom/commands/close_system_command.h"
@@ -88,6 +88,8 @@ QCoro::Task<> CustomInteractor::runLongOperation()
 
     auto *handler = new RunLongOperationCommandHandler();
 
+    Q_UNIMPLEMENTED();
+
     // connect
 
     QObject::connect(handler, &RunLongOperationCommandHandler::runLongOperationChanged, m_eventDispatcher->custom(),
@@ -171,8 +173,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
 
     if (!optional_result.has_value())
     {
-        // for now, I insert one invalid item to the list to show that there was
-        // an error
+        // for now, I insert one invalid item to the list to show that there was an error
         co_return GetCurrentTimeReplyDTO();
     }
 

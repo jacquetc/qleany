@@ -8,9 +8,9 @@
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
 #include "qleany/contracts/database/interface_database_table_group.h"
-#include "qleany/domain//entity_base.h"
+#include "qleany/domain/entity_base.h"
 #include "qleany/domain/entity_schema.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include "tools.h"
 #include <QDateTime>
 #include <QMetaObject>
