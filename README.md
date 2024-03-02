@@ -16,10 +16,10 @@ Qleany's primary goal is to automate the generation of a structured project envi
 
 The framework acknowledges the repetitive nature of file creation in Clean Architecture and addresses this by automating the generation of similar files. Additional features include:
 
-- An asynchronous undo-redo system based on the command pattern.
+- An asynchronous undo-redo system based on the command pattern. A project can ignore the undo part if it is not needed.
 - A SQLite-based database layer for data persistence.
-- Support for custom use cases with user-defined DTOs (Data Transfer Objects) for inputs and outputs.
-- The ability to define both soft and hard relationships between entities, including one-to-one and one-to-many (unordered or ordered) associations.
+- Support for custom use cases with their own signal and with user-defined DTOs (Data Transfer Objects) for inputs and outputs.
+- The ability to define both soft and hard relationships between entities, including one-to-one and one-to-many (unordered or ordered) associations. Many-to-many relationships are not supported yet.
 - Entities within the framework handle cascade deletion. Additionally, the implementation of soft-deletion (recoverable trash binning) is currently in progress.
 
 ## Framework Structure
@@ -59,10 +59,10 @@ Prerequisites:
 The use of sccache is optional. Also, adapt the -j6 to your number of CPU minus one.
 
 CMake options are:
-- QLEANY_BUILD_EXAMPLES
-- QLEANY_BUILD_TESTS
-- BUILD_SHARED_LIBS
-- QLEANY_BUILD_WITH_QT_GUI
+- QLEANY_BUILD_EXAMPLES (default: on)
+- QLEANY_BUILD_TESTS (default: on)
+- BUILD_SHARED_LIBS (default: off)
+- QLEANY_BUILD_WITH_QT_GUI (default: on)
 
 ```bash
 git clone https://github.com/jacquetc/qleany.git
@@ -74,9 +74,11 @@ cmake --build . -- -j6
 sudo cmake --install .
 ```
 
+Qleany is building and examples are running well if you use Qt Creator or Visual Studio Code with the CMake Tools extension.
+
 ## Installing the Qleany GUI Interface
 
-Qleany tooling can be installed using `pip install qleany`. Alternatively, you can install it using `pipx run qleany` if you have pipx installed.
+Qleany tooling can be installed using `pip install qleany`. Alternatively, for an easier installation, you can install it using `pipx run qleany` if you have pipx installed.
 
 
 ## Utilizing the Qleany GUI Interface
@@ -300,3 +302,29 @@ qml:
   folder_path: path/to/qml/folder
 
 ```
+
+## Using Qleany
+
+To use Qleany, follow these steps:
+
+1. Write a `qleany.yaml` file for your project. You can use the `examples/simple/qleany.yaml` file as a reference.
+2. Run the Qleany GUI interface and select the `qleany.yaml` file.
+3. List and select the files you want to generate.
+4. To avoid overwriting your current files: Preview the files, it will generate them in a "qleany_preview" folder.
+5. If you are sure, generate the files directly. Qleany will generate them in the right place, but will never delete other files.
+7. Create CMakelists.txt files to include the generated libraries in your project. You can use the `examples/simple/src/core/CMakeLists.txt` and `examples/simple/src/gui/CMakeLists.txt` files as a reference.
+6. For custom commands and queries, you still have to fill the blanks in the generated files. You will find "Q_UNIMPLEMENTED();" in the generated files.
+
+
+### For QWidgets GUI
+
+7. Create an UI project, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/desktop_application`.
+8. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use the interactors and models in presenter. Refer to the example for guidance at `examples/simple/src/gui/desktop_application/main.cpp`
+
+### For QML GUI
+
+*Note*: For now, the file generation is tailor-made to be used after a project is created using Qt Design Studio, but only subltle changes are needed to use it with a project created manually. You can use the `examples/simple/src/gui/qml_application` as a reference of what is running fine, this project uses Qt Design Studio's generated CMakeLists.txt. At the minimum, you only have to include the generated `realqmlmodules.cmake` file in your project's CMakeLists.txt file and mofify your main.cpp to register the other libraries.
+
+7. Create a QML project using Qt Design Studio, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/qml_application`.
+8. You can now start to implement your GUI and use cases. A GUI made with QML will use **not** the interactors and models directly from the interactor and presenter libraries. Wrappers around them all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/simple/src/gui/qml_application/src/main.cpp` and `examples/simple/src/gui/qml_application/CMakelists.txt`
+
