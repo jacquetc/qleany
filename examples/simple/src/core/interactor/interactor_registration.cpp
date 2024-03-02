@@ -1,3 +1,6 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+
 #include "interactor_registration.h"
 #include "brand/brand_interactor.h"
 #include "car/car_interactor.h"
@@ -14,6 +17,7 @@ using namespace Simple::Interactor;
 InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceRepositoryProvider *repositoryProvider)
     : QObject{parent}
 {
+
     auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
@@ -25,22 +29,18 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling
-    QObject::connect(
-        undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, dispatcher.data(),
-        [dispatcher](Qleany::Error error) {
-            qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
-                     << error.data() << error.stackTrace();
-            emit dispatcher->error()->errorSent(error);
-        },
-        Qt::QueuedConnection);
-    QObject::connect(
-        undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, dispatcher.data(),
-        [dispatcher](Qleany::Error error) {
-            qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
-                     << error.data() << error.stackTrace();
-            emit dispatcher->error()->warningSent(error);
-        },
-        Qt::QueuedConnection);
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
+            [dispatcher](Qleany::Error error) {
+                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
+                         << error.data() << error.stackTrace();
+                emit dispatcher->error()->errorSent(error);
+            });
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
+            [dispatcher](Qleany::Error error) {
+                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
+                         << error.data() << error.stackTrace();
+                emit dispatcher->error()->warningSent(error);
+            });
 
     // CarInteractor
 
@@ -67,8 +67,7 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
             &BrandSignals::removed);
 
-    // spread removal signal to all other entity signal holders so as to remove
-    // the relations
+    // spread removal signal to all other entity signal holders so as to remove the relations
 
     connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
             [dispatcher](QList<int> removedIds) {
@@ -91,8 +90,7 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
             &PassengerSignals::removed);
 
-    // spread removal signal to all other entity signal holders so as to remove
-    // the relations
+    // spread removal signal to all other entity signal holders so as to remove the relations
 
     connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
             [dispatcher](QList<int> removedIds) {

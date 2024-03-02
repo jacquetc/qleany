@@ -60,15 +60,10 @@ def get_generation_dict(
     feature_by_name: dict,
     entities_by_name: dict,
     interactor_by_name: dict,
-    export: str,
-    export_header_file: str,
     create_undo_redo_interactor: bool,
 ) -> dict:
     generation_dict = {}
 
-    # add export_header
-    generation_dict["export_header"] = export_header_file
-    generation_dict["export"] = export
     generation_dict["folder_path"] = folder_path
     generation_dict["all_interactor_files"] = []
 
@@ -87,6 +82,10 @@ def get_generation_dict(
         application_name
     )
     generation_dict["application_uppercase_name"] = application_name.upper()
+
+    # add export_header
+    generation_dict["export_header"] = f"{stringcase.snakecase(application_name)}_interactor_export.h"
+    generation_dict["export"] = f"{stringcase.snakecase(application_name).upper()}_INTERACTOR_EXPORT"
 
     generation_dict["features"] = []
 
@@ -354,6 +353,9 @@ def generate_cmakelists(
                     ],
                     application_uppercase_name=generation_dict[
                         "application_uppercase_name"
+                    ],
+                    application_snakecase_name=generation_dict[
+                        "application_snakecase_name"
                     ],
                     features=generation_dict["features"],
                 )
@@ -655,35 +657,6 @@ def generate_interactor_registration_files(
             print(f"Successfully wrote file {interactor_file}")
 
 
-def generate_export_header_file(
-    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
-):
-    template_env = Environment(loader=FileSystemLoader("templates/interactor"))
-    template = template_env.get_template("export_template.jinja2")
-
-    folder_path = generation_dict["folder_path"]
-
-    relative_export_header_file = os.path.join(
-        folder_path, generation_dict["export_header"]
-    )
-    export_header_file = os.path.join(root_path, relative_export_header_file)
-
-    if files_to_be_generated.get(relative_export_header_file, False):
-        # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
-
-        with open(export_header_file, "w") as f:
-            f.write(
-                template.render(
-                    application_uppercase_name=generation_dict[
-                        "application_uppercase_name"
-                    ],
-                    export=generation_dict["export"],
-                )
-            )
-            print(f"Successfully wrote file {export_header_file}")
-
-
 def generate_error_signals_file(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
@@ -861,8 +834,6 @@ def generate_interactor_files(
     }
 
     folder_path = interactor_data.get("folder_path", "Undefined")
-    export = interactor_data.get("export", "Undefined")
-    export_header_file = interactor_data.get("export_header_file", "Undefined")
     create_undo_redo_interactor = interactor_data.get(
         "create_undo_redo_interactor", False
     )
@@ -874,15 +845,12 @@ def generate_interactor_files(
         feature_by_name,
         entities_by_name,
         interactor_by_name,
-        export,
-        export_header_file,
         create_undo_redo_interactor,
     )
 
     generate_event_dispatcher_files(root_path, generation_dict, files_to_be_generated)
     generate_cmake_file(root_path, generation_dict, files_to_be_generated)
     generate_cmakelists(root_path, generation_dict, files_to_be_generated)
-    generate_export_header_file(root_path, generation_dict, files_to_be_generated)
     generate_signal_files(root_path, generation_dict, files_to_be_generated)
     _generate_interactor_h_and_cpp_files(
         root_path, generation_dict, files_to_be_generated
@@ -925,7 +893,6 @@ def get_files_to_be_generated(
         "create_undo_redo_interactor", False
     )
     folder_path = interactor_data["folder_path"]
-    export_header_file = interactor_data.get("export_header_file", "Undefined")
 
     # Get the list of files to be generated
     files = []
@@ -1016,12 +983,6 @@ def get_files_to_be_generated(
         os.path.join(
             folder_path,
             "progress_signals.h",
-        )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            export_header_file,
         )
     )
     files.append(

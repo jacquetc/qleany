@@ -5,7 +5,7 @@
 
 #include "undo_redo_command.h"
 
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QObject>
 #include <QQueue>
 #include <QSharedPointer>

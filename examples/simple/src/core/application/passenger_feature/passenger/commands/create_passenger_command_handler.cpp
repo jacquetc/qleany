@@ -7,7 +7,7 @@
 #include "car.h"
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Validators;
@@ -61,10 +61,10 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
                                                                const CreatePassengerCommand &request)
 {
     qDebug() << "CreatePassengerCommandHandler::handleImpl called";
-    Simple::Domain::Passenger passenger;
+    Simple::Entities::Passenger passenger;
     CreatePassengerDTO createDTO = request.req;
 
-    QList<Simple::Domain::Passenger> ownerEntityPassengers;
+    QList<Simple::Entities::Passenger> ownerEntityPassengers;
 
     // Get the entities from owner
     int ownerId = createDTO.carId();
@@ -81,7 +81,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
         // Map the create Passenger command to a domain Passenger object and
         // generate a UUID
         passenger =
-            Qleany::Tools::AutoMapper::AutoMapper::map<CreatePassengerDTO, Simple::Domain::Passenger>(createDTO);
+            Qleany::Tools::AutoMapper::AutoMapper::map<CreatePassengerDTO, Simple::Entities::Passenger>(createDTO);
 
         // allow for forcing the uuid
         if (passenger.uuid().isNull())
@@ -157,7 +157,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     }
 
     // Add the passenger to the owner entity
-    Result<QList<Simple::Domain::Passenger>> updateResult =
+    Result<QList<Simple::Entities::Passenger>> updateResult =
         m_repository->updateEntitiesInRelationOf(Car::schema, ownerId, "passengers", ownerEntityPassengers);
 
     QLN_RETURN_IF_ERROR_WITH_ACTION(PassengerDTO, updateResult, m_repository->cancelChanges();)
@@ -167,7 +167,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     m_newEntity = passengerResult;
 
     auto passengerDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passengerResult.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
     emit passengerCreated(passengerDTO);
 
     // send an insertion signal
@@ -201,8 +201,8 @@ bool CreatePassengerCommandHandler::s_mappingRegistered = false;
 
 void CreatePassengerCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
                                                            Contracts::DTO::Passenger::PassengerDTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::CreatePassengerDTO,
-                                                           Simple::Domain::Passenger>();
+                                                           Simple::Entities::Passenger>();
 }

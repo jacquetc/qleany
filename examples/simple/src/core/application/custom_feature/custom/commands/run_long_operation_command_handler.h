@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_custom_export.h"
+#include "simple_example_application_custom_export.h"
 
 #include "custom/commands/run_long_operation_command.h"
 
@@ -15,7 +15,7 @@ using namespace Simple::Contracts::CQRS::Custom::Commands;
 
 namespace Simple::Application::Features::Custom::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_CUSTOM_EXPORT RunLongOperationCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT RunLongOperationCommandHandler : public QObject
 {
     Q_OBJECT
   public:

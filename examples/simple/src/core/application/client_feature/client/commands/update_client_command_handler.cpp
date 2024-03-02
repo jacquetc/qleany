@@ -69,19 +69,19 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     // save old state
     if (m_undoState.isEmpty())
     {
-        Result<Simple::Domain::Client> currentResult = m_repository->get(request.req.id());
+        Result<Simple::Entities::Client> currentResult = m_repository->get(request.req.id());
 
         QLN_RETURN_IF_ERROR(ClientDTO, currentResult)
 
         // map
         m_undoState = Result<ClientDTO>(
-            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(currentResult.value()));
+            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(currentResult.value()));
     }
     auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<ClientDTO, UpdateClientDTO>(m_undoState.value());
     updateDto << request.req;
 
     // map
-    auto client = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateClientDTO, Simple::Domain::Client>(updateDto);
+    auto client = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateClientDTO, Simple::Entities::Client>(updateDto);
 
     // set update timestamp only on first pass
     if (m_undoState.isEmpty())
@@ -99,7 +99,7 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
     // map
     auto clientDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(clientResult.value());
 
     emit clientUpdated(clientDto);
 
@@ -118,7 +118,7 @@ Result<ClientDTO> UpdateClientCommandHandler::restoreImpl()
     qDebug() << "UpdateClientCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto client = Qleany::Tools::AutoMapper::AutoMapper::map<ClientDTO, Simple::Domain::Client>(m_undoState.value());
+    auto client = Qleany::Tools::AutoMapper::AutoMapper::map<ClientDTO, Simple::Entities::Client>(m_undoState.value());
 
     // do
     auto clientResult = m_repository->update(std::move(client));
@@ -127,7 +127,7 @@ Result<ClientDTO> UpdateClientCommandHandler::restoreImpl()
 
     // map
     auto clientDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(clientResult.value());
 
     emit clientUpdated(clientDto);
 
@@ -140,10 +140,10 @@ bool UpdateClientCommandHandler::s_mappingRegistered = false;
 
 void UpdateClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(
         true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::UpdateClientDTO,
                                                            Contracts::DTO::Client::ClientDTO>(true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::UpdateClientDTO,
-                                                           Simple::Domain::Client>();
+                                                           Simple::Entities::Client>();
 }

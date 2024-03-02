@@ -11,8 +11,8 @@ using namespace Qleany::Contracts::Repository;
 using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
-PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<Simple::Domain::Passenger> *passengerDatabase)
-    : Qleany::Repository::GenericRepository<Simple::Domain::Passenger>(passengerDatabase)
+PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<Simple::Entities::Passenger> *passengerDatabase)
+    : Qleany::Repository::GenericRepository<Simple::Entities::Passenger>(passengerDatabase)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }
@@ -35,7 +35,7 @@ Result<QHash<int, QList<int>>> PassengerRepository::removeInCascade(QList<int> i
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
-    returnedHashOfEntityWithRemovedIds.insert(Simple::Domain::Entities::Passenger, removedIdsResult.value());
+    returnedHashOfEntityWithRemovedIds.insert(Simple::Entities::Entities::Passenger, removedIdsResult.value());
 
     emit m_signalHolder->removed(removedIdsResult.value());
 
@@ -53,7 +53,7 @@ Result<QHash<int, QList<int>>> PassengerRepository::changeActiveStatusInCascade(
 
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
 
-    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Domain::Entities::Passenger, changedIdsResult.value());
+    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Entities::Entities::Passenger, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);

@@ -2,7 +2,7 @@
 
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QHash>
 #include <QMutexLocker>
 #include <QReadWriteLock>

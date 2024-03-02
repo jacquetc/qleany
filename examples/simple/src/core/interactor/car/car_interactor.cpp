@@ -1,5 +1,6 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
+
 #include "car_interactor.h"
 
 #include "car/commands/create_car_command.h"

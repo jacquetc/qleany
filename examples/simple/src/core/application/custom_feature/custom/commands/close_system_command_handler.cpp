@@ -56,7 +56,7 @@ Result<void> CloseSystemCommandHandler::handleImpl(QPromise<Result<void>> &progr
     qDebug() << "CloseSystemCommandHandler::handleImpl called";
 
     // implement logic here which will not be repeated on restore
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<void, Simple::Domain::Custom>(request.req);
+    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<void, Simple::Entities::Custom>(request.req);
 
     m_carRepository->beginChanges();
 

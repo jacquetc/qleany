@@ -19,7 +19,7 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
 
     // database tables:
     {% for entity in entities %}
-    auto *{{ entity.entity_camel_name }}DatabaseTableGroup = new DatabaseTableGroup<{{ application_cpp_domain_name }}::Domain::{{ entity.entity_pascal_name }}>(context);
+    auto *{{ entity.entity_camel_name }}DatabaseTableGroup = new DatabaseTableGroup<{{ application_cpp_domain_name }}::Entities::{{ entity.entity_pascal_name }}>(context);
     {%- endfor %}
 
     Result<void> initResult = context->init();

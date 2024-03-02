@@ -7,7 +7,7 @@
 #include "car.h"
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Brand;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Brand::Validators;
@@ -60,10 +60,10 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
                                                        const CreateBrandCommand &request)
 {
     qDebug() << "CreateBrandCommandHandler::handleImpl called";
-    Simple::Domain::Brand brand;
+    Simple::Entities::Brand brand;
     CreateBrandDTO createDTO = request.req;
 
-    Simple::Domain::Brand ownerEntityBrand;
+    Simple::Entities::Brand ownerEntityBrand;
 
     // Get the entities from owner
     int ownerId = createDTO.carId();
@@ -77,9 +77,9 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
         QLN_RETURN_IF_ERROR(BrandDTO, validatorResult);
 
-        // Map the create Brand command to a domain Brand object and
+        // Map the create Brand command to a z Brand object and
         // generate a UUID
-        brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, Simple::Domain::Brand>(createDTO);
+        brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, Simple::Entities::Brand>(createDTO);
 
         // allow for forcing the uuid
         if (brand.uuid().isNull())
@@ -136,7 +136,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     }
 
     // Add the brand to the owner entity
-    Result<Simple::Domain::Brand> updateResult =
+    Result<Simple::Entities::Brand> updateResult =
         m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand", ownerEntityBrand);
 
     QLN_RETURN_IF_ERROR_WITH_ACTION(BrandDTO, updateResult, m_repository->cancelChanges();)
@@ -145,7 +145,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     m_newEntity = brandResult;
 
-    auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());
+    auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brandResult.value());
     emit brandCreated(brandDTO);
 
     // send an insertion signal
@@ -179,8 +179,8 @@ bool CreateBrandCommandHandler::s_mappingRegistered = false;
 
 void CreateBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
         true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO,
-                                                           Simple::Domain::Brand>();
+                                                           Simple::Entities::Brand>();
 }

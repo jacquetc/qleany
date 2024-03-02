@@ -2,7 +2,7 @@
 
 #include "qleany/common/result.h"
 #include "qleany/database/types.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QList>
 #include <QString>
 

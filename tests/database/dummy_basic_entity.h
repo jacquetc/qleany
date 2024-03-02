@@ -6,11 +6,11 @@
 
 #include "dummy_entity.h"
 #include "entities.h"
-#include "qleany/domain/entity_schema.h"
+#include "qleany/entities/entity_schema.h"
 
-using namespace Qleany::Domain;
+using namespace Qleany::Entities;
 
-namespace DatabaseTest::Domain
+namespace DatabaseTest::Entities
 {
 
 class DummyBasicEntity : public DummyEntity
@@ -40,9 +40,9 @@ class DummyBasicEntity : public DummyEntity
     {
     }
 
-    static DatabaseTest::Domain::Entities::EntityEnum enumValue()
+    static DatabaseTest::Entities::Entities::EntityEnum enumValue()
     {
-        return DatabaseTest::Domain::Entities::EntityEnum::DummyBasicEntity;
+        return DatabaseTest::Entities::Entities::EntityEnum::DummyBasicEntity;
     }
 
     DummyBasicEntity &operator=(const DummyBasicEntity &other)
@@ -86,7 +86,7 @@ class DummyBasicEntity : public DummyEntity
         m_author = author;
     }
 
-    static Qleany::Domain::EntitySchema schema;
+    static Qleany::Entities::EntitySchema schema;
 
   private:
     QString m_name;
@@ -114,8 +114,8 @@ inline uint qHash(const DummyBasicEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyBasicEntity entity
-inline Qleany::Domain::EntitySchema DummyBasicEntity::schema = {
-    DatabaseTest::Domain::Entities::EntityEnum::DummyBasicEntity,
+inline Qleany::Entities::EntitySchema DummyBasicEntity::schema = {
+    DatabaseTest::Entities::Entities::EntityEnum::DummyBasicEntity,
     "DummyBasicEntity",
 
     // relationships:
@@ -131,5 +131,5 @@ inline Qleany::Domain::EntitySchema DummyBasicEntity::schema = {
      {"name", FieldType::String, false, false},
      {"author", FieldType::String, false, false}}};
 
-} // namespace DatabaseTest::Domain
-Q_DECLARE_METATYPE(DatabaseTest::Domain::DummyBasicEntity)
+} // namespace DatabaseTest::Entities
+Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyBasicEntity)

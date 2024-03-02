@@ -2,11 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
 #include "event_dispatcher.h"
 #include "passenger/create_passenger_dto.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/update_passenger_dto.h"
+#include "simple_example_interactor_export.h"
 #include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include <QCoroTask>
@@ -22,7 +22,7 @@ using namespace Simple::Contracts::DTO::Passenger;
 namespace Simple::Interactor::Passenger
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT PassengerInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT PassengerInteractor : public QObject
 {
     Q_OBJECT
   public:

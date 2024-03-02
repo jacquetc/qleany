@@ -47,9 +47,9 @@ Result<QList<CarDTO>> GetAllCarQueryHandler::handleImpl(QPromise<Result<void>> &
     // map
     QList<CarDTO> dtoList;
 
-    for (const Simple::Domain::Car &car : carResult.value())
+    for (const Simple::Entities::Car &car : carResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(car);
+        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(car);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,6 @@ bool GetAllCarQueryHandler::s_mappingRegistered = false;
 
 void GetAllCarQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                             true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                               true);
 }

@@ -2,7 +2,7 @@
 #include "QtCore/quuid.h"
 #include "QtCore/qvariant.h"
 #include "qleany/common/error.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QMetaType>
 #include <QString>
 

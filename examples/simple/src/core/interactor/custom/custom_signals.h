@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
+#include "simple_example_interactor_export.h"
 
 #include "custom/get_current_time_reply_dto.h"
 
@@ -13,7 +13,7 @@ namespace Simple::Interactor
 
 using namespace Simple::Contracts::DTO::Custom;
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT CustomSignals : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT CustomSignals : public QObject
 {
     Q_OBJECT
   public:
@@ -22,8 +22,6 @@ class SIMPLEEXAMPLE_INTERACTOR_EXPORT CustomSignals : public QObject
     }
 
   signals:
-    void removed(QList<int> removedIds);
-    void activeStatusChanged(QList<int> changedIds, bool isActive);
     void writeRandomThingsChanged();
     void runLongOperationChanged();
     void closeSystemChanged();

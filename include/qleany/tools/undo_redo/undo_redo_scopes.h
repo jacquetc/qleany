@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QString>
 
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 
 namespace Qleany::Tools::UndoRedo
 {

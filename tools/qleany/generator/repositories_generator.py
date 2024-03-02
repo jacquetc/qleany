@@ -127,17 +127,12 @@ def generate_repository_files(
             print(exc)
             return
 
-    repositories_data = manifest_data.get("repositories", [])
+    repositories_data = manifest_data.get("repositories", {})
     repositories_list = repositories_data.get("list", [])
-    export = repositories_data.get("export", "")
-    export_header_file = repositories_data.get(
-        "export_header_file", "repositories_export.h"
-    )
     repository_path = repositories_data.get("repository_folder_path", ".")
     base_path = repositories_data.get("base_folder_path", ".")
-    interface_path = repositories_data.get("interface_path", ".")
 
-    global_data = manifest_data.get("global", [])
+    global_data = manifest_data.get("global", {})
     application_name = global_data.get("application_name", "example")
     application_cpp_domain_name = global_data.get(
         "application_cpp_domain_name", "Undefined"
@@ -150,14 +145,21 @@ def generate_repository_files(
         "interface_repository_template.h.jinja2"
     )
 
-    contracts_data = manifest_data.get("contracts", [])
-    contracts_export = contracts_data.get("export", "")
-    contracts_export_header_file = contracts_data.get("export_header_file", "")
+    contracts_data = manifest_data.get("contracts", {})
     inverted_app_domain = contracts_data.get("inverted_app_domain", "com.example")
     contracts_folder_path = contracts_data.get("folder_path", ".")
 
-    entities_data = manifest_data.get("entities", [])
+    interface_path = os.path.join(contracts_folder_path, "repository")
+
+    entities_data = manifest_data.get("entities", {})
     entities_list = entities_data.get("list", [])
+
+    # exports:
+
+    export = f"{stringcase.snakecase(application_name).upper()}_PERSISTENCE_EXPORT"
+    export_header_file = f"{stringcase.snakecase(application_name)}_persistence_export.h"
+    contracts_export = f"{stringcase.snakecase(application_name).upper()}_CONTRACTS_EXPORT"
+    contracts_export_header_file = f"{stringcase.snakecase(application_name)}_contracts_export.h"
 
     # Organize entities by name for easier lookup
     entities_by_name = {entity["name"]: entity for entity in entities_list}
@@ -267,13 +269,13 @@ def generate_repository_files(
             dict.fromkeys(foreign_repository_header_list)
         )
 
-        # loader functions like     Domain::Book::ChaptersLoader fetchChaptersLoader();
+        # loader functions like     Entities::Book::ChaptersLoader fetchChaptersLoader();
 
         loader_function_list = []
         if generate_lazy_loaders:
             for key, value in foreign_entities.items():
                 loader_function_list.append(
-                    f"{application_cpp_domain_name}::Domain::{name}::{value['related_field_pascal_name']}Loader fetch{value['related_field_pascal_name']}Loader() override;"
+                    f"{application_cpp_domain_name}::Entities::{name}::{value['related_field_pascal_name']}Loader fetch{value['related_field_pascal_name']}Loader() override;"
                 )
 
         # Create .h file
@@ -350,13 +352,13 @@ def generate_repository_files(
             #     uncrustify.run_uncrustify(output_file, uncrustify_config_file)
             clang_format_runner.run_clang_format(output_file)
 
-        # loader functions like     Domain::Book::ChaptersLoader fetchChaptersLoader();
+        # loader functions like     Entities::Book::ChaptersLoader fetchChaptersLoader();
 
         loader_function_list_for_interface = []
         if generate_lazy_loaders:
             for key, value in foreign_entities.items():
                 loader_function_list_for_interface.append(
-                    f"virtual {application_cpp_domain_name}::Domain::{name}::{value['related_field_pascal_name']}Loader fetch{value['related_field_pascal_name']}Loader() = 0;"
+                    f"virtual {application_cpp_domain_name}::Entities::{name}::{value['related_field_pascal_name']}Loader fetch{value['related_field_pascal_name']}Loader() = 0;"
                 )
 
         # Create interface .h file
@@ -716,8 +718,10 @@ def get_files_to_be_generated(
 
     base_folder_path = manifest["repositories"]["base_folder_path"]
     repository_folder_path = manifest["repositories"]["repository_folder_path"]
-    interface_folder_path = manifest["repositories"]["interface_path"]
     contracts_folder_path = manifest["contracts"]["folder_path"]
+    interface_folder_path = os.path.join(contracts_folder_path, "repository")
+    global_data = manifest.get("global", {})
+    application_name = global_data.get("application_name", "example")
 
     # Get the list of files to be generated
     files = []
@@ -757,12 +761,12 @@ def get_files_to_be_generated(
 
     # add export header file:
     files.append(
-        os.path.join(base_folder_path, manifest["repositories"]["export_header_file"])
+        os.path.join(base_folder_path, f"{stringcase.snakecase(application_name)}_persistence_export.h")
     )
 
     # add contracts export header file:
     files.append(
-        os.path.join(contracts_folder_path, manifest["contracts"]["export_header_file"])
+        os.path.join(contracts_folder_path, f"{stringcase.snakecase(application_name)}_contracts_export.h")
     )
 
     # add interface cmake file:
@@ -804,9 +808,6 @@ def preview_repository_files(
     ].replace("..", "")
     manifest["repositories"]["repository_folder_path"] = manifest["repositories"][
         "repository_folder_path"
-    ].replace("..", "")
-    manifest["repositories"]["interface_path"] = manifest["repositories"][
-        "interface_path"
     ].replace("..", "")
 
     # write the modified manifest file

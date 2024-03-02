@@ -45,6 +45,4 @@ entities:
           name: orderedList
           ordered: true
           strong: false
-  export: ""
-  export_header_file: domain_export.h
   folder_path: ./

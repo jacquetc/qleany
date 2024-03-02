@@ -15,7 +15,7 @@ namespace {{ application_cpp_domain_name }}::Contracts::Repository
 {
 
 class {{ contracts_export }} Interface{{ name }}Repository
-    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<{{ application_cpp_domain_name }}::Domain::{{ name }}>,
+    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<{{ application_cpp_domain_name }}::Entities::{{ name }}>,
       public Qleany::Contracts::Repository::InterfaceRepository
 {
   public:
@@ -23,8 +23,8 @@ class {{ contracts_export }} Interface{{ name }}Repository
     {
     }
     {% if foreign_entities %}
-    virtual Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> update({{ application_cpp_domain_name }}::Domain::{{ name }} &&entity) = 0;
-    virtual Result<{{ application_cpp_domain_name }}::Domain::{{ name }}> getWithDetails(int entityId) = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> update({{ application_cpp_domain_name }}::Entities::{{ name }} &&entity) = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> getWithDetails(int entityId) = 0;
     {% endif %}
     {% for loader_function in loader_function_list_for_interface %}
     {{ loader_function }}

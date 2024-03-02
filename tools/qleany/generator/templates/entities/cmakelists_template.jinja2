@@ -4,19 +4,23 @@
 find_package(Qt6 COMPONENTS Core REQUIRED)
 find_package(qleany CONFIG REQUIRED)
 
-set(LIBRARY_NAME {{ application_spinalcase_name }}-domain)
+set(LIBRARY_NAME {{ application_spinalcase_name }}-entities)
 
 include(entities.cmake)
 
 set(SRCS
     {{ export_header_file }}
     entities.h
-    domain_registration.h
+    entities_registration.h
 )
 
 qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${ENTITY_LIST})
 
-target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_DOMAIN_LIBRARY)
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                      POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                      )
+                      
+target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_ENTITIES_LIBRARY)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

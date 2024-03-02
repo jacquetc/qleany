@@ -45,7 +45,7 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
 {
     qDebug() << "{{ query.pascal_name }}QueryHandler::handleImpl called";
 
-    // {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }} {{ feature_snake_name }};
+    // {{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }} {{ feature_snake_name }};
 {% if validator_enabled %}
     // Validate the query using the validator
     auto validator               = {{ query.pascal_name }}QueryValidator({% for repository in query.repositories %}m_{{ repository.camel_name }}Repository{% if not loop.last %},{% endif %}{% endfor %});
@@ -56,7 +56,7 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
 {% endif %}
 
     // implement logic here 
-    // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ query.dto_out_pascal_name }}, {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}>(request.req);
+    // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ query.dto_out_pascal_name }}, {{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}>(request.req);
 
    
 
@@ -65,7 +65,7 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
     Q_UNIMPLEMENTED();
 
   
-    //auto {{ feature_camel_name }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, {{ query.dto_out_pascal_name }}>({{ feature_snake_name }}Result.value());
+    //auto {{ feature_camel_name }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}, {{ query.dto_out_pascal_name }}>({{ feature_snake_name }}Result.value());
     // dummy to compile
     {{ query.dto_out_pascal_name }} {{ query.dto_out_camel_name }};
 

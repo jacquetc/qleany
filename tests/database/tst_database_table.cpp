@@ -3,7 +3,7 @@
 #include "qleany/database/database_table_group.h"
 #include <QtTest/QtTest>
 
-using namespace DatabaseTest::Domain;
+using namespace DatabaseTest::Entities;
 using namespace Qleany;
 
 class TestDatabaseTable : public QObject

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "interactor_export.h"
 #include "error_signals.h"
 #include "progress_signals.h"
+#include "simple_example_interactor_export.h"
 
 #include "undo_redo/undo_redo_signals.h"
 
@@ -21,7 +21,7 @@
 
 namespace Simple::Interactor
 {
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT EventDispatcher : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT EventDispatcher : public QObject
 {
     Q_OBJECT
   public:

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "brand.h"
-#include "contracts_export.h"
+#include "simple_example_contracts_export.h"
 #include <QObject>
 #include <qleany/common/result.h>
 #include <qleany/contracts/repository/interface_generic_repository.h>
@@ -14,8 +14,8 @@ using namespace Qleany;
 namespace Simple::Contracts::Repository
 {
 
-class SIMPLEEXAMPLE_CONTRACTS_EXPORT InterfaceBrandRepository
-    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<Simple::Domain::Brand>,
+class SIMPLE_EXAMPLE_CONTRACTS_EXPORT InterfaceBrandRepository
+    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<Simple::Entities::Brand>,
       public Qleany::Contracts::Repository::InterfaceRepository
 {
   public:

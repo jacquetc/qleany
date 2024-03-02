@@ -68,7 +68,7 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
 
 
 
-    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> {{ entity_mappable_with_camel }}Result = m_repository->get({{ entity_mappable_with_camel }}Id);
+    Result<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> {{ entity_mappable_with_camel }}Result = m_repository->get({{ entity_mappable_with_camel }}Id);
 
     QLN_RETURN_IF_ERROR(int, {{ entity_mappable_with_camel }}Result)
 
@@ -98,5 +98,5 @@ bool Remove{{ entity_mappable_with_pascal }}CommandHandler::s_mappingRegistered 
 
 void Remove{{ entity_mappable_with_pascal }}CommandHandler::registerMappings() 
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
 }

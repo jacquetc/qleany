@@ -1,6 +1,6 @@
-#include "qleany/domain/entity_base.h"
+#include "qleany/entities/entity_base.h"
 
-using namespace Qleany::Domain;
+using namespace Qleany::Entities;
 
 EntityBase::EntityBase() : m_id(0), m_metaData(this)
 {

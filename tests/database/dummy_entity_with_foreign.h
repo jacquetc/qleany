@@ -5,12 +5,12 @@
 #include "dummy_entity.h"
 #include "dummy_other_entity.h"
 #include "entities.h"
-#include "qleany/domain/entity_schema.h"
+#include "qleany/entities/entity_schema.h"
 #include <QString>
 
-using namespace Qleany::Domain;
+using namespace Qleany::Entities;
 
-namespace DatabaseTest::Domain
+namespace DatabaseTest::Entities
 {
 
 class DummyEntityWithForeign : public DummyEntity
@@ -55,9 +55,9 @@ class DummyEntityWithForeign : public DummyEntity
     {
     }
 
-    static DatabaseTest::Domain::Entities::EntityEnum enumValue()
+    static DatabaseTest::Entities::Entities::EntityEnum enumValue()
     {
-        return DatabaseTest::Domain::Entities::EntityEnum::DummyEntityWithForeign;
+        return DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign;
     }
 
     DummyEntityWithForeign &operator=(const DummyEntityWithForeign &other)
@@ -165,7 +165,7 @@ class DummyEntityWithForeign : public DummyEntity
         m_orderedListLoader = loader;
     }
 
-    static Qleany::Domain::EntitySchema schema;
+    static Qleany::Entities::EntitySchema schema;
 
   private:
     QString m_name;
@@ -204,21 +204,21 @@ inline uint qHash(const DummyEntityWithForeign &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyEntityWithForeign entity
-inline Qleany::Domain::EntitySchema DummyEntityWithForeign::schema = {
-    DatabaseTest::Domain::Entities::EntityEnum::DummyEntityWithForeign,
+inline Qleany::Entities::EntitySchema DummyEntityWithForeign::schema = {
+    DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign,
     "DummyEntityWithForeign",
 
     // relationships:
-    {{DatabaseTest::Domain::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
-      DatabaseTest::Domain::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "unique",
+    {{DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
+      DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "unique",
       RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
       RelationshipDirection::Forward},
-     {DatabaseTest::Domain::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
-      DatabaseTest::Domain::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "unorderedList",
+     {DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
+      DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "unorderedList",
       RelationshipType::OneToMany, RelationshipStrength::Weak, RelationshipCardinality::ManyUnordered,
       RelationshipDirection::Forward},
-     {DatabaseTest::Domain::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
-      DatabaseTest::Domain::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "orderedList",
+     {DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign, "DummyEntityWithForeign",
+      DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity, "DummyOtherEntity", "orderedList",
       RelationshipType::OneToMany, RelationshipStrength::Weak, RelationshipCardinality::ManyOrdered,
       RelationshipDirection::Forward}},
 
@@ -232,5 +232,5 @@ inline Qleany::Domain::EntitySchema DummyEntityWithForeign::schema = {
      {"unorderedList", FieldType::Entity, false, true},
      {"orderedList", FieldType::Entity, false, true}}};
 
-} // namespace DatabaseTest::Domain
-Q_DECLARE_METATYPE(DatabaseTest::Domain::DummyEntityWithForeign)
+} // namespace DatabaseTest::Entities
+Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyEntityWithForeign)

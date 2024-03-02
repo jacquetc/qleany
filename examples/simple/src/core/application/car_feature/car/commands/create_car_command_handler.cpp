@@ -5,7 +5,7 @@
 #include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Validators;
@@ -57,7 +57,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
                                                    const CreateCarCommand &request)
 {
     qDebug() << "CreateCarCommandHandler::handleImpl called";
-    Simple::Domain::Car car;
+    Simple::Entities::Car car;
     CreateCarDTO createDTO = request.req;
 
     if (m_firstPass)
@@ -70,7 +70,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
         // Map the create Car command to a domain Car object and
         // generate a UUID
-        car = Qleany::Tools::AutoMapper::AutoMapper::map<CreateCarDTO, Simple::Domain::Car>(createDTO);
+        car = Qleany::Tools::AutoMapper::AutoMapper::map<CreateCarDTO, Simple::Entities::Car>(createDTO);
 
         // allow for forcing the uuid
         if (car.uuid().isNull())
@@ -105,7 +105,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     m_newEntity = carResult;
 
-    auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());
+    auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
     emit carCreated(carDTO);
 
     qDebug() << "Car added:" << carDTO.id();
@@ -134,7 +134,7 @@ bool CreateCarCommandHandler::s_mappingRegistered = false;
 
 void CreateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                             true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, Simple::Domain::Car>();
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                               true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, Simple::Entities::Car>();
 }

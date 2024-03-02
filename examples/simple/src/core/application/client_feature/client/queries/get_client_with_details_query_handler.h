@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_client_export.h"
 #include "client/client_with_details_dto.h"
 #include "client/queries/get_client_query.h"
+#include "simple_example_application_client_export.h"
 
 #include "repository/interface_client_repository.h"
 #include <QPromise>
@@ -16,7 +16,7 @@ using namespace Simple::Contracts::CQRS::Client::Queries;
 
 namespace Simple::Application::Features::Client::Queries
 {
-class SIMPLEEXAMPLE_APPLICATION_CLIENT_EXPORT GetClientWithDetailsQueryHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT GetClientWithDetailsQueryHandler : public QObject
 {
     Q_OBJECT
   public:

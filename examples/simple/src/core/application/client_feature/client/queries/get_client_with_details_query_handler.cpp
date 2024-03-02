@@ -45,11 +45,11 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromi
 
     QLN_RETURN_IF_ERROR(ClientWithDetailsDTO, clientResult)
 
-    Simple::Domain::Client client = clientResult.value();
+    Simple::Entities::Client client = clientResult.value();
 
     // map
     auto clientWithDetailsDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientWithDetailsDTO>(client);
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientWithDetailsDTO>(client);
 
     qDebug() << "GetClientWithDetailsQueryHandler::handleImpl done";
 
@@ -60,6 +60,6 @@ bool GetClientWithDetailsQueryHandler::s_mappingRegistered = false;
 
 void GetClientWithDetailsQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client,
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client,
                                                            Contracts::DTO::Client::ClientWithDetailsDTO>();
 }

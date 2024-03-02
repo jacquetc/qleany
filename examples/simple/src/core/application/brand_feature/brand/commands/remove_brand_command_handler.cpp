@@ -66,7 +66,7 @@ Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progre
 
     QLN_RETURN_IF_ERROR(int, validatorResult);
 
-    Result<Simple::Domain::Brand> brandResult = m_repository->get(brandId);
+    Result<Simple::Entities::Brand> brandResult = m_repository->get(brandId);
 
     QLN_RETURN_IF_ERROR(int, brandResult)
 
@@ -95,6 +95,6 @@ bool RemoveBrandCommandHandler::s_mappingRegistered = false;
 
 void RemoveBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
         true, true);
 }

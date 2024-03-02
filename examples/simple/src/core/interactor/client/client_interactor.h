@@ -6,8 +6,8 @@
 #include "client/client_with_details_dto.h"
 #include "client/create_client_dto.h"
 #include "client/update_client_dto.h"
-#include "interactor_export.h"
 #include "event_dispatcher.h"
+#include "simple_example_interactor_export.h"
 #include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include <QCoroTask>
@@ -23,7 +23,7 @@ using namespace Simple::Contracts::DTO::Client;
 namespace Simple::Interactor::Client
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
 {
     Q_OBJECT
   public:

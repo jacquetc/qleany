@@ -2,22 +2,22 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_passenger_export.h"
 #include "passenger/commands/create_passenger_command.h"
 #include "passenger/passenger_dto.h"
 #include "repository/interface_passenger_repository.h"
+#include "simple_example_application_passenger_export.h"
 #include <QPromise>
 #include <qleany/common/result.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Commands;
 
 namespace Simple::Application::Features::Passenger::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler : public QObject
 {
     Q_OBJECT
   public:
@@ -37,13 +37,13 @@ class SIMPLEEXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler :
     InterfacePassengerRepository *m_repository;
     Result<PassengerDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreatePassengerCommand &request);
     Result<PassengerDTO> restoreImpl();
-    Result<Simple::Domain::Passenger> m_newEntity;
+    Result<Simple::Entities::Passenger> m_newEntity;
 
     int m_ownerId = -1;
     int m_position = -1;
 
-    QList<Simple::Domain::Passenger> m_oldOwnerPassengers;
-    QList<Simple::Domain::Passenger> m_ownerPassengersNewState;
+    QList<Simple::Entities::Passenger> m_oldOwnerPassengers;
+    QList<Simple::Entities::Passenger> m_ownerPassengersNewState;
 
     static bool s_mappingRegistered;
     void registerMappings();

@@ -32,7 +32,6 @@ def generate_export_header_file(
     rendered_template = export_header_template.render(
         application_uppercase_name=stringcase.uppercase(application_name),
         export=export,
-        layer_uppercase_name="DOMAIN",
     )
 
     # Create the directory if it does not exist
@@ -75,7 +74,7 @@ def generate_entities_enum_file(
         print(f"Successfully wrote file {entities_enum_file}")
 
 
-def generate_domain_registration_file(
+def generate_entities_registration_file(
     root_path: str,
     path: str,
     entities_list: list[dict],
@@ -86,18 +85,18 @@ def generate_domain_registration_file(
     files_to_be_generated: dict[str, bool],
 ):
     template_env = Environment(loader=FileSystemLoader("templates/entities"))
-    domain_registration_template = template_env.get_template(
-        "domain_registration_template.h.jinja2"
+    entities_registration_template = template_env.get_template(
+        "entities_registration_template.h.jinja2"
     )
 
-    relative_domain_registration_output_file = os.path.join(
-        path, "domain_registration.h"
+    relative_entities_registration_output_file = os.path.join(
+        path, "entities_registration.h"
     )
-    domain_registration_output_file = os.path.join(
-        root_path, relative_domain_registration_output_file
+    entities_registration_output_file = os.path.join(
+        root_path, relative_entities_registration_output_file
     )
 
-    rendered_template = domain_registration_template.render(
+    rendered_template = entities_registration_template.render(
         entities_list=entities_list,
         export=export,
         export_header_file=export_header_file,
@@ -105,10 +104,10 @@ def generate_domain_registration_file(
         headers=headers,
     )
 
-    if files_to_be_generated.get(relative_domain_registration_output_file, False):
-        with open(domain_registration_output_file, "w") as fh:
+    if files_to_be_generated.get(relative_entities_registration_output_file, False):
+        with open(entities_registration_output_file, "w") as fh:
             fh.write(rendered_template)
-            print(f"Successfully wrote file {domain_registration_output_file}")
+            print(f"Successfully wrote file {entities_registration_output_file}")
 
 
 def generate_cmakelists(
@@ -168,8 +167,8 @@ def generate_entity_files(
         "application_cpp_domain_name", "Undefined"
     )
 
-    export = entities_data.get("export", "")
-    export_header_file = entities_data.get("export_header_file", "")
+    export = f"{stringcase.snakecase(application_name).upper()}_ENTITIES_EXPORT"
+    export_header_file = f"{stringcase.snakecase(application_name)}_entities_export.h"
     path = entities_data.get("folder_path", ".")
 
     # Organize entities by name for easier lookup
@@ -336,7 +335,7 @@ def generate_entity_files(
 
         parent_header = f'"{stringcase.snakecase(parent)}.h"'
         if parent == "EntityBase":
-            parent_header = '"qleany/domain/entity_base.h"'
+            parent_header = '<qleany/entities/entity_base.h>'
 
         # If the parent is a custom entity defined in the manifest, include its fields as well. Also, it will add the fields parent of the parent recursively, butonly if the parent is defined in the
         # manifest. If the parent is not defined in the manifest, it will only add the fields of the current entity. But it adds the field "id" of type "int" from EntityBase.
@@ -493,7 +492,7 @@ def generate_entity_files(
         header_file = f'"{stringcase.snakecase(name)}.h"'
         all_headers.append(header_file)
 
-    generate_domain_registration_file(
+    generate_entities_registration_file(
         root_path,
         path,
         entities_list,
@@ -535,7 +534,10 @@ def get_files_to_be_generated(
         manifest = yaml.safe_load(fh)
 
     folder_path = manifest["entities"]["folder_path"]
-    export_header_file = manifest["entities"]["export_header_file"]
+
+    global_data = manifest.get("global", {})
+    application_name = global_data.get("application_name", "example")
+    export_header_file = f"{stringcase.snakecase(application_name)}_entities_export.h"
 
     # Get the list of files to be generated
     files = []
@@ -550,7 +552,7 @@ def get_files_to_be_generated(
     files.append(list_file)
 
     files.append(os.path.join(folder_path, "entities.h"))
-    files.append(os.path.join(folder_path, "domain_registration.h"))
+    files.append(os.path.join(folder_path, "entities_registration.h"))
     files.append(os.path.join(folder_path, export_header_file))
     files.append(os.path.join(folder_path, "CMakeLists.txt"))
 

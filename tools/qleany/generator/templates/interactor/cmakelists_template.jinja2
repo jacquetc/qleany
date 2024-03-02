@@ -30,11 +30,17 @@ set(SRCS
 
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${INTERACTOR_LIST})
 
-target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_INTERACTOR_LIBRARY)
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME {{ application_snakecase_name }}_interactor)
 
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+${CMAKE_CURRENT_SOURCE_DIR}
+${CMAKE_CURRENT_BINARY_DIR}
 
-target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-domain)
+)
+
+target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-entities)
 {% for feature in features -%}
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-application-feature-{{ feature.feature_name_spinal }})
 {% endfor -%}

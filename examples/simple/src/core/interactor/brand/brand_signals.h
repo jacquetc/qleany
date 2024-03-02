@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
+#include "simple_example_interactor_export.h"
 
 #include "brand/brand_dto.h"
 
@@ -13,7 +13,7 @@ namespace Simple::Interactor
 
 using namespace Simple::Contracts::DTO::Brand;
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT BrandSignals : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT BrandSignals : public QObject
 {
     Q_OBJECT
   public:
@@ -24,10 +24,10 @@ class SIMPLEEXAMPLE_INTERACTOR_EXPORT BrandSignals : public QObject
   signals:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
+    void created(BrandDTO dto);
+    void updated(BrandDTO dto);
+    void allRelationsInvalidated(int id);
     void getReplied(BrandDTO dto);
     void getAllReplied(QList<BrandDTO> dtoList);
-    void created(BrandDTO dto);
-    void updated(Contracts::DTO::Brand::BrandDTO dto);
-    void allRelationsInvalidated(int id);
 };
 } // namespace Simple::Interactor

@@ -3,7 +3,7 @@
 // See file LICENSE for full license details.
 #pragma once
 
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QDateTime>
 #include <QHash>
 #include <QMutexLocker>

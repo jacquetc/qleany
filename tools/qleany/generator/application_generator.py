@@ -29,7 +29,7 @@ def get_generation_dict(
             "feature_camel_name": feature_camel_name,
         }
         # add export_header
-        export_header = f"application_{feature_snake_name}_export.h"
+        export_header = f"{stringcase.snakecase(application_name)}_application_{feature_snake_name}_export.h"
         generation_dict[feature_pascal_name]["export_header"] = export_header
         generation_dict[feature_pascal_name]["export_header_file"] = os.path.join(
             common_cmake_folder_path,
@@ -38,7 +38,7 @@ def get_generation_dict(
         )
         generation_dict[feature_pascal_name][
             "export"
-        ] = f"{stringcase.uppercase(application_name)}_APPLICATION_{stringcase.uppercase(feature_snake_name)}_EXPORT"
+        ] = f"{stringcase.uppercase(stringcase.snakecase(application_name))}_APPLICATION_{stringcase.uppercase(feature_snake_name)}_EXPORT"
 
     # add CRUD handlers
     for feature_name, feature in generation_dict.items():
@@ -546,42 +546,6 @@ def generate_common_cmakelists(
             print(f"Successfully wrote file {common_cmakelists_file}")
 
 
-def generate_feature_export_file(
-    root_path: str,
-    feature: dict,
-    application_name: str,
-    files_to_be_generated: dict[str, bool],
-):
-    template_env = Environment(loader=FileSystemLoader("templates/application"))
-    dto_cmakelists_template = template_env.get_template("export_template.jinja2")
-
-    export_header_file = feature["export_header_file"]
-    export = feature["export"]
-
-    if not files_to_be_generated.get(export_header_file, False):
-        return
-
-    application_uppercase_name = stringcase.uppercase(application_name)
-
-    feature_snake_name = feature["feature_snake_name"]
-    feature_uppercase_name = stringcase.uppercase(feature_snake_name)
-
-    rendered_template = dto_cmakelists_template.render(
-        application_uppercase_name=application_uppercase_name,
-        feature_uppercase_name=feature_uppercase_name,
-        export=export,
-    )
-
-    export_header_file = os.path.join(root_path, export_header_file)
-
-    # Create the directory if it does not exist
-    os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
-
-    with open(export_header_file, "w") as fh:
-        fh.write(rendered_template)
-        print(f"Successfully wrote file {export_header_file}")
-
-
 def generate_handler_cmakelists(
     root_path: str,
     feature: dict,
@@ -620,6 +584,7 @@ def generate_handler_cmakelists(
         files=relative_generated_files,
         application_spinalcase_name=stringcase.spinalcase(application_name),
         application_uppercase_name=stringcase.uppercase(application_name),
+        application_snake_name=stringcase.snakecase(application_name),
     )
 
     # Create the directory if it does not exist
@@ -851,10 +816,6 @@ def generate_application_files(
             root_path, feature, application_name, files_to_be_generated
         )
 
-        generate_feature_export_file(
-            root_path, feature, application_name, files_to_be_generated
-        )
-
     # generate common cmakelists.txt
     generate_common_cmakelists(
         root_path, feature_by_name, common_cmake_folder_path, files_to_be_generated
@@ -903,8 +864,6 @@ def get_files_to_be_generated(
 
         common_cmake_file = feature["cmakelists_file"]
         files.append(common_cmake_file)
-        export_header_file = feature["export_header_file"]
-        files.append(export_header_file)
 
     # # add CMakelists.txt:
     common_cmake_file = os.path.join(common_cmake_folder_path, "CMakeLists.txt")

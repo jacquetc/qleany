@@ -24,16 +24,21 @@ set(SRC
     custom/commands/close_system_command_handler.cpp
     custom/queries/get_current_time_query_handler.h
     custom/queries/get_current_time_query_handler.cpp
-    application_custom_export.h
+    simple_example_application_custom_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+${CMAKE_CURRENT_SOURCE_DIR}
+${CMAKE_CURRENT_BINARY_DIR}
+)
 
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_APPLICATION_CUSTOM_LIBRARY)
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME simple_example_application_custom)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
-target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-domain)
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-persistence)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-cqrs-custom)
 

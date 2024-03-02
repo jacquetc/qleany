@@ -11,8 +11,8 @@ using namespace Qleany::Contracts::Repository;
 using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
-BrandRepository::BrandRepository(InterfaceDatabaseTableGroup<Simple::Domain::Brand> *brandDatabase)
-    : Qleany::Repository::GenericRepository<Simple::Domain::Brand>(brandDatabase)
+BrandRepository::BrandRepository(InterfaceDatabaseTableGroup<Simple::Entities::Brand> *brandDatabase)
+    : Qleany::Repository::GenericRepository<Simple::Entities::Brand>(brandDatabase)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }
@@ -35,7 +35,7 @@ Result<QHash<int, QList<int>>> BrandRepository::removeInCascade(QList<int> ids)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
-    returnedHashOfEntityWithRemovedIds.insert(Simple::Domain::Entities::Brand, removedIdsResult.value());
+    returnedHashOfEntityWithRemovedIds.insert(Simple::Entities::Entities::Brand, removedIdsResult.value());
 
     emit m_signalHolder->removed(removedIdsResult.value());
 
@@ -53,7 +53,7 @@ Result<QHash<int, QList<int>>> BrandRepository::changeActiveStatusInCascade(QLis
 
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
 
-    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Domain::Entities::Brand, changedIdsResult.value());
+    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Entities::Entities::Brand, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);

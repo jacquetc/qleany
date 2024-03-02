@@ -11,7 +11,7 @@
 #include <QVariant>
 #include <QtTest>
 
-using namespace DatabaseTest::Domain;
+using namespace DatabaseTest::Entities;
 using namespace Qleany;
 
 class DatabaseToolsTest : public QObject

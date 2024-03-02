@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_custom_export.h"
 #include "custom/get_current_time_reply_dto.h"
 #include "custom/queries/get_current_time_query.h"
+#include "simple_example_application_custom_export.h"
 
 #include <QPromise>
 #include <qleany/common/result.h>
@@ -16,7 +16,7 @@ using namespace Simple::Contracts::CQRS::Custom::Queries;
 
 namespace Simple::Application::Features::Custom::Queries
 {
-class SIMPLEEXAMPLE_APPLICATION_CUSTOM_EXPORT GetCurrentTimeQueryHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT GetCurrentTimeQueryHandler : public QObject
 {
     Q_OBJECT
   public:

@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_brand_export.h"
 #include "brand/brand_dto.h"
 #include "brand/commands/update_brand_command.h"
+#include "simple_example_application_brand_export.h"
 
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
@@ -17,7 +17,7 @@ using namespace Simple::Contracts::CQRS::Brand::Commands;
 
 namespace Simple::Application::Features::Brand::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : public QObject
 
 {
     Q_OBJECT

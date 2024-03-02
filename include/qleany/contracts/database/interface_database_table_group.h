@@ -2,7 +2,7 @@
 
 #include "qleany/common/result.h"
 #include "qleany/database/types.h"
-#include "qleany/domain/entity_schema.h"
+#include "qleany/entities/entity_schema.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -37,14 +37,14 @@ template <class T> class InterfaceDatabaseTableGroup
     virtual Result<void> rollback() = 0;
 
     // get related entities
-    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
-                                                     const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
+                                                     int entityId, const QString &field) = 0;
+    virtual Result<T> getEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int entityId,
                                             const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                         int leftEntityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
+    virtual Result<T> updateEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
                                                const QString &field, const T &rightEntity) = 0;
     virtual Result<void> removeAssociationsWith(QList<int> rightEntityIds) = 0;
 

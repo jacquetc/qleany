@@ -10,7 +10,7 @@
 #include <QPromise>
 
 using namespace Qleany;
-using namespace {{ application_cpp_domain_name }}::Domain;
+using namespace {{ application_cpp_domain_name }}::Entities;
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Commands;
@@ -39,16 +39,16 @@ class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : publ
     Interface{{ entity_mappable_with_pascal }}Repository *m_repository;
     Result<{{ entity_mappable_with_pascal }}DTO> handleImpl(QPromise<Result<void> >   & progressPromise, const Create{{ entity_mappable_with_pascal }}Command &request);
     Result<{{ entity_mappable_with_pascal }}DTO> restoreImpl();
-    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_newEntity;
+    Result<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> m_newEntity;
     {% if has_owner %}
     int m_ownerId = -1;
     int m_position = -1;
         {% if owner_field_is_list %}
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_oldOwner{{ owner_field_name_pascal }};
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> m_owner{{ owner_field_name_pascal }}NewState;
+    QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> m_oldOwner{{ owner_field_name_pascal }};
+    QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> m_owner{{ owner_field_name_pascal }}NewState;
         {% else %}
-    {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} m_oldOwner{{ owner_field_name_pascal }};
-    {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} m_owner{{ owner_field_name_pascal }}NewState;
+    {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }} m_oldOwner{{ owner_field_name_pascal }};
+    {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }} m_owner{{ owner_field_name_pascal }}NewState;
        {% endif %}
     {% endif %}
     static bool s_mappingRegistered;

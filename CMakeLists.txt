@@ -67,39 +67,6 @@ find_package(QCoro6 REQUIRED COMPONENTS Core)
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
 
-# Create a library target for the Qleany framework
-set(LIB_PUBLIC_HEADERS
-    include/qleany/tools/undo_redo/alter_command.h
-    include/qleany/tools/undo_redo/query_command.h
-    include/qleany/tools/undo_redo/undo_redo_stack.h
-    include/qleany/tools/undo_redo/threaded_undo_redo_system.h
-    include/qleany/tools/undo_redo/undo_redo_system.h
-    include/qleany/tools/undo_redo/undo_redo_command.h
-    include/qleany/tools/undo_redo/undo_redo_scopes.h
-    include/qleany/tools/automapper/automapper.h
-    include/qleany/common/error.h
-    include/qleany/common/result.h
-    include/qleany/database/types.h
-    include/qleany/database/database_context.h
-    include/qleany/database/database_table_group.h
-    include/qleany/database/tools.h
-    include/qleany/database/one_to_one_associator.h
-    include/qleany/database/one_to_many_unordered_associator.h
-    include/qleany/database/one_to_many_ordered_associator.h
-    include/qleany/qleany_global.h
-    include/qleany/repository/generic_repository.h
-    include/qleany/repository/repository_provider.h
-    include/qleany/domain/entity_schema.h
-    include/qleany/domain/entity_base.h
-    include/qleany/contracts/repository/interface_repository_provider.h
-    include/qleany/contracts/repository/interface_generic_repository.h
-    include/qleany/contracts/repository/interface_repository.h
-    include/qleany/contracts/repository/signal_holder.h
-    include/qleany/contracts/database/interface_database_table_group.h
-    include/qleany/contracts/database/interface_foreign_entity.h
-    include/qleany/contracts/database/interface_database_context.h
-)
-
 # configure the library
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/*.h")
@@ -112,15 +79,28 @@ add_library(Qleany ${LIB_TYPE}
     ${PUBLIC_HEADERS}
 )
 
+# Generate export header
+message(STATUS "Generating export header")
+
+include(GenerateExportHeader)
+generate_export_header(Qleany
+    EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qleany>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 set_target_properties(Qleany PROPERTIES CXX_STANDARD 20)
 
 set_target_properties(Qleany PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${PUBLIC_HEADERS})
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS};${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h")
 
 target_link_libraries(Qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
 
@@ -128,8 +108,15 @@ if(QLEANY_BUILD_WITH_QT_GUI)
     target_link_libraries(Qleany PRIVATE Qt::Gui)
 endif()
 
-target_compile_definitions(Qleany PRIVATE QLEANY_LIBRARY)
+# state that Qleany need PIC when the default is shared libraries
+set_target_properties(Qleany PROPERTIES
+                      POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                      )
 
+
+# configure the install location
+message(STATUS "Configuring install location")
+include(GNUInstallDirs)
 
 # Install library
 install(TARGETS ${PROJECT_NAME}
@@ -147,7 +134,14 @@ install(DIRECTORY include/${PROJECT_NAME_LOWER} DESTINATION include)
 install(FILES LICENSE DESTINATION share/${PROJECT_NAME_LOWER})
 
 
-# Create and install keygen-licenserConfig.cmake
+# Install the export set for use with the install-tree
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME_LOWER}Targets.cmake
+    DESTINATION lib/cmake/${PROJECT_NAME_LOWER}
+)  
+
+# Create and install qleanyConfig.cmake
+message(STATUS "Creating and installing qleanyConfig.cmake")
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     ${PROJECT_NAME_LOWER}ConfigVersion.cmake
@@ -164,12 +158,11 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}ConfigVersion.cmake
         DESTINATION lib/cmake/${PROJECT_NAME_LOWER})
 
-# Install the export set for use with the install-tree
-install(EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME_LOWER}Targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION lib/cmake/${PROJECT_NAME_LOWER}
-)
+# Export the targets to a script
+ # message(STATUS "Exporting targets to a script")
+ # export(EXPORT ${PROJECT_NAME}Targets
+ #       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Targets.cmake)
+
 
 # Subdirectories that contain CMakeLists.txt for the framework tests and example
 if(QLEANY_BUILD_TESTS)
@@ -177,5 +170,10 @@ if(QLEANY_BUILD_TESTS)
 endif()
 
 if(QLEANY_BUILD_EXAMPLES)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+    include_directories(${CMAKE_BINARY_DIR}/include)
+    set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR} ${CMAKE_PREFIX_PATH})
+    set(CMAKE_LIBRARY_PATH ${CMAKE_BINARY_DIR} ${CMAKE_LIBRARY_PATH})
+
     add_subdirectory(examples)
 endif()

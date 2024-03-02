@@ -3,9 +3,8 @@
 #pragma once
 
 #include "passenger.h"
-
-#include "persistence_export.h"
 #include "repository/interface_passenger_repository.h"
+#include "simple_example_persistence_export.h"
 #include <QReadWriteLock>
 #include <qleany/contracts/database/interface_database_table_group.h>
 #include <qleany/repository/generic_repository.h>
@@ -18,12 +17,12 @@ using namespace Qleany::Contracts::Database;
 namespace Simple::Persistence::Repository
 {
 
-class SIMPLEEXAMPLE_PERSISTENCE_EXPORT PassengerRepository final
-    : public Qleany::Repository::GenericRepository<Simple::Domain::Passenger>,
+class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT PassengerRepository final
+    : public Qleany::Repository::GenericRepository<Simple::Entities::Passenger>,
       public Simple::Contracts::Repository::InterfacePassengerRepository
 {
   public:
-    explicit PassengerRepository(InterfaceDatabaseTableGroup<Simple::Domain::Passenger> *passengerDatabase);
+    explicit PassengerRepository(InterfaceDatabaseTableGroup<Simple::Entities::Passenger> *passengerDatabase);
 
     SignalHolder *signalHolder() override;
 

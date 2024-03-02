@@ -7,7 +7,8 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <qleany/common/result.h>
-#include <qleany/domain/entity_schema.h>
+#include <qleany/entities/entity_base.h>
+#include <qleany/entities/entity_schema.h>
 
 using namespace Qleany::Contracts::Database;
 
@@ -17,7 +18,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
 {
   public:
     OneToManyOrderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                               const Qleany::Domain::RelationshipInfo &relationship)
+                               const Qleany::Entities::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
@@ -72,7 +73,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
 
   protected:
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Qleany::Domain::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const Qleany::Entities::EntitySchema &entitySchema) const;
     QList<EntityShadow> mergeShadows(const QList<EntityShadow> &originalShadows,
                                      const QList<EntityShadow> &newShadows) const;
 
@@ -87,10 +88,10 @@ template <class RightEntity> class OneToManyOrderedAssociator
     QString m_leftEntityForeignTableName;
     QString m_junctionTableRightEntityForeignKeyName;
     QString m_rightEntityForeignTableName;
-    Qleany::Domain::RelationshipInfo m_relationship;
-    Qleany::Domain::EntitySchema m_rightEntitySchema = RightEntity::schema;
+    Qleany::Entities::RelationshipInfo m_relationship;
+    Qleany::Entities::EntitySchema m_rightEntitySchema = RightEntity::schema;
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
-    Qleany::Domain::EntitySchema m_leftEntitySchema;
+    Qleany::Entities::EntitySchema m_leftEntitySchema;
     QString m_fieldName;
     QList<OneToManyOrderedAssociator<RightEntity>::EntityShadow> writePreviousAndNext(
         const QList<EntityShadow> &shadows) const;
@@ -320,7 +321,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
 
 template <class RightEntity>
 QStringList OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(
-    const Qleany::Domain::EntitySchema &entitySchema) const
+    const Qleany::Entities::EntitySchema &entitySchema) const
 {
     QStringList columns;
 

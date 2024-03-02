@@ -8,6 +8,7 @@ global:
     domain: qleany.eu
 
 entities:
+  folder_path: src/core/entities/
   list:
     - name: Entity
       parent: EntityBase
@@ -50,9 +51,6 @@ entities:
           strong: false
         - type: QList<Passenger>
           name: clientFriends
-  export: SIMPLEEXAMPLE_DOMAIN_EXPORT
-  export_header_file: domain_export.h
-  folder_path: src/core/domain/
 
 repositories:
   list:
@@ -65,16 +63,11 @@ repositories:
     - entity_name: Client
       lazy_loaders: true
 
-  interface_path: src/core/contracts/repository/
-  export: SIMPLEEXAMPLE_PERSISTENCE_EXPORT
-  export_header_file: persistence_export.h
   repository_folder_path: src/core/persistence/repository/
   base_folder_path: src/core/persistence/
 
 interactor: 
   folder_path: src/core/interactor/
-  export: SIMPLEEXAMPLE_INTERACTOR_EXPORT
-  export_header_file: interactor_export.h
   create_undo_redo_interactor: true
 
 application:

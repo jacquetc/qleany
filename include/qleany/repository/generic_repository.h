@@ -52,14 +52,14 @@ template <class T> class GenericRepository : public virtual Qleany::Contracts::R
     virtual Result<void> cancelChanges() override;
     InterfaceDatabaseTableGroup<T> *databaseTable() const;
 
-    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
-                                                     const QString &field) override;
-    virtual Result<T> getEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
+                                                     int entityId, const QString &field) override;
+    virtual Result<T> getEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int entityId,
                                             const QString &field) override;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                         int entityId, const QString &field,
                                                         const QList<T> &rightEntities) override;
-    virtual Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<T> updateEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int entityId,
                                                const QString &field, const T &rightEntity) override;
 
   private:
@@ -176,21 +176,21 @@ template <class T> InterfaceDatabaseTableGroup<T> *GenericRepository<T>::databas
 }
 
 template <class T>
-Result<QList<T>> GenericRepository<T>::getEntitiesInRelationOf(const Domain::EntitySchema &leftEntitySchema,
+Result<QList<T>> GenericRepository<T>::getEntitiesInRelationOf(const Entities::EntitySchema &leftEntitySchema,
                                                                int entityId, const QString &field)
 {
     return m_databaseTable->getEntitiesInRelationOf(leftEntitySchema, entityId, field);
 }
 
 template <class T>
-Result<T> GenericRepository<T>::getEntityInRelationOf(const Domain::EntitySchema &leftEntitySchema, int entityId,
+Result<T> GenericRepository<T>::getEntityInRelationOf(const Entities::EntitySchema &leftEntitySchema, int entityId,
                                                       const QString &field)
 {
     return m_databaseTable->getEntityInRelationOf(leftEntitySchema, entityId, field);
 }
 
 template <class T>
-Result<QList<T>> GenericRepository<T>::updateEntitiesInRelationOf(const Domain::EntitySchema &leftEntitySchema,
+Result<QList<T>> GenericRepository<T>::updateEntitiesInRelationOf(const Entities::EntitySchema &leftEntitySchema,
                                                                   int entityId, const QString &field,
                                                                   const QList<T> &rightEntities)
 {
@@ -198,7 +198,7 @@ Result<QList<T>> GenericRepository<T>::updateEntitiesInRelationOf(const Domain::
 }
 
 template <class T>
-Result<T> GenericRepository<T>::updateEntityInRelationOf(const Domain::EntitySchema &leftEntitySchema, int entityId,
+Result<T> GenericRepository<T>::updateEntityInRelationOf(const Entities::EntitySchema &leftEntitySchema, int entityId,
                                                          const QString &field, const T &rightEntity)
 {
     return m_databaseTable->updateEntityInRelationOf(leftEntitySchema, entityId, field, rightEntity);

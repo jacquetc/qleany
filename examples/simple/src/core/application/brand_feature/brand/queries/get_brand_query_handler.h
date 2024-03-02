@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_brand_export.h"
 #include "brand/brand_dto.h"
 #include "brand/queries/get_brand_query.h"
+#include "simple_example_application_brand_export.h"
 
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
@@ -16,7 +16,7 @@ using namespace Simple::Contracts::CQRS::Brand::Queries;
 
 namespace Simple::Application::Features::Brand::Queries
 {
-class SIMPLEEXAMPLE_APPLICATION_BRAND_EXPORT GetBrandQueryHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_BRAND_EXPORT GetBrandQueryHandler : public QObject
 {
     Q_OBJECT
   public:

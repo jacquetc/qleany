@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "application_car_export.h"
 #include "car/car_dto.h"
 #include "car/commands/remove_car_command.h"
+#include "simple_example_application_car_export.h"
 
 #include "repository/interface_car_repository.h"
 #include <QPromise>
@@ -17,7 +17,7 @@ using namespace Simple::Contracts::CQRS::Car::Commands;
 
 namespace Simple::Application::Features::Car::Commands
 {
-class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QObject
+class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QObject
 {
     Q_OBJECT
   public:
@@ -33,7 +33,7 @@ class SIMPLEEXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QObj
     InterfaceCarRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveCarCommand &request);
     Result<int> restoreImpl();
-    Simple::Domain::Car m_oldState;
+    Simple::Entities::Car m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

@@ -7,11 +7,11 @@
 {% endfor %}
 #include {{ parent_header }}
 #include "entities.h"
-#include <qleany/domain/entity_schema.h>
+#include <qleany/entities/entity_schema.h>
 
-using namespace Qleany::Domain;
+using namespace Qleany::Entities;
 
-namespace {{ application_cpp_domain_name }}::Domain
+namespace {{ application_cpp_domain_name }}::Entities
 {
 
 class {{ name }} : public {{ parent }}
@@ -96,9 +96,9 @@ class {{ name }} : public {{ parent }}
         m_metaData = MetaData(this, other.metaData());
     }
 
-    static {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum enumValue()
+    static {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum enumValue()
     {
-        return {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ name }};
+        return {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }};
     }
 
     {{ name }} &operator=(const {{ name }} &other)
@@ -153,7 +153,7 @@ class {{ name }} : public {{ parent }}
     {% endif %}
 {% endfor %}
 
-  static Qleany::Domain::EntitySchema schema;
+  static Qleany::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -198,17 +198,17 @@ inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 }
 
 /// Schema for {{ name }} entity
-inline Qleany::Domain::EntitySchema {{ name }}::schema = {
-    {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ name }},
+inline Qleany::Entities::EntitySchema {{ name }}::schema = {
+    {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }},
     "{{ name }}",
 
     // relationships:
     {
         {% for relationship in relationships -%}
         { 
-            {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ relationship.left_entity_name }}, 
+            {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ relationship.left_entity_name }}, 
             "{{ relationship.left_entity_name }}", 
-            {{ application_cpp_domain_name }}::Domain::Entities::EntityEnum::{{ relationship.right_entity_name }}, 
+            {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ relationship.right_entity_name }}, 
             "{{ relationship.right_entity_name }}", 
             "{{ relationship.field_name }}", 
             RelationshipType::{{ relationship.type }},
@@ -241,5 +241,5 @@ inline Qleany::Domain::EntitySchema {{ name }}::schema = {
 };
 
 
-} // namespace {{ application_cpp_domain_name }}::Domain
-Q_DECLARE_METATYPE({{ application_cpp_domain_name }}::Domain::{{ name }})
+} // namespace {{ application_cpp_domain_name }}::Entities
+Q_DECLARE_METATYPE({{ application_cpp_domain_name }}::Entities::{{ name }})

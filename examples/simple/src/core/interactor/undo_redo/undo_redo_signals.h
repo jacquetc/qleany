@@ -2,14 +2,14 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "interactor_export.h"
+#include "simple_example_interactor_export.h"
 #include <QObject>
 #include <qleany/tools/undo_redo/undo_redo_scopes.h>
 
 namespace Simple::Interactor
 {
 
-class SIMPLEEXAMPLE_INTERACTOR_EXPORT UndoRedoSignals : public QObject
+class SIMPLE_EXAMPLE_INTERACTOR_EXPORT UndoRedoSignals : public QObject
 {
     Q_OBJECT
   public:

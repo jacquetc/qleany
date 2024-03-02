@@ -7,19 +7,19 @@
 {% endfor %}
 #include <QObject>
 
-namespace {{ application_cpp_domain_name }}::Domain {
+namespace {{ application_cpp_domain_name }}::Entities {
 
-class DomainRegistration : public QObject
+class EntitiesRegistration : public QObject
 {
     Q_OBJECT
   public:
-    explicit DomainRegistration(QObject *parent) : QObject(parent)
+    explicit EntitiesRegistration(QObject *parent) : QObject(parent)
     {
         {% for entity in entities_list %}
-        qRegisterMetaType<{{ application_cpp_domain_name }}::Domain::{{ entity.name }}>("{{ application_cpp_domain_name }}::Domain::{{ entity.name }}");
+        qRegisterMetaType<{{ application_cpp_domain_name }}::Entities::{{ entity.name }}>("{{ application_cpp_domain_name }}::Entities::{{ entity.name }}");
         {%- endfor %}
 
     }
 };
 
-} // namespace {{ application_cpp_domain_name }}::Domain
+} // namespace {{ application_cpp_domain_name }}::Entities

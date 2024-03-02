@@ -43,7 +43,7 @@ Result<CarDTO> GetCarQueryHandler::handleImpl(QPromise<Result<void>> &progressPr
     QLN_RETURN_IF_ERROR(CarDTO, carResult)
 
     // map
-    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Car, CarDTO>(carResult.value());
+    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
 
     qDebug() << "GetCarQueryHandler::handleImpl done";
 
@@ -54,6 +54,6 @@ bool GetCarQueryHandler::s_mappingRegistered = false;
 
 void GetCarQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                             true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                               true);
 }

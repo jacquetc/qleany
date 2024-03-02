@@ -1,5 +1,5 @@
 #include "interface_repository.h"
-#include "qleany/qleany_global.h"
+#include "qleany/qleany_export.h"
 #include <QSharedPointer>
 
 #pragma once
