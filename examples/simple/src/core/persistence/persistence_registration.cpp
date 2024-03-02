@@ -21,10 +21,10 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
 
     // database tables:
 
-    auto *passengerDatabaseTableGroup = new DatabaseTableGroup<Simple::Domain::Passenger>(context);
-    auto *brandDatabaseTableGroup = new DatabaseTableGroup<Simple::Domain::Brand>(context);
-    auto *clientDatabaseTableGroup = new DatabaseTableGroup<Simple::Domain::Client>(context);
-    auto *carDatabaseTableGroup = new DatabaseTableGroup<Simple::Domain::Car>(context);
+    auto *passengerDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Passenger>(context);
+    auto *brandDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Brand>(context);
+    auto *clientDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Client>(context);
+    auto *carDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Car>(context);
 
     Result<void> initResult = context->init();
 

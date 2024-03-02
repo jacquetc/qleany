@@ -2,13 +2,13 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "persistence_export.h"
+#include "simple_example_persistence_export.h"
 #include <QObject>
 #include <qleany/repository/repository_provider.h>
 
 namespace Simple::Persistence
 {
-class SIMPLEEXAMPLE_PERSISTENCE_EXPORT PersistenceRegistration : public QObject
+class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT PersistenceRegistration : public QObject
 {
     Q_OBJECT
 

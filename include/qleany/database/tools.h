@@ -4,7 +4,7 @@
 #include <QSqlQuery>
 #include <QStringList>
 #include <qleany/common/result.h>
-#include <qleany/domain/entity_schema.h>
+#include <qleany/entities/entity_schema.h>
 
 namespace Qleany::Database
 {
@@ -220,7 +220,7 @@ template <class T> bool TableTools<T>::isForeign(const QString &propertyName)
     for (const auto &relationship : T::schema.relationships)
     {
         if (relationship.fieldName == propertyName &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Forward)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Forward)
         {
             result = true;
             break;

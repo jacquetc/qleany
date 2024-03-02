@@ -19,8 +19,6 @@ def _get_generation_dict(
     entities_by_name: dict,
     singles_list: list,
     list_models_list: list,
-    export: str,
-    export_header_file: str,
     create_undo_and_redo_singles: bool,
 ) -> dict:
     def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
@@ -80,8 +78,8 @@ def _get_generation_dict(
     )
     generation_dict["application_uppercase_name"] = application_name.upper()
     generation_dict["application_cpp_domain_name"] = application_cpp_domain_name
-    generation_dict["export_header_file"] = export_header_file
-    generation_dict["export"] = export
+    generation_dict["export_header_file"] = f"{stringcase.snakecase(application_name)}_presenter_export.h"
+    generation_dict["export"] = f"{stringcase.snakecase(application_name).upper()}_PRESENTER_EXPORT"
 
     generation_dict["all_presenter_files"] = []
     generation_dict["singles_list"] = []
@@ -636,8 +634,6 @@ def generate_presenter_files(
     )
 
     folder_path = presenter_data.get("folder_path", "Undefined")
-    export = presenter_data.get("export", "Undefined")
-    export_header_file = presenter_data.get("export_header_file", "Undefined")
 
     generation_dict = _get_generation_dict(
         folder_path,
@@ -647,8 +643,6 @@ def generate_presenter_files(
         entities_by_name,
         singles_presenter_list,
         list_models_list,
-        export,
-        export_header_file,
         create_undo_and_redo_singles,
     )
 
@@ -715,8 +709,6 @@ def get_files_to_be_generated(
     )
 
     folder_path = presenter_data.get("folder_path", "Undefined")
-    export = presenter_data.get("export", "Undefined")
-    export_header_file = presenter_data.get("export_header_file", "Undefined")
 
     generation_dict = _get_generation_dict(
         folder_path,
@@ -726,8 +718,6 @@ def get_files_to_be_generated(
         entities_by_name,
         singles_presenter_list,
         list_models_list,
-        export,
-        export_header_file,
         create_undo_and_redo_singles,
     )
 
@@ -756,7 +746,7 @@ def get_files_to_be_generated(
     files.append(
         os.path.join(
             folder_path,
-            export_header_file,
+            f"{stringcase.snakecase(application_name)}_presenter_export.h",
         )
     )
 

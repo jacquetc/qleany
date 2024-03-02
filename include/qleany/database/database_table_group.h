@@ -8,8 +8,8 @@
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
 #include "qleany/contracts/database/interface_database_table_group.h"
-#include "qleany/domain/entity_base.h"
-#include "qleany/domain/entity_schema.h"
+#include "qleany/entities/entity_base.h"
+#include "qleany/entities/entity_schema.h"
 #include "qleany/qleany_export.h"
 #include "tools.h"
 #include <QDateTime>
@@ -78,13 +78,14 @@ template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTa
     Result<void> rollback() override;
 
     // get related entities
-    Result<QList<T>> getEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<QList<T>> getEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
                                              const QString &field) override;
-    Result<T> getEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<T> getEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
                                     const QString &field) override;
-    Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
-                                                const QString &field, const QList<T> &rightEntities) override;
-    Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
+                                                int leftEntityId, const QString &field,
+                                                const QList<T> &rightEntities) override;
+    Result<T> updateEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
                                        const QString &field, const T &rightEntity) override;
     Result<void> removeAssociationsWith(QList<int> rightEntityIds) override;
 
@@ -121,35 +122,35 @@ template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTa
 template <class T>
 DatabaseTableGroup<T>::DatabaseTableGroup(QSharedPointer<InterfaceDatabaseContext> context) : m_databaseContext(context)
 {
-    static_assert(std::is_base_of<Domain::EntityBase, T>::value, "T must inherit from Domain::Entity");
+    static_assert(std::is_base_of<Entities::EntityBase, T>::value, "T must inherit from Entities::Entity");
 
     // entity table creation
     m_databaseContext->appendCreationSql("entity_table", getTableCreationSql());
 
     for (const auto &relationship : T::schema.relationships)
     {
-        if (relationship.direction == Qleany::Domain::RelationshipDirection::Backward)
+        if (relationship.direction == Qleany::Entities::RelationshipDirection::Backward)
         {
             QString junctionCreationSql;
 
-            if (relationship.type == Qleany::Domain::RelationshipType::OneToOne)
+            if (relationship.type == Qleany::Entities::RelationshipType::OneToOne)
             {
                 OneToOneAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                     relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyUnordered)
+            else if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                     relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                     relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                     relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Qleany::Domain::RelationshipType::ManyToMany)
+            else if (relationship.type == Qleany::Entities::RelationshipType::ManyToMany)
             {
             }
         }
@@ -161,7 +162,7 @@ DatabaseTableGroup<T>::DatabaseTableGroup(QSharedPointer<InterfaceDatabaseContex
 template <class T>
 DatabaseTableGroup<T>::DatabaseTableGroup(const DatabaseTableGroup &other) : m_databaseContext(other.databaseContext())
 {
-    static_assert(std::is_base_of<Domain::EntityBase, T>::value, "T must inherit from Domain::Entity");
+    static_assert(std::is_base_of<Entities::EntityBase, T>::value, "T must inherit from Entities::Entity");
 }
 
 template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
@@ -1267,7 +1268,7 @@ template <class T> QHash<QString, PropertyWithList> DatabaseTableGroup<T>::getEn
 //--------------------------------------------
 
 template <class T>
-Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                                 int leftEntityId, const QString &field)
 {
     Result<QList<T>> result;
@@ -1275,24 +1276,25 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::Do
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Forward && relationship.fieldName == field)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Forward &&
+            relationship.fieldName == field)
         {
             // One to Many Unordered:
-            if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyUnordered)
+            if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.getRightEntities(leftEntityId);
             }
             // One to Many Ordered:
-            else if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                     relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                     relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.getRightEntities(leftEntityId);
             }
             // Many to Many Unordered:
-            else if (relationship.type == Qleany::Domain::RelationshipType::ManyToMany)
+            else if (relationship.type == Qleany::Entities::RelationshipType::ManyToMany)
             {
                 //                ManyToManyAssociator<T, OtherEntity> associator(m_databaseContext, relationship);
                 //                result = associator.getRelatedEntities(relationship.field);
@@ -1312,33 +1314,34 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::Do
 //--------------------------------------------
 
 template <class T>
-Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
-                                                                   int leftEntityId, const QString &field,
-                                                                   const QList<T> &rightEntities)
+Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(
+    const Qleany::Entities::EntitySchema &leftEntitySchema, int leftEntityId, const QString &field,
+    const QList<T> &rightEntities)
 {
     Result<QList<T>> result;
 
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Forward && relationship.fieldName == field)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Forward &&
+            relationship.fieldName == field)
         {
             // One to Many Unordered:
-            if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyUnordered)
+            if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.updateRightEntities(leftEntityId, rightEntities);
             }
             // One to Many Ordered:
-            else if (relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-                     relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+                     relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.updateRightEntities(leftEntityId, rightEntities);
             }
             // Many to Many Unordered:
-            else if (relationship.type == Qleany::Domain::RelationshipType::ManyToMany)
+            else if (relationship.type == Qleany::Entities::RelationshipType::ManyToMany)
             {
                 //                ManyToManyAssociator<T, OtherEntity> associator(m_databaseContext, relationship);
                 //                result = associator.updateRightEntities(leftEntityId, rightEntities);
@@ -1358,7 +1361,7 @@ Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(const Qleany:
 //--------------------------------------------
 
 template <class T>
-Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                        int leftEntityId, const QString &field)
 {
 
@@ -1367,9 +1370,9 @@ Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Qleany::Domain::Ent
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Forward &&
-            relationship.fieldName == field && relationship.type == Qleany::Domain::RelationshipType::OneToOne &&
-            relationship.cardinality == Qleany::Domain::RelationshipCardinality::One)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Forward &&
+            relationship.fieldName == field && relationship.type == Qleany::Entities::RelationshipType::OneToOne &&
+            relationship.cardinality == Qleany::Entities::RelationshipCardinality::One)
         {
 
             OneToOneAssociator<T> associator(m_databaseContext, relationship);
@@ -1384,7 +1387,7 @@ Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Qleany::Domain::Ent
 //--------------------------------------------
 
 template <class T>
-Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                           int leftEntityId, const QString &field, const T &rightEntity)
 {
     Result<T> result;
@@ -1392,9 +1395,9 @@ Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Qleany::Domain::
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Forward &&
-            relationship.fieldName == field && relationship.type == Qleany::Domain::RelationshipType::OneToOne &&
-            relationship.cardinality == Qleany::Domain::RelationshipCardinality::One)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Forward &&
+            relationship.fieldName == field && relationship.type == Qleany::Entities::RelationshipType::OneToOne &&
+            relationship.cardinality == Qleany::Entities::RelationshipCardinality::One)
         {
 
             OneToOneAssociator<T> associator(m_databaseContext, relationship);
@@ -1409,13 +1412,13 @@ template <class T> Result<void> DatabaseTableGroup<T>::removeAssociationsWith(QL
 {
     // only reordering OneToManyOrdered relationships on backward relationships, meaning this entity T is the "target"
     // of the relationship. Other associations types are deleted in cascade by the database.
-    const Qleany::Domain::EntitySchema &entitySchema = T::schema;
+    const Qleany::Entities::EntitySchema &entitySchema = T::schema;
     for (const auto &relationship : entitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Qleany::Domain::RelationshipDirection::Backward &&
-            relationship.type == Qleany::Domain::RelationshipType::OneToMany &&
-            relationship.cardinality == Qleany::Domain::RelationshipCardinality::ManyOrdered)
+            relationship.direction == Qleany::Entities::RelationshipDirection::Backward &&
+            relationship.type == Qleany::Entities::RelationshipType::OneToMany &&
+            relationship.cardinality == Qleany::Entities::RelationshipCardinality::ManyOrdered)
         {
             OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
             auto result = associator.removeTheseRightIds(rightEntityIds);

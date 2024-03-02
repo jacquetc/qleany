@@ -47,9 +47,9 @@ Result<QList<ClientDTO>> GetAllClientQueryHandler::handleImpl(QPromise<Result<vo
     // map
     QList<ClientDTO> dtoList;
 
-    for (const Simple::Domain::Client &client : clientResult.value())
+    for (const Simple::Entities::Client &client : clientResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(client);
+        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(client);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,6 @@ bool GetAllClientQueryHandler::s_mappingRegistered = false;
 
 void GetAllClientQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(
         true, true);
 }

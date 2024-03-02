@@ -33,7 +33,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT RemoveClientCommandHandler : publ
     InterfaceClientRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request);
     Result<int> restoreImpl();
-    Simple::Domain::Client m_oldState;
+    Simple::Entities::Client m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

@@ -48,9 +48,9 @@ Result<QList<PassengerDTO>> GetAllPassengerQueryHandler::handleImpl(QPromise<Res
     // map
     QList<PassengerDTO> dtoList;
 
-    for (const Simple::Domain::Passenger &passenger : passengerResult.value())
+    for (const Simple::Entities::Passenger &passenger : passengerResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passenger);
+        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passenger);
         dtoList.append(dto);
     }
 
@@ -63,6 +63,6 @@ bool GetAllPassengerQueryHandler::s_mappingRegistered = false;
 
 void GetAllPassengerQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
                                                            Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

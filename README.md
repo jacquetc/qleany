@@ -30,7 +30,7 @@ Many developers are likely familiar with the following depiction of Clean Archit
 
 It's important to note that this conceptual representation needs to be tailored to fit the specific requirements of the language and project at hand. Qleany presents a distinct interpretation of Clean Architecture, uniquely adapted and structured to suit its specific use cases and environment.
 
-- **Domain**: Contains entities and is encapsulated in a library named `domain`.
+- **Entities**: Contains entities and is encapsulated in a library named `entities`.
 - **Application**: Groups use cases by functionalities, organized within a library called `application`.
 - **Persistence**: Manages internal data persistence. It includes a 'repository' wrapper for SQLite database interactions, with each entity having its repository in the `RepositoryProvider` class.
 - **Contracts**: A common library for most other components, housing all interfaces from `persistence`, `gateway`, and `infrastructure`. This design minimizes tight coupling and circular dependencies.
@@ -149,9 +149,7 @@ entities:
           ordered: true/false
           hidden: true/false (default: false)
         # other fields ...
-    # other entities
-  export: EXPORT_MACRO_NAME
-  export_header_file: header_file_name.h
+    # other entities ...
   folder_path: path/to/entity/folder
 ```
 
@@ -165,9 +163,6 @@ repositories:
     - entity_name: EntityName
       lazy_loaders: true/false
     # other repositories, typically one for each entity
-  interface_path: path/to/interface
-  export: EXPORT_MACRO_NAME
-  export_header_file: header_file_name.h
   repository_folder_path: path/to/repository/folder
   base_folder_path: path/to/base/folder
 ```
@@ -270,8 +265,6 @@ Defines settings for contracts in the application.
 contracts:
   inverted_app_domain: domain.identifier
   folder_path: path/to/contracts/folder
-  export: EXPORT_MACRO_NAME
-  export_header_file: header_file_name.h
 ```
 
 ### Presenter Settings
@@ -281,8 +274,6 @@ Configures presenter-specific settings. Note: the `name` can be set to `auto`
 ```yaml
 presenter:
   folder_path: path/to/presenter/folder
-  export: EXPORT_MACRO_NAME
-  export_header_file: header_file_name.h
   create_undo_and_redo_singles: true/false (default false)
   singles:
     - name: SingleName (or "auto")

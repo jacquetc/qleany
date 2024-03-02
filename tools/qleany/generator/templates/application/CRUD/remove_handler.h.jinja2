@@ -33,7 +33,7 @@ class {{ export }} Remove{{ entity_mappable_with_pascal }}CommandHandler : publ
     Interface{{ entity_mappable_with_pascal }}Repository *m_repository;
     Result<int> handleImpl(QPromise<Result<void> >   & progressPromise, const Remove{{ entity_mappable_with_pascal }}Command &request);
     Result<int> restoreImpl();
-    {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} m_oldState;
+    {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }} m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

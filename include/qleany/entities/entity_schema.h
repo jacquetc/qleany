@@ -4,7 +4,7 @@
 #include <QList>
 #include <QString>
 
-namespace Qleany::Domain
+namespace Qleany::Entities
 {
 Q_NAMESPACE_EXPORT(QLEANY_EXPORT)
 
@@ -89,4 +89,4 @@ struct QLEANY_EXPORT EntitySchema
     QList<FieldInfo> fields;
 };
 
-} // namespace Qleany::Domain
+} // namespace Qleany::Entities

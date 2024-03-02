@@ -8,7 +8,7 @@
 {% endif %}
 
 using namespace Qleany;
-using namespace {{ application_cpp_domain_name }}::Domain;
+using namespace {{ application_cpp_domain_name }}::Entities;
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Validators;
@@ -62,13 +62,13 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPromise<Result<void> >   & progressPromise,const Create{{ entity_mappable_with_pascal }}Command& request)
 {
     qDebug() << "Create{{ entity_mappable_with_pascal }}CommandHandler::handleImpl called";
-    {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }};
+    {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }} {{ entity_mappable_with_camel }};
     Create{{ entity_mappable_with_pascal }}DTO createDTO = request.req;
     {% if has_owner %}
         {% if owner_field_is_list %}
-    QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_name_pascal }};
+    QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> ownerEntity{{ owner_field_name_pascal }};
         {% else %}
-        {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_name_pascal }};
+        {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }} ownerEntity{{ owner_field_name_pascal }};
         {% endif %}
         // Get the entities from owner
         int ownerId = createDTO.{{ owner_name_camel }}Id();
@@ -85,7 +85,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
         // Map the create {{ entity_mappable_with_pascal }} command to a domain {{ entity_mappable_with_pascal }} object and
         // generate a UUID
-        {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>(createDTO);
+        {{ entity_mappable_with_camel }} = Qleany::Tools::AutoMapper::AutoMapper::map<Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}>(createDTO);
 
         // allow for forcing the uuid
         if ({{ entity_mappable_with_camel }}.uuid().isNull())
@@ -186,11 +186,11 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     {% if owner_field_is_list %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<QList<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
+    Result<QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
 
     {% else %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
+    Result<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
 
     {% endif %}
     QLN_RETURN_IF_ERROR_WITH_ACTION({{ entity_mappable_with_pascal }}DTO, updateResult, m_repository->cancelChanges();)
@@ -201,7 +201,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     m_newEntity = {{ entity_mappable_with_camel }}Result;
 
-    auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
+    auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
     emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
     {% if has_owner %}
     // send an insertion signal
@@ -239,6 +239,6 @@ bool Create{{ entity_mappable_with_pascal }}CommandHandler::s_mappingRegistered 
 
 void Create{{ entity_mappable_with_pascal }}CommandHandler::registerMappings() 
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}>();
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::{{ feature_pascal_name }}::Create{{ entity_mappable_with_pascal }}DTO, {{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}>();
 }

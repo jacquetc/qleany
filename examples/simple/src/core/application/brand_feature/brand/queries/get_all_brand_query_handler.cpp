@@ -47,9 +47,9 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handleImpl(QPromise<Result<void
     // map
     QList<BrandDTO> dtoList;
 
-    for (const Simple::Domain::Brand &brand : brandResult.value())
+    for (const Simple::Entities::Brand &brand : brandResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brand);
+        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brand);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,6 @@ bool GetAllBrandQueryHandler::s_mappingRegistered = false;
 
 void GetAllBrandQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
         true, true);
 }

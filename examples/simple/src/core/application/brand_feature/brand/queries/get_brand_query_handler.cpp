@@ -43,7 +43,7 @@ Result<BrandDTO> GetBrandQueryHandler::handleImpl(QPromise<Result<void>> &progre
     QLN_RETURN_IF_ERROR(BrandDTO, brandResult)
 
     // map
-    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Brand, BrandDTO>(brandResult.value());
+    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brandResult.value());
 
     qDebug() << "GetBrandQueryHandler::handleImpl done";
 
@@ -54,6 +54,6 @@ bool GetBrandQueryHandler::s_mappingRegistered = false;
 
 void GetBrandQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Brand, Contracts::DTO::Brand::BrandDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
         true, true);
 }

@@ -1,5 +1,5 @@
-# handles the domain entities
-add_subdirectory(domain)
+# handles the entities
+add_subdirectory(entities)
 # stores the interfaces
 add_subdirectory(contracts)
 # handles the data access from inside the system

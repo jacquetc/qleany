@@ -6,12 +6,12 @@
 #include <QUuid>
 
 #include "entities.h"
-#include <qleany/domain/entity_base.h>
-#include <qleany/domain/entity_schema.h>
+#include <qleany/entities/entity_base.h>
+#include <qleany/entities/entity_schema.h>
 
-using namespace Qleany::Domain;
+using namespace Qleany::Entities;
 
-namespace DatabaseTest::Domain
+namespace DatabaseTest::Entities
 {
 
 class DummyEntity : public EntityBase
@@ -44,9 +44,9 @@ class DummyEntity : public EntityBase
     {
     }
 
-    static DatabaseTest::Domain::Entities::EntityEnum enumValue()
+    static DatabaseTest::Entities::Entities::EntityEnum enumValue()
     {
-        return DatabaseTest::Domain::Entities::EntityEnum::DummyEntity;
+        return DatabaseTest::Entities::Entities::EntityEnum::DummyEntity;
     }
 
     DummyEntity &operator=(const DummyEntity &other)
@@ -104,7 +104,7 @@ class DummyEntity : public EntityBase
         m_updateDate = updateDate;
     }
 
-    static Qleany::Domain::EntitySchema schema;
+    static Qleany::Entities::EntitySchema schema;
 
   private:
     QUuid m_uuid;
@@ -134,19 +134,19 @@ inline uint qHash(const DummyEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyEntity entity
-inline Qleany::Domain::EntitySchema DummyEntity::schema = {DatabaseTest::Domain::Entities::EntityEnum::DummyEntity,
-                                                           "DummyEntity",
+inline Qleany::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
+                                                             "DummyEntity",
 
-                                                           // relationships:
-                                                           {
+                                                             // relationships:
+                                                             {
 
-                                                           },
+                                                             },
 
-                                                           // fields:
-                                                           {{"id", FieldType::Integer, true, false},
-                                                            {"uuid", FieldType::Uuid, false, false},
-                                                            {"creationDate", FieldType::DateTime, false, false},
-                                                            {"updateDate", FieldType::DateTime, false, false}}};
+                                                             // fields:
+                                                             {{"id", FieldType::Integer, true, false},
+                                                              {"uuid", FieldType::Uuid, false, false},
+                                                              {"creationDate", FieldType::DateTime, false, false},
+                                                              {"updateDate", FieldType::DateTime, false, false}}};
 
-} // namespace DatabaseTest::Domain
-Q_DECLARE_METATYPE(DatabaseTest::Domain::DummyEntity)
+} // namespace DatabaseTest::Entities
+Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyEntity)

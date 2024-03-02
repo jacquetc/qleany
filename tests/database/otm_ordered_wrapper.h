@@ -12,7 +12,7 @@ class OneToManyOrderedAssociatorWrapper : public Qleany::Database::OneToManyOrde
 {
   public:
     OneToManyOrderedAssociatorWrapper(QSharedPointer<InterfaceDatabaseContext> context,
-                                      const Qleany::Domain::RelationshipInfo &relationship)
+                                      const Qleany::Entities::RelationshipInfo &relationship)
         : Qleany::Database::OneToManyOrderedAssociator<RightEntity>(context, relationship)
     {
     }
@@ -23,7 +23,7 @@ class OneToManyOrderedAssociatorWrapper : public Qleany::Database::OneToManyOrde
     Result<QList<RightEntity>> updateRightEntities(int leftEntityId, const QList<RightEntity> &rightEntities);
 
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Qleany::Domain::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const Qleany::Entities::EntitySchema &entitySchema) const;
     QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> mergeShadows(
         const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
         const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows)
@@ -57,7 +57,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociatorWrapper<RightEntity>::getRi
 
 template <class RightEntity>
 QStringList OneToManyOrderedAssociatorWrapper<RightEntity>::getTablePropertyColumns(
-    const Domain::EntitySchema &entitySchema) const
+    const Entities::EntitySchema &entitySchema) const
 {
     return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(entitySchema);
 }

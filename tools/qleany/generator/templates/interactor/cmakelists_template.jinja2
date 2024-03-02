@@ -40,7 +40,7 @@ ${CMAKE_CURRENT_BINARY_DIR}
 
 )
 
-target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-domain)
+target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-entities)
 {% for feature in features -%}
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-application-feature-{{ feature.feature_name_spinal }})
 {% endfor -%}

@@ -4,7 +4,7 @@
 #include <QFuture>
 #include <QUuid>
 #include <qleany/common/result.h>
-#include <qleany/domain/entity_schema.h>
+#include <qleany/entities/entity_schema.h>
 
 namespace Qleany::Contracts::Repository
 {
@@ -36,14 +36,14 @@ template <class T> class InterfaceGenericRepository
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;
 
-    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
-                                                     const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
+                                                     int entityId, const QString &field) = 0;
+    virtual Result<T> getEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int entityId,
                                             const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema,
                                                         int entityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T> updateEntityInRelationOf(const Qleany::Domain::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<T> updateEntityInRelationOf(const Qleany::Entities::EntitySchema &leftEntitySchema, int entityId,
                                                const QString &field, const T &rightEntity) = 0;
 };
 } // namespace Qleany::Contracts::Repository

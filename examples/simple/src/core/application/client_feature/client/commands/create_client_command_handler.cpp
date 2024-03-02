@@ -5,7 +5,7 @@
 #include <qleany/tools/automapper/automapper.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Client;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Client::Validators;
@@ -58,7 +58,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
                                                          const CreateClientCommand &request)
 {
     qDebug() << "CreateClientCommandHandler::handleImpl called";
-    Simple::Domain::Client client;
+    Simple::Entities::Client client;
     CreateClientDTO createDTO = request.req;
 
     if (m_firstPass)
@@ -71,7 +71,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
         // Map the create Client command to a domain Client object and
         // generate a UUID
-        client = Qleany::Tools::AutoMapper::AutoMapper::map<CreateClientDTO, Simple::Domain::Client>(createDTO);
+        client = Qleany::Tools::AutoMapper::AutoMapper::map<CreateClientDTO, Simple::Entities::Client>(createDTO);
 
         // allow for forcing the uuid
         if (client.uuid().isNull())
@@ -107,7 +107,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     m_newEntity = clientResult;
 
     auto clientDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Client, ClientDTO>(clientResult.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(clientResult.value());
     emit clientCreated(clientDTO);
 
     qDebug() << "Client added:" << clientDTO.id();
@@ -136,8 +136,8 @@ bool CreateClientCommandHandler::s_mappingRegistered = false;
 
 void CreateClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(
         true, true);
     Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::CreateClientDTO,
-                                                           Simple::Domain::Client>();
+                                                           Simple::Entities::Client>();
 }

@@ -3,7 +3,7 @@
 #include "qleany/qleany_export.h"
 #include <QObject>
 
-namespace Qleany::Domain
+namespace Qleany::Entities
 {
 
 class QLEANY_EXPORT EntityBase
@@ -95,5 +95,5 @@ inline uint qHash(const EntityBase &entity, uint seed = 0) noexcept
     return hash;
 }
 
-} // namespace Qleany::Domain
-Q_DECLARE_METATYPE(Qleany::Domain::EntityBase)
+} // namespace Qleany::Entities
+Q_DECLARE_METATYPE(Qleany::Entities::EntityBase)

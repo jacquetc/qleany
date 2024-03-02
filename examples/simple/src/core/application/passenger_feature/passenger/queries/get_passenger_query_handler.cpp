@@ -46,7 +46,7 @@ Result<PassengerDTO> GetPassengerQueryHandler::handleImpl(QPromise<Result<void>>
 
     // map
     auto dto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Passenger, PassengerDTO>(passengerResult.value());
+        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
     qDebug() << "GetPassengerQueryHandler::handleImpl done";
 
@@ -57,6 +57,6 @@ bool GetPassengerQueryHandler::s_mappingRegistered = false;
 
 void GetPassengerQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
                                                            Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

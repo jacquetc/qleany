@@ -66,7 +66,7 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     QLN_RETURN_IF_ERROR(int, validatorResult);
 
-    Result<Simple::Domain::Client> clientResult = m_repository->get(clientId);
+    Result<Simple::Entities::Client> clientResult = m_repository->get(clientId);
 
     QLN_RETURN_IF_ERROR(int, clientResult)
 
@@ -95,6 +95,6 @@ bool RemoveClientCommandHandler::s_mappingRegistered = false;
 
 void RemoveClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Client, Contracts::DTO::Client::ClientDTO>(
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(
         true, true);
 }

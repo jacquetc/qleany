@@ -10,7 +10,7 @@ using namespace Simple::Contracts::DTO::Car;
 namespace Simple::Application::Features::Car
 {
 
-template <class T> T map(const Domain::Car &source)
+template <class T> T map(const Entities::Car &source)
 {
     T carDto;
     carDto.setId(source.id());
@@ -18,7 +18,7 @@ template <class T> T map(const Domain::Car &source)
     return carDto;
 }
 
-template <> CarDTO map<CarDTO>(const Domain::Car &source)
+template <> CarDTO map<CarDTO>(const Entities::Car &source)
 {
     CarDTO carDto;
     carDto.setId(source.id());

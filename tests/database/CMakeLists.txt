@@ -15,7 +15,7 @@ set(CMAKE_AUTOMOC ON)
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test Core Sql REQUIRED)
+find_package(Qt6 COMPONENTS Test Core Sql REQUIRED)
 
 # set(QRC ${CMAKE_SOURCE_DIR}/resources/test/testfiles.qrc)
 # qt_add_resources(RESOURCES ${QRC})
@@ -45,9 +45,6 @@ set(CMAKE_AUTOMOC ON)
 # As moc files are generated in the binary dir, tell CMake
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Test Core Sql CONFIG REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test Core Sql REQUIRED)
 
 # set(QRC ${CMAKE_SOURCE_DIR}/resources/test/testfiles.qrc)
 # qt_add_resources(RESOURCES ${QRC})
@@ -81,9 +78,6 @@ set(CMAKE_AUTOMOC ON)
 # As moc files are generated in the binary dir, tell CMake
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Test Core Sql CONFIG REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test Core Sql REQUIRED)
 
 # set(QRC ${CMAKE_SOURCE_DIR}/resources/test/testfiles.qrc)
 # qt_add_resources(RESOURCES ${QRC})

@@ -67,7 +67,7 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
 
     QLN_RETURN_IF_ERROR(int, validatorResult);
 
-    Result<Simple::Domain::Passenger> passengerResult = m_repository->get(passengerId);
+    Result<Simple::Entities::Passenger> passengerResult = m_repository->get(passengerId);
 
     QLN_RETURN_IF_ERROR(int, passengerResult)
 
@@ -96,6 +96,6 @@ bool RemovePassengerCommandHandler::s_mappingRegistered = false;
 
 void RemovePassengerCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Passenger,
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
                                                            Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

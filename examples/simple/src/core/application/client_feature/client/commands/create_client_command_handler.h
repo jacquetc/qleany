@@ -10,7 +10,7 @@
 #include <qleany/common/result.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Client;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Client::Commands;
@@ -34,7 +34,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : publ
     InterfaceClientRepository *m_repository;
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateClientCommand &request);
     Result<ClientDTO> restoreImpl();
-    Result<Simple::Domain::Client> m_newEntity;
+    Result<Simple::Entities::Client> m_newEntity;
 
     static bool s_mappingRegistered;
     void registerMappings();

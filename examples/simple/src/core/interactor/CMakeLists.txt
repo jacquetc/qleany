@@ -3,7 +3,7 @@
 
 find_package(Qt6 COMPONENTS Core Gui REQUIRED)
 find_package(QCoro6 REQUIRED COMPONENTS Core)
-find_package(qleany REQUIRED) # CONFIG disabled for now, because it's not available in the qleany package
+# find_package(qleany REQUIRED) # CONFIG disabled for now, because it's not available in the qleany package
 
 
 set(LIBRARY_NAME simple-example-interactor)
@@ -41,7 +41,7 @@ ${CMAKE_CURRENT_BINARY_DIR}
 
 )
 
-target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-domain)
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-application-feature-car)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-application-feature-brand)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-application-feature-passenger)
@@ -50,7 +50,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-application-feature-
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
-target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
+target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

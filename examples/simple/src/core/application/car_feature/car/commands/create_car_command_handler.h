@@ -10,7 +10,7 @@
 #include <qleany/common/result.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Commands;
@@ -34,7 +34,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QOb
     InterfaceCarRepository *m_repository;
     Result<CarDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request);
     Result<CarDTO> restoreImpl();
-    Result<Simple::Domain::Car> m_newEntity;
+    Result<Simple::Entities::Car> m_newEntity;
 
     static bool s_mappingRegistered;
     void registerMappings();

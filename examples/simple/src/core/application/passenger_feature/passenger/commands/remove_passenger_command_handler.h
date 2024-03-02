@@ -33,7 +33,7 @@ class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT RemovePassengerCommandHandler 
     InterfacePassengerRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemovePassengerCommand &request);
     Result<int> restoreImpl();
-    Simple::Domain::Passenger m_oldState;
+    Simple::Entities::Passenger m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

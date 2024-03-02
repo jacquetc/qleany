@@ -89,7 +89,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     {% endif %}
         
         // implement logic here which will not be repeated on restore
-        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}>(request.req);
+        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}>(request.req);
 
             
 {% if command.undo %}
@@ -97,7 +97,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     else
     {
         // implement logic here to load already filled newState for restore
-        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}>(request.req);
+        // {{ feature_snake_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ command.dto_in_pascal_name }}, {{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}>(request.req);
 
     }
 {% endif %}
@@ -114,7 +114,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }};
 
     // implement logic here to save to new state for restore
-    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>({{ feature_snake_name }}Result.value());
+    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>({{ feature_snake_name }}Result.value());
 
 {% if command.undo %}
     // m_newState = Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
@@ -140,7 +140,7 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
 {
 {% if command.dto_out_is_enabled %}
     {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }}; 
-    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>(m_newState);
+    //auto {{ command.dto_out_camel_name }} = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}, {{ command.dto_out_pascal_name }}>(m_newState);
     
     // dummy to compile:
     {{ command.dto_out_pascal_name }} {{ command.dto_out_camel_name }};

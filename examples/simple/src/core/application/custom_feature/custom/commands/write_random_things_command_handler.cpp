@@ -64,7 +64,7 @@ Result<void> WriteRandomThingsCommandHandler::handleImpl(QPromise<Result<void>> 
     QLN_RETURN_IF_ERROR(void, validatorResult);
 
     // implement logic here which will not be repeated on restore
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<WriteRandomThingsDTO, Simple::Domain::Custom>(request.req);
+    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<WriteRandomThingsDTO, Simple::Entities::Custom>(request.req);
 
     m_carRepository->beginChanges();
 

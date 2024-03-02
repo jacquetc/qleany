@@ -33,7 +33,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QOb
     InterfaceCarRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveCarCommand &request);
     Result<int> restoreImpl();
-    Simple::Domain::Car m_oldState;
+    Simple::Entities::Car m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };

@@ -45,7 +45,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Get{{ entity_mappable_with_pascal }}
     QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, {{ entity_mappable_with_camel }}Result)
 
     // map
-    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Domain::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
+    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
 
     qDebug() << "Get{{ entity_mappable_with_pascal }}QueryHandler::handleImpl done";
 
@@ -56,5 +56,5 @@ bool Get{{ entity_mappable_with_pascal }}QueryHandler::s_mappingRegistered = fal
 
 void Get{{ entity_mappable_with_pascal }}QueryHandler::registerMappings() 
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Domain::{{ feature_pascal_name }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<{{ application_cpp_domain_name }}::Entities::{{ feature_pascal_name }}, Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO>(true, true);
 }

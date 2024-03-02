@@ -65,7 +65,7 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
 
     QLN_RETURN_IF_ERROR(int, validatorResult);
 
-    Result<Simple::Domain::Car> carResult = m_repository->get(carId);
+    Result<Simple::Entities::Car> carResult = m_repository->get(carId);
 
     QLN_RETURN_IF_ERROR(int, carResult)
 
@@ -94,6 +94,6 @@ bool RemoveCarCommandHandler::s_mappingRegistered = false;
 
 void RemoveCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Domain::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                             true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
+                                                                                                               true);
 }

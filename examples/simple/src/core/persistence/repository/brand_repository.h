@@ -3,9 +3,8 @@
 #pragma once
 
 #include "brand.h"
-
-#include "persistence_export.h"
 #include "repository/interface_brand_repository.h"
+#include "simple_example_persistence_export.h"
 #include <QReadWriteLock>
 #include <qleany/contracts/database/interface_database_table_group.h>
 #include <qleany/repository/generic_repository.h>
@@ -18,12 +17,12 @@ using namespace Qleany::Contracts::Database;
 namespace Simple::Persistence::Repository
 {
 
-class SIMPLEEXAMPLE_PERSISTENCE_EXPORT BrandRepository final
-    : public Qleany::Repository::GenericRepository<Simple::Domain::Brand>,
+class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT BrandRepository final
+    : public Qleany::Repository::GenericRepository<Simple::Entities::Brand>,
       public Simple::Contracts::Repository::InterfaceBrandRepository
 {
   public:
-    explicit BrandRepository(InterfaceDatabaseTableGroup<Simple::Domain::Brand> *brandDatabase);
+    explicit BrandRepository(InterfaceDatabaseTableGroup<Simple::Entities::Brand> *brandDatabase);
 
     SignalHolder *signalHolder() override;
 

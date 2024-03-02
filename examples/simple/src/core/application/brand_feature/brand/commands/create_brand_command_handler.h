@@ -10,7 +10,7 @@
 #include <qleany/common/result.h>
 
 using namespace Qleany;
-using namespace Simple::Domain;
+using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Brand;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Brand::Commands;
@@ -37,13 +37,13 @@ class SIMPLE_EXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public
     InterfaceBrandRepository *m_repository;
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request);
     Result<BrandDTO> restoreImpl();
-    Result<Simple::Domain::Brand> m_newEntity;
+    Result<Simple::Entities::Brand> m_newEntity;
 
     int m_ownerId = -1;
     int m_position = -1;
 
-    Simple::Domain::Brand m_oldOwnerBrand;
-    Simple::Domain::Brand m_ownerBrandNewState;
+    Simple::Entities::Brand m_oldOwnerBrand;
+    Simple::Entities::Brand m_ownerBrandNewState;
 
     static bool s_mappingRegistered;
     void registerMappings();

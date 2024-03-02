@@ -50,7 +50,7 @@ Result<void> RunLongOperationCommandHandler::handleImpl(QPromise<Result<void>> &
     qDebug() << "RunLongOperationCommandHandler::handleImpl called";
 
     // implement logic here which will not be repeated on restore
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<void, Simple::Domain::Custom>(request.req);
+    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<void, Simple::Entities::Custom>(request.req);
 
     // play here with the repositories
     Q_UNIMPLEMENTED();

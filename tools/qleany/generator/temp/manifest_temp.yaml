@@ -160,9 +160,7 @@ contracts:
   folder_path: src/core/contracts
   inverted_app_domain: eu.qleany
 entities:
-  export: SIMPLEEXAMPLE_DOMAIN_EXPORT
-  export_header_file: domain_export.h
-  folder_path: src/core/domain/
+  folder_path: src/core/entities/
   list:
   - fields:
     - name: uuid
@@ -241,9 +239,6 @@ qml:
   folder_path: src/gui/qml_application/
 repositories:
   base_folder_path: src/core/persistence/
-  export: SIMPLEEXAMPLE_PERSISTENCE_EXPORT
-  export_header_file: persistence_export.h
-  interface_path: src/core/contracts/repository/
   list:
   - entity_name: Car
     lazy_loaders: true

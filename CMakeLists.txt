@@ -67,38 +67,6 @@ find_package(QCoro6 REQUIRED COMPONENTS Core)
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
 
-# Create a library target for the Qleany framework
-set(LIB_PUBLIC_HEADERS
-    include/qleany/tools/undo_redo/alter_command.h
-    include/qleany/tools/undo_redo/query_command.h
-    include/qleany/tools/undo_redo/undo_redo_stack.h
-    include/qleany/tools/undo_redo/threaded_undo_redo_system.h
-    include/qleany/tools/undo_redo/undo_redo_system.h
-    include/qleany/tools/undo_redo/undo_redo_command.h
-    include/qleany/tools/undo_redo/undo_redo_scopes.h
-    include/qleany/tools/automapper/automapper.h
-    include/qleany/common/error.h
-    include/qleany/common/result.h
-    include/qleany/database/types.h
-    include/qleany/database/database_context.h
-    include/qleany/database/database_table_group.h
-    include/qleany/database/tools.h
-    include/qleany/database/one_to_one_associator.h
-    include/qleany/database/one_to_many_unordered_associator.h
-    include/qleany/database/one_to_many_ordered_associator.h
-    include/qleany/repository/generic_repository.h
-    include/qleany/repository/repository_provider.h
-    include/qleany/domain/entity_schema.h
-    include/qleany/domain/entity_base.h
-    include/qleany/contracts/repository/interface_repository_provider.h
-    include/qleany/contracts/repository/interface_generic_repository.h
-    include/qleany/contracts/repository/interface_repository.h
-    include/qleany/contracts/repository/signal_holder.h
-    include/qleany/contracts/database/interface_database_table_group.h
-    include/qleany/contracts/database/interface_foreign_entity.h
-    include/qleany/contracts/database/interface_database_context.h
-)
-
 # configure the library
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/*.h")
@@ -125,8 +93,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qleany>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 set_target_properties(Qleany PROPERTIES CXX_STANDARD 20)
@@ -191,10 +159,9 @@ install(FILES
         DESTINATION lib/cmake/${PROJECT_NAME_LOWER})
 
 # Export the targets to a script
-message(STATUS "Exporting targets to a script")
-message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-export(EXPORT ${PROJECT_NAME}Targets
-       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Targets.cmake)
+ # message(STATUS "Exporting targets to a script")
+ # export(EXPORT ${PROJECT_NAME}Targets
+ #       FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}Targets.cmake)
 
 
 # Subdirectories that contain CMakeLists.txt for the framework tests and example
@@ -203,5 +170,10 @@ if(QLEANY_BUILD_TESTS)
 endif()
 
 if(QLEANY_BUILD_EXAMPLES)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+    include_directories(${CMAKE_BINARY_DIR}/include)
+    set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR} ${CMAKE_PREFIX_PATH})
+    set(CMAKE_LIBRARY_PATH ${CMAKE_BINARY_DIR} ${CMAKE_LIBRARY_PATH})
+
     add_subdirectory(examples)
 endif()

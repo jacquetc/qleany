@@ -43,15 +43,16 @@ Result<GetCurrentTimeReplyDTO> GetCurrentTimeQueryHandler::handleImpl(QPromise<R
 {
     qDebug() << "GetCurrentTimeQueryHandler::handleImpl called";
 
-    // Simple::Domain::Custom custom;
+    // Simple::Entities::Custom custom;
 
     // implement logic here
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<GetCurrentTimeReplyDTO, Simple::Domain::Custom>(request.req);
+    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<GetCurrentTimeReplyDTO,
+    // Simple::Entities::Custom>(request.req);
 
     // play here with the repositories
     Q_UNIMPLEMENTED();
 
-    // auto customDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Domain::Custom,
+    // auto customDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Custom,
     // GetCurrentTimeReplyDTO>(customResult.value());
     //  dummy to compile
     GetCurrentTimeReplyDTO getCurrentTimeReplyDTO;

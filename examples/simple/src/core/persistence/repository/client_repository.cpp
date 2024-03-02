@@ -11,9 +11,9 @@ using namespace Qleany::Contracts::Repository;
 using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
-ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<Simple::Domain::Client> *clientDatabase,
+ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<Simple::Entities::Client> *clientDatabase,
                                    InterfacePassengerRepository *passengerRepository)
-    : Qleany::Repository::GenericRepository<Simple::Domain::Client>(clientDatabase),
+    : Qleany::Repository::GenericRepository<Simple::Entities::Client>(clientDatabase),
       m_passengerRepository(passengerRepository)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
@@ -25,15 +25,15 @@ SignalHolder *ClientRepository::signalHolder()
     return m_signalHolder.data();
 }
 
-Result<Simple::Domain::Client> ClientRepository::update(Domain::Client &&entity)
+Result<Simple::Entities::Client> ClientRepository::update(Entities::Client &&entity)
 {
     QWriteLocker locker(&m_lock);
 
     if (entity.metaData().clientSet)
     {
 
-        Result<Domain::Passenger> clientResult = m_passengerRepository->updateEntityInRelationOf(
-            Domain::Client::schema, entity.id(), "client", entity.client());
+        Result<Entities::Passenger> clientResult = m_passengerRepository->updateEntityInRelationOf(
+            Entities::Client::schema, entity.id(), "client", entity.client());
 
 #ifdef QT_DEBUG
         if (clientResult.isError())
@@ -42,14 +42,14 @@ Result<Simple::Domain::Client> ClientRepository::update(Domain::Client &&entity)
             qFatal("Error found. The application will now exit");
         }
 #endif
-        QLN_RETURN_IF_ERROR(Domain::Client, clientResult)
+        QLN_RETURN_IF_ERROR(Entities::Client, clientResult)
     }
 
     if (entity.metaData().clientFriendsSet)
     {
 
-        Result<QList<Domain::Passenger>> clientFriendsResult = m_passengerRepository->updateEntitiesInRelationOf(
-            Domain::Client::schema, entity.id(), "clientFriends", entity.clientFriends());
+        Result<QList<Entities::Passenger>> clientFriendsResult = m_passengerRepository->updateEntitiesInRelationOf(
+            Entities::Client::schema, entity.id(), "clientFriends", entity.clientFriends());
 
 #ifdef QT_DEBUG
         if (clientFriendsResult.isError())
@@ -59,26 +59,26 @@ Result<Simple::Domain::Client> ClientRepository::update(Domain::Client &&entity)
             qFatal("Error found. The application will now exit");
         }
 #endif
-        QLN_RETURN_IF_ERROR(Domain::Client, clientFriendsResult)
+        QLN_RETURN_IF_ERROR(Entities::Client, clientFriendsResult)
     }
 
-    return Qleany::Repository::GenericRepository<Domain::Client>::update(std::move(entity));
+    return Qleany::Repository::GenericRepository<Entities::Client>::update(std::move(entity));
 }
 
-Result<Simple::Domain::Client> ClientRepository::getWithDetails(int entityId)
+Result<Simple::Entities::Client> ClientRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Repository::GenericRepository<Domain::Client>::get(entityId);
+    auto getResult = Qleany::Repository::GenericRepository<Entities::Client>::get(entityId);
 
     if (getResult.isError())
     {
         return getResult;
     }
 
-    Domain::Client entity = getResult.value();
+    Entities::Client entity = getResult.value();
 
-    Result<Domain::Passenger> clientResult =
-        m_passengerRepository->getEntityInRelationOf(Domain::Client::schema, entity.id(), "client");
+    Result<Entities::Passenger> clientResult =
+        m_passengerRepository->getEntityInRelationOf(Entities::Client::schema, entity.id(), "client");
 
 #ifdef QT_DEBUG
     if (clientResult.isError())
@@ -87,12 +87,12 @@ Result<Simple::Domain::Client> ClientRepository::getWithDetails(int entityId)
         qFatal("Error found. The application will now exit");
     }
 #endif
-    QLN_RETURN_IF_ERROR(Domain::Client, clientResult)
+    QLN_RETURN_IF_ERROR(Entities::Client, clientResult)
 
     entity.setClient(clientResult.value());
 
-    Result<QList<Domain::Passenger>> clientFriendsResult =
-        m_passengerRepository->getEntitiesInRelationOf(Domain::Client::schema, entity.id(), "clientFriends");
+    Result<QList<Entities::Passenger>> clientFriendsResult =
+        m_passengerRepository->getEntitiesInRelationOf(Entities::Client::schema, entity.id(), "clientFriends");
 
 #ifdef QT_DEBUG
     if (clientFriendsResult.isError())
@@ -102,18 +102,18 @@ Result<Simple::Domain::Client> ClientRepository::getWithDetails(int entityId)
         qFatal("Error found. The application will now exit");
     }
 #endif
-    QLN_RETURN_IF_ERROR(Domain::Client, clientFriendsResult)
+    QLN_RETURN_IF_ERROR(Entities::Client, clientFriendsResult)
 
     entity.setClientFriends(clientFriendsResult.value());
 
-    return Result<Domain::Client>(entity);
+    return Result<Entities::Client>(entity);
 }
 
-Simple::Domain::Client::ClientLoader ClientRepository::fetchClientLoader()
+Simple::Entities::Client::ClientLoader ClientRepository::fetchClientLoader()
 {
 #ifdef QT_DEBUG
     // verify the presence of "client" property in the entity Client using staticMetaObject
-    int propertyIndex = Simple::Domain::Client::staticMetaObject.indexOfProperty("client");
+    int propertyIndex = Simple::Entities::Client::staticMetaObject.indexOfProperty("client");
     if (propertyIndex == -1)
     {
         qCritical() << "The entity Client doesn't have a property named client";
@@ -123,24 +123,24 @@ Simple::Domain::Client::ClientLoader ClientRepository::fetchClientLoader()
 
     return [this](int entityId) {
         auto foreignEntityResult =
-            m_passengerRepository->getEntityInRelationOf(Simple::Domain::Client::schema, entityId, "client");
+            m_passengerRepository->getEntityInRelationOf(Simple::Entities::Client::schema, entityId, "client");
 
         if (foreignEntityResult.isError())
         {
             qCritical() << foreignEntityResult.error().code() << foreignEntityResult.error().message()
                         << foreignEntityResult.error().data();
-            return Simple::Domain::Passenger();
+            return Simple::Entities::Passenger();
         }
 
         return foreignEntityResult.value();
     };
 }
 
-Simple::Domain::Client::ClientFriendsLoader ClientRepository::fetchClientFriendsLoader()
+Simple::Entities::Client::ClientFriendsLoader ClientRepository::fetchClientFriendsLoader()
 {
 #ifdef QT_DEBUG
     // verify the presence of "clientFriends" property in the entity Client using staticMetaObject
-    int propertyIndex = Simple::Domain::Client::staticMetaObject.indexOfProperty("clientFriends");
+    int propertyIndex = Simple::Entities::Client::staticMetaObject.indexOfProperty("clientFriends");
     if (propertyIndex == -1)
     {
         qCritical() << "The entity Client doesn't have a property named clientFriends";
@@ -150,13 +150,13 @@ Simple::Domain::Client::ClientFriendsLoader ClientRepository::fetchClientFriends
 
     return [this](int entityId) {
         auto foreignEntitiesResult =
-            m_passengerRepository->getEntitiesInRelationOf(Simple::Domain::Client::schema, entityId, "clientFriends");
+            m_passengerRepository->getEntitiesInRelationOf(Simple::Entities::Client::schema, entityId, "clientFriends");
 
         if (foreignEntitiesResult.isError())
         {
             qCritical() << foreignEntitiesResult.error().code() << foreignEntitiesResult.error().message()
                         << foreignEntitiesResult.error().data();
-            return QList<Simple::Domain::Passenger>();
+            return QList<Simple::Entities::Passenger>();
         }
 
         return foreignEntitiesResult.value();
@@ -170,10 +170,10 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
     // remove the client in cascade
 
-    Qleany::Domain::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Domain::RelationshipInfo &relationship : Simple::Domain::Client::schema.relationships)
+    Qleany::Entities::RelationshipInfo passengerClientRelationship;
+    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Domain::Entities::Passenger && relationship.fieldName == "client")
+        if (relationship.rightEntityId == Simple::Entities::Entities::Passenger && relationship.fieldName == "client")
         {
             passengerClientRelationship = relationship;
             break;
@@ -182,11 +182,12 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Qleany::Domain::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
-            Simple::Domain::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+            Simple::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+
             if (!foreignClient.isValid())
             {
                 continue;
@@ -205,10 +206,10 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
     // remove the clientFriends in cascade
 
-    Qleany::Domain::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Domain::RelationshipInfo &relationship : Simple::Domain::Client::schema.relationships)
+    Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Domain::Entities::Passenger &&
+        if (relationship.rightEntityId == Simple::Entities::Entities::Passenger &&
             relationship.fieldName == "clientFriends")
         {
             passengerClientFriendsRelationship = relationship;
@@ -218,12 +219,13 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Qleany::Domain::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
-            QList<Simple::Domain::Passenger> foreignClientFriends =
+            QList<Simple::Entities::Passenger> foreignClientFriends =
                 this->fetchClientFriendsLoader().operator()(entityId);
+
             if (foreignClientFriends.isEmpty())
             {
                 continue;
@@ -250,7 +252,7 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
 
-    returnedHashOfEntityWithRemovedIds.insert(Simple::Domain::Entities::Client, removedIdsResult.value());
+    returnedHashOfEntityWithRemovedIds.insert(Simple::Entities::Entities::Client, removedIdsResult.value());
 
     emit m_signalHolder->removed(removedIdsResult.value());
 
@@ -264,10 +266,10 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     // cahnge active status of the client in cascade
 
-    Qleany::Domain::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Domain::RelationshipInfo &relationship : Simple::Domain::Client::schema.relationships)
+    Qleany::Entities::RelationshipInfo passengerClientRelationship;
+    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Domain::Entities::Passenger && relationship.fieldName == "client")
+        if (relationship.rightEntityId == Simple::Entities::Entities::Passenger && relationship.fieldName == "client")
         {
             passengerClientRelationship = relationship;
             break;
@@ -276,11 +278,12 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Qleany::Domain::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
-            Simple::Domain::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+            Simple::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
+
             if (!foreignClient.isValid())
             {
                 continue;
@@ -300,10 +303,10 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     // cahnge active status of the clientFriends in cascade
 
-    Qleany::Domain::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Domain::RelationshipInfo &relationship : Simple::Domain::Client::schema.relationships)
+    Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Domain::Entities::Passenger &&
+        if (relationship.rightEntityId == Simple::Entities::Entities::Passenger &&
             relationship.fieldName == "clientFriends")
         {
             passengerClientFriendsRelationship = relationship;
@@ -313,12 +316,13 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Qleany::Domain::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
-            QList<Simple::Domain::Passenger> foreignClientFriends =
+            QList<Simple::Entities::Passenger> foreignClientFriends =
                 this->fetchClientFriendsLoader().operator()(entityId);
+
             if (foreignClientFriends.isEmpty())
             {
                 continue;
@@ -345,7 +349,7 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
 
-    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Domain::Entities::Client, changedIdsResult.value());
+    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Entities::Entities::Client, changedIdsResult.value());
     emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);

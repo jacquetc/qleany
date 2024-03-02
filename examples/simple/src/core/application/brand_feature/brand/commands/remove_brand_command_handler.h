@@ -33,7 +33,7 @@ class SIMPLE_EXAMPLE_APPLICATION_BRAND_EXPORT RemoveBrandCommandHandler : public
     InterfaceBrandRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request);
     Result<int> restoreImpl();
-    Simple::Domain::Brand m_oldState;
+    Simple::Entities::Brand m_oldState;
     static bool s_mappingRegistered;
     void registerMappings();
 };
