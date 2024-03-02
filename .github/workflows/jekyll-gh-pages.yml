@@ -28,6 +28,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Doxygen Action
+        uses: mattnotmitt/doxygen-action@v1.9.5
+        with:
+          # Path to Doxyfile
+          doxyfile-path: "./Doxyfile" # default is ./Doxyfile
+          # Working directory
+          working-directory: "." # default is .
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Build with Jekyll
