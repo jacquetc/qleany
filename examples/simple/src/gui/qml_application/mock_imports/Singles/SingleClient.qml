@@ -11,7 +11,6 @@ QtObject {
         uuid: ""
         creationDate: "2020-01-01T00:00:00"
         updateDate: "2020-01-01T00:00:00"
-        content: "example"
     }
 
     ListElement {
@@ -20,7 +19,6 @@ QtObject {
         uuid: ""
         creationDate: "2020-01-01T00:00:00"
         updateDate: "2020-01-01T00:00:00"
-        content: "example"
     }
 
     ListElement {
@@ -29,7 +27,6 @@ QtObject {
         uuid: ""
         creationDate: "2020-01-01T00:00:00"
         updateDate: "2020-01-01T00:00:00"
-        content: "example"
     }
 
     ListElement {
@@ -38,7 +35,6 @@ QtObject {
         uuid: ""
         creationDate: "2020-01-01T00:00:00"
         updateDate: "2020-01-01T00:00:00"
-        content: "example"
     }
 
     ListElement {
@@ -47,7 +43,6 @@ QtObject {
         uuid: ""
         creationDate: "2020-01-01T00:00:00"
         updateDate: "2020-01-01T00:00:00"
-        content: "example"
     }
 
 

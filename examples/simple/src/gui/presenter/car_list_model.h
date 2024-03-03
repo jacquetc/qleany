@@ -3,14 +3,14 @@
 #pragma once
 
 #include "car/car_dto.h"
-#include "presenter_export.h"
+#include "simple_example_presenter_export.h"
 #include <QAbstractListModel>
 
 using namespace Simple::Contracts::DTO::Car;
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListModel
+class SIMPLE_EXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListModel
 {
     Q_OBJECT
 
@@ -37,7 +37,9 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListModel
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+
     QHash<int, QByteArray> roleNames() const override;
 
   signals:

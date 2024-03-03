@@ -1,11 +1,8 @@
 import QtQuick
 
 ListModel {
-
-    
     property int carId: 1
     
-
 
     ListElement {
         itemId: 1

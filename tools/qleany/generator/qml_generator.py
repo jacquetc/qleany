@@ -237,7 +237,7 @@ def _get_generation_dict(
     generation_dict["mock_interactor_files"].append(qcoro_qmltask_file)
     generation_dict["qcoro_qmltask_file"] = qcoro_qmltask_file
 
-    # add models
+    # ---- add models
     generation_dict["models"] = []
     generation_dict["mock_model_files"] = []
     generation_dict["real_model_files"] = []
@@ -339,6 +339,71 @@ def _get_generation_dict(
         real_imports_folder_path, "models", "CMakeLists.txt"
     )
     generation_dict["model_cmakelists_file"] = model_cmakelists_file
+
+    # ---- add singles
+    generation_dict["singles"] = []
+    generation_dict["mock_single_files"] = []
+    generation_dict["real_single_files"] = []
+
+    for single in singles:
+        single_name = single["name"]
+        single_pascal_name = stringcase.pascalcase(single_name)
+        single_snake_name = stringcase.snakecase(single_name)
+        single_camel_name = stringcase.camelcase(single_name)
+
+        entity_name = single["entity"]
+        entity_name_snake = stringcase.snakecase(entity_name)
+        entity_name_pascal = stringcase.pascalcase(entity_name)
+        entity_name_camel = stringcase.camelcase(entity_name)
+
+        if single_snake_name == "auto":
+            single_snake_name = f"single_{entity_name_snake}"
+            single_pascal_name = f"Single{entity_name_pascal}"
+            single_camel_name = f"single{entity_name_camel}"
+
+        mock_single_file = os.path.join(
+            mock_imports_folder_path,
+            "Singles",
+            f"{single_pascal_name}.qml",
+        )
+        generation_dict["mock_single_files"].append(mock_single_file)
+        real_single_file = os.path.join(
+            real_imports_folder_path,
+            "singles",
+            f"foreign_{single_snake_name}.h",
+        )
+        generation_dict["real_single_files"].append(real_single_file)
+
+        generation_dict["singles"].append(
+            {
+                "mock_single_file": mock_single_file,
+                "mock_template_path": "QML/mock_imports/singles/",
+                "mock_template": "single.qml.jinja2",
+                "real_single_file": real_single_file,
+                "real_template_path": "QML/real_imports/singles/",
+                "real_template": "foreign_single.h.jinja2",
+                "single_pascal_name": single_pascal_name,
+                "single_snake_name": single_snake_name,
+                "single_camel_name": single_camel_name,
+                "fields": tools.get_fields_without_foreign_entities(
+                    entities_by_name[single["entity"]]["fields"],
+                    entities_by_name,
+                    single["entity"],
+                ),
+            }
+        )
+
+    # add qmldir:
+    single_qmldir_file = os.path.join(mock_imports_folder_path, "Singles", "qmldir")
+
+    generation_dict["single_qmldir_file"] = single_qmldir_file
+
+    # add CMakelists.txt:
+    single_cmakelists_file = os.path.join(
+        real_imports_folder_path, "singles", "CMakeLists.txt"
+    )
+    generation_dict["single_cmakelists_file"] = single_cmakelists_file
+
 
     # add application_name
     generation_dict["application_name"] = application_name
@@ -1037,6 +1102,150 @@ def _generate_real_models_cmakelists_file(
 
     print(f"Successfully wrote file {output_file}")
 
+def _generate_mock_single_file(
+    root_path: str,
+    single: dict,
+    generation_dict: dict,
+    files_to_be_generated: dict[str, bool],
+):
+    # generate the mock single file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(single["mock_single_file"], False):
+        return
+
+    # Create the jinja2 environment
+    template_path = os.path.join("templates", single["mock_template_path"])
+    env = Environment(loader=FileSystemLoader(template_path))
+    # Load the template
+    template = env.get_template(single["mock_template"])
+
+    # Render the template
+    output = template.render(
+        single=single,
+    )
+
+    output_file = os.path.join(root_path, single["mock_single_file"])
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
+
+def _generate_real_single_file(
+    root_path: str,
+    single: dict,
+    generation_dict: dict,
+    files_to_be_generated: dict[str, bool],
+):
+    # generate the real single file if in the files_to_be_generated dict the value is True
+    real_single_file = single["real_single_file"]
+
+    if not files_to_be_generated.get(real_single_file, False):
+        return
+
+    # Create the jinja2 environment
+    template_path = os.path.join("templates", single["real_template_path"])
+    env = Environment(loader=FileSystemLoader(template_path))
+    # Load the template
+    template = env.get_template(single["real_template"])
+
+    # Render the template
+    output = template.render(
+        single=single,
+        application_cpp_domain_name=generation_dict["application_cpp_domain_name"],
+    )
+
+    output_file = os.path.join(root_path, real_single_file)
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    # if uncrustify_config_file:
+    #     uncrustify.run_uncrustify(real_single_file, uncrustify_config_file)
+    clang_format_runner.run_clang_format(output_file)
+
+    print(f"Successfully wrote file {output_file}")
+        
+
+def _generate_mock_singles_qmldir_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    # generate the mock qmldir file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(generation_dict["single_qmldir_file"], False):
+        return
+
+    # Create the jinja2 environment
+    env = Environment(loader=FileSystemLoader("templates/QML/mock_imports/singles/"))
+    # Load the template
+    template = env.get_template("qmldir_template.jinja2")
+
+    singles_to_declare_list = []
+    for single in generation_dict["singles"]:
+        name = single["single_pascal_name"]
+        singles_to_declare_list.append(f"{name} 1.0 {name}.qml")
+
+    # Render the template
+    output = template.render(singles_to_declare_list=singles_to_declare_list)
+
+    output_file = os.path.join(root_path, generation_dict["single_qmldir_file"])
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
+
+def _generate_real_singles_cmakelists_file(
+    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    interactor_cmakelists_file = generation_dict["single_cmakelists_file"]
+
+    # generate the real cmakelists file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(interactor_cmakelists_file, False):
+        return
+
+    output_file = os.path.join(root_path, interactor_cmakelists_file)
+
+    # Create the jinja2 environment
+    env = Environment(loader=FileSystemLoader("templates/QML/real_imports/singles/"))
+    # Load the template
+    template = env.get_template("cmakelists.txt.jinja2")
+
+    files = generation_dict["real_single_files"]
+    relative_files = []
+    for file in files:
+        relative_files.append(
+            os.path.relpath(
+                os.path.join(root_path, file), os.path.dirname(output_file)
+            ).replace("\\", "/")
+        )
+
+    # Render the template
+    output = template.render(
+        files=relative_files,
+        application_name=generation_dict["application_name"],
+    )
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
 
 def generate_qml_files(
     root_path: str,
@@ -1180,6 +1389,21 @@ def generate_qml_files(
         root_path, generation_dict, files_to_be_generated
     )
 
+    # singles
+    for single in generation_dict["singles"]:
+        _generate_mock_single_file(
+            root_path, single, generation_dict, files_to_be_generated
+        )
+        _generate_real_single_file(
+            root_path, single, generation_dict, files_to_be_generated
+        )
+
+    # generate mock qmldir file
+    _generate_mock_singles_qmldir_file(root_path, generation_dict, files_to_be_generated)
+    _generate_real_singles_cmakelists_file(
+        root_path, generation_dict, files_to_be_generated
+    )
+
 
 def get_files_to_be_generated(
     manifest_file: str, files_to_be_generated: dict[str, bool] = {}
@@ -1264,13 +1488,25 @@ def get_files_to_be_generated(
     files += generation_dict["real_model_files"]
     files += generation_dict["mock_model_files"]
 
-    # # add CMakelists.txt:
+    # # add model CMakelists.txt:
     model_cmakelists_file = generation_dict["model_cmakelists_file"]
     files.append(model_cmakelists_file)
 
-    # # add qmldir:
+    # # add model qmldir:
     model_qmldir_file = generation_dict["model_qmldir_file"]
     files.append(model_qmldir_file)
+
+    # list singles
+    files += generation_dict["real_single_files"]
+    files += generation_dict["mock_single_files"]
+
+    # # add single CMakelists.txt:
+    single_cmakelists_file = generation_dict["single_cmakelists_file"]
+    files.append(single_cmakelists_file)
+
+    # # add single qmldir:
+    single_qmldir_file = generation_dict["single_qmldir_file"]
+    files.append(single_qmldir_file)
 
     # add common real CMakeLists.txt file
     common_real_cmakelists_file = generation_dict["common_real_cmakelists_file"]

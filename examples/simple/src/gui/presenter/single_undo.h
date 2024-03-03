@@ -2,13 +2,13 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "presenter_export.h"
+#include "simple_example_presenter_export.h"
 #include <QAction>
 #include <QObject>
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleUndo : public QObject
+class SIMPLE_EXAMPLE_PRESENTER_EXPORT SingleUndo : public QObject
 {
     Q_OBJECT
 

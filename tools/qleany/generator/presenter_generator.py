@@ -21,53 +21,6 @@ def _get_generation_dict(
     list_models_list: list,
     create_undo_and_redo_singles: bool,
 ) -> dict:
-    def get_entity_fields(entity_name: str, entities_by_name: dict) -> list:
-        if entity_name == "EntityBase":
-            return [
-                {"name": "id", "type": "int", "pascal_name": "Id", "is_foreign": False}
-            ]
-
-        entity_data = entities_by_name[entity_name]
-        fields = entity_data["fields"]
-        return fields
-
-    def get_fields_without_foreign_entities(
-        fields: list, entities_by_name: dict, entity_mappable_with: str = ""
-    ) -> list:
-        # make a deep copy of the fields
-        fields = copy.deepcopy(fields)
-
-        # get recursive fields from parent
-
-        parent_fields = []
-        entity_parent = entities_by_name.get(entity_mappable_with, {}).get("parent", "")
-
-        while entity_parent:
-            parent_fields = (
-                get_entity_fields(entity_parent, entities_by_name) + parent_fields
-            )
-            entity_parent = entities_by_name.get(entity_parent, {}).get("parent", "")
-
-        fields = parent_fields + fields
-
-        # add fields without foreign entities
-        fields_without_foreign = []
-        for field in fields:
-            field["name_pascal"] = stringcase.pascalcase(field["name"])
-            field["name_snake"] = stringcase.snakecase(field["name"])
-            field["name_spinal"] = stringcase.spinalcase(field["name"])
-            field["name_camel"] = stringcase.camelcase(field["name"])
-
-            if tools.is_unique_foreign_entity(
-                field["type"], entities_by_name
-            ) or tools.is_list_foreign_entity(field["type"], entities_by_name):
-                continue
-
-            else:
-                field["is_foreign"] = False
-                fields_without_foreign.append(field)
-
-        return fields_without_foreign
 
     generation_dict = {}
 
@@ -112,7 +65,7 @@ def _get_generation_dict(
                 "class_name_pascal": class_name_pascal,
                 "class_name_spinal": class_name_spinal,
                 "class_name_camel": class_name_camel,
-                "fields": get_fields_without_foreign_entities(
+                "fields": tools.get_fields_without_foreign_entities(
                     entities_by_name[single["entity"]]["fields"],
                     entities_by_name,
                     single["entity"],
@@ -169,7 +122,7 @@ def _get_generation_dict(
         is_related_list = related_name != "" and related_field_name != ""
 
         related_fields = (
-            get_entity_fields(related_name, entities_by_name) if is_related_list else []
+            tools.get_entity_fields(related_name, entities_by_name) if is_related_list else []
         )
         is_ordered_list = False
         for field in related_fields:
@@ -216,7 +169,7 @@ def _get_generation_dict(
                 "class_name_pascal": class_name_pascal,
                 "class_name_spinal": class_name_spinal,
                 "class_name_camel": class_name_camel,
-                "fields": get_fields_without_foreign_entities(
+                "fields": tools.get_fields_without_foreign_entities(
                     entities_by_name[model["entity"]]["fields"],
                     entities_by_name,
                     model["entity"],

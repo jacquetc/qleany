@@ -3,14 +3,14 @@
 #pragma once
 
 #include "passenger/passenger_dto.h"
-#include "presenter_export.h"
+#include "simple_example_presenter_export.h"
 #include <QAbstractListModel>
 
 using namespace Simple::Contracts::DTO::Passenger;
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : public QAbstractListModel
+class SIMPLE_EXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int carId READ carId WRITE setCarId RESET resetCarId NOTIFY carIdChanged FINAL)
@@ -42,7 +42,9 @@ class SIMPLEEXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : publi
     void resetCarId();
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+
     QHash<int, QByteArray> roleNames() const override;
 
   signals:
