@@ -81,8 +81,8 @@ QVariant {{ model.class_name_pascal }}::data(const QModelIndex &index, int role)
     }
     
     {% for field in model.fields %}
-    else if (role == {{ field.name_pascal }}Role)
-        return {{ model.entity_name_camel }}.{{ field.name_camel }}();
+    else if (role == {{ field.pascal_name }}Role)
+        return {{ model.entity_name_camel }}.{{ field.camel_name }}();
     {%- endfor %}      
 
     return QVariant();
@@ -112,7 +112,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
     }
 
     {% for field in model.fields %}
-    else if (role == {{ field.name_pascal }}Role)
+    else if (role == {{ field.pascal_name }}Role)
     {
         if(value.canConvert<{{ field.type }}>() == false){
             qCritical() << "Cannot convert value to {{ field.type }}";
@@ -123,7 +123,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
 
         Update{{ model.entity_name_pascal }}DTO dto;
         dto.setId({{ model.entity_name_camel }}.id());
-        dto.set{{ field.name_pascal }}(value.value<{{ field.type }}>());
+        dto.set{{ field.pascal_name }}(value.value<{{ field.type }}>());
 
         {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Interactor::instance()->update(dto)
             .then([this, index, role](auto &&result) {
@@ -176,11 +176,11 @@ QHash<int, QByteArray> {{ model.class_name_pascal }}::roleNames() const
 {
     QHash<int, QByteArray> names;
     {% for field in model.fields %}
-        {%- if field.name_pascal == "Id" %}
+        {%- if field.pascal_name == "Id" %}
         // renaming id to itemId to avoid conflict with QML's id
-    names[{{ field.name_pascal }}Role] = "itemId";
+    names[{{ field.pascal_name }}Role] = "itemId";
         {%- else %}
-    names[{{ field.name_pascal }}Role] = "{{ field.name_camel }}";
+    names[{{ field.pascal_name }}Role] = "{{ field.camel_name }}";
         {%- endif %}
     {%- endfor %}
     return names;

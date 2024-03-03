@@ -143,9 +143,9 @@ def get_fields_without_foreign_entities(
     fields_without_foreign = []
     for field in fields:
         field["pascal_name"] = stringcase.pascalcase(field["name"])
-        field["name_snake"] = stringcase.snakecase(field["name"])
-        field["name_spinal"] = stringcase.spinalcase(field["name"])
-        field["name_camel"] = stringcase.camelcase(field["name"])
+        field["snake_name"] = stringcase.snakecase(field["name"])
+        field["spinal_name"] = stringcase.spinalcase(field["name"])
+        field["camel_name"] = stringcase.camelcase(field["name"])
         field["hidden"] = field.get("hidden", False)
 
         if is_unique_foreign_entity(

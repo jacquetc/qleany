@@ -7,7 +7,7 @@ QtObject {
 {% for element in range(1, 6) %}
     ListElement {
         itemId: {{ loop.index }}
-    {% for field in model.fields %}
+    {% for field in single.fields %}
         {%- if field.camel_name != "id" %}
         {{ field.camel_name }}: {{ field.default_value_for_qml }}
         {%- endif %}

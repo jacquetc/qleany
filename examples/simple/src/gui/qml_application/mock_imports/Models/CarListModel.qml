@@ -1,9 +1,7 @@
 import QtQuick
 
 ListModel {
-
     
-
 
     ListElement {
         itemId: 1

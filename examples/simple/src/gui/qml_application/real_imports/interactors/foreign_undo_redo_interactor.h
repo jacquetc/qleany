@@ -9,8 +9,9 @@ using namespace Simple::Interactor::UndoRedo;
 struct ForeignUndoRedoInteractor
 {
     Q_GADGET
-    QML_FOREIGN(UndoRedoInteractor)
+    QML_FOREIGN(Simple::Interactor::UndoRedo::UndoRedoInteractor)
     QML_SINGLETON
+    QML_NAMED_ELEMENT(UndoRedoInteractor)
 
   public:
     // Initialize this singleton instance with the given engine.

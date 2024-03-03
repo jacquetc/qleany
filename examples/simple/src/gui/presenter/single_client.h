@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "presenter_export.h"
+#include "simple_example_presenter_export.h"
 #include <QObject>
 
 #include <QDateTime>
@@ -13,7 +13,7 @@
 
 namespace Simple::Presenter
 {
-class SIMPLEEXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
+class SIMPLE_EXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int itemId READ id WRITE setId RESET resetId NOTIFY idChanged FINAL)

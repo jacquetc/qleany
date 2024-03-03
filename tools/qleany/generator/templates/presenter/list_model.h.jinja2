@@ -19,7 +19,7 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
     enum Roles
     {
         {% for field in model.fields %}
-        {{ field.name_pascal }}Role = Qt::UserRole + {{ loop.index0 }}{{ "," if not loop.last }}  
+        {{ field.pascal_name }}Role = Qt::UserRole + {{ loop.index0 }}{{ "," if not loop.last }}  
         {%- endfor %}      
     };
     Q_ENUM(Roles)

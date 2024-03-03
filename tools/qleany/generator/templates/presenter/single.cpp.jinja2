@@ -19,9 +19,9 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
         if (dto.id() == id())
         {
         {% for field in single.fields %}
-        if (m_{{ field.name_camel }} != dto.{{ field.name_camel }}()){
-            m_{{ field.name_camel }} = dto.{{ field.name_camel }}();
-            emit {{ field.name_camel }}Changed();
+        if (m_{{ field.camel_name }} != dto.{{ field.camel_name }}()){
+            m_{{ field.camel_name }} = dto.{{ field.camel_name }}();
+            emit {{ field.camel_name }}Changed();
             }
         {%- endfor %}
 
@@ -45,9 +45,9 @@ void {{ single.class_name_pascal }}::setId(int newId)
     if (m_id == 0)
     {
         {% for field in single.fields %}
-        {% if field.name_camel != "id" %}
-            m_{{ field.name_camel }} = {{ field.type }}{};
-            emit {{ field.name_camel }}Changed();
+        {% if field.camel_name != "id" %}
+            m_{{ field.camel_name }} = {{ field.type }}{};
+            emit {{ field.camel_name }}Changed();
         {% endif %}
         {%- endfor %}
     }
@@ -62,9 +62,9 @@ void {{ single.class_name_pascal }}::setId(int newId)
                     return;
                 }
                 {% for field in single.fields %}
-                {% if field.name_camel != "id" %}
-                    m_{{ field.name_camel }} = {{ single.entity_name_camel }}.{{ field.name_camel }}();
-                    emit {{ field.name_camel }}Changed();
+                {% if field.camel_name != "id" %}
+                    m_{{ field.camel_name }} = {{ single.entity_name_camel }}.{{ field.camel_name }}();
+                    emit {{ field.camel_name }}Changed();
                 {% endif %}
                 {%- endfor %}
                 });
@@ -77,29 +77,29 @@ void {{ single.class_name_pascal }}::resetId()
 }
 
 {% for field in single.fields %}
-{% if field.name_camel != "id" %}
-{{ field.type }} {{ single.class_name_pascal }}::{{ field.name_camel }}() const
+{% if field.camel_name != "id" %}
+{{ field.type }} {{ single.class_name_pascal }}::{{ field.camel_name }}() const
 {
-    return m_{{ field.name_camel }};
+    return m_{{ field.camel_name }};
 }
 
 {% if not single.read_only -%}
-void {{ single.class_name_pascal }}::set{{ field.name_pascal }}({% if field.type in ['int', 'double', 'float', 'bool'] %}{{ field.type }} new{{ field.name_pascal }}{% else %} const {{ field.type }} &new{{ field.name_pascal }}{% endif %})
+void {{ single.class_name_pascal }}::set{{ field.pascal_name }}({% if field.type in ['int', 'double', 'float', 'bool'] %}{{ field.type }} new{{ field.pascal_name }}{% else %} const {{ field.type }} &new{{ field.pascal_name }}{% endif %})
 {
-    if (m_{{ field.name_camel }} == new{{ field.name_pascal }})
+    if (m_{{ field.camel_name }} == new{{ field.pascal_name }})
         return;
 
     Update{{ single.entity_name_pascal }}DTO dto;
     dto.setId(id());
-    dto.set{{ field.name_pascal }}(new{{ field.name_pascal }});
+    dto.set{{ field.pascal_name }}(new{{ field.pascal_name }});
     {{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}Interactor::instance()->update(dto).then(
             [this](const {{ application_cpp_domain_name }}::Contracts::DTO::{{ single.entity_name_pascal }}::{{ single.entity_name_pascal }}DTO &{{ single.entity_name_camel }}) {   
                 if({{ single.entity_name_camel }}.isInvalid()){
                     qCritical() << Q_FUNC_INFO << "Invalid {{ single.entity_name_camel }}Id";
                     return;
                 }
-                m_{{ field.name_camel }} = {{ single.entity_name_camel }}.{{ field.name_camel }}();
-                emit {{ field.name_camel }}Changed();
+                m_{{ field.camel_name }} = {{ single.entity_name_camel }}.{{ field.camel_name }}();
+                emit {{ field.camel_name }}Changed();
             });
 }
 {% endif %}

@@ -349,8 +349,17 @@ def _get_generation_dict(
         single_name = single["name"]
         single_pascal_name = stringcase.pascalcase(single_name)
         single_snake_name = stringcase.snakecase(single_name)
-        single_spinal_name = stringcase.spinalcase(single_name)
         single_camel_name = stringcase.camelcase(single_name)
+
+        entity_name = single["entity"]
+        entity_name_snake = stringcase.snakecase(entity_name)
+        entity_name_pascal = stringcase.pascalcase(entity_name)
+        entity_name_camel = stringcase.camelcase(entity_name)
+
+        if single_snake_name == "auto":
+            single_snake_name = f"single_{entity_name_snake}"
+            single_pascal_name = f"Single{entity_name_pascal}"
+            single_camel_name = f"single{entity_name_camel}"
 
         mock_single_file = os.path.join(
             mock_imports_folder_path,
@@ -361,7 +370,7 @@ def _get_generation_dict(
         real_single_file = os.path.join(
             real_imports_folder_path,
             "singles",
-            f"foreign_{single_snake_name}_single.h",
+            f"foreign_{single_snake_name}.h",
         )
         generation_dict["real_single_files"].append(real_single_file)
 
@@ -375,8 +384,12 @@ def _get_generation_dict(
                 "real_template": "foreign_single.h.jinja2",
                 "single_pascal_name": single_pascal_name,
                 "single_snake_name": single_snake_name,
-                "single_spinal_name": single_spinal_name,
                 "single_camel_name": single_camel_name,
+                "fields": tools.get_fields_without_foreign_entities(
+                    entities_by_name[single["entity"]]["fields"],
+                    entities_by_name,
+                    single["entity"],
+                ),
             }
         )
 
