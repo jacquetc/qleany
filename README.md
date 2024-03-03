@@ -12,7 +12,7 @@ Please avoid using Qt Design Studio version 4.3 (which utilizes Qt 6.6) due to a
 
 ## Framework's Objective
 
-Qleany's primary goal is to automate the generation of a structured project environment for C++/Qt6 applications. This is achieved by interpreting a simple manifest file, named `qleany.yaml`, located at the root of the project. The framework generates a comprehensive structure including folders, CMakeLists.txt, and essential C++ files. The generated projects support both QWidget and QML GUIs or a combination of both. Upon initial generation, the projects are immediately compilable, requiring developers only to design GUIs and implement custom use cases.
+Qleany's primary goal is to automate the generation of a structured project environment for C++/Qt6 applications. This is achieved by interpreting a simple manifest file, named `qleany.yaml`, located at the root of the project. The framework generates a comprehensive structure including folders, CMakeLists.txt, and more than essential C++ files: it will generate whole libraries adapted to your needs. The generated projects support both QWidget and QML GUIs or a combination of both. Upon initial generation, the projects are immediately compilable, requiring developers only to design GUIs and implement custom use cases.
 
 The framework acknowledges the repetitive nature of file creation in Clean Architecture and addresses this by automating the generation of similar files. Additional features include:
 
@@ -30,16 +30,34 @@ Many developers are likely familiar with the following depiction of Clean Archit
 
 It's important to note that this conceptual representation needs to be tailored to fit the specific requirements of the language and project at hand. Qleany presents a distinct interpretation of Clean Architecture, uniquely adapted and structured to suit its specific use cases and environment.
 
+Libraries and their respective functionalities are organized as follows:
+
 - **Entities**: Contains entities and is encapsulated in a library named `entities`. This is the place where the domain model is defined, including the entities and their relationships. Also known as the "domain" layer or "enterprise business rules".
-- **Application**: Groups use cases by functionalities, organized within a library called `application`. This is the place where the application by itself is defined, with its use cases and their handlers. Also known as the "application businness rules" layer or "use cases" layer.
-- **Persistence**: Manages internal data persistence. It includes a 'repository' wrapper for SQLite database interactions, with each entity having its repository in the `RepositoryProvider` class.
+
+- **Application**: Groups use cases by functionalities, organized within a library called `application`. This is the place where the application by itself is defined, with its use cases and their handlers. Also known as the "application businness rules" layer or "use cases" layer. One little rule: a use case cannot depend on another use case, even if the temptation is strong. If it's really needed, delegate the duplicate work to a service following the example of Gateway and Infrasturcture, and use the service in the use cases. This way, the use cases are kept independent from each other and one breaking does not break the others.
+
+- **Persistence**: Manages internal data persistence, see the two sub-sections below.
+- **Persistence/repository**: It includes a 'repository' wrapper for persistence interactions, with each entity having its repository. Repositories instances are ultimately stored in the `RepositoryProvider` class. `RepositoryProvider` is provided by the Qleany library.
+- **Persistence/database**:Also, you would normally find a `database` folder by to the `repository` folder, containing the SQLite database and its management classes, but these classes are included in the Qleany library. Of course, if needed, you can implement your own database management classes and swap the provided ones with yours.
+
 - **Contracts**: A common library for most other components, housing all interfaces from `persistence`, `gateway`, and `infrastructure`. This design minimizes tight coupling and circular dependencies.
+
 - **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as interactors.
+
 - **CQRS Libraries** (Command Query Responsibility Segregation): The `application` layer is designed to support CQRS, with commands and queries being handled separately. This separation is achieved by using the `CommandHandler` and `QueryHandler` classes. Other classes, such as `CommandValidator` and `QueryValidator`, are used to validate commands and queries, respectively. They are stored away in a separate library called `cqrs`.
+
 - **Gateway**: Optional library for handling remote connections and services. It can be manually added by the developer and is used similarly to repositories in use cases.
+
 - **Infrastructure**: Optional. Handles actions like file management, local settings, and system queries. It's injected into use cases similar to repositories and gateways.
+
 - **Interactor**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
+
 - **Presenter**: Maintains Qt models and representations of unique entities (referred to as `Singles`), enhancing their integration and usage within the GUI.
+
+- **UI**: The structure allows the simultaneous use of different fronts, each in its own binary. QML and QWidgets UIs can coexist without any conflict. Same for a CLI, an API ... All these fronts will use the same models and interactors. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. Qleany will only generate one for each front.
+
+Another related point:
+
 - **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `interactor`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
 
 Project dependencies:
@@ -57,7 +75,7 @@ Prerequisites:
 - QCoro (dev packages)
 - Cmake and extra-cmake-modules
 
-The use of sccache is optional. Also, adapt the -j6 to your number of CPU minus one.
+Adapt the -j6 to your number of CPU minus one.
 
 CMake options are:
 - QLEANY_BUILD_EXAMPLES (default: on)
@@ -70,7 +88,7 @@ git clone https://github.com/jacquetc/qleany.git
 cd qleany
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DQLEANY_BUILD_WITH_QT_GUI=on -DQLEANY_BUILD_EXAMPLES=off -DQLEANY_BUILD_TESTS -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DQLEANY_BUILD_WITH_QT_GUI=on -DQLEANY_BUILD_EXAMPLES=off -DQLEANY_BUILD_TESTS ..
 cmake --build . -- -j6
 sudo cmake --install .
 ```
@@ -79,48 +97,63 @@ Qleany is building and examples are running well if you use Qt Creator or Visual
 
 ## Using Qleany
 
+Note: You can find the qleany library documentation at (https://jacquetc.github.io/qleany/index.html)[https://jacquetc.github.io/qleany/index.html]
+
 To use Qleany, follow these steps:
 
-1. Write a `qleany.yaml` file for your project. You can use the `examples/simple/qleany.yaml` file as a reference.
-2. Run the Qleany GUI interface and select the `qleany.yaml` file.
-3. List and select the files you want to generate.
-4. To avoid overwriting your current files: Preview the files, it will generate them in a "qleany_preview" folder.
-5. If you are sure, generate the files directly. Qleany will generate them in the right place, but will never delete other files.
-7. Create CMakelists.txt files to include the generated libraries in your project. You can use the `examples/simple/src/core/CMakeLists.txt` and `examples/simple/src/gui/CMakeLists.txt` files as a reference.
-6. For custom commands and queries, you still have to fill the blanks in the generated files. You will find "Q_UNIMPLEMENTED();" in the generated files.
+1. Think hard about your project's domain model, the entities, their fields and the relations between these entities. I enjoin you to use a UML tool to draw your domain model, like the ER diagrams of (https://mermaid.live)[Mermaid] or PlantUML.
+2. Then, draft all the use cases, grouped by features, with their commands and queries, and their DTOs (DTO = data struct for input or output). Think of these as the "verbs" of your application, the actions that can be done by the user or the fronts., like an API internal to your application.
+3. Finally, write a `qleany.yaml` file for your project. You can use the `examples/simple/qleany.yaml` file as a reference.
+4. Run the Qleany GUI interface and select the `qleany.yaml` file.
+5. List and select the files you want to generate.
+6. To avoid overwriting your current files: Preview the files, it will generate them in a "qleany_preview" folder.
+7. If you are sure, generate the files directly. Qleany will generate them in the right place, but will never delete other files.
+8. Create CMakelists.txt files to include the generated libraries in your project. You can use the `examples/simple/src/core/CMakeLists.txt` and `examples/simple/src/gui/CMakeLists.txt` files as a reference.
+9. For custom commands and queries, you still have to fill the blanks in the generated files. You will find "Q_UNIMPLEMENTED();" in the generated files.
 
+Note: I enjoin you to use sccache if you have a slow computer. It will speed up the compilation of your project after the first compilation. You can use it with the `CMAKE_CXX_COMPILER_LAUNCHER` option set to `sccache` in your CMakeLists.txt file or `-DCMAKE_CXX_COMPILER_LAUNCHER=sccache` in your cmake command line. To install sccache, go to (https://github.com/mozilla/sccache)[https://github.com/mozilla/sccache].
 
 ### For QWidgets GUI
 
-7. Create an UI project, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/desktop_application`.
-8. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use the interactors and models in presenter. Refer to the example for guidance at `examples/simple/src/gui/desktop_application/main.cpp`
+Note: For now, Qleany does not generate the GUI. You can use the `examples/simple/src/gui/desktop_application` as a reference of what is running fine.
+
+10. Create an UI project, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/desktop_application`.
+11. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use the interactors and models in presenter. Refer to the example for guidance at `examples/simple/src/gui/desktop_application/main.cpp`
 
 ### For QML GUI
 
+Note: For now, Qleany does not generate the GUI. You can use the `examples/simple/src/gui/qml_application` as a reference of what is running fine.
+
 *Note*: For now, the QML file generation is tailor-made to be used after a project is created using Qt Design Studio, but only subltle changes are needed to use it with a project created manually. You can use the `examples/simple/src/gui/qml_application` as a reference of what is running fine, this project uses Qt Design Studio's generated CMakeLists.txt. At the minimum, you only have to include the generated `realqmlmodules.cmake` file in your project's CMakeLists.txt file and mofify your main.cpp to register the other libraries.
 
-7. Create a QML project using Qt Design Studio, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/qml_application`.
-8. You can now start to implement your GUI and use cases. A GUI made with QML will use **not** the interactors and models directly from the interactor and presenter libraries. Wrappers around them all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/simple/src/gui/qml_application/src/main.cpp` and `examples/simple/src/gui/qml_application/CMakelists.txt`
+10. Create a QML project using Qt Design Studio, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/qml_application`.
+11. You can now start to implement your GUI and use cases. A GUI made with QML will use **not** the interactors and models directly from the interactor and presenter libraries. Wrappers around them all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/simple/src/gui/qml_application/src/main.cpp` and `examples/simple/src/gui/qml_application/CMakelists.txt`
 
 ### For both QWidgets and QML GUI
 
-You can use both QWidgets and QML GUIs in the same project. You can use the `examples/simple/` as a reference. The QML and QWidgets GUIs are in their own sub-folders, and the main.cpp file is in the root of the project. The CMakeLists.txt file is in the root of the project and includes the QML and QWidgets GUIs.
+You can use both QWidgets and QML GUIs in the same project. You can use the `examples/simple/` as a reference. The QML and QWidgets GUIs are in their own sub-folders, and the main.cpp file is in each folder. The CMakeLists.txt file is in the root of the project and includes the QML and QWidgets GUIs. In this configuration, two binaries are generated, one for each GUI. You can also use the same main.cpp file for both GUIs, and generate only one binary. It's up to you. Qleany will only write a main.cpp in each GUI folder, and you can modify them as you want.
+
+### Other Fronts
+
+You can also create a CLI, an API, a gRPC server, or other fronts. You can use the same models and interactors for all fronts. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. 
 
 ### Gateway and Infrastructure
 
 The gateway and infrastructure are not generated by Qleany. You have to create them manually. You can use the `examples/simple/src/core/contracts` and `examples/simple/src/core/persistence` as a reference. The `contracts` folder contains the interfaces for the gateway and infrastructure, similar to what is done with the repositories of `persistence`. 
 
-So, if I wnated to add a `gateway`, I would create a `gateway` folder in the `src/core/contracts` folder, and add the interfaces for the gateway. Then, I would create a `gateway` folder in the `src/core` folder, and add the implementation of the gateway. Each use case (handler) in `application` would have a `gateway` parameter using the interface, like what is already one with the repositories, and the `gateway` would be instanciated and injected into `interactor` in the `main.cpp` file.
+So, if I wanted to add a `gateway`, I would create a `gateway` folder in the `src/core/contracts` folder, and add the interfaces for all the public classes offered by the gateway. Then, I would create a `gateway` folder in the `src/core` folder, and add the implementation of the gateway classes. When needed, use cases (handler) in `application` would have a `gateway` parameter using the interface, like what is already done with the repositories, and the `gateway` classes would be instanciated and injected into `interactor` from inside the `main.cpp` file.
 
-Finally, do not forget a `gateway_registration.cpp` file in the `src/core/gateway` folder to register the gateway classes.
+Finally, do not forget a `gateway_registration.cpp` file in the `src/core/gateway` folder to register the gateway classes. 
 
-In a Gateway, we would find connections to remote services like REST APIs and remote datbases, and in Infrastructure, we would find connections to local services, like file management, local settings, and system queries. A "loadFile" method in a `FileLoader` class would be an example of an infrastructure service. Same for a `Settings` class or "exportToPdf" method in a `PdfExporter` class. 
+If you have too much gateway classes, it can be useful to store them inside a "GatewayProvider" class, like what is done with the `RepositoryProvider` that you can find (https://jacquetc.github.io/qleany/classQleany_1_1Repository_1_1RepositoryProvider.html)[here].
 
-The names Gateway and Infrastructure are not mandatory, you can use other names, like Remote and Local, or whatever you want.
+In a Gateway, we would find connections to remote services like REST APIs and remote databases, and in Infrastructure, we would find connections to local services, like file management, local settings, and system queries. A "loadFile" method in a `FileLoader` class would be an example of an infrastructure service. Same for a `Settings` class or "exportToPdf" method in a `PdfExporter` class. 
+
+The names Gateway and Infrastructure are not mandatory, you can use other names, like Remote and Local, or whatever you want. You can also put all inside a single `Gateway`. It's up to you.
 
 ### Custom Commands and Queries
 
-You can add custom commands and queries for each feature in the `application.features` of the `qleany.yaml`. You can use the `examples/simple/qleany.yaml` and `examples/simple/src/core/application` as references. Search for the Q_UNIMPLEMENTED(); macro in the generated files to find the places to fill with your custom code. Be careful ot not overwrite your custom code when you regenerate the files.
+You can add custom commands and queries for each feature in the `application.features` of the `qleany.yaml`. You can use the `examples/simple/qleany.yaml` and `examples/simple/src/core/application` as references. Search for the `Q_UNIMPLEMENTED();` macro in the generated files to find the places to fill with your custom code. Be careful ot not overwrite your custom code when you regenerate the files, use the preview feature of the generator to avoid this or deselect the files you don't want to regenerate.
 
 ## Installing the Qleany GUI Interface
 
@@ -134,7 +167,7 @@ To access Qleany's user-friendly graphical interface, run `qleany` in a terminal
 ![Alt text](doc/qleany_generator_gui.png)
 
 1. **Run the Qleany GUI**:
-   - Launch Qleany's graphical user interface by executing the script `generator/qleany_generator_ui.py`.
+   - Run `qleany` in a terminal.
 
 2. **Select the `qleany.yaml` File**:
    - Begin by choosing your project's `qleany.yaml` file. This configuration file is essential for the GUI to operate correctly.
