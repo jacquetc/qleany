@@ -30,8 +30,8 @@ Many developers are likely familiar with the following depiction of Clean Archit
 
 It's important to note that this conceptual representation needs to be tailored to fit the specific requirements of the language and project at hand. Qleany presents a distinct interpretation of Clean Architecture, uniquely adapted and structured to suit its specific use cases and environment.
 
-- **Entities**: Contains entities and is encapsulated in a library named `entities`.
-- **Application**: Groups use cases by functionalities, organized within a library called `application`.
+- **Entities**: Contains entities and is encapsulated in a library named `entities`. This is the place where the domain model is defined, including the entities and their relationships. Also known as the "domain" layer or "enterprise business rules".
+- **Application**: Groups use cases by functionalities, organized within a library called `application`. This is the place where the application by itself is defined, with its use cases and their handlers. Also known as the "application businness rules" layer or "use cases" layer.
 - **Persistence**: Manages internal data persistence. It includes a 'repository' wrapper for SQLite database interactions, with each entity having its repository in the `RepositoryProvider` class.
 - **Contracts**: A common library for most other components, housing all interfaces from `persistence`, `gateway`, and `infrastructure`. This design minimizes tight coupling and circular dependencies.
 - **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as interactors.
@@ -43,10 +43,10 @@ It's important to note that this conceptual representation needs to be tailored 
 - **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `interactor`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
 
 Project dependencies:
-![Alt text](doc/qleany_project_dep.drawio.png)
+![Alt text](docs/qleany_project_dep.drawio.png)
 
 Example of project structure:
-![Alt text](doc/qleany_project_structure.drawio.png)
+![Alt text](docs/qleany_project_structure.drawio.png)
 
 ## Installing the Qleany library
 
