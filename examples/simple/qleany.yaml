@@ -1,5 +1,7 @@
 ---
-
+schema:
+  version: 1
+  
 global:
   application_name: SimpleExample
   application_cpp_domain_name: Simple
@@ -233,13 +235,9 @@ CQRS:
 contracts:
   inverted_app_domain: eu.qleany
   folder_path: src/core/contracts
-  export: SIMPLEEXAMPLE_CONTRACTS_EXPORT
-  export_header_file: contracts_export.h
 
 presenter:
   folder_path: src/gui/presenter
-  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
-  export_header_file: presenter_export.h
   create_undo_and_redo_singles: true
   singles:
     - name: SingleCar
