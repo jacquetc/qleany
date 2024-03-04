@@ -2,21 +2,23 @@
 # If you do, be careful to not overwrite it when you run the generator again.
 
 find_package(Qt6 COMPONENTS Core Sql REQUIRED)
-#find_package(qleany CONFIG REQUIRED)
+# find_package(qleany CONFIG REQUIRED)
 
 set(LIBRARY_NAME simple-example-contracts)
 
 include(repository_interfaces.cmake)
 
-set(SRCS
-    simple_example_contracts_export.h
+qt_add_library(${LIBRARY_NAME} STATIC ${REPOSITORY_LIST})
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME simple_example_contracts
 )
 
-qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
-
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_CONTRACTS_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 

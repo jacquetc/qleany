@@ -6,22 +6,50 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 
 set(LIBRARY_NAME simple-example-entities)
 
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if(BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 include(entities.cmake)
 
 set(SRCS
-    simple_example_entities_export.h
     entities.h
     entities_registration.h
 )
 
-qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${ENTITY_LIST})
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${ENTITY_LIST})
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+BASE_NAME simple_example_persistence
+)
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES
                       POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
                       )
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_ENTITIES_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+                      
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qt6::Core )
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)
+
+if(IOS)
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif(IOS)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    install(TARGETS ${LIBRARY_NAME}
+        RUNTIME DESTINATION ${BINDIR}
+        LIBRARY DESTINATION ${LIBDIR})
+endif(CMAKE_SYSTEM_NAME STREQUAL "Windows")

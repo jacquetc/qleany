@@ -11,46 +11,10 @@ from copy import deepcopy
 import generation_dict_tools as tools
 
 
-def _generate_export_header_file(
-    root_path: str,
-    path: str,
-    application_name: str,
-    export: str,
-    export_header_file: str,
-    layer_name: str,
-    files_to_be_generated: dict[str, bool],
-):
-    # generate the export header file
-
-    template_env = Environment(loader=FileSystemLoader("templates/repositories"))
-    export_header_template = template_env.get_template("export_template.jinja2")
-
-    relative_export_header_file = os.path.join(path, export_header_file)
-
-    if not files_to_be_generated.get(relative_export_header_file, False):
-        return
-
-    export_header_file = os.path.join(root_path, relative_export_header_file)
-
-    rendered_template = export_header_template.render(
-        application_uppercase_name=stringcase.uppercase(application_name),
-        export=export,
-        layer_uppercase_name=stringcase.uppercase(layer_name),
-    )
-
-    # Create the directory if it does not exist
-    os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
-
-    with open(export_header_file, "w") as fh:
-        fh.write(rendered_template)
-        print(f"Successfully wrote file {export_header_file}")
-
-
 def _generate_cmakelists(
     root_path: str,
     path: str,
     application_name: str,
-    export_header_file: str,
     files_to_be_generated: dict[str, bool],
 ):
     # generate the cmakelists.txt
@@ -68,7 +32,7 @@ def _generate_cmakelists(
     rendered_template = cmakelists_template.render(
         application_spinalcase_name=stringcase.spinalcase(application_name),
         application_uppercase_name=stringcase.uppercase(application_name),
-        export_header_file=export_header_file,
+        application_snakecase_name=stringcase.snakecase(application_name),
     )
 
     # Create the directory if it does not exist
@@ -83,7 +47,6 @@ def _generate_contracts_cmakelists(
     root_path: str,
     path: str,
     application_name: str,
-    export_header_file: str,
     files_to_be_generated: dict[str, bool],
 ):
     # generate the cmakelists.txt
@@ -103,7 +66,7 @@ def _generate_contracts_cmakelists(
     rendered_template = cmakelists_template.render(
         application_spinalcase_name=stringcase.spinalcase(application_name),
         application_uppercase_name=stringcase.uppercase(application_name),
-        export_header_file=export_header_file,
+        application_snakecase_name=stringcase.snakecase(application_name),
     )
 
     # Create the directory if it does not exist
@@ -257,7 +220,7 @@ def generate_repository_files(
                 f"Interface{value['type_pascal_name']}Repository *m_{value['type_camel_name']}Repository;"
             )
         # remove duplicates :
-        loader_private_member_list = list(dict.fromkeys(foreign_entities_private_member_list))
+        foreign_entities_private_member_list = list(dict.fromkeys(foreign_entities_private_member_list))
 
         foreign_repository_header_list = []
         for key, value in foreign_entities.items():
@@ -669,7 +632,6 @@ def generate_repository_files(
         root_path,
         base_path,
         application_name,
-        export_header_file,
         files_to_be_generated,
     )
 
@@ -679,32 +641,8 @@ def generate_repository_files(
         root_path,
         contracts_folder_path,
         application_name,
-        contracts_export_header_file,
         files_to_be_generated,
     )
-
-    # write the export header file
-
-    _generate_export_header_file(
-        root_path,
-        base_path,
-        application_name,
-        export,
-        export_header_file,
-        "persistence",
-        files_to_be_generated,
-    )
-
-    _generate_export_header_file(
-        root_path,
-        contracts_folder_path,
-        application_name,
-        contracts_export,
-        contracts_export_header_file,
-        "contracts",
-        files_to_be_generated,
-    )
-
 
 def get_files_to_be_generated(
     manifest_file: str, files_to_be_generated: dict[str, bool] = None
@@ -721,7 +659,6 @@ def get_files_to_be_generated(
     contracts_folder_path = manifest["contracts"]["folder_path"]
     interface_folder_path = os.path.join(contracts_folder_path, "repository")
     global_data = manifest.get("global", {})
-    application_name = global_data.get("application_name", "example")
 
     # Get the list of files to be generated
     files = []
@@ -758,16 +695,6 @@ def get_files_to_be_generated(
 
     # add contracts CMakeLists.txt file:
     files.append(os.path.join(contracts_folder_path, "CMakeLists.txt"))
-
-    # add export header file:
-    files.append(
-        os.path.join(base_folder_path, f"{stringcase.snakecase(application_name)}_persistence_export.h")
-    )
-
-    # add contracts export header file:
-    files.append(
-        os.path.join(contracts_folder_path, f"{stringcase.snakecase(application_name)}_contracts_export.h")
-    )
 
     # add interface cmake file:
     files.append(

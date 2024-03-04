@@ -155,8 +155,6 @@ application:
       validator:
         enabled: false
 contracts:
-  export: SIMPLEEXAMPLE_CONTRACTS_EXPORT
-  export_header_file: contracts_export.h
   folder_path: src/core/contracts
   inverted_app_domain: eu.qleany
 entities:
@@ -214,8 +212,6 @@ interactor:
   folder_path: src/core/interactor/
 presenter:
   create_undo_and_redo_singles: true
-  export: SIMPLEEXAMPLE_PRESENTER_EXPORT
-  export_header_file: presenter_export.h
   folder_path: src/gui/presenter
   list_models:
   - displayed_field: name
@@ -249,3 +245,5 @@ repositories:
   - entity_name: Client
     lazy_loaders: true
   repository_folder_path: src/core/persistence/repository/
+schema:
+  version: 1
