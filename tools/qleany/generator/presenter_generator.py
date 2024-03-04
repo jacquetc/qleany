@@ -30,6 +30,9 @@ def _get_generation_dict(
         application_name
     )
     generation_dict["application_uppercase_name"] = application_name.upper()
+    generation_dict["application_snakecase_name"] = stringcase.snakecase(
+        application_name
+    )
     generation_dict["application_cpp_domain_name"] = application_cpp_domain_name
     generation_dict["export_header_file"] = f"{stringcase.snakecase(application_name)}_presenter_export.h"
     generation_dict["export"] = f"{stringcase.snakecase(application_name).upper()}_PRESENTER_EXPORT"
@@ -228,35 +231,6 @@ def _get_generation_dict(
     return generation_dict
 
 
-def _generate_export_header_file(
-    root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
-):
-    template_env = Environment(loader=FileSystemLoader("templates/presenter"))
-    template = template_env.get_template("export_template.jinja2")
-
-    folder_path = generation_dict["folder_path"]
-
-    relative_export_header_file = os.path.join(
-        folder_path, generation_dict["export_header_file"]
-    )
-    export_header_file = os.path.join(root_path, relative_export_header_file)
-
-    if files_to_be_generated.get(relative_export_header_file, False):
-        # Create the directory if it does not exist
-        os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
-
-        with open(export_header_file, "w") as f:
-            f.write(
-                template.render(
-                    application_uppercase_name=generation_dict[
-                        "application_uppercase_name"
-                    ],
-                    export=generation_dict["export"],
-                )
-            )
-            print(f"Successfully wrote file {export_header_file}")
-
-
 def _generate_cmakelists(
     root_path: str, generation_dict: dict, files_to_be_generated: dict[str, bool] = None
 ):
@@ -282,6 +256,10 @@ def _generate_cmakelists(
                     application_uppercase_name=generation_dict[
                         "application_uppercase_name"
                     ],
+                    application_snakecase_name=generation_dict[
+                        "application_snakecase_name"
+                    ]
+
                 )
             )
             print(f"Successfully wrote file {cmakelists_file}")
@@ -606,7 +584,6 @@ def generate_presenter_files(
         _generate_redo_single_files(root_path, generation_dict, files_to_be_generated)
     _generate_cmake_file(root_path, generation_dict, files_to_be_generated)
     _generate_cmakelists(root_path, generation_dict, files_to_be_generated)
-    _generate_export_header_file(root_path, generation_dict, files_to_be_generated)
 
     # format the files
     for file, to_be_generated in files_to_be_generated.items():
@@ -693,13 +670,6 @@ def get_files_to_be_generated(
         os.path.join(
             folder_path,
             "CMakeLists.txt",
-        )
-    )
-    
-    files.append(
-        os.path.join(
-            folder_path,
-            f"{stringcase.snakecase(application_name)}_presenter_export.h",
         )
     )
 

@@ -22,11 +22,11 @@ set_target_properties(${LIBRARY_NAME} PROPERTIES
                     POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
                     )
 
-add_dependencies(${LIBRARY_NAME} simple-example-contracts-dto-passenger)
 add_dependencies(${LIBRARY_NAME} simple-example-contracts-dto-brand)
+add_dependencies(${LIBRARY_NAME} simple-example-contracts-dto-passenger)
 
-target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-dto-passenger)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-dto-brand)
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-dto-passenger)
 
 
 target_link_libraries(${LIBRARY_NAME}
