@@ -6,14 +6,6 @@ find_package(qleany CONFIG REQUIRED)
 
 set(LIBRARY_NAME {{ application_spinalcase_name }}-entities)
 
-option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
-
-if(BUILD_SHARED_LIBS)
-    set(LIB_TYPE SHARED)
-else()
-    set(LIB_TYPE STATIC)
-endif()
-
 include(entities.cmake)
 
 set(SRCS
@@ -21,12 +13,7 @@ set(SRCS
     entities_registration.h
 )
 
-qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${ENTITY_LIST})
-
-include(GenerateExportHeader)
-generate_export_header(${LIBRARY_NAME}
-BASE_NAME {{ application_snakecase_name }}_persistence
-)
+qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${ENTITY_LIST})
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES
                       POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
@@ -34,22 +21,7 @@ set_target_properties(${LIBRARY_NAME} PROPERTIES
                       
 target_include_directories(${LIBRARY_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qt6::Core )
 target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
-
-if(IOS)
-    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endif(IOS)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    install(TARGETS ${LIBRARY_NAME}
-        RUNTIME DESTINATION ${BINDIR}
-        LIBRARY DESTINATION ${LIBDIR})
-endif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
