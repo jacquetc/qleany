@@ -552,7 +552,7 @@ def generate_handler_cmakelists(
     application_name: str,
     files_to_be_generated: dict[str, bool],
 ):
-    # generate these DTO's cmakelists.txt
+    # generate these handler's cmakelists.txt
 
     template_env = Environment(loader=FileSystemLoader("templates/application"))
     cmakelists_template = template_env.get_template("cmakelists_template.jinja2")

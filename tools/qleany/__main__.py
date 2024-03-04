@@ -14,16 +14,49 @@ import __version__
 
 from generator.qleany_generator_gui import main as gui_main
 
+def _print_version():
+    print("qleany version:")
+    print(__version__.__version__)
+    print("")
+    print("License:")
+    print("MPL License")
+    print("https://www.mozilla.org/en-US/MPL/2.0/")
+
+def print_help():
+    print("qleany version:")
+    print(__version__.__version__)
+    print("")
+    print("Usage:")
+    print("qleany gui")
+    print("qleany -v")
+    print("qleany --version")
+    print("")
+    print("Options:")
+    print("-v, --version  Show version")
+    print("-h, --help     Show this screen")
+    print("")
+    print("Description:")
+    print("Qleany is a tool to generate a project structure and files from a qleany.yaml schema file.")
+    print("It is a code generator that can be used to generate use cases, DTOs, models, services, and repositories")
+    print("for a Qt/C++ project using the Clean Architecture.")
+    print("")
+    print("License:")
+    print("MPL License")
+    print("https://www.mozilla.org/en-US/MPL/2.0/")
+
 
 def main():
     # -v or --version
     if len(sys.argv) > 1 and sys.argv[1] in ["-v", "--version"]:
-        print("qleany version:")
-        print(__version__.__version__)
+        _print_version()
+
+    if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
+        print_help()
 
     elif len(sys.argv) > 1 and sys.argv[1] == "gui":
         gui_main()
     else:
+        _print_version()
         gui_main()
 
 

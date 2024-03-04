@@ -4,7 +4,7 @@ add_subdirectory(entities)
 add_subdirectory(contracts)
 # handles the data access from inside the system
 add_subdirectory(persistence)
-# handles the data access from outide the system
+# handles the data access from outside the system
 add_subdirectory(contracts.dto)
 # handles the CQRS commands, queries and validators
 add_subdirectory(contracts.cqrs)

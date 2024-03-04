@@ -201,12 +201,21 @@ entities:
       type: QList<Passenger>
     name: Client
     parent: Entity
+front_ends:
+  kf6_kirigami:
+    folder_path: src/gui/kf6_kirigami_application/
+  kf6_widgets:
+    folder_path: src/gui/kf6_widgets_application/
+  qt_quick:
+    folder_path: src/gui/qt_quick_application/
+  qt_widgets:
+    folder_path: src/gui/qt_widgets_application/
 global:
-  application_cpp_domain_name: Simple
-  application_name: SimpleExample
+  application_cpp_domain_name: FrontEnds
+  application_name: FrontEndsExample
   organisation:
     domain: qleany.eu
-    name: simpleexample
+    name: frontendsexample
 interactor:
   create_undo_redo_interactor: true
   folder_path: src/core/interactor/

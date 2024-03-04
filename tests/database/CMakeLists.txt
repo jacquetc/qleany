@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.18)
-
 #-----------------------------------------------------------------------------------
 
 set(TEST_NAME "tst_database_table")
