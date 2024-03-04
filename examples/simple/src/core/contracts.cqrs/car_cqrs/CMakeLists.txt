@@ -20,6 +20,10 @@ qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                    )
+
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-dto-car)

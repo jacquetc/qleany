@@ -15,6 +15,10 @@ generate_export_header(${LIBRARY_NAME}
     BASE_NAME simple_example_contracts
 )
 
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                    )
+
 target_include_directories(${LIBRARY_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
