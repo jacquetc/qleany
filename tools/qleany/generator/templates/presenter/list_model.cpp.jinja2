@@ -143,6 +143,8 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
             }
         }
     });
+
+    populate();
 }
 
 QVariant {{ model.class_name_pascal }}::headerData(int section, Qt::Orientation orientation, int role) const
@@ -264,7 +266,10 @@ void {{ model.class_name_pascal }}::populate()
                 return;
             }
         }
-
+        if ({{ model.entity_name_camel }}List.isEmpty())
+        {
+            return;
+        }
         beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
         m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;
         // fill m_{{ model.entity_name_camel }}IdList

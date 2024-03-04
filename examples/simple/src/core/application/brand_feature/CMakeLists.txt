@@ -26,7 +26,6 @@ set(SRC
     brand/queries/get_brand_query_handler.h
     brand/queries/get_all_brand_query_handler.cpp
     brand/queries/get_all_brand_query_handler.h
-    simple_example_application_brand_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 

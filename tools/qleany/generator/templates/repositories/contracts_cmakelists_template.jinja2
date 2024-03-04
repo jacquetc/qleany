@@ -8,16 +8,22 @@ set(LIBRARY_NAME {{ application_spinalcase_name }}-contracts)
 
 include(repository_interfaces.cmake)
 
-set(SRCS
-    {{ export_header_file }}
+qt_add_library(${LIBRARY_NAME} STATIC ${REPOSITORY_LIST})
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME {{ application_snakecase_name }}_contracts
 )
 
-qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${REPOSITORY_LIST})
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
-target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_CONTRACTS_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                    )
+                    
 target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-entities)
 
 target_link_libraries(${LIBRARY_NAME}

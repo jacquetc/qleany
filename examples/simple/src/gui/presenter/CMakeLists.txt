@@ -17,15 +17,22 @@ endif()
 
 include(presenters.cmake)
 
-set(SRCS
-    simple_example_presenter_export.h
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${PRESENTER_LIST})
+
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                    )
+
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME simple_example_presenter)
+
+
+target_include_directories(${LIBRARY_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${PRESENTER_LIST})
-
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_PRESENTER_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE

@@ -555,29 +555,29 @@ def generate_handler_cmakelists(
     # generate these DTO's cmakelists.txt
 
     template_env = Environment(loader=FileSystemLoader("templates/application"))
-    dto_cmakelists_template = template_env.get_template("cmakelists_template.jinja2")
+    cmakelists_template = template_env.get_template("cmakelists_template.jinja2")
 
-    dto_cmakelists_file = feature["cmakelists_file"]
+    cmakelists_file = feature["cmakelists_file"]
 
-    if not files_to_be_generated.get(dto_cmakelists_file, False):
+    if not files_to_be_generated.get(cmakelists_file, False):
         return
 
-    files = feature["handler_files"] + [feature["export_header_file"]]
+    files = feature["handler_files"]
 
-    dto_cmakelists_file = os.path.join(root_path, dto_cmakelists_file)
+    cmakelists_file = os.path.join(root_path, cmakelists_file)
 
     ## Convert the file path to be relative to the directory of the cmakelists
     relative_generated_files = []
     for file_path in files:
         relative_generated_file = os.path.relpath(
-            os.path.join(root_path, file_path), os.path.dirname(dto_cmakelists_file)
+            os.path.join(root_path, file_path), os.path.dirname(cmakelists_file)
         )
         relative_generated_files.append(relative_generated_file.replace("\\", "/"))
 
     feature_snake_name = feature["feature_snake_name"]
     feature_spinal_name = stringcase.spinalcase(feature_snake_name)
 
-    rendered_template = dto_cmakelists_template.render(
+    rendered_template = cmakelists_template.render(
         feature_snake_name=feature_snake_name,
         feature_spinal_name=feature_spinal_name,
         feature_uppercase_name=stringcase.uppercase(feature_snake_name),
@@ -588,11 +588,11 @@ def generate_handler_cmakelists(
     )
 
     # Create the directory if it does not exist
-    os.makedirs(os.path.dirname(dto_cmakelists_file), exist_ok=True)
+    os.makedirs(os.path.dirname(cmakelists_file), exist_ok=True)
 
-    with open(dto_cmakelists_file, "w") as fh:
+    with open(cmakelists_file, "w") as fh:
         fh.write(rendered_template)
-        print(f"Successfully wrote file {dto_cmakelists_file}")
+        print(f"Successfully wrote file {cmakelists_file}")
 
 
 def generate_crud_handler(

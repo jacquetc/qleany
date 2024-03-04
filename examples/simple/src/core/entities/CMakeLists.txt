@@ -9,7 +9,6 @@ set(LIBRARY_NAME simple-example-entities)
 include(entities.cmake)
 
 set(SRCS
-    simple_example_entities_export.h
     entities.h
     entities_registration.h
 )
@@ -19,9 +18,11 @@ qt_add_library(${LIBRARY_NAME} STATIC ${SRCS} ${ENTITY_LIST})
 set_target_properties(${LIBRARY_NAME} PROPERTIES
                       POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
                       )
-target_compile_definitions(${LIBRARY_NAME} PRIVATE SIMPLEEXAMPLE_ENTITIES_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+                      
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qt6::Core )
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)

@@ -8,40 +8,6 @@ import uncrustify
 import clang_format_runner as clang_format_runner
 from pathlib import Path
 
-
-def generate_export_header_file(
-    root_path: str,
-    path: str,
-    application_name: str,
-    export: str,
-    export_header_file: str,
-    files_to_be_generated: dict[str, bool],
-):
-    # generate the export header file
-
-    template_env = Environment(loader=FileSystemLoader("templates/repositories"))
-    export_header_template = template_env.get_template("export_template.jinja2")
-
-    relative_export_header_file = os.path.join(path, export_header_file)
-
-    if not files_to_be_generated.get(relative_export_header_file, False):
-        return
-
-    export_header_file = os.path.join(root_path, relative_export_header_file)
-
-    rendered_template = export_header_template.render(
-        application_uppercase_name=stringcase.uppercase(application_name),
-        export=export,
-    )
-
-    # Create the directory if it does not exist
-    os.makedirs(os.path.dirname(export_header_file), exist_ok=True)
-
-    with open(export_header_file, "w") as fh:
-        fh.write(rendered_template)
-        print(f"Successfully wrote file {export_header_file}")
-
-
 def generate_entities_enum_file(
     root_path: str,
     path: str,
@@ -114,7 +80,6 @@ def generate_cmakelists(
     root_path: str,
     path: str,
     application_name: str,
-    export_header_file: str,
     files_to_be_generated: dict[str, bool],
 ):
     # generate the cmakelists.txt
@@ -132,7 +97,7 @@ def generate_cmakelists(
     rendered_template = cmakelists_template.render(
         application_spinalcase_name=stringcase.spinalcase(application_name),
         application_uppercase_name=stringcase.uppercase(application_name),
-        export_header_file=export_header_file,
+        application_snakecase_name=stringcase.snakecase(application_name),
     )
 
     # Create the directory if it does not exist
@@ -507,18 +472,6 @@ def generate_entity_files(
         root_path,
         path,
         manifest_data["global"]["application_name"],
-        export_header_file,
-        files_to_be_generated,
-    )
-
-    # write the export header file
-
-    generate_export_header_file(
-        root_path,
-        path,
-        application_name,
-        export,
-        export_header_file,
         files_to_be_generated,
     )
 
@@ -537,7 +490,6 @@ def get_files_to_be_generated(
 
     global_data = manifest.get("global", {})
     application_name = global_data.get("application_name", "example")
-    export_header_file = f"{stringcase.snakecase(application_name)}_entities_export.h"
 
     # Get the list of files to be generated
     files = []
@@ -553,7 +505,6 @@ def get_files_to_be_generated(
 
     files.append(os.path.join(folder_path, "entities.h"))
     files.append(os.path.join(folder_path, "entities_registration.h"))
-    files.append(os.path.join(folder_path, export_header_file))
     files.append(os.path.join(folder_path, "CMakeLists.txt"))
 
     # strip from files if the value in files_to_be_generated is False

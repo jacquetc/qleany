@@ -15,18 +15,18 @@ else()
     set(LIB_TYPE STATIC)
 endif()
 
-include(presenters.cmake)
+include(presenters.cmake
 
-set(SRCS
-    {{ export_header_file }}
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${PRESENTER_LIST})
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+    BASE_NAME {{ application_snakecase_name }}_presenter)
+
+target_include_directories(${LIBRARY_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${PRESENTER_LIST})
-
-target_compile_definitions(${LIBRARY_NAME} PRIVATE {{ application_uppercase_name }}_PRESENTER_LIBRARY)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)

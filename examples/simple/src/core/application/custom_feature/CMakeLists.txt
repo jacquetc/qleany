@@ -14,8 +14,6 @@ else()
 endif()
 
 set(SRC
-
-    
     custom/commands/write_random_things_command_handler.h
     custom/commands/write_random_things_command_handler.cpp
     custom/commands/run_long_operation_command_handler.h
@@ -24,7 +22,6 @@ set(SRC
     custom/commands/close_system_command_handler.cpp
     custom/queries/get_current_time_query_handler.h
     custom/queries/get_current_time_query_handler.cpp
-    simple_example_application_custom_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 
@@ -36,6 +33,10 @@ ${CMAKE_CURRENT_BINARY_DIR}
 include(GenerateExportHeader)
 generate_export_header(${LIBRARY_NAME}
     BASE_NAME simple_example_application_custom)
+
+set_target_properties(${LIBRARY_NAME} PROPERTIES
+                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                    )
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)

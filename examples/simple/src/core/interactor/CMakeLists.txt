@@ -20,7 +20,6 @@ endif()
 include(interactors.cmake)
 
 set(SRCS
-    simple_example_interactor_export.h
     event_dispatcher.h
     event_dispatcher.cpp
     interactor_registration.h
@@ -38,7 +37,6 @@ generate_export_header(${LIBRARY_NAME}
 target_include_directories(${LIBRARY_NAME} PUBLIC 
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${CMAKE_CURRENT_BINARY_DIR}
-
 )
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
