@@ -87,6 +87,8 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
 
             return;
         });
+
+        populate();
     });
 
     connect(EventDispatcher::instance()->{{ model.related_name_camel }}(), &{{ model.related_name_pascal }}Signals::relationRemoved, this, 
@@ -278,6 +280,10 @@ void {{ model.class_name_pascal }}::populate()
                 qCritical() << Q_FUNC_INFO << "Invalid {{ model.entity_name_camel }}";
                 return;
             }
+        }
+        if ({{ model.entity_name_camel }}List.isEmpty())
+        {
+            return;
         }
         beginInsertRows(QModelIndex(), 0, {{ model.entity_name_camel }}List.size() - 1);
         m_{{ model.entity_name_camel }}List = {{ model.entity_name_camel }}List;

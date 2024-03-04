@@ -44,6 +44,8 @@ CarListModel::CarListModel(QObject *parent) : QAbstractListModel(parent)
             }
         }
     });
+
+    populate();
 }
 
 QVariant CarListModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -268,6 +270,10 @@ void CarListModel::populate()
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return;
             }
+        }
+        if (carList.isEmpty())
+        {
+            return;
         }
         beginInsertRows(QModelIndex(), 0, carList.size() - 1);
         m_carList = carList;
