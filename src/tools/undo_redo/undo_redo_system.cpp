@@ -196,7 +196,7 @@ void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope,
 
 void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId) const
 {
-    push(const_cast<UndoRedoCommand *>(command), commandScope, stackId);
+    const_cast<UndoRedoSystem*>(this)->push(const_cast<UndoRedoCommand *>(command), commandScope, stackId);
 }
 
 /*!
