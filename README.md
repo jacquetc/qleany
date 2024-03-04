@@ -97,11 +97,11 @@ Qleany is building and examples are running well if you use Qt Creator or Visual
 
 ## Using Qleany
 
-Note: You can find the qleany library documentation at (https://jacquetc.github.io/qleany/index.html)[https://jacquetc.github.io/qleany/index.html]
+Note: You can find the qleany library documentation at [https://jacquetc.github.io/qleany/index.html](https://jacquetc.github.io/qleany/index.html)
 
 To use Qleany, follow these steps:
 
-1. Think hard about your project's domain model, the entities, their fields and the relations between these entities. I enjoin you to use a UML tool to draw your domain model, like the ER diagrams of (https://mermaid.live)[Mermaid] or PlantUML.
+1. Think hard about your project's domain model, the entities, their fields and the relations between these entities. I enjoin you to use a UML tool to draw your domain model, like the ER diagrams of [Mermaid](https://mermaid.live) or PlantUML.
 2. Then, draft all the use cases, grouped by features, with their commands and queries, and their DTOs (DTO = data struct for input or output). Think of these as the "verbs" of your application, the actions that can be done by the user or the fronts., like an API internal to your application.
 3. Finally, write a `qleany.yaml` file for your project. You can use the `examples/simple/qleany.yaml` file as a reference.
 4. Run the Qleany GUI interface and select the `qleany.yaml` file.
@@ -111,7 +111,7 @@ To use Qleany, follow these steps:
 8. Create CMakelists.txt files to include the generated libraries in your project. You can use the `examples/simple/src/core/CMakeLists.txt` and `examples/simple/src/gui/CMakeLists.txt` files as a reference.
 9. For custom commands and queries, you still have to fill the blanks in the generated files. You will find "Q_UNIMPLEMENTED();" in the generated files.
 
-Note: I enjoin you to use sccache if you have a slow computer. It will speed up the compilation of your project after the first compilation. You can use it with the `CMAKE_CXX_COMPILER_LAUNCHER` option set to `sccache` in your CMakeLists.txt file or `-DCMAKE_CXX_COMPILER_LAUNCHER=sccache` in your cmake command line. To install sccache, go to (https://github.com/mozilla/sccache)[https://github.com/mozilla/sccache].
+Note: I enjoin you to use sccache if you have a slow computer. It will speed up the compilation of your project after the first compilation. You can use it with the `CMAKE_CXX_COMPILER_LAUNCHER` option set to `sccache` in your CMakeLists.txt file or `-DCMAKE_CXX_COMPILER_LAUNCHER=sccache` in your cmake command line. To install sccache, go to [https://github.com/mozilla/sccache](https://github.com/mozilla/sccache).
 
 ### For QWidgets GUI
 
@@ -145,7 +145,7 @@ So, if I wanted to add a `gateway`, I would create a `gateway` folder in the `sr
 
 Finally, do not forget a `gateway_registration.cpp` file in the `src/core/gateway` folder to register the gateway classes. 
 
-If you have too much gateway classes, it can be useful to store them inside a "GatewayProvider" class, like what is done with the `RepositoryProvider` that you can find (https://jacquetc.github.io/qleany/classQleany_1_1Repository_1_1RepositoryProvider.html)[here].
+If you have too much gateway classes, it can be useful to store them inside a "GatewayProvider" class, like what is done with the `RepositoryProvider` that you can find [here](https://jacquetc.github.io/qleany/classQleany_1_1Repository_1_1RepositoryProvider.html).
 
 In a Gateway, we would find connections to remote services like REST APIs and remote databases, and in Infrastructure, we would find connections to local services, like file management, local settings, and system queries. A "loadFile" method in a `FileLoader` class would be an example of an infrastructure service. Same for a `Settings` class or "exportToPdf" method in a `PdfExporter` class. 
 
@@ -160,11 +160,11 @@ You can add custom commands and queries for each feature in the `application.fea
 Qleany tooling can be installed using `pip install qleany`. Alternatively, for an easier installation, you can install it using `pipx run qleany` if you have pipx installed.
 
 
-## Utilizing the Qleany GUI Interface
+## How to use the Qleany GUI Interface
 
 To access Qleany's user-friendly graphical interface, run `qleany` in a terminal. This interface allows developers to efficiently manage file generation. This is the recommended way to generate files.
 
-![Alt text](doc/qleany_generator_gui.png)
+![Alt text](docs/qleany_generator_gui.png)
 
 1. **Run the Qleany GUI**:
    - Run `qleany` in a terminal.
