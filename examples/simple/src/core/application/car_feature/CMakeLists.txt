@@ -28,7 +28,6 @@ set(SRC
     car/queries/get_all_car_query_handler.h
     car/queries/get_car_with_details_query_handler.cpp
     car/queries/get_car_with_details_query_handler.h
-    simple_example_application_car_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 

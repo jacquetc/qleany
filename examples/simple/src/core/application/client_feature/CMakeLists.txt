@@ -28,7 +28,6 @@ set(SRC
     client/queries/get_all_client_query_handler.h
     client/queries/get_client_with_details_query_handler.cpp
     client/queries/get_client_with_details_query_handler.h
-    simple_example_application_client_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 

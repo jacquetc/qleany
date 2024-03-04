@@ -26,7 +26,6 @@ set(SRC
     passenger/queries/get_passenger_query_handler.h
     passenger/queries/get_all_passenger_query_handler.cpp
     passenger/queries/get_all_passenger_query_handler.h
-    simple_example_application_passenger_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 

@@ -24,7 +24,6 @@ set(SRC
     custom/commands/close_system_command_handler.cpp
     custom/queries/get_current_time_query_handler.h
     custom/queries/get_current_time_query_handler.cpp
-    simple_example_application_custom_export.h
 )
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRC})
 
