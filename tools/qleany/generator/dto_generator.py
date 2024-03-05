@@ -382,7 +382,7 @@ def get_dto_dict_and_feature_ordered_dict(
             if dto_dependency in dto_dict:
                 dto_dependency_file_name = dto_dict[dto_dependency]["file_name"]
                 header_list.append(
-                    f'"{stringcase.snakecase(dto_dependency.strip("DTO"))}/{dto_dependency_file_name}"'
+                    f'"{stringcase.snakecase(dto_dependency.replace("DTO", ""))}/{dto_dependency_file_name}"'
                 )
 
         header_list = list(set(header_list))
