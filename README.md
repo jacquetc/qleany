@@ -83,15 +83,18 @@ CMake options are:
 - BUILD_SHARED_LIBS (default: off)
 - QLEANY_BUILD_WITH_QT_GUI (default: on)
 
+Below is an example of how to compile and install the Qleany static library:
 ```bash
 git clone https://github.com/jacquetc/qleany.git
 cd qleany
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DQLEANY_BUILD_WITH_QT_GUI=on -DQLEANY_BUILD_EXAMPLES=off -DQLEANY_BUILD_TESTS ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DQLEANY_BUILD_WITH_QT_GUI=on -DQLEANY_BUILD_EXAMPLES=off -DQLEANY_BUILD_TESTS=off ..
 cmake --build . -- -j6
 sudo cmake --install .
 ```
+
+Add `-DBUILD_SHARED_LIBS=on` to the cmake command line to build shared libraries.
 
 Qleany is building and examples are running well if you use Qt Creator or Visual Studio Code with the CMake Tools extension.
 

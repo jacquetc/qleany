@@ -50,6 +50,13 @@ entities:
       fields:
         - type: QString
           name: name
+    - name: ThirdEntity
+      parent: Entity
+      fields:
+        - type: QString
+          name: name
+        - type: int
+          name: age
 
 repositories:
   list:
