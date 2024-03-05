@@ -31,7 +31,7 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
     }
     
     // repositories:
-    {% for entity in entities %}
+    {% for entity in entities[::-1] %}
     {{ entity.entity_pascal_name }}Repository *{{ entity.entity_camel_name }}Repository = new {{ entity.entity_pascal_name }}Repository({{ entity.entity_camel_name }}DatabaseTableGroup 
     {% for child in entity.children_entities %}, {{ child.child_camel_name }}Repository{% endfor %});
     {%- endfor %}

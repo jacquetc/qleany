@@ -204,6 +204,7 @@ def generate_repository_files(
                 foreign_repository_constructor_arguments.append(
                     new_constructor_argument
                 )
+        foreign_repository_constructor_arguments.sort()
 
         foreign_repository_constructor_arguments_string = ", ".join(
             foreign_repository_constructor_arguments
@@ -599,6 +600,8 @@ def generate_repository_files(
                     "children_entities": children_entities,
                 }
             )
+        # sort entities by entity_pascal_name
+        entities = sorted(entities, key=lambda k: k["entity_pascal_name"])
 
         repositories = []
         repository_headers = []
