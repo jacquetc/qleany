@@ -38,7 +38,7 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
-target_link_libraries(${LIBRARY_NAME} PUBLIC Qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-interactor)
 
 if(IOS)

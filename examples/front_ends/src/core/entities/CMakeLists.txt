@@ -24,4 +24,4 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 )
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE Qt6::Core )
-target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)
+target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
