@@ -1,0 +1,23 @@
+#include "entities_registration.h"
+#include "interactor_registration.h"
+#include "mainwindow.h"
+#include "persistence_registration.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+
+    QApplication a(argc, argv);
+    a.setApplicationName("{{ application_name }}");
+    a.setOrganizationName("{{ organisation_name }}");
+    a.setOrganizationDomain("{{ organisation_domain }}");
+
+    new {{ application_cpp_domain_name }}::Entities::EntitiesRegistration(&a);
+    auto *persistenceRegistration = new {{ application_cpp_domain_name }}::Persistence::PersistenceRegistration(&a);
+    new {{ application_cpp_domain_name }}::Interactor::InteractorRegistration(&a, persistenceRegistration->repositoryProvider());
+
+    MainWindow window;
+    window.show();
+
+    return a.exec();
+}

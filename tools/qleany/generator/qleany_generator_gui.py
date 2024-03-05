@@ -56,6 +56,7 @@ import qml_generator
 import entity_relationship_viewer
 import presenter_generator
 import root_generator
+import qt_widgets_generator
 
 # this little application is a GUI for the generator
 
@@ -141,7 +142,7 @@ class MainWindow(QMainWindow):
         self.tree.setAlternatingRowColors(True)
         self.tree.setEditTriggers(QTreeView.NoEditTriggers)
 
-        self.button_layout = QHBoxLayout()
+        self.first_row_button_layout = QHBoxLayout()
 
         self.tools_group_box = QGroupBox()
         self.tools_group_box.setTitle("Tools")
@@ -166,7 +167,7 @@ class MainWindow(QMainWindow):
         self.btn_refresh.clicked.connect(self.refresh)
         self.tools_layout.addWidget(self.btn_refresh)
 
-        self.button_layout.addWidget(self.tools_group_box)
+        self.first_row_button_layout.addWidget(self.tools_group_box)
 
         # Generate root files
 
@@ -187,7 +188,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_root.clicked.connect(self.generate_root)
         self.generate_root_layout.addWidget(self.btn_generate_root)
 
-        self.button_layout.addWidget(self.generate_root_group_box)
+        self.first_row_button_layout.addWidget(self.generate_root_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_root.setEnabled(False)
@@ -218,7 +219,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_entities.clicked.connect(self.generate_entities)
         self.generate_entities_layout.addWidget(self.btn_generate_entities)
 
-        self.button_layout.addWidget(self.generate_entities_group_box)
+        self.first_row_button_layout.addWidget(self.generate_entities_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_entities.setEnabled(False)
@@ -249,7 +250,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_dtos.clicked.connect(self.generate_dtos)
         self.generate_dtos_layout.addWidget(self.btn_generate_dtos)
 
-        self.button_layout.addWidget(self.generate_dtos_group_box)
+        self.first_row_button_layout.addWidget(self.generate_dtos_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_dtos.setEnabled(False)
@@ -282,7 +283,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_repositories.clicked.connect(self.generate_repositories)
         self.generate_repositories_layout.addWidget(self.btn_generate_repositories)
 
-        self.button_layout.addWidget(self.generate_repositories_group_box)
+        self.first_row_button_layout.addWidget(self.generate_repositories_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_repositories.setEnabled(False)
@@ -313,7 +314,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_cqrs.clicked.connect(self.generate_cqrs)
         self.generate_cqrs_layout.addWidget(self.btn_generate_cqrs)
 
-        self.button_layout.addWidget(self.generate_cqrs_group_box)
+        self.first_row_button_layout.addWidget(self.generate_cqrs_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_cqrs.setEnabled(False)
@@ -344,7 +345,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_application.clicked.connect(self.generate_application)
         self.generate_application_layout.addWidget(self.btn_generate_application)
 
-        self.button_layout.addWidget(self.generate_application_group_box)
+        self.first_row_button_layout.addWidget(self.generate_application_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_application.setEnabled(False)
@@ -375,7 +376,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_interactors.clicked.connect(self.generate_interactors)
         self.generate_interactors_layout.addWidget(self.btn_generate_interactors)
 
-        self.button_layout.addWidget(self.generate_interactors_group_box)
+        self.first_row_button_layout.addWidget(self.generate_interactors_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_interactors.setEnabled(False)
@@ -406,7 +407,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_presenters.clicked.connect(self.generate_presenters)
         self.generate_presenters_layout.addWidget(self.btn_generate_presenters)
 
-        self.button_layout.addWidget(self.generate_presenters_group_box)
+        self.first_row_button_layout.addWidget(self.generate_presenters_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_presenters.setEnabled(False)
@@ -437,7 +438,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_qml.clicked.connect(self.generate_qml)
         self.generate_qml_layout.addWidget(self.btn_generate_qml)
 
-        self.button_layout.addWidget(self.generate_qml_group_box)
+        self.first_row_button_layout.addWidget(self.generate_qml_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_qml.setEnabled(False)
@@ -449,9 +450,45 @@ class MainWindow(QMainWindow):
 
         self.btn_list_qml.clicked.connect(enable_qml_buttons)
 
+        # second row of buttons
+        self.second_row_button_layout = QHBoxLayout()
+
+        # generate qt widgets ui
+
+        self.generate_qt_widgets_ui_group_box = QGroupBox()
+        self.generate_qt_widgets_ui_group_box.setTitle("Generate Qt Widgets UI")
+        self.generate_qt_widgets_ui_layout = QVBoxLayout()
+        self.generate_qt_widgets_ui_group_box.setLayout(self.generate_qt_widgets_ui_layout)
+
+        self.btn_list_qt_widgets_ui = QPushButton("List", self)
+        self.btn_list_qt_widgets_ui.clicked.connect(self.list_qt_widgets_ui)
+        self.generate_qt_widgets_ui_layout.addWidget(self.btn_list_qt_widgets_ui)
+
+        self.btn_preview_qt_widgets_ui = QPushButton("Preview", self)
+        self.btn_preview_qt_widgets_ui.clicked.connect(self.preview_qt_widgets_ui)
+        self.generate_qt_widgets_ui_layout.addWidget(self.btn_preview_qt_widgets_ui)
+
+        self.btn_generate_qt_widgets_ui = QPushButton("Generate", self)
+        self.btn_generate_qt_widgets_ui.clicked.connect(self.generate_qt_widgets_ui)
+        self.generate_qt_widgets_ui_layout.addWidget(self.btn_generate_qt_widgets_ui)
+
+        self.second_row_button_layout.addWidget(self.generate_qt_widgets_ui_group_box)
+
+        # disable preview and generate buttons if list button is not clicked once
+
+        self.btn_preview_qt_widgets_ui.setEnabled(False)
+        self.btn_generate_qt_widgets_ui.setEnabled(False)
+
+        def enable_qt_widgets_ui_buttons():
+            self.btn_preview_qt_widgets_ui.setEnabled(True)
+            self.btn_generate_qt_widgets_ui.setEnabled(True)
+
+        self.btn_list_qt_widgets_ui.clicked.connect(enable_qt_widgets_ui_buttons)
+
         # generate all
 
         self.generate_all_group_box = QGroupBox()
+        self.generate_all_group_box.setTitle("Generate All")
         self.generate_all_layout = QVBoxLayout()
         self.generate_all_group_box.setLayout(self.generate_all_layout)
 
@@ -467,7 +504,7 @@ class MainWindow(QMainWindow):
         self.btn_generate_all.clicked.connect(self.generate_all)
         self.generate_all_layout.addWidget(self.btn_generate_all)
 
-        self.button_layout.addWidget(self.generate_all_group_box)
+        self.second_row_button_layout.addWidget(self.generate_all_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
         self.btn_preview_all.setEnabled(False)
@@ -482,7 +519,10 @@ class MainWindow(QMainWindow):
         # add to layout
 
         button_widget = QWidget()
-        button_widget.setLayout(self.button_layout)
+        button_layout = QVBoxLayout()
+        button_layout.addLayout(self.first_row_button_layout)
+        button_layout.addLayout(self.second_row_button_layout)
+        button_widget.setLayout(button_layout)
         self.central_layout.addWidget(button_widget)
         self.central_layout.setStretch(0, 1)
 
@@ -501,6 +541,7 @@ class MainWindow(QMainWindow):
 
         self.load_data()
         self.load_settings()
+        self.refresh()
         self.timer.start()
 
     def on_manifest_file_changed(self, path):
@@ -530,6 +571,11 @@ class MainWindow(QMainWindow):
         self.create_temp_manifest_file()
         self.load_data()
         self.load_settings()
+        if self.manifest_file != "":
+            self.settings.setValue("last_selected_manifest_path", self.manifest_file)
+            self.settings.sync()
+            self.generate_qt_widgets_ui_group_box.setEnabled(qt_widgets_generator.is_enabled(self.manifest_file))
+
 
     def open_entity_relationship_window(self):
         self.relationship_viewer_window = (
@@ -562,6 +608,10 @@ class MainWindow(QMainWindow):
             application_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(qml_generator.get_files_to_be_generated(self.temp_manifest_file))
+        if qt_widgets_generator.is_enabled(self.manifest_file):
+            list.extend(
+                qt_widgets_generator.get_files_to_be_generated(self.temp_manifest_file)
+            )
         self.text_box.clear()
         self.text_box.setPlainText("All files:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -624,6 +674,13 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
+        if qt_widgets_generator.is_enabled(self.manifest_file):
+            qt_widgets_generator.preview_qt_widgets_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
 
         self.text_box.setPlainText(
             f"Preview folder cleared beforehand. All files previewed at {Path(self.root_path,).resolve()}/qleany_preview/ folder"
@@ -676,12 +733,18 @@ class MainWindow(QMainWindow):
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
+        if qt_widgets_generator.is_enabled(self.manifest_file):
+            file_list.extend(
+                qt_widgets_generator.get_files_to_be_generated(
+                    self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                )
+            )
 
         if self.display_overwrite_confirmation(file_list):
             # display progress dialog
             progress = QProgressDialog(self)
             progress.setLabelText("Generating files...")
-            progress.setRange(0, 9)
+            progress.setRange(0, 10)
             progress.show()
             QCoreApplication.processEvents()
 
@@ -767,6 +830,16 @@ class MainWindow(QMainWindow):
                 self.uncrustify_config_file,
             )
             progress.setValue(9)
+            QCoreApplication.processEvents()
+
+            if qt_widgets_generator.is_enabled(self.manifest_file):
+                qt_widgets_generator.generate_qt_widgets_files(
+                    self.root_path,
+                    self.temp_manifest_file,
+                    self.file_list_view.fetch_file_states(),
+                    self.uncrustify_config_file,
+                )
+            progress.setValue(10)
             QCoreApplication.processEvents()
 
             self.text_box.setPlainText("All files generated")
@@ -1136,6 +1209,47 @@ class MainWindow(QMainWindow):
             self.text_box.clear()
             self.text_box.setPlainText("QML generated")
 
+    # Qt Widgets UI functions
+            
+    def list_qt_widgets_ui(self):
+        list = qt_widgets_generator.get_files_to_be_generated(self.temp_manifest_file)
+        self.text_box.clear()
+        self.text_box.setPlainText("Qt Widgets UI:\n\n")
+        self.text_box.appendPlainText("\n".join(list))
+        self.file_list_view.list_files(list)
+
+    def preview_qt_widgets_ui(self):
+        self.list_qt_widgets_ui()
+        qt_widgets_generator.preview_qt_widgets_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
+        self.text_box.clear()
+        self.text_box.setPlainText(
+            f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
+        )
+        self.text_box.appendPlainText(
+            f" Qt Widgets UI files previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
+        )
+
+    def generate_qt_widgets_ui(self):
+        self.list_qt_widgets_ui()
+        if self.display_overwrite_confirmation(
+            qt_widgets_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        ):
+            qt_widgets_generator.generate_qt_widgets_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+            self.text_box.clear()
+            self.text_box.setPlainText("Qt Widgets UI generated")
+
     def display_overwrite_confirmation(self, files: list):
         # join self.root_path and file
         files = [os.path.join(self.root_path, file) for file in files]
@@ -1411,9 +1525,7 @@ class MainWindow(QMainWindow):
             self.manifest_file_text.setText(file_name)
             self.manifest_file = file_name
             self.root_path = str(Path(self.manifest_file).parent.resolve())
-            self.create_temp_manifest_file()
-            self.load_data()
-            self.load_settings()
+            self.refresh()
             self.list_all()
 
 

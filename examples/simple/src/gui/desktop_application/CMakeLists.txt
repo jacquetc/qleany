@@ -4,7 +4,7 @@ set(APP_NAME simple-example-desktop-application)
 
 find_package(Qt6 COMPONENTS Core Gui Widgets Concurrent Sql REQUIRED)
 
-find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
+find_package(QCoro6 REQUIRED COMPONENTS Core)
 # find_package(qleany REQUIRED)
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()

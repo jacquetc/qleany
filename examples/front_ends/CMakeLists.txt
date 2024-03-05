@@ -22,7 +22,7 @@ find_package(QCoro6 REQUIRED COMPONENTS Core)
 qcoro_enable_coroutines()
 
 # handles the entities
-add_subdirectory(src/core/entities/)
+add_subdirectory(src/core/entities)
 # stores the interfaces
 add_subdirectory(src/core/contracts)
 # handles the data access from inside the system
@@ -39,13 +39,13 @@ add_subdirectory(src/core/interactor/)
 add_subdirectory(src/gui/presenter) 
 
 # handles the QtQuick front end
-add_subdirectory(src/gui/qt_quick_application/)
+#add_subdirectory(src/gui/qt_quick_application/)
 
 # handles the QtWidgets front end
 add_subdirectory(src/gui/qt_widgets_application/)
 
 # handles the Kirigami front end
-add_subdirectory(src/gui/kf6_kirigami_application/)
+#add_subdirectory(src/gui/kf6_kirigami_application/)
 
 # handles the KF6Widgets front end
-add_subdirectory(src/gui/kf6_widgets_application/)
+#add_subdirectory(src/gui/kf6_widgets_application/)

@@ -2,6 +2,8 @@ import sys
 import os
 from pathlib import Path
 
+caller_path = os.getcwd()
+
 full_path = Path(__file__).resolve().parent
 full_path = f"{full_path}"
 # add the current directory to the path so that we can import the generated files
@@ -13,6 +15,7 @@ os.chdir(full_path)
 import __version__
 
 from generator.qleany_generator_gui import main as gui_main
+from generator.qleany_init import generate_blank_qleany_yaml
 
 def _print_version():
     print("qleany version:")
@@ -25,11 +28,13 @@ def _print_version():
 def print_help():
     print("qleany version:")
     print(__version__.__version__)
+    print("Written by: Cyril Jacquet")
+    print("Github: https://github.com/jacquetc/qleany")
     print("")
     print("Usage:")
-    print("qleany gui")
-    print("qleany -v")
-    print("qleany --version")
+    print("qleany init  # write a new qleany.yaml file in the current directory")
+    print("qleany gui   # start the GUI")
+    print("qleany       # Show this screen")
     print("")
     print("Options:")
     print("-v, --version  Show version")
@@ -55,6 +60,9 @@ def main():
 
     elif len(sys.argv) > 1 and sys.argv[1] == "gui":
         gui_main()
+    elif len(sys.argv) > 1 and sys.argv[1] == "init":
+        print("Writing a new qleany.yaml file in the current directory")
+        generate_blank_qleany_yaml(caller_path)
     else:
         _print_version()
         gui_main()
