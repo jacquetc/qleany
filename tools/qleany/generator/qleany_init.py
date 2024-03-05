@@ -232,6 +232,9 @@ presenter:
       entity: FirstEntity  
       displayed_field: content
 
+qml:
+  folder_path: src/qt_design_studio_application/
+
 front_ends:
   qt_widgets:
     folder_path: src/qt_widgets_application/
