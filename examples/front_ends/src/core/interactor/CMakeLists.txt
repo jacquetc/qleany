@@ -49,7 +49,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-application-feat
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
-target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)
+target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

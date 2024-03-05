@@ -29,4 +29,4 @@ target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql
 )
-target_link_libraries(${LIBRARY_NAME} PRIVATE Qleany)
+target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
