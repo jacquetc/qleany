@@ -161,6 +161,12 @@ The names Gateway and Infrastructure are not mandatory, you can use other names,
 
 You can add custom commands and queries for each feature in the `application.features` of the `qleany.yaml`. You can use the `examples/simple/qleany.yaml` and `examples/simple/src/core/application` as references. Search for the `Q_UNIMPLEMENTED();` macro in the generated files to find the places to fill with your custom code. Be careful ot not overwrite your custom code when you regenerate the files, use the preview feature of the generator to avoid this or deselect the files you don't want to regenerate.
 
+### Using your own database management classes
+
+When you take into account the classes offered by the Qleany library, `persistence` iis actually composed by a `repository` part and a `database`part, respectively situated in the "Interface Adapters" layer and in the "Frameworks & Drivers" layer of the Clean Architecture circle diagram.
+
+`database` classes are represented by `InterfaceDatabaseTableGroup` and `InterfaceDatabaseContext` interfaces. If the SQLite database management classes provided by Qleany are not enough for your needs, you can implement your own classes and swap the provided ones with yours.
+
 ## Installing the Qleany GUI Interface
 
 Qleany tooling can be installed using `pip install qleany`. Alternatively, for an easier installation, you can install it using `pipx run qleany` if you have pipx installed.
