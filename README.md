@@ -1,6 +1,7 @@
 - [Qleany - Clean Architecture Framework for C++/Qt6 Projects](#qleany---clean-architecture-framework-for-c---qt6-projects)
   * [Important Notices](#important-notices)
-  * [Framework's Objective](#framework-s-objective)
+  * [Framework's Objective](#frameworks-objective)
+  * [Why use Qleany ?](#why-use-qleany)
   * [Framework Structure](#framework-structure)
   * [Installing the Qleany library](#installing-the-qleany-library)
     + [Manually](#manually)
@@ -56,6 +57,19 @@ Additional features include:
 - Support for custom use cases with their own signal and with user-defined DTOs (Data Transfer Objects) for inputs and outputs.
 - The ability to define both soft and hard relationships between entities, including one-to-one and one-to-many (unordered or ordered) associations. Many-to-many relationships are not supported yet.
 - Entities within the framework handle cascade deletion. Additionally, the implementation of soft-deletion (recoverable trash binning) is currently in progress.
+
+## Why use Qleany ?
+
+Qleany is designed to streamline the development process, offering a range of benefits to developers:
+- **Consistency**: Qleany ensures a consistent project structure, reducing the time and effort required to create and maintain a project.
+- **Clean Architecture**: The framework is built on the principles of Clean Architecture, ensuring a clear separation of concerns and a high level of modularity.
+- **Efficiency**: Qleany automates the generation of a comprehensive project structure, saving developers time and effort.
+- **Flexibility**: The framework is designed to be flexible, allowing developers to customize and extend the generated project to suit their specific requirements.
+- **Ease of Use**: Qleany's user-friendly interface simplifies the process of generating a structured project environment, making it accessible to developers of all skill levels.
+- **Testability**: The framework is ease the creation of tests, thanks to the heavy use of interface classes offering a loose coupling between components. The generated code is also designed to be testable, with the use of mocks and the possibility to inject fake classes in the generated code.
+- **Support for Multiple Fronts**: Qleany supports the simultaneous development of different fronts, including QML and QWidget GUIs, without any conflict. 
+- **(optional) Integration with Qt Design Studio**: Qleany can be used in conjunction with Qt Design Studio, allowing developers to integrate QML imports into their existing QML projects. With mocks.
+- **Integration with QCoro**: Qleany can be used in conjunction with QCoro, a library that provides a set of tools for writing asynchronous code in C++ using the coroutines feature introduced in C++20. QCoro is used in the generated code to make the use of asynchronous code easier.
 
 ## Framework Structure
 
@@ -238,7 +252,7 @@ When you take into account the classes offered by the Qleany library, `persisten
 
 ### Installing the Qleany GUI Interface
 
-Qleany tooling can be installed using `pip install qleany`. Alternatively, for an easier installation, you can install it using `pipx run qleany` if you have pipx installed.
+Qleany tooling can be installed using `pip install qleany`. Alternatively, for an easier installation, you can install it using `pipx install qleany` if you have pipx installed, then run `qleany`.
 
 
 ### How to use the Qleany GUI Interface
