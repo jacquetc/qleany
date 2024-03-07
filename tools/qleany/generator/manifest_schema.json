@@ -1,0 +1,703 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1
+                }
+            }
+        },
+        "global": {
+            "type": "object",
+            "properties": {
+                "application_name": {
+                    "type": "string"
+                },
+                "application_cpp_domain_name": {
+                    "type": "string"
+                },
+                "organisation": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "domain": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "domain"
+                    ]
+                }
+            },
+            "required": [
+                "application_name",
+                "application_cpp_domain_name",
+                "organisation"
+            ]
+        },
+        "entities": {
+            "type": "object",
+            "properties": {
+                "folder_path": {
+                    "type": "string"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "parent": {
+                                "type": "string"
+                            },
+                            "only_for_heritage": {
+                                "type": "boolean"
+                            },
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "strong": {
+                                            "type": "boolean"
+                                        },
+                                        "ordered": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "type",
+                                        "name"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "fields"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "folder_path",
+                "list"
+            ]
+        },
+        "repositories": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "entity_name": {
+                                "type": "string"
+                            },
+                            "lazy_loaders": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "entity_name",
+                            "lazy_loaders"
+                        ]
+                    }
+                },
+                "repository_folder_path": {
+                    "type": "string"
+                },
+                "base_folder_path": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "list",
+                "repository_folder_path",
+                "base_folder_path"
+            ]
+        },
+        "interactor": {
+            "type": "object",
+            "properties": {
+                "folder_path": {
+                    "type": "string"
+                },
+                "create_undo_redo_interactor": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "folder_path",
+                "create_undo_redo_interactor"
+            ]
+        },
+        "application": {
+            "type": "object",
+            "properties": {
+                "common_cmake_folder_path": {
+                    "type": "string"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "DTO": {
+                                "type": "object",
+                                "properties": {
+                                    "dto_identical_to_entity": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            },
+                                            "entity_mappable_with": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "dto_identical_to_entity"
+                                ]
+                            },
+                            "CRUD": {
+                                "type": "object",
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean"
+                                    },
+                                    "entity_mappable_with": {
+                                        "type": "string"
+                                    },
+                                    "get": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    },
+                                    "get_all": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    },
+                                    "get_with_details": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    },
+                                    "create": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    },
+                                    "remove": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    },
+                                    "update": {
+                                        "type": "object",
+                                        "properties": {
+                                            "enabled": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "enabled"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "enabled"
+                                ]
+                            },
+                            "commands": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "entities": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "validator": {
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "enabled"
+                                            ]
+                                        },
+                                        "undo": {
+                                            "type": "boolean"
+                                        },
+                                        "dto": {
+                                            "type": "object",
+                                            "properties": {
+                                                "in": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "type_prefix": {
+                                                            "type": "string"
+                                                        },
+                                                        "fields": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "type",
+                                                                    "name"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "anyOf": [
+                                                        {
+                                                            "required": [
+                                                                "enabled"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "required": [
+                                                                "type_prefix",
+                                                                "fields"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "out": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "type_prefix": {
+                                                            "type": "string"
+                                                        },
+                                                        "fields": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "type",
+                                                                    "name"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "oneOf": [
+                                                        {
+                                                            "required": [
+                                                                "enabled"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "required": [
+                                                                "type_prefix",
+                                                                "fields"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "in",
+                                                "out"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "validator",
+                                        "undo"
+                                    ]
+                                }
+                            },
+                            "queries": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "entities": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "validator": {
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "enabled"
+                                            ]
+                                        },
+                                        "undo": {
+                                            "type": "boolean"
+                                        },
+                                        "dto": {
+                                            "type": "object",
+                                            "properties": {
+                                                "in": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "type_prefix": {
+                                                            "type": "string"
+                                                        },
+                                                        "fields": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "type",
+                                                                    "name"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "oneOf": [
+                                                        {
+                                                            "required": [
+                                                                "enabled"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "required": [
+                                                                "type_prefix",
+                                                                "fields"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "out": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "type_prefix": {
+                                                            "type": "string"
+                                                        },
+                                                        "fields": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "type",
+                                                                    "name"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "anyOf": [
+                                                        {
+                                                            "required": [
+                                                                "enabled"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "required": [
+                                                                "type_prefix",
+                                                                "fields"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "in",
+                                                "out"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "validator",
+                                        "undo"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "required": [
+                "common_cmake_folder_path",
+                "features"
+            ]
+        },
+        "DTOs": {
+            "type": "object",
+            "properties": {
+                "common_cmake_folder_path": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "common_cmake_folder_path"
+            ]
+        },
+        "CQRS": {
+            "type": "object",
+            "properties": {
+                "common_cmake_folder_path": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "common_cmake_folder_path"
+            ]
+        },
+        "contracts": {
+            "type": "object",
+            "properties": {
+                "inverted_app_domain": {
+                    "type": "string"
+                },
+                "folder_path": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "folder_path"
+            ]
+        },
+        "presenter": {
+            "type": "object",
+            "properties": {
+                "folder_path": {
+                    "type": "string"
+                },
+                "create_undo_and_redo_singles": {
+                    "type": "boolean"
+                },
+                "singles": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "entity": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "entity"
+                        ]
+                    }
+                },
+                "list_models": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "entity": {
+                                "type": "string"
+                            },
+                            "displayed_field": {
+                                "type": "string"
+                            },
+                            "in_relation_of": {
+                                "type": "string"
+                            },
+                            "relation_field_name": {
+                                "type": "string"
+                            }
+                        },
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "name",
+                                    "entity",
+                                    "displayed_field"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "name",
+                                    "entity",
+                                    "displayed_field",
+                                    "in_relation_of",
+                                    "relation_field_name"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "folder_path",
+                "create_undo_and_redo_singles",
+                "singles"
+            ]
+        },
+        "front_ends": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "qt_widgets": {
+                    "type": "object",
+                    "properties": {
+                        "folder_path": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "folder_path"
+                    ]
+                },
+                "qt_quick": {
+                    "type": "object",
+                    "properties": {
+                        "folder_path": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "folder_path"
+                    ]
+                },
+                "qml_imports_integration": {
+                    "type": "object",
+                    "properties": {
+                        "folder_path": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "folder_path"
+                    ]
+                }
+            },
+            "minProperties": 1
+            
+        }
+    },
+    "required": [
+        "schema",
+        "global",
+        "entities",
+        "repositories",
+        "interactor",
+        "application",
+        "DTOs",
+        "CQRS",
+        "contracts",
+        "presenter",
+        "front_ends"
+    ]
+}
