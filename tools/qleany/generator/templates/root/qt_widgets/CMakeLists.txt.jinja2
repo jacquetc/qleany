@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 3.21)
+
+project({{ application_name }} LANGUAGES CXX)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+
+# Compiler settings
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+# Add Qt components
+find_package(Qt6 COMPONENTS Core Sql Concurrent REQUIRED)
+qt_standard_project_setup()
+
+# Add QCoro
+find_package(QCoro6 REQUIRED COMPONENTS Core)
+
+# Set necessary compiler flags to enable coroutine support
+qcoro_enable_coroutines()
+
+# handles the entities
+add_subdirectory({{ entities_path }})
+
+# stores the interfaces
+add_subdirectory({{ contracts_path }})
+
+# handles the data access from inside the system
+add_subdirectory({{ persistence_path }})
+
+# handles the data access from outside the system
+add_subdirectory({{ contracts_dto_path }})
+
+# handles the CQRS commands, queries and validators
+add_subdirectory({{ contracts_cqrs_path }})
+
+# handles the use cases
+add_subdirectory({{ application_path }})
+
+# handles the interaction between the system's inner layers (use cases, DTOs) and the external world 
+add_subdirectory({{ interactor_path }}) 
+
+# handles the Qt models
+add_subdirectory({{ presenter_path }}) 
+
+# handles the QtWidgets front end
+add_subdirectory({{ front_ends.qt_widgets.folder_path }})

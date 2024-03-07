@@ -15,7 +15,7 @@ add_subdirectory(asset_imports)
 
 
 target_link_libraries(SimpleExampleQMLApp PRIVATE
-    contentplugin
+    content_bisplugin
     SimpleExampleQMLplugin
 
 )

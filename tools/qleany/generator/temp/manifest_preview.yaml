@@ -206,6 +206,8 @@ front_ends:
     folder_path: src/gui/kf6_kirigami_application/
   kf6_widgets:
     folder_path: src/gui/kf6_widgets_application/
+  qml_imports_integration:
+    folder_path: src/gui/qt_design_studio/
   qt_quick:
     folder_path: src/gui/qt_quick_application/
   qt_widgets:
@@ -240,8 +242,6 @@ presenter:
     name: auto
   - entity: Client
     name: auto
-qml:
-  folder_path: src/gui/qml_application/
 repositories:
   base_folder_path: src/core/persistence/
   list:
