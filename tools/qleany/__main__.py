@@ -16,6 +16,7 @@ import __version__
 
 from generator.qleany_generator_gui import main as gui_main
 from generator.qleany_init import generate_blank_qleany_yaml
+from generator.manifest_validator import validate_manifest
 
 def _print_version():
     print("qleany version:")
@@ -34,6 +35,7 @@ def print_help():
     print("Usage:")
     print("qleany init  # write a new qleany.yaml file in the current directory")
     print("qleany gui   # start the GUI")
+    print("qleany check # check the qleany.yaml file in the current directory")
     print("qleany       # Show this screen")
     print("")
     print("Options:")
@@ -60,9 +62,15 @@ def main():
 
     elif len(sys.argv) > 1 and sys.argv[1] == "gui":
         gui_main()
+
     elif len(sys.argv) > 1 and sys.argv[1] == "init":
         print("Writing a new qleany.yaml file in the current directory")
         generate_blank_qleany_yaml(caller_path)
+
+    elif len(sys.argv) > 1 and sys.argv[1] == "check":
+        print("Checking the qleany.yaml file in the current directory")
+        validate_manifest(os.path.join(caller_path, "qleany.yaml"))
+        print("Done")
     else:
         _print_version()
         gui_main()
