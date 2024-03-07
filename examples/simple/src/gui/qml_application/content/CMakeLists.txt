@@ -3,8 +3,8 @@
 
 
 
-qt_add_library(content STATIC)
-qt6_add_qml_module(content
+qt_add_library(content_bis STATIC)
+qt6_add_qml_module(content_bis
     URI "content"
     VERSION 1.0
     RESOURCE_PREFIX "/qt/qml"

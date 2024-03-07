@@ -258,16 +258,14 @@ presenter:
       entity: Car  
       displayed_field: content
       
-
-qml:
-  folder_path: src/gui/qml_application/
-
 front_ends:
   qt_widgets:
     folder_path: src/gui/qt_widgets_application/
   qt_quick:
     folder_path: src/gui/qt_quick_application/
-  kf6_kirigami:
-    folder_path: src/gui/kf6_kirigami_application/
-  kf6_widgets:
-    folder_path: src/gui/kf6_widgets_application/
+  # kf6_kirigami:
+  #   folder_path: src/gui/kf6_kirigami_application/
+  # kf6_widgets:
+  #   folder_path: src/gui/kf6_widgets_application/
+  qml_imports_integration:
+    folder_path: src/gui/qt_design_studio/

@@ -1247,8 +1247,9 @@ def _generate_real_singles_cmakelists_file(
 
     print(f"Successfully wrote file {output_file}")
 
-def generate_qml_files(
+def generate_qml_imports_files(
     root_path: str,
+    relative_folder_path: str,
     manifest_file: str,
     files_to_be_generated: dict[str, bool] = {},
     uncrustify_config_file: str = None,
@@ -1293,11 +1294,9 @@ def generate_qml_files(
     list_models = presenter_data.get("list_models", [])
     singles = presenter_data.get("singles", [])
 
-    qml_data = manifest_data.get("qml", [])
-    folder_path = qml_data["folder_path"]
 
     generation_dict = _get_generation_dict(
-        folder_path,
+        relative_folder_path,
         feature_by_name,
         entities_by_name,
         has_undo_redo,
@@ -1406,7 +1405,7 @@ def generate_qml_files(
 
 
 def get_files_to_be_generated(
-    manifest_file: str, files_to_be_generated: dict[str, bool] = {}
+    manifest_file: str, files_to_be_generated: dict[str, bool] = {}, folder_path: str = ""
 ) -> list[str]:
     """
     Get the list of files that need to be generated based on the manifest file
@@ -1453,9 +1452,6 @@ def get_files_to_be_generated(
 
     # Organize feature_list by name for easier lookup
     feature_by_name = {feature["name"]: feature for feature in feature_list}
-
-    qml_data = manifest_data.get("qml", [])
-    folder_path = qml_data["folder_path"]
 
     files = []
     generation_dict = _get_generation_dict(
@@ -1524,10 +1520,48 @@ def get_files_to_be_generated(
 
     return files
 
+def is_qml_imports_integration_enabled(manifest_file: str) -> bool:
+    """
+    Check if the QML imports integration is enabled
+    """
+    # Read the manifest file
+    with open(manifest_file, "r") as stream:
+        try:
+            manifest_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return
+
+    qml_imports_integration_dict = manifest_data.get("front_ends", {}).get(
+        "qml_imports_integration", {})
+
+    if not qml_imports_integration_dict:
+        return False
+
+    return True
+
+def get_qml_imports_integration_folder_path(manifest_file: str) -> str:
+    """
+    Get the folder path where the QML imports files will be integrated
+    """
+    # Read the manifest file
+    with open(manifest_file, "r") as stream:
+        try:
+            manifest_data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return
+        
+    integration_folder_path = manifest_data.get("front_ends", {}).get(
+        "qml_imports_integration", {}).get("folder_path", "qml_imports")
+
+    return integration_folder_path
+
 
 # generate the files into the preview folder
-def preview_qml_files(
+def preview_qml_imports_files(
     root_path: str,
+    relative_folder_path: str,
     manifest_file: str,
     files_to_be_generated: dict[str, bool] = {},
     uncrustify_config_file: str = None,
@@ -1541,11 +1575,6 @@ def preview_qml_files(
     with open(manifest_preview_file, "r") as fh:
         manifest = yaml.safe_load(fh)
 
-    # remove .. from the path
-    manifest["qml"]["folder_path"] = manifest["qml"][
-        "folder_path"
-    ].replace("..", "")
-
     # write the modified manifest file
     with open(manifest_preview_file, "w") as fh:
         yaml.dump(manifest, fh)
@@ -1558,15 +1587,16 @@ def preview_qml_files(
         for path, value in files_to_be_generated.items():
             preview_files_to_be_generated[path.replace("..", "")] = value
 
-        generate_qml_files(
+        generate_qml_imports_files(
             root_path,
+            relative_folder_path,
             manifest_preview_file,
             preview_files_to_be_generated,
             uncrustify_config_file,
         )
 
     else:
-        generate_qml_files(root_path, manifest_preview_file, {}, uncrustify_config_file)
+        generate_qml_imports_files(root_path, relative_folder_path, manifest_preview_file, {}, uncrustify_config_file)
 
 
 # Main execution
@@ -1586,9 +1616,9 @@ if __name__ == "__main__":
             root_path = Path(manifest_file).parent
 
             if len(sys.argv) > 2 and sys.argv[2] == "--preview":
-                preview_qml_files(root_path, manifest_file)
+                preview_qml_imports_files(root_path, "", manifest_file)
             else:
-                generate_qml_files(root_path, manifest_file)
+                generate_qml_imports_files(root_path, "", manifest_file)
         else:
             print("Error: Manifest file must be named 'qleany.yaml' or 'qleany.yml'")
     else:

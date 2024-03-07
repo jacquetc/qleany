@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     set_qt_environment();
     QGuiApplication app(argc, argv);
 
+
     new Simple::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&app);
     new Simple::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());

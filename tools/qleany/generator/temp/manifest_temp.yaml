@@ -1,15 +1,15 @@
 CQRS:
-  common_cmake_folder_path: src/contracts.cqrs
+  common_cmake_folder_path: src/core/contracts.cqrs
 DTOs:
-  common_cmake_folder_path: src/contracts.dto
+  common_cmake_folder_path: src/core/contracts.dto
 application:
-  common_cmake_folder_path: src/application
+  common_cmake_folder_path: src/core/application
   features:
   - CRUD:
       create:
         enabled: true
       enabled: true
-      entity_mappable_with: FirstEntity
+      entity_mappable_with: Car
       get:
         enabled: true
       get_all:
@@ -25,15 +25,15 @@ application:
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: FirstEntity
-    name: FirstEntity
+        entity_mappable_with: Car
+    name: Car
   - CRUD:
       change_active_status:
         enabled: true
       create:
         enabled: true
       enabled: true
-      entity_mappable_with: SecondEntity
+      entity_mappable_with: Brand
       get:
         enabled: true
       get_all:
@@ -47,15 +47,15 @@ application:
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: SecondEntity
-    name: SecondEntity
+        entity_mappable_with: Brand
+    name: Brand
   - CRUD:
       change_active_status:
         enabled: true
       create:
         enabled: true
       enabled: true
-      entity_mappable_with: ThirdEntity
+      entity_mappable_with: Passenger
       get:
         enabled: true
       get_all:
@@ -69,8 +69,30 @@ application:
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: ThirdEntity
-    name: ThirdEntity
+        entity_mappable_with: Passenger
+    name: Passenger
+  - CRUD:
+      create:
+        enabled: true
+      enabled: true
+      entity_mappable_with: Client
+      get:
+        enabled: true
+      get_all:
+        enabled: true
+      get_with_details:
+        enabled: true
+      insert_relation:
+        enabled: true
+      remove:
+        enabled: true
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Client
+    name: Client
   - CRUD:
       enabled: false
     DTO:
@@ -86,9 +108,10 @@ application:
         out:
           enabled: false
       entities:
-      - FirstEntity
-      - SecondEntity
-      - ThirdEntity
+      - Car
+      - Passenger
+      - Brand
+      - Client
       name: WriteRandomThings
       undo: false
       validator:
@@ -109,9 +132,10 @@ application:
         out:
           enabled: false
       entities:
-      - FirstEntity
-      - SecondEntity
-      - ThirdEntity
+      - Car
+      - Passenger
+      - Brand
+      - Client
       name: CloseSystem
       undo: false
       validator:
@@ -131,10 +155,10 @@ application:
       validator:
         enabled: false
 contracts:
-  folder_path: src/contracts
-  inverted_app_domain: com.example
+  folder_path: src/core/contracts
+  inverted_app_domain: eu.qleany
 entities:
-  folder_path: src/entities/
+  folder_path: src/core/entities/
   list:
   - fields:
     - name: uuid
@@ -149,69 +173,82 @@ entities:
   - fields:
     - name: content
       type: QString
-    - name: secondEntity
+    - name: brand
       strong: true
-      type: SecondEntity
-    - name: bucketOfThirdEntities
+      type: Brand
+    - name: passengers
       ordered: true
       strong: true
-      type: QList<ThirdEntity>
-    name: FirstEntity
+      type: QList<Passenger>
+    name: Car
     parent: Entity
   - fields:
     - name: name
       type: QString
-    name: SecondEntity
+    name: Brand
     parent: Entity
   - fields:
     - name: name
       type: QString
-    - name: age
-      type: int
-    name: ThirdEntity
+    name: Passenger
+    parent: Entity
+  - fields:
+    - name: client
+      ordered: false
+      strong: false
+      type: Passenger
+    - name: clientFriends
+      type: QList<Passenger>
+    name: Client
     parent: Entity
 front_ends:
+  qml_imports_integration:
+    folder_path: src/gui/qt_design_studio/
+  qt_quick:
+    folder_path: src/gui/qt_quick_application/
   qt_widgets:
-    folder_path: src/qt_widgets_application/
+    folder_path: src/gui/qt_widgets_application/
 global:
-  application_cpp_domain_name: example
-  application_name: example
+  application_cpp_domain_name: FrontEnds
+  application_name: FrontEndsExample
   organisation:
-    domain: example.com
-    name: example
+    domain: qleany.eu
+    name: frontendsexample
 interactor:
-  create_undo_redo_interactor: false
-  folder_path: src/interactor/
+  create_undo_redo_interactor: true
+  folder_path: src/core/interactor/
 presenter:
-  create_undo_and_redo_singles: false
-  folder_path: src/presenters
+  create_undo_and_redo_singles: true
+  folder_path: src/gui/presenter
   list_models:
   - displayed_field: name
-    entity: ThirdEntity
-    in_relation_of: FirstEntity
-    name: ThirdEntityListModelFromFirstEntityBucketOfThirdEntities
-    relation_field_name: bucketOfThirdEntities
+    entity: Passenger
+    in_relation_of: Car
+    name: PassengerListModelFromCarPassengers
+    relation_field_name: passengers
   - displayed_field: content
-    entity: FirstEntity
-    name: FirstEntityListModel
+    entity: Car
+    name: CarListModel
   singles:
-  - entity: FirstEntity
-    name: SingleFirstEntity
-  - entity: SecondEntity
+  - entity: Car
+    name: SingleCar
+  - entity: Brand
     name: auto
-  - entity: ThirdEntity
+  - entity: Passenger
     name: auto
-qml:
-  folder_path: src/qt_design_studio_application/
+  - entity: Client
+    name: auto
 repositories:
-  base_folder_path: src/persistence/
+  base_folder_path: src/core/persistence/
   list:
-  - entity_name: FirstEntity
+  - entity_name: Car
     lazy_loaders: true
-  - entity_name: SecondEntity
+  - entity_name: Brand
     lazy_loaders: true
-  - entity_name: ThirdEntity
+  - entity_name: Passenger
     lazy_loaders: true
-  repository_folder_path: src/persistence/repository/
+  - entity_name: Client
+    lazy_loaders: true
+  repository_folder_path: src/core/persistence/repository/
 schema:
   version: 1
