@@ -21,7 +21,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
         {% for field in single.fields %}
         if (m_{{ field.camel_name }} != dto.{{ field.camel_name }}()){
             m_{{ field.camel_name }} = dto.{{ field.camel_name }}();
-            emit {{ field.camel_name }}Changed();
+            Q_EMIT {{ field.camel_name }}Changed();
             }
         {%- endfor %}
 
@@ -39,7 +39,7 @@ void {{ single.class_name_pascal }}::setId(int newId)
     if (m_id == newId)
         return;
     m_id = newId;
-    emit idChanged();
+    Q_EMIT idChanged();
 
     // clear
     if (m_id == 0)
@@ -47,7 +47,7 @@ void {{ single.class_name_pascal }}::setId(int newId)
         {% for field in single.fields %}
         {% if field.camel_name != "id" %}
             m_{{ field.camel_name }} = {{ field.type }}{};
-            emit {{ field.camel_name }}Changed();
+            Q_EMIT {{ field.camel_name }}Changed();
         {% endif %}
         {%- endfor %}
     }
@@ -64,7 +64,7 @@ void {{ single.class_name_pascal }}::setId(int newId)
                 {% for field in single.fields %}
                 {% if field.camel_name != "id" %}
                     m_{{ field.camel_name }} = {{ single.entity_name_camel }}.{{ field.camel_name }}();
-                    emit {{ field.camel_name }}Changed();
+                    Q_EMIT {{ field.camel_name }}Changed();
                 {% endif %}
                 {%- endfor %}
                 });
@@ -99,7 +99,7 @@ void {{ single.class_name_pascal }}::set{{ field.pascal_name }}({% if field.type
                     return;
                 }
                 m_{{ field.camel_name }} = {{ single.entity_name_camel }}.{{ field.camel_name }}();
-                emit {{ field.camel_name }}Changed();
+                Q_EMIT {{ field.camel_name }}Changed();
             });
 }
 {% endif %}

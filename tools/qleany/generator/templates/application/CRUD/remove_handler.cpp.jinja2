@@ -79,8 +79,8 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    // repositories handle remove signals
-    // emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+    // repositories handle remove Q_SIGNALS
+    // Q_EMIT {{ entity_mappable_with_camel }}Removed(deleteResult.value());
 
     qDebug() << "{{ entity_mappable_with_pascal }} removed:" << {{ entity_mappable_with_camel }}Id;
 

@@ -54,7 +54,7 @@ void UndoRedoCommand::asyncUndo()
     }
 
     m_status = Status::Running;
-    emit undoing(m_scope, true);
+    Q_EMIT undoing(m_scope, true);
     m_watcher->setFuture(QtConcurrent::run(m_undoFunction));
 }
 
@@ -64,7 +64,7 @@ void UndoRedoCommand::asyncUndo()
 void UndoRedoCommand::asyncRedo()
 {
     m_status = Status::Running;
-    emit redoing(m_scope, true);
+    Q_EMIT redoing(m_scope, true);
     m_watcher->setFuture(QtConcurrent::run(m_redoFunction).onFailed([](const std::exception &e) {
         return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
                                         "Redo failed: " + QString::fromStdString(e.what())));
@@ -109,18 +109,18 @@ void UndoRedoCommand::onFinished()
 
         if (result.error().status() == Error::Warning)
         {
-            emit warningSent(result.error());
+            Q_EMIT warningSent(result.error());
         }
         else
         {
-            emit errorSent(result.error());
+            Q_EMIT errorSent(result.error());
         }
     }
     m_status = Status::Finished;
-    emit redoing(m_scope, false);
-    emit undoing(m_scope, false);
-    emit progressFinished();
-    emit finished(result.isOk());
+    Q_EMIT redoing(m_scope, false);
+    Q_EMIT undoing(m_scope, false);
+    Q_EMIT progressFinished();
+    Q_EMIT finished(result.isOk());
 }
 
 void UndoRedoCommand::progressTimerTimeout()
@@ -128,7 +128,7 @@ void UndoRedoCommand::progressTimerTimeout()
     if ((m_progressMinimumDuration >= 0) &&
         (m_startTime.msecsTo(QDateTime::currentDateTime()) > m_progressMinimumDuration))
     {
-        emit progressStarted();
+        Q_EMIT progressStarted();
         m_progressTimer->stop();
     }
 }

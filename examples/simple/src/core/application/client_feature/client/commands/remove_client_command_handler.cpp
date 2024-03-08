@@ -77,8 +77,8 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    // repositories handle remove signals
-    // emit clientRemoved(deleteResult.value());
+    // repositories handle remove Q_SIGNALS
+    // Q_EMIT clientRemoved(deleteResult.value());
 
     qDebug() << "Client removed:" << clientId;
 

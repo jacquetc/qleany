@@ -31,7 +31,7 @@ class QLEANY_EXPORT UndoRedoStack : public QObject
     void incrementCurrentIndex();
     void decrementCurrentIndex();
 
-  signals:
+  Q_SIGNALS:
 
   private:
     QUuid m_id;

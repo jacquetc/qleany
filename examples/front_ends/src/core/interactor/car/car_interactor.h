@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Car::UpdateCarDTO getUpdateDTO();
 
-  public slots:
+  public Q_SLOTS:
 
     QCoro::Task<CarDTO> create(const CreateCarDTO &dto);
 

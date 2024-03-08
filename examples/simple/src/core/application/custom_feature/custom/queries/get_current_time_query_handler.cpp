@@ -57,8 +57,8 @@ Result<GetCurrentTimeReplyDTO> GetCurrentTimeQueryHandler::handleImpl(QPromise<R
     //  dummy to compile
     GetCurrentTimeReplyDTO getCurrentTimeReplyDTO;
 
-    // emit signal
-    emit getCurrentTimeChanged(getCurrentTimeReplyDTO);
+    // Q_EMIT signal
+    Q_EMIT getCurrentTimeChanged(getCurrentTimeReplyDTO);
 
     // Return
     return Result<GetCurrentTimeReplyDTO>(getCurrentTimeReplyDTO);

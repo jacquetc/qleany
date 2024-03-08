@@ -65,8 +65,8 @@ Result<void> CloseSystemCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     m_carRepository->saveChanges();
 
-    // emit signal
-    // emit closeSystemChanged();
+    // Q_EMIT signal
+    // Q_EMIT closeSystemChanged();
 
     // Return
     return Result<void>();

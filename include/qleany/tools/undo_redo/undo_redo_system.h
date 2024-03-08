@@ -72,7 +72,7 @@ class QLEANY_EXPORT UndoRedoSystem : public QThread
 
     Q_INVOKABLE int numberOfCommands() const;
 
-  private slots:
+  private Q_SLOTS:
 
     void executeNextCommandUndo();
     void executeNextCommandRedo();
@@ -81,7 +81,7 @@ class QLEANY_EXPORT UndoRedoSystem : public QThread
     void onCommandUndoFinished(bool isSuccessful);
     void onCommandRedoFinished(bool isSuccessful);
 
-  signals:
+  Q_SIGNALS:
 
     void stateChanged();
 

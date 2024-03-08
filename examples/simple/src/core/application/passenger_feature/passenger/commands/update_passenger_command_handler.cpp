@@ -104,11 +104,11 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
     auto passengerDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
-    emit passengerUpdated(passengerDto);
+    Q_EMIT passengerUpdated(passengerDto);
 
     if (request.req.metaData().areDetailsSet())
     {
-        emit passengerDetailsUpdated(passengerDto.id());
+        Q_EMIT passengerDetailsUpdated(passengerDto.id());
     }
 
     qDebug() << "UpdatePassengerCommandHandler::handleImpl done";
@@ -133,7 +133,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::restoreImpl()
     auto passengerDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
-    emit passengerUpdated(passengerDto);
+    Q_EMIT passengerUpdated(passengerDto);
 
     qDebug() << "UpdatePassengerCommandHandler::restoreImpl done";
 

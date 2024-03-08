@@ -15,7 +15,7 @@ class SIMPLE_EXAMPLE_INTERACTOR_EXPORT ErrorSignals : public QObject
     {
     }
 
-  signals:
+  Q_SIGNALS:
     void warningSent(const Qleany::Error &error);
     void errorSent(const Qleany::Error &error);
 };

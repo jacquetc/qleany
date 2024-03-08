@@ -25,8 +25,8 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT RemoveBrandCommandHandler : pu
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request);
     Result<int> restore();
 
-  signals:
-    // repositories handle remove signals
+  Q_SIGNALS:
+    // repositories handle remove Q_SIGNALS
     // void brandRemoved(int id);
 
   private:

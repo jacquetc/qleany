@@ -19,7 +19,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_p
 
 namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Queries
 {
-class {{ export }} {{ query.pascal_name }}QueryHandler : public QObject 
+class {{ export }} {{ query.pascal_name }}QueryHandler : public QObject 
 {
     Q_OBJECT
   public:
@@ -28,7 +28,7 @@ Interface{{ repository.pascal_name }}Repository *{{ repository.camel_name }}Repo
 
     Result<{{ query.dto_out_pascal_name }}> handle(QPromise<Result<void>> &progressPromise, const {{ query.pascal_name }}Query &request);
 
-  signals:
+  Q_SIGNALS:
     void {{ query.camel_name }}Changed({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ query.dto_out_pascal_name }} {{ query.dto_out_camel_name }});
 
   private:

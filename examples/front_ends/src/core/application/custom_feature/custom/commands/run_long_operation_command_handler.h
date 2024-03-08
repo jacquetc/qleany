@@ -25,7 +25,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT RunLongOperationCommandHandle
 
     Result<void> restore();
 
-  signals:
+  Q_SIGNALS:
 
     void runLongOperationChanged();
 

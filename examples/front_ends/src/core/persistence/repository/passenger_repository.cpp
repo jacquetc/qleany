@@ -37,7 +37,7 @@ Result<QHash<int, QList<int>>> PassengerRepository::removeInCascade(QList<int> i
 
     returnedHashOfEntityWithRemovedIds.insert(FrontEnds::Entities::Entities::Passenger, removedIdsResult.value());
 
-    emit m_signalHolder->removed(removedIdsResult.value());
+    Q_EMIT m_signalHolder->removed(removedIdsResult.value());
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithRemovedIds);
 }
@@ -54,7 +54,7 @@ Result<QHash<int, QList<int>>> PassengerRepository::changeActiveStatusInCascade(
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
 
     returnedHashOfEntityWithActiveChangedIds.insert(FrontEnds::Entities::Entities::Passenger, changedIdsResult.value());
-    emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
+    Q_EMIT m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
 }

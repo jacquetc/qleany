@@ -55,8 +55,8 @@ Result<void> RunLongOperationCommandHandler::handleImpl(QPromise<Result<void>> &
     // play here with the repositories
     Q_UNIMPLEMENTED();
 
-    // emit signal
-    // emit runLongOperationChanged();
+    // Q_EMIT signal
+    // Q_EMIT runLongOperationChanged();
 
     // Return
     return Result<void>();

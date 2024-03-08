@@ -147,10 +147,10 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     auto brandDTO =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
-    emit brandCreated(brandDTO);
+    Q_EMIT brandCreated(brandDTO);
 
     // send an insertion signal
-    emit relationWithOwnerInserted(brand.id(), ownerId, position);
+    Q_EMIT relationWithOwnerInserted(brand.id(), ownerId, position);
 
     qDebug() << "Brand added:" << brandDTO.id();
 
@@ -167,11 +167,11 @@ Result<BrandDTO> CreateBrandCommandHandler::restoreImpl()
 
     QLN_RETURN_IF_ERROR(BrandDTO, deleteResult)
 
-    emit brandRemoved(deleteResult.value());
+    Q_EMIT brandRemoved(deleteResult.value());
 
     qDebug() << "Brand removed:" << deleteResult.value();
 
-    emit relationWithOwnerRemoved(entityId, m_ownerId);
+    Q_EMIT relationWithOwnerRemoved(entityId, m_ownerId);
 
     return Result<BrandDTO>(BrandDTO());
 }

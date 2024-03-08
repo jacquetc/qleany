@@ -77,8 +77,8 @@ Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progre
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    // repositories handle remove signals
-    // emit brandRemoved(deleteResult.value());
+    // repositories handle remove Q_SIGNALS
+    // Q_EMIT brandRemoved(deleteResult.value());
 
     qDebug() << "Brand removed:" << brandId;
 

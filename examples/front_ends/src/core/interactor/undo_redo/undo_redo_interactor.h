@@ -52,7 +52,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
     QAction *createUndoAction(QObject *parent, const QString &prefix = QString()) const;
     QAction *createRedoAction(QObject *parent, const QString &prefix = QString()) const;
 
-  public slots:
+  public Q_SLOTS:
 
     void undo();
     void redo();

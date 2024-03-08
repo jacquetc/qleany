@@ -32,7 +32,7 @@ class SIMPLE_EXAMPLE_INTERACTOR_EXPORT CustomInteractor : public QObject
 
     Q_INVOKABLE QCoro::Task<GetCurrentTimeReplyDTO> getCurrentTime() const;
 
-  public slots:
+  public Q_SLOTS:
 
     QCoro::Task<> writeRandomThings(WriteRandomThingsDTO dto);
 

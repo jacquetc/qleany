@@ -160,7 +160,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->custom()->getCurrentTimeReplied(result.value());
+            Q_EMIT m_eventDispatcher->custom()->getCurrentTimeReplied(result.value());
         }
         return Result<void>(result.error());
     });

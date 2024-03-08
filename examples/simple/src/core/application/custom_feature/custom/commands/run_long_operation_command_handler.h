@@ -25,7 +25,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT RunLongOperationCommandHandler : 
 
     Result<void> restore();
 
-  signals:
+  Q_SIGNALS:
 
     void runLongOperationChanged();
 

@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListMod
 
     QHash<int, QByteArray> roleNames() const override;
 
-  signals:
+  Q_SIGNALS:
 
   private:
     void populate();

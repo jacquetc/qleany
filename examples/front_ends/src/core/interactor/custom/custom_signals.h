@@ -21,7 +21,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CustomSignals : public QObject
     {
     }
 
-  signals:
+  Q_SIGNALS:
     void writeRandomThingsChanged();
     void runLongOperationChanged();
     void closeSystemChanged();

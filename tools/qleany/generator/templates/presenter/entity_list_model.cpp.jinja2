@@ -40,7 +40,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
             {
                 m_{{ model.entity_name_camel }}List[i] = dto;
                 m_{{ model.entity_name_camel }}IdList[i] = dto.id();
-                emit dataChanged(index(i), index(i));
+                Q_EMIT dataChanged(index(i), index(i));
                 break;
             }
         }
@@ -133,7 +133,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
                     qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
                     return false;
                 }
-                emit dataChanged(index, index, {role});
+                Q_EMIT dataChanged(index, index, {role});
                 return true;
             });
                                 

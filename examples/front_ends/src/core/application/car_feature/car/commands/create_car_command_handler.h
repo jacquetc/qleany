@@ -26,7 +26,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public
     Result<CarDTO> handle(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request);
     Result<CarDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void carCreated(FrontEnds::Contracts::DTO::Car::CarDTO carDto);
     void carRemoved(int id);
 

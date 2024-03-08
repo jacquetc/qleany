@@ -39,7 +39,7 @@ class SIMPLE_EXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Brand::UpdateBrandDTO getUpdateDTO();
 
-  public slots:
+  public Q_SLOTS:
 
     QCoro::Task<BrandDTO> create(const CreateBrandDTO &dto);
 

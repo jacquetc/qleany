@@ -99,11 +99,11 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     // map
     auto carDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
 
-    emit carUpdated(carDto);
+    Q_EMIT carUpdated(carDto);
 
     if (request.req.metaData().areDetailsSet())
     {
-        emit carDetailsUpdated(carDto.id());
+        Q_EMIT carDetailsUpdated(carDto.id());
     }
 
     qDebug() << "UpdateCarCommandHandler::handleImpl done";
@@ -126,7 +126,7 @@ Result<CarDTO> UpdateCarCommandHandler::restoreImpl()
     // map
     auto carDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
 
-    emit carUpdated(carDto);
+    Q_EMIT carUpdated(carDto);
 
     qDebug() << "UpdateCarCommandHandler::restoreImpl done";
 

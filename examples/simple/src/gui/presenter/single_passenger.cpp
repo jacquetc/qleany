@@ -22,27 +22,27 @@ SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
             if (m_id != dto.id())
             {
                 m_id = dto.id();
-                emit idChanged();
+                Q_EMIT idChanged();
             }
             if (m_uuid != dto.uuid())
             {
                 m_uuid = dto.uuid();
-                emit uuidChanged();
+                Q_EMIT uuidChanged();
             }
             if (m_creationDate != dto.creationDate())
             {
                 m_creationDate = dto.creationDate();
-                emit creationDateChanged();
+                Q_EMIT creationDateChanged();
             }
             if (m_updateDate != dto.updateDate())
             {
                 m_updateDate = dto.updateDate();
-                emit updateDateChanged();
+                Q_EMIT updateDateChanged();
             }
             if (m_name != dto.name())
             {
                 m_name = dto.name();
-                emit nameChanged();
+                Q_EMIT nameChanged();
             }
         }
     });
@@ -58,23 +58,23 @@ void SinglePassenger::setId(int newId)
     if (m_id == newId)
         return;
     m_id = newId;
-    emit idChanged();
+    Q_EMIT idChanged();
 
     // clear
     if (m_id == 0)
     {
 
         m_uuid = QUuid{};
-        emit uuidChanged();
+        Q_EMIT uuidChanged();
 
         m_creationDate = QDateTime{};
-        emit creationDateChanged();
+        Q_EMIT creationDateChanged();
 
         m_updateDate = QDateTime{};
-        emit updateDateChanged();
+        Q_EMIT updateDateChanged();
 
         m_name = QString{};
-        emit nameChanged();
+        Q_EMIT nameChanged();
     }
 
     // set
@@ -89,16 +89,16 @@ void SinglePassenger::setId(int newId)
                 }
 
                 m_uuid = passenger.uuid();
-                emit uuidChanged();
+                Q_EMIT uuidChanged();
 
                 m_creationDate = passenger.creationDate();
-                emit creationDateChanged();
+                Q_EMIT creationDateChanged();
 
                 m_updateDate = passenger.updateDate();
-                emit updateDateChanged();
+                Q_EMIT updateDateChanged();
 
                 m_name = passenger.name();
-                emit nameChanged();
+                Q_EMIT nameChanged();
             });
     }
 }
@@ -129,7 +129,7 @@ void SinglePassenger::setUuid(const QUuid &newUuid)
                 return;
             }
             m_uuid = passenger.uuid();
-            emit uuidChanged();
+            Q_EMIT uuidChanged();
         });
 }
 
@@ -154,7 +154,7 @@ void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
                 return;
             }
             m_creationDate = passenger.creationDate();
-            emit creationDateChanged();
+            Q_EMIT creationDateChanged();
         });
 }
 
@@ -179,7 +179,7 @@ void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
                 return;
             }
             m_updateDate = passenger.updateDate();
-            emit updateDateChanged();
+            Q_EMIT updateDateChanged();
         });
 }
 
@@ -204,6 +204,6 @@ void SinglePassenger::setName(const QString &newName)
                 return;
             }
             m_name = passenger.name();
-            emit nameChanged();
+            Q_EMIT nameChanged();
         });
 }

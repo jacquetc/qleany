@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT UpdatePassengerCommandHandler 
     Result<PassengerDTO> handle(QPromise<Result<void>> &progressPromise, const UpdatePassengerCommand &request);
     Result<PassengerDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void passengerUpdated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerDetailsUpdated(int id);
 

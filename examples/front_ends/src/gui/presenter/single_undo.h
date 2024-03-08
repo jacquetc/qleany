@@ -18,10 +18,10 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleUndo : public QObject
     bool enabled() const;
     QString text() const;
 
-  public slots:
+  public Q_SLOTS:
     void undo();
 
-  signals:
+  Q_SIGNALS:
     void enabledChanged();
     void textChanged();
 

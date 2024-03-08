@@ -168,10 +168,10 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     auto passengerDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Passenger, PassengerDTO>(
         passengerResult.value());
-    emit passengerCreated(passengerDTO);
+    Q_EMIT passengerCreated(passengerDTO);
 
     // send an insertion signal
-    emit relationWithOwnerInserted(passenger.id(), ownerId, position);
+    Q_EMIT relationWithOwnerInserted(passenger.id(), ownerId, position);
 
     qDebug() << "Passenger added:" << passengerDTO.id();
 
@@ -188,11 +188,11 @@ Result<PassengerDTO> CreatePassengerCommandHandler::restoreImpl()
 
     QLN_RETURN_IF_ERROR(PassengerDTO, deleteResult)
 
-    emit passengerRemoved(deleteResult.value());
+    Q_EMIT passengerRemoved(deleteResult.value());
 
     qDebug() << "Passenger removed:" << deleteResult.value();
 
-    emit relationWithOwnerRemoved(entityId, m_ownerId);
+    Q_EMIT relationWithOwnerRemoved(entityId, m_ownerId);
 
     return Result<PassengerDTO>(PassengerDTO());
 }

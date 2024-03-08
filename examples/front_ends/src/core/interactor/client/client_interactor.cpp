@@ -59,7 +59,7 @@ QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->client()->getReplied(result.value());
+            Q_EMIT m_eventDispatcher->client()->getReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -92,7 +92,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->client()->getWithDetailsReplied(result.value());
+            Q_EMIT m_eventDispatcher->client()->getWithDetailsReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -123,7 +123,7 @@ QCoro::Task<QList<ClientDTO>> ClientInteractor::getAll() const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->client()->getAllReplied(result.value());
+            Q_EMIT m_eventDispatcher->client()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -157,7 +157,7 @@ QCoro::Task<ClientDTO> ClientInteractor::create(const CreateClientDTO &dto)
                      &ClientSignals::created);
 
     QObject::connect(handler, &CreateClientCommandHandler::clientRemoved, this,
-                     [this](int removedId) { emit m_eventDispatcher->client()->removed(QList<int>() << removedId); });
+                     [this](int removedId) { Q_EMIT m_eventDispatcher->client()->removed(QList<int>() << removedId); });
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<CreateClientCommandHandler, CreateClientCommand>(
@@ -190,7 +190,7 @@ QCoro::Task<ClientDTO> ClientInteractor::update(const UpdateClientDTO &dto)
 
     // connect
     QObject::connect(handler, &UpdateClientCommandHandler::clientUpdated, this,
-                     [this](ClientDTO dto) { emit m_eventDispatcher->client()->updated(dto); });
+                     [this](ClientDTO dto) { Q_EMIT m_eventDispatcher->client()->updated(dto); });
     QObject::connect(handler, &UpdateClientCommandHandler::clientDetailsUpdated, m_eventDispatcher->client(),
                      &ClientSignals::allRelationsInvalidated);
 

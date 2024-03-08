@@ -32,7 +32,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT CloseSystemCommandHandler : publi
 
     Result<void> restore();
 
-  signals:
+  Q_SIGNALS:
 
     void closeSystemChanged();
 

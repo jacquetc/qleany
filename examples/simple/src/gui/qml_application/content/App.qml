@@ -100,7 +100,7 @@ ApplicationWindow {
         }
     }
 
-    // connnect to error signals and display a message box
+    // connnect to error Q_SIGNALS and display a message box
     // warningSent
     Connections {
         target: EventDispatcher.error()

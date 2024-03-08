@@ -32,6 +32,8 @@ set(QT_MIN_VERSION "6.4.0")
 set(QT_DEFAULT_MAJOR_VERSION 6)
 set(CMAKE_AUTOMOC ON)
 
+add_compile_definitions(-DQT_NO_KEYWORDS)
+
 # options
 option(QLEANY_BUILD_EXAMPLES "Build examples" ON)
 option(QLEANY_BUILD_TESTS "Build tests" ON)

@@ -81,7 +81,7 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
                     m_passengerList[i] = newPassengerList[i];
                     QModelIndex topLeft = index(i, 0);
                     QModelIndex bottomRight = index(i, 0);
-                    emit dataChanged(topLeft, bottomRight);
+                    Q_EMIT dataChanged(topLeft, bottomRight);
                 }
             }
 
@@ -155,7 +155,7 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
             {
                 m_passengerList[i] = dto;
                 m_passengerIdList[i] = dto.id();
-                emit dataChanged(index(i), index(i));
+                Q_EMIT dataChanged(index(i), index(i));
                 break;
             }
         }
@@ -253,7 +253,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -279,7 +279,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -305,7 +305,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -331,7 +331,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -357,7 +357,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -425,7 +425,7 @@ void PassengerListModelFromCarPassengers::setCarId(int newCarId)
     {
         populate();
     }
-    emit carIdChanged();
+    Q_EMIT carIdChanged();
 }
 
 void PassengerListModelFromCarPassengers::resetCarId()

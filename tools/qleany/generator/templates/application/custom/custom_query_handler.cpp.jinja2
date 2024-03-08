@@ -69,8 +69,8 @@ Result<{{ query.dto_out_pascal_name }}>{{ query.pascal_name }}QueryHandler::hand
     // dummy to compile
     {{ query.dto_out_pascal_name }} {{ query.dto_out_camel_name }};
 
-    // emit signal
-    emit {{ query.camel_name }}Changed({{ query.dto_out_camel_name }});
+    // Q_EMIT signal
+    Q_EMIT {{ query.camel_name }}Changed({{ query.dto_out_camel_name }});
 
     // Return 
     return Result<{{ query.dto_out_pascal_name }}>({{ query.dto_out_camel_name }});

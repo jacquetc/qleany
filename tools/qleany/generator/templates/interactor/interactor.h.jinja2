@@ -73,7 +73,7 @@ class {{ export }} {{ feature_name_pascal }}Interactor : public QObject
     {% endif %}
 {% endif %}
 
-  public slots:
+  public Q_SLOTS:
 
 {% if feature.crud.enabled %}
     {%if feature.crud.create %}

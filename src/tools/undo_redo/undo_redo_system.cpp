@@ -114,7 +114,7 @@ void UndoRedoSystem::undo()
         }
 
         command->asyncUndo();
-        emit stateChanged();
+        Q_EMIT stateChanged();
     }
 }
 
@@ -143,7 +143,7 @@ void UndoRedoSystem::redo()
         }
 
         command->asyncRedo();
-        emit stateChanged();
+        Q_EMIT stateChanged();
     }
 }
 
@@ -191,7 +191,7 @@ void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope,
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 void UndoRedoSystem::push(UndoRedoCommand *command, const QString &commandScope, const QUuid &stackId) const
@@ -219,7 +219,7 @@ void UndoRedoSystem::clear()
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 /*!
@@ -240,7 +240,7 @@ void UndoRedoSystem::setUndoLimit(int limit)
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 /*!
@@ -364,7 +364,7 @@ void UndoRedoSystem::setCurrentIndex(int index)
     if (index < m_activeStack->currentIndex())
     {
         // we append the command to a undo queue
-        // when the command is done, it will emit a signal
+        // when the command is done, it will Q_EMIT a signal
         // we will then undo the next command in the queue
 
         while (movingIndex > index)
@@ -444,7 +444,7 @@ void UndoRedoSystem::setActiveStack(const QUuid &stackId)
         m_activeStack = m_stackHash.value(stackId);
 
         // to reinit the undo redo actions
-        emit stateChanged();
+        Q_EMIT stateChanged();
     }
 }
 
@@ -541,7 +541,7 @@ void UndoRedoSystem::onCommandUndoFinished(bool isSuccessful)
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 void UndoRedoSystem::onCommandRedoFinished(bool isSuccessful)
@@ -570,7 +570,7 @@ void UndoRedoSystem::onCommandRedoFinished(bool isSuccessful)
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 /*!
@@ -627,7 +627,7 @@ void UndoRedoSystem::onCommandDoFinished(bool isSuccessful)
     }
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 /*!

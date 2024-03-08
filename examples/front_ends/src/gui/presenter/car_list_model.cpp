@@ -39,7 +39,7 @@ CarListModel::CarListModel(QObject *parent) : QAbstractListModel(parent)
             {
                 m_carList[i] = dto;
                 m_carIdList[i] = dto.id();
-                emit dataChanged(index(i), index(i));
+                Q_EMIT dataChanged(index(i), index(i));
                 break;
             }
         }
@@ -139,7 +139,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -165,7 +165,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -191,7 +191,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -217,7 +217,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 
@@ -243,7 +243,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
-            emit dataChanged(index, index, {role});
+            Q_EMIT dataChanged(index, index, {role});
             return true;
         });
 

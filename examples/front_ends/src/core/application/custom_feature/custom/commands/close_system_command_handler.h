@@ -32,7 +32,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT CloseSystemCommandHandler : p
 
     Result<void> restore();
 
-  signals:
+  Q_SIGNALS:
 
     void closeSystemChanged();
 

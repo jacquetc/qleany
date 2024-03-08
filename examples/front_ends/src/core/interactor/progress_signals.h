@@ -30,7 +30,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ProgressSignals : public QObject
                          &ProgressSignals::progressValueChanged, Qt::QueuedConnection);
     }
 
-  signals:
+  Q_SIGNALS:
     void progressStarted();
     void progressFinished();
     void progressRangeChanged(int minimum, int maximum);

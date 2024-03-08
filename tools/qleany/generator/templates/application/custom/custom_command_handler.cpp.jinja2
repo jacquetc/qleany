@@ -120,14 +120,14 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
     // m_newState = Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
 {% endif %}
 
-    // emit signal
-    //emit {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
+    // Q_EMIT signal
+    //Q_EMIT {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
 
     // Return 
     return Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
 {% else %}
-    // emit signal
-    //emit {{ command.camel_name }}Changed();
+    // Q_EMIT signal
+    //Q_EMIT {{ command.camel_name }}Changed();
 
     // Return 
     return Result<void>();
@@ -147,13 +147,13 @@ Result<{{ command.dto_out_pascal_name }}>{{ command.pascal_name }}CommandHandler
 
     Q_UNIMPLEMENTED();
 
-    emit {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
+    Q_EMIT {{ command.camel_name }}Changed({{ command.dto_out_camel_name }});
 
     return Result<{{ command.dto_out_pascal_name }}>({{ command.dto_out_camel_name }});
 {% else %}
     Q_UNIMPLEMENTED();
 
-    emit {{ command.camel_name }}Changed();
+    Q_EMIT {{ command.camel_name }}Changed();
 
     return Result<void>();
 {% endif %}

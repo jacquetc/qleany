@@ -26,7 +26,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : pu
     Result<BrandDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request);
     Result<BrandDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void brandUpdated(FrontEnds::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandDetailsUpdated(int id);
 

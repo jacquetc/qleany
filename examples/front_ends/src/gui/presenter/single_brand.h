@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleBrand : public QObject
     QString name() const;
     void setName(const QString &newName);
 
-  signals:
+  Q_SIGNALS:
 
     void idChanged();
 

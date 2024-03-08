@@ -22,27 +22,27 @@ SingleBrand::SingleBrand(QObject *parent) : QObject{parent}
             if (m_id != dto.id())
             {
                 m_id = dto.id();
-                emit idChanged();
+                Q_EMIT idChanged();
             }
             if (m_uuid != dto.uuid())
             {
                 m_uuid = dto.uuid();
-                emit uuidChanged();
+                Q_EMIT uuidChanged();
             }
             if (m_creationDate != dto.creationDate())
             {
                 m_creationDate = dto.creationDate();
-                emit creationDateChanged();
+                Q_EMIT creationDateChanged();
             }
             if (m_updateDate != dto.updateDate())
             {
                 m_updateDate = dto.updateDate();
-                emit updateDateChanged();
+                Q_EMIT updateDateChanged();
             }
             if (m_name != dto.name())
             {
                 m_name = dto.name();
-                emit nameChanged();
+                Q_EMIT nameChanged();
             }
         }
     });
@@ -58,23 +58,23 @@ void SingleBrand::setId(int newId)
     if (m_id == newId)
         return;
     m_id = newId;
-    emit idChanged();
+    Q_EMIT idChanged();
 
     // clear
     if (m_id == 0)
     {
 
         m_uuid = QUuid{};
-        emit uuidChanged();
+        Q_EMIT uuidChanged();
 
         m_creationDate = QDateTime{};
-        emit creationDateChanged();
+        Q_EMIT creationDateChanged();
 
         m_updateDate = QDateTime{};
-        emit updateDateChanged();
+        Q_EMIT updateDateChanged();
 
         m_name = QString{};
-        emit nameChanged();
+        Q_EMIT nameChanged();
     }
 
     // set
@@ -89,16 +89,16 @@ void SingleBrand::setId(int newId)
                 }
 
                 m_uuid = brand.uuid();
-                emit uuidChanged();
+                Q_EMIT uuidChanged();
 
                 m_creationDate = brand.creationDate();
-                emit creationDateChanged();
+                Q_EMIT creationDateChanged();
 
                 m_updateDate = brand.updateDate();
-                emit updateDateChanged();
+                Q_EMIT updateDateChanged();
 
                 m_name = brand.name();
-                emit nameChanged();
+                Q_EMIT nameChanged();
             });
     }
 }
@@ -129,7 +129,7 @@ void SingleBrand::setUuid(const QUuid &newUuid)
                 return;
             }
             m_uuid = brand.uuid();
-            emit uuidChanged();
+            Q_EMIT uuidChanged();
         });
 }
 
@@ -154,7 +154,7 @@ void SingleBrand::setCreationDate(const QDateTime &newCreationDate)
                 return;
             }
             m_creationDate = brand.creationDate();
-            emit creationDateChanged();
+            Q_EMIT creationDateChanged();
         });
 }
 
@@ -179,7 +179,7 @@ void SingleBrand::setUpdateDate(const QDateTime &newUpdateDate)
                 return;
             }
             m_updateDate = brand.updateDate();
-            emit updateDateChanged();
+            Q_EMIT updateDateChanged();
         });
 }
 
@@ -204,6 +204,6 @@ void SingleBrand::setName(const QString &newName)
                 return;
             }
             m_name = brand.name();
-            emit nameChanged();
+            Q_EMIT nameChanged();
         });
 }

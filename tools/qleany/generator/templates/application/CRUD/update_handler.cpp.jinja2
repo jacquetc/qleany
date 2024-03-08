@@ -100,10 +100,10 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     // map
     auto {{ entity_mappable_with_camel }}Dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
 
-    emit {{ entity_mappable_with_camel }}Updated({{ entity_mappable_with_camel }}Dto);
+    Q_EMIT {{ entity_mappable_with_camel }}Updated({{ entity_mappable_with_camel }}Dto);
 
     if(request.req.metaData().areDetailsSet()){
-        emit {{ entity_mappable_with_camel }}DetailsUpdated({{ entity_mappable_with_camel }}Dto.id());
+        Q_EMIT {{ entity_mappable_with_camel }}DetailsUpdated({{ entity_mappable_with_camel }}Dto.id());
     }
 
 
@@ -127,7 +127,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Update{{ entity_mappable_with_pascal
     // map
     auto {{ entity_mappable_with_camel }}Dto = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
 
-    emit {{ entity_mappable_with_camel }}Updated({{ entity_mappable_with_camel }}Dto);
+    Q_EMIT {{ entity_mappable_with_camel }}Updated({{ entity_mappable_with_camel }}Dto);
 
     qDebug() << "Update{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl done";
 

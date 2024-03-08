@@ -106,7 +106,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     m_newEntity = carResult;
 
     auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Car, CarDTO>(carResult.value());
-    emit carCreated(carDTO);
+    Q_EMIT carCreated(carDTO);
 
     qDebug() << "Car added:" << carDTO.id();
 
@@ -123,7 +123,7 @@ Result<CarDTO> CreateCarCommandHandler::restoreImpl()
 
     QLN_RETURN_IF_ERROR(CarDTO, deleteResult)
 
-    emit carRemoved(deleteResult.value());
+    Q_EMIT carRemoved(deleteResult.value());
 
     qDebug() << "Car removed:" << deleteResult.value();
 

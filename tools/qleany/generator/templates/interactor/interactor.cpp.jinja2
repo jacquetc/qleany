@@ -86,7 +86,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->{{ feature_name_camel }}()->getReplied(result.value());
+            Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->getReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -121,7 +121,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->{{ feature_name_camel }}()->getWithDetailsReplied(result.value());
+            Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->getWithDetailsReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -155,7 +155,7 @@ QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Interac
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->{{ feature_name_camel }}()->getAllReplied(result.value());
+            Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -192,15 +192,15 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::cr
     {% if feature.crud.has_owner %}
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerInserted, this, [this](int id, int ownerId, int position){
         auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, position);
-        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationInserted(dto);
+        Q_EMIT m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationInserted(dto);
             });
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId){
         auto dto = {{ feature.crud.owner_name_pascal }}RelationDTO(ownerId, {{ feature.crud.owner_name_pascal }}RelationDTO::RelationField::{{ feature.crud.owner_field_name_pascal }} , QList<int>() << id, -1);
-        emit m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationRemoved(dto);
+        Q_EMIT m_eventDispatcher->{{ feature.crud.owner_name_camel }}()->relationRemoved(dto);
             });
     {% endif %}
     QObject::connect(handler, &Create{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Removed, this, [this](int removedId) {
-        emit m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << removedId);
+        Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->removed(QList<int>() << removedId);
     });
 
     // Create specialized UndoRedoCommand
@@ -236,7 +236,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::up
 
     // connect
     QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}Updated, this,
-                     [this]({{ entity_name_pascal }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->updated(dto); });
+                     [this]({{ entity_name_pascal }}DTO dto) { Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->updated(dto); });
     QObject::connect(handler, &Update{{ entity_name_pascal }}CommandHandler::{{ entity_name_camel }}DetailsUpdated, m_eventDispatcher->{{ feature_name_camel }}(), &{{ entity_name_pascal }}Signals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
@@ -327,7 +327,7 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
     // connect
     {% if command.dto_out_enabled %}
     QObject::connect(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, this,
-                     [this]({{ command.dto_out }}DTO dto) { emit m_eventDispatcher->{{ feature_name_camel }}()->{{ command.name_camel }}Changed(dto); });
+                     [this]({{ command.dto_out }}DTO dto) { Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->{{ command.name_camel }}Changed(dto); });
     {% else %}
     QObject::connect(handler, &{{ command.name }}CommandHandler::{{ command.name_camel }}Changed, m_eventDispatcher->{{ feature_name_camel }}(),
                      &{{ feature_name_pascal }}Signals::{{ command.name_camel }}Changed);
@@ -383,7 +383,7 @@ QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Interactor::{{ quer
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->{{ feature_name_camel }}()->{{ query.name_camel }}Replied(result.value());
+            Q_EMIT m_eventDispatcher->{{ feature_name_camel }}()->{{ query.name_camel }}Replied(result.value());
         }
         return Result<void>(result.error());
     });

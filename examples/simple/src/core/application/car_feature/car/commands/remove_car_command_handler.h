@@ -25,8 +25,8 @@ class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT RemoveCarCommandHandler : public QOb
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemoveCarCommand &request);
     Result<int> restore();
 
-  signals:
-    // repositories handle remove signals
+  Q_SIGNALS:
+    // repositories handle remove Q_SIGNALS
     // void carRemoved(int id);
 
   private:

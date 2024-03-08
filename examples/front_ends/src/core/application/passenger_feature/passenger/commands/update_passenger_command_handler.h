@@ -26,7 +26,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_PASSENGER_EXPORT UpdatePassengerCommandHand
     Result<PassengerDTO> handle(QPromise<Result<void>> &progressPromise, const UpdatePassengerCommand &request);
     Result<PassengerDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void passengerUpdated(FrontEnds::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerDetailsUpdated(int id);
 

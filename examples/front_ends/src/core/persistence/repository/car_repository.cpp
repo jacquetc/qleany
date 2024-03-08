@@ -255,7 +255,7 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
 
     returnedHashOfEntityWithRemovedIds.insert(FrontEnds::Entities::Entities::Car, removedIdsResult.value());
 
-    emit m_signalHolder->removed(removedIdsResult.value());
+    Q_EMIT m_signalHolder->removed(removedIdsResult.value());
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithRemovedIds);
 }
@@ -351,7 +351,7 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
     QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
 
     returnedHashOfEntityWithActiveChangedIds.insert(FrontEnds::Entities::Entities::Car, changedIdsResult.value());
-    emit m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
+    Q_EMIT m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
     return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
 }

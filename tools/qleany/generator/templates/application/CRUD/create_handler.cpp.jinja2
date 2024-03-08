@@ -202,10 +202,10 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     m_newEntity = {{ entity_mappable_with_camel }}Result;
 
     auto {{ entity_mappable_with_camel }}DTO = Qleany::Tools::AutoMapper::AutoMapper::map<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}, {{ entity_mappable_with_pascal }}DTO>({{ entity_mappable_with_camel }}Result.value());
-    emit {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
+    Q_EMIT {{ entity_mappable_with_camel }}Created({{ entity_mappable_with_camel }}DTO);
     {% if has_owner %}
     // send an insertion signal
-    emit relationWithOwnerInserted( {{ entity_mappable_with_camel }}.id(), ownerId, position);
+    Q_EMIT relationWithOwnerInserted( {{ entity_mappable_with_camel }}.id(), ownerId, position);
     {% endif %}
 
     qDebug() << "{{ entity_mappable_with_pascal }} added:" << {{ entity_mappable_with_camel }}DTO.id();
@@ -223,12 +223,12 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, deleteResult)
 
-    emit {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+    Q_EMIT {{ entity_mappable_with_camel }}Removed(deleteResult.value());
 
     qDebug() << "{{ entity_mappable_with_pascal }} removed:" << deleteResult.value();
 
     {% if has_owner %}
-    emit relationWithOwnerRemoved(entityId, m_ownerId);
+    Q_EMIT relationWithOwnerRemoved(entityId, m_ownerId);
     {% endif %}
 
 

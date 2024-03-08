@@ -47,7 +47,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : 
 
     QHash<int, QByteArray> roleNames() const override;
 
-  signals:
+  Q_SIGNALS:
     void carIdChanged();
 
   private:

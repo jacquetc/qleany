@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Client::UpdateClientDTO getUpdateDTO();
 
-  public slots:
+  public Q_SLOTS:
 
     QCoro::Task<ClientDTO> create(const CreateClientDTO &dto);
 

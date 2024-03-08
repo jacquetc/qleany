@@ -25,8 +25,8 @@ class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT RemovePassengerCommandHandler 
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemovePassengerCommand &request);
     Result<int> restore();
 
-  signals:
-    // repositories handle remove signals
+  Q_SIGNALS:
+    // repositories handle remove Q_SIGNALS
     // void passengerRemoved(int id);
 
   private:

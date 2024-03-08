@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public
     Result<BrandDTO> handle(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request);
     Result<BrandDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void brandCreated(Simple::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandRemoved(int id);
 

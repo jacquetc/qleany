@@ -17,7 +17,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_p
 
 namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands
 {
-class {{ export }} Remove{{ entity_mappable_with_pascal }}CommandHandler : public QObject 
+class {{ export }} Remove{{ entity_mappable_with_pascal }}CommandHandler : public QObject 
 {
     Q_OBJECT
   public:
@@ -25,8 +25,8 @@ class {{ export }} Remove{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<int> handle(QPromise<Result<void>> &progressPromise, const Remove{{ entity_mappable_with_pascal }}Command &request);
     Result<int> restore();
 
-  signals:
-    // repositories handle remove signals
+  Q_SIGNALS:
+    // repositories handle remove Q_SIGNALS
     //void {{ entity_mappable_with_camel }}Removed(int id);
 
   private:

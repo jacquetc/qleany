@@ -34,7 +34,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT WriteRandomThingsCommandHandler :
 
     Result<void> restore();
 
-  signals:
+  Q_SIGNALS:
 
     void writeRandomThingsChanged();
 

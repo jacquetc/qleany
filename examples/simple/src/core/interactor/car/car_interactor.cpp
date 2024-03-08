@@ -58,7 +58,7 @@ QCoro::Task<CarDTO> CarInteractor::get(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->car()->getReplied(result.value());
+            Q_EMIT m_eventDispatcher->car()->getReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -91,7 +91,7 @@ QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->car()->getWithDetailsReplied(result.value());
+            Q_EMIT m_eventDispatcher->car()->getWithDetailsReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -122,7 +122,7 @@ QCoro::Task<QList<CarDTO>> CarInteractor::getAll() const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->car()->getAllReplied(result.value());
+            Q_EMIT m_eventDispatcher->car()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -155,7 +155,7 @@ QCoro::Task<CarDTO> CarInteractor::create(const CreateCarDTO &dto)
     QObject::connect(handler, &CreateCarCommandHandler::carCreated, m_eventDispatcher->car(), &CarSignals::created);
 
     QObject::connect(handler, &CreateCarCommandHandler::carRemoved, this,
-                     [this](int removedId) { emit m_eventDispatcher->car()->removed(QList<int>() << removedId); });
+                     [this](int removedId) { Q_EMIT m_eventDispatcher->car()->removed(QList<int>() << removedId); });
 
     // Create specialized UndoRedoCommand
     auto command =
@@ -188,7 +188,7 @@ QCoro::Task<CarDTO> CarInteractor::update(const UpdateCarDTO &dto)
 
     // connect
     QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this,
-                     [this](CarDTO dto) { emit m_eventDispatcher->car()->updated(dto); });
+                     [this](CarDTO dto) { Q_EMIT m_eventDispatcher->car()->updated(dto); });
     QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(),
                      &CarSignals::allRelationsInvalidated);
 

@@ -39,7 +39,7 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
     {% endif %}
     QHash<int, QByteArray> roleNames() const override;
 
-  signals:
+  Q_SIGNALS:
 
   private:
     void populate();

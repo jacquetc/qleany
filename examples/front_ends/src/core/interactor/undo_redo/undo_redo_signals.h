@@ -17,7 +17,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoSignals : public QObject
     {
     }
 
-  signals:
+  Q_SIGNALS:
 
     /*!
      * \brief A signal that is emitted when the undo redo system state has

@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler 
     Result<PassengerDTO> handle(QPromise<Result<void>> &progressPromise, const CreatePassengerCommand &request);
     Result<PassengerDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void passengerCreated(Simple::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerRemoved(int id);
 

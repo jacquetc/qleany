@@ -17,7 +17,7 @@ SingleUndo::SingleUndo(QObject *parent) : QObject{parent}
         if (m_enabled == newEnabled)
             return;
         m_enabled = newEnabled;
-        emit enabledChanged();
+        Q_EMIT enabledChanged();
     });
 
     m_text = m_action->text();
@@ -26,14 +26,14 @@ SingleUndo::SingleUndo(QObject *parent) : QObject{parent}
         if (m_text == newText)
             return;
         m_text = newText;
-        emit textChanged();
+        Q_EMIT textChanged();
     });
 
     connect(EventDispatcher::instance()->undoRedo(), &UndoRedoSignals::undoing, this, [this](Scope scope, bool active) {
         if (m_enabled == active)
             return;
         m_enabled = active;
-        emit enabledChanged();
+        Q_EMIT enabledChanged();
     });
 }
 

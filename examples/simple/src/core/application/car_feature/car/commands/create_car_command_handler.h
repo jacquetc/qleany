@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QOb
     Result<CarDTO> handle(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request);
     Result<CarDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void carCreated(Simple::Contracts::DTO::Car::CarDTO carDto);
     void carRemoved(int id);
 

@@ -101,11 +101,11 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     auto brandDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
 
-    emit brandUpdated(brandDto);
+    Q_EMIT brandUpdated(brandDto);
 
     if (request.req.metaData().areDetailsSet())
     {
-        emit brandDetailsUpdated(brandDto.id());
+        Q_EMIT brandDetailsUpdated(brandDto.id());
     }
 
     qDebug() << "UpdateBrandCommandHandler::handleImpl done";
@@ -129,7 +129,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::restoreImpl()
     auto brandDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
 
-    emit brandUpdated(brandDto);
+    Q_EMIT brandUpdated(brandDto);
 
     qDebug() << "UpdateBrandCommandHandler::restoreImpl done";
 

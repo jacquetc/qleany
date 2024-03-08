@@ -25,8 +25,8 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT RemoveClientCommandHandler : 
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request);
     Result<int> restore();
 
-  signals:
-    // repositories handle remove signals
+  Q_SIGNALS:
+    // repositories handle remove Q_SIGNALS
     // void clientRemoved(int id);
 
   private:

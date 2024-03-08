@@ -88,7 +88,7 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
   protected:
     void setType(Type newType);
 
-  signals:
+  Q_SIGNALS:
 
     void finished(bool isSuccessful);
 
@@ -99,7 +99,7 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
     void errorSent(Error error);
     void warningSent(Error error);
 
-    // progress signals
+    // progress Q_SIGNALS
     void progressStarted();
     void progressFinished();
     void progressRangeChanged(int minimum, int maximum);
@@ -109,7 +109,7 @@ class QLEANY_EXPORT UndoRedoCommand : public QObject
     void undoing(Qleany::Tools::UndoRedo::Scope scope, bool active);
     void redoing(Qleany::Tools::UndoRedo::Scope scope, bool active);
 
-  private slots:
+  private Q_SLOTS:
 
     void onFinished();
     void progressTimerTimeout();

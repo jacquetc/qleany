@@ -26,7 +26,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : 
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const CreateClientCommand &request);
     Result<ClientDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void clientCreated(FrontEnds::Contracts::DTO::Client::ClientDTO clientDto);
     void clientRemoved(int id);
 

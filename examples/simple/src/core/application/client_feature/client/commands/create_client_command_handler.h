@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : publ
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const CreateClientCommand &request);
     Result<ClientDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void clientCreated(Simple::Contracts::DTO::Client::ClientDTO clientDto);
     void clientRemoved(int id);
 

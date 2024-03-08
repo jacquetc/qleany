@@ -159,7 +159,7 @@ void ThreadedUndoRedoSystem::onUndoRedoSystemStateChanged()
     QMutexLocker locker(&m_mutex);
 
     // Emit the stateChanged signal
-    emit stateChanged();
+    Q_EMIT stateChanged();
 }
 
 void ThreadedUndoRedoSystem::onErrorSent(const Error &error)
@@ -167,7 +167,7 @@ void ThreadedUndoRedoSystem::onErrorSent(const Error &error)
     QMutexLocker locker(&m_mutex);
 
     // Emit the stateChanged signal
-    emit errorSent(error);
+    Q_EMIT errorSent(error);
 }
 
 void ThreadedUndoRedoSystem::onWarningSent(const Error &error)
@@ -175,7 +175,7 @@ void ThreadedUndoRedoSystem::onWarningSent(const Error &error)
     QMutexLocker locker(&m_mutex);
 
     // Emit the stateChanged signal
-    emit warningSent(error);
+    Q_EMIT warningSent(error);
 }
 
 /*!

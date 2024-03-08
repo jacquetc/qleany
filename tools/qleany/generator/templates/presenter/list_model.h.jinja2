@@ -44,7 +44,7 @@ class {{ export }} {{ model.class_name_pascal }} : public QAbstractListModel
     {% endif %}
     QHash<int, QByteArray> roleNames() const override;
 
-  signals:
+  Q_SIGNALS:
     void {{ model.related_name_camel }}IdChanged();
 
   private:

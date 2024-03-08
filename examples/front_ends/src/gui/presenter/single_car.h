@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
     QString content() const;
     void setContent(const QString &newContent);
 
-  signals:
+  Q_SIGNALS:
 
     void idChanged();
 

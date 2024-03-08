@@ -17,7 +17,7 @@ class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT PersistenceRegistration : public QOb
 
     Qleany::Repository::RepositoryProvider *repositoryProvider();
 
-  signals:
+  Q_SIGNALS:
 
   private:
     QScopedPointer<Qleany::Repository::RepositoryProvider> m_repositoryProvider;

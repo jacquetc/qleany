@@ -47,7 +47,7 @@ class SIMPLE_EXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : publ
 
     QHash<int, QByteArray> roleNames() const override;
 
-  signals:
+  Q_SIGNALS:
     void carIdChanged();
 
   private:

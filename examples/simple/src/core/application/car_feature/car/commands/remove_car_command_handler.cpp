@@ -76,8 +76,8 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    // repositories handle remove signals
-    // emit carRemoved(deleteResult.value());
+    // repositories handle remove Q_SIGNALS
+    // Q_EMIT carRemoved(deleteResult.value());
 
     qDebug() << "Car removed:" << carId;
 

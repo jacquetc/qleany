@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : publ
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void clientUpdated(Simple::Contracts::DTO::Client::ClientDTO clientDto);
     void clientDetailsUpdated(int id);
 

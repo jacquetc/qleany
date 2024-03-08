@@ -24,7 +24,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CUSTOM_EXPORT GetCurrentTimeQueryHandler : publ
 
     Result<GetCurrentTimeReplyDTO> handle(QPromise<Result<void>> &progressPromise, const GetCurrentTimeQuery &request);
 
-  signals:
+  Q_SIGNALS:
     void getCurrentTimeChanged(Simple::Contracts::DTO::Custom::GetCurrentTimeReplyDTO getCurrentTimeReplyDTO);
 
   private:

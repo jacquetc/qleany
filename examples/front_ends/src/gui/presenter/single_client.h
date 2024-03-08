@@ -38,7 +38,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
     QDateTime updateDate() const;
     void setUpdateDate(const QDateTime &newUpdateDate);
 
-  signals:
+  Q_SIGNALS:
 
     void idChanged();
 

@@ -13,7 +13,7 @@ class QLEANY_EXPORT SignalHolder : public QObject
   public:
     explicit SignalHolder(QObject *parent = nullptr);
 
-  signals:
+  Q_SIGNALS:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool active);
 };

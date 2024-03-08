@@ -101,11 +101,11 @@ Result<ClientDTO> UpdateClientCommandHandler::handleImpl(QPromise<Result<void>> 
     auto clientDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Client, ClientDTO>(clientResult.value());
 
-    emit clientUpdated(clientDto);
+    Q_EMIT clientUpdated(clientDto);
 
     if (request.req.metaData().areDetailsSet())
     {
-        emit clientDetailsUpdated(clientDto.id());
+        Q_EMIT clientDetailsUpdated(clientDto.id());
     }
 
     qDebug() << "UpdateClientCommandHandler::handleImpl done";
@@ -130,7 +130,7 @@ Result<ClientDTO> UpdateClientCommandHandler::restoreImpl()
     auto clientDto =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Client, ClientDTO>(clientResult.value());
 
-    emit clientUpdated(clientDto);
+    Q_EMIT clientUpdated(clientDto);
 
     qDebug() << "UpdateClientCommandHandler::restoreImpl done";
 

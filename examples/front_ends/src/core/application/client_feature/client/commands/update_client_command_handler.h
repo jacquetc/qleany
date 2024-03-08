@@ -26,7 +26,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : 
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void clientUpdated(FrontEnds::Contracts::DTO::Client::ClientDTO clientDto);
     void clientDetailsUpdated(int id);
 

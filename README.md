@@ -175,7 +175,7 @@ If you already have a QtWidgets GUI, you can craete a blank GUI in a sub-folder 
 Note: You can use the `examples/simple/src/gui/desktop_application` or `examples/front_ends` as references of what is running fine.
 
 11. Your QtWidgets must be, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/desktop_application`.
-12. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use `interactor` for commands/queries and signals. Also, it will use models from `presenter`. Refer to the example for guidance at `examples/front_ends/src/gui/qt_widgets_application/main.cpp`
+12. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use `interactor` for commands/queries and Q_SIGNALS. Also, it will use models from `presenter`. Refer to the example for guidance at `examples/front_ends/src/gui/qt_widgets_application/main.cpp`
 
 ### For QtQuick GUI
 
@@ -188,7 +188,7 @@ If you already have a QtQuick GUI, you can craete a blank GUI in a sub-folder ne
 11. Your QML GUI must be, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/qml_application`.
 12. You can now start to implement your GUI and use cases. 
 
-A GUI made with QML will **not** use `interactor` and `presenter`. Wrappers around models, signals, commands and queries all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/front_ends/src/gui/qt_quick_application/main.cpp` and `examples/front_ends/src/gui/qt_quick__application/CMakelists.txt`
+A GUI made with QML will **not** use `interactor` and `presenter`. Wrappers around models, Q_SIGNALS, commands and queries all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/front_ends/src/gui/qt_quick_application/main.cpp` and `examples/front_ends/src/gui/qt_quick__application/CMakelists.txt`
 
 ### For multiple Uis
 

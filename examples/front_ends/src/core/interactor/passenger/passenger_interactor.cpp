@@ -56,7 +56,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->passenger()->getReplied(result.value());
+            Q_EMIT m_eventDispatcher->passenger()->getReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -87,7 +87,7 @@ QCoro::Task<QList<PassengerDTO>> PassengerInteractor::getAll() const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->passenger()->getAllReplied(result.value());
+            Q_EMIT m_eventDispatcher->passenger()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -124,16 +124,16 @@ QCoro::Task<PassengerDTO> PassengerInteractor::create(const CreatePassengerDTO &
                      [this](int id, int ownerId, int position) {
                          auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers,
                                                    QList<int>() << id, position);
-                         emit m_eventDispatcher->car()->relationInserted(dto);
+                         Q_EMIT m_eventDispatcher->car()->relationInserted(dto);
                      });
     QObject::connect(
         handler, &CreatePassengerCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
             auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers, QList<int>() << id, -1);
-            emit m_eventDispatcher->car()->relationRemoved(dto);
+            Q_EMIT m_eventDispatcher->car()->relationRemoved(dto);
         });
 
     QObject::connect(handler, &CreatePassengerCommandHandler::passengerRemoved, this, [this](int removedId) {
-        emit m_eventDispatcher->passenger()->removed(QList<int>() << removedId);
+        Q_EMIT m_eventDispatcher->passenger()->removed(QList<int>() << removedId);
     });
 
     // Create specialized UndoRedoCommand
@@ -167,7 +167,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::update(const UpdatePassengerDTO &
 
     // connect
     QObject::connect(handler, &UpdatePassengerCommandHandler::passengerUpdated, this,
-                     [this](PassengerDTO dto) { emit m_eventDispatcher->passenger()->updated(dto); });
+                     [this](PassengerDTO dto) { Q_EMIT m_eventDispatcher->passenger()->updated(dto); });
     QObject::connect(handler, &UpdatePassengerCommandHandler::passengerDetailsUpdated, m_eventDispatcher->passenger(),
                      &PassengerSignals::allRelationsInvalidated);
 

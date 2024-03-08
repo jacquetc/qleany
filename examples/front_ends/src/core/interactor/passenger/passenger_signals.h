@@ -21,7 +21,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT PassengerSignals : public QObject
     {
     }
 
-  signals:
+  Q_SIGNALS:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
     void created(PassengerDTO dto);

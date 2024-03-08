@@ -81,7 +81,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
                     m_{{ model.entity_name_camel }}List[i] = new{{ model.entity_name_pascal }}List[i];
                     QModelIndex topLeft = index(i, 0);
                     QModelIndex bottomRight = index(i, 0);
-                    emit dataChanged(topLeft, bottomRight);
+                    Q_EMIT dataChanged(topLeft, bottomRight);
                 }
             }
 
@@ -158,7 +158,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
             {
                 m_{{ model.entity_name_camel }}List[i] = dto;
                 m_{{ model.entity_name_camel }}IdList[i] = dto.id();
-                emit dataChanged(index(i), index(i));
+                Q_EMIT dataChanged(index(i), index(i));
                 break;
             }
         }
@@ -250,7 +250,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
                     qCritical() << Q_FUNC_INFO << "Invalid {{ model.related_name_camel }}";
                     return false;
                 }
-                emit dataChanged(index, index, {role});
+                Q_EMIT dataChanged(index, index, {role});
                 return true;
             });
                                 
@@ -319,7 +319,7 @@ void {{ model.class_name_pascal }}::set{{ model.related_name_pascal }}Id(int new
     {
         populate();
     }
-    emit {{ model.related_name_camel }}IdChanged();
+    Q_EMIT {{ model.related_name_camel }}IdChanged();
 }
 
 void {{ model.class_name_pascal }}::reset{{ model.related_name_pascal }}Id()

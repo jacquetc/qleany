@@ -21,7 +21,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_p
 
 namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands
 {
-class {{ export }} {{ command.pascal_name }}CommandHandler : public QObject 
+class {{ export }} {{ command.pascal_name }}CommandHandler : public QObject 
 {
     Q_OBJECT
   public:
@@ -32,7 +32,7 @@ class {{ export }} {{ command.pascal_name }}CommandHandler : public QObject
 
     Result<{{ command.dto_out_pascal_name }}> restore();
 
-  signals:
+  Q_SIGNALS:
 {% if command.dto_out_is_enabled %}
     void {{ command.camel_name }}Changed({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ command.dto_out_pascal_name }} {{ command.dto.out.type_prefix_camel }}Dto);
 {% else %}

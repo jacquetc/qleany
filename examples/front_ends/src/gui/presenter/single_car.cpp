@@ -22,27 +22,27 @@ SingleCar::SingleCar(QObject *parent) : QObject{parent}
             if (m_id != dto.id())
             {
                 m_id = dto.id();
-                emit idChanged();
+                Q_EMIT idChanged();
             }
             if (m_uuid != dto.uuid())
             {
                 m_uuid = dto.uuid();
-                emit uuidChanged();
+                Q_EMIT uuidChanged();
             }
             if (m_creationDate != dto.creationDate())
             {
                 m_creationDate = dto.creationDate();
-                emit creationDateChanged();
+                Q_EMIT creationDateChanged();
             }
             if (m_updateDate != dto.updateDate())
             {
                 m_updateDate = dto.updateDate();
-                emit updateDateChanged();
+                Q_EMIT updateDateChanged();
             }
             if (m_content != dto.content())
             {
                 m_content = dto.content();
-                emit contentChanged();
+                Q_EMIT contentChanged();
             }
         }
     });
@@ -58,23 +58,23 @@ void SingleCar::setId(int newId)
     if (m_id == newId)
         return;
     m_id = newId;
-    emit idChanged();
+    Q_EMIT idChanged();
 
     // clear
     if (m_id == 0)
     {
 
         m_uuid = QUuid{};
-        emit uuidChanged();
+        Q_EMIT uuidChanged();
 
         m_creationDate = QDateTime{};
-        emit creationDateChanged();
+        Q_EMIT creationDateChanged();
 
         m_updateDate = QDateTime{};
-        emit updateDateChanged();
+        Q_EMIT updateDateChanged();
 
         m_content = QString{};
-        emit contentChanged();
+        Q_EMIT contentChanged();
     }
 
     // set
@@ -88,16 +88,16 @@ void SingleCar::setId(int newId)
             }
 
             m_uuid = car.uuid();
-            emit uuidChanged();
+            Q_EMIT uuidChanged();
 
             m_creationDate = car.creationDate();
-            emit creationDateChanged();
+            Q_EMIT creationDateChanged();
 
             m_updateDate = car.updateDate();
-            emit updateDateChanged();
+            Q_EMIT updateDateChanged();
 
             m_content = car.content();
-            emit contentChanged();
+            Q_EMIT contentChanged();
         });
     }
 }
@@ -127,7 +127,7 @@ void SingleCar::setUuid(const QUuid &newUuid)
             return;
         }
         m_uuid = car.uuid();
-        emit uuidChanged();
+        Q_EMIT uuidChanged();
     });
 }
 
@@ -151,7 +151,7 @@ void SingleCar::setCreationDate(const QDateTime &newCreationDate)
             return;
         }
         m_creationDate = car.creationDate();
-        emit creationDateChanged();
+        Q_EMIT creationDateChanged();
     });
 }
 
@@ -175,7 +175,7 @@ void SingleCar::setUpdateDate(const QDateTime &newUpdateDate)
             return;
         }
         m_updateDate = car.updateDate();
-        emit updateDateChanged();
+        Q_EMIT updateDateChanged();
     });
 }
 
@@ -199,6 +199,6 @@ void SingleCar::setContent(const QString &newContent)
             return;
         }
         m_content = car.content();
-        emit contentChanged();
+        Q_EMIT contentChanged();
     });
 }

@@ -73,8 +73,8 @@ Result<void> WriteRandomThingsCommandHandler::handleImpl(QPromise<Result<void>> 
 
     m_carRepository->saveChanges();
 
-    // emit signal
-    // emit writeRandomThingsChanged();
+    // Q_EMIT signal
+    // Q_EMIT writeRandomThingsChanged();
 
     // Return
     return Result<void>();

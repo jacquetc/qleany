@@ -78,8 +78,8 @@ Result<int> RemovePassengerCommandHandler::handleImpl(QPromise<Result<void>> &pr
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
-    // repositories handle remove signals
-    // emit passengerRemoved(deleteResult.value());
+    // repositories handle remove Q_SIGNALS
+    // Q_EMIT passengerRemoved(deleteResult.value());
 
     qDebug() << "Passenger removed:" << passengerId;
 

@@ -26,7 +26,7 @@ class SIMPLE_EXAMPLE_APPLICATION_CAR_EXPORT UpdateCarCommandHandler : public QOb
     Result<CarDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateCarCommand &request);
     Result<CarDTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void carUpdated(Simple::Contracts::DTO::Car::CarDTO carDto);
     void carDetailsUpdated(int id);
 

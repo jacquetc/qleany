@@ -108,7 +108,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
     auto clientDTO =
         Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Client, ClientDTO>(clientResult.value());
-    emit clientCreated(clientDTO);
+    Q_EMIT clientCreated(clientDTO);
 
     qDebug() << "Client added:" << clientDTO.id();
 
@@ -125,7 +125,7 @@ Result<ClientDTO> CreateClientCommandHandler::restoreImpl()
 
     QLN_RETURN_IF_ERROR(ClientDTO, deleteResult)
 
-    emit clientRemoved(deleteResult.value());
+    Q_EMIT clientRemoved(deleteResult.value());
 
     qDebug() << "Client removed:" << deleteResult.value();
 

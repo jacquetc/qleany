@@ -65,7 +65,7 @@ class {{ export }} {{ single.class_name_pascal }} : public QObject
     {% endif -%}
     {%- endfor %}
 
-  signals:
+  Q_SIGNALS:
 
     void idChanged();
     {% for field in single.fields %}

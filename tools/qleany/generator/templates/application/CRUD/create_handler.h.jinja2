@@ -17,7 +17,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_p
 
 namespace {{ application_cpp_domain_name }}::Application::Features::{{ feature_pascal_name }}::Commands
 {
-class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : public QObject
+class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : public QObject
 {
     Q_OBJECT
   public:
@@ -26,7 +26,7 @@ class {{ export }} Create{{ entity_mappable_with_pascal }}CommandHandler : publ
     Result<{{ entity_mappable_with_pascal }}DTO> handle(QPromise<Result<void>> &progressPromise, const Create{{ entity_mappable_with_pascal }}Command &request);
     Result<{{ entity_mappable_with_pascal }}DTO> restore();
 
-  signals:
+  Q_SIGNALS:
     void {{ entity_mappable_with_camel }}Created({{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}::{{ entity_mappable_with_pascal }}DTO {{ entity_mappable_with_camel }}Dto);
     void {{ entity_mappable_with_camel }}Removed(int id);
     {% if has_owner %}

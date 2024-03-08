@@ -24,7 +24,7 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT GetCurrentTimeQueryHandler : 
 
     Result<GetCurrentTimeReplyDTO> handle(QPromise<Result<void>> &progressPromise, const GetCurrentTimeQuery &request);
 
-  signals:
+  Q_SIGNALS:
     void getCurrentTimeChanged(FrontEnds::Contracts::DTO::Custom::GetCurrentTimeReplyDTO getCurrentTimeReplyDTO);
 
   private:

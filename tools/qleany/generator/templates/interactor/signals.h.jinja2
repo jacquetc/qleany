@@ -34,7 +34,7 @@ class {{ export }} {{ feature.feature_name_pascal }}Signals : public QObject
     {
     }
 
-  signals:
+  Q_SIGNALS:
     
 {%- if feature.crud.enabled %}
     void removed(QList<int> removedIds);

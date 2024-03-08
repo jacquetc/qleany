@@ -83,7 +83,7 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
     QAction *createRedoAction(QObject *parent, const QString &prefix = QString()) const;
 #endif // ifdef QLEANY_BUILD_WITH_QT_GUI
 
-  signals:
+  Q_SIGNALS:
 
     /*!
      * \brief A signal that is emitted when the undo redo system state has
@@ -113,7 +113,7 @@ class QLEANY_EXPORT ThreadedUndoRedoSystem : public QObject
      */
     void undoing(Scope scope, bool active);
 
-  private slots:
+  private Q_SLOTS:
 
     void onUndoRedoSystemStateChanged();
     void onErrorSent(const Error &error);

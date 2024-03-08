@@ -31,12 +31,12 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
             [dispatcher](Qleany::Error error) {
                 qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message() << error.data() << error.stackTrace();
-                emit dispatcher->error()->errorSent(error);
+                Q_EMIT dispatcher->error()->errorSent(error);
             });
     connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
             [dispatcher](Qleany::Error error) {
                 qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message() << error.data() << error.stackTrace();
-                emit dispatcher->error()->warningSent(error);
+                Q_EMIT dispatcher->error()->warningSent(error);
             });
 
 {% for feature in features%}
@@ -58,7 +58,7 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     {% endif %}
     connect({{ feature.feature_name_camel }}SignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds){    
         {{ other_entity_relation_field.name_pascal }}RelationDTO dto(-1, {{ other_entity_relation_field.name_pascal }}RelationDTO::RelationField::{{ other_entity_relation_field.field_name_pascal }},removedIds, -1);
-        emit dispatcher->{{ other_entity_relation_field.name_camel }}()->relationRemoved(dto);
+        Q_EMIT dispatcher->{{ other_entity_relation_field.name_camel }}()->relationRemoved(dto);
     });
     {% endfor %}
 

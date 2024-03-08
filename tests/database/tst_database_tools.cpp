@@ -22,7 +22,7 @@ class DatabaseToolsTest : public QObject
     DatabaseToolsTest();
     ~DatabaseToolsTest();
 
-  public slots:
+  public Q_SLOTS:
 
   private Q_SLOTS:
 

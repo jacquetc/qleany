@@ -18,10 +18,10 @@ class SIMPLE_EXAMPLE_PRESENTER_EXPORT SingleRedo : public QObject
     bool enabled() const;
     QString text() const;
 
-  public slots:
+  public Q_SLOTS:
     void redo();
 
-  signals:
+  Q_SIGNALS:
     void enabledChanged();
     void textChanged();
 

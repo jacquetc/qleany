@@ -56,7 +56,7 @@ QCoro::Task<BrandDTO> BrandInteractor::get(int id) const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->brand()->getReplied(result.value());
+            Q_EMIT m_eventDispatcher->brand()->getReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -87,7 +87,7 @@ QCoro::Task<QList<BrandDTO>> BrandInteractor::getAll() const
 
         if (result.isSuccess())
         {
-            emit m_eventDispatcher->brand()->getAllReplied(result.value());
+            Q_EMIT m_eventDispatcher->brand()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
     });
@@ -124,15 +124,15 @@ QCoro::Task<BrandDTO> BrandInteractor::create(const CreateBrandDTO &dto)
                      [this](int id, int ownerId, int position) {
                          auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Brand, QList<int>() << id,
                                                    position);
-                         emit m_eventDispatcher->car()->relationInserted(dto);
+                         Q_EMIT m_eventDispatcher->car()->relationInserted(dto);
                      });
     QObject::connect(handler, &CreateBrandCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
         auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Brand, QList<int>() << id, -1);
-        emit m_eventDispatcher->car()->relationRemoved(dto);
+        Q_EMIT m_eventDispatcher->car()->relationRemoved(dto);
     });
 
     QObject::connect(handler, &CreateBrandCommandHandler::brandRemoved, this,
-                     [this](int removedId) { emit m_eventDispatcher->brand()->removed(QList<int>() << removedId); });
+                     [this](int removedId) { Q_EMIT m_eventDispatcher->brand()->removed(QList<int>() << removedId); });
 
     // Create specialized UndoRedoCommand
     auto command = new AlterCommand<CreateBrandCommandHandler, CreateBrandCommand>(BrandInteractor::tr("Create brand"),
@@ -165,7 +165,7 @@ QCoro::Task<BrandDTO> BrandInteractor::update(const UpdateBrandDTO &dto)
 
     // connect
     QObject::connect(handler, &UpdateBrandCommandHandler::brandUpdated, this,
-                     [this](BrandDTO dto) { emit m_eventDispatcher->brand()->updated(dto); });
+                     [this](BrandDTO dto) { Q_EMIT m_eventDispatcher->brand()->updated(dto); });
     QObject::connect(handler, &UpdateBrandCommandHandler::brandDetailsUpdated, m_eventDispatcher->brand(),
                      &BrandSignals::allRelationsInvalidated);
 
