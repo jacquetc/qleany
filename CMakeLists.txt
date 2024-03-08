@@ -33,17 +33,22 @@ set(QT_DEFAULT_MAJOR_VERSION 6)
 set(CMAKE_AUTOMOC ON)
 
 add_compile_definitions(
-  -DQT_NO_KEYWORDS
+  QT_NO_KEYWORDS
+  QT_NO_CAST_TO_ASCII
+  QT_NO_CAST_FROM_ASCII
+  QT_NO_CAST_FROM_BYTEARRAY
+  QT_NO_KEYWORDS
+  QT_NO_FOREACH
+  QT_STRICT_ITERATORS
+  QT_USE_QSTRINGBUILDER
+  QT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+  QT_NO_URL_CAST_FROM_STRING)
 
-  # -DQT_NO_CAST_TO_ASCII
-  -DQT_NO_CAST_FROM_ASCII
-  -DQT_NO_CAST_FROM_BYTEARRAY
-  -DQT_NO_KEYWORDS
-  -DQT_NO_FOREACH
-  -DQT_STRICT_ITERATORS
-  -DQT_USE_QSTRINGBUILDER
-  -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT
-  -DQT_NO_URL_CAST_FROM_STRING)
+if(NOT WIN32)
+  # strict iterators on MSVC only work when Qt itself is also built with them,
+  # which is not usually the case. Otherwise there are linking issues.
+  add_compile_definitions(QT_STRICT_ITERATORS)
+endif()
 
 # options
 option(QLEANY_BUILD_EXAMPLES "Build examples" ON)
@@ -90,7 +95,7 @@ qcoro_enable_coroutines()
 # configure the library
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE PUBLIC_HEADERS
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/qleany/*.h")
+     "${CMAKE_CURRENT_SOURCE_DIR}/include/qleany/*.h")
 
 message(STATUS "PUBLIC_HEADERS: ${PUBLIC_HEADERS}")
 
@@ -110,8 +115,8 @@ target_include_directories(qleany PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_include_directories(
   qleany
   PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qleany>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set_target_properties(qleany PROPERTIES CXX_STANDARD 20)
 
@@ -119,8 +124,8 @@ set_target_properties(qleany PROPERTIES OUTPUT_NAME qleany)
 set_target_properties(
   qleany
   PROPERTIES
-  PUBLIC_HEADER
-  "${PUBLIC_HEADERS};${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h"
+    PUBLIC_HEADER
+    "${PUBLIC_HEADERS};${CMAKE_CURRENT_BINARY_DIR}/include/qleany/qleany_export.h"
 )
 
 target_link_libraries(qleany PUBLIC Qt6::Core Qt6::Concurrent Qt6::Sql)
@@ -131,7 +136,7 @@ endif()
 
 # state that Qleany need PIC when the default is shared libraries
 set_target_properties(qleany PROPERTIES POSITION_INDEPENDENT_CODE
-  ${BUILD_SHARED_LIBS})
+                                        ${BUILD_SHARED_LIBS})
 
 # configure the install location
 message(STATUS "Configuring install location")
@@ -171,8 +176,8 @@ configure_package_config_file(
   INSTALL_DESTINATION lib/cmake/qleany)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qleanyConfig.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/qleanyConfigVersion.cmake
-  DESTINATION lib/cmake/qleany)
+              ${CMAKE_CURRENT_BINARY_DIR}/qleanyConfigVersion.cmake
+        DESTINATION lib/cmake/qleany)
 
 # Export the targets to a script message(STATUS "Exporting targets to a script")
 # export(EXPORT ${PROJECT_NAME}Targets FILE
