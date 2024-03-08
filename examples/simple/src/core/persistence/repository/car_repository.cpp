@@ -33,8 +33,8 @@ Result<Simple::Entities::Car> CarRepository::update(Entities::Car &&entity)
     if (entity.metaData().brandSet)
     {
 
-        Result<Entities::Brand> brandResult =
-            m_brandRepository->updateEntityInRelationOf(Entities::Car::schema, entity.id(), "brand", entity.brand());
+        Result<Entities::Brand> brandResult = m_brandRepository->updateEntityInRelationOf(
+            Entities::Car::schema, entity.id(), QString::fromLatin1("brand"), entity.brand());
 
 #ifdef QT_DEBUG
         if (brandResult.isError())
@@ -50,7 +50,7 @@ Result<Simple::Entities::Car> CarRepository::update(Entities::Car &&entity)
     {
 
         Result<QList<Entities::Passenger>> passengersResult = m_passengerRepository->updateEntitiesInRelationOf(
-            Entities::Car::schema, entity.id(), "passengers", entity.passengers());
+            Entities::Car::schema, entity.id(), QString::fromLatin1("passengers"), entity.passengers());
 
 #ifdef QT_DEBUG
         if (passengersResult.isError())
@@ -79,7 +79,7 @@ Result<Simple::Entities::Car> CarRepository::getWithDetails(int entityId)
     Entities::Car entity = getResult.value();
 
     Result<Entities::Brand> brandResult =
-        m_brandRepository->getEntityInRelationOf(Entities::Car::schema, entity.id(), "brand");
+        m_brandRepository->getEntityInRelationOf(Entities::Car::schema, entity.id(), QString::fromLatin1("brand"));
 
 #ifdef QT_DEBUG
     if (brandResult.isError())
@@ -92,8 +92,8 @@ Result<Simple::Entities::Car> CarRepository::getWithDetails(int entityId)
 
     entity.setBrand(brandResult.value());
 
-    Result<QList<Entities::Passenger>> passengersResult =
-        m_passengerRepository->getEntitiesInRelationOf(Entities::Car::schema, entity.id(), "passengers");
+    Result<QList<Entities::Passenger>> passengersResult = m_passengerRepository->getEntitiesInRelationOf(
+        Entities::Car::schema, entity.id(), QString::fromLatin1("passengers"));
 
 #ifdef QT_DEBUG
     if (passengersResult.isError())
@@ -123,8 +123,8 @@ Simple::Entities::Car::BrandLoader CarRepository::fetchBrandLoader()
 #endif
 
     return [this](int entityId) {
-        auto foreignEntityResult =
-            m_brandRepository->getEntityInRelationOf(Simple::Entities::Car::schema, entityId, "brand");
+        auto foreignEntityResult = m_brandRepository->getEntityInRelationOf(Simple::Entities::Car::schema, entityId,
+                                                                            QString::fromLatin1("brand"));
 
         if (foreignEntityResult.isError())
         {
@@ -150,8 +150,8 @@ Simple::Entities::Car::PassengersLoader CarRepository::fetchPassengersLoader()
 #endif
 
     return [this](int entityId) {
-        auto foreignEntitiesResult =
-            m_passengerRepository->getEntitiesInRelationOf(Simple::Entities::Car::schema, entityId, "passengers");
+        auto foreignEntitiesResult = m_passengerRepository->getEntitiesInRelationOf(
+            Simple::Entities::Car::schema, entityId, QString::fromLatin1("passengers"));
 
         if (foreignEntitiesResult.isError())
         {
@@ -174,7 +174,8 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
     Qleany::Entities::RelationshipInfo brandBrandRelationship;
     for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Entities::Entities::Brand && relationship.fieldName == "brand")
+        if (relationship.rightEntityId == Simple::Entities::Entities::Brand &&
+            relationship.fieldName == QString::fromLatin1("brand"))
         {
             brandBrandRelationship = relationship;
             break;
@@ -211,7 +212,7 @@ Result<QHash<int, QList<int>>> CarRepository::removeInCascade(QList<int> ids)
     for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::Passenger &&
-            relationship.fieldName == "passengers")
+            relationship.fieldName == QString::fromLatin1("passengers"))
         {
             passengerPassengersRelationship = relationship;
             break;
@@ -269,7 +270,8 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
     Qleany::Entities::RelationshipInfo brandBrandRelationship;
     for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
-        if (relationship.rightEntityId == Simple::Entities::Entities::Brand && relationship.fieldName == "brand")
+        if (relationship.rightEntityId == Simple::Entities::Entities::Brand &&
+            relationship.fieldName == QString::fromLatin1("brand"))
         {
             brandBrandRelationship = relationship;
             break;
@@ -307,7 +309,7 @@ Result<QHash<int, QList<int>>> CarRepository::changeActiveStatusInCascade(QList<
     for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::Passenger &&
-            relationship.fieldName == "passengers")
+            relationship.fieldName == QString::fromLatin1("passengers"))
         {
             passengerPassengersRelationship = relationship;
             break;

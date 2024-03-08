@@ -47,7 +47,7 @@ CarInteractor *CarInteractor::instance()
 
 QCoro::Task<CarDTO> CarInteractor::get(int id) const
 {
-    auto queryCommand = new QueryCommand("get");
+    auto queryCommand = new QueryCommand("get"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
@@ -63,7 +63,7 @@ QCoro::Task<CarDTO> CarInteractor::get(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "car");
+    m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
@@ -80,7 +80,7 @@ QCoro::Task<CarDTO> CarInteractor::get(int id) const
 
 QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
 {
-    auto queryCommand = new QueryCommand("getWithDetails");
+    auto queryCommand = new QueryCommand("getWithDetails"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetCarQuery query;
@@ -96,7 +96,7 @@ QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "car");
+    m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
     const std::optional<CarWithDetailsDTO> optional_result = co_await qCoro(
@@ -113,7 +113,7 @@ QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
 
 QCoro::Task<QList<CarDTO>> CarInteractor::getAll() const
 {
-    auto queryCommand = new QueryCommand("getAll");
+    auto queryCommand = new QueryCommand("getAll"_L1);
 
     queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
         auto interface = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
@@ -126,7 +126,7 @@ QCoro::Task<QList<CarDTO>> CarInteractor::getAll() const
         }
         return Result<void>(result.error());
     });
-    m_undo_redo_system->push(queryCommand, "car");
+    m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
     const std::optional<QList<CarDTO>> optional_result =
@@ -162,7 +162,7 @@ QCoro::Task<CarDTO> CarInteractor::create(const CreateCarDTO &dto)
         new AlterCommand<CreateCarCommandHandler, CreateCarCommand>(CarInteractor::tr("Create car"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "car");
+    m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
@@ -197,7 +197,7 @@ QCoro::Task<CarDTO> CarInteractor::update(const UpdateCarDTO &dto)
         new AlterCommand<UpdateCarCommandHandler, UpdateCarCommand>(CarInteractor::tr("Update car"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "car");
+    m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
     const std::optional<CarDTO> optional_result =
@@ -229,7 +229,7 @@ QCoro::Task<bool> CarInteractor::remove(int id)
         new AlterCommand<RemoveCarCommandHandler, RemoveCarCommand>(CarInteractor::tr("Remove car"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "car");
+    m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =

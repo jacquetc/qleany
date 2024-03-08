@@ -28,12 +28,12 @@ template <class T, class U> class DummyDatabaseContext : public Contracts::Datab
 
     // InterfaceDatabaseContext interface
   public:
-    void appendCreationSql(const QString &type, const QString &sql) override;
+    void appendCreationSql(const char *type, const QString &sql) override;
 };
 
-template <class T, class U> void DummyDatabaseContext<T, U>::appendCreationSql(const QString &type, const QString &sql)
+template <class T, class U> void DummyDatabaseContext<T, U>::appendCreationSql(const char *type, const QString &sql)
 {
-    m_creationSqlHash.insert(type, sql);
+    m_creationSqlHash.insert(QString::fromLatin1(type), sql);
     qDebug() << sql;
 }
 
@@ -43,7 +43,7 @@ template <class T, class U> DummyDatabaseContext<T, U>::DummyDatabaseContext()
 
     qRegisterMetaType<U>(U::staticMetaObject.className());
 
-    m_databaseName = ":memory:";
+    m_databaseName = ":memory:"_L1;
 }
 
 template <class T, class U> DummyDatabaseContext<T, U>::~DummyDatabaseContext()
@@ -66,7 +66,7 @@ template <class T, class U> Result<void> DummyDatabaseContext<T, U>::init()
         QSqlQuery query(sqlDb);
 
         // entity tables
-        QStringList entityTableSqls = m_creationSqlHash.values("entity_table");
+        QStringList entityTableSqls = m_creationSqlHash.values("entity_table"_L1);
         entityTableSqls.removeDuplicates();
 
         for (const QString &string : entityTableSqls)
@@ -84,7 +84,7 @@ template <class T, class U> Result<void> DummyDatabaseContext<T, U>::init()
         }
 
         // junction tables
-        QStringList junctionTableSqls = m_creationSqlHash.values("junction_table");
+        QStringList junctionTableSqls = m_creationSqlHash.values("junction_table"_L1);
         junctionTableSqls.removeDuplicates();
 
         for (const QString &string : junctionTableSqls)
@@ -124,10 +124,10 @@ template <class T, class U> Result<void> DummyDatabaseContext<T, U>::init()
 
 template <class T, class U> QSqlDatabase DummyDatabaseContext<T, U>::getConnection()
 {
-    QString connectionName = QString("connectionName");
+    QString connectionName = "connectionName"_L1;
     if (!QSqlDatabase::contains(connectionName))
     {
-        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE"_L1, connectionName);
         database.setDatabaseName(m_databaseName);
         if (!database.open())
         {

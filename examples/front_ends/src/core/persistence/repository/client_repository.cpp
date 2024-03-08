@@ -33,7 +33,7 @@ Result<FrontEnds::Entities::Client> ClientRepository::update(Entities::Client &&
     {
 
         Result<Entities::Passenger> clientResult = m_passengerRepository->updateEntityInRelationOf(
-            Entities::Client::schema, entity.id(), "client", entity.client());
+            Entities::Client::schema, entity.id(), QString::fromLatin1("client"), entity.client());
 
 #ifdef QT_DEBUG
         if (clientResult.isError())
@@ -49,7 +49,7 @@ Result<FrontEnds::Entities::Client> ClientRepository::update(Entities::Client &&
     {
 
         Result<QList<Entities::Passenger>> clientFriendsResult = m_passengerRepository->updateEntitiesInRelationOf(
-            Entities::Client::schema, entity.id(), "clientFriends", entity.clientFriends());
+            Entities::Client::schema, entity.id(), QString::fromLatin1("clientFriends"), entity.clientFriends());
 
 #ifdef QT_DEBUG
         if (clientFriendsResult.isError())
@@ -77,8 +77,8 @@ Result<FrontEnds::Entities::Client> ClientRepository::getWithDetails(int entityI
 
     Entities::Client entity = getResult.value();
 
-    Result<Entities::Passenger> clientResult =
-        m_passengerRepository->getEntityInRelationOf(Entities::Client::schema, entity.id(), "client");
+    Result<Entities::Passenger> clientResult = m_passengerRepository->getEntityInRelationOf(
+        Entities::Client::schema, entity.id(), QString::fromLatin1("client"));
 
 #ifdef QT_DEBUG
     if (clientResult.isError())
@@ -91,8 +91,8 @@ Result<FrontEnds::Entities::Client> ClientRepository::getWithDetails(int entityI
 
     entity.setClient(clientResult.value());
 
-    Result<QList<Entities::Passenger>> clientFriendsResult =
-        m_passengerRepository->getEntitiesInRelationOf(Entities::Client::schema, entity.id(), "clientFriends");
+    Result<QList<Entities::Passenger>> clientFriendsResult = m_passengerRepository->getEntitiesInRelationOf(
+        Entities::Client::schema, entity.id(), QString::fromLatin1("clientFriends"));
 
 #ifdef QT_DEBUG
     if (clientFriendsResult.isError())
@@ -122,8 +122,8 @@ FrontEnds::Entities::Client::ClientLoader ClientRepository::fetchClientLoader()
 #endif
 
     return [this](int entityId) {
-        auto foreignEntityResult =
-            m_passengerRepository->getEntityInRelationOf(FrontEnds::Entities::Client::schema, entityId, "client");
+        auto foreignEntityResult = m_passengerRepository->getEntityInRelationOf(
+            FrontEnds::Entities::Client::schema, entityId, QString::fromLatin1("client"));
 
         if (foreignEntityResult.isError())
         {
@@ -149,8 +149,8 @@ FrontEnds::Entities::Client::ClientFriendsLoader ClientRepository::fetchClientFr
 #endif
 
     return [this](int entityId) {
-        auto foreignEntitiesResult = m_passengerRepository->getEntitiesInRelationOf(FrontEnds::Entities::Client::schema,
-                                                                                    entityId, "clientFriends");
+        auto foreignEntitiesResult = m_passengerRepository->getEntitiesInRelationOf(
+            FrontEnds::Entities::Client::schema, entityId, QString::fromLatin1("clientFriends"));
 
         if (foreignEntitiesResult.isError())
         {
@@ -174,7 +174,7 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
     for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == "client")
+            relationship.fieldName == QString::fromLatin1("client"))
         {
             passengerClientRelationship = relationship;
             break;
@@ -211,7 +211,7 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
     for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == "clientFriends")
+            relationship.fieldName == QString::fromLatin1("clientFriends"))
         {
             passengerClientFriendsRelationship = relationship;
             break;
@@ -271,7 +271,7 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
     for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == "client")
+            relationship.fieldName == QString::fromLatin1("client"))
         {
             passengerClientRelationship = relationship;
             break;
@@ -309,7 +309,7 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
     for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == "clientFriends")
+            relationship.fieldName == QString::fromLatin1("clientFriends"))
         {
             passengerClientFriendsRelationship = relationship;
             break;

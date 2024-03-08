@@ -22,7 +22,7 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     // Undo Redo System
     Scopes scopes(QStringList() 
 {% for feature in features-%}
-                                << "{{ feature.feature_name_camel }}"
+                                << "{{ feature.feature_name_camel }}"_L1
 {% endfor -%}
                                 );
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);

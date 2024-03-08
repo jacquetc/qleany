@@ -47,7 +47,7 @@ class {{ name }} : public {{ parent }}
     bool getSet(const QString &fieldName) const
     {
         {% for field in fields -%}
-        if (fieldName == "{{ field.name }}")
+        if (fieldName == "{{ field.name }}"_L1)
         {
             {% if field.need_lazy_loader -%}
             return {{ field.name }}Set;
@@ -62,7 +62,7 @@ class {{ name }} : public {{ parent }}
     bool getLoaded(const QString &fieldName) const
     {
         {% for field in fields %}
-        if (fieldName == "{{ field.name }}")
+        if (fieldName == "{{ field.name }}"_L1)
         {
             {% if field.need_lazy_loader -%}
             return {{ field.name }}Loaded;
@@ -200,17 +200,17 @@ inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 /// Schema for {{ name }} entity
 inline Qleany::Entities::EntitySchema {{ name }}::schema = {
     {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }},
-    "{{ name }}",
+    "{{ name }}"_L1,
 
     // relationships:
     {
         {% for relationship in relationships -%}
         { 
             {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ relationship.left_entity_name }}, 
-            "{{ relationship.left_entity_name }}", 
+            "{{ relationship.left_entity_name }}"_L1, 
             {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ relationship.right_entity_name }}, 
-            "{{ relationship.right_entity_name }}", 
-            "{{ relationship.field_name }}", 
+            "{{ relationship.right_entity_name }}"_L1, 
+            "{{ relationship.field_name }}"_L1, 
             RelationshipType::{{ relationship.type }},
             RelationshipStrength::{{ relationship.strength }},
             RelationshipCardinality::{{ relationship.cardinality }},
@@ -223,7 +223,7 @@ inline Qleany::Entities::EntitySchema {{ name }}::schema = {
     {
         {% for field in parent_fields -%}
         { 
-            "{{ field.name }}",
+            "{{ field.name }}"_L1,
             FieldType::{% if field.type == "bool" %}Bool{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
             {% if field.is_primary_key %}true{% else %}false{%endif %},
             {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}
@@ -231,7 +231,7 @@ inline Qleany::Entities::EntitySchema {{ name }}::schema = {
         {%- endfor %}
         {% for field in fields -%}
         { 
-            "{{ field.name }}",
+            "{{ field.name }}"_L1,
             FieldType::{% if field.type == "bool" %}Bool{% elif field.type == "int" %}Integer{% elif field.type == "float" %}Float{% elif field.type == "double" %}Double{% elif field.type == "QString" %}String{% elif field.type == "QUuid" %}Uuid{% elif field.type == "QDateTime" %}DateTime{% else %}Entity{% endif %},
             {% if field.is_primary_key %}true{% else %}false{%endif %},
             {% if field.is_linked_to_another_entity %}true{% else %}false{%endif %}

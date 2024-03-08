@@ -7,6 +7,7 @@
 
 namespace FrontEnds::Contracts::DTO::Custom
 {
+using namespace Qt::Literals::StringLiterals;
 
 class WriteRandomThingsDTO
 {
@@ -20,7 +21,7 @@ class WriteRandomThingsDTO
         bool randomCarNameSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "randomCarName")
+            if (fieldName == "randomCarName"_L1)
             {
                 return randomCarNameSet;
             }

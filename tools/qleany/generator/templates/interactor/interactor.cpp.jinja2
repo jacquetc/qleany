@@ -75,7 +75,7 @@ QPointer<{{ feature_name_pascal }}Interactor> {{ feature_name_pascal }}Interacto
     {%if feature.crud.get %}
 QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::get(int id) const
 {
-    auto queryCommand = new QueryCommand("get");
+    auto queryCommand = new QueryCommand("get"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         Get{{ entity_name_pascal }}Query query;
@@ -91,7 +91,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
@@ -110,7 +110,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
 
  QCoro::Task<{{ entity_name_pascal }}WithDetailsDTO> {{ feature_name_pascal }}Interactor::getWithDetails(int id) const
 {
-     auto queryCommand = new QueryCommand("getWithDetails");
+     auto queryCommand = new QueryCommand("getWithDetails"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         Get{{ entity_name_pascal }}Query query;
@@ -126,7 +126,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}WithDetailsDTO> optional_result =
@@ -146,7 +146,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::ge
 
 QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Interactor::getAll() const
 {
-    auto queryCommand = new QueryCommand("getAll");
+    auto queryCommand = new QueryCommand("getAll"_L1);
 
     queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
         auto interface = static_cast<Interface{{ entity_name_pascal }}Repository *>(m_repositoryProvider->repository("{{ entity_name_pascal }}"));
@@ -159,7 +159,7 @@ QCoro::Task<QList<{{ entity_name_pascal }}DTO>> {{ feature_name_pascal }}Interac
         }
         return Result<void>(result.error());
     });
-    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<QList<{{ entity_name_pascal }}DTO>> optional_result = co_await qCoro(
@@ -208,7 +208,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::cr
         {{ feature_name_pascal }}Interactor::tr("Create {{ entity_name_camel }}"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
@@ -244,7 +244,7 @@ QCoro::Task<{{ entity_name_pascal }}DTO> {{ feature_name_pascal }}Interactor::up
         {{ feature_name_pascal }}Interactor::tr("Update {{ entity_name_camel }}"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<{{ entity_name_pascal }}DTO> optional_result =
@@ -278,7 +278,7 @@ QCoro::Task<bool> {{ feature_name_pascal }}Interactor::remove(int id)
             {{ feature_name_pascal }}Interactor::tr("Remove {{ entity_name_camel }}"), handler, query);
 
         // push command
-        m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+        m_undo_redo_system->push(command, "{{ feature_name_camel }}"_L1);
 
         // async wait for result signal
         const std::optional<QList<int>> optional_result =
@@ -342,7 +342,7 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
     m_eventDispatcher->progress()->bindToProgressSignals(command);
 
     // push command
-    m_undo_redo_system->push(command, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(command, "{{ feature_name_camel }}"_L1);
 
     {% if command.dto_out_enabled %}
     // async wait for result signal
@@ -365,7 +365,7 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
 
 QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Interactor::{{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const
 {
-    auto queryCommand = new QueryCommand("{{ query.name }}");
+    auto queryCommand = new QueryCommand("{{ query.name }}"_L1);
      
     Q_UNIMPLEMENTED();
 
@@ -388,7 +388,7 @@ QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Interactor::{{ quer
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}");
+    m_undo_redo_system->push(queryCommand, "{{ feature_name_camel }}"_L1);
 
     // async wait for result signal
     const std::optional<{{ query.dto_out }}DTO> optional_result =

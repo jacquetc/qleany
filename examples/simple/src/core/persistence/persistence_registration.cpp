@@ -21,32 +21,33 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
 
     // database tables:
 
-    auto *passengerDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Passenger>(context);
     auto *brandDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Brand>(context);
-    auto *clientDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Client>(context);
     auto *carDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Car>(context);
+    auto *clientDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Client>(context);
+    auto *passengerDatabaseTableGroup = new DatabaseTableGroup<Simple::Entities::Passenger>(context);
 
     Result<void> initResult = context->init();
 
     if (initResult.hasError())
     {
         Error error = initResult.error();
-        qCritical() << error.className() + "\n" + error.code() + "\n" + error.message() + "\n" + error.data();
+        qCritical() << error.className() + QString::fromLatin1("\n") + error.code() + QString::fromLatin1("\n") +
+                           error.message() + QString::fromLatin1("\n") + error.data();
     }
 
     // repositories:
 
-    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
     BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
+    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
     ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
     CarRepository *carRepository = new CarRepository(carDatabaseTableGroup, brandRepository, passengerRepository);
 
     // register repositories:
 
-    RepositoryProvider::instance()->registerRepository("passenger", passengerRepository);
     RepositoryProvider::instance()->registerRepository("brand", brandRepository);
-    RepositoryProvider::instance()->registerRepository("client", clientRepository);
     RepositoryProvider::instance()->registerRepository("car", carRepository);
+    RepositoryProvider::instance()->registerRepository("client", clientRepository);
+    RepositoryProvider::instance()->registerRepository("passenger", passengerRepository);
 }
 
 RepositoryProvider *PersistenceRegistration::repositoryProvider()

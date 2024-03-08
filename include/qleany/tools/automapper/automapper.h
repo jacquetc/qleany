@@ -13,6 +13,8 @@
 
 namespace Qleany::Tools::AutoMapper
 {
+using namespace Qt::Literals::StringLiterals;
+
 class QLEANY_EXPORT AutoMapper
 {
   public:
@@ -263,7 +265,7 @@ class QLEANY_EXPORT AutoMapper
                         if (getDefaultSiblingFunction != getDefaultSiblingFunctions.end())
                         {
                             // We have a conversion for this type.
-                            if (QString(value.metaType().name()).startsWith("QList<"))
+                            if (QString::fromLatin1(value.metaType().name()).startsWith("QList<"_L1))
                             {
                                 // If it's a QList<QVariant>, process each
                                 // QVariant.
@@ -307,7 +309,8 @@ class QLEANY_EXPORT AutoMapper
                                 auto writeIt = writerHash.find(
                                     MetaTypePair(value.metaType(), getDefaultSiblingFunction.value()().metaType()));
 
-                                if (writeIt != writerHash.end() && source.metaData().getSet(sourceProperty.name()))
+                                if (writeIt != writerHash.end() &&
+                                    source.metaData().getSet(QString::fromLatin1(sourceProperty.name())))
                                 {
                                     bool success = writeIt.value()(destinationProperty, destinationPointer, value);
 

@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
     set_qt_environment();
     QGuiApplication app(argc, argv);
 
-
     new Simple::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&app);
     new Simple::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());
@@ -32,8 +31,8 @@ int main(int argc, char *argv[])
         },
         Qt::QueuedConnection);
 
-    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
-    engine.addImportPath(":/");
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml"_L1);
+    engine.addImportPath(":/"_L1);
 
     engine.load(url);
 

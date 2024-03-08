@@ -8,6 +8,7 @@
 
 namespace Simple::Contracts::DTO::Client
 {
+using namespace Qt::Literals::StringLiterals;
 
 class ClientDTO
 {
@@ -27,19 +28,19 @@ class ClientDTO
         bool updateDateSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id")
+            if (fieldName == "id"_L1)
             {
                 return idSet;
             }
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return uuidSet;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return updateDateSet;
             }

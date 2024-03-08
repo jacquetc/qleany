@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->addCarPushButton, &QPushButton::clicked, this, []() {
         auto *carInteractor = Simple::Interactor::Car::CarInteractor::instance();
         auto create_DTO = carInteractor->getCreateDTO();
-        create_DTO.setContent(QString("Example car %1").arg(QDateTime::currentMSecsSinceEpoch()));
+        create_DTO.setContent("Example car %1"_L1.arg(QString::number(QDateTime::currentMSecsSinceEpoch())));
 
         Simple::Interactor::Car::CarInteractor::instance()->create(create_DTO);
     });
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->addPassengerPushButton, &QPushButton::clicked, this, []() {
         auto *passengerInteractor = Simple::Interactor::Passenger::PassengerInteractor::instance();
         auto create_DTO = passengerInteractor->getCreateDTO();
-        create_DTO.setName(QString("Example passenger %1").arg(QDateTime::currentMSecsSinceEpoch()));
+        create_DTO.setName("Example passenger %1"_L1.arg(QString::number(QDateTime::currentMSecsSinceEpoch())));
         create_DTO.setCarId(1);
         create_DTO.setPosition(-1);
 
@@ -93,12 +93,12 @@ QCoro::Task<> MainWindow::init()
 {
     auto *carInteractor = Simple::Interactor::Car::CarInteractor::instance();
     auto createCarDTO = carInteractor->getCreateDTO();
-    createCarDTO.setContent("Example car 1");
+    createCarDTO.setContent("Example car 1"_L1);
     const auto &carDto = co_await carInteractor->create(createCarDTO);
 
     auto *passengerInteractor = Simple::Interactor::Passenger::PassengerInteractor::instance();
     auto create_DTO = passengerInteractor->getCreateDTO();
-    create_DTO.setName("Example passenger 1");
+    create_DTO.setName("Example passenger 1"_L1);
     create_DTO.setCarId(1);
     const auto &passengerDto = co_await passengerInteractor->create(create_DTO);
 

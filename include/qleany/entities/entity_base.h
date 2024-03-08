@@ -5,6 +5,7 @@
 
 namespace Qleany::Entities
 {
+using namespace Qt::Literals::StringLiterals;
 
 class QLEANY_EXPORT EntityBase
 {
@@ -23,7 +24,7 @@ class QLEANY_EXPORT EntityBase
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id")
+            if (fieldName == "id"_L1)
             {
                 return true;
             }
@@ -33,7 +34,7 @@ class QLEANY_EXPORT EntityBase
         bool getLoaded(const QString &fieldName) const
         {
 
-            if (fieldName == "id")
+            if (fieldName == "id"_L1)
             {
                 return true;
             }

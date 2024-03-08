@@ -48,7 +48,7 @@ ClientInteractor *ClientInteractor::instance()
 
 QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
 {
-    auto queryCommand = new QueryCommand("get");
+    auto queryCommand = new QueryCommand("get"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
@@ -64,7 +64,7 @@ QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "client");
+    m_undo_redo_system->push(queryCommand, "client"_L1);
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
@@ -81,7 +81,7 @@ QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
 
 QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
 {
-    auto queryCommand = new QueryCommand("getWithDetails");
+    auto queryCommand = new QueryCommand("getWithDetails"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetClientQuery query;
@@ -97,7 +97,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "client");
+    m_undo_redo_system->push(queryCommand, "client"_L1);
 
     // async wait for result signal
     const std::optional<ClientWithDetailsDTO> optional_result = co_await qCoro(
@@ -114,7 +114,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
 
 QCoro::Task<QList<ClientDTO>> ClientInteractor::getAll() const
 {
-    auto queryCommand = new QueryCommand("getAll");
+    auto queryCommand = new QueryCommand("getAll"_L1);
 
     queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
         auto interface = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
@@ -127,7 +127,7 @@ QCoro::Task<QList<ClientDTO>> ClientInteractor::getAll() const
         }
         return Result<void>(result.error());
     });
-    m_undo_redo_system->push(queryCommand, "client");
+    m_undo_redo_system->push(queryCommand, "client"_L1);
 
     // async wait for result signal
     const std::optional<QList<ClientDTO>> optional_result =
@@ -164,7 +164,7 @@ QCoro::Task<ClientDTO> ClientInteractor::create(const CreateClientDTO &dto)
         ClientInteractor::tr("Create client"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "client");
+    m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
@@ -199,7 +199,7 @@ QCoro::Task<ClientDTO> ClientInteractor::update(const UpdateClientDTO &dto)
         ClientInteractor::tr("Update client"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "client");
+    m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
     const std::optional<ClientDTO> optional_result =
@@ -231,7 +231,7 @@ QCoro::Task<bool> ClientInteractor::remove(int id)
         ClientInteractor::tr("Remove client"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "client");
+    m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =

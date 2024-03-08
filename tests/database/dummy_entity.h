@@ -135,7 +135,7 @@ inline uint qHash(const DummyEntity &entity, uint seed = 0) noexcept
 
 /// Schema for DummyEntity entity
 inline Qleany::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
-                                                             "DummyEntity",
+                                                             "DummyEntity"_L1,
 
                                                              // relationships:
                                                              {
@@ -143,10 +143,10 @@ inline Qleany::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entit
                                                              },
 
                                                              // fields:
-                                                             {{"id", FieldType::Integer, true, false},
-                                                              {"uuid", FieldType::Uuid, false, false},
-                                                              {"creationDate", FieldType::DateTime, false, false},
-                                                              {"updateDate", FieldType::DateTime, false, false}}};
+                                                             {{"id"_L1, FieldType::Integer, true, false},
+                                                              {"uuid"_L1, FieldType::Uuid, false, false},
+                                                              {"creationDate"_L1, FieldType::DateTime, false, false},
+                                                              {"updateDate"_L1, FieldType::DateTime, false, false}}};
 
 } // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyEntity)

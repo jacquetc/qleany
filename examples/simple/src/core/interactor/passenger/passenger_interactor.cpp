@@ -45,7 +45,7 @@ PassengerInteractor *PassengerInteractor::instance()
 
 QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
 {
-    auto queryCommand = new QueryCommand("get");
+    auto queryCommand = new QueryCommand("get"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetPassengerQuery query;
@@ -61,7 +61,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "passenger");
+    m_undo_redo_system->push(queryCommand, "passenger"_L1);
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
@@ -78,7 +78,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
 
 QCoro::Task<QList<PassengerDTO>> PassengerInteractor::getAll() const
 {
-    auto queryCommand = new QueryCommand("getAll");
+    auto queryCommand = new QueryCommand("getAll"_L1);
 
     queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
         auto interface = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
@@ -91,7 +91,7 @@ QCoro::Task<QList<PassengerDTO>> PassengerInteractor::getAll() const
         }
         return Result<void>(result.error());
     });
-    m_undo_redo_system->push(queryCommand, "passenger");
+    m_undo_redo_system->push(queryCommand, "passenger"_L1);
 
     // async wait for result signal
     const std::optional<QList<PassengerDTO>> optional_result = co_await qCoro(
@@ -141,7 +141,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::create(const CreatePassengerDTO &
         PassengerInteractor::tr("Create passenger"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "passenger");
+    m_undo_redo_system->push(command, "passenger"_L1);
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
@@ -176,7 +176,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::update(const UpdatePassengerDTO &
         PassengerInteractor::tr("Update passenger"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "passenger");
+    m_undo_redo_system->push(command, "passenger"_L1);
 
     // async wait for result signal
     const std::optional<PassengerDTO> optional_result =
@@ -208,7 +208,7 @@ QCoro::Task<bool> PassengerInteractor::remove(int id)
         PassengerInteractor::tr("Remove passenger"), handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "passenger");
+    m_undo_redo_system->push(command, "passenger"_L1);
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =

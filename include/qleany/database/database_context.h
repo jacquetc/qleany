@@ -36,7 +36,7 @@ class QLEANY_EXPORT DatabaseContext : public Contracts::Database::InterfaceDatab
 
     QSqlDatabase getConnection() override;
 
-    void appendCreationSql(const QString &type, const QString &sql) override;
+    void appendCreationSql(const char *type, const QString &sql) override;
 
   private:
     QMutex mutex;

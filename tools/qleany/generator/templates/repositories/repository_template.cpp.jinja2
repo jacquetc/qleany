@@ -32,10 +32,10 @@ Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Reposi
     {
 {% if value["is_list"] %}
         Result<QList<Entities::{{ value["type_pascal_name"] }}>> {{ value["related_field_name"] }}Result =
-            m_{{ value["type_camel_name"] }}Repository->updateEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}", entity.{{ value["related_field_name"] }}());
+            m_{{ value["type_camel_name"] }}Repository->updateEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1, entity.{{ value["related_field_name"] }}());
 {% else %}
         Result<Entities::{{ value["type_pascal_name"] }}> {{ value["related_field_name"] }}Result =
-            m_{{ value["type_camel_name"] }}Repository->updateEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}", entity.{{ value["related_field_name"] }}());
+            m_{{ value["type_camel_name"] }}Repository->updateEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1, entity.{{ value["related_field_name"] }}());
 {% endif %}
 
 #ifdef QT_DEBUG
@@ -69,10 +69,10 @@ Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Reposi
 
 {% if value["is_list"] %}
         Result<QList<Entities::{{ value["type_pascal_name"] }}>> {{ value["related_field_name"] }}Result =
-            m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}");
+            m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1);
 {% else %}
         Result<Entities::{{ value["type_pascal_name"] }}> {{ value["related_field_name"] }}Result =
-            m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}");
+            m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1);
 {% endif %}
 
 #ifdef QT_DEBUG
@@ -109,7 +109,7 @@ Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Reposi
     return [this](int entityId) {
 
     {% if value["is_list"] %}
-        auto foreignEntitiesResult = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+        auto foreignEntitiesResult = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
 
         if (foreignEntitiesResult.isError())
         {
@@ -120,7 +120,7 @@ Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Reposi
         return foreignEntitiesResult.value();
     {% else %}
 
-        auto foreignEntityResult = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+        auto foreignEntityResult = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}"_L1);
 
         if (foreignEntityResult.isError())
         {
@@ -147,7 +147,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::removeInCascade(QList<int> 
 
     Qleany::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
     for(const Qleany::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
-        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::{{ value["type_pascal_name"] }} && relationship.fieldName == "{{ value["related_field_name"] }}" ){
+        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::{{ value["type_pascal_name"] }} && relationship.fieldName == "{{ value["related_field_name"] }}"_L1){
             {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
             break;
         }
@@ -236,7 +236,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
 
     Qleany::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
     for(const Qleany::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
-        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::{{ value["type_pascal_name"] }} && relationship.fieldName == "{{ value["related_field_name"] }}" ){
+        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::{{ value["type_pascal_name"] }} && relationship.fieldName == QString::fromLatin1("{{ value["related_field_name"] }}") ){
             {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
             break;
         }
@@ -251,7 +251,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
             {% if generate_lazy_loaders %}
             QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);            
             {% else %}
-            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
             if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
             {
                 qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();
@@ -267,7 +267,7 @@ Result<QHash<int, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade
             {% if generate_lazy_loaders %}
             {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
             {% else %}
-            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
             if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
             {
                 qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();

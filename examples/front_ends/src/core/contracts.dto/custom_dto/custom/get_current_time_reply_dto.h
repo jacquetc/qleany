@@ -7,6 +7,7 @@
 
 namespace FrontEnds::Contracts::DTO::Custom
 {
+using namespace Qt::Literals::StringLiterals;
 
 class GetCurrentTimeReplyDTO
 {
@@ -20,7 +21,7 @@ class GetCurrentTimeReplyDTO
         bool currentDateTimeSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "currentDateTime")
+            if (fieldName == "currentDateTime"_L1)
             {
                 return currentDateTimeSet;
             }

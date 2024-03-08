@@ -267,15 +267,16 @@ void ForeignEntityTest::debugListsRelationshipTable()
     QSqlDatabase db = m_context->getConnection();
     QSqlQuery query(db);
     // Add a SQL query to print all rows in the dummy_entity_with_foreign_lists_relationship table
-    query.prepare("SELECT * FROM dummy_entity_with_foreign_lists_relationship");
+    query.prepare(QString::fromLatin1("SELECT * FROM dummy_entity_with_foreign_lists_relationship"));
     if (query.exec())
     {
         while (query.next())
         {
-            qDebug() << "Id: " << query.value("id").toInt() << " Previous: " << query.value("previous").toInt()
-                     << " Next: " << query.value("next").toInt()
-                     << " Dummy Entity ID: " << query.value("dummy_entity_with_foreign_id").toInt()
-                     << " Dummy Other Entity ID: " << query.value("dummy_other_entity_id").toInt();
+            qDebug() << "Id: " << query.value(QString::fromLatin1("id")).toInt() << QString::fromLatin1(" Previous: ")
+                     << query.value(QString::fromLatin1("previous")).toInt()
+                     << " Next: " << query.value(QString::fromLatin1("next")).toInt()
+                     << " Dummy Entity ID: " << query.value(QString::fromLatin1("dummy_entity_with_foreign_id")).toInt()
+                     << " Dummy Other Entity ID: " << query.value(QString::fromLatin1("dummy_other_entity_id")).toInt();
         }
     }
     else

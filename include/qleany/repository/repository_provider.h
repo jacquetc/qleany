@@ -24,9 +24,9 @@ class QLEANY_EXPORT RepositoryProvider : public QObject,
     // InterfaceRepositoryProvider interface
 
   public:
-    void registerRepository(const QString &name, InterfaceRepository *repository) override;
+    void registerRepository(const char *name, InterfaceRepository *repository) override;
 
-    InterfaceRepository *repository(const QString &name) override;
+    InterfaceRepository *repository(const char *name) override;
 
   private:
     RepositoryProvider() = default;

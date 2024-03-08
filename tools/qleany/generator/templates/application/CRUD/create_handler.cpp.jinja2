@@ -126,7 +126,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
     {
 
         {% if owner_field_is_list %}
-        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}");
+        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}"_L1);
         if (Q_UNLIKELY(originalOwner{{ owner_field_name_pascal }}Result.hasError()))
         {
             return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_name_pascal }}Result.error());
@@ -160,7 +160,7 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
 
         {% else %}
-        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}");
+        auto originalOwner{{ owner_field_name_pascal }}Result = m_repository->getEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}"_L1);
         if (Q_UNLIKELY(originalOwner{{ owner_field_name_pascal }}Result.hasError()))
         {
             return Result<{{ entity_mappable_with_pascal }}DTO>(originalOwner{{ owner_field_name_pascal }}Result.error());
@@ -186,11 +186,11 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 
     {% if owner_field_is_list %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
+    Result<QList<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}>> updateResult = m_repository->updateEntitiesInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}"_L1, ownerEntity{{ owner_field_name_pascal }});
 
     {% else %}
     // Add the {{ entity_mappable_with_camel }} to the owner entity
-    Result<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}", ownerEntity{{ owner_field_name_pascal }});
+    Result<{{ application_cpp_domain_name }}::Entities::{{ entity_mappable_with_pascal }}> updateResult = m_repository->updateEntityInRelationOf({{ owner_name_pascal }}::schema, ownerId, "{{ owner_field_name_camel }}"_L1, ownerEntity{{ owner_field_name_pascal }});
 
     {% endif %}
     QLN_RETURN_IF_ERROR_WITH_ACTION({{ entity_mappable_with_pascal }}DTO, updateResult, m_repository->cancelChanges();)

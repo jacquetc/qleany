@@ -15,6 +15,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ field.fore
 
 namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }}
 {
+using namespace Qt::Literals::StringLiterals;
 
 class {{ dto_pascal_type }}
 {
@@ -32,7 +33,7 @@ class {{ dto_pascal_type }}
         bool getSet(const QString &fieldName) const
         {
             {% for field in fields -%}
-            if (fieldName == "{{ field.name }}")
+            if (fieldName == "{{ field.name }}"_L1)
             {
                 return {{ field.name }}Set;
             }

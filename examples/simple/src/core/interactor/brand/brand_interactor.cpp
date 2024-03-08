@@ -45,7 +45,7 @@ BrandInteractor *BrandInteractor::instance()
 
 QCoro::Task<BrandDTO> BrandInteractor::get(int id) const
 {
-    auto queryCommand = new QueryCommand("get");
+    auto queryCommand = new QueryCommand("get"_L1);
 
     queryCommand->setQueryFunction([this, id](QPromise<Result<void>> &progressPromise) {
         GetBrandQuery query;
@@ -61,7 +61,7 @@ QCoro::Task<BrandDTO> BrandInteractor::get(int id) const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "brand");
+    m_undo_redo_system->push(queryCommand, "brand"_L1);
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
@@ -78,7 +78,7 @@ QCoro::Task<BrandDTO> BrandInteractor::get(int id) const
 
 QCoro::Task<QList<BrandDTO>> BrandInteractor::getAll() const
 {
-    auto queryCommand = new QueryCommand("getAll");
+    auto queryCommand = new QueryCommand("getAll"_L1);
 
     queryCommand->setQueryFunction([&](QPromise<Result<void>> &progressPromise) {
         auto interface = static_cast<InterfaceBrandRepository *>(m_repositoryProvider->repository("Brand"));
@@ -91,7 +91,7 @@ QCoro::Task<QList<BrandDTO>> BrandInteractor::getAll() const
         }
         return Result<void>(result.error());
     });
-    m_undo_redo_system->push(queryCommand, "brand");
+    m_undo_redo_system->push(queryCommand, "brand"_L1);
 
     // async wait for result signal
     const std::optional<QList<BrandDTO>> optional_result =
@@ -139,7 +139,7 @@ QCoro::Task<BrandDTO> BrandInteractor::create(const CreateBrandDTO &dto)
                                                                                    handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "brand");
+    m_undo_redo_system->push(command, "brand"_L1);
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
@@ -174,7 +174,7 @@ QCoro::Task<BrandDTO> BrandInteractor::update(const UpdateBrandDTO &dto)
                                                                                    handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "brand");
+    m_undo_redo_system->push(command, "brand"_L1);
 
     // async wait for result signal
     const std::optional<BrandDTO> optional_result =
@@ -206,7 +206,7 @@ QCoro::Task<bool> BrandInteractor::remove(int id)
                                                                                    handler, query);
 
     // push command
-    m_undo_redo_system->push(command, "brand");
+    m_undo_redo_system->push(command, "brand"_L1);
 
     // async wait for result signal
     const std::optional<QList<int>> optional_result =

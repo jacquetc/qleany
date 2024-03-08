@@ -2,8 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+#include "QtCore/QLatin1StringView"
 #include "QtCore/qobjectdefs.h"
 #include "QtCore/qtmetamacros.h"
+
+using namespace Qt::Literals::StringLiterals;
 
 namespace DatabaseTest::Entities::Entities
 {

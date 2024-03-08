@@ -9,6 +9,7 @@
 
 namespace FrontEnds::Contracts::DTO::Car
 {
+using namespace Qt::Literals::StringLiterals;
 
 class CarDTO
 {
@@ -30,23 +31,23 @@ class CarDTO
         bool contentSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id")
+            if (fieldName == "id"_L1)
             {
                 return idSet;
             }
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return uuidSet;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return updateDateSet;
             }
-            if (fieldName == "content")
+            if (fieldName == "content"_L1)
             {
                 return contentSet;
             }

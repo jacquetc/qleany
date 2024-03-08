@@ -44,10 +44,10 @@ Qleany::Result<void> DatabaseContext::init()
 QSqlDatabase DatabaseContext::getConnection()
 {
     QMutexLocker locker(&mutex);
-    QString connectionName = QString("Thread_%1").arg(uintptr_t(QThread::currentThreadId()));
+    QString connectionName = "Thread_%1"_L1.arg(QString::number(uintptr_t(QThread::currentThreadId())));
     if (!QSqlDatabase::contains(connectionName))
     {
-        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE"_L1, connectionName);
         database.setDatabaseName(m_databaseName);
         if (!database.open())
         {
@@ -104,36 +104,40 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
         QSqlQuery query(sqlDb);
 
         // entity tables
-        QList<QString> entityTableSqls = m_creationSqlHash.values("entity_table");
+        QList<QString> entityTableSqls = m_creationSqlHash.values("entity_table"_L1);
 
         for (const QString &string : entityTableSqls)
         {
             if (!query.prepare(string))
             {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
             if (!query.exec())
             {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
         }
 
         // junction tables
-        QList<QString> junctionTableSqls = m_creationSqlHash.values("junction_table");
+        QList<QString> junctionTableSqls = m_creationSqlHash.values("junction_table"_L1);
 
         for (const QString &string : junctionTableSqls)
         {
             if (!query.prepare(string))
             {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
             if (!query.exec())
             {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), string));
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
         }
 
@@ -161,7 +165,7 @@ Qleany::Result<QString> DatabaseContext::createEmptyDatabase()
 
 //---------------------------------------------------------
 
-void Qleany::Database::DatabaseContext::appendCreationSql(const QString &type, const QString &sql)
+void Qleany::Database::DatabaseContext::appendCreationSql(const char *type, const QString &sql)
 {
-    m_creationSqlHash.insert(type, sql);
+    m_creationSqlHash.insert(QString::fromLatin1(type), sql);
 }

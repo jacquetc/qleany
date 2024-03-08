@@ -12,6 +12,7 @@ using namespace FrontEnds::Contracts::DTO::Passenger;
 
 namespace FrontEnds::Contracts::DTO::Client
 {
+using namespace Qt::Literals::StringLiterals;
 
 class CreateClientDTO
 {
@@ -33,23 +34,23 @@ class CreateClientDTO
         bool clientFriendsSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return uuidSet;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return updateDateSet;
             }
-            if (fieldName == "client")
+            if (fieldName == "client"_L1)
             {
                 return clientSet;
             }
-            if (fieldName == "clientFriends")
+            if (fieldName == "clientFriends"_L1)
             {
                 return clientFriendsSet;
             }

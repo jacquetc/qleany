@@ -1,4 +1,4 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "entities_registration.h"
 #include "interactor_registration.h"
@@ -10,9 +10,9 @@ int main(int argc, char *argv[])
 {
 
     QApplication a(argc, argv);
-    a.setApplicationName("FrontEndsExample");
-    a.setOrganizationName("frontendsexample");
-    a.setOrganizationDomain("qleany.eu");
+    a.setApplicationName("FrontEndsExample"_L1);
+    a.setOrganizationName("frontendsexample"_L1);
+    a.setOrganizationDomain("qleany.eu"_L1);
 
     new FrontEnds::Entities::EntitiesRegistration(&a);
     auto *persistenceRegistration = new FrontEnds::Persistence::PersistenceRegistration(&a);

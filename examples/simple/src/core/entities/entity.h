@@ -36,15 +36,15 @@ class Entity : public EntityBase
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return true;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return true;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return true;
             }
@@ -54,15 +54,15 @@ class Entity : public EntityBase
         bool getLoaded(const QString &fieldName) const
         {
 
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return true;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return true;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return true;
             }
@@ -194,7 +194,7 @@ inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 
 /// Schema for Entity entity
 inline Qleany::Entities::EntitySchema Entity::schema = {Simple::Entities::Entities::EntityEnum::Entity,
-                                                        "Entity",
+                                                        "Entity"_L1,
 
                                                         // relationships:
                                                         {
@@ -202,10 +202,10 @@ inline Qleany::Entities::EntitySchema Entity::schema = {Simple::Entities::Entiti
                                                         },
 
                                                         // fields:
-                                                        {{"id", FieldType::Integer, true, false},
-                                                         {"uuid", FieldType::Uuid, false, false},
-                                                         {"creationDate", FieldType::DateTime, false, false},
-                                                         {"updateDate", FieldType::DateTime, false, false}}};
+                                                        {{"id"_L1, FieldType::Integer, true, false},
+                                                         {"uuid"_L1, FieldType::Uuid, false, false},
+                                                         {"creationDate"_L1, FieldType::DateTime, false, false},
+                                                         {"updateDate"_L1, FieldType::DateTime, false, false}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Entity)

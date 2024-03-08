@@ -8,7 +8,6 @@
 
 using namespace Qleany::Tools::UndoRedo;
 
-
 /*!
  * \brief Constructs an UndoRedoCommand with the specified \a text.
  */
@@ -66,8 +65,9 @@ void UndoRedoCommand::asyncRedo()
     m_status = Status::Running;
     Q_EMIT redoing(m_scope, true);
     m_watcher->setFuture(QtConcurrent::run(m_redoFunction).onFailed([](const std::exception &e) {
-        return Result<void>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "redo-error",
-                                        "Redo failed: " + QString::fromStdString(e.what())));
+        return Result<void>(QLN_ERROR_2(
+            Q_FUNC_INFO, Error::Critical, "redo-error",
+            QString(QString::fromLatin1("Redo failed: ") + QString::fromStdString(e.what())).toLatin1().constData()));
     }));
 
     // start timer to update progress

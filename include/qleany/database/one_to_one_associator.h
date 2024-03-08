@@ -26,10 +26,10 @@ template <class RightEntity> class OneToOneAssociator
         QString rightEntityLastName = RightEntity::schema.name;
 
         m_junctionTableName =
-            leftEntityLastName + "_" + relationship.fieldName + "_" + rightEntityLastName + "_junction";
-        m_junctionTableLeftEntityForeignKeyName = leftEntityLastName + "_id";
+            leftEntityLastName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityLastName + "_junction"_L1;
+        m_junctionTableLeftEntityForeignKeyName = leftEntityLastName + "_id"_L1;
         m_leftEntityForeignTableName = Qleany::Database::Tools::fromPascalToSnakeCase(leftEntityLastName);
-        m_junctionTableRightEntityForeignKeyName = rightEntityLastName + "_id";
+        m_junctionTableRightEntityForeignKeyName = rightEntityLastName + "_id"_L1;
         m_rightEntityForeignTableName = Qleany::Database::TableTools<RightEntity>::getEntityTableName();
     }
     ~OneToOneAssociator() = default;
@@ -62,15 +62,17 @@ template <class RightEntity> QString OneToOneAssociator<RightEntity>::getTableCr
     // create a table with a ont to one relationship between entity and other entity foreign ids , enforce it by
     // constraints
 
-    return "CREATE TABLE IF NOT EXISTS " + m_junctionTableName +
+    return "CREATE TABLE IF NOT EXISTS %1"
            " (id INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE ON CONFLICT ROLLBACK NOT NULL ON "
-           "CONFLICT ROLLBACK, " +
-           m_junctionTableLeftEntityForeignKeyName + " INTEGER NOT NULL, " + m_junctionTableRightEntityForeignKeyName +
-           " INTEGER NOT NULL, FOREIGN KEY (" + m_junctionTableLeftEntityForeignKeyName + ") REFERENCES " +
-           m_leftEntityForeignTableName + " (id) ON DELETE CASCADE, " + "FOREIGN KEY (" +
-           m_junctionTableRightEntityForeignKeyName + ") REFERENCES " + m_rightEntityForeignTableName +
-           " (id) ON DELETE CASCADE, " + "UNIQUE (" + m_junctionTableLeftEntityForeignKeyName +
-           ") ON CONFLICT ROLLBACK" + ");";
+           "CONFLICT ROLLBACK, %2"
+           " INTEGER NOT NULL, %3"
+           " INTEGER NOT NULL, FOREIGN KEY (%4) REFERENCES %5 (id) ON DELETE CASCADE, FOREIGN KEY (%6) REFERENCES %7 "
+           "(id) ON DELETE CASCADE, UNIQUE (%8"
+           ") ON CONFLICT ROLLBACK);"_L1.arg(m_junctionTableName, m_junctionTableLeftEntityForeignKeyName,
+                                             m_junctionTableRightEntityForeignKeyName,
+                                             m_junctionTableLeftEntityForeignKeyName, m_leftEntityForeignTableName,
+                                             m_junctionTableRightEntityForeignKeyName, m_rightEntityForeignTableName,
+                                             m_junctionTableLeftEntityForeignKeyName);
 }
 
 template <class RightEntity> Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntity(int leftEntityId)
@@ -78,15 +80,15 @@ template <class RightEntity> Result<RightEntity> OneToOneAssociator<RightEntity>
     auto connection = m_databaseContext->getConnection();
 
     QSqlQuery query(connection);
-    QString queryStr = "SELECT " + m_junctionTableRightEntityForeignKeyName + " FROM " + m_junctionTableName +
-                       " WHERE " + m_junctionTableLeftEntityForeignKeyName + " = :entityId";
+    QString queryStr = "SELECT "_L1 + m_junctionTableRightEntityForeignKeyName + " FROM "_L1 + m_junctionTableName +
+                       " WHERE "_L1 + m_junctionTableLeftEntityForeignKeyName + " = :entityId"_L1;
     query.prepare(queryStr);
     if (!query.exec())
     {
         return Result<RightEntity>(
             QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
-    query.bindValue(":entityId", leftEntityId);
+    query.bindValue(":entityId"_L1, leftEntityId);
     if (!query.exec())
     {
         return Result<RightEntity>(
@@ -117,15 +119,15 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
         // remove line with leftEntityId if it exists in the junction table
 
         QSqlQuery deleteQuery(connection);
-        QString deleteQueryStr = "DELETE FROM " + m_junctionTableName + " WHERE " +
-                                 m_junctionTableLeftEntityForeignKeyName + " = :leftEntityId";
+        QString deleteQueryStr = "DELETE FROM "_L1 + m_junctionTableName + " WHERE "_L1 +
+                                 m_junctionTableLeftEntityForeignKeyName + " = :leftEntityId"_L1;
         deleteQuery.prepare(deleteQueryStr);
         if (!deleteQuery.exec())
         {
             return Result<RightEntity>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", deleteQuery.lastError().text(), deleteQueryStr));
         }
-        deleteQuery.bindValue(":leftEntityId", leftEntityId);
+        deleteQuery.bindValue(":leftEntityId"_L1, leftEntityId);
         if (!deleteQuery.exec())
         {
             return Result<RightEntity>(
@@ -137,15 +139,15 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
     // search for the leftEntityId in the junction table
 
     QSqlQuery query(connection);
-    QString queryStr = "SELECT " + m_junctionTableRightEntityForeignKeyName + " FROM " + m_junctionTableName +
-                       " WHERE " + m_junctionTableLeftEntityForeignKeyName + " = :entityId";
+    QString queryStr = "SELECT "_L1 + m_junctionTableRightEntityForeignKeyName + " FROM "_L1 + m_junctionTableName +
+                       " WHERE "_L1 + m_junctionTableLeftEntityForeignKeyName + " = :entityId"_L1;
     query.prepare(queryStr);
     if (!query.exec())
     {
         return Result<RightEntity>(
             QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
     }
-    query.bindValue(":entityId", leftEntityId);
+    query.bindValue(":entityId"_L1, leftEntityId);
     if (!query.exec())
     {
         return Result<RightEntity>(
@@ -155,17 +157,17 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
     {
         // insert the right entity foreign id
         QSqlQuery insertQuery(connection);
-        QString insertQueryStr = "INSERT INTO " + m_junctionTableName + " (" + m_junctionTableLeftEntityForeignKeyName +
-                                 ", " + m_junctionTableRightEntityForeignKeyName + ") VALUES (:leftEntityId, " +
-                                 ":rightEntityId)";
+        QString insertQueryStr =
+            "INSERT INTO "_L1 + m_junctionTableName + " ("_L1 + m_junctionTableLeftEntityForeignKeyName + ", "_L1 +
+            m_junctionTableRightEntityForeignKeyName + ") VALUES (:leftEntityId, "_L1 + ":rightEntityId)"_L1;
         insertQuery.prepare(insertQueryStr);
         if (!insertQuery.exec())
         {
             return Result<RightEntity>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", insertQuery.lastError().text(), insertQueryStr));
         }
-        insertQuery.bindValue(":leftEntityId", leftEntityId);
-        insertQuery.bindValue(":rightEntityId", rightEntity.id());
+        insertQuery.bindValue(":leftEntityId"_L1, leftEntityId);
+        insertQuery.bindValue(":rightEntityId"_L1, rightEntity.id());
         if (!insertQuery.exec())
         {
             return Result<RightEntity>(
@@ -181,17 +183,17 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::updateRightEntity(int leftE
     {
         // update the right entity foreign id
         QSqlQuery updateQuery(connection);
-        QString updateQueryStr = "UPDATE " + m_junctionTableName + " SET " + m_junctionTableRightEntityForeignKeyName +
-                                 " = :rightEntityId WHERE " + m_junctionTableLeftEntityForeignKeyName +
-                                 " = :leftEntityId";
+        QString updateQueryStr = "UPDATE "_L1 + m_junctionTableName + " SET "_L1 +
+                                 m_junctionTableRightEntityForeignKeyName + " = :rightEntityId WHERE "_L1 +
+                                 m_junctionTableLeftEntityForeignKeyName + " = :leftEntityId"_L1;
         updateQuery.prepare(updateQueryStr);
         if (!updateQuery.exec())
         {
             return Result<RightEntity>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", updateQuery.lastError().text(), updateQueryStr));
         }
-        updateQuery.bindValue(":leftEntityId", leftEntityId);
-        updateQuery.bindValue(":rightEntityId", rightEntity.id());
+        updateQuery.bindValue(":leftEntityId"_L1, leftEntityId);
+        updateQuery.bindValue(":rightEntityId"_L1, rightEntity.id());
         if (!updateQuery.exec())
         {
             return Result<RightEntity>(
@@ -218,19 +220,19 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntityFromItsId(int
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + m_rightEntityForeignTableName + " WHERE " + "id = :id";
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + m_rightEntityForeignTableName + " WHERE id = :id"_L1;
         if (!query.prepare(queryStr))
         {
             return Result<RightEntity>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":id", QVariant(rightEntityId));
+        query.bindValue(":id"_L1, QVariant(rightEntityId));
         if (!query.exec())
         {
             return Result<RightEntity>(
@@ -252,7 +254,7 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntityFromItsId(int
         if (columnWithValues.isEmpty())
         {
             return Result<RightEntity>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing",
-                                                   "No row with id " + QString::number(rightEntityId)));
+                                                   "No row with id "_L1 + QString::number(rightEntityId)));
         }
     }
 

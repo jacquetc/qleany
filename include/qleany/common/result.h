@@ -144,8 +144,8 @@ template <> class QLEANY_EXPORT Result<void>
 
     QString errorString() const
     {
-        return m_error.message() + " (" + m_error.code() + ")" + " [" + m_error.className() + "]" + " [" +
-               m_error.data() + "]";
+        return m_error.message() + QString::fromLatin1(" (") + m_error.code() + QString::fromLatin1(") [") + m_error.className() + QString::fromLatin1("] [") +
+               m_error.data() + QString::fromLatin1("]");
     }
 
     QList<Error> trace() const

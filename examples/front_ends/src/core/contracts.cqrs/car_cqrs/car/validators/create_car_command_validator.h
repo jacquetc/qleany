@@ -1,8 +1,10 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+
 #include "car/create_car_dto.h"
+
 
 #include "repository/interface_car_repository.h"
 
@@ -19,7 +21,8 @@ namespace FrontEnds::Contracts::CQRS::Car::Validators
 class CreateCarCommandValidator
 {
   public:
-    CreateCarCommandValidator(InterfaceCarRepository *carRepository) : m_carRepository(carRepository)
+    CreateCarCommandValidator(InterfaceCarRepository *carRepository)
+        :  m_carRepository(carRepository)
     {
     }
 
@@ -27,11 +30,17 @@ class CreateCarCommandValidator
 
     {
 
+
+
+
+
         // Return that is Ok :
         return Result<void>();
     }
 
   private:
+
     InterfaceCarRepository *m_carRepository;
+
 };
 } // namespace FrontEnds::Contracts::CQRS::Car::Validators

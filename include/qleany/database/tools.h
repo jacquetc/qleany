@@ -58,7 +58,7 @@ template <class T> QString TableTools<T>::getEntityClassName()
 {
 
     const QMetaObject &sourceMetaObject = T::staticMetaObject;
-    return QString(sourceMetaObject.className()).split("::").last();
+    return QString::fromLatin1(sourceMetaObject.className()).split("::"_L1).last();
 }
 
 //--------------------------------------------
@@ -73,7 +73,7 @@ template <class T> QString TableTools<T>::getEntityTableName()
 
 template <class T> QString TableTools<T>::getTableNameFromClassName(const QString &className)
 {
-    return Tools::fromPascalToSnakeCase(className.split("::").last());
+    return Tools::fromPascalToSnakeCase(className.split("::"_L1).last());
 }
 
 //--------------------------------------------
@@ -90,11 +90,11 @@ template <class T> QStringList TableTools<T>::getEntityProperties()
         QMetaProperty property = metaObject.property(i);
         if (property.isReadable())
         {
-            if (property.name() == QString("objectName"))
+            if (QString::fromLatin1(property.name()) == "objectName"_L1)
             {
                 continue;
             }
-            propertyList.append(property.name());
+            propertyList.append(QString::fromLatin1(property.name()));
         }
     }
 
@@ -115,11 +115,11 @@ template <class T> QVariant TableTools<T>::getEntityPropertyValue(const T &entit
         QMetaProperty property = metaObject.property(i);
         if (property.isReadable())
         {
-            if (property.name() == QString("objectName"))
+            if (QString::fromLatin1(property.name()) == "objectName"_L1)
             {
                 continue;
             }
-            if (property.name() == propertyName)
+            if (QString::fromLatin1(property.name()) == propertyName)
             {
                 propertyValue = property.readOnGadget(&entity);
                 break;
@@ -141,11 +141,11 @@ void TableTools<T>::setEntityPropertyValue(T &entity, const QString &propertyNam
         QMetaProperty property = metaObject.property(i);
         if (property.isWritable())
         {
-            if (property.name() == QString("objectName"))
+            if (QString::fromLatin1(property.name()) == "objectName"_L1)
             {
                 continue;
             }
-            if (property.name() == propertyName)
+            if (QString::fromLatin1(property.name()) == propertyName)
             {
                 property.writeOnGadget(&entity, propertyValue);
                 break;
@@ -168,7 +168,7 @@ template <class T> Result<T> TableTools<T>::mapToEntity(const QHash<QString, QVa
         QString columnName = i.key();
         QString propertyName = Tools::fromSnakeCaseToCamelCase(columnName);
 
-        int destinationPropertyIndex = metaObject.indexOfProperty(propertyName.toLatin1());
+        int destinationPropertyIndex = metaObject.indexOfProperty(propertyName.toLatin1().constData());
         if (destinationPropertyIndex >= 0)
         {
             QVariant value = i.value();
@@ -208,7 +208,7 @@ template <class T> void TableTools<T>::readEntityFromQuery(T &entity, const QSql
         if (!entity.setProperty(truePropertyName, value))
         {
 
-            qCritical() << "setting property " << truePropertyName << "failed on" << getEntityClassName();
+            qCritical() << "setting property "_L1 << truePropertyName << "failed on"_L1 << getEntityClassName();
         }
     }
 }
@@ -272,7 +272,7 @@ inline QString Tools::fromPascalToSnakeCase(const QString &string)
         {
             if (i != 0)
             {
-                finalString.append("_");
+                finalString.append("_"_L1);
             }
             finalString.append(character.toLower());
         }
@@ -293,7 +293,7 @@ inline QString Tools::fromSnakeCaseToPascalCase(const QString &string)
     for (int i = 0; i < string.size(); i++)
     {
         const QChar &character = string.at(i);
-        if (character == '_')
+        if (character == QChar::fromLatin1('_'))
         {
             next_letter_must_be_upper = true;
             continue;
@@ -319,7 +319,7 @@ inline QString Tools::fromSnakeCaseToCamelCase(const QString &string)
     for (int i = 0; i < string.size(); i++)
     {
         const QChar &character = string.at(i);
-        if (character == '_')
+        if (character == QChar::fromLatin1('_'))
         {
             next_letter_must_be_upper = true;
             continue;

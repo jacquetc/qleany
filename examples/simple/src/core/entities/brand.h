@@ -31,7 +31,7 @@ class Brand : public Entity
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "name")
+            if (fieldName == "name"_L1)
             {
                 return true;
             }
@@ -41,7 +41,7 @@ class Brand : public Entity
         bool getLoaded(const QString &fieldName) const
         {
 
-            if (fieldName == "name")
+            if (fieldName == "name"_L1)
             {
                 return true;
             }
@@ -141,19 +141,19 @@ inline uint qHash(const Brand &entity, uint seed = 0) noexcept
 /// Schema for Brand entity
 inline Qleany::Entities::EntitySchema Brand::schema = {
     Simple::Entities::Entities::EntityEnum::Brand,
-    "Brand",
+    "Brand"_L1,
 
     // relationships:
-    {{Simple::Entities::Entities::EntityEnum::Car, "Car", Simple::Entities::Entities::EntityEnum::Brand, "Brand",
-      "brand", RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
+    {{Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Brand, "Brand"_L1,
+      "brand"_L1, RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
       RelationshipDirection::Backward}},
 
     // fields:
-    {{"id", FieldType::Integer, true, false},
-     {"uuid", FieldType::Uuid, false, false},
-     {"creationDate", FieldType::DateTime, false, false},
-     {"updateDate", FieldType::DateTime, false, false},
-     {"name", FieldType::String, false, false}}};
+    {{"id"_L1, FieldType::Integer, true, false},
+     {"uuid"_L1, FieldType::Uuid, false, false},
+     {"creationDate"_L1, FieldType::DateTime, false, false},
+     {"updateDate"_L1, FieldType::DateTime, false, false},
+     {"name"_L1, FieldType::String, false, false}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Brand)

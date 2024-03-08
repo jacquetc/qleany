@@ -11,7 +11,7 @@ Qleany::Tools::UndoRedo::Scopes::Scopes(const QStringList &scopeList)
     for (const auto &scope : scopeList)
     {
         // If the scope is "all", and exit the loop
-        if (scope.toLower() == "all")
+        if (scope.toLower() == QString::fromLatin1("all"))
         {
             qFatal("do not add All to scopes");
         }
@@ -28,12 +28,12 @@ Qleany::Tools::UndoRedo::Scopes::Scopes(const QStringList &scopeList)
 }
 
 Qleany::Tools::UndoRedo::Scopes::Scopes(const QString &scopeList)
-    : Scopes(scopeList.split(QRegularExpression("[\\s|,]+"), Qt::SkipEmptyParts))
+    : Scopes(scopeList.split(QRegularExpression(QString::fromLatin1("[\\s|,]+")), Qt::SkipEmptyParts))
 {
 }
 
 Qleany::Tools::UndoRedo::Scope Qleany::Tools::UndoRedo::Scopes::createScopeFromString(const QString &scopeString)
 {
-    static auto expr = QRegularExpression("[\\s|,]+");
+    static auto expr = QRegularExpression(QString::fromLatin1("[\\s|,]+"));
     return createScopeFromString(scopeString.split(expr, Qt::SkipEmptyParts));
 }

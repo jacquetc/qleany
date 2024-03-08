@@ -117,7 +117,8 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
     if (m_firstPass)
     {
 
-        auto originalOwnerPassengersResult = m_repository->getEntitiesInRelationOf(Car::schema, ownerId, "passengers");
+        auto originalOwnerPassengersResult =
+            m_repository->getEntitiesInRelationOf(Car::schema, ownerId, "passengers"_L1);
         if (Q_UNLIKELY(originalOwnerPassengersResult.hasError()))
         {
             return Result<PassengerDTO>(originalOwnerPassengersResult.error());
@@ -158,7 +159,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     // Add the passenger to the owner entity
     Result<QList<Simple::Entities::Passenger>> updateResult =
-        m_repository->updateEntitiesInRelationOf(Car::schema, ownerId, "passengers", ownerEntityPassengers);
+        m_repository->updateEntitiesInRelationOf(Car::schema, ownerId, "passengers"_L1, ownerEntityPassengers);
 
     QLN_RETURN_IF_ERROR_WITH_ACTION(PassengerDTO, updateResult, m_repository->cancelChanges();)
 

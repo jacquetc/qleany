@@ -77,7 +77,7 @@ QCoro::Task<> CustomInteractor::writeRandomThings(WriteRandomThingsDTO dto)
     m_eventDispatcher->progress()->bindToProgressSignals(command);
 
     // push command
-    m_undo_redo_system->push(command, "custom");
+    m_undo_redo_system->push(command, "custom"_L1);
 
     co_return;
 }
@@ -104,7 +104,7 @@ QCoro::Task<> CustomInteractor::runLongOperation()
     m_eventDispatcher->progress()->bindToProgressSignals(command);
 
     // push command
-    m_undo_redo_system->push(command, "custom");
+    m_undo_redo_system->push(command, "custom"_L1);
 
     co_return;
 }
@@ -141,14 +141,14 @@ QCoro::Task<> CustomInteractor::closeSystem()
     m_eventDispatcher->progress()->bindToProgressSignals(command);
 
     // push command
-    m_undo_redo_system->push(command, "custom");
+    m_undo_redo_system->push(command, "custom"_L1);
 
     co_return;
 }
 
 QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
 {
-    auto queryCommand = new QueryCommand("GetCurrentTime");
+    auto queryCommand = new QueryCommand("GetCurrentTime"_L1);
 
     Q_UNIMPLEMENTED();
 
@@ -165,7 +165,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
         return Result<void>(result.error());
     });
 
-    m_undo_redo_system->push(queryCommand, "custom");
+    m_undo_redo_system->push(queryCommand, "custom"_L1);
 
     // async wait for result signal
     const std::optional<GetCurrentTimeReplyDTO> optional_result = co_await qCoro(

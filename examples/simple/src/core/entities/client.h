@@ -43,11 +43,11 @@ class Client : public Entity
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "client")
+            if (fieldName == "client"_L1)
             {
                 return clientSet;
             }
-            if (fieldName == "clientFriends")
+            if (fieldName == "clientFriends"_L1)
             {
                 return clientFriendsSet;
             }
@@ -57,11 +57,11 @@ class Client : public Entity
         bool getLoaded(const QString &fieldName) const
         {
 
-            if (fieldName == "client")
+            if (fieldName == "client"_L1)
             {
                 return clientLoaded;
             }
-            if (fieldName == "clientFriends")
+            if (fieldName == "clientFriends"_L1)
             {
                 return clientFriendsLoaded;
             }
@@ -206,23 +206,23 @@ inline uint qHash(const Client &entity, uint seed = 0) noexcept
 /// Schema for Client entity
 inline Qleany::Entities::EntitySchema Client::schema = {
     Simple::Entities::Entities::EntityEnum::Client,
-    "Client",
+    "Client"_L1,
 
     // relationships:
-    {{Simple::Entities::Entities::EntityEnum::Client, "Client", Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger", "client", RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
+    {{Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
+      "Passenger"_L1, "client"_L1, RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
       RelationshipDirection::Forward},
-     {Simple::Entities::Entities::EntityEnum::Client, "Client", Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger", "clientFriends", RelationshipType::OneToMany, RelationshipStrength::Strong,
+     {Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
+      "Passenger"_L1, "clientFriends"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
       RelationshipCardinality::ManyUnordered, RelationshipDirection::Forward}},
 
     // fields:
-    {{"id", FieldType::Integer, true, false},
-     {"uuid", FieldType::Uuid, false, false},
-     {"creationDate", FieldType::DateTime, false, false},
-     {"updateDate", FieldType::DateTime, false, false},
-     {"client", FieldType::Entity, false, true},
-     {"clientFriends", FieldType::Entity, false, true}}};
+    {{"id"_L1, FieldType::Integer, true, false},
+     {"uuid"_L1, FieldType::Uuid, false, false},
+     {"creationDate"_L1, FieldType::DateTime, false, false},
+     {"updateDate"_L1, FieldType::DateTime, false, false},
+     {"client"_L1, FieldType::Entity, false, true},
+     {"clientFriends"_L1, FieldType::Entity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Client)

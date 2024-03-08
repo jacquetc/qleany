@@ -1,13 +1,13 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
-// If you do, be careful to not overwrite it when you run the generator again.// This file was generated automatically by Qleany's generator, edit at your own risk! 
-// If you do, be careful to not overwrite it when you run the generator again.
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.// This file was generated automatically
+// by Qleany's generator, edit at your own risk! If you do, be careful to not overwrite it when you run the generator
+// again.
 #include "entities_registration.h"
 #include "interactor_registration.h"
 #include "persistence_registration.h"
 #include <QCoroQml>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-
 
 int main(int argc, char *argv[])
 {
@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
     qputenv("QT_ENABLE_HIGHDPI_SCALING", "0");
 
     QGuiApplication app(argc, argv);
-    app.setApplicationName("FrontEndsExample");
-    app.setOrganizationName("frontendsexample");
-    app.setOrganizationDomain("qleany.eu");
+    app.setApplicationName("FrontEndsExample"_L1);
+    app.setOrganizationName("frontendsexample"_L1);
+    app.setOrganizationDomain("qleany.eu"_L1);
 
     new FrontEnds::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new FrontEnds::Persistence::PersistenceRegistration(&app);
@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
         },
         Qt::QueuedConnection);
 
-    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
-    engine.addImportPath(":/");
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml"_L1);
+    engine.addImportPath(":/"_L1);
 #if defined(MOCKS)
-    engine.addImportPath(QCoreApplication::applicationDirPath() + "/mock_imports");
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/mock_imports"_L1);
 #endif
 
     engine.load(url);

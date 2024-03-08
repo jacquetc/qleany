@@ -170,7 +170,7 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
 
     QString tableName = TableTools<T>::getEntityTableName();
 
-    QString createTableSql = QString("CREATE TABLE %1 (").arg(tableName);
+    QString createTableSql = "CREATE TABLE %1 ("_L1.arg(tableName);
 
     QStringList relationshipPropertyNameListToIgnore;
 
@@ -180,7 +180,7 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
     {
 
         QMetaProperty property = T::staticMetaObject.property(i);
-        const char *propertyName = property.name();
+        const QString &propertyName = QString::fromLatin1(property.name());
 
         // ignore QList and QSet properties
 
@@ -190,7 +190,7 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
             {
 
                 relationshipPropertyNameListToIgnore.append(propertyName);
-                relationshipPropertyNameListToIgnore.append(QString(propertyName) + "Loaded");
+                relationshipPropertyNameListToIgnore.append(propertyName + "Loaded"_L1);
             }
         }
     }
@@ -206,7 +206,7 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
             continue;
         }
 
-        if (relationshipPropertyNameListToIgnore.contains(property.name()))
+        if (relationshipPropertyNameListToIgnore.contains(QString::fromLatin1(property.name())))
         {
             continue;
         }
@@ -216,17 +216,18 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
 
         if (propertySqlType)
         {
-            createTableSql.append(QString("%1 %2").arg(Tools::fromPascalToSnakeCase(propertyName), propertySqlType));
+            createTableSql.append("%1 %2"_L1.arg(Tools::fromPascalToSnakeCase(QString::fromLatin1(propertyName)),
+                                                 QString::fromLatin1(propertySqlType)));
 
             // Set uuid property as primary key, not null, and unique
             if (strcmp(propertyName, "id") == 0)
             {
                 createTableSql.append(" PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT"
                                       " UNIQUE ON CONFLICT ROLLBACK"
-                                      " NOT NULL ON CONFLICT ROLLBACK");
+                                      " NOT NULL ON CONFLICT ROLLBACK"_L1);
             }
 
-            createTableSql.append(", ");
+            createTableSql.append(", "_L1);
         }
         else
         {
@@ -238,7 +239,7 @@ template <class T> QString DatabaseTableGroup<T>::getTableCreationSql() const
     // remove last comma
     createTableSql.chop(2);
 
-    createTableSql.append(");");
+    createTableSql.append(");"_L1);
 
     return createTableSql;
 }
@@ -255,19 +256,19 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(int id)
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + entityName + " WHERE " + "id = :id";
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + entityName + " WHERE "_L1 + "id = :id"_L1;
         if (!query.prepare(queryStr))
         {
             return Result<T>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":id", QVariant(id));
+        query.bindValue(":id"_L1, QVariant(id));
         if (!query.exec())
         {
             return Result<T>(
@@ -288,8 +289,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(int id)
         }
         if (columnWithValues.isEmpty())
         {
-            return Result<T>(
-                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
+            return Result<T>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing",
+                                         "No row with id "_L1 + QString::number(id)));
         }
     }
 
@@ -310,19 +311,19 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(const QUuid &uuid)
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + entityName + " WHERE " + "uuid = :uuid";
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + entityName + " WHERE "_L1 + "uuid = :uuid"_L1;
         if (!query.prepare(queryStr))
         {
             return Result<T>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":uuid", QVariant(uuid));
+        query.bindValue(":uuid"_L1, QVariant(uuid));
         if (!query.exec())
         {
             return Result<T>(
@@ -344,7 +345,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::get(const QUuid &uuid)
         if (columnWithValues.isEmpty())
         {
             return Result<T>(
-                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid "_L1 + uuid.toString()));
         }
     }
 
@@ -369,17 +370,17 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::get(const QList<int> 
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + entityName + " WHERE id IN (:ids)";
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + entityName + " WHERE id IN (:ids)"_L1;
         QString idsString;
         for (int id : ids)
         {
-            idsString += QString::number(id) + ",";
+            idsString += QString::number(id) + ","_L1;
         }
         idsString.chop(1);
         if (!query.prepare(queryStr))
@@ -387,7 +388,7 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::get(const QList<int> 
             return Result<QList<T>>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":ids", idsString);
+        query.bindValue(":ids"_L1, idsString);
         if (!query.exec())
         {
             return Result<QList<T>>(
@@ -437,13 +438,13 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll()
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + entityName;
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + entityName;
         if (!query.prepare(queryStr))
         {
             return Result<QList<T>>(
@@ -491,9 +492,9 @@ template <class T> QString DatabaseTableGroup<T>::generateFilterQueryString(cons
     QStringList filterConditions;
     for (auto it = filters.constBegin(); it != filters.constEnd(); ++it)
     {
-        filterConditions.append(QString("%1 = :%1").arg(Tools::fromPascalToSnakeCase(it.key())));
+        filterConditions.append("%1 = :%1"_L1.arg(Tools::fromPascalToSnakeCase(it.key())));
     }
-    return filterConditions.join(" AND ");
+    return filterConditions.join(" AND "_L1);
 }
 
 //--------------------------------------------
@@ -511,18 +512,18 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll(const QHash<QS
     QString fields;
     for (const QString &column : columns)
     {
-        fields += column + ",";
+        fields += column + ","_L1;
     }
     fields.chop(1);
 
     {
         QSqlQuery query(database);
-        QString queryStr = "SELECT " + fields + " FROM " + entityName;
+        QString queryStr = "SELECT "_L1 + fields + " FROM "_L1 + entityName;
         QString filterStr = generateFilterQueryString(filters);
 
         if (!filterStr.isEmpty())
         {
-            queryStr += " WHERE " + filterStr;
+            queryStr += " WHERE "_L1 + filterStr;
         }
 
         if (!query.prepare(queryStr))
@@ -532,7 +533,7 @@ template <class T> Result<QList<T>> DatabaseTableGroup<T>::getAll(const QHash<QS
         }
         for (auto it = filters.constBegin(); it != filters.constEnd(); ++it)
         {
-            query.bindValue(":" + Tools::fromPascalToSnakeCase(it.key()), it.value());
+            query.bindValue(":"_L1 + Tools::fromPascalToSnakeCase(it.key()), it.value());
         }
 
         if (!query.exec())
@@ -578,7 +579,7 @@ template <class T> Result<int> DatabaseTableGroup<T>::remove(int id)
     QSqlDatabase database = m_databaseContext->getConnection();
 
     // Generate the SQL DELETE statement
-    QString queryStr = "DELETE FROM " + entityName + " WHERE id = :id";
+    QString queryStr = "DELETE FROM %1 WHERE id = :id"_L1.arg(entityName);
 
     {
         QSqlQuery query(database);
@@ -587,7 +588,7 @@ template <class T> Result<int> DatabaseTableGroup<T>::remove(int id)
             return Result<int>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":id", id);
+        query.bindValue(":id"_L1, id);
 
         // Execute the DELETE statement with the entity ID
         if (!query.exec())
@@ -618,14 +619,15 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::remove(QList<int> i
     QSqlDatabase database = m_databaseContext->getConnection();
 
     // Generate the SQL DELETE statement
-    QString queryStr = "DELETE FROM " + entityName + " WHERE id IN (";
+    QString queryStr = "DELETE FROM %1 WHERE id IN ("_L1;
 
     for (int id : ids)
     {
-        queryStr += QString::number(id) + ",";
+        queryStr += QString::number(id) + ","_L1;
     }
     queryStr.chop(1);
-    queryStr += ")";
+    queryStr += ")"_L1;
+    queryStr = queryStr.arg(entityName);
 
     QSqlQuery query(database);
     if (!query.prepare(queryStr))
@@ -661,7 +663,7 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::changeActiveStatus(
     QSqlDatabase database = m_databaseContext->getConnection();
 
     // Generate the SQL UPDATE statement
-    QString queryStr = "UPDATE " + entityName + " SET active = :active WHERE id IN (:ids)";
+    QString queryStr = "UPDATE "_L1 + entityName + " SET active = :active WHERE id IN (:ids)"_L1;
 
     {
         QSqlQuery query(database);
@@ -674,11 +676,11 @@ template <class T> Result<QList<int>> DatabaseTableGroup<T>::changeActiveStatus(
         QString idsString;
         for (int id : ids)
         {
-            idsString += QString::number(id) + ",";
+            idsString += QString::number(id) + ","_L1;
             idsString.chop(1);
         }
-        query.bindValue(":ids", idsString);
-        query.bindValue(":active", active);
+        query.bindValue(":ids"_L1, idsString);
+        query.bindValue(":active"_L1, active);
 
         // Execute the UPDATE statement with the entity ID
         if (!query.exec())
@@ -714,7 +716,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
 
     for (const QString &column : columnsWithoutForeignKeys)
     {
-        int propertyIndex = T::staticMetaObject.indexOfProperty(Tools::fromSnakeCaseToCamelCase(column).toLatin1());
+        int propertyIndex =
+            T::staticMetaObject.indexOfProperty(Tools::fromSnakeCaseToCamelCase(column).toLatin1().constData());
         QVariant value = T::staticMetaObject.property(propertyIndex).readOnGadget(&entity);
         columnNameWithValue.insert(column, value);
     }
@@ -723,17 +726,18 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
     QString placeholders;
     for (const QString &column : columnsWithoutForeignKeys)
     {
-        if (entity.id() == 0 && column == "id")
+        if (entity.id() == 0 && column == "id"_L1)
         {
             continue;
         }
-        fields += column + ",";
-        placeholders += ":" + column + ",";
+        fields += column + ","_L1;
+        placeholders += ":"_L1 + column + ","_L1;
     }
     fields.chop(1);
     placeholders.chop(1);
 
-    QString queryStrMain = "INSERT INTO " + entityTableName + " (" + fields + ") VALUES (" + placeholders + ")";
+    QString queryStrMain =
+        "INSERT INTO "_L1 + entityTableName + " ("_L1 + fields + ") VALUES ("_L1 + placeholders + ")"_L1;
 
     {
         QSqlQuery query(database);
@@ -746,7 +750,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::add(T &&entity)
         for (const QString &column : columnsWithoutForeignKeys)
         {
             QVariant value = columnNameWithValue.value(column);
-            query.bindValue(":" + column, value);
+            query.bindValue(":"_L1 + column, value);
         }
 
         if (!query.exec())
@@ -786,7 +790,8 @@ template <class T> Result<T> DatabaseTableGroup<T>::update(T &&entity)
 
     for (const QString &column : columnsWithoutForeignKeys)
     {
-        int propertyIndex = T::staticMetaObject.indexOfProperty(Tools::fromSnakeCaseToCamelCase(column).toLatin1());
+        int propertyIndex =
+            T::staticMetaObject.indexOfProperty(Tools::fromSnakeCaseToCamelCase(column).toLatin1().constData());
         QVariant value = T::staticMetaObject.property(propertyIndex).readOnGadget(&entity);
         fieldWithValue.insert(column, value);
     }
@@ -794,11 +799,11 @@ template <class T> Result<T> DatabaseTableGroup<T>::update(T &&entity)
     QString fields;
     for (const QString &column : columnsWithoutForeignKeys)
     {
-        fields += column + " = :" + column + ",";
+        fields += column + " = :"_L1 + column + ","_L1;
     }
     fields.chop(1);
 
-    QString queryStrMain = "UPDATE " + entityName + " SET " + fields + " WHERE id = :id";
+    QString queryStrMain = "UPDATE "_L1 + entityName + " SET "_L1 + fields + " WHERE id = :id"_L1;
 
     int id = entity.id();
 
@@ -813,7 +818,7 @@ template <class T> Result<T> DatabaseTableGroup<T>::update(T &&entity)
         for (const QString &property : columnsWithoutForeignKeys)
         {
             QVariant value = fieldWithValue.value(Tools::fromPascalToSnakeCase(property));
-            query.bindValue(":" + property, value);
+            query.bindValue(":"_L1 + property, value);
         }
 
         if (!query.exec())
@@ -845,13 +850,13 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(const QUuid &uuid)
     {
 
         QSqlQuery query(database);
-        QString queryStr = "SELECT COUNT(*) FROM " + entityName + " WHERE uuid = :uuid";
+        QString queryStr = "SELECT COUNT(*) FROM "_L1 + entityName + " WHERE uuid = :uuid"_L1;
         if (!query.prepare(queryStr))
         {
             return Result<bool>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":uuid", uuid.toString());
+        query.bindValue(":uuid"_L1, uuid.toString());
         if (!query.exec())
         {
             return Result<bool>(
@@ -865,7 +870,7 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(const QUuid &uuid)
         else
         {
             return Result<bool>(
-                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid " + uuid.toString()));
+                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with uuid "_L1 + uuid.toString()));
         }
     }
     return Result<bool>(QLN_ERROR_1(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable"));
@@ -881,13 +886,13 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(int id)
     {
 
         QSqlQuery query(database);
-        QString queryStr = "SELECT COUNT(*) FROM " + entityName + " WHERE id = :id";
+        QString queryStr = "SELECT COUNT(*) FROM "_L1 + entityName + " WHERE id = :id"_L1;
         if (!query.prepare(queryStr))
         {
             return Result<bool>(
                 QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text(), queryStr));
         }
-        query.bindValue(":id", id);
+        query.bindValue(":id"_L1, id);
         if (!query.exec())
         {
             return Result<bool>(
@@ -900,8 +905,8 @@ template <class T> Result<bool> DatabaseTableGroup<T>::exists(int id)
         }
         else
         {
-            return Result<bool>(
-                QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing", "No row with id " + QString::number(id)));
+            return Result<bool>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "sql_row_missing",
+                                            "No row with id "_L1 + QString::number(id)));
         }
     }
     return Result<bool>(QLN_ERROR_1(Q_FUNC_INFO, Error::Fatal, "normaly_unreacheable"));
@@ -914,7 +919,7 @@ template <class T> Result<void> DatabaseTableGroup<T>::clear()
     const QString &entityName = m_tableName;
     QSqlDatabase database = this->databaseContext()->getConnection();
     QSqlQuery query(database);
-    QString queryStrMain = "DELETE FROM " + entityName;
+    QString queryStrMain = "DELETE FROM "_L1 + entityName;
 
     if (!query.prepare(queryStrMain))
     {
@@ -940,7 +945,7 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
     const QString &entityName = m_tableName;
     const QStringList &columns = m_propertyColumns;
 
-    QStringList tableTypes = {"entity"};
+    QStringList tableTypes = {"entity"_L1};
 
     for (const QString &tableType : tableTypes)
     {
@@ -951,7 +956,7 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
         if (idList.isEmpty())
         {
             // Save the whole table
-            queryStr = "SELECT * FROM " + tableName;
+            queryStr = "SELECT * FROM "_L1 + tableName;
         }
         else
         {
@@ -959,10 +964,10 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
             QString idPlaceholders;
             for (int i = 0; i < idList.count(); ++i)
             {
-                idPlaceholders += ":id" + QString::number(i) + ",";
+                idPlaceholders += ":id"_L1 + QString::number(i) + ","_L1;
             }
             idPlaceholders.chop(1);
-            queryStr = "SELECT * FROM " + tableName + " WHERE id IN (" + idPlaceholders + ")";
+            queryStr = "SELECT * FROM "_L1 + tableName + " WHERE id IN ("_L1 + idPlaceholders + ")"_L1;
         }
 
         QSqlQuery query(database);
@@ -975,7 +980,7 @@ template <class T> Result<SaveData> DatabaseTableGroup<T>::save(const QList<int>
         {
             for (int i = 0; i < idList.count(); ++i)
             {
-                query.bindValue(":id" + QString::number(i), idList[i]);
+                query.bindValue(":id"_L1 + QString::number(i), idList[i]);
             }
         }
 
@@ -1030,14 +1035,14 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
         {
             // Check if the row exists in the table
             QSqlQuery checkQuery(database);
-            QString checkQueryStr = "SELECT COUNT(*) FROM " + tableName + " WHERE id = :id";
+            QString checkQueryStr = "SELECT COUNT(*) FROM "_L1 + tableName + " WHERE id = :id"_L1;
 
             if (!checkQuery.prepare(checkQueryStr))
             {
                 return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
                                                 checkQuery.lastError().text(), checkQueryStr));
             }
-            checkQuery.bindValue(":id", row.value("id"));
+            checkQuery.bindValue(":id"_L1, row.value("id"_L1));
             if (!checkQuery.exec())
             {
                 return Result<void>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
@@ -1054,22 +1059,22 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
             if (rowCount == 1)
             {
                 // Update the existing row
-                QString updateStr = "UPDATE " + tableName + " SET ";
+                QString updateStr = "UPDATE "_L1 + tableName + " SET "_L1;
                 for (const QString &column : columns)
                 {
-                    if (column != "id")
+                    if (column != "id"_L1)
                     {
-                        updateStr += column + " = :" + column + ",";
+                        updateStr += column + " = :"_L1 + column + ","_L1;
                     }
                 }
                 updateStr.chop(1);
-                updateStr += " WHERE id = :id";
+                updateStr += " WHERE id = :id"_L1;
 
                 QSqlQuery updateQuery(database);
                 updateQuery.prepare(updateStr);
                 for (const QString &column : columns)
                 {
-                    updateQuery.bindValue(":" + column, row.value(column));
+                    updateQuery.bindValue(":"_L1 + column, row.value(column));
                 }
 
                 if (!updateQuery.exec())
@@ -1081,16 +1086,16 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
             else
             {
                 // Insert the missing row
-                QString insertStr = "INSERT INTO " + tableName + " (";
+                QString insertStr = "INSERT INTO "_L1 + tableName + " ("_L1;
                 QString placeholders;
                 for (const QString &column : columns)
                 {
-                    insertStr += column + ",";
-                    placeholders += ":" + column + ",";
+                    insertStr += column + ","_L1;
+                    placeholders += ":"_L1 + column + ","_L1;
                 }
                 insertStr.chop(1);
                 placeholders.chop(1);
-                insertStr += ") VALUES (" + placeholders + ")";
+                insertStr += ") VALUES ("_L1 + placeholders + ")"_L1;
 
                 QSqlQuery insertQuery(database);
                 if (!insertQuery.prepare(insertStr))
@@ -1100,7 +1105,7 @@ template <class T> Result<void> DatabaseTableGroup<T>::restore(const SaveData &s
                 }
                 for (const QString &column : columns)
                 {
-                    insertQuery.bindValue(":" + column, row.value(column));
+                    insertQuery.bindValue(":"_L1 + column, row.value(column));
                 }
 
                 if (!insertQuery.exec())
@@ -1204,10 +1209,10 @@ QString DatabaseTableGroup<T>::getListTableName(const QString &listPropertyName,
     switch (type)
     {
     case PropertyWithList::ListType::List:
-        tableName += upperCaseListPropertyName + "List";
+        tableName += upperCaseListPropertyName + "List"_L1;
         break;
     case PropertyWithList::ListType::Set:
-        tableName += upperCaseListPropertyName + "Set";
+        tableName += upperCaseListPropertyName + "Set"_L1;
         break;
     }
 
@@ -1235,13 +1240,13 @@ template <class T> QHash<QString, PropertyWithList> DatabaseTableGroup<T>::getEn
     QHash<QString, PropertyWithList> propertiesWithList;
     const QMetaObject &metaObject = T::staticMetaObject;
 
-    QRegularExpression listRegex(R"(QList<(.+)>)");
-    QRegularExpression setRegex(R"(QSet<(.+)>)");
+    QRegularExpression listRegex(R"(QList<(.+)>)"_L1);
+    QRegularExpression setRegex(R"(QSet<(.+)>)"_L1);
 
     for (int i = 0; i < metaObject.propertyCount(); ++i)
     {
         QMetaProperty property = metaObject.property(i);
-        QString propertyTypeName = property.typeName();
+        QString propertyTypeName = QString::fromLatin1(property.typeName());
 
         QRegularExpressionMatch listMatch = listRegex.match(propertyTypeName);
         QRegularExpressionMatch setMatch = setRegex.match(propertyTypeName);
@@ -1255,9 +1260,9 @@ template <class T> QHash<QString, PropertyWithList> DatabaseTableGroup<T>::getEn
             {
                 PropertyWithList::ListType listType =
                     listMatch.hasMatch() ? PropertyWithList::ListType::List : PropertyWithList::ListType::Set;
-                QString listTableName = getListTableName(property.name(), listType);
+                QString listTableName = getListTableName(QString::fromLatin1(property.name()), listType);
                 PropertyWithList propertyWithList{innerTypeName, listTableName, listType};
-                propertiesWithList.insert(property.name(), propertyWithList);
+                propertiesWithList.insert(QString::fromLatin1(property.name()), propertyWithList);
             }
         }
     }

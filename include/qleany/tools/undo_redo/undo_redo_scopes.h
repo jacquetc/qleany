@@ -113,7 +113,7 @@ class QLEANY_EXPORT Scopes
     // Returns true if the given scope is in the list
     bool hasScope(const QString &scope) const
     {
-        if (scope.toLower() == "all")
+        if (scope.toLower() == QString::fromLatin1("all"))
         {
             return true;
         }
@@ -138,7 +138,7 @@ class QLEANY_EXPORT Scopes
         for (const auto &scope : scopeStringList)
         {
             int scopeFlag = 0;
-            if (scope == "all")
+            if (scope == QString::fromLatin1("all"))
             {
                 n = 0xFFFFFFF;
                 break;
@@ -149,7 +149,7 @@ class QLEANY_EXPORT Scopes
 
             if (scopeFlag == 0)
             {
-                QString fatal = QString("At Scopes::createScopeFromString, unknown scope : %1").arg(scope);
+                QString fatal = QString::fromLatin1("At Scopes::createScopeFromString, unknown scope : %1").arg(scope);
                 qFatal("%s", fatal.toStdString().c_str());
             }
         }

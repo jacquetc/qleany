@@ -1,8 +1,10 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+
 #include "passenger/create_passenger_dto.h"
+
 
 #include "repository/interface_passenger_repository.h"
 
@@ -20,7 +22,7 @@ class CreatePassengerCommandValidator
 {
   public:
     CreatePassengerCommandValidator(InterfacePassengerRepository *passengerRepository)
-        : m_passengerRepository(passengerRepository)
+        :  m_passengerRepository(passengerRepository)
     {
     }
 
@@ -28,11 +30,17 @@ class CreatePassengerCommandValidator
 
     {
 
+
+
+
+
         // Return that is Ok :
         return Result<void>();
     }
 
   private:
+
     InterfacePassengerRepository *m_passengerRepository;
+
 };
 } // namespace Simple::Contracts::CQRS::Passenger::Validators

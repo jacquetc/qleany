@@ -14,7 +14,7 @@ class QLEANY_EXPORT InterfaceDatabaseContext
     }
 
     virtual Result<void> init() = 0;
-    virtual void appendCreationSql(const QString &type, const QString &sql) = 0;
+    virtual void appendCreationSql(const char *type, const QString &sql) = 0;
 
     virtual QSqlDatabase getConnection() = 0;
 };

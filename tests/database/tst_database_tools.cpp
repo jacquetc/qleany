@@ -71,11 +71,11 @@ void DatabaseToolsTest::cleanup()
 void DatabaseToolsTest::testStringCaseConversion()
 {
     // Test data
-    QStringList pascalCaseStrings = {"PascalCaseExample", "AnotherExample", "TestString", "Single"};
+    QStringList pascalCaseStrings = {"PascalCaseExample"_L1, "AnotherExample"_L1, "TestString"_L1, "Single"_L1};
 
-    QStringList camelCaseStrings = {"pascalCaseExample", "anotherExample", "testString", "single"};
+    QStringList camelCaseStrings = {"pascalCaseExample"_L1, "anotherExample"_L1, "testString"_L1, "single"_L1};
 
-    QStringList snakeCaseStrings = {"pascal_case_example", "another_example", "test_string", "single"};
+    QStringList snakeCaseStrings = {"pascal_case_example"_L1, "another_example"_L1, "test_string"_L1, "single"_L1};
 
     // Test fromPascalToSnakeCase
     for (int i = 0; i < pascalCaseStrings.size(); ++i)
@@ -107,7 +107,7 @@ void DatabaseToolsTest::testGetEntityTableName()
     QString entityClassName = Database::TableTools<DummyBasicEntity>::getEntityTableName();
 
     // Verify the output
-    QCOMPARE(entityClassName, QString("dummy_basic_entity"));
+    QCOMPARE(entityClassName, "dummy_basic_entity"_L1);
 }
 
 QTEST_APPLESS_MAIN(DatabaseToolsTest)

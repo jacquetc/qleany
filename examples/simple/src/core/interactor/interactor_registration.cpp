@@ -21,11 +21,11 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
-    Scopes scopes(QStringList() << "car"
-                                << "brand"
-                                << "passenger"
-                                << "client"
-                                << "custom");
+    Scopes scopes(QStringList() << "car"_L1
+                                << "brand"_L1
+                                << "passenger"_L1
+                                << "client"_L1
+                                << "custom"_L1);
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling

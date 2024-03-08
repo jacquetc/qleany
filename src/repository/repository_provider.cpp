@@ -14,26 +14,26 @@ RepositoryProvider *RepositoryProvider::instance()
     return s_instance.data();
 }
 
-void RepositoryProvider::registerRepository(const QString &name, InterfaceRepository *repository)
+void RepositoryProvider::registerRepository(const char *name, InterfaceRepository *repository)
 {
     QMutexLocker locker(&m_mutex);
 
-    if (m_repositories.contains(name.toCaseFolded()))
+    if (m_repositories.contains(QString::fromLatin1(name).toCaseFolded()))
     {
         qWarning() << "Repositories: m_repositories contains already this InterfaceRepository";
         return;
     }
-    m_repositories.insert(name.toCaseFolded(), repository);
+    m_repositories.insert(QString::fromLatin1(name).toCaseFolded(), repository);
 }
 
-InterfaceRepository *RepositoryProvider::repository(const QString &name)
+InterfaceRepository *RepositoryProvider::repository(const char *name)
 {
     QMutexLocker locker(&m_mutex);
-    auto repository = m_repositories.value(name.toCaseFolded(), nullptr);
+    auto repository = m_repositories.value(QString::fromLatin1(name).toCaseFolded(), nullptr);
 
     if (!repository)
     {
-        qCritical() << "No repository registered for type" << name.toCaseFolded();
+        qCritical() << "No repository registered for type" << QString::fromLatin1(name).toCaseFolded();
     }
     return repository;
 }

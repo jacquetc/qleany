@@ -12,7 +12,7 @@ class QLEANY_EXPORT InterfaceRepositoryProvider
     {
     }
 
-    virtual void registerRepository(const QString &name, InterfaceRepository *repository) = 0;
-    virtual InterfaceRepository *repository(const QString &name) = 0;
+    virtual void registerRepository(const char *name, InterfaceRepository *repository) = 0;
+    virtual InterfaceRepository *repository(const char *name) = 0;
 };
 } // namespace Qleany::Contracts::Repository

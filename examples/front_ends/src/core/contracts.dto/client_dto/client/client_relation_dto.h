@@ -6,6 +6,7 @@
 
 namespace FrontEnds::Contracts::DTO::Client
 {
+using namespace Qt::Literals::StringLiterals;
 
 class ClientRelationDTO
 {
@@ -25,19 +26,19 @@ class ClientRelationDTO
         bool positionSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id")
+            if (fieldName == "id"_L1)
             {
                 return idSet;
             }
-            if (fieldName == "relationField")
+            if (fieldName == "relationField"_L1)
             {
                 return relationFieldSet;
             }
-            if (fieldName == "relatedIds")
+            if (fieldName == "relatedIds"_L1)
             {
                 return relatedIdsSet;
             }
-            if (fieldName == "position")
+            if (fieldName == "position"_L1)
             {
                 return positionSet;
             }

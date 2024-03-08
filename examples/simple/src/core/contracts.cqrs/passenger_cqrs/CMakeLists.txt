@@ -24,6 +24,8 @@ set_target_properties(${LIBRARY_NAME} PROPERTIES
                     POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
                     )
 
+set_target_properties(${LIBRARY_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+        
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts-dto-passenger)

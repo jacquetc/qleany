@@ -47,7 +47,7 @@ void TestDatabaseTable::testAdd()
 {
 
     DummyBasicEntity entity;
-    entity.setName("Sample DummyEntity");
+    entity.setName("Sample DummyEntity"_L1);
     entity.setUuid(QUuid::createUuid());
     entity.setCreationDate(QDateTime::currentDateTime());
     auto addResult = m_entityTable->add(std::move(entity));
@@ -67,14 +67,14 @@ void TestDatabaseTable::testAdd()
 
     auto entities = entitiesResult.value();
     QCOMPARE(entities.size(), 1);
-    QCOMPARE(entities.first().name(), QString("Sample DummyEntity"));
+    QCOMPARE(entities.first().name(), "Sample DummyEntity"_L1);
     QVERIFY(entities.first().creationDate().isValid());
 }
 
 void TestDatabaseTable::testRemove()
 {
     DummyBasicEntity entity;
-    entity.setName("Sample DummyEntity");
+    entity.setName("Sample DummyEntity"_L1);
     entity.setUuid(QUuid::createUuid());
     auto addResult = m_entityTable->add(std::move(entity));
     QVERIFY(addResult.isSuccess());
@@ -82,7 +82,7 @@ void TestDatabaseTable::testRemove()
     // Verify the entity is added
     auto entities = m_entityTable->getAll().value();
     QCOMPARE(entities.size(), 1);
-    QCOMPARE(entities.first().name(), QString("Sample DummyEntity"));
+    QCOMPARE(entities.first().name(), "Sample DummyEntity"_L1);
 
     // remove the entity
 

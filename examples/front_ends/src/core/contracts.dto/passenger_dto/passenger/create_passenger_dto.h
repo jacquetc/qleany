@@ -9,6 +9,7 @@
 
 namespace FrontEnds::Contracts::DTO::Passenger
 {
+using namespace Qt::Literals::StringLiterals;
 
 class CreatePassengerDTO
 {
@@ -32,27 +33,27 @@ class CreatePassengerDTO
         bool positionSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid")
+            if (fieldName == "uuid"_L1)
             {
                 return uuidSet;
             }
-            if (fieldName == "creationDate")
+            if (fieldName == "creationDate"_L1)
             {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate")
+            if (fieldName == "updateDate"_L1)
             {
                 return updateDateSet;
             }
-            if (fieldName == "name")
+            if (fieldName == "name"_L1)
             {
                 return nameSet;
             }
-            if (fieldName == "carId")
+            if (fieldName == "carId"_L1)
             {
                 return carIdSet;
             }
-            if (fieldName == "position")
+            if (fieldName == "position"_L1)
             {
                 return positionSet;
             }

@@ -47,15 +47,15 @@ class Car : public Entity
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "content")
+            if (fieldName == "content"_L1)
             {
                 return true;
             }
-            if (fieldName == "brand")
+            if (fieldName == "brand"_L1)
             {
                 return brandSet;
             }
-            if (fieldName == "passengers")
+            if (fieldName == "passengers"_L1)
             {
                 return passengersSet;
             }
@@ -65,15 +65,15 @@ class Car : public Entity
         bool getLoaded(const QString &fieldName) const
         {
 
-            if (fieldName == "content")
+            if (fieldName == "content"_L1)
             {
                 return true;
             }
-            if (fieldName == "brand")
+            if (fieldName == "brand"_L1)
             {
                 return brandLoaded;
             }
-            if (fieldName == "passengers")
+            if (fieldName == "passengers"_L1)
             {
                 return passengersLoaded;
             }
@@ -236,24 +236,24 @@ inline uint qHash(const Car &entity, uint seed = 0) noexcept
 /// Schema for Car entity
 inline Qleany::Entities::EntitySchema Car::schema = {
     Simple::Entities::Entities::EntityEnum::Car,
-    "Car",
+    "Car"_L1,
 
     // relationships:
-    {{Simple::Entities::Entities::EntityEnum::Car, "Car", Simple::Entities::Entities::EntityEnum::Brand, "Brand",
-      "brand", RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
+    {{Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Brand, "Brand"_L1,
+      "brand"_L1, RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
       RelationshipDirection::Forward},
-     {Simple::Entities::Entities::EntityEnum::Car, "Car", Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger", "passengers", RelationshipType::OneToMany, RelationshipStrength::Strong,
+     {Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
+      "Passenger"_L1, "passengers"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
       RelationshipCardinality::ManyOrdered, RelationshipDirection::Forward}},
 
     // fields:
-    {{"id", FieldType::Integer, true, false},
-     {"uuid", FieldType::Uuid, false, false},
-     {"creationDate", FieldType::DateTime, false, false},
-     {"updateDate", FieldType::DateTime, false, false},
-     {"content", FieldType::String, false, false},
-     {"brand", FieldType::Entity, false, true},
-     {"passengers", FieldType::Entity, false, true}}};
+    {{"id"_L1, FieldType::Integer, true, false},
+     {"uuid"_L1, FieldType::Uuid, false, false},
+     {"creationDate"_L1, FieldType::DateTime, false, false},
+     {"updateDate"_L1, FieldType::DateTime, false, false},
+     {"content"_L1, FieldType::String, false, false},
+     {"brand"_L1, FieldType::Entity, false, true},
+     {"passengers"_L1, FieldType::Entity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Car)

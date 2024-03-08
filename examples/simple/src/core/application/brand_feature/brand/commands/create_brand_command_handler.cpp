@@ -77,7 +77,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
         QLN_RETURN_IF_ERROR(BrandDTO, validatorResult);
 
-        // Map the create Brand command to a z Brand object and
+        // Map the create Brand command to a domain Brand object and
         // generate a UUID
         brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, Simple::Entities::Brand>(createDTO);
 
@@ -115,7 +115,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     if (m_firstPass)
     {
 
-        auto originalOwnerBrandResult = m_repository->getEntityInRelationOf(Car::schema, ownerId, "brand");
+        auto originalOwnerBrandResult = m_repository->getEntityInRelationOf(Car::schema, ownerId, "brand"_L1);
         if (Q_UNLIKELY(originalOwnerBrandResult.hasError()))
         {
             return Result<BrandDTO>(originalOwnerBrandResult.error());
@@ -137,7 +137,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     // Add the brand to the owner entity
     Result<Simple::Entities::Brand> updateResult =
-        m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand", ownerEntityBrand);
+        m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand"_L1, ownerEntityBrand);
 
     QLN_RETURN_IF_ERROR_WITH_ACTION(BrandDTO, updateResult, m_repository->cancelChanges();)
 
