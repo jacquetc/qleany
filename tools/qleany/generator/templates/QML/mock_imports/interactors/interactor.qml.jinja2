@@ -123,7 +123,7 @@ QtObject {
 {%- for command in interactor.custom_commands %}
 
     function {{ command.camel_name }}(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the command's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -136,18 +136,30 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.{{ interactor.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
             })
         }
 
         return task
     }
+
+    {%if command.dto_in_enabled %}
+    function get{{ command.dto_in_pascal_type_prefix }}DTO() {
+    // TODO: change this dict below to conform to the command's dto in
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+    {% endif %}
+
 {% endfor %}
 
 {%- for query in interactor.custom_queries %}
 
     function {{ query.camel_name }}(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the query's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -160,12 +172,24 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.{{ interactor.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
             })
         }
 
         return task
     }
+
+    {%if query.dto_in_enabled %}
+    function get{{ query.dto_in_pascal_type_prefix }}DTO() {
+    // TODO: change this dict below to conform to the query's dto in
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+    {% endif %}
+
 {% endfor %}
 
 }

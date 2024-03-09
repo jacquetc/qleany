@@ -64,6 +64,14 @@ public:
     {
         return s_interactorInstance->{{ query.camel_name }}({% if query.dto_in_enabled %}dto{% endif %});
     }
+    
+    {%if query.dto_in_enabled %}
+    Q_INVOKABLE {{ query.dto_in_pascal_type_prefix }}DTO get{{ query.dto_in_pascal_type_prefix }}DTO()
+    {
+        return {{ query.dto_in_pascal_type_prefix }}DTO();
+    }
+    {% endif %}
+
     {% endfor %}
 
 {% if interactor.crud.enabled %}
@@ -95,6 +103,14 @@ public:
     {
         return s_interactorInstance->{{ command.camel_name }}({% if command.dto_in_enabled %}dto{% endif %});
     }
+
+    {%if command.dto_in_enabled %}
+    Q_INVOKABLE {{ command.dto_in_pascal_type_prefix }}DTO get{{ command.dto_in_pascal_type_prefix }}DTO()
+    {
+        return {{ command.dto_in_pascal_type_prefix }}DTO();
+    }
+    {% endif %}
+
     {% endfor %}
 
 
