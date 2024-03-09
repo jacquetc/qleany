@@ -78,7 +78,7 @@ class {{ name }} : public {{ parent }}
     };
 
 
-    {{ name }}() : {{ parent }}() {{ fields_init_values }}, m_metaData(this)
+    {{ name }}() : {{ parent }}(), m_metaData(this) {{ fields_init_values }}
     {
     }
 
@@ -87,7 +87,7 @@ class {{ name }} : public {{ parent }}
     }
 
    {{ name }}( {% for field in parent_fields %} const {{ field.type }} &{{ field.name }}, {% endfor %} {% for field in fields %}{% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
-        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}, m_metaData(this)
+        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), m_metaData(this), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
     {
     }
 

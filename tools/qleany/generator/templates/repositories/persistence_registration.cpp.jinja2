@@ -27,11 +27,11 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
     if (initResult.hasError())
     {
         Error error = initResult.error();
-        qCritical() << error.className() + "\n" + error.code() + "\n" + error.message() + "\n" + error.data();
+        qCritical() << error.className() + "\n"_L1 + error.code() + "\n"_L1 + error.message() + "\n"_L1 + error.data();
     }
     
     // repositories:
-    {% for entity in entities[::-1] %}
+    {% for entity in entities %}
     {{ entity.entity_pascal_name }}Repository *{{ entity.entity_camel_name }}Repository = new {{ entity.entity_pascal_name }}Repository({{ entity.entity_camel_name }}DatabaseTableGroup 
     {% for child in entity.children_entities %}, {{ child.child_camel_name }}Repository{% endfor %});
     {%- endfor %}
