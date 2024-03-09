@@ -359,6 +359,13 @@ QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}>
     co_return;
     {% endif %}
 }
+
+{% if command.dto_in_enabled %}
+{{ command.dto_in }}DTO {{ feature_name_pascal }}Interactor::get{{ command.dto_in }}DTO()
+{
+    return {{ command.dto_in }}DTO();
+}
+{% endif %}
 {% endfor %}
 
 {% for query in custom_queries %}
@@ -402,4 +409,12 @@ QCoro::Task<{{ query.dto_out }}DTO> {{ feature_name_pascal }}Interactor::{{ quer
 
     co_return optional_result.value();
 }
+
+{% if query.dto_in_enabled %}
+{{ query.dto_in }}DTO {{ feature_name_pascal }}Interactor::get{{ query.dto_in }}DTO()
+{
+    return {{ query.dto_in }}DTO();
+}
+{% endif %}
+
 {% endfor %}

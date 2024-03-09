@@ -68,7 +68,7 @@ public:
     {%if query.dto_in_enabled %}
     Q_INVOKABLE {{ query.dto_in_pascal_type_prefix }}DTO get{{ query.dto_in_pascal_type_prefix }}DTO()
     {
-        return {{ query.dto_in_pascal_type_prefix }}DTO();
+        return s_interactorInstance->get{{ query.dto_in_pascal_type_prefix }}DTO();
     }
     {% endif %}
 
@@ -107,7 +107,7 @@ public:
     {%if command.dto_in_enabled %}
     Q_INVOKABLE {{ command.dto_in_pascal_type_prefix }}DTO get{{ command.dto_in_pascal_type_prefix }}DTO()
     {
-        return {{ command.dto_in_pascal_type_prefix }}DTO();
+        return s_interactorInstance->get{{ command.dto_in_pascal_type_prefix }}DTO();
     }
     {% endif %}
 

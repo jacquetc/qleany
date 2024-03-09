@@ -60,9 +60,12 @@ class {{ export }} {{ feature_name_pascal }}Interactor : public QObject
     {% endif %}
 {% endif %}
 
-    {% for query in feature.custom_queries %}
+    {% for query in feature.custom_queries -%}
     Q_INVOKABLE QCoro::Task<{{ query.dto_out }}DTO> {{ query.name_camel }}({% if query.dto_in_enabled %}{{ query.dto_in }}DTO dto{% endif %}) const;
-    {% endfor %}
+    {% if query.dto_in_enabled -%}
+    {{ query.dto_in }}DTO get{{ query.dto_in }}DTO();
+    {%- endif %}
+    {%- endfor %}
 
 {% if feature.crud.enabled %}
     {% if feature.crud.create %}
@@ -88,9 +91,12 @@ class {{ export }} {{ feature_name_pascal }}Interactor : public QObject
 
 {% endif %}
 
-    {% for command in feature.custom_commands %}
+    {% for command in feature.custom_commands -%}
     QCoro::Task<{% if command.dto_out_enabled %}{{ command.dto_out }}DTO{% endif %}> {{ command.name_camel }}({% if command.dto_in_enabled %}{{ command.dto_in }}DTO dto{% endif %});
-    {% endfor %}
+    {% if command.dto_in_enabled -%}
+    {{ command.dto_in }}DTO get{{ command.dto_in }}DTO();
+    {%- endif %}
+    {%- endfor %}
 
   private:
     static QPointer<{{ feature_name_pascal }}Interactor> s_instance;
