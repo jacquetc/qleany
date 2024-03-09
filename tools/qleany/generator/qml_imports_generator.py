@@ -299,7 +299,7 @@ def _get_generation_dict(
         real_model_file = os.path.join(
             real_imports_folder_path,
             "models",
-            f"foreign_{list_model_snake_name}_model.h",
+            f"foreign_{list_model_snake_name}.h",
         )
         generation_dict["real_model_files"].append(real_model_file)
 
