@@ -13,7 +13,6 @@ option(BUILD_WITH_MOCKS "Build with mocks" OFF)
 
 find_package(Qt6 COMPONENTS Core Gui Qml Quick Concurrent)
 find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
-
 # find_package(qleany CONFIG REQUIRED)
 
 # Set necessary compiler flags to enable coroutine support
@@ -27,7 +26,7 @@ set(APP_NAME FrontEndsExampleApp)
 qt_add_executable(${APP_NAME} main.cpp)
 
 qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
-  qtquickcontrols2.conf)
+                 qtquickcontrols2.conf)
 
 # Link the example against the Qleany library
 target_link_libraries(${APP_NAME} PUBLIC qleany)
@@ -40,24 +39,30 @@ target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
 target_link_libraries(
   ${APP_NAME}
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui
-  Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Qml
-  Qt${QT_VERSION_MAJOR}::Concurrent)
+          Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Qml
+          Qt${QT_VERSION_MAJOR}::Concurrent)
 
 qt6_add_qml_module(
   ${APP_NAME}
-  URI "Main"
-  VERSION 1.0
-  RESOURCE_PREFIX "/qt/qml"
+  URI
+  "Main"
+  VERSION
+  1.0
+  RESOURCE_PREFIX
+  "/qt/qml"
   NO_PLUGIN
-  QML_FILES main.qml)
+  QML_FILES
+  main.qml)
 
 add_subdirectory(content)
 
 target_link_libraries(${APP_NAME} PRIVATE contentplugin)
 
 if(BUILD_WITH_MOCKS)
-  # import the QML modules from the mock directory
-  target_compile_definitions(${APP_NAME} PRIVATE MOCKS)
+  # copy mock_imports in binary folder
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/mock_imports
+       DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  target_compile_definitions(${APP_NAME} PRIVATE BUILD_WITH_MOCKS)
 else()
   include(${CMAKE_CURRENT_SOURCE_DIR}/realqmlmodules.cmake)
 endif()

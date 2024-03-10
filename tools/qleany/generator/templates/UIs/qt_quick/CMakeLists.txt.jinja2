@@ -58,10 +58,12 @@ target_link_libraries(${APP_NAME} PRIVATE
 )
 
 if(BUILD_WITH_MOCKS)
-    # import the QML modules from the mock directory
-    target_compile_definitions(${APP_NAME} PRIVATE MOCKS)
+  # copy mock_imports in binary folder
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/mock_imports
+       DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  target_compile_definitions(${APP_NAME} PRIVATE BUILD_WITH_MOCKS)
 else()
-    include(${CMAKE_CURRENT_SOURCE_DIR}/realqmlmodules.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/realqmlmodules.cmake)
 endif()
 
 include(GNUInstallDirs)
