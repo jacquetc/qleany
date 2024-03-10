@@ -54,8 +54,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
         GetPassengerQueryHandler handler(interface);
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->passenger()->getReplied(result.value());
         }
         return Result<void>(result.error());
@@ -67,8 +66,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::get(int id) const
     const std::optional<PassengerDTO> optional_result =
         co_await qCoro(m_eventDispatcher->passenger(), &PassengerSignals::getReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return PassengerDTO();
     }
@@ -85,8 +83,7 @@ QCoro::Task<QList<PassengerDTO>> PassengerInteractor::getAll() const
         GetAllPassengerQueryHandler handler(interface);
         auto result = handler.handle(progressPromise);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->passenger()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
@@ -94,11 +91,10 @@ QCoro::Task<QList<PassengerDTO>> PassengerInteractor::getAll() const
     m_undo_redo_system->push(queryCommand, "passenger"_L1);
 
     // async wait for result signal
-    const std::optional<QList<PassengerDTO>> optional_result = co_await qCoro(
-        m_eventDispatcher->passenger(), &PassengerSignals::getAllReplied, std::chrono::milliseconds(1000));
+    const std::optional<QList<PassengerDTO>> optional_result =
+        co_await qCoro(m_eventDispatcher->passenger(), &PassengerSignals::getAllReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return QList<PassengerDTO>() << PassengerDTO();
     }
@@ -117,28 +113,23 @@ QCoro::Task<PassengerDTO> PassengerInteractor::create(const CreatePassengerDTO &
     auto *handler = new CreatePassengerCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &CreatePassengerCommandHandler::passengerCreated, m_eventDispatcher->passenger(),
-                     &PassengerSignals::created);
+    QObject::connect(handler, &CreatePassengerCommandHandler::passengerCreated, m_eventDispatcher->passenger(), &PassengerSignals::created);
 
-    QObject::connect(handler, &CreatePassengerCommandHandler::relationWithOwnerInserted, this,
-                     [this](int id, int ownerId, int position) {
-                         auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers,
-                                                   QList<int>() << id, position);
-                         Q_EMIT m_eventDispatcher->car()->relationInserted(dto);
-                     });
-    QObject::connect(
-        handler, &CreatePassengerCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
-            auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers, QList<int>() << id, -1);
-            Q_EMIT m_eventDispatcher->car()->relationRemoved(dto);
-        });
+    QObject::connect(handler, &CreatePassengerCommandHandler::relationWithOwnerInserted, this, [this](int id, int ownerId, int position) {
+        auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers, QList<int>() << id, position);
+        Q_EMIT m_eventDispatcher->car()->relationInserted(dto);
+    });
+    QObject::connect(handler, &CreatePassengerCommandHandler::relationWithOwnerRemoved, this, [this](int id, int ownerId) {
+        auto dto = CarRelationDTO(ownerId, CarRelationDTO::RelationField::Passengers, QList<int>() << id, -1);
+        Q_EMIT m_eventDispatcher->car()->relationRemoved(dto);
+    });
 
     QObject::connect(handler, &CreatePassengerCommandHandler::passengerRemoved, this, [this](int removedId) {
         Q_EMIT m_eventDispatcher->passenger()->removed(QList<int>() << removedId);
     });
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<CreatePassengerCommandHandler, CreatePassengerCommand>(
-        PassengerInteractor::tr("Create passenger"), handler, query);
+    auto command = new AlterCommand<CreatePassengerCommandHandler, CreatePassengerCommand>(PassengerInteractor::tr("Create passenger"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "passenger"_L1);
@@ -147,8 +138,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::create(const CreatePassengerDTO &
     const std::optional<PassengerDTO> optional_result =
         co_await qCoro(handler, &CreatePassengerCommandHandler::passengerCreated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return PassengerDTO();
     }
 
@@ -166,14 +156,16 @@ QCoro::Task<PassengerDTO> PassengerInteractor::update(const UpdatePassengerDTO &
     auto *handler = new UpdatePassengerCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &UpdatePassengerCommandHandler::passengerUpdated, this,
-                     [this](PassengerDTO dto) { Q_EMIT m_eventDispatcher->passenger()->updated(dto); });
-    QObject::connect(handler, &UpdatePassengerCommandHandler::passengerDetailsUpdated, m_eventDispatcher->passenger(),
+    QObject::connect(handler, &UpdatePassengerCommandHandler::passengerUpdated, this, [this](PassengerDTO dto) {
+        Q_EMIT m_eventDispatcher->passenger()->updated(dto);
+    });
+    QObject::connect(handler,
+                     &UpdatePassengerCommandHandler::passengerDetailsUpdated,
+                     m_eventDispatcher->passenger(),
                      &PassengerSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<UpdatePassengerCommandHandler, UpdatePassengerCommand>(
-        PassengerInteractor::tr("Update passenger"), handler, query);
+    auto command = new AlterCommand<UpdatePassengerCommandHandler, UpdatePassengerCommand>(PassengerInteractor::tr("Update passenger"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "passenger"_L1);
@@ -182,8 +174,7 @@ QCoro::Task<PassengerDTO> PassengerInteractor::update(const UpdatePassengerDTO &
     const std::optional<PassengerDTO> optional_result =
         co_await qCoro(handler, &UpdatePassengerCommandHandler::passengerUpdated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return PassengerDTO();
     }
 
@@ -204,18 +195,15 @@ QCoro::Task<bool> PassengerInteractor::remove(int id)
     // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<RemovePassengerCommandHandler, RemovePassengerCommand>(
-        PassengerInteractor::tr("Remove passenger"), handler, query);
+    auto command = new AlterCommand<RemovePassengerCommandHandler, RemovePassengerCommand>(PassengerInteractor::tr("Remove passenger"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "passenger"_L1);
 
     // async wait for result signal
-    const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
+    const std::optional<QList<int>> optional_result = co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return false;
     }
 

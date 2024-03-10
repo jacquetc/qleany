@@ -16,12 +16,13 @@ using namespace FrontEnds::Contracts::DTO::Passenger;
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT PassengerSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit PassengerSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit PassengerSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
     void created(PassengerDTO dto);

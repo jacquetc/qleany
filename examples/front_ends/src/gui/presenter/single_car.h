@@ -23,7 +23,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate NOTIFY updateDateChanged FINAL)
     Q_PROPERTY(QString content READ content WRITE setContent NOTIFY contentChanged FINAL)
 
-  public:
+public:
     explicit SingleCar(QObject *parent = nullptr);
 
     int id() const;
@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
     QString content() const;
     void setContent(const QString &newContent);
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void idChanged();
 
@@ -51,7 +51,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleCar : public QObject
     void updateDateChanged();
     void contentChanged();
 
-  private:
+private:
     int m_id;
 
     QUuid m_uuid;

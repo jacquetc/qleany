@@ -23,7 +23,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate NOTIFY updateDateChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
 
-  public:
+public:
     explicit SinglePassenger(QObject *parent = nullptr);
 
     int id() const;
@@ -42,7 +42,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
     QString name() const;
     void setName(const QString &newName);
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void idChanged();
 
@@ -51,7 +51,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SinglePassenger : public QObject
     void updateDateChanged();
     void nameChanged();
 
-  private:
+private:
     int m_id;
 
     QUuid m_uuid;

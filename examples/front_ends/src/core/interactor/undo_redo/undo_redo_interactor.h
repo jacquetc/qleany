@@ -19,9 +19,8 @@ namespace FrontEnds::Interactor::UndoRedo
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
 {
     Q_OBJECT
-  public:
-    explicit UndoRedoInteractor(ThreadedUndoRedoSystem *undo_redo_system,
-                                QSharedPointer<EventDispatcher> eventDispatcher);
+public:
+    explicit UndoRedoInteractor(ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher);
 
     static UndoRedoInteractor *instance();
 
@@ -52,7 +51,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
     QAction *createUndoAction(QObject *parent, const QString &prefix = QString()) const;
     QAction *createRedoAction(QObject *parent, const QString &prefix = QString()) const;
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     void undo();
     void redo();
@@ -60,7 +59,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoInteractor : public QObject
     void setCurrentIndex(int index);
     void setActiveStack(const QUuid &stackId = QUuid());
 
-  private:
+private:
     static QPointer<UndoRedoInteractor> s_instance;
     ThreadedUndoRedoSystem *m_undo_redo_system;
     QSharedPointer<EventDispatcher> m_eventDispatcher;

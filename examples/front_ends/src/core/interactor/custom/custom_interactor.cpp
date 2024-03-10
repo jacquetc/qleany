@@ -51,26 +51,25 @@ QCoro::Task<> CustomInteractor::writeRandomThings(WriteRandomThingsDTO dto)
 
     auto carRepository = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
 
-    auto passengerRepository =
-        static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
+    auto passengerRepository = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
 
     auto brandRepository = static_cast<InterfaceBrandRepository *>(m_repositoryProvider->repository("Brand"));
 
     auto clientRepository = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
 
-    auto *handler =
-        new WriteRandomThingsCommandHandler(carRepository, passengerRepository, brandRepository, clientRepository);
+    auto *handler = new WriteRandomThingsCommandHandler(carRepository, passengerRepository, brandRepository, clientRepository);
 
     Q_UNIMPLEMENTED();
 
     // connect
 
-    QObject::connect(handler, &WriteRandomThingsCommandHandler::writeRandomThingsChanged, m_eventDispatcher->custom(),
+    QObject::connect(handler,
+                     &WriteRandomThingsCommandHandler::writeRandomThingsChanged,
+                     m_eventDispatcher->custom(),
                      &CustomSignals::writeRandomThingsChanged);
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<WriteRandomThingsCommandHandler, WriteRandomThingsCommand>(
-        CustomInteractor::tr("Doing WriteRandomThings"), handler, query);
+    auto command = new AlterCommand<WriteRandomThingsCommandHandler, WriteRandomThingsCommand>(CustomInteractor::tr("Doing WriteRandomThings"), handler, query);
 
     // set progress minimum duration
     command->setProgressMinimumDuration(1000);
@@ -80,6 +79,11 @@ QCoro::Task<> CustomInteractor::writeRandomThings(WriteRandomThingsDTO dto)
     m_undo_redo_system->push(command, "custom"_L1);
 
     co_return;
+}
+
+WriteRandomThingsDTO CustomInteractor::getWriteRandomThingsDTO()
+{
+    return WriteRandomThingsDTO();
 }
 
 QCoro::Task<> CustomInteractor::runLongOperation()
@@ -92,12 +96,10 @@ QCoro::Task<> CustomInteractor::runLongOperation()
 
     // connect
 
-    QObject::connect(handler, &RunLongOperationCommandHandler::runLongOperationChanged, m_eventDispatcher->custom(),
-                     &CustomSignals::runLongOperationChanged);
+    QObject::connect(handler, &RunLongOperationCommandHandler::runLongOperationChanged, m_eventDispatcher->custom(), &CustomSignals::runLongOperationChanged);
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<RunLongOperationCommandHandler, RunLongOperationCommand>(
-        CustomInteractor::tr("Doing RunLongOperation"), handler, query);
+    auto command = new AlterCommand<RunLongOperationCommandHandler, RunLongOperationCommand>(CustomInteractor::tr("Doing RunLongOperation"), handler, query);
 
     // set progress minimum duration
     command->setProgressMinimumDuration(1000);
@@ -115,26 +117,22 @@ QCoro::Task<> CustomInteractor::closeSystem()
 
     auto carRepository = static_cast<InterfaceCarRepository *>(m_repositoryProvider->repository("Car"));
 
-    auto passengerRepository =
-        static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
+    auto passengerRepository = static_cast<InterfacePassengerRepository *>(m_repositoryProvider->repository("Passenger"));
 
     auto brandRepository = static_cast<InterfaceBrandRepository *>(m_repositoryProvider->repository("Brand"));
 
     auto clientRepository = static_cast<InterfaceClientRepository *>(m_repositoryProvider->repository("Client"));
 
-    auto *handler =
-        new CloseSystemCommandHandler(carRepository, passengerRepository, brandRepository, clientRepository);
+    auto *handler = new CloseSystemCommandHandler(carRepository, passengerRepository, brandRepository, clientRepository);
 
     Q_UNIMPLEMENTED();
 
     // connect
 
-    QObject::connect(handler, &CloseSystemCommandHandler::closeSystemChanged, m_eventDispatcher->custom(),
-                     &CustomSignals::closeSystemChanged);
+    QObject::connect(handler, &CloseSystemCommandHandler::closeSystemChanged, m_eventDispatcher->custom(), &CustomSignals::closeSystemChanged);
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<CloseSystemCommandHandler, CloseSystemCommand>(
-        CustomInteractor::tr("Doing CloseSystem"), handler, query);
+    auto command = new AlterCommand<CloseSystemCommandHandler, CloseSystemCommand>(CustomInteractor::tr("Doing CloseSystem"), handler, query);
 
     // set progress minimum duration
     command->setProgressMinimumDuration(1000);
@@ -158,8 +156,7 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
         GetCurrentTimeQueryHandler handler;
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->custom()->getCurrentTimeReplied(result.value());
         }
         return Result<void>(result.error());
@@ -168,11 +165,10 @@ QCoro::Task<GetCurrentTimeReplyDTO> CustomInteractor::getCurrentTime() const
     m_undo_redo_system->push(queryCommand, "custom"_L1);
 
     // async wait for result signal
-    const std::optional<GetCurrentTimeReplyDTO> optional_result = co_await qCoro(
-        m_eventDispatcher->custom(), &CustomSignals::getCurrentTimeReplied, std::chrono::milliseconds(1000));
+    const std::optional<GetCurrentTimeReplyDTO> optional_result =
+        co_await qCoro(m_eventDispatcher->custom(), &CustomSignals::getCurrentTimeReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return GetCurrentTimeReplyDTO();
     }

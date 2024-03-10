@@ -7,35 +7,29 @@
 using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Presenter;
 
-SingleClient::SingleClient(QObject *parent) : QObject{parent}
+SingleClient::SingleClient(QObject *parent)
+    : QObject{parent}
 {
     connect(EventDispatcher::instance()->client(), &ClientSignals::removed, this, [this](QList<int> removedIds) {
-        if (removedIds.contains(id()))
-        {
+        if (removedIds.contains(id())) {
             resetId();
         }
     });
     connect(EventDispatcher::instance()->client(), &ClientSignals::updated, this, [this](ClientDTO dto) {
-        if (dto.id() == id())
-        {
-
-            if (m_id != dto.id())
-            {
+        if (dto.id() == id()) {
+            if (m_id != dto.id()) {
                 m_id = dto.id();
                 Q_EMIT idChanged();
             }
-            if (m_uuid != dto.uuid())
-            {
+            if (m_uuid != dto.uuid()) {
                 m_uuid = dto.uuid();
                 Q_EMIT uuidChanged();
             }
-            if (m_creationDate != dto.creationDate())
-            {
+            if (m_creationDate != dto.creationDate()) {
                 m_creationDate = dto.creationDate();
                 Q_EMIT creationDateChanged();
             }
-            if (m_updateDate != dto.updateDate())
-            {
+            if (m_updateDate != dto.updateDate()) {
                 m_updateDate = dto.updateDate();
                 Q_EMIT updateDateChanged();
             }
@@ -56,9 +50,7 @@ void SingleClient::setId(int newId)
     Q_EMIT idChanged();
 
     // clear
-    if (m_id == 0)
-    {
-
+    if (m_id == 0) {
         m_uuid = QUuid{};
         Q_EMIT uuidChanged();
 
@@ -67,28 +59,26 @@ void SingleClient::setId(int newId)
 
         m_updateDate = QDateTime{};
         Q_EMIT updateDateChanged();
+
     }
 
     // set
-    else
-    {
-        Client::ClientInteractor::instance()->get(m_id).then(
-            [this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
-                if (client.isInvalid())
-                {
-                    qCritical() << Q_FUNC_INFO << "Invalid clientId";
-                    return;
-                }
+    else {
+        Client::ClientInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+            if (client.isInvalid()) {
+                qCritical() << Q_FUNC_INFO << "Invalid clientId";
+                return;
+            }
 
-                m_uuid = client.uuid();
-                Q_EMIT uuidChanged();
+            m_uuid = client.uuid();
+            Q_EMIT uuidChanged();
 
-                m_creationDate = client.creationDate();
-                Q_EMIT creationDateChanged();
+            m_creationDate = client.creationDate();
+            Q_EMIT creationDateChanged();
 
-                m_updateDate = client.updateDate();
-                Q_EMIT updateDateChanged();
-            });
+            m_updateDate = client.updateDate();
+            Q_EMIT updateDateChanged();
+        });
     }
 }
 
@@ -110,16 +100,14 @@ void SingleClient::setUuid(const QUuid &newUuid)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Client::ClientInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
-            if (client.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid clientId";
-                return;
-            }
-            m_uuid = client.uuid();
-            Q_EMIT uuidChanged();
-        });
+    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+        if (client.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid clientId";
+            return;
+        }
+        m_uuid = client.uuid();
+        Q_EMIT uuidChanged();
+    });
 }
 
 QDateTime SingleClient::creationDate() const
@@ -135,16 +123,14 @@ void SingleClient::setCreationDate(const QDateTime &newCreationDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Client::ClientInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
-            if (client.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid clientId";
-                return;
-            }
-            m_creationDate = client.creationDate();
-            Q_EMIT creationDateChanged();
-        });
+    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+        if (client.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid clientId";
+            return;
+        }
+        m_creationDate = client.creationDate();
+        Q_EMIT creationDateChanged();
+    });
 }
 
 QDateTime SingleClient::updateDate() const
@@ -160,14 +146,12 @@ void SingleClient::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Client::ClientInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
-            if (client.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid clientId";
-                return;
-            }
-            m_updateDate = client.updateDate();
-            Q_EMIT updateDateChanged();
-        });
+    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+        if (client.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid clientId";
+            return;
+        }
+        m_updateDate = client.updateDate();
+        Q_EMIT updateDateChanged();
+    });
 }

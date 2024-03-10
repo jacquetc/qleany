@@ -20,12 +20,13 @@ using namespace FrontEnds::Contracts::DTO::Car;
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CarSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit CarSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit CarSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
     void created(CarDTO dto);

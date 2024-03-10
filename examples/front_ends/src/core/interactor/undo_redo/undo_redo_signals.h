@@ -12,12 +12,13 @@ namespace FrontEnds::Interactor
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT UndoRedoSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit UndoRedoSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit UndoRedoSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     /*!
      * \brief A signal that is emitted when the undo redo system state has

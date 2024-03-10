@@ -10,12 +10,13 @@ namespace FrontEnds::Interactor
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ErrorSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit ErrorSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit ErrorSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void warningSent(const Qleany::Error &error);
     void errorSent(const Qleany::Error &error);
 };

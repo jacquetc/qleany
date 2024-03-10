@@ -12,20 +12,20 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleRedo : public QObject
 {
     Q_OBJECT
 
-  public:
+public:
     explicit SingleRedo(QObject *parent = nullptr);
 
     bool enabled() const;
     QString text() const;
 
-  public Q_SLOTS:
+public Q_SLOTS:
     void redo();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void enabledChanged();
     void textChanged();
 
-  private:
+private:
     QAction *m_action;
     bool m_enabled;
     QString m_text;

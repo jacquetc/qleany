@@ -24,23 +24,23 @@ namespace FrontEnds::Interactor::Custom
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CustomInteractor : public QObject
 {
     Q_OBJECT
-  public:
-    explicit CustomInteractor(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+public:
+    explicit CustomInteractor(InterfaceRepositoryProvider *repositoryProvider,
+                              ThreadedUndoRedoSystem *undo_redo_system,
                               QSharedPointer<EventDispatcher> eventDispatcher);
 
     static CustomInteractor *instance();
 
     Q_INVOKABLE QCoro::Task<GetCurrentTimeReplyDTO> getCurrentTime() const;
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     QCoro::Task<> writeRandomThings(WriteRandomThingsDTO dto);
-
+    WriteRandomThingsDTO getWriteRandomThingsDTO();
     QCoro::Task<> runLongOperation();
-
     QCoro::Task<> closeSystem();
 
-  private:
+private:
     static QPointer<CustomInteractor> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;

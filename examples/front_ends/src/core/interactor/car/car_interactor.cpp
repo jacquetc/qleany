@@ -27,7 +27,8 @@ using namespace Qleany::Contracts::Repository;
 
 QPointer<CarInteractor> CarInteractor::s_instance = nullptr;
 
-CarInteractor::CarInteractor(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+CarInteractor::CarInteractor(InterfaceRepositoryProvider *repositoryProvider,
+                             ThreadedUndoRedoSystem *undo_redo_system,
                              QSharedPointer<EventDispatcher> eventDispatcher)
     : QObject{nullptr}
 {
@@ -56,8 +57,7 @@ QCoro::Task<CarDTO> CarInteractor::get(int id) const
         GetCarQueryHandler handler(interface);
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->car()->getReplied(result.value());
         }
         return Result<void>(result.error());
@@ -66,11 +66,9 @@ QCoro::Task<CarDTO> CarInteractor::get(int id) const
     m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
-    const std::optional<CarDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(1000));
+    const std::optional<CarDTO> optional_result = co_await qCoro(m_eventDispatcher->car(), &CarSignals::getReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return CarDTO();
     }
@@ -89,8 +87,7 @@ QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
         GetCarWithDetailsQueryHandler handler(interface);
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->car()->getWithDetailsReplied(result.value());
         }
         return Result<void>(result.error());
@@ -99,11 +96,10 @@ QCoro::Task<CarWithDetailsDTO> CarInteractor::getWithDetails(int id) const
     m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
-    const std::optional<CarWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
+    const std::optional<CarWithDetailsDTO> optional_result =
+        co_await qCoro(m_eventDispatcher.get()->car(), &CarSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return CarWithDetailsDTO();
     }
@@ -120,8 +116,7 @@ QCoro::Task<QList<CarDTO>> CarInteractor::getAll() const
         GetAllCarQueryHandler handler(interface);
         auto result = handler.handle(progressPromise);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->car()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
@@ -129,11 +124,9 @@ QCoro::Task<QList<CarDTO>> CarInteractor::getAll() const
     m_undo_redo_system->push(queryCommand, "car"_L1);
 
     // async wait for result signal
-    const std::optional<QList<CarDTO>> optional_result =
-        co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(1000));
+    const std::optional<QList<CarDTO>> optional_result = co_await qCoro(m_eventDispatcher->car(), &CarSignals::getAllReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return QList<CarDTO>() << CarDTO();
     }
@@ -154,22 +147,20 @@ QCoro::Task<CarDTO> CarInteractor::create(const CreateCarDTO &dto)
     // connect
     QObject::connect(handler, &CreateCarCommandHandler::carCreated, m_eventDispatcher->car(), &CarSignals::created);
 
-    QObject::connect(handler, &CreateCarCommandHandler::carRemoved, this,
-                     [this](int removedId) { Q_EMIT m_eventDispatcher->car()->removed(QList<int>() << removedId); });
+    QObject::connect(handler, &CreateCarCommandHandler::carRemoved, this, [this](int removedId) {
+        Q_EMIT m_eventDispatcher->car()->removed(QList<int>() << removedId);
+    });
 
     // Create specialized UndoRedoCommand
-    auto command =
-        new AlterCommand<CreateCarCommandHandler, CreateCarCommand>(CarInteractor::tr("Create car"), handler, query);
+    auto command = new AlterCommand<CreateCarCommandHandler, CreateCarCommand>(CarInteractor::tr("Create car"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
-    const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(1000));
+    const std::optional<CarDTO> optional_result = co_await qCoro(handler, &CreateCarCommandHandler::carCreated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return CarDTO();
     }
 
@@ -187,24 +178,21 @@ QCoro::Task<CarDTO> CarInteractor::update(const UpdateCarDTO &dto)
     auto *handler = new UpdateCarCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this,
-                     [this](CarDTO dto) { Q_EMIT m_eventDispatcher->car()->updated(dto); });
-    QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(),
-                     &CarSignals::allRelationsInvalidated);
+    QObject::connect(handler, &UpdateCarCommandHandler::carUpdated, this, [this](CarDTO dto) {
+        Q_EMIT m_eventDispatcher->car()->updated(dto);
+    });
+    QObject::connect(handler, &UpdateCarCommandHandler::carDetailsUpdated, m_eventDispatcher->car(), &CarSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
-    auto command =
-        new AlterCommand<UpdateCarCommandHandler, UpdateCarCommand>(CarInteractor::tr("Update car"), handler, query);
+    auto command = new AlterCommand<UpdateCarCommandHandler, UpdateCarCommand>(CarInteractor::tr("Update car"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
-    const std::optional<CarDTO> optional_result =
-        co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(1000));
+    const std::optional<CarDTO> optional_result = co_await qCoro(handler, &UpdateCarCommandHandler::carUpdated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return CarDTO();
     }
 
@@ -225,18 +213,15 @@ QCoro::Task<bool> CarInteractor::remove(int id)
     // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
-    auto command =
-        new AlterCommand<RemoveCarCommandHandler, RemoveCarCommand>(CarInteractor::tr("Remove car"), handler, query);
+    auto command = new AlterCommand<RemoveCarCommandHandler, RemoveCarCommand>(CarInteractor::tr("Remove car"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "car"_L1);
 
     // async wait for result signal
-    const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
+    const std::optional<QList<int>> optional_result = co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return false;
     }
 

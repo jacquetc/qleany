@@ -13,12 +13,11 @@ namespace FrontEnds::Interactor
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT InteractorRegistration : public QObject
 {
     Q_OBJECT
-  public:
-    explicit InteractorRegistration(QObject *parent,
-                                    Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
+public:
+    explicit InteractorRegistration(QObject *parent, Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
     ~InteractorRegistration();
 
-  private:
+private:
 };
 
 } // namespace FrontEnds::Interactor

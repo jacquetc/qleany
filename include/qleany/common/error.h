@@ -158,6 +158,23 @@ class QLEANY_EXPORT Error
     {
     }
 
+    // Copy assignment operator
+    Error &operator=(const Error &other)
+    {
+        if (this != &other)
+        {
+            m_status = other.m_status;
+            m_className = other.m_className;
+            m_code = other.m_code;
+            m_message = other.m_message;
+            m_data = other.m_data;
+            m_file = other.m_file;
+            m_line = other.m_line;
+            m_trace = other.m_trace;
+        }
+        return *this;
+    }
+
     bool operator==(const Error &otherError) const
     {
         return m_status == otherError.m_status && m_className == otherError.m_className &&

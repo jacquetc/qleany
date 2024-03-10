@@ -15,9 +15,8 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : 
     Q_OBJECT
     Q_PROPERTY(int carId READ carId WRITE setCarId RESET resetCarId NOTIFY carIdChanged FINAL)
 
-  public:
-    enum Roles
-    {
+public:
+    enum Roles {
 
         IdRole = Qt::UserRole + 0,
         UuidRole = Qt::UserRole + 1,
@@ -47,10 +46,10 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT PassengerListModelFromCarPassengers : 
 
     QHash<int, QByteArray> roleNames() const override;
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void carIdChanged();
 
-  private:
+private:
     void populate();
 
     QList<PassengerDTO> m_passengerList;

@@ -7,40 +7,33 @@
 using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Presenter;
 
-SingleBrand::SingleBrand(QObject *parent) : QObject{parent}
+SingleBrand::SingleBrand(QObject *parent)
+    : QObject{parent}
 {
     connect(EventDispatcher::instance()->brand(), &BrandSignals::removed, this, [this](QList<int> removedIds) {
-        if (removedIds.contains(id()))
-        {
+        if (removedIds.contains(id())) {
             resetId();
         }
     });
     connect(EventDispatcher::instance()->brand(), &BrandSignals::updated, this, [this](BrandDTO dto) {
-        if (dto.id() == id())
-        {
-
-            if (m_id != dto.id())
-            {
+        if (dto.id() == id()) {
+            if (m_id != dto.id()) {
                 m_id = dto.id();
                 Q_EMIT idChanged();
             }
-            if (m_uuid != dto.uuid())
-            {
+            if (m_uuid != dto.uuid()) {
                 m_uuid = dto.uuid();
                 Q_EMIT uuidChanged();
             }
-            if (m_creationDate != dto.creationDate())
-            {
+            if (m_creationDate != dto.creationDate()) {
                 m_creationDate = dto.creationDate();
                 Q_EMIT creationDateChanged();
             }
-            if (m_updateDate != dto.updateDate())
-            {
+            if (m_updateDate != dto.updateDate()) {
                 m_updateDate = dto.updateDate();
                 Q_EMIT updateDateChanged();
             }
-            if (m_name != dto.name())
-            {
+            if (m_name != dto.name()) {
                 m_name = dto.name();
                 Q_EMIT nameChanged();
             }
@@ -61,9 +54,7 @@ void SingleBrand::setId(int newId)
     Q_EMIT idChanged();
 
     // clear
-    if (m_id == 0)
-    {
-
+    if (m_id == 0) {
         m_uuid = QUuid{};
         Q_EMIT uuidChanged();
 
@@ -75,31 +66,29 @@ void SingleBrand::setId(int newId)
 
         m_name = QString{};
         Q_EMIT nameChanged();
+
     }
 
     // set
-    else
-    {
-        Brand::BrandInteractor::instance()->get(m_id).then(
-            [this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
-                if (brand.isInvalid())
-                {
-                    qCritical() << Q_FUNC_INFO << "Invalid brandId";
-                    return;
-                }
+    else {
+        Brand::BrandInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+            if (brand.isInvalid()) {
+                qCritical() << Q_FUNC_INFO << "Invalid brandId";
+                return;
+            }
 
-                m_uuid = brand.uuid();
-                Q_EMIT uuidChanged();
+            m_uuid = brand.uuid();
+            Q_EMIT uuidChanged();
 
-                m_creationDate = brand.creationDate();
-                Q_EMIT creationDateChanged();
+            m_creationDate = brand.creationDate();
+            Q_EMIT creationDateChanged();
 
-                m_updateDate = brand.updateDate();
-                Q_EMIT updateDateChanged();
+            m_updateDate = brand.updateDate();
+            Q_EMIT updateDateChanged();
 
-                m_name = brand.name();
-                Q_EMIT nameChanged();
-            });
+            m_name = brand.name();
+            Q_EMIT nameChanged();
+        });
     }
 }
 
@@ -121,16 +110,14 @@ void SingleBrand::setUuid(const QUuid &newUuid)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Brand::BrandInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
-            if (brand.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid brandId";
-                return;
-            }
-            m_uuid = brand.uuid();
-            Q_EMIT uuidChanged();
-        });
+    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+        if (brand.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid brandId";
+            return;
+        }
+        m_uuid = brand.uuid();
+        Q_EMIT uuidChanged();
+    });
 }
 
 QDateTime SingleBrand::creationDate() const
@@ -146,16 +133,14 @@ void SingleBrand::setCreationDate(const QDateTime &newCreationDate)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Brand::BrandInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
-            if (brand.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid brandId";
-                return;
-            }
-            m_creationDate = brand.creationDate();
-            Q_EMIT creationDateChanged();
-        });
+    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+        if (brand.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid brandId";
+            return;
+        }
+        m_creationDate = brand.creationDate();
+        Q_EMIT creationDateChanged();
+    });
 }
 
 QDateTime SingleBrand::updateDate() const
@@ -171,16 +156,14 @@ void SingleBrand::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Brand::BrandInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
-            if (brand.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid brandId";
-                return;
-            }
-            m_updateDate = brand.updateDate();
-            Q_EMIT updateDateChanged();
-        });
+    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+        if (brand.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid brandId";
+            return;
+        }
+        m_updateDate = brand.updateDate();
+        Q_EMIT updateDateChanged();
+    });
 }
 
 QString SingleBrand::name() const
@@ -196,14 +179,12 @@ void SingleBrand::setName(const QString &newName)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Brand::BrandInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
-            if (brand.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid brandId";
-                return;
-            }
-            m_name = brand.name();
-            Q_EMIT nameChanged();
-        });
+    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+        if (brand.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid brandId";
+            return;
+        }
+        m_name = brand.name();
+        Q_EMIT nameChanged();
+    });
 }

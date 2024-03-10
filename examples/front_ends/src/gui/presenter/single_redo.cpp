@@ -8,7 +8,8 @@ using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Interactor::UndoRedo;
 using namespace FrontEnds::Presenter;
 
-SingleRedo::SingleRedo(QObject *parent) : QObject{parent}
+SingleRedo::SingleRedo(QObject *parent)
+    : QObject{parent}
 {
     m_action = UndoRedoInteractor::instance()->createUndoAction(this, tr("Redo: %1"));
 

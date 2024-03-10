@@ -7,40 +7,33 @@
 using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Presenter;
 
-SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
+SinglePassenger::SinglePassenger(QObject *parent)
+    : QObject{parent}
 {
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::removed, this, [this](QList<int> removedIds) {
-        if (removedIds.contains(id()))
-        {
+        if (removedIds.contains(id())) {
             resetId();
         }
     });
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
-        if (dto.id() == id())
-        {
-
-            if (m_id != dto.id())
-            {
+        if (dto.id() == id()) {
+            if (m_id != dto.id()) {
                 m_id = dto.id();
                 Q_EMIT idChanged();
             }
-            if (m_uuid != dto.uuid())
-            {
+            if (m_uuid != dto.uuid()) {
                 m_uuid = dto.uuid();
                 Q_EMIT uuidChanged();
             }
-            if (m_creationDate != dto.creationDate())
-            {
+            if (m_creationDate != dto.creationDate()) {
                 m_creationDate = dto.creationDate();
                 Q_EMIT creationDateChanged();
             }
-            if (m_updateDate != dto.updateDate())
-            {
+            if (m_updateDate != dto.updateDate()) {
                 m_updateDate = dto.updateDate();
                 Q_EMIT updateDateChanged();
             }
-            if (m_name != dto.name())
-            {
+            if (m_name != dto.name()) {
                 m_name = dto.name();
                 Q_EMIT nameChanged();
             }
@@ -61,9 +54,7 @@ void SinglePassenger::setId(int newId)
     Q_EMIT idChanged();
 
     // clear
-    if (m_id == 0)
-    {
-
+    if (m_id == 0) {
         m_uuid = QUuid{};
         Q_EMIT uuidChanged();
 
@@ -75,31 +66,29 @@ void SinglePassenger::setId(int newId)
 
         m_name = QString{};
         Q_EMIT nameChanged();
+
     }
 
     // set
-    else
-    {
-        Passenger::PassengerInteractor::instance()->get(m_id).then(
-            [this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-                if (passenger.isInvalid())
-                {
-                    qCritical() << Q_FUNC_INFO << "Invalid passengerId";
-                    return;
-                }
+    else {
+        Passenger::PassengerInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+            if (passenger.isInvalid()) {
+                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+                return;
+            }
 
-                m_uuid = passenger.uuid();
-                Q_EMIT uuidChanged();
+            m_uuid = passenger.uuid();
+            Q_EMIT uuidChanged();
 
-                m_creationDate = passenger.creationDate();
-                Q_EMIT creationDateChanged();
+            m_creationDate = passenger.creationDate();
+            Q_EMIT creationDateChanged();
 
-                m_updateDate = passenger.updateDate();
-                Q_EMIT updateDateChanged();
+            m_updateDate = passenger.updateDate();
+            Q_EMIT updateDateChanged();
 
-                m_name = passenger.name();
-                Q_EMIT nameChanged();
-            });
+            m_name = passenger.name();
+            Q_EMIT nameChanged();
+        });
     }
 }
 
@@ -121,16 +110,14 @@ void SinglePassenger::setUuid(const QUuid &newUuid)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-            if (passenger.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
-                return;
-            }
-            m_uuid = passenger.uuid();
-            Q_EMIT uuidChanged();
-        });
+    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+        if (passenger.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+            return;
+        }
+        m_uuid = passenger.uuid();
+        Q_EMIT uuidChanged();
+    });
 }
 
 QDateTime SinglePassenger::creationDate() const
@@ -146,16 +133,14 @@ void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-            if (passenger.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
-                return;
-            }
-            m_creationDate = passenger.creationDate();
-            Q_EMIT creationDateChanged();
-        });
+    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+        if (passenger.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+            return;
+        }
+        m_creationDate = passenger.creationDate();
+        Q_EMIT creationDateChanged();
+    });
 }
 
 QDateTime SinglePassenger::updateDate() const
@@ -171,16 +156,14 @@ void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-            if (passenger.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
-                return;
-            }
-            m_updateDate = passenger.updateDate();
-            Q_EMIT updateDateChanged();
-        });
+    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+        if (passenger.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+            return;
+        }
+        m_updateDate = passenger.updateDate();
+        Q_EMIT updateDateChanged();
+    });
 }
 
 QString SinglePassenger::name() const
@@ -196,14 +179,12 @@ void SinglePassenger::setName(const QString &newName)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
-        [this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
-            if (passenger.isInvalid())
-            {
-                qCritical() << Q_FUNC_INFO << "Invalid passengerId";
-                return;
-            }
-            m_name = passenger.name();
-            Q_EMIT nameChanged();
-        });
+    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+        if (passenger.isInvalid()) {
+            qCritical() << Q_FUNC_INFO << "Invalid passengerId";
+            return;
+        }
+        m_name = passenger.name();
+        Q_EMIT nameChanged();
+    });
 }

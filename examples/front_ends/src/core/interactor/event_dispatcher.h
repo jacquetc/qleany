@@ -24,7 +24,7 @@ namespace FrontEnds::Interactor
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT EventDispatcher : public QObject
 {
     Q_OBJECT
-  public:
+public:
     explicit EventDispatcher();
     static EventDispatcher *instance();
 
@@ -43,7 +43,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT EventDispatcher : public QObject
 
     Q_INVOKABLE CustomSignals *custom() const;
 
-  private:
+private:
     static QPointer<EventDispatcher> s_instance;
     ErrorSignals *m_errorSignals;
     ProgressSignals *m_progressSignals;

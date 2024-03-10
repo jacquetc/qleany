@@ -26,8 +26,9 @@ namespace FrontEnds::Interactor::Car
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
 {
     Q_OBJECT
-  public:
-    explicit CarInteractor(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+public:
+    explicit CarInteractor(InterfaceRepositoryProvider *repositoryProvider,
+                           ThreadedUndoRedoSystem *undo_redo_system,
                            QSharedPointer<EventDispatcher> eventDispatcher);
 
     static CarInteractor *instance();
@@ -42,7 +43,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Car::UpdateCarDTO getUpdateDTO();
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     QCoro::Task<CarDTO> create(const CreateCarDTO &dto);
 
@@ -50,7 +51,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CarInteractor : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-  private:
+private:
     static QPointer<CarInteractor> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;

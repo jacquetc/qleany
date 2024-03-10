@@ -16,12 +16,13 @@ using namespace FrontEnds::Contracts::DTO::Custom;
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT CustomSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit CustomSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit CustomSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void writeRandomThingsChanged();
     void runLongOperationChanged();
     void closeSystemChanged();

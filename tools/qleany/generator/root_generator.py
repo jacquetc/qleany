@@ -15,9 +15,20 @@ def _get_generation_dict(manifest_data) -> dict:
 
     cmakelists_dict = {}
 
-    cmakelists_dict["application_name"] = manifest_data.get("global", {}).get(
+    application_name = manifest_data.get("global", {}).get(
         "application_name", "example"
     )
+
+    cmakelists_dict["application_name"] = application_name
+    cmakelists_dict["application_name_pascalcase"] = stringcase.pascalcase(
+        application_name
+    )
+    cmakelists_dict["application_name_uppercase"] = stringcase.uppercase(
+        application_name
+    )
+    cmakelists_dict["application_name_lowercase"] = stringcase.lowercase(
+        application_name
+    ).strip("-_ ")
 
     # get the paths from the manifest file
     cmakelists_dict["entities_path"] = manifest_data.get("entities", {}).get(
@@ -103,6 +114,7 @@ def _get_generation_dict(manifest_data) -> dict:
         front_end_count += 1
 
     front_end_dict["multiple_uis"] = True if front_end_count > 1 else False
+    front_end_dict["no_ui"] = True if front_end_count == 0 else False
 
     cmakelists_dict["front_ends"] = front_end_dict
 
@@ -175,8 +187,12 @@ def _generate_cmakelists_file_for_multiple_uis(
     # Render the template
     output = cmakelists_template.render(
         application_name=cmakelists_dict["application_name"],
-        application_name_upper=stringcase.uppercase(cmakelists_dict["application_name"]),
-        application_name_lower=stringcase.lowercase(cmakelists_dict["application_name"]),
+        application_name_upper=stringcase.uppercase(
+            cmakelists_dict["application_name"]
+        ),
+        application_name_lower=stringcase.lowercase(
+            cmakelists_dict["application_name"]
+        ),
         entities_path=cmakelists_dict["entities_path"],
         contracts_path=cmakelists_dict["contracts_path"],
         persistence_path=cmakelists_dict["persistence_path"],
@@ -196,6 +212,244 @@ def _generate_cmakelists_file_for_multiple_uis(
         fh.write(output)
 
     print(f"Successfully wrote file {output_file}")
+
+def _generate_cmakelists_file_for_no_ui(
+    root_path: str, cmakelists_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    cmakelists_file = "CMakeLists.txt"
+
+    # Create the jinja2 environment
+    template_env = Environment(loader=FileSystemLoader("templates/root"))
+    # Load the template
+    cmakelists_template = template_env.get_template("CMakeLists.txt.no_ui.jinja2")
+
+    # generate the real cmakelists file if in the files_to_be_generated dict the value is True
+    if not files_to_be_generated.get(cmakelists_file, False):
+        return
+
+    output_file = os.path.join(root_path, cmakelists_file)
+
+    # Render the template
+    output = cmakelists_template.render(
+        application_name=cmakelists_dict["application_name"],
+        application_name_upper=stringcase.uppercase(
+            cmakelists_dict["application_name"]
+        ),
+        application_name_lower=stringcase.lowercase(
+            cmakelists_dict["application_name"]
+        ),
+        entities_path=cmakelists_dict["entities_path"],
+        contracts_path=cmakelists_dict["contracts_path"],
+        persistence_path=cmakelists_dict["persistence_path"],
+        contracts_dto_path=cmakelists_dict["contracts_dto_path"],
+        contracts_cqrs_path=cmakelists_dict["contracts_cqrs_path"],
+        application_path=cmakelists_dict["application_path"],
+        interactor_path=cmakelists_dict["interactor_path"],
+        presenter_path=cmakelists_dict["presenter_path"],
+        front_ends=cmakelists_dict["front_ends"],
+    )
+
+    # Create the directory if it does not exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # Write the output to the file
+    with open(output_file, "w") as fh:
+        fh.write(output)
+
+    print(f"Successfully wrote file {output_file}")
+
+def _generate_kf6_kirigami_files(
+    root_path: str, cmakelists_dict: dict, files_to_be_generated: dict[str, bool]
+):
+    application_name = cmakelists_dict["application_name"]
+    application_name_lower = cmakelists_dict["application_name_lowercase"]
+    application_name_pascal = cmakelists_dict["application_name_pascalcase"]
+
+    # Create the jinja2 environment
+    template_env = Environment(
+        loader=FileSystemLoader(os.path.join("templates/root", "kf6_kirigami"))
+    )
+
+    # generate the real files if in the files_to_be_generated dict the value is True
+    if files_to_be_generated.get(f"org.kde.{application_name_lower}.json", False):
+        # Load the template
+        org_kde_json_template = template_env.get_template("org.kde.placeholder.json.jinja2")
+
+        output_file = os.path.join(root_path, f"org.kde.{application_name_lower}.json")
+
+        # Render the template
+        output = org_kde_json_template.render(
+            application_name_lower=application_name_lower
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+    if files_to_be_generated.get(f"org.kde.{application_name_lower}.desktop", False):
+        # Load the template
+        desktop_template = template_env.get_template("org.kde.placeholder.desktop.jinja2")
+
+        output_file = os.path.join(
+            root_path, f"org.kde.{application_name_lower}.desktop"
+        )
+
+        # Render the template
+        output = desktop_template.render(
+            application_name=cmakelists_dict["application_name"]
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+    if files_to_be_generated.get(f"org.kde.{application_name_lower}.metainfo.xml", False):
+        # Load the template
+        metainfo_template = template_env.get_template("org.kde.placeholder.metainfo.xml.jinja2")
+
+        output_file = os.path.join(
+            root_path, f"org.kde.{application_name_lower}.metainfo.xml"
+        )
+
+        # Render the template
+        output = metainfo_template.render(
+            application_name=cmakelists_dict["application_name"],
+            application_name_lower=application_name_lower
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+    if files_to_be_generated.get(f"{application_name_pascal}.kdev4", False):
+        # Load the template
+        kdev4_template = template_env.get_template("placeholder.kdev4.jinja2")
+
+        output_file = os.path.join(root_path, f"{application_name_pascal}.kdev4")
+
+        # Render the template
+        output = kdev4_template.render(application_name_pascal=application_name_pascal)
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+    # Create the jinja2 environment for android files
+    template_env = Environment(
+        loader=FileSystemLoader(os.path.join("templates/root", "kf6_kirigami", "android"))
+    )
+
+    if files_to_be_generated.get(f"android/AndroidManifest.xml", False):
+        # Load the template
+        android_manifest_template = template_env.get_template("AndroidManifest.xml.jinja2")
+
+        output_file = os.path.join(root_path, "android/AndroidManifest.xml")
+
+        # Render the template
+        output = android_manifest_template.render(
+            application_name_lower=application_name_lower,
+            application_name=application_name
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+    # copy the other android and LICENSES files if they are in the files_to_be_generated dict
+    if files_to_be_generated.get(f"android/build.gradle", False):
+        os.makedirs(os.path.join(root_path, "android"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/android", "build.gradle"),
+            os.path.join(root_path, "android/build.gradle"),
+        )
+        print(f"Successfully wrote file {root_path}/android/build.gradle")
+
+    if files_to_be_generated.get(f"android/version.gradle.in", False):
+        os.makedirs(os.path.join(root_path, "android"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/android", "version.gradle.in"),
+            os.path.join(root_path, "android/version.gradle.in"),
+        )
+        print(f"Successfully wrote file {root_path}/android/version.gradle.in")
+
+    if files_to_be_generated.get(f"android/res/drawable/logo.png", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "android/res/drawable/"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/android/res/drawable", "logo.png"),
+            os.path.join(root_path, "android/res/drawable/logo.png"),
+        )
+        print(f"Successfully wrote file {root_path}/android/res/drawable/logo.png")
+
+    if files_to_be_generated.get(f"android/res/drawable/splash.xml", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "android/res/drawable/"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/android/res/drawable", "splash.xml"),
+            os.path.join(root_path, "android/res/drawable/splash.xml"),
+        )
+        print(f"Successfully wrote file {root_path}/android/res/drawable/splash.xml")
+
+    if files_to_be_generated.get(f"LICENSES/BSD-3-Clause.txt", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "LICENSES"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/LICENSES", "BSD-3-Clause.txt"),
+            os.path.join(root_path, "LICENSES/BSD-3-Clause.txt"),
+        )
+        print(f"Successfully wrote file {root_path}/LICENSES/BSD-3-Clause.txt")
+
+    if files_to_be_generated.get(f"LICENSES/GPL-2.0-or-later.txt", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "LICENSES"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/LICENSES", "GPL-2.0-or-later.txt"),
+            os.path.join(root_path, "LICENSES/GPL-2.0-or-later.txt"),
+        )
+        print(f"Successfully wrote file {root_path}/LICENSES/GPL-2.0-or-later.txt")
+
+    if files_to_be_generated.get(f"LICENSES/CC0-1.0.txt", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "LICENSES"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/LICENSES", "CC0-1.0.txt"),
+            os.path.join(root_path, "LICENSES/CC0-1.0.txt"),
+        )
+        print(f"Successfully wrote file {root_path}/LICENSES/CC0-1.0.txt")
+
+    if files_to_be_generated.get(f"LICENSES/FSFAP.txt", False):
+        # Create the directory if it does not exist
+        os.makedirs(os.path.join(root_path, "LICENSES"), exist_ok=True)
+        shutil.copy(
+            os.path.join("templates/root/kf6_kirigami/LICENSES", "FSFAP.txt"),
+            os.path.join(root_path, "LICENSES/FSFAP.txt"),
+        )
+        print(f"Successfully wrote file {root_path}/LICENSES/FSFAP.txt")
 
 
 def generate_root_files(
@@ -219,13 +473,27 @@ def generate_root_files(
         _generate_cmakelists_file_for_multiple_uis(
             root_path, generation_dict["cmakelists"], files_to_be_generated
         )
+    elif generation_dict["cmakelists"]["front_ends"]["no_ui"]:
+        _generate_cmakelists_file_for_no_ui(
+            root_path, generation_dict["cmakelists"], files_to_be_generated
+        )
     elif generation_dict["cmakelists"]["front_ends"]["qt_widgets"]["enabled"]:
         _generate_cmakelists_file(
-            root_path, "qt_quick", generation_dict["cmakelists"], files_to_be_generated
+            root_path, "qt_widgets", generation_dict["cmakelists"], files_to_be_generated
         )
     elif generation_dict["cmakelists"]["front_ends"]["qt_quick"]["enabled"]:
         _generate_cmakelists_file(
             root_path, "qt_quick", generation_dict["cmakelists"], files_to_be_generated
+        )
+    # generate the kf6 kirigami files
+    elif generation_dict["cmakelists"]["front_ends"]["kf6_kirigami"]["enabled"]:
+        _generate_cmakelists_file(
+            root_path, "kf6_kirigami", generation_dict["cmakelists"], files_to_be_generated
+        )
+
+    if generation_dict["cmakelists"]["front_ends"]["kf6_kirigami"]["enabled"]:
+        _generate_kf6_kirigami_files(
+            root_path, generation_dict["cmakelists"], files_to_be_generated
         )
 
 
@@ -239,12 +507,35 @@ def _get_files_to_be_generated_for_qt_quick(generation_dict: dict) -> list[str]:
 
 def _get_files_to_be_generated_for_kf6_widgets(generation_dict: dict) -> list[str]:
     application_name = generation_dict["cmakelists"]["application_name"]
+    
+    # trow an exception
+    raise Exception("kf6_widgets is not implemented yet")
+    
     return []
 
 
 def _get_files_to_be_generated_for_kf6_kirigami(generation_dict: dict) -> list[str]:
-    application_name = generation_dict["cmakelists"]["application_name"]
-    return []
+    application_name_lower = generation_dict["cmakelists"]["application_name_lowercase"]
+    application_name_pascal = generation_dict["cmakelists"][
+        "application_name_pascalcase"
+    ]
+
+    file_list = [
+        f"org.kde.{application_name_lower}.json",
+        f"{application_name_lower}.desktop",
+        f"org.kde.{application_name_lower}.metainfo.xml",
+        f"{application_name_pascal}.kdev4",
+        f"android/AndroidManifest.xml",
+        f"android/build.gradle",
+        f"android/version.gradle.in",
+        f"android/res/drawable/logo.png",
+        f"android/res/drawable/splash.xml",
+        f"LICENSES/BSD-3-Clause.txt",
+        f"LICENSES/GPL-2.0-or-later.txt",
+        f"LICENSES/CC0-1.0.txt",
+        f"LICENSES/FSFAP.txt",
+    ]
+    return file_list
 
 
 def get_files_to_be_generated(
@@ -264,8 +555,11 @@ def get_files_to_be_generated(
     generation_dict = _get_generation_dict(manifest_data)
 
     files = []
+    # there is always a root CMakeLists.txt file
+    files.append("CMakeLists.txt")
+
+    # if multiple UIs:
     if generation_dict["cmakelists"]["front_ends"]["multiple_uis"]:
-        files.append("CMakeLists.txt")
         if generation_dict["cmakelists"]["front_ends"]["qt_widgets"]["enabled"]:
             files.extend(_get_files_to_be_generated_for_qt_widgets(generation_dict))
         if generation_dict["cmakelists"]["front_ends"]["qt_quick"]["enabled"]:
@@ -275,10 +569,18 @@ def get_files_to_be_generated(
         if generation_dict["cmakelists"]["front_ends"]["kf6_kirigami"]["enabled"]:
             files.extend(_get_files_to_be_generated_for_kf6_kirigami(generation_dict))
 
+        # remove duplicates
+        files = list(dict.fromkeys(files))
+
+    # if only one UI:
     elif generation_dict["cmakelists"]["front_ends"]["qt_widgets"]["enabled"]:
-        files.append("CMakeLists.txt")
+        pass
     elif generation_dict["cmakelists"]["front_ends"]["qt_quick"]["enabled"]:
-        files.append("CMakeLists.txt")
+        pass
+    elif generation_dict["cmakelists"]["front_ends"]["kf6_widgets"]["enabled"]:
+        files.extend(_get_files_to_be_generated_for_kf6_widgets(generation_dict))
+    elif generation_dict["cmakelists"]["front_ends"]["kf6_kirigami"]["enabled"]:
+        files.extend(_get_files_to_be_generated_for_kf6_kirigami(generation_dict))
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:

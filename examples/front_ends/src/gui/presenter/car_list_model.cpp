@@ -6,7 +6,8 @@
 using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Presenter;
 
-CarListModel::CarListModel(QObject *parent) : QAbstractListModel(parent)
+CarListModel::CarListModel(QObject *parent)
+    : QAbstractListModel(parent)
 {
     connect(EventDispatcher::instance()->car(), &CarSignals::created, this, [this](CarDTO dto) {
         beginInsertRows(QModelIndex(), m_carList.size(), m_carList.size());
@@ -16,12 +17,9 @@ CarListModel::CarListModel(QObject *parent) : QAbstractListModel(parent)
     });
 
     connect(EventDispatcher::instance()->car(), &CarSignals::removed, this, [this](QList<int> ids) {
-        for (int i = 0; i < ids.size(); ++i)
-        {
-            for (int j = 0; j < m_carList.size(); ++j)
-            {
-                if (m_carList.at(j).id() == ids.at(i))
-                {
+        for (int i = 0; i < ids.size(); ++i) {
+            for (int j = 0; j < m_carList.size(); ++j) {
+                if (m_carList.at(j).id() == ids.at(i)) {
                     beginRemoveRows(QModelIndex(), j, j);
                     m_carList.removeAt(j);
                     m_carIdList.removeAt(j);
@@ -33,10 +31,8 @@ CarListModel::CarListModel(QObject *parent) : QAbstractListModel(parent)
     });
 
     connect(EventDispatcher::instance()->car(), &CarSignals::updated, this, [this](CarDTO dto) {
-        for (int i = 0; i < m_carList.size(); ++i)
-        {
-            if (m_carList.at(i).id() == dto.id())
-            {
+        for (int i = 0; i < m_carList.size(); ++i) {
+            if (m_carList.at(i).id() == dto.id()) {
                 m_carList[i] = dto;
                 m_carIdList[i] = dto.id();
                 Q_EMIT dataChanged(index(i), index(i));
@@ -74,12 +70,10 @@ QVariant CarListModel::data(const QModelIndex &index, int role) const
 
     const CarDTO &car = m_carList.at(index.row());
 
-    if (role == Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole) {
         return car.content();
     }
-    if (role == Qt::EditRole)
-    {
+    if (role == Qt::EditRole) {
         return car.content();
     }
 
@@ -114,15 +108,12 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
     if (row >= m_carList.size())
         return false;
 
-    else if (role == Qt::EditRole)
-    {
+    else if (role == Qt::EditRole) {
         return this->setData(index, value, ContentRole);
     }
 
-    else if (role == IdRole)
-    {
-        if (value.canConvert<int>() == false)
-        {
+    else if (role == IdRole) {
+        if (value.canConvert<int>() == false) {
             qCritical() << "Cannot convert value to int";
             return false;
         }
@@ -134,8 +125,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         dto.setId(value.value<int>());
 
         Car::CarInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
@@ -144,11 +134,8 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         });
 
         return true;
-    }
-    else if (role == UuidRole)
-    {
-        if (value.canConvert<QUuid>() == false)
-        {
+    } else if (role == UuidRole) {
+        if (value.canConvert<QUuid>() == false) {
             qCritical() << "Cannot convert value to QUuid";
             return false;
         }
@@ -160,8 +147,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         dto.setUuid(value.value<QUuid>());
 
         Car::CarInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
@@ -170,11 +156,8 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         });
 
         return true;
-    }
-    else if (role == CreationDateRole)
-    {
-        if (value.canConvert<QDateTime>() == false)
-        {
+    } else if (role == CreationDateRole) {
+        if (value.canConvert<QDateTime>() == false) {
             qCritical() << "Cannot convert value to QDateTime";
             return false;
         }
@@ -186,8 +169,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         dto.setCreationDate(value.value<QDateTime>());
 
         Car::CarInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
@@ -196,11 +178,8 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         });
 
         return true;
-    }
-    else if (role == UpdateDateRole)
-    {
-        if (value.canConvert<QDateTime>() == false)
-        {
+    } else if (role == UpdateDateRole) {
+        if (value.canConvert<QDateTime>() == false) {
             qCritical() << "Cannot convert value to QDateTime";
             return false;
         }
@@ -212,8 +191,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         dto.setUpdateDate(value.value<QDateTime>());
 
         Car::CarInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
@@ -222,11 +200,8 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         });
 
         return true;
-    }
-    else if (role == ContentRole)
-    {
-        if (value.canConvert<QString>() == false)
-        {
+    } else if (role == ContentRole) {
+        if (value.canConvert<QString>() == false) {
             qCritical() << "Cannot convert value to QString";
             return false;
         }
@@ -238,8 +213,7 @@ bool CarListModel::setData(const QModelIndex &index, const QVariant &value, int 
         dto.setContent(value.value<QString>());
 
         Car::CarInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return false;
             }
@@ -263,23 +237,19 @@ void CarListModel::populate()
     auto task = Car::CarInteractor::instance()->getAll();
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<FrontEnds::Contracts::DTO::Car::CarDTO> carList = result;
-        for (const auto &car : carList)
-        {
-            if (car.isInvalid())
-            {
+        for (const auto &car : carList) {
+            if (car.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid ";
                 return;
             }
         }
-        if (carList.isEmpty())
-        {
+        if (carList.isEmpty()) {
             return;
         }
         beginInsertRows(QModelIndex(), 0, carList.size() - 1);
         m_carList = carList;
         // fill m_carIdList
-        for (const auto &car : carList)
-        {
+        for (const auto &car : carList) {
             m_carIdList.append(car.id());
         }
 

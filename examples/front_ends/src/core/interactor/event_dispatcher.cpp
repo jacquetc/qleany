@@ -4,7 +4,8 @@ using namespace FrontEnds::Interactor;
 
 QPointer<EventDispatcher> EventDispatcher::s_instance = nullptr;
 
-EventDispatcher::EventDispatcher() : QObject{nullptr}
+EventDispatcher::EventDispatcher()
+    : QObject{nullptr}
 {
     m_errorSignals = new ErrorSignals(this);
     m_progressSignals = new ProgressSignals(this);

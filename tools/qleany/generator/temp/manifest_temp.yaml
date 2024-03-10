@@ -6,113 +6,82 @@ application:
   common_cmake_folder_path: src/core/application
   features:
   - CRUD:
-      create:
-        enabled: true
       enabled: true
-      entity_mappable_with: Car
+      entity_mappable_with: Root
+      get:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Root
+    name: Root
+  - CRUD:
+      enabled: true
+      entity_mappable_with: RecentProject
       get:
         enabled: true
       get_all:
         enabled: true
-      get_with_details:
-        enabled: true
-      insert_relation:
-        enabled: true
       remove:
-        enabled: true
-      update:
         enabled: true
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: Car
-    name: Car
+        entity_mappable_with: RecentProject
+    name: RecentProject
   - CRUD:
-      change_active_status:
-        enabled: true
-      create:
-        enabled: true
       enabled: true
-      entity_mappable_with: Brand
+      entity_mappable_with: Project
       get:
         enabled: true
-      get_all:
-        enabled: true
-      get_with_details:
-        enabled: false
-      remove:
-        enabled: true
-      update:
-        enabled: true
     DTO:
       dto_identical_to_entity:
         enabled: true
-        entity_mappable_with: Brand
-    name: Brand
-  - CRUD:
-      change_active_status:
-        enabled: true
-      create:
-        enabled: true
-      enabled: true
-      entity_mappable_with: Passenger
-      get:
-        enabled: true
-      get_all:
-        enabled: true
-      get_with_details:
-        enabled: false
-      remove:
-        enabled: true
-      update:
-        enabled: true
-    DTO:
-      dto_identical_to_entity:
-        enabled: true
-        entity_mappable_with: Passenger
-    name: Passenger
-  - CRUD:
-      create:
-        enabled: true
-      enabled: true
-      entity_mappable_with: Client
-      get:
-        enabled: true
-      get_all:
-        enabled: true
-      get_with_details:
-        enabled: true
-      insert_relation:
-        enabled: true
-      remove:
-        enabled: true
-      update:
-        enabled: true
-    DTO:
-      dto_identical_to_entity:
-        enabled: true
-        entity_mappable_with: Client
-    name: Client
-  - CRUD:
-      enabled: false
-    DTO:
-      dto_identical_to_entity:
-        enabled: false
+        entity_mappable_with: Project
     commands:
     - dto:
         in:
           fields:
-          - name: randomCarName
+          - name: fileName
             type: QString
-          type_prefix: WriteRandomThings
+          type_prefix: LoadProject
         out:
           enabled: false
       entities:
-      - Car
-      - Passenger
-      - Brand
-      - Client
-      name: WriteRandomThings
+      - Project
+      - GlobalComponent
+      - RecentProject
+      name: LoadProject
+      undo: false
+      validator:
+        enabled: true
+    - dto:
+        in:
+          fields:
+          - name: fileName
+            type: QString
+          type_prefix: SaveProject
+        out:
+          enabled: false
+      entities:
+      - Project
+      - GlobalComponent
+      name: SaveProject
+      undo: false
+      validator:
+        enabled: true
+    - dto:
+        in:
+          fields:
+          - name: fileName
+            type: QString
+          type_prefix: CreateProject
+        out:
+          enabled: false
+      entities:
+      - Project
+      - GlobalComponent
+      name: CreateProject
       undo: false
       validator:
         enabled: true
@@ -121,39 +90,55 @@ application:
           enabled: false
         out:
           enabled: false
-      minimum_progress_time: 1000
-      name: RunLongOperation
-      undo: false
-      validator:
-        enabled: false
-    - dto:
-        in:
-          enabled: false
-        out:
-          enabled: false
       entities:
-      - Car
-      - Passenger
-      - Brand
-      - Client
-      name: CloseSystem
+      - Project
+      name: CloseProject
       undo: false
       validator:
         enabled: false
-    name: Custom
-    queries:
-    - dto:
-        in:
-          enabled: false
-        out:
-          fields:
-          - name: currentDateTime
-            type: QDateTime
-          type_prefix: GetCurrentTimeReply
-      name: GetCurrentTime
-      undo: false
-      validator:
-        enabled: false
+    name: Project
+  - CRUD:
+      enabled: true
+      entity_mappable_with: GlobalComponent
+      get:
+        enabled: true
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: GlobalComponent
+    name: GlobalComponent
+  - CRUD:
+      enabled: true
+      entity_mappable_with: EntityComponent
+      get:
+        enabled: true
+      get_with_details:
+        enabled: true
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: EntityComponent
+    name: EntityComponent
+  - CRUD:
+      create:
+        enabled: true
+      enabled: true
+      entity_mappable_with: Entity
+      get:
+        enabled: true
+      remove:
+        enabled: true
+      update:
+        enabled: true
+    DTO:
+      dto_identical_to_entity:
+        enabled: true
+        entity_mappable_with: Entity
+    name: Entity
 contracts:
   folder_path: src/core/contracts
   inverted_app_domain: eu.qleany
@@ -167,82 +152,108 @@ entities:
       type: QDateTime
     - name: updateDate
       type: QDateTime
-    name: Entity
+    name: CommonParent
     only_for_heritage: true
     parent: EntityBase
   - fields:
     - name: content
       type: QString
-    - name: brand
+    - name: rootPath
+      type: QString
+    - name: recentProjects
+      ordered: false
       strong: true
-      type: Brand
-    - name: passengers
+      type: QList<RecentProject>
+    - name: project
+      strong: true
+      type: Project
+    name: Root
+    parent: CommonParent
+  - fields:
+    - name: fileName
+      type: QString
+    - name: rootPath
+      type: QString
+    name: RecentProject
+    parent: CommonParent
+  - fields:
+    - name: fileName
+      type: QString
+    - name: globalComponent
+      strong: true
+      type: GlobalComponent
+    name: Project
+    parent: CommonParent
+  - fields:
+    - name: applicationName
+      type: QString
+    - name: applicationCppDomainName
+      type: QString
+    - name: organisationName
+      type: QString
+    - name: organisationDomain
+      type: QString
+    name: GlobalComponent
+    parent: CommonParent
+  - fields:
+    - name: relativeFolderPath
+      type: QString
+    - name: entities
       ordered: true
       strong: true
-      type: QList<Passenger>
-    name: Car
-    parent: Entity
+      type: QList<Entity>
+    name: EntityComponent
+    parent: CommonParent
   - fields:
     - name: name
       type: QString
-    name: Brand
-    parent: Entity
-  - fields:
-    - name: name
-      type: QString
-    name: Passenger
-    parent: Entity
-  - fields:
-    - name: client
-      ordered: false
-      strong: false
-      type: Passenger
-    - name: clientFriends
-      type: QList<Passenger>
-    name: Client
-    parent: Entity
+    name: Entity
+    parent: CommonParent
+front_ends:
+  kf6_kirigami:
+    folder_path: src/ui/kirigami/
 global:
-  application_cpp_domain_name: Simple
-  application_name: SimpleExample
+  application_cpp_domain_name: QleanyEditor
+  application_name: qleany-editor
   organisation:
     domain: qleany.eu
-    name: simpleexample
+    name: qleany
 interactor:
-  create_undo_redo_interactor: true
+  create_undo_redo_interactor: false
   folder_path: src/core/interactor/
 presenter:
-  create_undo_and_redo_singles: true
-  folder_path: src/gui/presenter
+  create_undo_and_redo_singles: false
+  folder_path: src/ui/presenter
   list_models:
+  - displayed_field: rootPath
+    entity: RecentProject
+    name: auto
+    read_only: true
   - displayed_field: name
-    entity: Passenger
-    in_relation_of: Car
-    name: PassengerListModelFromCarPassengers
-    relation_field_name: passengers
-  - displayed_field: content
-    entity: Car
-    name: CarListModel
+    entity: Entity
+    in_relation_of: EntityComponent
+    name: auto
+    relation_field_name: entities
   singles:
-  - entity: Car
-    name: SingleCar
-  - entity: Brand
+  - entity: Project
     name: auto
-  - entity: Passenger
+    read_only: true
+  - entity: GlobalComponent
     name: auto
-  - entity: Client
-    name: auto
-qml:
-  folder_path: src/gui/qml_application/
 repositories:
   base_folder_path: src/core/persistence/
   list:
-  - entity_name: Car
+  - entity_name: Root
     lazy_loaders: true
-  - entity_name: Brand
+  - entity_name: RecentProject
     lazy_loaders: true
-  - entity_name: Passenger
+  - entity_name: Project
     lazy_loaders: true
-  - entity_name: Client
+  - entity_name: GlobalComponent
+    lazy_loaders: true
+  - entity_name: EntityComponent
+    lazy_loaders: true
+  - entity_name: Entity
     lazy_loaders: true
   repository_folder_path: src/core/persistence/repository/
 schema:

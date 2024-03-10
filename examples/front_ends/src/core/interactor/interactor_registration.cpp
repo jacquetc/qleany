@@ -17,7 +17,6 @@ using namespace FrontEnds::Interactor;
 InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceRepositoryProvider *repositoryProvider)
     : QObject{parent}
 {
-
     auto dispatcher = QSharedPointer<EventDispatcher>(new EventDispatcher());
 
     // Undo Redo System
@@ -29,18 +28,14 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     auto *undoRedoSystem = new Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem(this, scopes);
 
     // error handling
-    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this,
-            [dispatcher](Qleany::Error error) {
-                qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message()
-                         << error.data() << error.stackTrace();
-                Q_EMIT dispatcher->error()->errorSent(error);
-            });
-    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this,
-            [dispatcher](Qleany::Error error) {
-                qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message()
-                         << error.data() << error.stackTrace();
-                Q_EMIT dispatcher->error()->warningSent(error);
-            });
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::errorSent, this, [dispatcher](Qleany::Error error) {
+        qDebug() << "Error in undo redo system: " << error.status() << error.code() << error.message() << error.data() << error.stackTrace();
+        Q_EMIT dispatcher->error()->errorSent(error);
+    });
+    connect(undoRedoSystem, &Qleany::Tools::UndoRedo::ThreadedUndoRedoSystem::warningSent, this, [dispatcher](Qleany::Error error) {
+        qDebug() << "Warning in undo redo system: " << error.status() << error.code() << error.message() << error.data() << error.stackTrace();
+        Q_EMIT dispatcher->error()->warningSent(error);
+    });
 
     // CarInteractor
 
@@ -49,12 +44,12 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     SignalHolder *carSignalHolder = repositoryProvider->repository("Car")->signalHolder();
 
     // removal
-    connect(carSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(),
-            &CarSignals::removed);
+    connect(carSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->car(), &CarSignals::removed);
 
     // active status
     connect(repositoryProvider->repository("car")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->car(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged,
+            dispatcher->car(),
             &CarSignals::activeStatusChanged);
 
     // BrandInteractor
@@ -64,20 +59,19 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     SignalHolder *brandSignalHolder = repositoryProvider->repository("Brand")->signalHolder();
 
     // removal
-    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(),
-            &BrandSignals::removed);
+    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->brand(), &BrandSignals::removed);
 
     // spread removal signal to all other entity signal holders so as to remove the relations
 
-    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Brand, removedIds, -1);
-                Q_EMIT dispatcher->car()->relationRemoved(dto);
-            });
+    connect(brandSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds) {
+        CarRelationDTO dto(-1, CarRelationDTO::RelationField::Brand, removedIds, -1);
+        Q_EMIT dispatcher->car()->relationRemoved(dto);
+    });
 
     // active status
     connect(repositoryProvider->repository("brand")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->brand(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged,
+            dispatcher->brand(),
             &BrandSignals::activeStatusChanged);
 
     // PassengerInteractor
@@ -87,32 +81,29 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     SignalHolder *passengerSignalHolder = repositoryProvider->repository("Passenger")->signalHolder();
 
     // removal
-    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(),
-            &PassengerSignals::removed);
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->passenger(), &PassengerSignals::removed);
 
     // spread removal signal to all other entity signal holders so as to remove the relations
 
-    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                CarRelationDTO dto(-1, CarRelationDTO::RelationField::Passengers, removedIds, -1);
-                Q_EMIT dispatcher->car()->relationRemoved(dto);
-            });
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds) {
+        CarRelationDTO dto(-1, CarRelationDTO::RelationField::Passengers, removedIds, -1);
+        Q_EMIT dispatcher->car()->relationRemoved(dto);
+    });
 
-    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::Client, removedIds, -1);
-                Q_EMIT dispatcher->client()->relationRemoved(dto);
-            });
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds) {
+        ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::Client, removedIds, -1);
+        Q_EMIT dispatcher->client()->relationRemoved(dto);
+    });
 
-    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this,
-            [dispatcher](QList<int> removedIds) {
-                ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::ClientFriends, removedIds, -1);
-                Q_EMIT dispatcher->client()->relationRemoved(dto);
-            });
+    connect(passengerSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, this, [dispatcher](QList<int> removedIds) {
+        ClientRelationDTO dto(-1, ClientRelationDTO::RelationField::ClientFriends, removedIds, -1);
+        Q_EMIT dispatcher->client()->relationRemoved(dto);
+    });
 
     // active status
     connect(repositoryProvider->repository("passenger")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->passenger(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged,
+            dispatcher->passenger(),
             &PassengerSignals::activeStatusChanged);
 
     // ClientInteractor
@@ -122,12 +113,12 @@ InteractorRegistration::InteractorRegistration(QObject *parent, InterfaceReposit
     SignalHolder *clientSignalHolder = repositoryProvider->repository("Client")->signalHolder();
 
     // removal
-    connect(clientSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->client(),
-            &ClientSignals::removed);
+    connect(clientSignalHolder, &Qleany::Contracts::Repository::SignalHolder::removed, dispatcher->client(), &ClientSignals::removed);
 
     // active status
     connect(repositoryProvider->repository("client")->signalHolder(),
-            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged, dispatcher->client(),
+            &Qleany::Contracts::Repository::SignalHolder::activeStatusChanged,
+            dispatcher->client(),
             &ClientSignals::activeStatusChanged);
 
     // CustomInteractor

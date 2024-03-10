@@ -14,9 +14,8 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListMod
 {
     Q_OBJECT
 
-  public:
-    enum Roles
-    {
+public:
+    enum Roles {
 
         IdRole = Qt::UserRole + 0,
         UuidRole = Qt::UserRole + 1,
@@ -42,9 +41,9 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT CarListModel : public QAbstractListMod
 
     QHash<int, QByteArray> roleNames() const override;
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
-  private:
+private:
     void populate();
 
     QList<CarDTO> m_carList;

@@ -16,12 +16,13 @@ using namespace FrontEnds::Contracts::DTO::Brand;
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT BrandSignals : public QObject
 {
     Q_OBJECT
-  public:
-    explicit BrandSignals(QObject *parent = nullptr) : QObject{parent}
+public:
+    explicit BrandSignals(QObject *parent = nullptr)
+        : QObject{parent}
     {
     }
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void removed(QList<int> removedIds);
     void activeStatusChanged(QList<int> changedIds, bool isActive);
     void created(BrandDTO dto);

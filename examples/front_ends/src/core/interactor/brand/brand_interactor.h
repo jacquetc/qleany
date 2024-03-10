@@ -25,8 +25,9 @@ namespace FrontEnds::Interactor::Brand
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
 {
     Q_OBJECT
-  public:
-    explicit BrandInteractor(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+public:
+    explicit BrandInteractor(InterfaceRepositoryProvider *repositoryProvider,
+                             ThreadedUndoRedoSystem *undo_redo_system,
                              QSharedPointer<EventDispatcher> eventDispatcher);
 
     static BrandInteractor *instance();
@@ -39,7 +40,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Brand::UpdateBrandDTO getUpdateDTO();
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     QCoro::Task<BrandDTO> create(const CreateBrandDTO &dto);
 
@@ -47,7 +48,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT BrandInteractor : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-  private:
+private:
     static QPointer<BrandInteractor> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;

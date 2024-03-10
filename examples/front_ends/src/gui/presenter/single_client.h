@@ -22,7 +22,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
     Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate NOTIFY creationDateChanged FINAL)
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate NOTIFY updateDateChanged FINAL)
 
-  public:
+public:
     explicit SingleClient(QObject *parent = nullptr);
 
     int id() const;
@@ -38,7 +38,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
     QDateTime updateDate() const;
     void setUpdateDate(const QDateTime &newUpdateDate);
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void idChanged();
 
@@ -46,7 +46,7 @@ class FRONT_ENDS_EXAMPLE_PRESENTER_EXPORT SingleClient : public QObject
     void creationDateChanged();
     void updateDateChanged();
 
-  private:
+private:
     int m_id;
 
     QUuid m_uuid;

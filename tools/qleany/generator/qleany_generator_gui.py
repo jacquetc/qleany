@@ -58,6 +58,7 @@ import presenter_generator
 import root_generator
 import qt_widgets_generator
 import qt_quick_generator
+import kf6_kirigami_generator
 
 # this little application is a GUI for the generator
 
@@ -488,6 +489,38 @@ class MainWindow(QMainWindow):
 
         self.btn_list_qt_quick_ui.clicked.connect(enable_qt_quick_ui_buttons)
 
+        # Generate kf6 kirigami ui
+
+        self.generate_kf6_kirigami_ui_group_box = QGroupBox()
+        self.generate_kf6_kirigami_ui_group_box.setTitle("Generate KF6 Kirigami UI")
+        self.generate_kf6_kirigami_ui_layout = QVBoxLayout()
+        self.generate_kf6_kirigami_ui_group_box.setLayout(self.generate_kf6_kirigami_ui_layout)
+
+        self.btn_list_kf6_kirigami_ui = QPushButton("List", self)
+        self.btn_list_kf6_kirigami_ui.clicked.connect(self.list_kf6_kirigami_ui)
+        self.generate_kf6_kirigami_ui_layout.addWidget(self.btn_list_kf6_kirigami_ui)
+
+        self.btn_preview_kf6_kirigami_ui = QPushButton("Preview", self)
+        self.btn_preview_kf6_kirigami_ui.clicked.connect(self.preview_kf6_kirigami_ui)
+        self.generate_kf6_kirigami_ui_layout.addWidget(self.btn_preview_kf6_kirigami_ui)
+
+        self.btn_generate_kf6_kirigami_ui = QPushButton("Generate", self)
+        self.btn_generate_kf6_kirigami_ui.clicked.connect(self.generate_kf6_kirigami_ui)
+        self.generate_kf6_kirigami_ui_layout.addWidget(self.btn_generate_kf6_kirigami_ui)
+
+        self.second_row_button_layout.addWidget(self.generate_kf6_kirigami_ui_group_box)
+
+        # disable preview and generate buttons if list button is not clicked once
+
+        self.btn_preview_kf6_kirigami_ui.setEnabled(False)
+        self.btn_generate_kf6_kirigami_ui.setEnabled(False)
+
+        def enable_kf6_kirigami_ui_buttons():
+            self.btn_preview_kf6_kirigami_ui.setEnabled(True)
+            self.btn_generate_kf6_kirigami_ui.setEnabled(True)
+
+        self.btn_list_kf6_kirigami_ui.clicked.connect(enable_kf6_kirigami_ui_buttons)
+
         # Generate "QML imports integration"
 
         self.generate_qml_group_box = QGroupBox()
@@ -612,6 +645,7 @@ class MainWindow(QMainWindow):
             self.generate_qml_group_box.setEnabled(qml_imports_generator.is_qml_imports_integration_enabled(self.manifest_file))
             self.generate_qt_widgets_ui_group_box.setEnabled(qt_widgets_generator.is_enabled(self.manifest_file))
             self.generate_qt_quick_ui_group_box.setEnabled(qt_quick_generator.is_enabled(self.manifest_file))
+            self.generate_kf6_kirigami_ui_group_box.setEnabled(kf6_kirigami_generator.is_enabled(self.manifest_file))
 
     def open_entity_relationship_window(self):
         self.relationship_viewer_window = (
@@ -655,6 +689,10 @@ class MainWindow(QMainWindow):
         if qt_quick_generator.is_enabled(self.manifest_file):
             list.extend(
                 qt_quick_generator.get_files_to_be_generated(self.manifest_file)
+            )
+        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+            list.extend(
+                kf6_kirigami_generator.get_files_to_be_generated(self.manifest_file)
             )
 
         self.text_box.clear()
@@ -739,6 +777,14 @@ class MainWindow(QMainWindow):
                 self.uncrustify_config_file,
             )
 
+        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+            kf6_kirigami_generator.preview_kf6_kirigami_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+
         self.text_box.setPlainText(
             f"Preview folder cleared beforehand. All files previewed at {Path(self.root_path,).resolve()}/qleany_preview/ folder"
         )
@@ -807,11 +853,18 @@ class MainWindow(QMainWindow):
                 )
             )
 
+        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+            file_list.extend(
+                kf6_kirigami_generator.get_files_to_be_generated(
+                    self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                )
+            )
+
         if self.display_overwrite_confirmation(file_list):
             # display progress dialog
             progress = QProgressDialog(self)
             progress.setLabelText("Generating files...")
-            progress.setRange(0, 11)
+            progress.setRange(0, 12)
             progress.show()
             QCoreApplication.processEvents()
 
@@ -919,6 +972,16 @@ class MainWindow(QMainWindow):
                     self.uncrustify_config_file,
                 )
             progress.setValue(11)
+            QCoreApplication.processEvents()
+
+            if kf6_kirigami_generator.is_enabled(self.temp_manifest_file):
+                kf6_kirigami_generator.generate_kf6_kirigami_files(
+                    self.root_path,
+                    self.temp_manifest_file,
+                    self.file_list_view.fetch_file_states(),
+                    self.uncrustify_config_file,
+                )
+            progress.setValue(12)
             QCoreApplication.processEvents()
 
             self.text_box.setPlainText("All files generated")
@@ -1374,6 +1437,47 @@ class MainWindow(QMainWindow):
             )
             self.text_box.clear()
             self.text_box.setPlainText("Qt Quick UI generated")
+
+    # KF6 Kirigami UI functions
+            
+    def list_kf6_kirigami_ui(self):
+        list = kf6_kirigami_generator.get_files_to_be_generated(self.temp_manifest_file)
+        self.text_box.clear()
+        self.text_box.setPlainText("KF6 Kirigami UI:\n\n")
+        self.text_box.appendPlainText("\n".join(list))
+        self.file_list_view.list_files(list)
+        
+    def preview_kf6_kirigami_ui(self):
+        self.list_kf6_kirigami_ui()
+        kf6_kirigami_generator.preview_kf6_kirigami_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
+        self.text_box.clear()
+        self.text_box.setPlainText(
+            f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
+        )
+        self.text_box.appendPlainText(
+            f" KF6 Kirigami UI files previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
+        )
+
+    def generate_kf6_kirigami_ui(self):
+        self.list_kf6_kirigami_ui()
+        if self.display_overwrite_confirmation(
+            kf6_kirigami_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        ):
+            kf6_kirigami_generator.generate_kf6_kirigami_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+            self.text_box.clear()
+            self.text_box.setPlainText("KF6 Kirigami UI generated")
 
     def display_overwrite_confirmation(self, files: list):
         # join self.root_path and file

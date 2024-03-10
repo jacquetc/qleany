@@ -13,9 +13,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(BUILD_QT_QUICK "Build the QtQuick front end" ON)
+option(BUILD_QT_QUICK "Build the QtQuick front end" OFF)
 
 option(BUILD_QT_WIDGETS "Build the QtWidgets front end" ON)
+
+option(BUILD_KF6_KIRIGAMI "Build the KF6Kirigami front end" ON)
 
 if(NOT BUILD_QT_QUICK
    AND NOT BUILD_QT_WIDGETS
@@ -24,9 +26,50 @@ if(NOT BUILD_QT_QUICK
   message(FATAL_ERROR "At least one front end must be enabled")
 endif()
 
+if(BUILD_KF6_KIRIGAMI OR BUILD_KF6_WIDGETS)
+  set(BUILD_KF6 ON)
+endif()
+
+if(BUILD_KF6)
+  set(QT6_MIN_VERSION 6.5.0)
+  set(KF6_MIN_VERSION 6.0.0)
+
+  find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
+
+  include(FeatureSummary)
+  include(KDEInstallDirs)
+  include(KDECMakeSettings)
+  include(KDECompilerSettings NO_POLICY_SCOPE)
+  include(ECMSetupVersion)
+  include(ECMFindQmlModule)
+  include(ECMInstallIcons)
+
+  # enable -fexceptions
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
+
+  if(NOT ANDROID)
+    include(KDEGitCommitHooks)
+    include(KDEClangFormat)
+  endif()
+
+  if(BUILD_KF6_KIRIGAMI)
+    ecm_setup_version(
+      ${PROJECT_VERSION}
+      VARIABLE_PREFIX
+      FRONTENDSEXAMPLE
+      VERSION_HEADER
+      "${CMAKE_CURRENT_BINARY_DIR}/src/gui/kf6_kirigami_application//version-frontendsexample.h"
+    )
+  endif()
+
+endif()
+
 if(BUILD_QT_QUICK OR BUILD_QT_WIDGETS)
   set(QT6_MIN_VERSION 6.5.0)
 endif()
+
+# qt_policy(SET QTP0001 NEW)
 
 # Add QCoro
 find_package(QCoro6 REQUIRED COMPONENTS Core)
@@ -36,8 +79,10 @@ qcoro_enable_coroutines()
 
 find_package(Qt6 ${QT6_MIN_VERSION} REQUIRED COMPONENTS Core Gui Svg Sql
                                                         Concurrent)
+
 if(BUILD_KF6_KIRIGAMI OR BUILD_QT_QUICK)
   find_package(Qt6 ${QT6_MIN_VERSION} REQUIRED COMPONENTS Qml QuickControls2)
+  find_package(QCoro6 REQUIRED COMPONENTS Qml)
 
   set(QT_EXTRA_COMPONENTS)
 
@@ -47,6 +92,19 @@ if(BUILD_KF6_KIRIGAMI OR BUILD_QT_QUICK)
 
   find_package(Qt6 ${QT6_MIN_VERSION} REQUIRED
                COMPONENTS Qml QuickControls2 ${QT_EXTRA_COMPONENTS})
+endif()
+
+if(BUILD_KF6_KIRIGAMI)
+  find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons
+                                                          Config I18n)
+
+  if(ANDROID)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/android/version.gradle.in
+                   ${CMAKE_BINARY_DIR}/version.gradle)
+  endif()
+  qt_policy(SET QTP0001 NEW)
+
+  ecm_find_qmlmodule(org.kde.kirigamiaddons.formcard 1.0)
 endif()
 
 # handles the entities
@@ -82,4 +140,27 @@ endif()
 if(BUILD_QT_WIDGETS)
   # handles the QtWidgets front end
   add_subdirectory(src/gui/qt_widgets_application/)
+endif()
+
+if(BUILD_KF6_KIRIGAMI)
+  # handles the Kirigami front end
+  add_subdirectory(src/gui/kf6_kirigami_application/)
+endif()
+
+if(BUILD_KF6)
+  install(FILES org.kde.frontendsexample.desktop
+          DESTINATION ${KDE_INSTALL_APPDIR})
+  install(FILES org.kde.frontendsexample.metainfo.xml
+          DESTINATION ${KDE_INSTALL_METAINFODIR})
+
+  ki18n_install(po)
+
+  feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES
+                           FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+  if(NOT ANDROID)
+    file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES src/*.cpp src/*.h)
+    kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
+    kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
+  endif()
 endif()

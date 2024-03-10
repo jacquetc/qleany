@@ -10,11 +10,9 @@ using namespace Qleany::Tools::UndoRedo;
 
 QPointer<UndoRedoInteractor> UndoRedoInteractor::s_instance = nullptr;
 
-UndoRedoInteractor::UndoRedoInteractor(ThreadedUndoRedoSystem *undo_redo_system,
-                                       QSharedPointer<EventDispatcher> eventDispatcher)
+UndoRedoInteractor::UndoRedoInteractor(ThreadedUndoRedoSystem *undo_redo_system, QSharedPointer<EventDispatcher> eventDispatcher)
     : QObject{nullptr}
 {
-
     // connections for undo commands:
     m_undo_redo_system = undo_redo_system;
     m_eventDispatcher = eventDispatcher;

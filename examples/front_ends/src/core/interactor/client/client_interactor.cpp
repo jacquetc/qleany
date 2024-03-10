@@ -57,8 +57,7 @@ QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
         GetClientQueryHandler handler(interface);
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->client()->getReplied(result.value());
         }
         return Result<void>(result.error());
@@ -67,11 +66,9 @@ QCoro::Task<ClientDTO> ClientInteractor::get(int id) const
     m_undo_redo_system->push(queryCommand, "client"_L1);
 
     // async wait for result signal
-    const std::optional<ClientDTO> optional_result =
-        co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(1000));
+    const std::optional<ClientDTO> optional_result = co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return ClientDTO();
     }
@@ -90,8 +87,7 @@ QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
         GetClientWithDetailsQueryHandler handler(interface);
         auto result = handler.handle(progressPromise, query);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->client()->getWithDetailsReplied(result.value());
         }
         return Result<void>(result.error());
@@ -100,11 +96,10 @@ QCoro::Task<ClientWithDetailsDTO> ClientInteractor::getWithDetails(int id) const
     m_undo_redo_system->push(queryCommand, "client"_L1);
 
     // async wait for result signal
-    const std::optional<ClientWithDetailsDTO> optional_result = co_await qCoro(
-        m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
+    const std::optional<ClientWithDetailsDTO> optional_result =
+        co_await qCoro(m_eventDispatcher.get()->client(), &ClientSignals::getWithDetailsReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return ClientWithDetailsDTO();
     }
@@ -121,8 +116,7 @@ QCoro::Task<QList<ClientDTO>> ClientInteractor::getAll() const
         GetAllClientQueryHandler handler(interface);
         auto result = handler.handle(progressPromise);
 
-        if (result.isSuccess())
-        {
+        if (result.isSuccess()) {
             Q_EMIT m_eventDispatcher->client()->getAllReplied(result.value());
         }
         return Result<void>(result.error());
@@ -133,8 +127,7 @@ QCoro::Task<QList<ClientDTO>> ClientInteractor::getAll() const
     const std::optional<QList<ClientDTO>> optional_result =
         co_await qCoro(m_eventDispatcher->client(), &ClientSignals::getAllReplied, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         // for now, I insert one invalid item to the list to show that there was an error
         co_return QList<ClientDTO>() << ClientDTO();
     }
@@ -153,25 +146,22 @@ QCoro::Task<ClientDTO> ClientInteractor::create(const CreateClientDTO &dto)
     auto *handler = new CreateClientCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &CreateClientCommandHandler::clientCreated, m_eventDispatcher->client(),
-                     &ClientSignals::created);
+    QObject::connect(handler, &CreateClientCommandHandler::clientCreated, m_eventDispatcher->client(), &ClientSignals::created);
 
-    QObject::connect(handler, &CreateClientCommandHandler::clientRemoved, this,
-                     [this](int removedId) { Q_EMIT m_eventDispatcher->client()->removed(QList<int>() << removedId); });
+    QObject::connect(handler, &CreateClientCommandHandler::clientRemoved, this, [this](int removedId) {
+        Q_EMIT m_eventDispatcher->client()->removed(QList<int>() << removedId);
+    });
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<CreateClientCommandHandler, CreateClientCommand>(
-        ClientInteractor::tr("Create client"), handler, query);
+    auto command = new AlterCommand<CreateClientCommandHandler, CreateClientCommand>(ClientInteractor::tr("Create client"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
-    const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(1000));
+    const std::optional<ClientDTO> optional_result = co_await qCoro(handler, &CreateClientCommandHandler::clientCreated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return ClientDTO();
     }
 
@@ -189,24 +179,21 @@ QCoro::Task<ClientDTO> ClientInteractor::update(const UpdateClientDTO &dto)
     auto *handler = new UpdateClientCommandHandler(repository);
 
     // connect
-    QObject::connect(handler, &UpdateClientCommandHandler::clientUpdated, this,
-                     [this](ClientDTO dto) { Q_EMIT m_eventDispatcher->client()->updated(dto); });
-    QObject::connect(handler, &UpdateClientCommandHandler::clientDetailsUpdated, m_eventDispatcher->client(),
-                     &ClientSignals::allRelationsInvalidated);
+    QObject::connect(handler, &UpdateClientCommandHandler::clientUpdated, this, [this](ClientDTO dto) {
+        Q_EMIT m_eventDispatcher->client()->updated(dto);
+    });
+    QObject::connect(handler, &UpdateClientCommandHandler::clientDetailsUpdated, m_eventDispatcher->client(), &ClientSignals::allRelationsInvalidated);
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<UpdateClientCommandHandler, UpdateClientCommand>(
-        ClientInteractor::tr("Update client"), handler, query);
+    auto command = new AlterCommand<UpdateClientCommandHandler, UpdateClientCommand>(ClientInteractor::tr("Update client"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
-    const std::optional<ClientDTO> optional_result =
-        co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(1000));
+    const std::optional<ClientDTO> optional_result = co_await qCoro(handler, &UpdateClientCommandHandler::clientUpdated, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return ClientDTO();
     }
 
@@ -227,18 +214,15 @@ QCoro::Task<bool> ClientInteractor::remove(int id)
     // no need to connect to removed signal, because it will be emitted by the repository itself
 
     // Create specialized UndoRedoCommand
-    auto command = new AlterCommand<RemoveClientCommandHandler, RemoveClientCommand>(
-        ClientInteractor::tr("Remove client"), handler, query);
+    auto command = new AlterCommand<RemoveClientCommandHandler, RemoveClientCommand>(ClientInteractor::tr("Remove client"), handler, query);
 
     // push command
     m_undo_redo_system->push(command, "client"_L1);
 
     // async wait for result signal
-    const std::optional<QList<int>> optional_result =
-        co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
+    const std::optional<QList<int>> optional_result = co_await qCoro(repository->signalHolder(), &SignalHolder::removed, std::chrono::milliseconds(1000));
 
-    if (!optional_result.has_value())
-    {
+    if (!optional_result.has_value()) {
         co_return false;
     }
 

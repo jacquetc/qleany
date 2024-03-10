@@ -7,33 +7,28 @@
 using namespace FrontEnds::Interactor;
 using namespace FrontEnds::Presenter;
 
-PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject *parent) : QAbstractListModel(parent)
+PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject *parent)
+    : QAbstractListModel(parent)
 {
-
     connect(EventDispatcher::instance()->car(), &CarSignals::allRelationsInvalidated, this, [this](int carId) {
-        if (carId == m_carId)
-        {
+        if (carId == m_carId) {
             return;
         }
         auto task = Car::CarInteractor::instance()->getWithDetails(carId);
         QCoro::connect(std::move(task), this, [this, carId](auto &&carDetails) {
-            if (carDetails.isInvalid())
-            {
+            if (carDetails.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid carId";
                 return;
             }
             QList<PassengerDTO> newPassengerList = carDetails.passengers();
             QList<int> newPassengerIdList;
-            for (const auto &passenger : newPassengerList)
-            {
+            for (const auto &passenger : newPassengerList) {
                 newPassengerIdList.append(passenger.id());
             }
 
             // first, add the missing passengers
-            for (const auto &passenger : newPassengerList)
-            {
-                if (!m_passengerIdList.contains(passenger.id()))
-                {
+            for (const auto &passenger : newPassengerList) {
+                if (!m_passengerIdList.contains(passenger.id())) {
                     // add the passenger
                     int row = m_passengerList.size();
                     beginInsertRows(QModelIndex(), row, row);
@@ -45,10 +40,8 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
 
             // then, remove the passengerList that are not in the new list
 
-            for (int i = m_passengerList.size() - 1; i >= 0; --i)
-            {
-                if (!newPassengerIdList.contains(m_passengerList[i].id()))
-                {
+            for (int i = m_passengerList.size() - 1; i >= 0; --i) {
+                if (!newPassengerIdList.contains(m_passengerList[i].id())) {
                     // remove the passenger
                     beginRemoveRows(QModelIndex(), i, i);
                     m_passengerList.removeAt(i);
@@ -58,10 +51,8 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
             }
             // then, move the current ones so the list is in the same order as the new list
 
-            for (int i = 0; i < m_passengerList.size(); ++i)
-            {
-                if (m_passengerIdList[i] != newPassengerList[i].id())
-                {
+            for (int i = 0; i < m_passengerList.size(); ++i) {
+                if (m_passengerIdList[i] != newPassengerList[i].id()) {
                     // move the passenger
                     int row = newPassengerList.indexOf(m_passengerList[i]);
                     beginMoveRows(QModelIndex(), i, i, QModelIndex(), row);
@@ -73,10 +64,8 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
 
             // finally, update those that are in both lists if the updateDateDate has changed
 
-            for (int i = 0; i < m_passengerList.size(); ++i)
-            {
-                if (m_passengerList[i].updateDate() != newPassengerList[i].updateDate())
-                {
+            for (int i = 0; i < m_passengerList.size(); ++i) {
+                if (m_passengerList[i].updateDate() != newPassengerList[i].updateDate()) {
                     // update the passenger
                     m_passengerList[i] = newPassengerList[i];
                     QModelIndex topLeft = index(i, 0);
@@ -92,24 +81,20 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
     });
 
     connect(EventDispatcher::instance()->car(), &CarSignals::relationRemoved, this, [this](CarRelationDTO dto) {
-        if (dto.relationField() != CarRelationDTO::RelationField::Passengers)
-        {
+        if (dto.relationField() != CarRelationDTO::RelationField::Passengers) {
             return;
         }
 
         // remove the passenger list
         QList<int> relatedIds = dto.relatedIds();
 
-        for (int id : relatedIds)
-        {
-            if (!m_passengerIdList.contains(id))
-            {
+        for (int id : relatedIds) {
+            if (!m_passengerIdList.contains(id)) {
                 continue;
             }
 
             int index = m_passengerIdList.indexOf(id);
-            if (index != -1)
-            {
+            if (index != -1) {
                 beginRemoveRows(QModelIndex(), index, index);
                 m_passengerList.removeAt(index);
                 m_passengerIdList.removeAt(index);
@@ -119,8 +104,7 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
     });
 
     connect(EventDispatcher::instance()->car(), &CarSignals::relationInserted, this, [this](CarRelationDTO dto) {
-        if (dto.id() != m_carId || dto.relationField() != CarRelationDTO::RelationField::Passengers)
-        {
+        if (dto.id() != m_carId || dto.relationField() != CarRelationDTO::RelationField::Passengers) {
             return;
         }
 
@@ -131,28 +115,22 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
         std::reverse(relatedIds.begin(), relatedIds.end());
 
         // fetch passenger list from interactor
-        for (int passengerId : relatedIds)
-        {
-            Passenger::PassengerInteractor::instance()
-                ->get(passengerId)
-                .then([this, passengerId, position](PassengerDTO passenger) {
-                    // add passenger to this model
-                    if (!m_passengerIdList.contains(passengerId))
-                    {
-                        beginInsertRows(QModelIndex(), position, position);
-                        m_passengerList.insert(position, passenger);
-                        m_passengerIdList.insert(position, passengerId);
-                        endInsertRows();
-                    }
-                });
+        for (int passengerId : relatedIds) {
+            Passenger::PassengerInteractor::instance()->get(passengerId).then([this, passengerId, position](PassengerDTO passenger) {
+                // add passenger to this model
+                if (!m_passengerIdList.contains(passengerId)) {
+                    beginInsertRows(QModelIndex(), position, position);
+                    m_passengerList.insert(position, passenger);
+                    m_passengerIdList.insert(position, passengerId);
+                    endInsertRows();
+                }
+            });
         }
     });
 
     connect(EventDispatcher::instance()->passenger(), &PassengerSignals::updated, this, [this](PassengerDTO dto) {
-        for (int i = 0; i < m_passengerList.size(); ++i)
-        {
-            if (m_passengerIdList.at(i) == dto.id())
-            {
+        for (int i = 0; i < m_passengerList.size(); ++i) {
+            if (m_passengerIdList.at(i) == dto.id()) {
                 m_passengerList[i] = dto;
                 m_passengerIdList[i] = dto.id();
                 Q_EMIT dataChanged(index(i), index(i));
@@ -188,12 +166,10 @@ QVariant PassengerListModelFromCarPassengers::data(const QModelIndex &index, int
 
     const PassengerDTO &passenger = m_passengerList.at(index.row());
 
-    if (role == Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole) {
         return passenger.name();
     }
-    if (role == Qt::EditRole)
-    {
+    if (role == Qt::EditRole) {
         return passenger.name();
     }
 
@@ -228,15 +204,12 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
     if (row >= m_passengerList.size())
         return false;
 
-    else if (role == Qt::EditRole)
-    {
+    else if (role == Qt::EditRole) {
         return this->setData(index, value, NameRole);
     }
 
-    else if (role == IdRole)
-    {
-        if (value.canConvert<int>() == false)
-        {
+    else if (role == IdRole) {
+        if (value.canConvert<int>() == false) {
             qCritical() << "Cannot convert value to int";
             return false;
         }
@@ -248,8 +221,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(value.value<int>());
 
         Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
@@ -258,11 +230,8 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         });
 
         return true;
-    }
-    else if (role == UuidRole)
-    {
-        if (value.canConvert<QUuid>() == false)
-        {
+    } else if (role == UuidRole) {
+        if (value.canConvert<QUuid>() == false) {
             qCritical() << "Cannot convert value to QUuid";
             return false;
         }
@@ -274,8 +243,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setUuid(value.value<QUuid>());
 
         Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
@@ -284,11 +252,8 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         });
 
         return true;
-    }
-    else if (role == CreationDateRole)
-    {
-        if (value.canConvert<QDateTime>() == false)
-        {
+    } else if (role == CreationDateRole) {
+        if (value.canConvert<QDateTime>() == false) {
             qCritical() << "Cannot convert value to QDateTime";
             return false;
         }
@@ -300,8 +265,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setCreationDate(value.value<QDateTime>());
 
         Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
@@ -310,11 +274,8 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         });
 
         return true;
-    }
-    else if (role == UpdateDateRole)
-    {
-        if (value.canConvert<QDateTime>() == false)
-        {
+    } else if (role == UpdateDateRole) {
+        if (value.canConvert<QDateTime>() == false) {
             qCritical() << "Cannot convert value to QDateTime";
             return false;
         }
@@ -326,8 +287,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setUpdateDate(value.value<QDateTime>());
 
         Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
@@ -336,11 +296,8 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         });
 
         return true;
-    }
-    else if (role == NameRole)
-    {
-        if (value.canConvert<QString>() == false)
-        {
+    } else if (role == NameRole) {
+        if (value.canConvert<QString>() == false) {
             qCritical() << "Cannot convert value to QString";
             return false;
         }
@@ -352,8 +309,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setName(value.value<QString>());
 
         Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
-            if (result.isInvalid())
-            {
+            if (result.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
                 return false;
             }
@@ -379,23 +335,19 @@ void PassengerListModelFromCarPassengers::populate()
     auto task = Car::CarInteractor::instance()->getWithDetails(m_carId);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<FrontEnds::Contracts::DTO::Passenger::PassengerDTO> passengerList = result.passengers();
-        for (const auto &passenger : passengerList)
-        {
-            if (passenger.isInvalid())
-            {
+        for (const auto &passenger : passengerList) {
+            if (passenger.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid passenger";
                 return;
             }
         }
-        if (passengerList.isEmpty())
-        {
+        if (passengerList.isEmpty()) {
             return;
         }
         beginInsertRows(QModelIndex(), 0, passengerList.size() - 1);
         m_passengerList = passengerList;
         // fill m_passengerIdList
-        for (const auto &passenger : passengerList)
-        {
+        for (const auto &passenger : passengerList) {
             m_passengerIdList.append(passenger.id());
         }
 
@@ -414,15 +366,12 @@ void PassengerListModelFromCarPassengers::setCarId(int newCarId)
         return;
     m_carId = newCarId;
 
-    if (m_carId == 0)
-    {
+    if (m_carId == 0) {
         beginResetModel();
         m_passengerList.clear();
         m_passengerIdList.clear();
         endResetModel();
-    }
-    else
-    {
+    } else {
         populate();
     }
     Q_EMIT carIdChanged();

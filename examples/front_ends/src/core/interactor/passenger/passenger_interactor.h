@@ -25,7 +25,7 @@ namespace FrontEnds::Interactor::Passenger
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT PassengerInteractor : public QObject
 {
     Q_OBJECT
-  public:
+public:
     explicit PassengerInteractor(InterfaceRepositoryProvider *repositoryProvider,
                                  ThreadedUndoRedoSystem *undo_redo_system,
                                  QSharedPointer<EventDispatcher> eventDispatcher);
@@ -40,7 +40,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT PassengerInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Passenger::UpdatePassengerDTO getUpdateDTO();
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     QCoro::Task<PassengerDTO> create(const CreatePassengerDTO &dto);
 
@@ -48,7 +48,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT PassengerInteractor : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-  private:
+private:
     static QPointer<PassengerInteractor> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;

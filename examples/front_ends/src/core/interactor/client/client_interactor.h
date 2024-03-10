@@ -26,8 +26,9 @@ namespace FrontEnds::Interactor::Client
 class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
 {
     Q_OBJECT
-  public:
-    explicit ClientInteractor(InterfaceRepositoryProvider *repositoryProvider, ThreadedUndoRedoSystem *undo_redo_system,
+public:
+    explicit ClientInteractor(InterfaceRepositoryProvider *repositoryProvider,
+                              ThreadedUndoRedoSystem *undo_redo_system,
                               QSharedPointer<EventDispatcher> eventDispatcher);
 
     static ClientInteractor *instance();
@@ -42,7 +43,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
 
     Q_INVOKABLE static Contracts::DTO::Client::UpdateClientDTO getUpdateDTO();
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
     QCoro::Task<ClientDTO> create(const CreateClientDTO &dto);
 
@@ -50,7 +51,7 @@ class FRONT_ENDS_EXAMPLE_INTERACTOR_EXPORT ClientInteractor : public QObject
 
     QCoro::Task<bool> remove(int id);
 
-  private:
+private:
     static QPointer<ClientInteractor> s_instance;
     InterfaceRepositoryProvider *m_repositoryProvider;
     ThreadedUndoRedoSystem *m_undo_redo_system;

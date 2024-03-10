@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
+# SPDX-License-Identifier: BSD-3-Clause
+
+cmake_minimum_required(VERSION 3.16)
+
+project({{ application_name }} VERSION 0.1)
+
+set(QT6_MIN_VERSION 6.5.0)
+set(KF6_MIN_VERSION 6.0.0)
+
+# Compiler settings
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
+
+include(FeatureSummary)
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMSetupVersion)
+include(ECMFindQmlModule)
+
+if(NOT ANDROID)
+    include(KDEGitCommitHooks)
+    include(KDEClangFormat)
+endif()
+
+ecm_setup_version(${PROJECT_VERSION}
+    VARIABLE_PREFIX {{ application_name_upper }}
+    VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/version-{{ application_name_lower }}.h"
+)
+
+set(QT_EXTRA_COMPONENTS)
+
+if(NOT ANDROID)
+    list(APPEND QT_EXTRA_COMPONENTS Widgets)
+endif()
+
+find_package(Qt6 ${QT6_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml QuickControls2 Svg Sql Concurrent ${QT_EXTRA_COMPONENTS})
+find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons Config I18n)
+
+# Add QCoro
+find_package(QCoro6 REQUIRED COMPONENTS Core)
+
+# Set necessary compiler flags to enable coroutine support
+qcoro_enable_coroutines()
+
+qt_policy(SET QTP0001 NEW)
+
+ecm_find_qmlmodule(org.kde.kirigamiaddons.formcard 1.0)
+
+if(ANDROID)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/android/version.gradle.in ${CMAKE_BINARY_DIR}/version.gradle)
+endif()
+
+# handles the entities
+add_subdirectory({{ entities_path }})
+
+# stores the interfaces
+add_subdirectory({{ contracts_path }})
+
+# handles the data access from inside the system
+add_subdirectory({{ persistence_path }})
+
+# handles the data access from outside the system
+add_subdirectory({{ contracts_dto_path }})
+
+# handles the CQRS commands, queries and validators
+add_subdirectory({{ contracts_cqrs_path }})
+
+# handles the use cases
+add_subdirectory({{ application_path }})
+
+# handles the interaction between the system's inner layers (use cases, DTOs) and the external world
+add_subdirectory({{ interactor_path }})
+
+# handles the Qt models
+add_subdirectory({{ presenter_path }})
+
+# handles the Kirigami front end
+add_subdirectory({{ front_ends.kf6_kirigami.folder_path }})
+
+install(FILES org.kde.{{ application_name_lower }}.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+install(FILES org.kde.{{ application_name_lower }}.metainfo.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
+ki18n_install(po)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+if(NOT ANDROID)
+    file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES src/*.cpp src/*.h)
+    kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
+    kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
+endif()
