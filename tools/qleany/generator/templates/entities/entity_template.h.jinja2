@@ -35,6 +35,9 @@ class {{ name }} : public {{ parent }}
             this->{{ field.name }}Loaded = other.{{ field.name }}Loaded;
             {% endif -%}
             {%- endfor %}
+            {% if not has_foreign_and_lazy_fields -%}
+            Q_UNUSED(other);
+            {%- endif %}
 
         }
 
@@ -44,6 +47,8 @@ class {{ name }} : public {{ parent }}
         bool {{ field.name }}Loaded = false;
     {% endif %}
     {% endfor %}
+
+    // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
     bool getSet(const QString &fieldName) const
     {
         {% for field in fields -%}
@@ -56,9 +61,11 @@ class {{ name }} : public {{ parent }}
             {% endif -%}
         }
         {%- endfor %}
+        // If the field is not found, we delegate to the parent class
         return m_entity->{{ parent }}::metaData().getSet(fieldName);
     }
 
+    // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
     bool getLoaded(const QString &fieldName) const
     {
         {% for field in fields %}
@@ -71,6 +78,7 @@ class {{ name }} : public {{ parent }}
             {% endif -%}
         }
         {%- endfor %}
+        // If the field is not found, we delegate to the parent class
         return m_entity->{{ parent }}::metaData().getLoaded(fieldName);
     }
       private:
@@ -87,7 +95,7 @@ class {{ name }} : public {{ parent }}
     }
 
    {{ name }}( {% for field in parent_fields %} const {{ field.type }} &{{ field.name }}, {% endfor %} {% for field in fields %}{% if field.type in ['int', 'double', 'float', 'bool'] %} {{ field.type }} {{ field.name }}{% else %} const {{ field.type }} &{{ field.name }}{% endif %}{% if not loop.last %}, {% endif %} {% endfor %}) 
-        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), m_metaData(this), {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
+        : {{ parent }}({{ parent_fields | map(attribute='name') | join(", ")}}), m_metaData(this),  {% for field in fields %}m_{{ field.name }}({{ field.name }}){% if not loop.last %}, {% endif %}{% endfor %}
     {
     }
 

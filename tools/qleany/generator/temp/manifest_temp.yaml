@@ -210,7 +210,7 @@ entities:
     name: Entity
     parent: CommonParent
 front_ends:
-  kf6_kirigami:
+  qml_imports_integration:
     folder_path: src/ui/kirigami/
 global:
   application_cpp_domain_name: QleanyEditor

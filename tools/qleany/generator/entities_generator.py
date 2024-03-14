@@ -267,6 +267,9 @@ def generate_entity_files(
         relationships = []
 
         # add other informations to fields
+
+        has_foreign_and_lazy_fields = False
+
         for field in fields:
             field["name_pascal"] = stringcase.pascalcase(field["name"])
             field["is_primary_key"] = False
@@ -275,6 +278,7 @@ def generate_entity_files(
             if isListOrSetForeignEntity(field["type"]) or isUniqueForeignEntity(
                 field["type"]
             ):
+                has_foreign_and_lazy_fields = True
                 field["need_lazy_loader"] = True
                 field["is_linked_to_another_entity"] = True
             else:
@@ -393,6 +397,7 @@ def generate_entity_files(
             export_header_file=export_header_file,
             fields_init_values=fields_init_values,
             parent_init_values=parent_init_values,
+            has_foreign_and_lazy_fields=has_foreign_and_lazy_fields,
             relationships=relationships,
             application_cpp_domain_name=application_cpp_domain_name,
         )

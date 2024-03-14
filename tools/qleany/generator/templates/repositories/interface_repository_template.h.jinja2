@@ -23,7 +23,7 @@ class {{ contracts_export }} Interface{{ name }}Repository
     {
     }
     {% if foreign_entities %}
-    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> update({{ application_cpp_domain_name }}::Entities::{{ name }} &&entity) = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> update({{ application_cpp_domain_name }}::Entities::{{ name }} &&entity) override = 0;
     virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> getWithDetails(int entityId) = 0;
     {% endif %}
     {% for loader_function in loader_function_list_for_interface %}
