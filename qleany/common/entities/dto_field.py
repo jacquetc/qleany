@@ -1,18 +1,14 @@
 from dataclasses import dataclass
 from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldInfo, FieldType, RelationshipInfo, RelationshipType, RelationshipStrength, RelationshipDirection, RelationshipCardinality
 
-@dataclass
-class Field:
+@dataclass(slots=True)
+class DtoField:
     id: int
     name: str
     type_: str
-    entity: int | None
+    dto: int | None
     is_nullable: bool
-    is_primary_key: bool
     is_list: bool
-    strong: bool
-    list_model: bool
-    list_model_displayed_field: str | None
 
     @classmethod
     def _schema(cls) -> EntitySchema:
@@ -38,7 +34,7 @@ class Field:
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='entity',
+                    field_name='dto',
                     field_type=FieldType.Integer,
                     is_primary_key=False,
                     has_relationship=True
@@ -50,47 +46,34 @@ class Field:
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='is_primary_key',
-                    field_type=FieldType.Bool,
-                    is_primary_key=False,
-                    has_relationship=False
-                ),
-                FieldInfo(
                     field_name='is_list',
                     field_type=FieldType.Bool,
-                    is_primary_key=False,
-                    has_relationship=False
-                ),
-                FieldInfo(
-                    field_name='strong',
-                    field_type=FieldType.Bool,
-                    is_primary_key=False,
-                    has_relationship=False
-                ),
-                FieldInfo(
-                    field_name='list_model',
-                    field_type=FieldType.Bool,
-                    is_primary_key=False,
-                    has_relationship=False
-                ),
-                FieldInfo(
-                    field_name='list_model_displayed_field',
-                    field_type=FieldType.String,
                     is_primary_key=False,
                     has_relationship=False
                 )
             ],
             relationships=[
                 RelationshipInfo(
-                    left_entity=EntityEnum.Field,
-                    left_entity_name='Field',
-                    right_entity=EntityEnum.Entity,
-                    right_entity_name='Entity',
-                    field_name='entity',
-                    relationship_type=RelationshipType.OneToOne,
+                    left_entity=EntityEnum.DtoField,
+                    left_entity_name='DtoField',
+                    right_entity=EntityEnum.Dto,
+                    right_entity_name='Dto',
+                    field_name='dto',
+                    relationship_type=RelationshipType.ManyToOne,
                     relationship_strength=RelationshipStrength.Weak,
                     relationship_direction=RelationshipDirection.Forward,
                     relationship_cardinality=RelationshipCardinality.One
+                ),
+                RelationshipInfo(
+                    left_entity=EntityEnum.Dto,
+                    left_entity_name='Dto',
+                    right_entity=EntityEnum.DtoField,
+                    right_entity_name='DtoField',
+                    field_name='dto_fields',
+                    relationship_type=RelationshipType.OneToMany,
+                    relationship_strength=RelationshipStrength.Strong,
+                    relationship_direction=RelationshipDirection.Backward,
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered
                 )
             ]
         )
