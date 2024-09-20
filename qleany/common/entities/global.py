@@ -2,11 +2,13 @@ from dataclasses import dataclass
 from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldInfo, FieldType, RelationshipInfo, RelationshipType, RelationshipStrength, RelationshipDirection, RelationshipCardinality
 
 @dataclass
-class Feature:
+class Global:
     id: int
-    name: str
-    description: str
-    use_cases: list[int]
+    language: str
+    application_name: str
+    organisation_name: str
+    organisation_domain: str
+
 
     @classmethod
     def _schema(cls) -> EntitySchema:
@@ -20,35 +22,29 @@ class Feature:
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='name',
+                    field_name='language',
                     field_type=FieldType.String,
                     is_primary_key=False,
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='description',
+                    field_name='application_name',
                     field_type=FieldType.String,
                     is_primary_key=False,
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='use_cases',
-                    field_type=FieldType.Integer,
+                    field_name='organisation_name',
+                    field_type=FieldType.String,
                     is_primary_key=False,
-                    has_relationship=True
+                    has_relationship=False
+                ),
+                FieldInfo(
+                    field_name='organisation_domain',
+                    field_type=FieldType.String,
+                    is_primary_key=False,
+                    has_relationship=False
                 )
             ],
-            relationships=[
-                RelationshipInfo(
-                    left_entity=EntityEnum.Feature,
-                    left_entity_name='Feature',
-                    right_entity=EntityEnum.UseCase,
-                    right_entity_name='UseCase',
-                    field_name='use_cases',
-                    relationship_type=RelationshipType.OneToMany,
-                    relationship_strength=RelationshipStrength.Strong,
-                    relationship_direction=RelationshipDirection.Forward,
-                    relationship_cardinality=RelationshipCardinality.ManyOrdered
-                )
-            ]
+            relationships=[]
         )
