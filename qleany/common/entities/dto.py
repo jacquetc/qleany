@@ -3,9 +3,9 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class Dto:
-    id: int
+    id_: int
     name: str
-    dto_fields: list[int]
+    fields: list[int]
 
 
     @classmethod
@@ -14,7 +14,7 @@ class Dto:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False
@@ -26,7 +26,7 @@ class Dto:
                     has_relationship=False
                 ),
                 FieldInfo(
-                    field_name='dto_fields',
+                    field_name='fields',
                     field_type=FieldType.Integer,
                     is_primary_key=False,
                     has_relationship=True
@@ -38,7 +38,7 @@ class Dto:
                     left_entity_name='Dto',
                     right_entity=EntityEnum.DtoField,
                     right_entity_name='DtoField',
-                    field_name='dto_fields',
+                    field_name='fields',
                     relationship_type=RelationshipType.OneToMany,
                     relationship_strength=RelationshipStrength.Strong,
                     relationship_direction=RelationshipDirection.Forward,

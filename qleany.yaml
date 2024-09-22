@@ -16,6 +16,28 @@ entities:
       fields:
         - name: id
           type: int
+
+    - name: Root
+      parent: EntityBase
+      fields:
+        - name: global
+          type: Global
+          is_list: false
+          ordered: false
+          strong: true
+          list_model: false
+        - name: entities
+          type: Entity
+          is_list: false
+          ordered: false
+          strong: true
+          list_model: false
+        - name: features
+          type: Feature
+          is_list: false
+          ordered: false
+          strong: true
+          list_model: false
           
     - name: Entity
       parent: EntityBase
@@ -29,6 +51,12 @@ entities:
           strong: true
           list_model: true
           list_model_displayed_field: name
+        - name: relationships
+          type: Relationship
+          is_list: true
+          ordered: false
+          strong: true
+          list_model: false
 
     - name: Field
       parent: EntityBase
@@ -37,6 +65,14 @@ entities:
           type: string
         - name: type
           type: string
+        - name: entity
+          type: Entity
+          strong: false
+          is_nullable: true
+        - name: is_nullable
+          type: bool
+        - name: is_primary_key
+          type: bool
         - name: is_list
           type: bool
         - name: single
@@ -45,20 +81,23 @@ entities:
           type: bool
         - name: ordered
           type: bool
+        - name: list_model
+          type: bool
+        - name: list_model_displayed_field
+          type: string
 
     - name: Feature
       parent: EntityBase
       fields:
         - name: name
           type: string
-        - name: validator
-          type: bool
         - name: use_cases
           type: UseCase
           is_list: true
           strong: true
           list_model: true
           list_model_displayed_field: name
+          ordered: true
 
     - name: UseCase
       parent: EntityBase
@@ -67,20 +106,22 @@ entities:
           type: string
         - name: validator
           type: bool
-        - name: undoable
-          type: bool
-        - name: dto_in
-          type: Dto
-          strong: true
-        - name: dto_out
-          type: Dto
-          single: true
-          strong: true
         - name: entities
           type: Entity
           is_list: true
           list_model: true
           list_model_displayed_field: name
+          ordered: true
+        - name: undoable
+          type: bool
+        - name: dto_in
+          type: Dto
+          strong: true
+          is_nullable: true
+        - name: dto_out
+          type: Dto
+          strong: true
+          is_nullable: true
 
     - name: Dto
       parent: EntityBase
@@ -102,8 +143,40 @@ entities:
           type: string
         - name: type
           type: string
+        - name: is_nullable
+          type: bool
         - name: is_list
           type: bool
+
+    - name: Global
+      parent: EntityBase
+      fields:
+        - name: language
+          type: string
+        - name: application_name
+          type: string
+        - name: organisation_name
+          type: string
+        - name: organisation_domain
+          type: string
+
+    - name: Relationship
+      parent: EntityBase
+      fields:
+        - name: left_entity_name
+          type: string
+        - name: right_entity_name
+          type: string
+        - name: field_name
+          type: string
+        - name: relationship_type
+          type: string
+        - name: strength
+          type: string
+        - name: direction
+          type: string
+        - name: cardinality
+          type: string
 
 features:
   python_file_listing: 

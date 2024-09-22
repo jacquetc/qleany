@@ -3,7 +3,7 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class Global:
-    id: int
+    id_: int
     language: str
     application_name: str
     organisation_name: str
@@ -16,7 +16,7 @@ class Global:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False
@@ -46,5 +46,16 @@ class Global:
                     has_relationship=False
                 )
             ],
-            relationships=[]
+            relationships=[
+                RelationshipInfo(
+                    left_entity=EntityEnum.Root,
+                    left_entity_name='Root',
+                    right_entity=EntityEnum.Global,
+                    right_entity_name='Global',
+                    field_name='global_',
+                    relationship_type=RelationshipType.OneToOne,
+                    relationship_strength=RelationshipStrength.Strong,
+                    relationship_direction=RelationshipDirection.Backward,
+                    relationship_cardinality=RelationshipCardinality.One)
+            ],  
         )

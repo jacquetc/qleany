@@ -8,6 +8,8 @@ class EntityEnum(Enum):
     Dto = 5
     DtoField = 6
     UseCase = 7
+    Relationship = 8
+    Global = 9
 
 class FieldType(Enum):
     Bool = 1

@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.dto_field import DtoField
+from qleany.common.entities.field import Field
 
-class IDtoFieldRepository(ABC):
+
+class IFieldRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[DtoField]:
+    def get(self, ids: list[int]) -> list[Field]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[DtoField]:
+    def get_all(self) -> list[Field]:
         pass
 
     @abstractmethod
@@ -15,11 +16,11 @@ class IDtoFieldRepository(ABC):
         pass
 
     @abstractmethod
-    def create(self, dto_fields: list[DtoField]) -> list[DtoField]:
+    def create(self, field_fields: list[Field]) -> list[Field]:
         pass
 
     @abstractmethod
-    def update(self, dto_fields: list[DtoField]) -> list[DtoField]:
+    def update(self, field_fields: list[Field]) -> list[Field]:
         pass
 
     @abstractmethod

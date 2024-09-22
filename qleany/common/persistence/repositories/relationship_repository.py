@@ -1,20 +1,20 @@
-from qleany.common.persistence.repositories.interfaces.i_field_repository import (
-    IFieldRepository,
+from qleany.common.persistence.repositories.interfaces.i_relationship_repository import (
+    IRelationshipRepository,
 )
-from qleany.common.entities.field import Field
+from qleany.common.entities.relationship import Relationship
 from functools import lru_cache
 import logging
 from qleany.common.persistence.repositories.repository_observer import RepositorySubject
 
 
-class FieldRepository(IFieldRepository, RepositorySubject):
+class RelationshipRepository(IRelationshipRepository, RepositorySubject):
 
     def __init__(self, db_context):
         self._database = Database(db_context)
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, ids: list[int]) -> list[Field]:
+    def get(self, ids: list[int]) -> list[Relationship]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
@@ -24,7 +24,7 @@ class FieldRepository(IFieldRepository, RepositorySubject):
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self) -> list[Field]:
+    def get_all(self) -> list[Relationship]:
         if not self._cache:
             db_entities = self._database.get_all()
             for entity in db_entities:
@@ -36,7 +36,7 @@ class FieldRepository(IFieldRepository, RepositorySubject):
             self.get_all()
         return list(self._cache.keys())
 
-    def create(self, entities: list[Field]) -> list[Field]:
+    def create(self, entities: list[Relationship]) -> list[Relationship]:
         created_entities = self._database.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
@@ -48,7 +48,7 @@ class FieldRepository(IFieldRepository, RepositorySubject):
 
         return created_entities
 
-    def update(self, entities: list[Field]) -> list[Field]:
+    def update(self, entities: list[Relationship]) -> list[Relationship]:
         updated_entities = self._database.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
@@ -86,10 +86,12 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         logging.info("Cache cleared")
 
     def cascade_remove(
-        self, left_entity: str, field_name: str, left_entity_ids: list[int]
+        self, left_entity: str, relationship_name: str, left_entity_ids: list[int]
     ):
         right_ids = self._database.get_right_ids(
-            left_entity, field_name, left_entity_ids
+            left_entity, relationship_name, left_entity_ids
         )
         self.remove(right_ids)
-        logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")
+        logging.info(
+            f"Cascade remove {right_ids} from {left_entity} {relationship_name}"
+        )
