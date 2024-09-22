@@ -3,9 +3,8 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class Feature:
-    id: int
+    id_: int
     name: str
-    description: str
     use_cases: list[int]
 
     @classmethod
@@ -14,7 +13,7 @@ class Feature:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False
@@ -49,6 +48,17 @@ class Feature:
                     relationship_strength=RelationshipStrength.Strong,
                     relationship_direction=RelationshipDirection.Forward,
                     relationship_cardinality=RelationshipCardinality.ManyOrdered
+                ),
+                RelationshipInfo(
+                    left_entity=EntityEnum.Root,
+                    left_entity_name='Root',
+                    right_entity=EntityEnum.Feature,
+                    right_entity_name='Feature',
+                    field_name='features',
+                    relationship_type=RelationshipType.OneToMany,
+                    relationship_strength=RelationshipStrength.Strong,
+                    relationship_direction=RelationshipDirection.Backward,
+                    relationship_cardinality=RelationshipCardinality.ManyUnordered
                 )
             ]
         )

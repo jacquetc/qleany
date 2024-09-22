@@ -3,7 +3,7 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class Root:
-    id: int
+    id_: int
     global_: int
     entities: list[int]
     features: list[int]
@@ -16,7 +16,7 @@ class Root:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False

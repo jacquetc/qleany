@@ -3,9 +3,10 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class Entity:
-    id: int
+    id_: int
     only_for_heritage: bool = False
     fields: list[int]
+    relationships: list[int]
 
 
     @classmethod
@@ -14,13 +15,25 @@ class Entity:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False
                 ),
                 FieldInfo(
+                    field_name='only_for_heritage',
+                    field_type=FieldType.Bool,
+                    is_primary_key=False,
+                    has_relationship=False
+                ),
+                FieldInfo(
                     field_name='fields',
+                    field_type=FieldType.Integer,
+                    is_primary_key=False,
+                    has_relationship=True
+                ),
+                FieldInfo(
+                    field_name='relationships',
                     field_type=FieldType.Integer,
                     is_primary_key=False,
                     has_relationship=True
@@ -39,8 +52,19 @@ class Entity:
                     relationship_cardinality=RelationshipCardinality.ManyOrdered
                 ),
                 RelationshipInfo(
-                    left_entity=EntityEnum.Feature,
-                    left_entity_name='Feature',
+                    left_entity=EntityEnum.Entity,
+                    left_entity_name='Entity',
+                    right_entity=EntityEnum.Relationship,
+                    right_entity_name='Relationship',
+                    field_name='relationships',
+                    relationship_type=RelationshipType.OneToMany,
+                    relationship_strength=RelationshipStrength.Strong,
+                    relationship_direction=RelationshipDirection.Forward,
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered
+                ),
+                RelationshipInfo(
+                    left_entity=EntityEnum.UseCase,
+                    left_entity_name='UseCase',
                     right_entity=EntityEnum.Entity,
                     right_entity_name='Entity',
                     field_name='entities',

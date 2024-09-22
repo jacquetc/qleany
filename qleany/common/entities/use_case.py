@@ -3,7 +3,7 @@ from qleany.common.entities.entity_enums import EntitySchema, EntityEnum, FieldI
 
 @dataclass
 class UseCase:
-    id: int
+    id_: int
     name: str
     validator: bool
     entities: list[int]
@@ -18,7 +18,7 @@ class UseCase:
             entity_name=cls.__name__,
             fields=[
                 FieldInfo(
-                    field_name='id',
+                    field_name='id_',
                     field_type=FieldType.Integer,
                     is_primary_key=True,
                     has_relationship=False

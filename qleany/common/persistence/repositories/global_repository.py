@@ -1,47 +1,21 @@
-from qleany.common.persistence.repositories.feature_repository import (
-    FeatureRepository,
+from qleany.common.persistence.repositories.interfaces.i_global_repository import (
+    IGlobalRepository,
 )
-from qleany.common.persistence.repositories.entity_repository import (
-    EntityRepository,
-)
-from qleany.common.persistence.repositories.global_repository import (
-    GlobalRepository,
-)
-from qleany.common.persistence.repositories.interfaces.i_root_repository import (
-    IRootRepository,
-)
-from qleany.common.entities.root import Root
+from qleany.common.entities.global_ import Global
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import (
-    RepositoryObserver,
-    RepositorySubject,
-)
+from qleany.common.persistence.repositories.repository_observer import RepositorySubject
 import logging
-from qleany.common.entities.root import Root
 
 
-class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
+class GlobalRepository(IGlobalRepository, RepositorySubject):
 
-    def __init__(
-        self,
-        db_context,
-        feature_repository: FeatureRepository,
-        entity_repository: EntityRepository,
-        global_repository: GlobalRepository,
-    ):
+    def __init__(self, db_context):
         self._database = Database(db_context)
-        self._feature_repository = feature_repository
-        self._entity_repository = entity_repository
-        self._global_repository = global_repository
-
-        self._feature_repository.attach(self)
-        self._entity_repository.attach(self)
-        self._global_repository.attach(self)
 
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, ids: list[int]) -> list[Root]:
+    def get(self, ids: list[int]) -> list[Global]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
@@ -51,7 +25,7 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self) -> list[Root]:
+    def get_all(self) -> list[Global]:
         if not self._cache:
             db_entities = self._database.get_all()
             for entity in db_entities:
@@ -63,7 +37,7 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
             self.get_all()
         return list(self._cache.keys())
 
-    def create(self, entities: list[Root]) -> list[Root]:
+    def create(self, entities: list[Global]) -> list[Global]:
         created_entities = self._database.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
@@ -75,7 +49,7 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
 
         return created_entities
 
-    def update(self, entities: list[Root]) -> list[Root]:
+    def update(self, entities: list[Global]) -> list[Global]:
         updated_entities = self._database.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
@@ -89,10 +63,6 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
         return updated_entities
 
     def remove(self, ids: list[int]) -> list[int]:
-        # cascade remove for strong relationships
-        self._feature_repository.cascade_remove("Root", "features", ids)
-        self._entity_repository.cascade_remove("Root", "entities", ids)
-        self._global_repository.cascade_remove("Root", "global_", ids)
 
         removed_ids = self._database.remove(ids)
         for id in removed_ids:
@@ -123,20 +93,3 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")
-
-    # observer methods
-
-    def _on_related_ids_to_be_cleared_from_cache(
-        self, subject, left_entity: type, left_ids: list[int]
-    ):
-
-        if subject not in [
-            self._feature_repository,
-            self._entity_repository,
-            self._global_repository,
-        ]:
-            return
-        if left_entity != Root:
-            return
-        self.get.cache_clear()
-        [self._cache.pop(id, None) for id in left_ids]
