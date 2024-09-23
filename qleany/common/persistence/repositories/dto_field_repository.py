@@ -10,34 +10,35 @@ from qleany.common.persistence.repositories.repository_observer import Repositor
 
 class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
-    def __init__(self, db_context):
-        self._database = Database(db_context)
+    def __init__(self):
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, ids: list[int]) -> list[DtoField]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[DtoField]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
-            db_entities = self._database.get(missing_ids)
+            db_entities = self._database.get(db_connection, missing_ids)
             for entity in db_entities:
                 self._cache[entity.id_] = entity
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self) -> list[DtoField]:
+    def get_all(self, db_connection: IDbConnection) -> list[DtoField]:
         if not self._cache:
             db_entities = self._database.get_all()
             for entity in db_entities:
                 self._cache[entity.id_] = entity
         return list(self._cache.values())
 
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         if not self._cache:
             self.get_all()
         return list(self._cache.keys())
 
-    def create(self, entities: list[DtoField]) -> list[DtoField]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[DtoField]
+    ) -> list[DtoField]:
         created_entities = self._database.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
@@ -49,7 +50,9 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
         return created_entities
 
-    def update(self, entities: list[DtoField]) -> list[DtoField]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[DtoField]
+    ) -> list[DtoField]:
         updated_entities = self._database.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
@@ -62,10 +65,10 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
         return updated_entities
 
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         # cascade remove for strong relationships
-        self._feature_repository.cascade_remove("Root", "features", ids)
-        
+        self._feature_repository.cascade_remove(db_connection, "Root", "features", ids)
+
         # remove from database and cache
         self._database.remove(ids)
         for id in ids:
@@ -79,7 +82,7 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
         return ids
 
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         self._database.clear()
         self._cache.clear()
         self.get.cache_clear()
@@ -89,10 +92,14 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
         logging.info("Cache cleared")
 
     def cascade_remove(
-        self, left_entity: str, field_name: str, left_entity_ids: list[int]
+        self,
+        db_connection: IDbConnection,
+        left_entity: str,
+        field_name: str,
+        left_entity_ids: list[int],
     ):
         right_ids = self._database.get_right_ids(
-            left_entity, field_name, left_entity_ids
+            db_connection, left_entity, field_name, left_entity_ids
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

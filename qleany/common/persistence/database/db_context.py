@@ -3,6 +3,9 @@ import tempfile
 import threading
 import os
 from typing import Dict, List
+from qleany.common.persistence.database.db_connection import DbConnection
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
+
 
 class DbContext:
     def __init__(self):
@@ -16,7 +19,7 @@ class DbContext:
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             self.file_name = temp_file.name
             temp_file.close()
-            self.database_name = self.create_empty_database()
+            self.database_name = self._create_empty_database()
         except Exception as e:
             raise RuntimeError(f"Error initializing database: {str(e)}")
 
@@ -28,7 +31,7 @@ class DbContext:
             except OSError as e:
                 print(f"Error removing database file: {e}")
 
-    def get_connection(self) -> sqlite3.Connection:
+    def get_connection(self) -> IDbConnection:
         with self.mutex:
             conn = sqlite3.connect(self.file_name)
             # Execute PRAGMA statements for the new connection
@@ -39,12 +42,12 @@ class DbContext:
                 "PRAGMA locking_mode=NORMAL",
                 "PRAGMA synchronous=OFF",
                 "PRAGMA recursive_triggers=ON",
-                "PRAGMA foreign_keys=ON"
+                "PRAGMA foreign_keys=ON",
             ]
             cursor = conn.cursor()
             for pragma in pragmas:
                 cursor.execute(pragma)
-            return conn
+            return DbConnection(conn)
 
     def append_creation_sql(self, type: str, sql: str):
         with self.mutex:
@@ -52,19 +55,19 @@ class DbContext:
                 self._creation_sql_dict[type] = []
             self._creation_sql_dict[type].append(sql)
 
-    def create_empty_database(self):
+    def _create_empty_database(self):
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 # Create the entity tables in the database
-                entity_tables = self._creation_sql_dict.get("entity_table")
-                
+                entity_tables = self._creation_sql_dict.get("entity_table", [])
+
                 for table in entity_tables:
                     cursor.execute(table)
-                    
+
                 # Create the junction tables in the database
-                junction_tables = self._creation_sql_dict.get("junction_table")
+                junction_tables = self._creation_sql_dict.get("junction_table", [])
 
                 for table in junction_tables:
                     cursor.execute(table)
@@ -77,9 +80,9 @@ class DbContext:
                     "PRAGMA locking_mode=NORMAL",
                     "PRAGMA synchronous=OFF",
                     "PRAGMA recursive_triggers=ON",
-                    "PRAGMA foreign_keys=ON"
+                    "PRAGMA foreign_keys=ON",
                 ]
-                
+
                 for pragma in optimization_pragmas:
                     cursor.execute(pragma)
 
@@ -87,5 +90,3 @@ class DbContext:
 
         except Exception as e:
             raise RuntimeError(f"Error creating database: {str(e)}")
-
-

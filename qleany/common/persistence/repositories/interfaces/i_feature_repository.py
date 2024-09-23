@@ -4,29 +4,33 @@ from qleany.common.entities.feature import Feature
 
 class IFeatureRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[Feature]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Feature]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Feature]:
+    def get_all(self, db_connection: IDbConnection) -> list[Feature]:
         pass
 
     @abstractmethod
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         pass
 
     @abstractmethod
-    def create(self, feature_fields: list[Feature]) -> list[Feature]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         pass
 
     @abstractmethod
-    def update(self, feature_fields: list[Feature]) -> list[Feature]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         pass
 
     @abstractmethod
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         pass
 
     @abstractmethod
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         pass

@@ -4,29 +4,33 @@ from qleany.common.entities.entity import Entity
 
 class IEntityRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[Entity]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Entity]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Entity]:
+    def get_all(self, db_connection: IDbConnection) -> list[Entity]:
         pass
 
     @abstractmethod
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         pass
 
     @abstractmethod
-    def create(self, entity_fields: list[Entity]) -> list[Entity]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[Entity]
+    ) -> list[Entity]:
         pass
 
     @abstractmethod
-    def update(self, entity_fields: list[Entity]) -> list[Entity]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[Entity]
+    ) -> list[Entity]:
         pass
 
     @abstractmethod
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         pass
 
     @abstractmethod
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         pass

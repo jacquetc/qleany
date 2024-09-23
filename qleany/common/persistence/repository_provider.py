@@ -3,6 +3,7 @@ from typing import Type, Dict
 from abc import ABC, abstractmethod
 from typing import Type, Dict
 
+
 class IRepositoryProvider(ABC):
     @classmethod
     @abstractmethod

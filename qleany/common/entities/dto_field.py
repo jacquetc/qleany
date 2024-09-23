@@ -59,13 +59,14 @@ class DtoField:
             relationships=[
                 RelationshipInfo(
                     left_entity=EntityEnum.Dto,
-                    left_entity_name='Dto',
+                    left_entity_name="Dto",
                     right_entity=EntityEnum.DtoField,
-                    right_entity_name='DtoField',
-                    field_name='fields',
+                    right_entity_name="DtoField",
+                    field_name="fields",
                     relationship_type=RelationshipType.OneToMany,
                     relationship_strength=RelationshipStrength.Strong,
                     relationship_direction=RelationshipDirection.Backward,
-                    relationship_cardinality=RelationshipCardinality.ManyOrdered
-                )],
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered,
+                )
+            ],
         )

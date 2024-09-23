@@ -120,6 +120,7 @@ docs/_build/
 
 # PyBuilder
 target/
+.venv
 
 # Eclipse
 .project
