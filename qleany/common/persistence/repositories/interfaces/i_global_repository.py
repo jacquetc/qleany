@@ -4,29 +4,33 @@ from qleany.common.entities.global_ import Global
 
 class IGlobalRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[Global]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Global]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Global]:
+    def get_all(self, db_connection: IDbConnection) -> list[Global]:
         pass
 
     @abstractmethod
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         pass
 
     @abstractmethod
-    def create(self, global_fields: list[Global]) -> list[Global]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[Global]
+    ) -> list[Global]:
         pass
 
     @abstractmethod
-    def update(self, global_fields: list[Global]) -> list[Global]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[Global]
+    ) -> list[Global]:
         pass
 
     @abstractmethod
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         pass
 
     @abstractmethod
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         pass

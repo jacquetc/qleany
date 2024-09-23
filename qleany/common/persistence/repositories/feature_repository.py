@@ -15,7 +15,7 @@ import logging
 
 class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubject):
 
-    def __init__(self, db_context, use_case_repository: UseCaseRepository):
+    def __init__(self, use_case_repository: UseCaseRepository):
         self._database = Database(db_context)
         self._use_case_repository = use_case_repository
 
@@ -24,29 +24,31 @@ class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubjec
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, ids: list[int]) -> list[Feature]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Feature]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
-            db_entities = self._database.get(missing_ids)
+            db_entities = self._database.get(db_connection, missing_ids)
             for entity in db_entities:
                 self._cache[entity.id_] = entity
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self) -> list[Feature]:
+    def get_all(self, db_connection: IDbConnection) -> list[Feature]:
         if not self._cache:
             db_entities = self._database.get_all()
             for entity in db_entities:
                 self._cache[entity.id_] = entity
         return list(self._cache.values())
 
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         if not self._cache:
             self.get_all()
         return list(self._cache.keys())
 
-    def create(self, entities: list[Feature]) -> list[Feature]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         created_entities = self._database.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
@@ -58,7 +60,9 @@ class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubjec
 
         return created_entities
 
-    def update(self, entities: list[Feature]) -> list[Feature]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         updated_entities = self._database.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
@@ -71,9 +75,11 @@ class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubjec
 
         return updated_entities
 
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         # cascade remove for strong relationships
-        self._use_case_repository.cascade_remove("Feature", "use_cases", ids)
+        self._use_case_repository.cascade_remove(
+            db_connection, "Feature", "use_cases", ids
+        )
 
         removed_ids = self._database.remove(ids)
         for id in removed_ids:
@@ -87,7 +93,7 @@ class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubjec
 
         return removed_ids
 
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         self._database.clear()
         self._cache.clear()
         self.get.cache_clear()
@@ -97,10 +103,14 @@ class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubjec
         logging.info("Cache cleared")
 
     def cascade_remove(
-        self, left_entity: str, field_name: str, left_entity_ids: list[int]
+        self,
+        db_connection: IDbConnection,
+        left_entity: str,
+        field_name: str,
+        left_entity_ids: list[int],
     ):
         right_ids = self._database.get_right_ids(
-            left_entity, field_name, left_entity_ids
+            db_connection, left_entity, field_name, left_entity_ids
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

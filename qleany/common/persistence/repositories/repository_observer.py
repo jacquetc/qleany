@@ -14,13 +14,15 @@ class RepositoryObserver(ABC):
     def _on_cleared(self, subject):
         pass
 
-    def _on_related_ids_to_be_cleared_from_cache(self, subject, left_entity, field_name, left_ids: list[int]):
+    def _on_related_ids_to_be_cleared_from_cache(
+        self, subject, left_entity, field_name, left_ids: list[int]
+    ):
         pass
 
 
 class RepositorySubject(ABC):
     def __init__(self):
-        self._observers : list[RepositoryObserver] = []
+        self._observers: list[RepositoryObserver] = []
 
     def attach(self, observer: RepositoryObserver):
         self._observers.append(observer)
@@ -44,6 +46,10 @@ class RepositorySubject(ABC):
         for observer in self._observers:
             observer._on_cleared(self)
 
-    def _notify_related_ids_to_be_cleared_from_cache(self, left_entity: type, left_ids: list[int]):
+    def _notify_related_ids_to_be_cleared_from_cache(
+        self, left_entity: type, left_ids: list[int]
+    ):
         for observer in self._observers:
-            observer._on_related_ids_to_be_cleared_from_cache(self, left_entity, left_ids)
+            observer._on_related_ids_to_be_cleared_from_cache(
+                self, left_entity, left_ids
+            )

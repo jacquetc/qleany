@@ -1,31 +1,36 @@
 from abc import ABC, abstractmethod
 from qleany.common.entities.dto_field import DtoField
 
+
 class IDtoFieldRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[DtoField]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[DtoField]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[DtoField]:
+    def get_all(self, db_connection: IDbConnection) -> list[DtoField]:
         pass
 
     @abstractmethod
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         pass
 
     @abstractmethod
-    def create(self, dto_fields: list[DtoField]) -> list[DtoField]:
+    def create(
+        self, db_connection: IDbConnection, entities: list[DtoField]
+    ) -> list[DtoField]:
         pass
 
     @abstractmethod
-    def update(self, dto_fields: list[DtoField]) -> list[DtoField]:
+    def update(
+        self, db_connection: IDbConnection, entities: list[DtoField]
+    ) -> list[DtoField]:
         pass
 
     @abstractmethod
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
         pass
 
     @abstractmethod
-    def clear(self):
+    def clear(self, db_connection: IDbConnection):
         pass

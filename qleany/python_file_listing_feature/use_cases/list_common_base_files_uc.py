@@ -8,7 +8,7 @@ class ListCommonBaseFilesUc:
     def __init__(self):
         pass
 
-    def execute(self, dto: ListCommonBaseFilesUcDto):
+    def execute(self, db_context: IDbContext, dto: ListCommonBaseFilesUcDto):
 
         files = ["qleany/common/__init__.py"]
 

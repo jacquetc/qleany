@@ -6,7 +6,7 @@ description = "Python tool for Qleany"
 authors = ["Cyril Jacquet <cyril.jacquet@skribisto.eu>"]
 repository = "https://github.com/jacquetc/qleany"
 readme = ["README.md", "LICENSE"]
-packages = [{ include = "qleany", from = "tools" }]
+packages = [{ include = "qleany" }]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
@@ -42,8 +42,7 @@ format-jinja-imports = [{ module = "datetime", item = "datetime" }]
 
 [tool.poetry-dynamic-versioning.substitution]
 folders = [
-  { path = "tools/generator"}, 
-  { path = "tools"}
+  { path = "qleany"}
 ]
 
 [virtualenvs]

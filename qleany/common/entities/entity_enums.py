@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class EntityEnum(Enum):
     Root = 1
     Entity = 2
@@ -11,6 +12,7 @@ class EntityEnum(Enum):
     Relationship = 8
     Global = 9
 
+
 class FieldType(Enum):
     Bool = 1
     Integer = 2
@@ -20,15 +22,18 @@ class FieldType(Enum):
     DateTime = 6
     Entity = 7
 
+
 class RelationshipType(Enum):
     OneToOne = 1
     OneToMany = 2
     ManyToMany = 3
     ManyToOne = 4
 
+
 class RelationshipStrength(Enum):
     Strong = 1
     Weak = 2
+
 
 class RelationshipDirection(Enum):
     """
@@ -38,9 +43,11 @@ class RelationshipDirection(Enum):
     Note: this is used to determine the name of the relationship in the related
     entity or the junction table name
     """
+
     Forward = 1
     Backward = 2
-    
+
+
 class RelationshipCardinality(Enum):
     """
     RelationshipCardinality
@@ -50,9 +57,11 @@ class RelationshipCardinality(Enum):
     Note: this is used to determine the name of the relationship in the related
     entity or the junction table name
     """
+
     One = 1
     ManyOrdered = 2
     ManyUnordered = 3
+
 
 class RelationshipInfo:
     left_entity: EntityEnum
@@ -65,7 +74,18 @@ class RelationshipInfo:
     relationship_direction: RelationshipDirection
     relationship_cardinality: RelationshipCardinality
 
-    def __init__(self, left_entity: EntityEnum, left_entity_name: str, right_entity: EntityEnum, right_entity_name: str, field_name: str, relationship_type: RelationshipType, relationship_strength: RelationshipStrength, relationship_direction: RelationshipDirection, relationship_cardinality: RelationshipCardinality):
+    def __init__(
+        self,
+        left_entity: EntityEnum,
+        left_entity_name: str,
+        right_entity: EntityEnum,
+        right_entity_name: str,
+        field_name: str,
+        relationship_type: RelationshipType,
+        relationship_strength: RelationshipStrength,
+        relationship_direction: RelationshipDirection,
+        relationship_cardinality: RelationshipCardinality,
+    ):
         self.left_entity = left_entity
         self.left_entity_name = left_entity_name
         self.right_entity = right_entity
@@ -76,24 +96,37 @@ class RelationshipInfo:
         self.relationship_direction = relationship_direction
         self.relationship_cardinality = relationship_cardinality
 
+
 class FieldInfo:
     field_name: str
     field_type: FieldType
     is_primary_key: bool
     has_relationship: bool
 
-    def __init__(self, field_name: str, field_type: FieldType, is_primary_key: bool, has_relationship: bool):
+    def __init__(
+        self,
+        field_name: str,
+        field_type: FieldType,
+        is_primary_key: bool,
+        has_relationship: bool,
+    ):
         self.field_name = field_name
         self.field_type = field_type
         self.is_primary_key = is_primary_key
         self.has_relationship = has_relationship
+
 
 class EntitySchema:
     entity_name: str
     fields: list[FieldInfo]
     relationships: list[RelationshipInfo]
 
-    def __init__(self, entity_name: str, fields: list[FieldInfo], relationships: list[RelationshipInfo]):
+    def __init__(
+        self,
+        entity_name: str,
+        fields: list[FieldInfo],
+        relationships: list[RelationshipInfo],
+    ):
         self.entity_name = entity_name
         self.fields = fields
         self.relationships = relationships
