@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.field import Field
+from qleany.common.entities.field import
+from functools import lru_cache
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 
 
 class IFieldRepository(ABC):
+    @lru_cache(maxsize=None)
     @abstractmethod
     def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Field]:
         pass

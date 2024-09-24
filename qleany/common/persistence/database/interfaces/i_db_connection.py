@@ -5,7 +5,7 @@ import sqlite3
 class IDbConnection(ABC):
 
     @abstractmethod
-    def connection(self) -> sqlite3.connection:
+    def connection(self) -> sqlite3.Connection:
         pass
 
     @abstractmethod

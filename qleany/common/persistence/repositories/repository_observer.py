@@ -1,4 +1,5 @@
 from abc import ABC
+from qleany.common.entities.entity_enums import EntityEnum
 
 
 class RepositoryObserver(ABC):
@@ -47,7 +48,7 @@ class RepositorySubject(ABC):
             observer._on_cleared(self)
 
     def _notify_related_ids_to_be_cleared_from_cache(
-        self, left_entity: type, left_ids: list[int]
+        self, left_entity: EntityEnum, left_ids: list[int]
     ):
         for observer in self._observers:
             observer._on_related_ids_to_be_cleared_from_cache(

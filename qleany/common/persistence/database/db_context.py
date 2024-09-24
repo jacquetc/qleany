@@ -10,7 +10,7 @@ from qleany.common.persistence.database.interfaces.i_db_connection import IDbCon
 class DbContext:
     def __init__(self):
         self.mutex = threading.Lock()
-        self.file_name = None
+        self.file_name = ""
         self.database_name = None
         self._creation_sql_dict: Dict[str, List[str]] = {}
 

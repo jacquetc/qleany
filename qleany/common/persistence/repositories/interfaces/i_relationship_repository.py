@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from qleany.common.entities.relationship import Relationship
+from functools import lru_cache
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 
 
 class IRelationshipRepository(ABC):
+    @lru_cache(maxsize=None)
     @abstractmethod
     def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Relationship]:
         pass
