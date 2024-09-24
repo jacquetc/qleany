@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 import logging
 from functools import lru_cache
 
@@ -11,14 +13,17 @@ from qleany.common.persistence.database.interfaces.i_db_connection import (
 from qleany.common.persistence.repositories.interfaces.i_dto_field_repository import (
     IDtoFieldRepository,
 )
-from qleany.common.persistence.repositories.repository_observer import (
-    RepositorySubject,
-)
+from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.dto_field import DtoField
+from functools import lru_cache
+import logging
+from qleany.common.persistence.repositories.repository_observer import RepositorySubject
 
 
 class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
     def __init__(self):
+        super().__init__()
         self._cache = {}
 
     @lru_cache(maxsize=None)

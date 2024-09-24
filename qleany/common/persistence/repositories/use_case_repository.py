@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.dto_repository import (
     DtoRepository,
 )
@@ -5,7 +7,7 @@ from qleany.common.persistence.repositories.entity_repository import EntityRepos
 from qleany.common.persistence.repositories.interfaces.i_use_case_repository import (
     IUseCaseRepository,
 )
-from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.entity_enums import EntityEnum, RelationshipDirection
 from qleany.common.entities.use_case import UseCase
 from functools import lru_cache
 from qleany.common.persistence.repositories.repository_observer import (
@@ -22,7 +24,8 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         entity_repository: EntityRepository,
         dto_repository: DtoRepository,
     ):
-        self._database = Database(db_context)
+        super().__init__()
+        self._database = DbTableGroup(UseCase)
         self._entity_repository = entity_repository
         self._dto_repository = dto_repository
 
@@ -36,7 +39,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
-            db_entities = self._database.get(db_connection, missing_ids)
+            db_entities = self._database.get(db_connection.connection(), missing_ids)
             for entity in db_entities:
                 self._cache[entity.id_] = entity
             cached_entities.extend(db_entities)
@@ -44,20 +47,20 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
 
     def get_all(self, db_connection: IDbConnection) -> list[UseCase]:
         if not self._cache:
-            db_entities = self._database.get_all()
+            db_entities = self._database.get_all(db_connection.connection())
             for entity in db_entities:
                 self._cache[entity.id_] = entity
         return list(self._cache.values())
 
     def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         if not self._cache:
-            self.get_all()
+            self.get_all(db_connection)
         return list(self._cache.keys())
 
     def create(
         self, db_connection: IDbConnection, entities: list[UseCase]
     ) -> list[UseCase]:
-        created_entities = self._database.create(entities)
+        created_entities = self._database.create(db_connection.connection(), entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
         self.get.cache_clear()
@@ -71,7 +74,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
     def update(
         self, db_connection: IDbConnection, entities: list[UseCase]
     ) -> list[UseCase]:
-        updated_entities = self._database.update(entities)
+        updated_entities = self._database.update(db_connection.connection(), entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
                 self._cache[entity.id_] = entity
@@ -88,7 +91,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         self._dto_repository.cascade_remove(db_connection, "UseCase", "dto_in", ids)
         self._dto_repository.cascade_remove(db_connection, "UseCase", "dto_out", ids)
 
-        self._database.remove(ids)
+        self._database.remove(db_connection, ids)
         for id in ids:
             if id in self._cache:
                 del self._cache[id]
@@ -97,7 +100,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         # signals all repos depending of this repo
         for relationship in UseCase._schema().relationships:
             if relationship.relationship_direction == RelationshipDirection.Backward:
-                left_ids = self._database.get_left_ids(db_connection, relationship.left_entity_name, relationship.field_name, ids)
+                left_ids = self._database.get_left_ids(db_connection.connection(), relationship.left_entity_name, relationship.field_name, ids)
                 self._notify_related_ids_to_be_cleared_from_cache(relationship.left_entity, left_ids)
 
         self._notify_removed(ids)
@@ -105,7 +108,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         logging.info(f"Removed {ids}")
 
     def clear(self, db_connection: IDbConnection):
-        self._database.clear()
+        self._database.clear(db_connection.connection())
         self._cache.clear()
         self.get.cache_clear()
 
@@ -121,7 +124,7 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
         left_entity_ids: list[int],
     ):
         right_ids = self._database.get_right_ids(
-            db_connection, left_entity, field_name, left_entity_ids
+            db_connection.connection(), left_entity, field_name, left_entity_ids
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

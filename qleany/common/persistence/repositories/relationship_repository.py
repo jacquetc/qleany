@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.interfaces.i_relationship_repository import (
     IRelationshipRepository,
 )
@@ -11,6 +13,7 @@ from qleany.common.persistence.repositories.repository_observer import Repositor
 class RelationshipRepository(IRelationshipRepository, RepositorySubject):
 
     def __init__(self):
+        super().__init__()
         self._database = Database(db_context)
         self._cache = {}
 

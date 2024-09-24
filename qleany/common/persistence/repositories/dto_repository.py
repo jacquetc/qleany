@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.dto_field_repository import (
     DtoFieldRepository,
 )
@@ -17,6 +19,7 @@ import logging
 class DtoRepository(IDtoRepository, RepositoryObserver, RepositorySubject):
 
     def __init__(self, dto_field_repository: DtoFieldRepository):
+        super().__init__()
         self._database = Database(db_context)
         self._dto_field_repository = dto_field_repository
 

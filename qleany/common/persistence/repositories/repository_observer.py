@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from abc import ABC
 from qleany.common.entities.entity_enums import EntityEnum
 
@@ -23,6 +25,7 @@ class RepositoryObserver(ABC):
 
 class RepositorySubject(ABC):
     def __init__(self):
+        super().__init__()
         self._observers: list[RepositoryObserver] = []
 
     def attach(self, observer: RepositoryObserver):
