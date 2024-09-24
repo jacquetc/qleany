@@ -1,6 +1,8 @@
 from qleany.common.persistence.repositories.use_case_repository import (
     UseCaseRepository,
 )
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.interfaces.i_feature_repository import (
     IFeatureRepository,
 )
@@ -17,6 +19,7 @@ import logging
 class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubject):
 
     def __init__(self, use_case_repository: UseCaseRepository):
+        super().__init__()
         self._database = Database(db_context)
         self._use_case_repository = use_case_repository
 

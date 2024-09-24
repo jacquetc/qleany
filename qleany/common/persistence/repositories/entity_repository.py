@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.field_repository import (
     FieldRepository,
 )
@@ -25,6 +27,7 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
         field_repository: FieldRepository,
         relationship_repository: RelationshipRepository,
     ):
+        super().__init__()
         self._database = Database(db_context)
         self._field_repository = field_repository
         self._relationship_repository = relationship_repository

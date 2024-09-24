@@ -4,8 +4,9 @@ from qleany.common.entities.entity_enums import EntitySchema
 
 
 class IEntity(ABC):
+    id_: int
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def _schema(cls) -> EntitySchema:
         pass

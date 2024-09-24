@@ -1,3 +1,5 @@
+from qleany.common.persistence.database.db_table_group import DbTableGroup
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.persistence.repositories.feature_repository import (
     FeatureRepository,
 )
@@ -28,6 +30,7 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
         entity_repository: EntityRepository,
         global_repository: GlobalRepository,
     ):
+        super().__init__()
         self._database = Database(db_context)
         self._feature_repository = feature_repository
         self._entity_repository = entity_repository
