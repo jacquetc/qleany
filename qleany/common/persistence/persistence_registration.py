@@ -42,7 +42,8 @@ from qleany.common.persistence.repositories.interfaces.i_root_repository import 
 )
 
 
-def register() -> (RepositoryProvider, DbContext):
+
+def register() -> tuple[RepositoryProvider, DbContext]:
     # initialize database
 
     db_context = DbContext()
@@ -62,6 +63,11 @@ def register() -> (RepositoryProvider, DbContext):
     RepositoryProvider.register(IUseCaseRepository, use_case_repository)
     feature_repository = FeatureRepository(use_case_repository)
     RepositoryProvider.register(IFeatureRepository, feature_repository)
+
+
+
+
+
     global_repository = GlobalRepository()
     RepositoryProvider.register(IGlobalRepository, global_repository)
     root_repository = RootRepository(
@@ -69,4 +75,4 @@ def register() -> (RepositoryProvider, DbContext):
     )
     RepositoryProvider.register(IRootRepository, root_repository)
 
-    return (RepositoryProvider, db_context)
+    return (RepositoryProvider(), db_context)

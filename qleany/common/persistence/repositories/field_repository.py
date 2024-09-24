@@ -1,6 +1,7 @@
 from qleany.common.persistence.repositories.interfaces.i_field_repository import (
     IFieldRepository,
 )
+from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.field import Field
 from functools import lru_cache
 import logging
@@ -74,6 +75,19 @@ class FieldRepository(IFieldRepository, RepositorySubject):
                 del self._cache[id]
         self.get.cache_clear()
 
+        # signals all repos depending of this repo
+        for relationship in Field._schema().relationships:
+            if relationship.relationship_direction == RelationshipDirection.Backward:
+                left_ids = self._database.get_left_ids(
+                    db_connection,
+                    relationship.left_entity_name,
+                    relationship.field_name,
+                    ids,
+                )
+                self._notify_related_ids_to_be_cleared_from_cache(
+                    relationship.left_entity, left_ids
+                )
+
         self._notify_removed(ids)
 
         logging.info(f"Removed {ids}")
@@ -101,3 +115,13 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")
+
+    # observer methods
+
+    def _on_related_ids_to_be_cleared_from_cache(
+        self, left_entity: EntityEnum, left_ids: list[int]
+    ):
+        if left_entity != EntityEnum.Field:
+            return
+        self.get.cache_clear()
+        [self._cache.pop(id, None) for id in left_ids]

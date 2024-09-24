@@ -41,10 +41,8 @@ format-jinja = """
 format-jinja-imports = [{ module = "datetime", item = "datetime" }]
 
 [tool.poetry-dynamic-versioning.substitution]
-folders = [
-  { path = "qleany"}
-]
+folders = [{ path = "qleany" }]
 
-[virtualenvs]
-create = true
-in-project = true
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

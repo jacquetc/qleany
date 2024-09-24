@@ -12,7 +12,7 @@ class IRepositoryProvider(ABC):
 
     @classmethod
     @abstractmethod
-    def get(cls, repo_type: Type):
+    def get(cls, repo_type: Type) -> object:
         pass
 
 
@@ -24,5 +24,5 @@ class RepositoryProvider(IRepositoryProvider):
         cls._repositories[repo_type] = repo_instance
 
     @classmethod
-    def get(cls, repo_type: Type):
+    def get(cls, repo_type: Type) -> object:
         return cls._repositories.get(repo_type)

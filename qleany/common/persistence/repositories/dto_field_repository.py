@@ -2,12 +2,12 @@ from qleany.common.entities.entity_enums import RelationshipDirection
 from qleany.common.persistence.repositories.interfaces.i_dto_field_repository import (
     IDtoFieldRepository,
 )
+from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.dto_field import DtoField
 from functools import lru_cache
 import logging
 from qleany.common.persistence.repositories.repository_observer import RepositorySubject
-
-
+from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
     def __init__(self):
@@ -33,7 +33,7 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
     def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
         if not self._cache:
-            self.get_all()
+            self.get_all(db_connection)
         return list(self._cache.keys())
 
     def create(
@@ -75,6 +75,19 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
             if id in self._cache:
                 del self._cache[id]
         self.get.cache_clear()
+
+        # signals all repos depending of this repo
+        for relationship in DtoField._schema().relationships:
+            if relationship.relationship_direction == RelationshipDirection.Backward:
+                left_ids = self._database.get_left_ids(
+                    db_connection,
+                    relationship.left_entity_name,
+                    relationship.field_name,
+                    ids,
+                )
+                self._notify_related_ids_to_be_cleared_from_cache(
+                    relationship.left_entity, left_ids
+                )
 
         self._notify_removed(ids)
 

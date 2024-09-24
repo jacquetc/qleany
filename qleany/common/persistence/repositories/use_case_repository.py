@@ -5,6 +5,7 @@ from qleany.common.persistence.repositories.entity_repository import EntityRepos
 from qleany.common.persistence.repositories.interfaces.i_use_case_repository import (
     IUseCaseRepository,
 )
+from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.use_case import UseCase
 from functools import lru_cache
 from qleany.common.persistence.repositories.repository_observer import (
@@ -92,6 +93,12 @@ class UseCaseRepository(IUseCaseRepository, RepositoryObserver, RepositorySubjec
             if id in self._cache:
                 del self._cache[id]
         self.get.cache_clear()
+
+        # signals all repos depending of this repo
+        for relationship in UseCase._schema().relationships:
+            if relationship.relationship_direction == RelationshipDirection.Backward:
+                left_ids = self._database.get_left_ids(db_connection, relationship.left_entity_name, relationship.field_name, ids)
+                self._notify_related_ids_to_be_cleared_from_cache(relationship.left_entity, left_ids)
 
         self._notify_removed(ids)
 

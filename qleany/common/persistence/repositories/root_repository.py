@@ -10,6 +10,7 @@ from qleany.common.persistence.repositories.global_repository import (
 from qleany.common.persistence.repositories.interfaces.i_root_repository import (
     IRootRepository,
 )
+from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.root import Root
 from functools import lru_cache
 from qleany.common.persistence.repositories.repository_observer import (
@@ -17,7 +18,6 @@ from qleany.common.persistence.repositories.repository_observer import (
     RepositorySubject,
 )
 import logging
-from qleany.common.entities.root import Root
 
 
 class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
@@ -99,6 +99,19 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
                 del self._cache[id]
         self.get.cache_clear()
 
+        # signals all repos depending of this repo
+        for relationship in Root._schema().relationships:
+            if relationship.relationship_direction == RelationshipDirection.Backward:
+                left_ids = self._database.get_left_ids(
+                    db_connection,
+                    relationship.left_entity_name,
+                    relationship.field_name,
+                    ids,
+                )
+                self._notify_related_ids_to_be_cleared_from_cache(
+                    relationship.left_entity, left_ids
+                )
+
         self._notify_removed(removed_ids)
 
         logging.info(f"Removed {removed_ids}")
@@ -129,17 +142,6 @@ class RootRepository(IRootRepository, RepositoryObserver, RepositorySubject):
 
     # observer methods
 
-    def _on_related_ids_to_be_cleared_from_cache(
-        self, subject, left_entity: type, left_ids: list[int]
-    ):
-
-        if subject not in [
-            self._feature_repository,
-            self._entity_repository,
-            self._global_repository,
-        ]:
-            return
-        if left_entity != Root:
-            return
+    def _on_related_ids_to_be_cleared_from_cache(self, left_ids: list[int]):
         self.get.cache_clear()
         [self._cache.pop(id, None) for id in left_ids]
