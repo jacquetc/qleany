@@ -1,13 +1,21 @@
-from qleany.common.entities.entity_enums import RelationshipDirection
+import logging
+from functools import lru_cache
+
+from qleany.common.entities.dto_field import DtoField
+from qleany.common.entities.entity_enums import (
+    RelationshipDirection,
+)
+from qleany.common.persistence.database.interfaces.i_db_connection import (
+    IDbConnection,
+)
 from qleany.common.persistence.repositories.interfaces.i_dto_field_repository import (
     IDtoFieldRepository,
 )
-from qleany.common.entities.entity_enums import EntityEnum
-from qleany.common.entities.dto_field import DtoField
-from functools import lru_cache
-import logging
-from qleany.common.persistence.repositories.repository_observer import RepositorySubject
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
+from qleany.common.persistence.repositories.repository_observer import (
+    RepositorySubject,
+)
+
+
 class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
 
     def __init__(self):
@@ -114,5 +122,5 @@ class DtoFieldRepository(IDtoFieldRepository, RepositorySubject):
         right_ids = self._database.get_right_ids(
             db_connection, left_entity, field_name, left_entity_ids
         )
-        self.remove(right_ids)
+        self.remove(db_connection, right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

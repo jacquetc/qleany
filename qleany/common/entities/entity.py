@@ -1,19 +1,21 @@
 from dataclasses import dataclass
+
 from qleany.common.entities.entity_enums import (
-    EntitySchema,
     EntityEnum,
+    EntitySchema,
     FieldInfo,
     FieldType,
-    RelationshipInfo,
-    RelationshipType,
-    RelationshipStrength,
-    RelationshipDirection,
     RelationshipCardinality,
+    RelationshipDirection,
+    RelationshipInfo,
+    RelationshipStrength,
+    RelationshipType,
 )
+from qleany.common.entities.i_entity import IEntity
 
 
 @dataclass(slots=True)
-class Entity:
+class Entity(IEntity):
     id_: int
     only_for_heritage: bool
     fields: list[int]
