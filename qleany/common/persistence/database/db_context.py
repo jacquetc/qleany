@@ -1,10 +1,12 @@
+import os
 import sqlite3
 import tempfile
 import threading
-import os
-from typing import Dict, List
+
 from qleany.common.persistence.database.db_connection import DbConnection
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
+from qleany.common.persistence.database.interfaces.i_db_connection import (
+    IDbConnection,
+)
 
 
 class DbContext:
@@ -12,14 +14,12 @@ class DbContext:
         self.mutex = threading.Lock()
         self.file_name = ""
         self.database_name = None
-        self._creation_sql_dict: Dict[str, List[str]] = {}
 
         try:
             # Initialize the internal database
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             self.file_name = temp_file.name
             temp_file.close()
-            self.database_name = self._create_empty_database()
         except Exception as e:
             raise RuntimeError(f"Error initializing database: {str(e)}")
 
@@ -48,45 +48,3 @@ class DbContext:
             for pragma in pragmas:
                 cursor.execute(pragma)
             return DbConnection(conn)
-
-    def append_creation_sql(self, type: str, sql: str):
-        with self.mutex:
-            if type not in self._creation_sql_dict:
-                self._creation_sql_dict[type] = []
-            self._creation_sql_dict[type].append(sql)
-
-    def _create_empty_database(self):
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-
-                # Create the entity tables in the database
-                entity_tables = self._creation_sql_dict.get("entity_table", [])
-
-                for table in entity_tables:
-                    cursor.execute(table)
-
-                # Create the junction tables in the database
-                junction_tables = self._creation_sql_dict.get("junction_table", [])
-
-                for table in junction_tables:
-                    cursor.execute(table)
-
-                # Execute additional PRAGMA statements for optimization
-                optimization_pragmas = [
-                    "PRAGMA case_sensitive_like=true",
-                    "PRAGMA journal_mode=MEMORY",
-                    "PRAGMA temp_store=MEMORY",
-                    "PRAGMA locking_mode=NORMAL",
-                    "PRAGMA synchronous=OFF",
-                    "PRAGMA recursive_triggers=ON",
-                    "PRAGMA foreign_keys=ON",
-                ]
-
-                for pragma in optimization_pragmas:
-                    cursor.execute(pragma)
-
-                conn.commit()
-
-        except Exception as e:
-            raise RuntimeError(f"Error creating database: {str(e)}")

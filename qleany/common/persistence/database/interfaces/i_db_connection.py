@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import sqlite3
+from abc import ABC, abstractmethod
 
 
 class IDbConnection(ABC):
