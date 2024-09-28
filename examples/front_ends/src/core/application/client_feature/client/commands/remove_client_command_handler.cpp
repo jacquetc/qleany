@@ -12,26 +12,22 @@ using namespace FrontEnds::Contracts::CQRS::Client::Commands;
 using namespace FrontEnds::Application::Features::Client::Commands;
 using namespace FrontEnds::Contracts::CQRS::Client::Validators;
 
-RemoveClientCommandHandler::RemoveClientCommandHandler(InterfaceClientRepository *repository) : m_repository(repository)
+RemoveClientCommandHandler::RemoveClientCommandHandler(InterfaceClientRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
 }
 
-Result<int> RemoveClientCommandHandler::handle(QPromise<Result<void>> &progressPromise,
-                                               const RemoveClientCommand &request)
+Result<int> RemoveClientCommandHandler::handle(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request)
 {
     Result<int> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, request);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveClientCommand:" << ex.what();
     }
@@ -43,20 +39,16 @@ Result<int> RemoveClientCommandHandler::restore()
 {
     Result<int> result;
 
-    try
-    {
+    try {
         result = restoreImpl();
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveClientCommand restore:" << ex.what();
     }
     return result;
 }
 
-Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                   const RemoveClientCommand &request)
+Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request)
 {
     int clientId = request.id;
 
@@ -73,7 +65,7 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
     // save old entity
     m_oldState = clientResult.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << clientId);
+    auto deleteResult = m_repository->remove(QList<int>() << clientId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
@@ -95,6 +87,5 @@ bool RemoveClientCommandHandler::s_mappingRegistered = false;
 
 void RemoveClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Client,
-                                                           Contracts::DTO::Client::ClientDTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
 }

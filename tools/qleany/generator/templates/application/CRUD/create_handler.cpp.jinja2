@@ -219,11 +219,11 @@ Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal
 Result<{{ entity_mappable_with_pascal }}DTO>Create{{ entity_mappable_with_pascal }}CommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR({{ entity_mappable_with_pascal }}DTO, deleteResult)
 
-    Q_EMIT {{ entity_mappable_with_camel }}Removed(deleteResult.value());
+    Q_EMIT {{ entity_mappable_with_camel }}Removed(deleteResult.value().value({{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ entity_mappable_with_pascal }}).first());
 
     qDebug() << "{{ entity_mappable_with_pascal }} removed:" << deleteResult.value();
 

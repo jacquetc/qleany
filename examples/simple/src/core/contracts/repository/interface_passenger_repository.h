@@ -23,7 +23,8 @@ class SIMPLE_EXAMPLE_CONTRACTS_EXPORT InterfacePassengerRepository
     {
     }
 
-    virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
-    virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
+    virtual Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) = 0;
+    virtual Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(
+        QList<int> ids, bool active) = 0;
 };
 } // namespace Simple::Contracts::Repository

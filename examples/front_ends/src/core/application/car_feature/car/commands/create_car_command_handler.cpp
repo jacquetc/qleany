@@ -11,10 +11,10 @@ using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Car::Validators;
 using namespace FrontEnds::Application::Features::Car::Commands;
 
-CreateCarCommandHandler::CreateCarCommandHandler(InterfaceCarRepository *repository) : m_repository(repository)
+CreateCarCommandHandler::CreateCarCommandHandler(InterfaceCarRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
@@ -24,12 +24,9 @@ Result<CarDTO> CreateCarCommandHandler::handle(QPromise<Result<void>> &progressP
 {
     Result<CarDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, request);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateCarCommand:" << ex.what();
     }
@@ -41,27 +38,22 @@ Result<CarDTO> CreateCarCommandHandler::restore()
 {
     Result<CarDTO> result;
 
-    try
-    {
+    try {
         result = restoreImpl();
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateCarCommand restore:" << ex.what();
     }
     return result;
 }
 
-Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                   const CreateCarCommand &request)
+Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request)
 {
     qDebug() << "CreateCarCommandHandler::handleImpl called";
     FrontEnds::Entities::Car car;
     CreateCarDTO createDTO = request.req;
 
-    if (m_firstPass)
-    {
+    if (m_firstPass) {
         // Validate the create Car command using the validator
         auto validator = CreateCarCommandValidator(m_repository);
         Result<void> validatorResult = validator.validate(createDTO);
@@ -73,17 +65,15 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
         car = Qleany::Tools::AutoMapper::AutoMapper::map<CreateCarDTO, FrontEnds::Entities::Car>(createDTO);
 
         // allow for forcing the uuid
-        if (car.uuid().isNull())
-        {
+        if (car.uuid().isNull()) {
             car.setUuid(QUuid::createUuid());
         }
 
         // Set the creation and update timestamps to the current date and time
         car.setCreationDate(QDateTime::currentDateTime());
         car.setUpdateDate(QDateTime::currentDateTime());
-    }
-    else
-    {
+
+    } else {
         car = m_newEntity.value();
     }
 
@@ -119,11 +109,11 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 Result<CarDTO> CreateCarCommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR(CarDTO, deleteResult)
 
-    Q_EMIT carRemoved(deleteResult.value());
+    Q_EMIT carRemoved(deleteResult.value().value(FrontEnds::Entities::Entities::EntityEnum::Car).first());
 
     qDebug() << "Car removed:" << deleteResult.value();
 
@@ -134,8 +124,6 @@ bool CreateCarCommandHandler::s_mappingRegistered = false;
 
 void CreateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                                  true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO,
-                                                           FrontEnds::Entities::Car>();
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, FrontEnds::Entities::Car>();
 }

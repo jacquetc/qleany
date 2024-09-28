@@ -20,17 +20,17 @@ namespace FrontEnds::Application::Features::Car::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CAR_EXPORT CreateCarCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     CreateCarCommandHandler(InterfaceCarRepository *repository);
 
     Result<CarDTO> handle(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request);
     Result<CarDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void carCreated(FrontEnds::Contracts::DTO::Car::CarDTO carDto);
     void carRemoved(int id);
 
-  private:
+private:
     InterfaceCarRepository *m_repository;
     Result<CarDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateCarCommand &request);
     Result<CarDTO> restoreImpl();

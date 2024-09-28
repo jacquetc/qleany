@@ -20,17 +20,17 @@ namespace FrontEnds::Application::Features::Client::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT CreateClientCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     CreateClientCommandHandler(InterfaceClientRepository *repository);
 
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const CreateClientCommand &request);
     Result<ClientDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void clientCreated(FrontEnds::Contracts::DTO::Client::ClientDTO clientDto);
     void clientRemoved(int id);
 
-  private:
+private:
     InterfaceClientRepository *m_repository;
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateClientCommand &request);
     Result<ClientDTO> restoreImpl();

@@ -23,38 +23,41 @@ SignalHolder *PassengerRepository::signalHolder()
     return m_signalHolder.data();
 }
 
-Result<QHash<int, QList<int>>> PassengerRepository::removeInCascade(QList<int> ids)
+Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> PassengerRepository::remove(QList<int> ids)
 {
     QWriteLocker locker(&m_lock);
-    QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
+    QHash<Simple::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // finally remove the entites of this repository
 
     Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, associationRemovalResult)
+    QLN_RETURN_IF_ERROR(QHash<Simple::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, associationRemovalResult)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
+    QLN_RETURN_IF_ERROR(QHash<Simple::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removedIdsResult)
 
-    returnedHashOfEntityWithRemovedIds.insert(Simple::Entities::Entities::Passenger, removedIdsResult.value());
+    returnedHashOfEntityWithRemovedIds.insert(Simple::Entities::Entities::EntityEnum::Passenger,
+                                              removedIdsResult.value());
 
     Q_EMIT m_signalHolder->removed(removedIdsResult.value());
 
-    return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithRemovedIds);
+    return Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithRemovedIds);
 }
 
-Result<QHash<int, QList<int>>> PassengerRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
+Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> PassengerRepository::changeActiveStatusInCascade(
+    QList<int> ids, bool active)
 {
     QWriteLocker locker(&m_lock);
-    QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
+    QHash<Simple::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // finally change the entites of this repository
 
     Result<QList<int>> changedIdsResult = this->databaseTable()->changeActiveStatus(ids, active);
 
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
+    QLN_RETURN_IF_ERROR(QHash<Simple::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changedIdsResult)
 
-    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Entities::Entities::Passenger, changedIdsResult.value());
+    returnedHashOfEntityWithActiveChangedIds.insert(Simple::Entities::Entities::EntityEnum::Passenger,
+                                                    changedIdsResult.value());
     Q_EMIT m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
-    return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
+    return Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
 }

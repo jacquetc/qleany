@@ -185,11 +185,11 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 Result<PassengerDTO> CreatePassengerCommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR(PassengerDTO, deleteResult)
 
-    Q_EMIT passengerRemoved(deleteResult.value());
+    Q_EMIT passengerRemoved(deleteResult.value().value(Simple::Entities::Entities::EntityEnum::Passenger).first());
 
     qDebug() << "Passenger removed:" << deleteResult.value();
 

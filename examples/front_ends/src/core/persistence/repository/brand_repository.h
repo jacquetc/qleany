@@ -17,21 +17,20 @@ using namespace Qleany::Contracts::Database;
 namespace FrontEnds::Persistence::Repository
 {
 
-class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT BrandRepository final
-    : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Brand>,
-      public FrontEnds::Contracts::Repository::InterfaceBrandRepository
+class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT BrandRepository final : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Brand>,
+                                                                    public FrontEnds::Contracts::Repository::InterfaceBrandRepository
 {
-  public:
+public:
     explicit BrandRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Brand> *brandDatabase);
 
     SignalHolder *signalHolder() override;
 
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
 
-  private:
+private:
     QScopedPointer<SignalHolder> m_signalHolder;
     QReadWriteLock m_lock;
 };
 
-} // namespace FrontEnds::Persistence::Repository
+} // namespace FrontEnds::Repository

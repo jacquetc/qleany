@@ -273,11 +273,11 @@ class QLEANY_EXPORT Error
     }
 
   private:
+    const char *m_className;
+    Error::Status m_status;
     const char *m_code;
     const char *m_message;
     const char *m_data;
-    const char *m_className;
-    Error::Status m_status;
     const char *m_file;
     int m_line;
     QList<Error> m_trace;

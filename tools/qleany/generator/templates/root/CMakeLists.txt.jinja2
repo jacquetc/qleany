@@ -121,7 +121,7 @@ endif()
 {% if front_ends.kf6_kirigami.enabled -%}
 
 if(BUILD_KF6_KIRIGAMI)
-    find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons Config I18n)
+    find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami CoreAddons Config I18n)
 
     if(ANDROID)
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/android/version.gradle.in ${CMAKE_BINARY_DIR}/version.gradle)

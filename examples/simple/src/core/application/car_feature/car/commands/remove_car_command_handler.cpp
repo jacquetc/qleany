@@ -72,7 +72,7 @@ Result<int> RemoveCarCommandHandler::handleImpl(QPromise<Result<void>> &progress
     // save old entity
     m_oldState = carResult.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << carId);
+    auto deleteResult = m_repository->remove(QList<int>() << carId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 

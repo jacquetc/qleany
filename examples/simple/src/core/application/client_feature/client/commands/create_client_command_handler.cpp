@@ -121,11 +121,11 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 Result<ClientDTO> CreateClientCommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR(ClientDTO, deleteResult)
 
-    Q_EMIT clientRemoved(deleteResult.value());
+    Q_EMIT clientRemoved(deleteResult.value().value(Simple::Entities::Entities::EntityEnum::Client).first());
 
     qDebug() << "Client removed:" << deleteResult.value();
 

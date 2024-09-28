@@ -73,7 +73,7 @@ Result<int> RemoveClientCommandHandler::handleImpl(QPromise<Result<void>> &progr
     // save old entity
     m_oldState = clientResult.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << clientId);
+    auto deleteResult = m_repository->remove(QList<int>() << clientId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 

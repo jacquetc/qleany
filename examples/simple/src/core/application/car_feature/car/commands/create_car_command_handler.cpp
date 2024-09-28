@@ -119,11 +119,11 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 Result<CarDTO> CreateCarCommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR(CarDTO, deleteResult)
 
-    Q_EMIT carRemoved(deleteResult.value());
+    Q_EMIT carRemoved(deleteResult.value().value(Simple::Entities::Entities::EntityEnum::Car).first());
 
     qDebug() << "Car removed:" << deleteResult.value();
 

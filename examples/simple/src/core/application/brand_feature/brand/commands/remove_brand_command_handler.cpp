@@ -73,7 +73,7 @@ Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progre
     // save old entity
     m_oldState = brandResult.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << brandId);
+    auto deleteResult = m_repository->remove(QList<int>() << brandId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 

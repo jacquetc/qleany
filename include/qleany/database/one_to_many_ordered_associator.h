@@ -22,14 +22,14 @@ template <class RightEntity> class OneToManyOrderedAssociator
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
-        QString leftEntityLastName = relationship.leftEntityName;
-        QString rightEntityLastName = RightEntity::schema.name;
+        QString leftEntityName = relationship.leftEntityName;
+        QString rightEntityName = RightEntity::schema.name;
 
         m_junctionTableName =
-            leftEntityLastName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityLastName + "_junction"_L1;
-        m_junctionTableLeftEntityForeignKeyName = leftEntityLastName + "_id"_L1;
-        m_leftEntityForeignTableName = Qleany::Database::Tools::fromPascalToSnakeCase(leftEntityLastName);
-        m_junctionTableRightEntityForeignKeyName = rightEntityLastName + "_id"_L1;
+            leftEntityName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityName + "_junction"_L1;
+        m_junctionTableLeftEntityForeignKeyName = leftEntityName + "_id"_L1;
+        m_leftEntityForeignTableName = Qleany::Database::Tools::fromPascalToSnakeCase(leftEntityName);
+        m_junctionTableRightEntityForeignKeyName = rightEntityName + "_id"_L1;
         m_rightEntityForeignTableName = Qleany::Database::TableTools<RightEntity>::getEntityTableName();
     }
     ~OneToManyOrderedAssociator() = default;

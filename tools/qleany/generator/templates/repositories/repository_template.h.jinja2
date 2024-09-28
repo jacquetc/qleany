@@ -34,8 +34,8 @@ class {{ export }} {{ name }}Repository  final : public Qleany::Repository::Gene
     {% for loader_function in loader_function_list %}
     {{ loader_function }}
     {% endfor %}
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
 
 
   private:

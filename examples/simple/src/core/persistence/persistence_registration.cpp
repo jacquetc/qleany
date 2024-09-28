@@ -31,16 +31,15 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
     if (initResult.hasError())
     {
         Error error = initResult.error();
-        qCritical() << error.className() + QString::fromLatin1("\n") + error.code() + QString::fromLatin1("\n") +
-                           error.message() + QString::fromLatin1("\n") + error.data();
+        qCritical() << error.className() + "\n"_L1 + error.code() + "\n"_L1 + error.message() + "\n"_L1 + error.data();
     }
 
     // repositories:
 
-    BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
     PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
-    ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
+    BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
     CarRepository *carRepository = new CarRepository(carDatabaseTableGroup, brandRepository, passengerRepository);
+    ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
 
     // register repositories:
 

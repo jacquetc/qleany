@@ -23,14 +23,15 @@ class SIMPLE_EXAMPLE_CONTRACTS_EXPORT InterfaceClientRepository
     {
     }
 
-    virtual Result<Simple::Entities::Client> update(Simple::Entities::Client &&entity) = 0;
+    virtual Result<Simple::Entities::Client> update(Simple::Entities::Client &&entity) override = 0;
     virtual Result<Simple::Entities::Client> getWithDetails(int entityId) = 0;
 
     virtual Simple::Entities::Client::ClientLoader fetchClientLoader() = 0;
 
     virtual Simple::Entities::Client::ClientFriendsLoader fetchClientFriendsLoader() = 0;
 
-    virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
-    virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
+    virtual Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) = 0;
+    virtual Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(
+        QList<int> ids, bool active) = 0;
 };
 } // namespace Simple::Contracts::Repository

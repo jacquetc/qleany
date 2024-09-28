@@ -95,7 +95,7 @@ if(BUILD_KF6_KIRIGAMI OR BUILD_QT_QUICK)
 endif()
 
 if(BUILD_KF6_KIRIGAMI)
-  find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons
+  find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami CoreAddons
                                                           Config I18n)
 
   if(ANDROID)

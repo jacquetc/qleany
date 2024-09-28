@@ -35,8 +35,9 @@ class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT ClientRepository final
 
     Simple::Entities::Client::ClientFriendsLoader fetchClientFriendsLoader() override;
 
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids,
+                                                                                                  bool active) override;
 
   private:
     InterfacePassengerRepository *m_passengerRepository;

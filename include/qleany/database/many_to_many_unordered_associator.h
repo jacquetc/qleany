@@ -14,10 +14,10 @@ using namespace Qleany::Contracts::Database;
 
 namespace Qleany::Database
 {
-template <class RightEntity> class OneToManyUnorderedAssociator
+template <class RightEntity> class ManyToManyUnorderedAssociator
 {
   public:
-    OneToManyUnorderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
+    ManyToManyUnorderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
                                  const Qleany::Entities::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
@@ -32,7 +32,7 @@ template <class RightEntity> class OneToManyUnorderedAssociator
         m_junctionTableRightEntityForeignKeyName = rightEntityName + "_id"_L1;
         m_rightEntityForeignTableName = Qleany::Database::TableTools<RightEntity>::getEntityTableName();
     }
-    ~OneToManyUnorderedAssociator() = default;
+    ~ManyToManyUnorderedAssociator() = default;
     Result<QList<RightEntity>> getRightEntities(int leftEntityId);
 
     QString getTableCreationSql() const;
@@ -58,22 +58,22 @@ template <class RightEntity> class OneToManyUnorderedAssociator
     QString m_fieldName;
 };
 
-template <class RightEntity> QString OneToManyUnorderedAssociator<RightEntity>::getTableCreationSql() const
+template <class RightEntity> QString ManyToManyUnorderedAssociator<RightEntity>::getTableCreationSql() const
 {
     return "CREATE TABLE IF NOT EXISTS %1"
            " (id INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE ON CONFLICT ROLLBACK NOT NULL ON "
            "CONFLICT ROLLBACK, %2 INTEGER NOT NULL, "
-           "%3 INTEGER NOT NULL ON CONFLICT ROLLBACK UNIQUE ON CONFLICT ROLLBACK, FOREIGN KEY (%4) REFERENCES %5"
+           "%3 INTEGER NOT NULL ON CONFLICT ROLLBACK, FOREIGN KEY (%4) REFERENCES %5"
            " (id) ON DELETE CASCADE, FOREIGN KEY (%6) REFERENCES %7 (id) ON DELETE CASCADE, "
-           "UNIQUE (%8) ON CONFLICT ROLLBACK);"_L1.arg(
+           "UNIQUE (%8, %9) ON CONFLICT ROLLBACK);"_L1.arg(
                m_junctionTableName, m_junctionTableLeftEntityForeignKeyName, m_junctionTableRightEntityForeignKeyName,
                m_junctionTableLeftEntityForeignKeyName, m_leftEntityForeignTableName,
                m_junctionTableRightEntityForeignKeyName, m_rightEntityForeignTableName,
-               m_junctionTableRightEntityForeignKeyName);
+               m_junctionTableLeftEntityForeignKeyName, m_junctionTableRightEntityForeignKeyName);
 }
 
 template <class RightEntity>
-Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEntities(int leftEntityId)
+Result<QList<RightEntity>> ManyToManyUnorderedAssociator<RightEntity>::getRightEntities(int leftEntityId)
 {
     auto connection = m_databaseContext->getConnection();
 
@@ -101,7 +101,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
 }
 
 template <class RightEntity>
-Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::updateRightEntities(
+Result<QList<RightEntity>> ManyToManyUnorderedAssociator<RightEntity>::updateRightEntities(
     int leftEntityId, const QList<RightEntity> &rightEntities)
 {
     // find all the right entities that are already associated with the left entity, then compare them with the new
@@ -169,7 +169,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::updateRigh
 //--------------------------------------------
 
 template <class RightEntity>
-Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEntitiesFromTheirIds(
+Result<QList<RightEntity>> ManyToManyUnorderedAssociator<RightEntity>::getRightEntitiesFromTheirIds(
     QList<int> rightEntityIds) const
 {
     const QStringList &columns = getTablePropertyColumns(m_rightEntitySchema);
@@ -231,7 +231,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
 //--------------------------------------------
 
 template <class RightEntity>
-QStringList OneToManyUnorderedAssociator<RightEntity>::getTablePropertyColumns(
+QStringList ManyToManyUnorderedAssociator<RightEntity>::getTablePropertyColumns(
     const Qleany::Entities::EntitySchema &entitySchema) const
 {
     QStringList columns;

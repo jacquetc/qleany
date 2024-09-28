@@ -11,10 +11,9 @@ using namespace Qleany::Contracts::Repository;
 using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
-ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Client> *clientDatabase,
-                                   InterfacePassengerRepository *passengerRepository)
-    : Qleany::Repository::GenericRepository<FrontEnds::Entities::Client>(clientDatabase),
-      m_passengerRepository(passengerRepository)
+ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Client> *clientDatabase, InterfacePassengerRepository *passengerRepository)
+    : Qleany::Repository::GenericRepository<FrontEnds::Entities::Client>(clientDatabase)
+    , m_passengerRepository(passengerRepository)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }
@@ -29,15 +28,12 @@ Result<FrontEnds::Entities::Client> ClientRepository::update(Entities::Client &&
 {
     QWriteLocker locker(&m_lock);
 
-    if (entity.metaData().clientSet)
-    {
-
-        Result<Entities::Passenger> clientResult = m_passengerRepository->updateEntityInRelationOf(
-            Entities::Client::schema, entity.id(), QString::fromLatin1("client"), entity.client());
+    if (entity.metaData().clientSet) {
+        Result<Entities::Passenger> clientResult =
+            m_passengerRepository->updateEntityInRelationOf(Entities::Client::schema, entity.id(), "client"_L1, entity.client());
 
 #ifdef QT_DEBUG
-        if (clientResult.isError())
-        {
+        if (clientResult.isError()) {
             qCritical() << clientResult.error().code() << clientResult.error().message() << clientResult.error().data();
             qFatal("Error found. The application will now exit");
         }
@@ -45,17 +41,13 @@ Result<FrontEnds::Entities::Client> ClientRepository::update(Entities::Client &&
         QLN_RETURN_IF_ERROR(Entities::Client, clientResult)
     }
 
-    if (entity.metaData().clientFriendsSet)
-    {
-
-        Result<QList<Entities::Passenger>> clientFriendsResult = m_passengerRepository->updateEntitiesInRelationOf(
-            Entities::Client::schema, entity.id(), QString::fromLatin1("clientFriends"), entity.clientFriends());
+    if (entity.metaData().clientFriendsSet) {
+        Result<QList<Entities::Passenger>> clientFriendsResult =
+            m_passengerRepository->updateEntitiesInRelationOf(Entities::Client::schema, entity.id(), "clientFriends"_L1, entity.clientFriends());
 
 #ifdef QT_DEBUG
-        if (clientFriendsResult.isError())
-        {
-            qCritical() << clientFriendsResult.error().code() << clientFriendsResult.error().message()
-                        << clientFriendsResult.error().data();
+        if (clientFriendsResult.isError()) {
+            qCritical() << clientFriendsResult.error().code() << clientFriendsResult.error().message() << clientFriendsResult.error().data();
             qFatal("Error found. The application will now exit");
         }
 #endif
@@ -70,19 +62,16 @@ Result<FrontEnds::Entities::Client> ClientRepository::getWithDetails(int entityI
     QWriteLocker locker(&m_lock);
     auto getResult = Qleany::Repository::GenericRepository<Entities::Client>::get(entityId);
 
-    if (getResult.isError())
-    {
+    if (getResult.isError()) {
         return getResult;
     }
 
     Entities::Client entity = getResult.value();
 
-    Result<Entities::Passenger> clientResult = m_passengerRepository->getEntityInRelationOf(
-        Entities::Client::schema, entity.id(), QString::fromLatin1("client"));
+    Result<Entities::Passenger> clientResult = m_passengerRepository->getEntityInRelationOf(Entities::Client::schema, entity.id(), "client"_L1);
 
 #ifdef QT_DEBUG
-    if (clientResult.isError())
-    {
+    if (clientResult.isError()) {
         qCritical() << clientResult.error().code() << clientResult.error().message() << clientResult.error().data();
         qFatal("Error found. The application will now exit");
     }
@@ -91,14 +80,12 @@ Result<FrontEnds::Entities::Client> ClientRepository::getWithDetails(int entityI
 
     entity.setClient(clientResult.value());
 
-    Result<QList<Entities::Passenger>> clientFriendsResult = m_passengerRepository->getEntitiesInRelationOf(
-        Entities::Client::schema, entity.id(), QString::fromLatin1("clientFriends"));
+    Result<QList<Entities::Passenger>> clientFriendsResult =
+        m_passengerRepository->getEntitiesInRelationOf(Entities::Client::schema, entity.id(), "clientFriends"_L1);
 
 #ifdef QT_DEBUG
-    if (clientFriendsResult.isError())
-    {
-        qCritical() << clientFriendsResult.error().code() << clientFriendsResult.error().message()
-                    << clientFriendsResult.error().data();
+    if (clientFriendsResult.isError()) {
+        qCritical() << clientFriendsResult.error().code() << clientFriendsResult.error().message() << clientFriendsResult.error().data();
         qFatal("Error found. The application will now exit");
     }
 #endif
@@ -114,21 +101,17 @@ FrontEnds::Entities::Client::ClientLoader ClientRepository::fetchClientLoader()
 #ifdef QT_DEBUG
     // verify the presence of "client" property in the entity Client using staticMetaObject
     int propertyIndex = FrontEnds::Entities::Client::staticMetaObject.indexOfProperty("client");
-    if (propertyIndex == -1)
-    {
+    if (propertyIndex == -1) {
         qCritical() << "The entity Client doesn't have a property named client";
         qFatal("The application will now exit");
     }
 #endif
 
     return [this](int entityId) {
-        auto foreignEntityResult = m_passengerRepository->getEntityInRelationOf(
-            FrontEnds::Entities::Client::schema, entityId, QString::fromLatin1("client"));
+        auto foreignEntityResult = m_passengerRepository->getEntityInRelationOf(FrontEnds::Entities::Client::schema, entityId, "client"_L1);
 
-        if (foreignEntityResult.isError())
-        {
-            qCritical() << foreignEntityResult.error().code() << foreignEntityResult.error().message()
-                        << foreignEntityResult.error().data();
+        if (foreignEntityResult.isError()) {
+            qCritical() << foreignEntityResult.error().code() << foreignEntityResult.error().message() << foreignEntityResult.error().data();
             return FrontEnds::Entities::Passenger();
         }
 
@@ -141,21 +124,18 @@ FrontEnds::Entities::Client::ClientFriendsLoader ClientRepository::fetchClientFr
 #ifdef QT_DEBUG
     // verify the presence of "clientFriends" property in the entity Client using staticMetaObject
     int propertyIndex = FrontEnds::Entities::Client::staticMetaObject.indexOfProperty("clientFriends");
-    if (propertyIndex == -1)
-    {
+    if (propertyIndex == -1) {
         qCritical() << "The entity Client doesn't have a property named clientFriends";
         qFatal("The application will now exit");
     }
 #endif
 
     return [this](int entityId) {
-        auto foreignEntitiesResult = m_passengerRepository->getEntitiesInRelationOf(
-            FrontEnds::Entities::Client::schema, entityId, QString::fromLatin1("clientFriends"));
+        auto foreignEntitiesResult =
+            m_passengerRepository->getEntitiesInRelationOf(FrontEnds::Entities::Client::schema, entityId, QString::fromLatin1("clientFriends"));
 
-        if (foreignEntitiesResult.isError())
-        {
-            qCritical() << foreignEntitiesResult.error().code() << foreignEntitiesResult.error().message()
-                        << foreignEntitiesResult.error().data();
+        if (foreignEntitiesResult.isError()) {
+            qCritical() << foreignEntitiesResult.error().code() << foreignEntitiesResult.error().message() << foreignEntitiesResult.error().data();
             return QList<FrontEnds::Entities::Passenger>();
         }
 
@@ -163,34 +143,28 @@ FrontEnds::Entities::Client::ClientFriendsLoader ClientRepository::fetchClientFr
     };
 }
 
-Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
+Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepository::remove(QList<int> ids)
 {
     QWriteLocker locker(&m_lock);
-    QHash<int, QList<int>> returnedHashOfEntityWithRemovedIds;
+    QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithRemovedIds;
 
     // remove the client in cascade
 
     Qleany::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
-    {
-        if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == QString::fromLatin1("client"))
-        {
+    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+        if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == "client"_L1) {
             passengerClientRelationship = relationship;
             break;
         }
     }
 
-    for (int entityId : ids)
-    {
-        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
-        {
+    for (int entityId : ids) {
+        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
 
-            if (!foreignClient.isValid())
-            {
+            if (!foreignClient.isValid()) {
                 continue;
             }
 
@@ -198,8 +172,8 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
 
             foreignIds.append(foreignClient.id());
 
-            auto removalResult = m_passengerRepository->removeInCascade(foreignIds);
-            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removalResult)
+            auto removalResult = m_passengerRepository->remove(foreignIds);
+            QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removalResult)
 
             returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
         }
@@ -208,39 +182,31 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
     // remove the clientFriends in cascade
 
     Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
-    {
-        if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == QString::fromLatin1("clientFriends"))
-        {
+    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+        if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == "clientFriends"_L1) {
             passengerClientFriendsRelationship = relationship;
             break;
         }
     }
 
-    for (int entityId : ids)
-    {
-        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
-        {
+    for (int entityId : ids) {
+        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
-            QList<FrontEnds::Entities::Passenger> foreignClientFriends =
-                this->fetchClientFriendsLoader().operator()(entityId);
+            QList<FrontEnds::Entities::Passenger> foreignClientFriends = this->fetchClientFriendsLoader().operator()(entityId);
 
-            if (foreignClientFriends.isEmpty())
-            {
+            if (foreignClientFriends.isEmpty()) {
                 continue;
             }
 
             QList<int> foreignIds;
 
-            for (const auto &passenger : foreignClientFriends)
-            {
+            for (const auto &passenger : foreignClientFriends) {
                 foreignIds.append(passenger.id());
             }
 
-            auto removalResult = m_passengerRepository->removeInCascade(foreignIds);
-            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removalResult)
+            auto removalResult = m_passengerRepository->remove(foreignIds);
+            QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removalResult)
 
             returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
         }
@@ -249,45 +215,39 @@ Result<QHash<int, QList<int>>> ClientRepository::removeInCascade(QList<int> ids)
     // finally remove the entites of this repository
 
     Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, associationRemovalResult)
+    QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, associationRemovalResult)
     Result<QList<int>> removedIdsResult = this->databaseTable()->remove(ids);
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, removedIdsResult)
+    QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removedIdsResult)
 
-    returnedHashOfEntityWithRemovedIds.insert(FrontEnds::Entities::Entities::Client, removedIdsResult.value());
+    returnedHashOfEntityWithRemovedIds.insert(FrontEnds::Entities::Entities::EntityEnum::Client, removedIdsResult.value());
 
     Q_EMIT m_signalHolder->removed(removedIdsResult.value());
 
-    return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithRemovedIds);
+    return Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithRemovedIds);
 }
 
-Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
+Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepository::changeActiveStatusInCascade(QList<int> ids, bool active)
 {
     QWriteLocker locker(&m_lock);
-    QHash<int, QList<int>> returnedHashOfEntityWithActiveChangedIds;
+    QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithActiveChangedIds;
 
     // cahnge active status of the client in cascade
 
     Qleany::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
-    {
-        if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == QString::fromLatin1("client"))
-        {
+    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+        if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == QString::fromLatin1("client")) {
             passengerClientRelationship = relationship;
             break;
         }
     }
 
-    for (int entityId : ids)
-    {
-        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
-        {
+    for (int entityId : ids) {
+        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
 
-            if (!foreignClient.isValid())
-            {
+            if (!foreignClient.isValid()) {
                 continue;
             }
 
@@ -297,7 +257,7 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
             auto changeResult = m_passengerRepository->changeActiveStatusInCascade(foreignIds, active);
 
-            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changeResult)
+            QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changeResult)
 
             returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
         }
@@ -306,40 +266,33 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
     // cahnge active status of the clientFriends in cascade
 
     Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships)
-    {
-        if (relationship.rightEntityId == FrontEnds::Entities::Entities::Passenger &&
-            relationship.fieldName == QString::fromLatin1("clientFriends"))
-        {
+    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+        if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger
+            && relationship.fieldName == QString::fromLatin1("clientFriends")) {
             passengerClientFriendsRelationship = relationship;
             break;
         }
     }
 
-    for (int entityId : ids)
-    {
-        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
-        {
+    for (int entityId : ids) {
+        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
-            QList<FrontEnds::Entities::Passenger> foreignClientFriends =
-                this->fetchClientFriendsLoader().operator()(entityId);
+            QList<FrontEnds::Entities::Passenger> foreignClientFriends = this->fetchClientFriendsLoader().operator()(entityId);
 
-            if (foreignClientFriends.isEmpty())
-            {
+            if (foreignClientFriends.isEmpty()) {
                 continue;
             }
 
             QList<int> foreignIds;
 
-            for (const auto &passenger : foreignClientFriends)
-            {
+            for (const auto &passenger : foreignClientFriends) {
                 foreignIds.append(passenger.id());
             }
 
             auto changeResult = m_passengerRepository->changeActiveStatusInCascade(foreignIds, active);
 
-            QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changeResult)
+            QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changeResult)
 
             returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
         }
@@ -349,10 +302,10 @@ Result<QHash<int, QList<int>>> ClientRepository::changeActiveStatusInCascade(QLi
 
     Result<QList<int>> changedIdsResult = this->databaseTable()->changeActiveStatus(ids, active);
 
-    QLN_RETURN_IF_ERROR(QHash<int QLN_COMMA QList<int>>, changedIdsResult)
+    QLN_RETURN_IF_ERROR(QHash<FrontEnds::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changedIdsResult)
 
-    returnedHashOfEntityWithActiveChangedIds.insert(FrontEnds::Entities::Entities::Client, changedIdsResult.value());
+    returnedHashOfEntityWithActiveChangedIds.insert(FrontEnds::Entities::Entities::EntityEnum::Client, changedIdsResult.value());
     Q_EMIT m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
 
-    return Result<QHash<int, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
+    return Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
 }

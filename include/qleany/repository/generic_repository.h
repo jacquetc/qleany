@@ -34,9 +34,6 @@ template <class T> class GenericRepository : public virtual Qleany::Contracts::R
     virtual Result<QList<T>> getAll() override;
     Result<QList<T>> getAll(const QHash<QString, QVariant> &filters) override;
 
-    virtual Result<int> remove(int id) override;
-    virtual Result<QList<int>> remove(QList<int> ids) override;
-
     virtual Result<T> add(T &&entity) override;
 
     virtual Result<T> update(T &&entity) override;
@@ -91,18 +88,6 @@ template <class T> Result<QList<T>> GenericRepository<T>::getAll(const QHash<QSt
 {
     QReadLocker locker(&m_lock);
     return databaseTable()->getAll(filters);
-}
-
-template <class T> Result<int> GenericRepository<T>::remove(int id)
-{
-    QWriteLocker locker(&m_lock);
-    return databaseTable()->remove(id);
-}
-
-template <class T> Result<QList<int>> GenericRepository<T>::remove(QList<int> ids)
-{
-    QWriteLocker locker(&m_lock);
-    return databaseTable()->remove(ids);
 }
 
 template <class T> Result<T> GenericRepository<T>::add(T &&entity)

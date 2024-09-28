@@ -12,26 +12,22 @@ using namespace FrontEnds::Contracts::CQRS::Brand::Commands;
 using namespace FrontEnds::Application::Features::Brand::Commands;
 using namespace FrontEnds::Contracts::CQRS::Brand::Validators;
 
-RemoveBrandCommandHandler::RemoveBrandCommandHandler(InterfaceBrandRepository *repository) : m_repository(repository)
+RemoveBrandCommandHandler::RemoveBrandCommandHandler(InterfaceBrandRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
 }
 
-Result<int> RemoveBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise,
-                                              const RemoveBrandCommand &request)
+Result<int> RemoveBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request)
 {
     Result<int> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, request);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveBrandCommand:" << ex.what();
     }
@@ -43,20 +39,16 @@ Result<int> RemoveBrandCommandHandler::restore()
 {
     Result<int> result;
 
-    try
-    {
+    try {
         result = restoreImpl();
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<int>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling RemoveBrandCommand restore:" << ex.what();
     }
     return result;
 }
 
-Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                  const RemoveBrandCommand &request)
+Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request)
 {
     int brandId = request.id;
 
@@ -73,7 +65,7 @@ Result<int> RemoveBrandCommandHandler::handleImpl(QPromise<Result<void>> &progre
     // save old entity
     m_oldState = brandResult.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << brandId);
+    auto deleteResult = m_repository->remove(QList<int>() << brandId);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 
@@ -95,6 +87,5 @@ bool RemoveBrandCommandHandler::s_mappingRegistered = false;
 
 void RemoveBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
 }

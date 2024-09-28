@@ -26,8 +26,9 @@ class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT PassengerRepository final
 
     SignalHolder *signalHolder() override;
 
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids,
+                                                                                                  bool active) override;
 
   private:
     QScopedPointer<SignalHolder> m_signalHolder;

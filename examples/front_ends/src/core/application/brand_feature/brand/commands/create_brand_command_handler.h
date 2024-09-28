@@ -20,20 +20,20 @@ namespace FrontEnds::Application::Features::Brand::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT CreateBrandCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     CreateBrandCommandHandler(InterfaceBrandRepository *repository);
 
     Result<BrandDTO> handle(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request);
     Result<BrandDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void brandCreated(FrontEnds::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandRemoved(int id);
 
     void relationWithOwnerInserted(int id, int ownerId, int position);
     void relationWithOwnerRemoved(int id, int ownerId);
 
-  private:
+private:
     InterfaceBrandRepository *m_repository;
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request);
     Result<BrandDTO> restoreImpl();

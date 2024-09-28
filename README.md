@@ -125,6 +125,9 @@ Prerequisites:
 - QCoro (dev packages)
 - Cmake and extra-cmake-modules
 
+On Debian-based distribution, it would be packages like: qtbase6-dev qcoro-qt6-dev cmake extra-cmake-modules cmake-extras
+Depending of your options: qt6-declarative-dev qt6-svg-dev libkf6*dev kirigami2-dev
+
 Adapt the -j6 to your number of CPU minus one.
 
 CMake options are:

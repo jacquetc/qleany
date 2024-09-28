@@ -18,12 +18,12 @@ class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT InterfaceBrandRepository
     : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<FrontEnds::Entities::Brand>,
       public Qleany::Contracts::Repository::InterfaceRepository
 {
-  public:
+public:
     virtual ~InterfaceBrandRepository()
     {
     }
 
-    virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
-    virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
+    virtual Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) = 0;
+    virtual Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
 };
 } // namespace FrontEnds::Contracts::Repository

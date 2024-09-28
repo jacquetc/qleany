@@ -18,19 +18,19 @@ class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT InterfaceClientRepository
     : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<FrontEnds::Entities::Client>,
       public Qleany::Contracts::Repository::InterfaceRepository
 {
-  public:
+public:
     virtual ~InterfaceClientRepository()
     {
     }
 
-    virtual Result<FrontEnds::Entities::Client> update(FrontEnds::Entities::Client &&entity) = 0;
+    virtual Result<FrontEnds::Entities::Client> update(FrontEnds::Entities::Client &&entity) override = 0;
     virtual Result<FrontEnds::Entities::Client> getWithDetails(int entityId) = 0;
 
     virtual FrontEnds::Entities::Client::ClientLoader fetchClientLoader() = 0;
 
     virtual FrontEnds::Entities::Client::ClientFriendsLoader fetchClientFriendsLoader() = 0;
 
-    virtual Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) = 0;
-    virtual Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
+    virtual Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) = 0;
+    virtual Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
 };
 } // namespace FrontEnds::Contracts::Repository

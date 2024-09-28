@@ -75,7 +75,7 @@ Result<int>Remove{{ entity_mappable_with_pascal }}CommandHandler::handleImpl(QPr
     // save old entity
     m_oldState = {{ entity_mappable_with_camel }}Result.value();
 
-    auto deleteResult = m_repository->removeInCascade(QList<int>() << {{ entity_mappable_with_camel }}Id);
+    auto deleteResult = m_repository->remove(QList<int>() << {{ entity_mappable_with_camel }}Id);
 
     QLN_RETURN_IF_ERROR(int, deleteResult)
 

@@ -18,13 +18,11 @@ using namespace Qleany::Contracts::Database;
 namespace FrontEnds::Persistence::Repository
 {
 
-class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT ClientRepository final
-    : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Client>,
-      public FrontEnds::Contracts::Repository::InterfaceClientRepository
+class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT ClientRepository final : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Client>,
+                                                                     public FrontEnds::Contracts::Repository::InterfaceClientRepository
 {
-  public:
-    explicit ClientRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Client> *clientDatabase,
-                              InterfacePassengerRepository *passengerRepository);
+public:
+    explicit ClientRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Client> *clientDatabase, InterfacePassengerRepository *passengerRepository);
 
     SignalHolder *signalHolder() override;
 
@@ -35,13 +33,13 @@ class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT ClientRepository final
 
     FrontEnds::Entities::Client::ClientFriendsLoader fetchClientFriendsLoader() override;
 
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
 
-  private:
+private:
     InterfacePassengerRepository *m_passengerRepository;
     QScopedPointer<SignalHolder> m_signalHolder;
     QReadWriteLock m_lock;
 };
 
-} // namespace FrontEnds::Persistence::Repository
+} // namespace FrontEnds::Repository

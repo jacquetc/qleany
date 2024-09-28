@@ -160,7 +160,7 @@ install(FILES LICENSE DESTINATION share/qleany)
 install(
   EXPORT qleanyTargets
   FILE qleanyTargets.cmake
-  DESTINATION lib/cmake/qleany)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qleany)
 
 # Create and install qleanyConfig.cmake
 message(STATUS "Creating and installing qleanyConfig.cmake")

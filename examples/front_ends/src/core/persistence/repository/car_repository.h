@@ -19,11 +19,10 @@ using namespace Qleany::Contracts::Database;
 namespace FrontEnds::Persistence::Repository
 {
 
-class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT CarRepository final
-    : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Car>,
-      public FrontEnds::Contracts::Repository::InterfaceCarRepository
+class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT CarRepository final : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Car>,
+                                                                  public FrontEnds::Contracts::Repository::InterfaceCarRepository
 {
-  public:
+public:
     explicit CarRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Car> *carDatabase,
                            InterfaceBrandRepository *brandRepository,
                            InterfacePassengerRepository *passengerRepository);
@@ -37,14 +36,14 @@ class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT CarRepository final
 
     FrontEnds::Entities::Car::PassengersLoader fetchPassengersLoader() override;
 
-    Result<QHash<int, QList<int>>> removeInCascade(QList<int> ids) override;
-    Result<QHash<int, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
 
-  private:
+private:
     InterfaceBrandRepository *m_brandRepository;
     InterfacePassengerRepository *m_passengerRepository;
     QScopedPointer<SignalHolder> m_signalHolder;
     QReadWriteLock m_lock;
 };
 
-} // namespace FrontEnds::Persistence::Repository
+} // namespace FrontEnds::Repository

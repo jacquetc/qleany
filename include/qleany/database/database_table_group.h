@@ -4,6 +4,7 @@
 #include "QtCore/qmetaobject.h"
 #include "one_to_many_ordered_associator.h"
 #include "one_to_many_unordered_associator.h"
+#include "many_to_many_unordered_associator.h"
 #include "one_to_one_associator.h"
 #include "qleany/common/result.h"
 #include "qleany/contracts/database/interface_database_context.h"
@@ -1301,8 +1302,8 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Qleany::En
             // Many to Many Unordered:
             else if (relationship.type == Qleany::Entities::RelationshipType::ManyToMany)
             {
-                //                ManyToManyAssociator<T, OtherEntity> associator(m_databaseContext, relationship);
-                //                result = associator.getRelatedEntities(relationship.field);
+                ManyToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
+                result = associator.getRightEntities(leftEntityId);
             }
             else
             {
@@ -1348,8 +1349,8 @@ Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(
             // Many to Many Unordered:
             else if (relationship.type == Qleany::Entities::RelationshipType::ManyToMany)
             {
-                //                ManyToManyAssociator<T, OtherEntity> associator(m_databaseContext, relationship);
-                //                result = associator.updateRightEntities(leftEntityId, rightEntities);
+                ManyToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
+                result = associator.updateRightEntities(leftEntityId, rightEntities);
             }
             else
             {

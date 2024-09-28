@@ -20,20 +20,20 @@ namespace FrontEnds::Application::Features::Passenger::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_PASSENGER_EXPORT CreatePassengerCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     CreatePassengerCommandHandler(InterfacePassengerRepository *repository);
 
     Result<PassengerDTO> handle(QPromise<Result<void>> &progressPromise, const CreatePassengerCommand &request);
     Result<PassengerDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void passengerCreated(FrontEnds::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerRemoved(int id);
 
     void relationWithOwnerInserted(int id, int ownerId, int position);
     void relationWithOwnerRemoved(int id, int ownerId);
 
-  private:
+private:
     InterfacePassengerRepository *m_repository;
     Result<PassengerDTO> handleImpl(QPromise<Result<void>> &progressPromise, const CreatePassengerCommand &request);
     Result<PassengerDTO> restoreImpl();

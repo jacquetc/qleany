@@ -13,26 +13,22 @@ using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Brand::Validators;
 using namespace FrontEnds::Application::Features::Brand::Commands;
 
-CreateBrandCommandHandler::CreateBrandCommandHandler(InterfaceBrandRepository *repository) : m_repository(repository)
+CreateBrandCommandHandler::CreateBrandCommandHandler(InterfaceBrandRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
 }
 
-Result<BrandDTO> CreateBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise,
-                                                   const CreateBrandCommand &request)
+Result<BrandDTO> CreateBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request)
 {
     Result<BrandDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, request);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateBrandCommand:" << ex.what();
     }
@@ -44,20 +40,16 @@ Result<BrandDTO> CreateBrandCommandHandler::restore()
 {
     Result<BrandDTO> result;
 
-    try
-    {
+    try {
         result = restoreImpl();
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling CreateBrandCommand restore:" << ex.what();
     }
     return result;
 }
 
-Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                       const CreateBrandCommand &request)
+Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise, const CreateBrandCommand &request)
 {
     qDebug() << "CreateBrandCommandHandler::handleImpl called";
     FrontEnds::Entities::Brand brand;
@@ -69,8 +61,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     int ownerId = createDTO.carId();
     m_ownerId = ownerId;
 
-    if (m_firstPass)
-    {
+    if (m_firstPass) {
         // Validate the create Brand command using the validator
         auto validator = CreateBrandCommandValidator(m_repository);
         Result<void> validatorResult = validator.validate(createDTO);
@@ -82,17 +73,15 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
         brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, FrontEnds::Entities::Brand>(createDTO);
 
         // allow for forcing the uuid
-        if (brand.uuid().isNull())
-        {
+        if (brand.uuid().isNull()) {
             brand.setUuid(QUuid::createUuid());
         }
 
         // Set the creation and update timestamps to the current date and time
         brand.setCreationDate(QDateTime::currentDateTime());
         brand.setUpdateDate(QDateTime::currentDateTime());
-    }
-    else
-    {
+
+    } else {
         brand = m_newEntity.value();
     }
 
@@ -112,12 +101,9 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     int position = -1;
 
-    if (m_firstPass)
-    {
-
+    if (m_firstPass) {
         auto originalOwnerBrandResult = m_repository->getEntityInRelationOf(Car::schema, ownerId, "brand"_L1);
-        if (Q_UNLIKELY(originalOwnerBrandResult.hasError()))
-        {
+        if (Q_UNLIKELY(originalOwnerBrandResult.hasError())) {
             return Result<BrandDTO>(originalOwnerBrandResult.error());
         }
         auto originalOwnerBrand = originalOwnerBrandResult.value();
@@ -128,16 +114,13 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
         m_ownerBrandNewState = originalOwnerBrand;
         ownerEntityBrand = originalOwnerBrand;
-    }
-    else
-    {
+    } else {
         ownerEntityBrand = m_ownerBrandNewState;
         position = m_position;
     }
 
     // Add the brand to the owner entity
-    Result<FrontEnds::Entities::Brand> updateResult =
-        m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand"_L1, ownerEntityBrand);
+    Result<FrontEnds::Entities::Brand> updateResult = m_repository->updateEntityInRelationOf(Car::schema, ownerId, "brand"_L1, ownerEntityBrand);
 
     QLN_RETURN_IF_ERROR_WITH_ACTION(BrandDTO, updateResult, m_repository->cancelChanges();)
 
@@ -145,8 +128,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     m_newEntity = brandResult;
 
-    auto brandDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
+    auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
     Q_EMIT brandCreated(brandDTO);
 
     // send an insertion signal
@@ -163,11 +145,11 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 Result<BrandDTO> CreateBrandCommandHandler::restoreImpl()
 {
     int entityId = m_newEntity.value().id();
-    auto deleteResult = m_repository->remove(entityId);
+    auto deleteResult = m_repository->remove(QList<int>() << entityId);
 
     QLN_RETURN_IF_ERROR(BrandDTO, deleteResult)
 
-    Q_EMIT brandRemoved(deleteResult.value());
+    Q_EMIT brandRemoved(deleteResult.value().value(FrontEnds::Entities::Entities::EntityEnum::Brand).first());
 
     qDebug() << "Brand removed:" << deleteResult.value();
 
@@ -180,8 +162,6 @@ bool CreateBrandCommandHandler::s_mappingRegistered = false;
 
 void CreateBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO,
-                                                           FrontEnds::Entities::Brand>();
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
+    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO, FrontEnds::Entities::Brand>();
 }
