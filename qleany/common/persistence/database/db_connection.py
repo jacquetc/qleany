@@ -1,4 +1,4 @@
-import sqlite3
+from sqlalchemy.orm import Session
 
 from qleany.common.persistence.database.interfaces.i_db_connection import (
     IDbConnection,
@@ -6,11 +6,11 @@ from qleany.common.persistence.database.interfaces.i_db_connection import (
 
 
 class DbConnection(IDbConnection):
-    def __init__(self, sqlite_connection: sqlite3.Connection):
-        self._sqlite_connection = sqlite_connection
+    def __init__(self, session: Session):
+        self._session = session
 
-    def connection(self) -> sqlite3.Connection:
-        return self._sqlite_connection
+    def connection(self) -> Session:
+        return self._session
 
     def commit(self):
-        self._sqlite_connection.commit()
+        self._session.commit()

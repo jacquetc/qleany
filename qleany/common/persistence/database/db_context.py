@@ -1,12 +1,15 @@
 import os
-import sqlite3
 import tempfile
 import threading
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from qleany.common.persistence.database.db_connection import DbConnection
 from qleany.common.persistence.database.interfaces.i_db_connection import (
     IDbConnection,
 )
+from qleany.common.persistence.database.models import Base
 
 
 class DbContext:
@@ -20,6 +23,10 @@ class DbContext:
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             self.file_name = temp_file.name
             temp_file.close()
+
+            self.engine = create_engine(f'sqlite:///{self.file_name}')
+            Base.metadata.create_all(self.engine)
+            self.Session = sessionmaker(bind=self.engine)
         except Exception as e:
             raise RuntimeError(f"Error initializing database: {str(e)}")
 
@@ -33,18 +40,5 @@ class DbContext:
 
     def get_connection(self) -> IDbConnection:
         with self.mutex:
-            conn = sqlite3.connect(self.file_name)
-            # Execute PRAGMA statements for the new connection
-            pragmas = [
-                "PRAGMA case_sensitive_like=true",
-                "PRAGMA journal_mode=MEMORY",
-                "PRAGMA temp_store=MEMORY",
-                "PRAGMA locking_mode=NORMAL",
-                "PRAGMA synchronous=OFF",
-                "PRAGMA recursive_triggers=ON",
-                "PRAGMA foreign_keys=ON",
-            ]
-            cursor = conn.cursor()
-            for pragma in pragmas:
-                cursor.execute(pragma)
-            return DbConnection(conn)
+            session = self.Session()
+            return DbConnection(session)
