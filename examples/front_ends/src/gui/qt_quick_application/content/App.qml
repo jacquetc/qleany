@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 // Components
-import Interactors
+import Controllers
 import Models
 import Singles
 

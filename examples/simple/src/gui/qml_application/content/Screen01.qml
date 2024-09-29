@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import Interactors
+import Controllers
 import Singles
 
 Screen01Form {
@@ -19,7 +19,7 @@ Screen01Form {
     Connections {
         target: runLongOperationButton
         function onClicked() {
-            CustomInteractor.runLongOperation()
+            CustomController.runLongOperation()
         }
     }
 
@@ -30,22 +30,22 @@ Screen01Form {
                 return
             }
 
-            var dto = PassengerInteractor.getCreateDTO()
+            var dto = PassengerController.getCreateDTO()
             dto.name = "p " + passengerNumber
             passengerNumber = passengerNumber + 1
             dto.carId = currentCarId
             dto.position = 0
-            PassengerInteractor.create(dto)
+            PassengerController.create(dto)
         }
     }
 
     Connections {
         target: addCarButton
         function onClicked() {
-            var dto = CarInteractor.getCreateDTO()
+            var dto = CarController.getCreateDTO()
             dto.content = "c " + carNumber
             carNumber = carNumber + 1
-            CarInteractor.create(dto).then(result => console.log(
+            CarController.create(dto).then(result => console.log(
                                                "Result", result.content))
         }
     }

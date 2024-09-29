@@ -1,0 +1,120 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+#include "{{ controller.feature_snake_name }}/{{ controller.feature_snake_name }}_controller.h"
+#include <QCoroQml>
+#include <QCoroQmlTask>
+#include <QQmlEngine>
+
+
+using namespace {{ application_cpp_domain_name }}::Controller::{{ controller.feature_pascal_name }};
+
+class Foreign{{ controller.feature_pascal_name }}Controller : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_NAMED_ELEMENT({{ controller.feature_pascal_name }}Controller)
+
+public:
+
+    Foreign{{ controller.feature_pascal_name }}Controller(QObject *parent = nullptr) : QObject(parent)
+    {
+        s_controllerInstance = {{ controller.feature_pascal_name }}Controller::instance();
+    }
+
+{% if controller.crud.enabled %}
+    {%if controller.crud.get %}
+    Q_INVOKABLE QCoro::QmlTask get(int id) const
+    {
+        return s_controllerInstance->get(id);
+    }
+    {% endif %}
+
+    {%if controller.crud.get_with_details %}
+    Q_INVOKABLE QCoro::QmlTask getWithDetails(int id) const
+    {
+        return s_controllerInstance->get(id);
+    }
+    {% endif %}
+
+    {%if controller.crud.get_all %}
+    Q_INVOKABLE QCoro::QmlTask getAll() const
+    {
+        return s_controllerInstance->getAll();
+    }
+    {% endif %}
+
+    {%if controller.crud.create %}
+    Q_INVOKABLE Create{{ controller.feature_pascal_name }}DTO getCreateDTO()
+    {
+        return s_controllerInstance->getCreateDTO();
+    }
+    {% endif %}
+
+    {%if controller.crud.update_ %}
+    Q_INVOKABLE Update{{ controller.feature_pascal_name }}DTO getUpdateDTO()
+    {
+        return s_controllerInstance->getUpdateDTO();
+    }
+    {% endif %}
+{% endif %}
+
+    {% for query in controller.custom_queries %}
+    Q_INVOKABLE QCoro::QmlTask {{ query.camel_name }}({% if query.dto_in_enabled %}{{ query.dto_in_pascal_type_prefix }}DTO dto{% endif %}) const
+    {
+        return s_controllerInstance->{{ query.camel_name }}({% if query.dto_in_enabled %}dto{% endif %});
+    }
+    
+    {%if query.dto_in_enabled %}
+    Q_INVOKABLE {{ query.dto_in_pascal_type_prefix }}DTO get{{ query.dto_in_pascal_type_prefix }}DTO()
+    {
+        return s_controllerInstance->get{{ query.dto_in_pascal_type_prefix }}DTO();
+    }
+    {% endif %}
+
+    {% endfor %}
+
+{% if controller.crud.enabled %}
+    {% if controller.crud.create %}
+
+    Q_INVOKABLE QCoro::QmlTask create(const Create{{ controller.feature_pascal_name }}DTO &dto)
+    {
+        return s_controllerInstance->create(dto);
+    }
+    {% endif %}
+
+    {% if controller.crud.update_ %}
+    Q_INVOKABLE QCoro::QmlTask update(const Update{{ controller.feature_pascal_name }}DTO &dto)
+    {
+        return s_controllerInstance->update(dto);
+    }
+    {% endif %}
+
+    {%if controller.crud.remove %}
+    Q_INVOKABLE QCoro::QmlTask remove(int id)
+    {
+        return s_controllerInstance->remove(id);
+    }
+    {% endif %}
+{% endif %}
+
+    {% for command in controller.custom_commands %}
+    Q_INVOKABLE QCoro::QmlTask {{ command.camel_name }}({% if command.dto_in_enabled %}{{ command.dto_in_pascal_type_prefix }}DTO dto{% endif %})
+    {
+        return s_controllerInstance->{{ command.camel_name }}({% if command.dto_in_enabled %}dto{% endif %});
+    }
+
+    {%if command.dto_in_enabled %}
+    Q_INVOKABLE {{ command.dto_in_pascal_type_prefix }}DTO get{{ command.dto_in_pascal_type_prefix }}DTO()
+    {
+        return s_controllerInstance->get{{ command.dto_in_pascal_type_prefix }}DTO();
+    }
+    {% endif %}
+
+    {% endfor %}
+
+
+private:
+
+    {{ controller.feature_pascal_name }}Controller *s_controllerInstance = nullptr;
+};

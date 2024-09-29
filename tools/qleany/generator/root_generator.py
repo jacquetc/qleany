@@ -49,8 +49,8 @@ def _get_generation_dict(manifest_data) -> dict:
     cmakelists_dict["application_path"] = manifest_data.get("application", {}).get(
         "common_cmake_folder_path", "src/application"
     )
-    cmakelists_dict["interactor_path"] = manifest_data.get("interactor", {}).get(
-        "folder_path", "src/interactor"
+    cmakelists_dict["controller_path"] = manifest_data.get("controller", {}).get(
+        "folder_path", "src/controller"
     )
     cmakelists_dict["presenter_path"] = manifest_data.get("presenter", {}).get(
         "folder_path", "src/presenters"
@@ -153,7 +153,7 @@ def _generate_cmakelists_file(
         contracts_dto_path=cmakelists_dict["contracts_dto_path"],
         contracts_cqrs_path=cmakelists_dict["contracts_cqrs_path"],
         application_path=cmakelists_dict["application_path"],
-        interactor_path=cmakelists_dict["interactor_path"],
+        controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
         front_ends=cmakelists_dict["front_ends"],
     )
@@ -199,7 +199,7 @@ def _generate_cmakelists_file_for_multiple_uis(
         contracts_dto_path=cmakelists_dict["contracts_dto_path"],
         contracts_cqrs_path=cmakelists_dict["contracts_cqrs_path"],
         application_path=cmakelists_dict["application_path"],
-        interactor_path=cmakelists_dict["interactor_path"],
+        controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
         front_ends=cmakelists_dict["front_ends"],
     )
@@ -244,7 +244,7 @@ def _generate_cmakelists_file_for_no_ui(
         contracts_dto_path=cmakelists_dict["contracts_dto_path"],
         contracts_cqrs_path=cmakelists_dict["contracts_cqrs_path"],
         application_path=cmakelists_dict["application_path"],
-        interactor_path=cmakelists_dict["interactor_path"],
+        controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
         front_ends=cmakelists_dict["front_ends"],
     )

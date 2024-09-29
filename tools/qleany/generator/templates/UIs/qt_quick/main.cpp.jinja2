@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #ifndef BUILD_WITH_MOCKS
 #include "entities_registration.h"
-#include "interactor_registration.h"
+#include "controller_registration.h"
 #include "persistence_registration.h"
 #endif
 #include <QCoroQml>
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     new {{ application_cpp_domain_name }}::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new {{ application_cpp_domain_name }}::Persistence::PersistenceRegistration(&app);
-    new {{ application_cpp_domain_name }}::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());
+    new {{ application_cpp_domain_name }}::Controller::ControllerRegistration(&app, persistenceRegistration->repositoryProvider());
 #endif
 
     QCoro::Qml::registerTypes();

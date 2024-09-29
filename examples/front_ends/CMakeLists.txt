@@ -127,7 +127,7 @@ add_subdirectory(src/core/application)
 
 # handles the interaction between the system's inner layers (use cases, DTOs)
 # and the external world
-add_subdirectory(src/core/interactor/)
+add_subdirectory(src/core/controller/)
 
 # handles the Qt models
 add_subdirectory(src/gui/presenter)

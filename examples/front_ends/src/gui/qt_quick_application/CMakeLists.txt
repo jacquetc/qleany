@@ -32,7 +32,7 @@ qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
 target_link_libraries(${APP_NAME} PUBLIC qleany)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-entities)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-persistence)
-target_link_libraries(${APP_NAME} PUBLIC front-ends-example-interactor)
+target_link_libraries(${APP_NAME} PUBLIC front-ends-example-controller)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-presenter)
 target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
 

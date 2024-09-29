@@ -68,9 +68,9 @@ repositories:
   repository_folder_path: src/core/persistence/repository/
   base_folder_path: src/core/persistence/
 
-interactor: 
-  folder_path: src/core/interactor/
-  create_undo_redo_interactor: true
+controller: 
+  folder_path: src/core/controller/
+  create_undo_redo_controller: true
 
 application:
   common_cmake_folder_path: src/core/application

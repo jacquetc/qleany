@@ -1,0 +1,25 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+pragma Singleton
+
+import QtQuick
+
+QtObject {
+    function progress() {
+        return ProgressSignals;
+    }
+    function error() {
+        return ErrorSignals;
+    }
+{% if has_undo_redo %}
+    function undoRedo() {
+        return UndoRedoSignals;
+    }
+{% endif %}
+
+{% for feature_name, controller in controllers.items() %}
+    function {{ controller.feature_camel_name }}() {
+        return {{ controller.feature_pascal_name }}Signals;
+    }
+{% endfor %}
+}

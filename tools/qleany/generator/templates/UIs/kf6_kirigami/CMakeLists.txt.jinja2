@@ -22,7 +22,7 @@ qcoro_enable_coroutines()
 
 target_link_libraries(${APP_NAME} PUBLIC {{ application_name_spinal }}-entities)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_name_spinal }}-persistence)
-target_link_libraries(${APP_NAME} PUBLIC {{ application_name_spinal }}-interactor)
+target_link_libraries(${APP_NAME} PUBLIC {{ application_name_spinal }}-controller)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_name_spinal }}-presenter)
 target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
 

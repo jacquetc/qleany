@@ -1,0 +1,195 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+pragma Singleton
+
+import QtQuick
+
+QtObject {
+    id: controller
+{% if controller.crud.enabled %}
+{% if controller.crud.get %}
+    function get(id) {
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getReplied(id)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.get_with_details %}
+    function getWithDetails(id) {
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getWithDetailsReplied(id)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.get_all %}
+    function getAll() {
+        // fill it with whatever you want to return
+        var dtos = []
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dtos);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().getAllReplied(dtos)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.create %}
+    function getCreateDTO() {
+        return {
+            "content": "{{ controller.feature_pascal_name }} 1"
+        }
+    }
+
+    function create(dto) {
+        // create random id
+        var newId = Math.floor(Math.random() * 1000000);
+        dto["id"] = newId;
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){EventDispatcher.{{ controller.feature_camel_name }}().created(dto)})
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.update_ %}
+    function getUpdateDTO() {
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+
+    function update(dto) {
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().updated(dto);
+                EventDispatcher.{{ controller.feature_camel_name }}().allRelationsInvalidated(dto.id);
+            })
+        }
+
+        return task
+    }
+{% endif -%}
+{% if controller.crud.remove %}
+    signal {{ controller.feature_camel_name }}Removed(int id)
+    function remove(id) {
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+                EventDispatcher.{{ controller.feature_camel_name }}().removed(id);
+            })
+        }
+
+        return task
+    }
+{% endif -%}
+{% endif -%}
+
+{%- for command in controller.custom_commands %}
+
+    function {{ command.camel_name }}(dto) {
+        // TODO: change this dict below to conform to the command's dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
+                EventDispatcher.{{ controller.feature_camel_name }}().{{ command.camel_name }}Changed(reply_dto);
+            })
+        }
+
+        return task
+    }
+
+    {%if command.dto_in_enabled %}
+    function get{{ command.dto_in_pascal_type_prefix }}DTO() {
+    // TODO: change this dict below to conform to the command's dto in
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+    {% endif %}
+
+{% endfor %}
+
+{%- for query in controller.custom_queries %}
+
+    function {{ query.camel_name }}(dto) {
+        // TODO: change this dict below to conform to the query's dto out
+        var reply_dto = {
+            "id": 0,
+            "content": ""
+        }
+
+        // mocking QCoro::Task
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            var task = component.createObject(controller);
+            task.setValue(reply_dto);
+            task.setDelay(50);
+            task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
+                EventDispatcher.{{ controller.feature_camel_name }}().{{ query.camel_name }}Replied(reply_dto);
+            })
+        }
+
+        return task
+    }
+
+    {%if query.dto_in_enabled %}
+    function get{{ query.dto_in_pascal_type_prefix }}DTO() {
+    // TODO: change this dict below to conform to the query's dto in
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+    {% endif %}
+
+{% endfor %}
+
+}

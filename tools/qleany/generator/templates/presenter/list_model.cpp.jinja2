@@ -1,10 +1,10 @@
 #include "{{ model.class_name_snake }}.h"
-#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_interactor.h"
-#include "{{ model.related_name_snake }}/{{ model.related_name_snake }}_interactor.h"
+#include "{{ model.entity_name_snake }}/{{ model.entity_name_snake }}_controller.h"
+#include "{{ model.related_name_snake }}/{{ model.related_name_snake }}_controller.h"
 #include "event_dispatcher.h"
 #include <QCoroTask>
 
-using namespace {{ application_cpp_domain_name }}::Interactor;
+using namespace {{ application_cpp_domain_name }}::Controller;
 using namespace {{ application_cpp_domain_name }}::Presenter;
 
 {{ model.class_name_pascal }}::{{ model.class_name_pascal }}(QObject *parent) : QAbstractListModel(parent)
@@ -15,7 +15,7 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
         {
             return;
         }
-        auto task = {{ model.entity_name_pascal }}::Interactor::{{ model.related_name_pascal }}::{{ model.related_name_pascal }}Interactor::instance()->getWithDetails({{ model.related_name_camel }}Id);
+        auto task = {{ model.entity_name_pascal }}::Controller::{{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails({{ model.related_name_camel }}Id);
         QCoro::connect(std::move(task), this, [this, {{ model.related_name_camel }}Id](auto &&{{ model.related_name_camel }}Details) {
             if (!{{ model.related_name_camel }}Details.isValid())
             {
@@ -112,10 +112,10 @@ using namespace {{ application_cpp_domain_name }}::Presenter;
                 QList<int> relatedIds = dto.relatedIds();
                 std::reverse(relatedIds.begin(), relatedIds.end());
 
-                // fetch {{ model.entity_name_camel }} list from interactor
+                // fetch {{ model.entity_name_camel }} list from controller
                 for (int {{ model.entity_name_camel }}Id : relatedIds)
                 {
-                    {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Interactor::instance()
+                    {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()
                         ->get({{ model.entity_name_camel }}Id)
                         .then([this, {{ model.entity_name_camel }}Id]({{ model.entity_name_pascal }}DTO {{ model.entity_name_camel }}) {
                             // add {{ model.entity_name_camel }} to this model
@@ -226,7 +226,7 @@ bool {{ model.class_name_pascal }}::setData(const QModelIndex &index, const QVar
         dto.setId({{ model.entity_name_camel }}.id());
         dto.set{{ field.pascal_name }}(value.value<{{ field.type }}>());
 
-        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Interactor::instance()->update(dto)
+        {{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}Controller::instance()->update(dto)
             .then([this, index, role](auto &&result) {
 
                 if(result.isInvalid()){
@@ -256,7 +256,7 @@ void {{ model.class_name_pascal }}::populate()
     m_{{ model.entity_name_camel }}Ids.clear();
     endResetModel();
 
-    auto task = {{ model.related_name_pascal }}::{{ model.related_name_pascal }}Interactor::instance()->getWithDetails(m_{{ model.related_name_camel }}Id);
+    auto task = {{ model.related_name_pascal }}::{{ model.related_name_pascal }}Controller::instance()->getWithDetails(m_{{ model.related_name_camel }}Id);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<{{ application_cpp_domain_name }}::Contracts::DTO::{{ model.entity_name_pascal }}::{{ model.entity_name_pascal }}DTO> {{ model.entity_name_camel }}List = result.{{ model.related_field_name_camel }}();
         for (const auto &{{ model.entity_name_camel }} : {{ model.entity_name_camel }}List)

@@ -1,10 +1,10 @@
 #include "passenger_list_model_from_car_passengers.h"
-#include "car/car_interactor.h"
+#include "car/car_controller.h"
 #include "event_dispatcher.h"
-#include "passenger/passenger_interactor.h"
+#include "passenger/passenger_controller.h"
 #include <QCoroTask>
 
-using namespace Simple::Interactor;
+using namespace Simple::Controller;
 using namespace Simple::Presenter;
 
 PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject *parent) : QAbstractListModel(parent)
@@ -15,7 +15,7 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
         {
             return;
         }
-        auto task = Car::CarInteractor::instance()->getWithDetails(carId);
+        auto task = Car::CarController::instance()->getWithDetails(carId);
         QCoro::connect(std::move(task), this, [this, carId](auto &&carDetails) {
             if (carDetails.isInvalid())
             {
@@ -128,10 +128,10 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
         QList<int> relatedIds = dto.relatedIds();
         std::reverse(relatedIds.begin(), relatedIds.end());
 
-        // fetch passenger list from interactor
+        // fetch passenger list from controller
         for (int passengerId : relatedIds)
         {
-            Passenger::PassengerInteractor::instance()
+            Passenger::PassengerController::instance()
                 ->get(passengerId)
                 .then([this, passengerId, position](PassengerDTO passenger) {
                     // add passenger to this model
@@ -247,7 +247,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(passenger.id());
         dto.setId(value.value<int>());
 
-        Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
+        Passenger::PassengerController::instance()->update(dto).then([this, index, role](auto &&result) {
             if (result.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
@@ -273,7 +273,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(passenger.id());
         dto.setUuid(value.value<QUuid>());
 
-        Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
+        Passenger::PassengerController::instance()->update(dto).then([this, index, role](auto &&result) {
             if (result.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
@@ -299,7 +299,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(passenger.id());
         dto.setCreationDate(value.value<QDateTime>());
 
-        Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
+        Passenger::PassengerController::instance()->update(dto).then([this, index, role](auto &&result) {
             if (result.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
@@ -325,7 +325,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(passenger.id());
         dto.setUpdateDate(value.value<QDateTime>());
 
-        Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
+        Passenger::PassengerController::instance()->update(dto).then([this, index, role](auto &&result) {
             if (result.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
@@ -351,7 +351,7 @@ bool PassengerListModelFromCarPassengers::setData(const QModelIndex &index, cons
         dto.setId(passenger.id());
         dto.setName(value.value<QString>());
 
-        Passenger::PassengerInteractor::instance()->update(dto).then([this, index, role](auto &&result) {
+        Passenger::PassengerController::instance()->update(dto).then([this, index, role](auto &&result) {
             if (result.isInvalid())
             {
                 qCritical() << Q_FUNC_INFO << "Invalid car";
@@ -376,7 +376,7 @@ void PassengerListModelFromCarPassengers::populate()
     m_passengerIdList.clear();
     endResetModel();
 
-    auto task = Car::CarInteractor::instance()->getWithDetails(m_carId);
+    auto task = Car::CarController::instance()->getWithDetails(m_carId);
     QCoro::connect(std::move(task), this, [this](auto &&result) {
         const QList<Simple::Contracts::DTO::Passenger::PassengerDTO> passengerList = result.passengers();
         for (const auto &passenger : passengerList)

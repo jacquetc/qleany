@@ -1,10 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_client.h"
-#include "client/client_interactor.h"
+#include "client/client_controller.h"
 #include "event_dispatcher.h"
 
-using namespace FrontEnds::Interactor;
+using namespace FrontEnds::Controller;
 using namespace FrontEnds::Presenter;
 
 SingleClient::SingleClient(QObject *parent)
@@ -64,7 +64,7 @@ void SingleClient::setId(int newId)
 
     // set
     else {
-        Client::ClientInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+        Client::ClientController::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
             if (client.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid clientId";
                 return;
@@ -100,7 +100,7 @@ void SingleClient::setUuid(const QUuid &newUuid)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+    Client::ClientController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
         if (client.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid clientId";
             return;
@@ -123,7 +123,7 @@ void SingleClient::setCreationDate(const QDateTime &newCreationDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+    Client::ClientController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
         if (client.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid clientId";
             return;
@@ -146,7 +146,7 @@ void SingleClient::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateClientDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Client::ClientInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
+    Client::ClientController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Client::ClientDTO &client) {
         if (client.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid clientId";
             return;

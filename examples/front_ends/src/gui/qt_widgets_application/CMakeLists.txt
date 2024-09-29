@@ -32,6 +32,6 @@ target_link_libraries(${APP_NAME} PUBLIC Qt6::Core Qt6::Widgets Qt6::Concurrent
 target_link_libraries(${APP_NAME} PUBLIC qleany)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-entities)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-persistence)
-target_link_libraries(${APP_NAME} PUBLIC front-ends-example-interactor)
+target_link_libraries(${APP_NAME} PUBLIC front-ends-example-controller)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-presenter)
 target_link_libraries(${APP_NAME} PRIVATE QCoro::Core)

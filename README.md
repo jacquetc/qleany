@@ -22,7 +22,7 @@
     + [Global Settings](#global-settings)
     + [Entities Definition](#entities-definition)
     + [Repositories Configuration](#repositories-configuration)
-    + [Interactor Settings](#interactor-settings)
+    + [Controller Settings](#controller-settings)
     + [Application Layer Configuration](#application-layer-configuration)
     + [DTOs (Data Transfer Objects) Configuration](#dtos--data-transfer-objects--configuration)
     + [Contracts Configuration](#contracts-configuration)
@@ -92,7 +92,7 @@ Libraries and their respective functionalities are organized as follows:
 
 - **Contracts**: A common library for most other components, housing all interfaces from `persistence`, `gateway`, and `infrastructure`. This design minimizes tight coupling and circular dependencies.
 
-- **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as interactors.
+- **DTO Libraries**: Each functionality has its DTO library, facilitating communication with the `application` layer. DTOs are used for both input and output in interactions with the outer layers, such as controllers.
 
 - **CQRS Libraries** (Command Query Responsibility Segregation): The `application` layer is designed to support CQRS, with commands and queries being handled separately. This separation is achieved by using the `CommandHandler` and `QueryHandler` classes. Other classes, such as `CommandValidator` and `QueryValidator`, are used to validate commands and queries, respectively. They are stored away in a separate library called `cqrs`.
 
@@ -100,15 +100,15 @@ Libraries and their respective functionalities are organized as follows:
 
 - **Infrastructure**: Optional. Handles actions like file management, local settings, and system queries. It's injected into use cases similar to repositories and gateways.
 
-- **Interactor**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
+- **Controller**: Acts as an internal API to invoke use cases, streamlining the interaction between the user interface and application logic.
 
 - **Presenter**: Maintains Qt models and representations of unique entities (referred to as `Singles`), enhancing their integration and usage within the GUI.
 
-- **UI**: The structure allows the simultaneous use of different fronts, each in its own binary. QML and QWidgets UIs can coexist without any conflict. Same for a CLI, an API ... All these fronts will use the same models and interactors. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. Qleany will only generate one for each front. 
+- **UI**: The structure allows the simultaneous use of different fronts, each in its own binary. QML and QWidgets UIs can coexist without any conflict. Same for a CLI, an API ... All these fronts will use the same models and controllers. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. Qleany will only generate one for each front. 
 
 Another related point:
 
-- **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `interactor`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
+- **Registration**: Each component (`persistence`, `gateway`, `infrastructure`, `controller`) initializes its classes in a corresponding *name*_registration.cpp file, typically called together in the main.cpp.
 
 Project dependencies:
 ![Alt text](docs/qleany_project_dep.drawio.png)
@@ -179,7 +179,7 @@ If you already have a QtWidgets GUI, you can craete a blank GUI in a sub-folder 
 Note: You can use the `examples/simple/src/gui/desktop_application` or `examples/front_ends` as references of what is running fine.
 
 11. Your QtWidgets must be, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/desktop_application`.
-12. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use `interactor` for commands/queries and Q_SIGNALS. Also, it will use models from `presenter`. Refer to the example for guidance at `examples/front_ends/src/gui/qt_widgets_application/main.cpp`
+12. You can now start to implement your GUI and use cases. A GUI made with QWidgets will only use `controller` for commands/queries and Q_SIGNALS. Also, it will use models from `presenter`. Refer to the example for guidance at `examples/front_ends/src/gui/qt_widgets_application/main.cpp`
 
 ### For QtQuick GUI
 
@@ -192,7 +192,7 @@ If you already have a QtQuick GUI, you can craete a blank GUI in a sub-folder ne
 11. Your QML GUI must be, not at the root of the project, but in a dedicated sub-folder, like with did with `examples/simple/src/gui/qml_application`.
 12. You can now start to implement your GUI and use cases. 
 
-A GUI made with QML will **not** use `interactor` and `presenter`. Wrappers around models, Q_SIGNALS, commands and queries all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/front_ends/src/gui/qt_quick_application/main.cpp` and `examples/front_ends/src/gui/qt_quick__application/CMakelists.txt`
+A GUI made with QML will **not** use `controller` and `presenter`. Wrappers around models, Q_SIGNALS, commands and queries all are generated in the QML `real_imports` folder in the QML folder to be made available from QML. Also, QML mocks are generated in `mock_imports`, to be filled by the developer. Refer to the example for guidance at `examples/front_ends/src/gui/qt_quick_application/main.cpp` and `examples/front_ends/src/gui/qt_quick__application/CMakelists.txt`
 
 ### For KF6 Kirigami GUI
 
@@ -232,13 +232,13 @@ Read "Front end Configuration" section below for more details.
 
 ### Other Fronts
 
-You can also create a CLI, an API, a gRPC server, or other fronts. You can use the same models and interactors for all fronts. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. 
+You can also create a CLI, an API, a gRPC server, or other fronts. You can use the same models and controllers for all fronts. You can have a single main.cpp file for all fronts, or one for each front. It's up to you. 
 
 ### Gateway and Infrastructure
 
 The gateway and infrastructure are not generated by Qleany. You have to create them manually. You can use the `examples/simple/src/core/contracts` and `examples/simple/src/core/persistence` as a reference. The `contracts` folder contains the interfaces for the gateway and infrastructure, similar to what is done with the repositories of `persistence`. 
 
-So, if I wanted to add a `gateway`, I would create a `gateway` folder in the `src/core/contracts` folder, and add the interfaces for all the public classes offered by the gateway. Then, I would create a `gateway` folder in the `src/core` folder, and add the implementation of the gateway classes. When needed, use cases (handler) in `application` would have a `gateway` parameter using the interface, like what is already done with the repositories, and the `gateway` classes would be instanciated and injected into `interactor` from inside the `main.cpp` file.
+So, if I wanted to add a `gateway`, I would create a `gateway` folder in the `src/core/contracts` folder, and add the interfaces for all the public classes offered by the gateway. Then, I would create a `gateway` folder in the `src/core` folder, and add the implementation of the gateway classes. When needed, use cases (handler) in `application` would have a `gateway` parameter using the interface, like what is already done with the repositories, and the `gateway` classes would be instanciated and injected into `controller` from inside the `main.cpp` file.
 
 Finally, do not forget a `gateway_registration.cpp` file in the `src/core/gateway` folder to register the gateway classes. 
 
@@ -364,14 +364,14 @@ repositories:
   base_folder_path: path/to/base/folder
 ```
 
-### Interactor Settings
+### Controller Settings
 
-Configures interactor-specific settings.
+Configures controller-specific settings.
 
 ```yaml
-interactor: 
-  folder_path: path/to/interactor/folder
-  create_undo_redo_interactor: true/false
+controller: 
+  folder_path: path/to/controller/folder
+  create_undo_redo_controller: true/false
 ```
 ### Application Layer Configuration
 

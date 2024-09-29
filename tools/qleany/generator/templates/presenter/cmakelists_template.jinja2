@@ -32,7 +32,7 @@ target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
 target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)
-target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-interactor)
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-controller)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

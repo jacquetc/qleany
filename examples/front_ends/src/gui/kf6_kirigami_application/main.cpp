@@ -24,7 +24,7 @@
 
 #ifndef BUILD_WITH_MOCKS
 #include "entities_registration.h"
-#include "interactor_registration.h"
+#include "controller_registration.h"
 #include "persistence_registration.h"
 #endif
 #include "frontendsexampleconfig.h"
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     new FrontEnds::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new FrontEnds::Persistence::PersistenceRegistration(&app);
-    new FrontEnds::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());
+    new FrontEnds::Controller::ControllerRegistration(&app, persistenceRegistration->repositoryProvider());
 #endif
 
 #ifdef Q_OS_WINDOWS

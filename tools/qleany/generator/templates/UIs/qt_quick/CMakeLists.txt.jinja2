@@ -31,7 +31,7 @@ qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
 target_link_libraries(${APP_NAME} PUBLIC qleany)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-entities)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-persistence)
-target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-interactor)
+target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-controller)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-presenter)
 target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
 

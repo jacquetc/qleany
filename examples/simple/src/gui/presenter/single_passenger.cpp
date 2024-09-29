@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_passenger.h"
 #include "event_dispatcher.h"
-#include "passenger/passenger_interactor.h"
+#include "passenger/passenger_controller.h"
 
-using namespace Simple::Interactor;
+using namespace Simple::Controller;
 using namespace Simple::Presenter;
 
 SinglePassenger::SinglePassenger(QObject *parent) : QObject{parent}
@@ -80,7 +80,7 @@ void SinglePassenger::setId(int newId)
     // set
     else
     {
-        Passenger::PassengerInteractor::instance()->get(m_id).then(
+        Passenger::PassengerController::instance()->get(m_id).then(
             [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
                 if (passenger.isInvalid())
                 {
@@ -121,7 +121,7 @@ void SinglePassenger::setUuid(const QUuid &newUuid)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
+    Passenger::PassengerController::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
             if (passenger.isInvalid())
             {
@@ -146,7 +146,7 @@ void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
+    Passenger::PassengerController::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
             if (passenger.isInvalid())
             {
@@ -171,7 +171,7 @@ void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
+    Passenger::PassengerController::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
             if (passenger.isInvalid())
             {
@@ -196,7 +196,7 @@ void SinglePassenger::setName(const QString &newName)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerInteractor::instance()->update(dto).then(
+    Passenger::PassengerController::instance()->update(dto).then(
         [this](const Simple::Contracts::DTO::Passenger::PassengerDTO &passenger) {
             if (passenger.isInvalid())
             {

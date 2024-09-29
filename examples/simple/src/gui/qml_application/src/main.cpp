@@ -4,7 +4,7 @@
 #include "app_environment.h"
 #include "entities_registration.h"
 #include "import_qml_plugins.h"
-#include "interactor_registration.h"
+#include "controller_registration.h"
 #include "persistence_registration.h"
 #include <QCoroQml>
 #include <QGuiApplication>
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     new Simple::Entities::EntitiesRegistration(&app);
     auto *persistenceRegistration = new Simple::Persistence::PersistenceRegistration(&app);
-    new Simple::Interactor::InteractorRegistration(&app, persistenceRegistration->repositoryProvider());
+    new Simple::Controller::ControllerRegistration(&app, persistenceRegistration->repositoryProvider());
 
     QCoro::Qml::registerTypes();
 

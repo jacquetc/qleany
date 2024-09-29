@@ -218,9 +218,9 @@ global:
   organisation:
     domain: qleany.eu
     name: frontendsexample
-interactor:
-  create_undo_redo_interactor: true
-  folder_path: src/core/interactor/
+controller:
+  create_undo_redo_controller: true
+  folder_path: src/core/controller/
 presenter:
   create_undo_and_redo_singles: true
   folder_path: src/gui/presenter

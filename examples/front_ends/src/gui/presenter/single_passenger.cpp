@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_passenger.h"
 #include "event_dispatcher.h"
-#include "passenger/passenger_interactor.h"
+#include "passenger/passenger_controller.h"
 
-using namespace FrontEnds::Interactor;
+using namespace FrontEnds::Controller;
 using namespace FrontEnds::Presenter;
 
 SinglePassenger::SinglePassenger(QObject *parent)
@@ -71,7 +71,7 @@ void SinglePassenger::setId(int newId)
 
     // set
     else {
-        Passenger::PassengerInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+        Passenger::PassengerController::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
             if (passenger.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid passengerId";
                 return;
@@ -110,7 +110,7 @@ void SinglePassenger::setUuid(const QUuid &newUuid)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+    Passenger::PassengerController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
         if (passenger.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid passengerId";
             return;
@@ -133,7 +133,7 @@ void SinglePassenger::setCreationDate(const QDateTime &newCreationDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+    Passenger::PassengerController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
         if (passenger.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid passengerId";
             return;
@@ -156,7 +156,7 @@ void SinglePassenger::setUpdateDate(const QDateTime &newUpdateDate)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+    Passenger::PassengerController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
         if (passenger.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid passengerId";
             return;
@@ -179,7 +179,7 @@ void SinglePassenger::setName(const QString &newName)
     UpdatePassengerDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Passenger::PassengerInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
+    Passenger::PassengerController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Passenger::PassengerDTO &passenger) {
         if (passenger.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid passengerId";
             return;

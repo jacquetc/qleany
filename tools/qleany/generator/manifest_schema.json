@@ -134,19 +134,19 @@
                 "base_folder_path"
             ]
         },
-        "interactor": {
+        "controller": {
             "type": "object",
             "properties": {
                 "folder_path": {
                     "type": "string"
                 },
-                "create_undo_redo_interactor": {
+                "create_undo_redo_controller": {
                     "type": "boolean"
                 }
             },
             "required": [
                 "folder_path",
-                "create_undo_redo_interactor"
+                "create_undo_redo_controller"
             ]
         },
         "application": {
@@ -692,7 +692,7 @@
         "global",
         "entities",
         "repositories",
-        "interactor",
+        "controller",
         "application",
         "DTOs",
         "CQRS",

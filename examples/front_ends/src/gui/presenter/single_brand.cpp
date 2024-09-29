@@ -1,10 +1,10 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_brand.h"
-#include "brand/brand_interactor.h"
+#include "brand/brand_controller.h"
 #include "event_dispatcher.h"
 
-using namespace FrontEnds::Interactor;
+using namespace FrontEnds::Controller;
 using namespace FrontEnds::Presenter;
 
 SingleBrand::SingleBrand(QObject *parent)
@@ -71,7 +71,7 @@ void SingleBrand::setId(int newId)
 
     // set
     else {
-        Brand::BrandInteractor::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+        Brand::BrandController::instance()->get(m_id).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
             if (brand.isInvalid()) {
                 qCritical() << Q_FUNC_INFO << "Invalid brandId";
                 return;
@@ -110,7 +110,7 @@ void SingleBrand::setUuid(const QUuid &newUuid)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setUuid(newUuid);
-    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+    Brand::BrandController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
         if (brand.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid brandId";
             return;
@@ -133,7 +133,7 @@ void SingleBrand::setCreationDate(const QDateTime &newCreationDate)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setCreationDate(newCreationDate);
-    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+    Brand::BrandController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
         if (brand.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid brandId";
             return;
@@ -156,7 +156,7 @@ void SingleBrand::setUpdateDate(const QDateTime &newUpdateDate)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setUpdateDate(newUpdateDate);
-    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+    Brand::BrandController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
         if (brand.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid brandId";
             return;
@@ -179,7 +179,7 @@ void SingleBrand::setName(const QString &newName)
     UpdateBrandDTO dto;
     dto.setId(id());
     dto.setName(newName);
-    Brand::BrandInteractor::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
+    Brand::BrandController::instance()->update(dto).then([this](const FrontEnds::Contracts::DTO::Brand::BrandDTO &brand) {
         if (brand.isInvalid()) {
             qCritical() << Q_FUNC_INFO << "Invalid brandId";
             return;

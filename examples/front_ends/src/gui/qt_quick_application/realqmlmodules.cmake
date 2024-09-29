@@ -4,7 +4,7 @@
 add_subdirectory(real_imports)
 
 target_link_libraries(${APP_NAME} PRIVATE
-    front-ends-example-qml-interactorsplugin
+    front-ends-example-qml-controllersplugin
     front-ends-example-qml-modelsplugin
     front-ends-example-qml-singlesplugin
 )

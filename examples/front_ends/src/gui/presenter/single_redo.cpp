@@ -2,16 +2,16 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "single_redo.h"
 #include "event_dispatcher.h"
-#include "undo_redo/undo_redo_interactor.h"
+#include "undo_redo/undo_redo_controller.h"
 
-using namespace FrontEnds::Interactor;
-using namespace FrontEnds::Interactor::UndoRedo;
+using namespace FrontEnds::Controller;
+using namespace FrontEnds::Controller::UndoRedo;
 using namespace FrontEnds::Presenter;
 
 SingleRedo::SingleRedo(QObject *parent)
     : QObject{parent}
 {
-    m_action = UndoRedoInteractor::instance()->createUndoAction(this, tr("Redo: %1"));
+    m_action = UndoRedoController::instance()->createUndoAction(this, tr("Redo: %1"));
 
     m_enabled = m_action->isEnabled();
     connect(m_action, &QAction::enabledChanged, this, [this](bool newEnabled) {
@@ -50,5 +50,5 @@ QString SingleRedo::text() const
 
 void SingleRedo::redo()
 {
-    UndoRedoInteractor::instance()->redo();
+    UndoRedoController::instance()->redo();
 }
