@@ -7,9 +7,8 @@
 {% endfor %}
 #include {{ parent_header }}
 #include "entities.h"
-#include <qleany/entities/entity_schema.h>
+#include "entity_schema.h"
 
-using namespace Qleany::Entities;
 
 namespace {{ application_cpp_domain_name }}::Entities
 {
@@ -161,7 +160,7 @@ class {{ name }} : public {{ parent }}
     {% endif %}
 {% endfor %}
 
-  static Qleany::Entities::EntitySchema schema;
+  static {{ application_cpp_domain_name }}::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -206,7 +205,7 @@ inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 }
 
 /// Schema for {{ name }} entity
-inline Qleany::Entities::EntitySchema {{ name }}::schema = {
+inline {{ application_cpp_domain_name }}::Entities::EntitySchema {{ name }}::schema = {
     {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }},
     "{{ name }}"_L1,
 

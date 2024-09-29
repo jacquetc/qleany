@@ -3,8 +3,8 @@
 #pragma once
 
 #include "front_ends_example_persistence_export.h"
+#include "repository/repository_provider.h"
 #include <QObject>
-#include <qleany/repository/repository_provider.h>
 
 namespace FrontEnds::Persistence
 {
@@ -12,14 +12,14 @@ class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT PersistenceRegistration : public QOb
 {
     Q_OBJECT
 
-  public:
+public:
     explicit PersistenceRegistration(QObject *parent);
 
-    Qleany::Repository::RepositoryProvider *repositoryProvider();
+    FrontEnds::Persistence::Repository::RepositoryProvider *repositoryProvider();
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
-  private:
-    QScopedPointer<Qleany::Repository::RepositoryProvider> m_repositoryProvider;
+private:
+    QScopedPointer<FrontEnds::Persistence::Repository::RepositoryProvider> m_repositoryProvider;
 };
 } // namespace FrontEnds::Persistence

@@ -14,16 +14,16 @@
 #include "client/queries/get_client_with_details_query_handler.h"
 // #include "client/commands/insert_client_into_xxx_command.h"
 // #include "client/commands/update_client_into_xxx_command_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace FrontEnds::Controller;
 using namespace FrontEnds::Controller::Client;
 using namespace FrontEnds::Application::Features::Client::Commands;
 using namespace FrontEnds::Application::Features::Client::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds::Controller::UndoRedo;
+using namespace FrontEnds::Contracts::Repository;
 
 QPointer<ClientController> ClientController::s_instance = nullptr;
 

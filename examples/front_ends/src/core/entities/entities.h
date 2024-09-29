@@ -4,6 +4,7 @@
 
 #include "QtCore/qobjectdefs.h"
 #include "QtCore/qtmetamacros.h"
+#include "QtCore/QLatin1StringView"
 
 using namespace Qt::Literals::StringLiterals;
 

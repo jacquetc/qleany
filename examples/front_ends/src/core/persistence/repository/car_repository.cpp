@@ -6,15 +6,13 @@
 #include <QObject>
 #endif
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
-using namespace FrontEnds::Persistence::Repository;
+using namespace FrontEnds using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
 CarRepository::CarRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Car> *carDatabase,
                              InterfaceBrandRepository *brandRepository,
                              InterfacePassengerRepository *passengerRepository)
-    : Qleany::Repository::GenericRepository<FrontEnds::Entities::Car>(carDatabase)
+    : FrontEnds::Persistence::Repository::GenericRepository<FrontEnds::Entities::Car>(carDatabase)
     , m_brandRepository(brandRepository)
     , m_passengerRepository(passengerRepository)
 {
@@ -56,13 +54,13 @@ Result<FrontEnds::Entities::Car> CarRepository::update(Entities::Car &&entity)
         QLN_RETURN_IF_ERROR(Entities::Car, passengersResult)
     }
 
-    return Qleany::Repository::GenericRepository<Entities::Car>::update(std::move(entity));
+    return FrontEnds::Persistence::Repository::GenericRepository<Entities::Car>::update(std::move(entity));
 }
 
 Result<FrontEnds::Entities::Car> CarRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Repository::GenericRepository<Entities::Car>::get(entityId);
+    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
 
     if (getResult.isError()) {
         return getResult;
@@ -151,8 +149,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
 
     // remove the brand in cascade
 
-    Qleany::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
+    FrontEnds::Entities::RelationshipInfo brandBrandRelationship;
+    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Brand && relationship.fieldName == "brand"_L1) {
             brandBrandRelationship = relationship;
             break;
@@ -160,7 +158,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
     }
 
     for (int entityId : ids) {
-        if (brandBrandRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
+        if (brandBrandRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Brand foreignBrand = this->fetchBrandLoader().operator()(entityId);
@@ -182,8 +180,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
 
     // remove the passengers in cascade
 
-    Qleany::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
+    FrontEnds::Entities::RelationshipInfo passengerPassengersRelationship;
+    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == "passengers"_L1) {
             passengerPassengersRelationship = relationship;
             break;
@@ -191,7 +189,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
     }
 
     for (int entityId : ids) {
-        if (passengerPassengersRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
+        if (passengerPassengersRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             QList<FrontEnds::Entities::Passenger> foreignPassengers = this->fetchPassengersLoader().operator()(entityId);
@@ -234,8 +232,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
 
     // cahnge active status of the brand in cascade
 
-    Qleany::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
+    FrontEnds::Entities::RelationshipInfo brandBrandRelationship;
+    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Brand && relationship.fieldName == QString::fromLatin1("brand")) {
             brandBrandRelationship = relationship;
             break;
@@ -243,7 +241,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
     }
 
     for (int entityId : ids) {
-        if (brandBrandRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
+        if (brandBrandRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Brand foreignBrand = this->fetchBrandLoader().operator()(entityId);
@@ -266,8 +264,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
 
     // cahnge active status of the passengers in cascade
 
-    Qleany::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
+    FrontEnds::Entities::RelationshipInfo passengerPassengersRelationship;
+    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Car::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == QString::fromLatin1("passengers")) {
             passengerPassengersRelationship = relationship;
             break;
@@ -275,7 +273,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> CarReposito
     }
 
     for (int entityId : ids) {
-        if (passengerPassengersRelationship.strength == Qleany::Entities::RelationshipStrength::Strong) {
+        if (passengerPassengersRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
             // get foreign entities
 
             QList<FrontEnds::Entities::Passenger> foreignPassengers = this->fetchPassengersLoader().operator()(entityId);

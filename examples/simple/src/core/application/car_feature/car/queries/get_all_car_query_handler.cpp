@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_car_query_handler.h"
 #include "repository/interface_car_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Car::Queries;
 
 GetAllCarQueryHandler::GetAllCarQueryHandler(InterfaceCarRepository *repository) : m_repository(repository)
@@ -49,7 +49,7 @@ Result<QList<CarDTO>> GetAllCarQueryHandler::handleImpl(QPromise<Result<void>> &
 
     for (const Simple::Entities::Car &car : carResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(car);
+        auto dto = Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarDTO>(car);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,5 @@ bool GetAllCarQueryHandler::s_mappingRegistered = false;
 
 void GetAllCarQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                               true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
 }

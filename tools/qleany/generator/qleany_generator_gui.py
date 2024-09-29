@@ -46,9 +46,10 @@ sys.path.append(full_path)
 os.chdir(full_path)
 
 import __version__
+import common_generator
 import entities_generator
 import dto_generator
-import repositories_generator
+import persistence_generator
 import cqrs_generator
 import controller_generator
 import application_generator
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
 
         # geometry
 
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 800, 900)
         self.setWindowTitle(f"Qleany, the Qt Clean Architecture Generator, version {__version__.__version__}")
 
         # UI
@@ -202,6 +203,37 @@ class MainWindow(QMainWindow):
 
         self.btn_list_root.clicked.connect(enable_root_buttons)
 
+        # Generate common files
+        
+        self.generate_common_group_box = QGroupBox()
+        self.generate_common_group_box.setTitle("Generate Common Files")
+        self.generate_common_layout = QVBoxLayout()
+        self.generate_common_group_box.setLayout(self.generate_common_layout)
+        
+        self.btn_list_common = QPushButton("List", self)
+        self.btn_list_common.clicked.connect(self.list_common)
+        self.generate_common_layout.addWidget(self.btn_list_common)
+        
+        self.btn_preview_common = QPushButton("Preview", self)
+        self.btn_preview_common.clicked.connect(self.preview_common)
+        self.generate_common_layout.addWidget(self.btn_preview_common)
+        
+        self.btn_generate_common = QPushButton("Generate", self)
+        self.btn_generate_common.clicked.connect(self.generate_common)
+        self.generate_common_layout.addWidget(self.btn_generate_common)
+        
+        self.first_row_button_layout.addWidget(self.generate_common_group_box)
+        
+        # disable preview and generate buttons if list button is not clicked once
+        self.btn_preview_common.setEnabled(False)
+        self.btn_generate_common.setEnabled(False)
+        
+        def enable_common_buttons():
+            self.btn_preview_common.setEnabled(True)
+            self.btn_generate_common.setEnabled(True)
+
+        self.btn_list_common.clicked.connect(enable_common_buttons)
+
         # Generate Entities
 
         self.generate_entities_group_box = QGroupBox()
@@ -264,38 +296,38 @@ class MainWindow(QMainWindow):
 
         self.btn_list_dtos.clicked.connect(enable_dtos_buttons)
 
-        # Generate Repositories
+        # Generate Persistence
 
-        self.generate_repositories_group_box = QGroupBox()
-        self.generate_repositories_group_box.setTitle("Generate Repositories")
-        self.generate_repositories_layout = QVBoxLayout()
-        self.generate_repositories_group_box.setLayout(
-            self.generate_repositories_layout
+        self.generate_persistence_group_box = QGroupBox()
+        self.generate_persistence_group_box.setTitle("Generate Persistence")
+        self.generate_persistence_layout = QVBoxLayout()
+        self.generate_persistence_group_box.setLayout(
+            self.generate_persistence_layout
         )
 
-        self.btn_list_repositories = QPushButton("List", self)
-        self.btn_list_repositories.clicked.connect(self.list_repositories)
-        self.generate_repositories_layout.addWidget(self.btn_list_repositories)
+        self.btn_list_persistence = QPushButton("List", self)
+        self.btn_list_persistence.clicked.connect(self.list_persistence)
+        self.generate_persistence_layout.addWidget(self.btn_list_persistence)
 
-        self.btn_preview_repositories = QPushButton("Preview", self)
-        self.btn_preview_repositories.clicked.connect(self.preview_repositories)
-        self.generate_repositories_layout.addWidget(self.btn_preview_repositories)
+        self.btn_preview_persistence = QPushButton("Preview", self)
+        self.btn_preview_persistence.clicked.connect(self.preview_persistence)
+        self.generate_persistence_layout.addWidget(self.btn_preview_persistence)
 
-        self.btn_generate_repositories = QPushButton("Generate", self)
-        self.btn_generate_repositories.clicked.connect(self.generate_repositories)
-        self.generate_repositories_layout.addWidget(self.btn_generate_repositories)
+        self.btn_generate_persistence = QPushButton("Generate", self)
+        self.btn_generate_persistence.clicked.connect(self.generate_persistence)
+        self.generate_persistence_layout.addWidget(self.btn_generate_persistence)
 
-        self.first_row_button_layout.addWidget(self.generate_repositories_group_box)
+        self.first_row_button_layout.addWidget(self.generate_persistence_group_box)
 
         # disable preview and generate buttons if list button is not clicked once
-        self.btn_preview_repositories.setEnabled(False)
-        self.btn_generate_repositories.setEnabled(False)
+        self.btn_preview_persistence.setEnabled(False)
+        self.btn_generate_persistence.setEnabled(False)
 
-        def enable_repositories_buttons():
-            self.btn_preview_repositories.setEnabled(True)
-            self.btn_generate_repositories.setEnabled(True)
+        def enable_persistence_buttons():
+            self.btn_preview_persistence.setEnabled(True)
+            self.btn_generate_persistence.setEnabled(True)
 
-        self.btn_list_repositories.clicked.connect(enable_repositories_buttons)
+        self.btn_list_persistence.clicked.connect(enable_persistence_buttons)
 
         # Generate CQRS
 
@@ -661,11 +693,14 @@ class MainWindow(QMainWindow):
             root_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(
+            common_generator.get_files_to_be_generated(self.temp_manifest_file)
+        )
+        list.extend(
             entities_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(dto_generator.get_files_to_be_generated(self.temp_manifest_file))
         list.extend(
-            repositories_generator.get_files_to_be_generated(self.temp_manifest_file)
+            persistence_generator.get_files_to_be_generated(self.temp_manifest_file)
         )
         list.extend(cqrs_generator.get_files_to_be_generated(self.temp_manifest_file))
         list.extend(
@@ -709,6 +744,12 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
+        common_generator.preview_common_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
         entities_generator.preview_entity_files(
             self.root_path,
             self.temp_manifest_file,
@@ -721,7 +762,7 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
-        repositories_generator.preview_repository_files(
+        persistence_generator.preview_repository_files(
             self.root_path,
             self.temp_manifest_file,
             self.file_list_view.fetch_file_states(),
@@ -797,6 +838,11 @@ class MainWindow(QMainWindow):
             )
         )
         file_list.extend(
+            common_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        )
+        file_list.extend(
             entities_generator.get_files_to_be_generated(
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
@@ -807,7 +853,7 @@ class MainWindow(QMainWindow):
             )
         )
         file_list.extend(
-            repositories_generator.get_files_to_be_generated(
+            persistence_generator.get_files_to_be_generated(
                 self.temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
@@ -864,7 +910,7 @@ class MainWindow(QMainWindow):
             # display progress dialog
             progress = QProgressDialog(self)
             progress.setLabelText("Generating files...")
-            progress.setRange(0, 12)
+            progress.setRange(0, 13)
             progress.show()
             QCoreApplication.processEvents()
 
@@ -880,7 +926,7 @@ class MainWindow(QMainWindow):
             progress.setValue(1)            
             QCoreApplication.processEvents()
 
-            entities_generator.generate_entity_files(
+            common_generator.generate_common_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -888,8 +934,8 @@ class MainWindow(QMainWindow):
             )
             progress.setValue(2)
             QCoreApplication.processEvents()
-
-            dto_generator.generate_dto_files(
+            
+            entities_generator.generate_entity_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -898,7 +944,7 @@ class MainWindow(QMainWindow):
             progress.setValue(3)
             QCoreApplication.processEvents()
 
-            repositories_generator.generate_repository_files(
+            dto_generator.generate_dto_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -907,7 +953,7 @@ class MainWindow(QMainWindow):
             progress.setValue(4)
             QCoreApplication.processEvents()
 
-            cqrs_generator.generate_cqrs_files(
+            persistence_generator.generate_persistence_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -916,7 +962,7 @@ class MainWindow(QMainWindow):
             progress.setValue(5)
             QCoreApplication.processEvents()
 
-            controller_generator.generate_controller_files(
+            cqrs_generator.generate_cqrs_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -925,7 +971,7 @@ class MainWindow(QMainWindow):
             progress.setValue(6)
             QCoreApplication.processEvents()
 
-            presenter_generator.generate_presenter_files(
+            controller_generator.generate_controller_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
@@ -934,13 +980,22 @@ class MainWindow(QMainWindow):
             progress.setValue(7)
             QCoreApplication.processEvents()
 
-            application_generator.generate_application_files(
+            presenter_generator.generate_presenter_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
             progress.setValue(8)
+            QCoreApplication.processEvents()
+
+            application_generator.generate_application_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+            progress.setValue(9)
             QCoreApplication.processEvents()
 
             if qml_imports_generator.is_qml_imports_integration_enabled(self.temp_manifest_file):
@@ -951,7 +1006,7 @@ class MainWindow(QMainWindow):
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
-            progress.setValue(9)
+            progress.setValue(10)
             QCoreApplication.processEvents()
 
             if qt_widgets_generator.is_enabled(self.temp_manifest_file):
@@ -961,7 +1016,7 @@ class MainWindow(QMainWindow):
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
-            progress.setValue(10)
+            progress.setValue(11)
             QCoreApplication.processEvents()
 
             if qt_quick_generator.is_enabled(self.temp_manifest_file):
@@ -971,7 +1026,7 @@ class MainWindow(QMainWindow):
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
-            progress.setValue(11)
+            progress.setValue(12)
             QCoreApplication.processEvents()
 
             if kf6_kirigami_generator.is_enabled(self.temp_manifest_file):
@@ -981,7 +1036,7 @@ class MainWindow(QMainWindow):
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
-            progress.setValue(12)
+            progress.setValue(13)
             QCoreApplication.processEvents()
 
             self.text_box.setPlainText("All files generated")
@@ -996,7 +1051,6 @@ class MainWindow(QMainWindow):
         self.file_list_view.list_files(list)
 
     def preview_root(self):
-        self.clear_preview_folder()
         self.list_root()
         root_generator.preview_root_files(
             self.root_path,
@@ -1004,8 +1058,12 @@ class MainWindow(QMainWindow):
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
+        self.text_box.clear()
         self.text_box.setPlainText(
-            f"Preview folder cleared beforehand. Root files previewed at {Path(self.root_path,).resolve()}/qleany_preview/ folder"
+            f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
+        )
+        self.text_box.appendPlainText(
+            f" Entities previewed at {Path(__file__).resolve().parent}/preview/ folder"
         )
 
     def generate_root(self):
@@ -1021,7 +1079,49 @@ class MainWindow(QMainWindow):
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
+            self.text_box.clear()
             self.text_box.setPlainText("Root files generated")
+
+    # common functions
+    
+    def list_common(self):
+        list = common_generator.get_files_to_be_generated(self.temp_manifest_file)
+        self.text_box.clear()
+        self.text_box.setPlainText("Common files:\n\n")
+        self.text_box.appendPlainText("\n".join(list))
+        self.file_list_view.list_files(list)
+        
+    def preview_common(self):
+        self.list_common()
+        common_generator.preview_common_files(
+            self.root_path,
+            self.temp_manifest_file,
+            self.file_list_view.fetch_file_states(),
+            self.uncrustify_config_file,
+        )
+        self.text_box.clear()
+        self.text_box.setPlainText(
+            f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
+        )
+        self.text_box.appendPlainText(
+            f" Entities previewed at {Path(__file__).resolve().parent}/preview/ folder"
+        )
+        
+    def generate_common(self):
+        self.list_common()
+        if self.display_overwrite_confirmation(
+            common_generator.get_files_to_be_generated(
+                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+            )
+        ):
+            common_generator.generate_common_files(
+                self.root_path,
+                self.temp_manifest_file,
+                self.file_list_view.fetch_file_states(),
+                self.uncrustify_config_file,
+            )
+        self.text_box.clear()
+        self.text_box.setPlainText("Common files generated")
 
     # entities functions
 
@@ -1105,18 +1205,18 @@ class MainWindow(QMainWindow):
             self.text_box.clear()
             self.text_box.setPlainText("DTOs generated")
 
-    # Repositories functions
+    # Persistence functions
 
-    def list_repositories(self):
-        list = repositories_generator.get_files_to_be_generated(self.temp_manifest_file)
+    def list_persistence(self):
+        list = persistence_generator.get_files_to_be_generated(self.temp_manifest_file)
         self.text_box.clear()
-        self.text_box.setPlainText("Repositories:\n\n")
+        self.text_box.setPlainText("Persistence:\n\n")
         self.text_box.appendPlainText("\n".join(list))
         self.file_list_view.list_files(list)
 
-    def preview_repositories(self):
-        self.list_repositories()
-        repositories_generator.preview_repository_files(
+    def preview_persistence(self):
+        self.list_persistence()
+        persistence_generator.preview_persistence_files(
             self.root_path,
             self.temp_manifest_file,
             self.file_list_view.fetch_file_states(),
@@ -1127,25 +1227,25 @@ class MainWindow(QMainWindow):
             f'Preview folder NOT cleared beforehand. Do it if needed by clicking on "Clear Preview Folder" button.'
         )
         self.text_box.appendPlainText(
-            f" Repositories previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
+            f" Persistence previewed at {Path(__file__).resolve().parent}/qleany_preview/ folder"
         )
 
-    def generate_repositories(self):
-        self.list_repositories()
+    def generate_persistence(self):
+        self.list_persistence()
         if self.display_overwrite_confirmation(
-            repositories_generator.get_files_to_be_generated(
+            persistence_generator.get_files_to_be_generated(
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
             )
         ):
-            repositories_generator.generate_repository_files(
+            persistence_generator.generate_persistence_files(
                 self.root_path,
                 self.temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
             self.text_box.clear()
-            self.text_box.setPlainText("Repositories generated")
+            self.text_box.setPlainText("Persistence generated")
 
     # CQRS functions
 

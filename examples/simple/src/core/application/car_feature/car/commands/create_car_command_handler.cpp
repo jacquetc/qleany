@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_car_command_handler.h"
 #include "car/validators/create_car_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
@@ -70,7 +70,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
         // Map the create Car command to a domain Car object and
         // generate a UUID
-        car = Qleany::Tools::AutoMapper::AutoMapper::map<CreateCarDTO, Simple::Entities::Car>(createDTO);
+        car = Simple::Tools::AutoMapper::map<CreateCarDTO, Simple::Entities::Car>(createDTO);
 
         // allow for forcing the uuid
         if (car.uuid().isNull())
@@ -105,7 +105,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     m_newEntity = carResult;
 
-    auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
+    auto carDTO = Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
     Q_EMIT carCreated(carDTO);
 
     qDebug() << "Car added:" << carDTO.id();
@@ -134,7 +134,6 @@ bool CreateCarCommandHandler::s_mappingRegistered = false;
 
 void CreateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                               true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, Simple::Entities::Car>();
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, Simple::Entities::Car>();
 }

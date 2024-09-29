@@ -100,7 +100,7 @@
                 "list"
             ]
         },
-        "repositories": {
+        "persistence": {
             "type": "object",
             "properties": {
                 "list": {
@@ -691,7 +691,7 @@
         "schema",
         "global",
         "entities",
-        "repositories",
+        "persistence",
         "controller",
         "application",
         "DTOs",

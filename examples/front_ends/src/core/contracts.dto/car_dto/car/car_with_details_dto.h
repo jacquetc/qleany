@@ -28,9 +28,8 @@ class CarWithDetailsDTO
     Q_PROPERTY(BrandDTO brand READ brand WRITE setBrand)
     Q_PROPERTY(QList<PassengerDTO> passengers READ passengers WRITE setPassengers)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool idSet = false;
         bool uuidSet = false;
         bool creationDateSet = false;
@@ -40,32 +39,25 @@ class CarWithDetailsDTO
         bool passengersSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id"_L1)
-            {
+            if (fieldName == "id"_L1) {
                 return idSet;
             }
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
-            if (fieldName == "content"_L1)
-            {
+            if (fieldName == "content"_L1) {
                 return contentSet;
             }
-            if (fieldName == "brand"_L1)
-            {
+            if (fieldName == "brand"_L1) {
                 return brandSet;
             }
-            if (fieldName == "passengers"_L1)
-            {
+            if (fieldName == "passengers"_L1) {
                 return passengersSet;
             }
             return false;
@@ -73,7 +65,6 @@ class CarWithDetailsDTO
 
         bool areDetailsSet() const
         {
-
             if (brandSet)
                 return true;
 
@@ -85,7 +76,11 @@ class CarWithDetailsDTO
     };
 
     CarWithDetailsDTO()
-        : m_id(0), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_content(QString())
+        : m_id(0)
+        , m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
+        , m_content(QString())
     {
     }
 
@@ -93,17 +88,32 @@ class CarWithDetailsDTO
     {
     }
 
-    CarWithDetailsDTO(int id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-                      const QString &content, const BrandDTO &brand, const QList<PassengerDTO> &passengers)
-        : m_id(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_content(content),
-          m_brand(brand), m_passengers(passengers)
+    CarWithDetailsDTO(int id,
+                      const QUuid &uuid,
+                      const QDateTime &creationDate,
+                      const QDateTime &updateDate,
+                      const QString &content,
+                      const BrandDTO &brand,
+                      const QList<PassengerDTO> &passengers)
+        : m_id(id)
+        , m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
+        , m_content(content)
+        , m_brand(brand)
+        , m_passengers(passengers)
     {
     }
 
     CarWithDetailsDTO(const CarWithDetailsDTO &other)
-        : m_metaData(other.m_metaData), m_id(other.m_id), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate), m_content(other.m_content), m_brand(other.m_brand),
-          m_passengers(other.m_passengers)
+        : m_metaData(other.m_metaData)
+        , m_id(other.m_id)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
+        , m_content(other.m_content)
+        , m_brand(other.m_brand)
+        , m_passengers(other.m_passengers)
     {
     }
 
@@ -124,8 +134,7 @@ class CarWithDetailsDTO
 
     CarWithDetailsDTO &operator=(const CarWithDetailsDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -140,8 +149,7 @@ class CarWithDetailsDTO
 
     CarWithDetailsDTO &operator=(const CarWithDetailsDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -156,40 +164,32 @@ class CarWithDetailsDTO
 
     CarWithDetailsDTO &mergeWith(const CarWithDetailsDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.idSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.idSet) {
                 m_id = other.m_id;
                 m_metaData.idSet = true;
             }
-            if (other.m_metaData.uuidSet)
-            {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
-            if (other.m_metaData.contentSet)
-            {
+            if (other.m_metaData.contentSet) {
                 m_content = other.m_content;
                 m_metaData.contentSet = true;
             }
-            if (other.m_metaData.brandSet)
-            {
+            if (other.m_metaData.brandSet) {
                 m_brand = other.m_brand;
                 m_metaData.brandSet = true;
             }
-            if (other.m_metaData.passengersSet)
-            {
+            if (other.m_metaData.passengersSet) {
                 m_passengers = other.m_passengers;
                 m_metaData.passengersSet = true;
             }
@@ -303,7 +303,7 @@ class CarWithDetailsDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     int m_id;
@@ -317,10 +317,8 @@ class CarWithDetailsDTO
 
 inline bool operator==(const CarWithDetailsDTO &lhs, const CarWithDetailsDTO &rhs)
 {
-
-    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate && lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand &&
-           lhs.m_passengers == rhs.m_passengers;
+    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate
+        && lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
 }
 
 inline uint qHash(const CarWithDetailsDTO &dto, uint seed = 0) noexcept

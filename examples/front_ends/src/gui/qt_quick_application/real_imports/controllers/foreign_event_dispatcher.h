@@ -5,14 +5,13 @@
 #include "event_dispatcher.h"
 #include <QQmlEngine>
 
-struct ForeignEventDispatcher
-{
+struct ForeignEventDispatcher {
     Q_GADGET
     QML_FOREIGN(FrontEnds::Controller::EventDispatcher)
     QML_SINGLETON
     QML_NAMED_ELEMENT(EventDispatcher)
 
-  public:
+public:
     // Initialize this singleton instance with the given engine.
 
     inline static FrontEnds::Controller::EventDispatcher *s_singletonInstance = nullptr;
@@ -40,6 +39,6 @@ struct ForeignEventDispatcher
         return s_singletonInstance;
     }
 
-  private:
+private:
     inline static QJSEngine *s_engine = nullptr;
 };

@@ -8,9 +8,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace FrontEnds::Entities
 {
@@ -25,13 +23,14 @@ class Car : public Entity
 
     Q_PROPERTY(QList<Passenger> passengers READ passengers WRITE setPassengers)
 
-  public:
-    struct MetaData
-    {
-        MetaData(Car *entity) : m_entity(entity)
+public:
+    struct MetaData {
+        MetaData(Car *entity)
+            : m_entity(entity)
         {
         }
-        MetaData(Car *entity, const MetaData &other) : m_entity(entity)
+        MetaData(Car *entity, const MetaData &other)
+            : m_entity(entity)
         {
             this->brandSet = other.brandSet;
             this->brandLoaded = other.brandLoaded;
@@ -45,46 +44,46 @@ class Car : public Entity
         bool passengersSet = false;
         bool passengersLoaded = false;
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "content"_L1)
-            {
+            if (fieldName == "content"_L1) {
                 return true;
             }
-            if (fieldName == "brand"_L1)
-            {
+            if (fieldName == "brand"_L1) {
                 return brandSet;
             }
-            if (fieldName == "passengers"_L1)
-            {
+            if (fieldName == "passengers"_L1) {
                 return passengersSet;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
-
-            if (fieldName == "content"_L1)
-            {
+            if (fieldName == "content"_L1) {
                 return true;
             }
-            if (fieldName == "brand"_L1)
-            {
+            if (fieldName == "brand"_L1) {
                 return brandLoaded;
             }
-            if (fieldName == "passengers"_L1)
-            {
+            if (fieldName == "passengers"_L1) {
                 return passengersLoaded;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
-      private:
+    private:
         Car *m_entity = nullptr;
     };
 
-    Car() : Entity(), m_content(QString()), m_metaData(this)
+    Car()
+        : Entity()
+        , m_metaData(this)
+        , m_content(QString())
     {
     }
 
@@ -92,16 +91,27 @@ class Car : public Entity
     {
     }
 
-    Car(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-        const QString &content, const Brand &brand, const QList<Passenger> &passengers)
-        : Entity(id, uuid, creationDate, updateDate), m_content(content), m_brand(brand), m_passengers(passengers),
-          m_metaData(this)
+    Car(const int &id,
+        const QUuid &uuid,
+        const QDateTime &creationDate,
+        const QDateTime &updateDate,
+        const QString &content,
+        const Brand &brand,
+        const QList<Passenger> &passengers)
+        : Entity(id, uuid, creationDate, updateDate)
+        , m_metaData(this)
+        , m_content(content)
+        , m_brand(brand)
+        , m_passengers(passengers)
     {
     }
 
     Car(const Car &other)
-        : Entity(other), m_metaData(other.m_metaData), m_content(other.m_content), m_brand(other.m_brand),
-          m_passengers(other.m_passengers)
+        : Entity(other)
+        , m_metaData(other.m_metaData)
+        , m_content(other.m_content)
+        , m_brand(other.m_brand)
+        , m_passengers(other.m_passengers)
     {
         m_metaData = MetaData(this, other.metaData());
     }
@@ -113,8 +123,7 @@ class Car : public Entity
 
     Car &operator=(const Car &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             Entity::operator=(other);
             m_content = other.m_content;
             m_brand = other.m_brand;
@@ -133,7 +142,6 @@ class Car : public Entity
 
     QString content() const
     {
-
         return m_content;
     }
 
@@ -146,8 +154,7 @@ class Car : public Entity
 
     Brand brand()
     {
-        if (!m_metaData.brandLoaded && m_brandLoader)
-        {
+        if (!m_metaData.brandLoaded && m_brandLoader) {
             m_brand = m_brandLoader(this->id());
             m_metaData.brandLoaded = true;
         }
@@ -172,8 +179,7 @@ class Car : public Entity
 
     QList<Passenger> passengers()
     {
-        if (!m_metaData.passengersLoaded && m_passengersLoader)
-        {
+        if (!m_metaData.passengersLoaded && m_passengersLoader) {
             m_passengers = m_passengersLoader(this->id());
             m_metaData.passengersLoaded = true;
         }
@@ -194,17 +200,17 @@ class Car : public Entity
         m_passengersLoader = loader;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static FrontEnds::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
         return m_metaData;
     }
 
-  protected:
+protected:
     MetaData m_metaData;
 
-  private:
+private:
     QString m_content;
     Brand m_brand;
     BrandLoader m_brandLoader;
@@ -214,10 +220,9 @@ class Car : public Entity
 
 inline bool operator==(const Car &lhs, const Car &rhs)
 {
-
     return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
 
-           lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
+        lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
 }
 
 inline uint qHash(const Car &entity, uint seed = 0) noexcept
@@ -234,26 +239,37 @@ inline uint qHash(const Car &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Car entity
-inline Qleany::Entities::EntitySchema Car::schema = {
-    FrontEnds::Entities::Entities::EntityEnum::Car,
-    "Car"_L1,
+inline FrontEnds::Entities::EntitySchema Car::schema = {FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                        "Car"_L1,
 
-    // relationships:
-    {{FrontEnds::Entities::Entities::EntityEnum::Car, "Car"_L1, FrontEnds::Entities::Entities::EntityEnum::Brand,
-      "Brand"_L1, "brand"_L1, RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
-      RelationshipDirection::Forward},
-     {FrontEnds::Entities::Entities::EntityEnum::Car, "Car"_L1, FrontEnds::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "passengers"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyOrdered, RelationshipDirection::Forward}},
+                                                        // relationships:
+                                                        {{FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                          "Car"_L1,
+                                                          FrontEnds::Entities::Entities::EntityEnum::Brand,
+                                                          "Brand"_L1,
+                                                          "brand"_L1,
+                                                          RelationshipType::OneToOne,
+                                                          RelationshipStrength::Strong,
+                                                          RelationshipCardinality::One,
+                                                          RelationshipDirection::Forward},
+                                                         {FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                          "Car"_L1,
+                                                          FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                          "Passenger"_L1,
+                                                          "passengers"_L1,
+                                                          RelationshipType::OneToMany,
+                                                          RelationshipStrength::Strong,
+                                                          RelationshipCardinality::ManyOrdered,
+                                                          RelationshipDirection::Forward}},
 
-    // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"content"_L1, FieldType::String, false, false},
-     {"brand"_L1, FieldType::Entity, false, true},
-     {"passengers"_L1, FieldType::Entity, false, true}}};
+                                                        // fields:
+                                                        {{"id"_L1, FieldType::Integer, true, false},
+                                                         {"uuid"_L1, FieldType::Uuid, false, false},
+                                                         {"creationDate"_L1, FieldType::DateTime, false, false},
+                                                         {"updateDate"_L1, FieldType::DateTime, false, false},
+                                                         {"content"_L1, FieldType::String, false, false},
+                                                         {"brand"_L1, FieldType::Entity, false, true},
+                                                         {"passengers"_L1, FieldType::Entity, false, true}}};
 
 } // namespace FrontEnds::Entities
 Q_DECLARE_METATYPE(FrontEnds::Entities::Car)

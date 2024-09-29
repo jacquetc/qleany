@@ -24,11 +24,11 @@ set_target_properties(${LIBRARY_NAME} PROPERTIES
                     
 set_target_properties(${LIBRARY_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-add_dependencies(${LIBRARY_NAME} front-ends-example-contracts-dto-brand)
 add_dependencies(${LIBRARY_NAME} front-ends-example-contracts-dto-passenger)
+add_dependencies(${LIBRARY_NAME} front-ends-example-contracts-dto-brand)
 
-target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-contracts-dto-brand)
 target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-contracts-dto-passenger)
+target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-contracts-dto-brand)
 
 
 target_link_libraries(${LIBRARY_NAME}

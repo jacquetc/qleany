@@ -10,10 +10,10 @@
 #include "repository/interface_car_repository.h"
 #include "repository/interface_client_repository.h"
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 
 using namespace FrontEnds::Contracts::Repository;
 
@@ -24,19 +24,21 @@ namespace FrontEnds::Application::Features::Custom::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT CloseSystemCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
-    CloseSystemCommandHandler(InterfaceCarRepository *carRepository, InterfacePassengerRepository *passengerRepository,
-                              InterfaceBrandRepository *brandRepository, InterfaceClientRepository *clientRepository);
+public:
+    CloseSystemCommandHandler(InterfaceCarRepository *carRepository,
+                              InterfacePassengerRepository *passengerRepository,
+                              InterfaceBrandRepository *brandRepository,
+                              InterfaceClientRepository *clientRepository);
 
     Result<void> handle(QPromise<Result<void>> &progressPromise, const CloseSystemCommand &request);
 
     Result<void> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void closeSystemChanged();
 
-  private:
+private:
     InterfaceCarRepository *m_carRepository;
     InterfacePassengerRepository *m_passengerRepository;
     InterfaceBrandRepository *m_brandRepository;

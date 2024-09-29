@@ -6,16 +6,14 @@
 #include <QObject>
 #endif
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
-using namespace Simple::Persistence::Repository;
+using namespace Simple using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
 CarRepository::CarRepository(InterfaceDatabaseTableGroup<Simple::Entities::Car> *carDatabase,
                              InterfaceBrandRepository *brandRepository,
                              InterfacePassengerRepository *passengerRepository)
-    : Qleany::Repository::GenericRepository<Simple::Entities::Car>(carDatabase), m_brandRepository(brandRepository),
-      m_passengerRepository(passengerRepository)
+    : Simple::Persistence::Repository::GenericRepository<Simple::Entities::Car>(carDatabase),
+      m_brandRepository(brandRepository), m_passengerRepository(passengerRepository)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }
@@ -63,13 +61,13 @@ Result<Simple::Entities::Car> CarRepository::update(Entities::Car &&entity)
         QLN_RETURN_IF_ERROR(Entities::Car, passengersResult)
     }
 
-    return Qleany::Repository::GenericRepository<Entities::Car>::update(std::move(entity));
+    return Simple::Persistence::Repository::GenericRepository<Entities::Car>::update(std::move(entity));
 }
 
 Result<Simple::Entities::Car> CarRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Repository::GenericRepository<Entities::Car>::get(entityId);
+    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
 
     if (getResult.isError())
     {
@@ -171,8 +169,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // remove the brand in cascade
 
-    Qleany::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::RelationshipInfo brandBrandRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Brand &&
             relationship.fieldName == "brand"_L1)
@@ -184,7 +182,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (brandBrandRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (brandBrandRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -208,8 +206,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // remove the passengers in cascade
 
-    Qleany::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerPassengersRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "passengers"_L1)
@@ -221,7 +219,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (passengerPassengersRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerPassengersRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -268,8 +266,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // cahnge active status of the brand in cascade
 
-    Qleany::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::RelationshipInfo brandBrandRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Brand &&
             relationship.fieldName == QString::fromLatin1("brand"))
@@ -281,7 +279,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (brandBrandRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (brandBrandRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -306,8 +304,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // cahnge active status of the passengers in cascade
 
-    Qleany::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerPassengersRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("passengers"))
@@ -319,7 +317,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (passengerPassengersRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerPassengersRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 

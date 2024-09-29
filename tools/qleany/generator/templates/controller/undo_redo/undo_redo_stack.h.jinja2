@@ -1,0 +1,40 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "undo_redo_command.h"
+
+#include "{{ export_header_file }}"
+#include <QObject>
+#include <QQueue>
+#include <QSharedPointer>
+
+namespace {{ application_cpp_domain_name }}::Controller::UndoRedo
+{
+
+class {{ export }} UndoRedoStack : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit UndoRedoStack(QObject *parent = nullptr);
+    explicit UndoRedoStack(QObject *parent, const QUuid &id);
+
+    QQueue<QSharedPointer<UndoRedoCommand>> &queue();
+    void setQueue(const QQueue<QSharedPointer<UndoRedoCommand>> &newQueue);
+
+    QUuid id() const;
+    void setId(const QUuid &newId);
+
+    int currentIndex() const;
+    void setCurrentIndex(int newCurrentIndex);
+    void incrementCurrentIndex();
+    void decrementCurrentIndex();
+
+  Q_SIGNALS:
+
+  private:
+    QUuid m_id;
+    QQueue<QSharedPointer<UndoRedoCommand>> m_queue;
+    int m_currentIndex = -1;
+};
+} // namespace {{ application_cpp_domain_name }}::Controller::UndoRedo

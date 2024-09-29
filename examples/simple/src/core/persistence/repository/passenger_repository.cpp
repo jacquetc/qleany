@@ -6,13 +6,11 @@
 #include <QObject>
 #endif
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
-using namespace Simple::Persistence::Repository;
+using namespace Simple using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
 PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<Simple::Entities::Passenger> *passengerDatabase)
-    : Qleany::Repository::GenericRepository<Simple::Entities::Passenger>(passengerDatabase)
+    : Simple::Persistence::Repository::GenericRepository<Simple::Entities::Passenger>(passengerDatabase)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }

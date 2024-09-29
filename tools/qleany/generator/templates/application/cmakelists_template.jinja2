@@ -30,6 +30,7 @@ include(GenerateExportHeader)
 generate_export_header(${LIBRARY_NAME}
     BASE_NAME {{ application_snake_name }}_application_{{ feature_snake_name }})
 
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-common)
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-entities)
 target_link_libraries(${LIBRARY_NAME} PRIVATE {{ application_spinalcase_name }}-persistence)

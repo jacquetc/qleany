@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_car_with_details_query_handler.h"
 #include "repository/interface_car_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Car::Queries;
 
 GetCarWithDetailsQueryHandler::GetCarWithDetailsQueryHandler(InterfaceCarRepository *repository)
@@ -48,7 +48,7 @@ Result<CarWithDetailsDTO> GetCarWithDetailsQueryHandler::handleImpl(QPromise<Res
     Simple::Entities::Car car = carResult.value();
 
     // map
-    auto carWithDetailsDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarWithDetailsDTO>(car);
+    auto carWithDetailsDTO = Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarWithDetailsDTO>(car);
 
     qDebug() << "GetCarWithDetailsQueryHandler::handleImpl done";
 
@@ -59,6 +59,5 @@ bool GetCarWithDetailsQueryHandler::s_mappingRegistered = false;
 
 void GetCarWithDetailsQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car,
-                                                           Contracts::DTO::Car::CarWithDetailsDTO>();
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarWithDetailsDTO>();
 }

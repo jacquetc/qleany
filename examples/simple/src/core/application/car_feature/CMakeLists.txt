@@ -40,10 +40,7 @@ include(GenerateExportHeader)
 generate_export_header(${LIBRARY_NAME}
     BASE_NAME simple_example_application_car)
 
-set_target_properties(${LIBRARY_NAME} PROPERTIES
-                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
-                    )
-                    
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-common)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-persistence)

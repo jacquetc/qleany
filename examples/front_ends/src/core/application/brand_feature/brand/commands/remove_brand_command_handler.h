@@ -7,10 +7,10 @@
 #include "front_ends_example_application_brand_export.h"
 
 #include "repository/interface_brand_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Brand::Commands;
@@ -20,16 +20,16 @@ namespace FrontEnds::Application::Features::Brand::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT RemoveBrandCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     RemoveBrandCommandHandler(InterfaceBrandRepository *repository);
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request);
     Result<int> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     // repositories handle remove Q_SIGNALS
     // void brandRemoved(int id);
 
-  private:
+private:
     InterfaceBrandRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveBrandCommand &request);
     Result<int> restoreImpl();

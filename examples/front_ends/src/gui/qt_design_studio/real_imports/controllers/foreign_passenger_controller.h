@@ -14,8 +14,9 @@ class ForeignPassengerController : public QObject
     QML_SINGLETON
     QML_NAMED_ELEMENT(PassengerController)
 
-  public:
-    ForeignPassengerController(QObject *parent = nullptr) : QObject(parent)
+public:
+    ForeignPassengerController(QObject *parent = nullptr)
+        : QObject(parent)
     {
         s_controllerInstance = PassengerController::instance();
     }
@@ -55,6 +56,6 @@ class ForeignPassengerController : public QObject
         return s_controllerInstance->remove(id);
     }
 
-  private:
+private:
     PassengerController *s_controllerInstance = nullptr;
 };

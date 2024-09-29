@@ -5,7 +5,7 @@
 #include "dummy_entity.h"
 #include "dummy_other_entity.h"
 #include "entities.h"
-#include "qleany/entities/entity_schema.h"
+#include "examples/simple/src/core/entities/entity_schema.h"
 #include <QString>
 
 using namespace Qleany::Entities;

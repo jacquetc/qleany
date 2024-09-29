@@ -6,9 +6,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace Simple::Entities
 {
@@ -27,17 +25,22 @@ class Passenger : public Entity
         }
         MetaData(Passenger *entity, const MetaData &other) : m_entity(entity)
         {
+
+            Q_UNUSED(other);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "name"_L1)
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
 
@@ -45,6 +48,7 @@ class Passenger : public Entity
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
@@ -52,7 +56,7 @@ class Passenger : public Entity
         Passenger *m_entity = nullptr;
     };
 
-    Passenger() : Entity(), m_name(QString()), m_metaData(this)
+    Passenger() : Entity(), m_metaData(this), m_name(QString())
     {
     }
 
@@ -62,7 +66,7 @@ class Passenger : public Entity
 
     Passenger(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
               const QString &name)
-        : Entity(id, uuid, creationDate, updateDate), m_name(name), m_metaData(this)
+        : Entity(id, uuid, creationDate, updateDate), m_metaData(this), m_name(name)
     {
     }
 
@@ -105,7 +109,7 @@ class Passenger : public Entity
         m_name = name;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -139,7 +143,7 @@ inline uint qHash(const Passenger &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Passenger entity
-inline Qleany::Entities::EntitySchema Passenger::schema = {
+inline Simple::Entities::EntitySchema Passenger::schema = {
     Simple::Entities::Entities::EntityEnum::Passenger,
     "Passenger"_L1,
 

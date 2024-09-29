@@ -6,9 +6,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace Simple::Entities
 {
@@ -41,6 +39,7 @@ class Client : public Entity
         bool clientFriendsSet = false;
         bool clientFriendsLoaded = false;
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "client"_L1)
@@ -51,9 +50,11 @@ class Client : public Entity
             {
                 return clientFriendsSet;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
 
@@ -65,6 +66,7 @@ class Client : public Entity
             {
                 return clientFriendsLoaded;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
@@ -82,7 +84,7 @@ class Client : public Entity
 
     Client(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
            const Passenger &client, const QList<Passenger> &clientFriends)
-        : Entity(id, uuid, creationDate, updateDate), m_client(client), m_clientFriends(clientFriends), m_metaData(this)
+        : Entity(id, uuid, creationDate, updateDate), m_metaData(this), m_client(client), m_clientFriends(clientFriends)
     {
     }
 
@@ -166,7 +168,7 @@ class Client : public Entity
         m_clientFriendsLoader = loader;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -204,7 +206,7 @@ inline uint qHash(const Client &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Client entity
-inline Qleany::Entities::EntitySchema Client::schema = {
+inline Simple::Entities::EntitySchema Client::schema = {
     Simple::Entities::Entities::EntityEnum::Client,
     "Client"_L1,
 

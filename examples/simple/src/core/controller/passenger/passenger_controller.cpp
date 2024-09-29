@@ -11,16 +11,16 @@
 #include "passenger/commands/update_passenger_command_handler.h"
 #include "passenger/queries/get_all_passenger_query_handler.h"
 #include "passenger/queries/get_passenger_query_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace Simple::Controller;
 using namespace Simple::Controller::Passenger;
 using namespace Simple::Application::Features::Passenger::Commands;
 using namespace Simple::Application::Features::Passenger::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace Simple::Controller::UndoRedo;
+using namespace Simple::Contracts::Repository;
 
 QPointer<PassengerController> PassengerController::s_instance = nullptr;
 

@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_client_command_handler.h"
 #include "client/validators/create_client_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
@@ -62,7 +62,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
         // Map the create Client command to a domain Client object and
         // generate a UUID
-        client = Qleany::Tools::AutoMapper::AutoMapper::map<CreateClientDTO, FrontEnds::Entities::Client>(createDTO);
+        client = FrontEnds::Tools::AutoMapper::map<CreateClientDTO, FrontEnds::Entities::Client>(createDTO);
 
         // allow for forcing the uuid
         if (client.uuid().isNull()) {
@@ -95,7 +95,7 @@ Result<ClientDTO> CreateClientCommandHandler::handleImpl(QPromise<Result<void>> 
 
     m_newEntity = clientResult;
 
-    auto clientDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Client, ClientDTO>(clientResult.value());
+    auto clientDTO = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Client, ClientDTO>(clientResult.value());
     Q_EMIT clientCreated(clientDTO);
 
     qDebug() << "Client added:" << clientDTO.id();
@@ -124,6 +124,6 @@ bool CreateClientCommandHandler::s_mappingRegistered = false;
 
 void CreateClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Client::CreateClientDTO, FrontEnds::Entities::Client>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Client::CreateClientDTO, FrontEnds::Entities::Client>();
 }

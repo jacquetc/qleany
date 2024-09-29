@@ -1,11 +1,11 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_current_time_query_handler.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
 #include <QDebug>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Custom;
 
 using namespace Simple::Application::Features::Custom::Queries;
@@ -46,13 +46,12 @@ Result<GetCurrentTimeReplyDTO> GetCurrentTimeQueryHandler::handleImpl(QPromise<R
     // Simple::Entities::Custom custom;
 
     // implement logic here
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<GetCurrentTimeReplyDTO,
-    // Simple::Entities::Custom>(request.req);
+    // custom = Simple::Tools::AutoMapper::map<GetCurrentTimeReplyDTO, Simple::Entities::Custom>(request.req);
 
     // play here with the repositories
     Q_UNIMPLEMENTED();
 
-    // auto customDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Custom,
+    // auto customDTO = Simple::Tools::AutoMapper::map<Simple::Entities::Custom,
     // GetCurrentTimeReplyDTO>(customResult.value());
     //  dummy to compile
     GetCurrentTimeReplyDTO getCurrentTimeReplyDTO;

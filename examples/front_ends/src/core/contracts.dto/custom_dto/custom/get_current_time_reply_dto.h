@@ -15,14 +15,12 @@ class GetCurrentTimeReplyDTO
 
     Q_PROPERTY(QDateTime currentDateTime READ currentDateTime WRITE setCurrentDateTime)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool currentDateTimeSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "currentDateTime"_L1)
-            {
+            if (fieldName == "currentDateTime"_L1) {
                 return currentDateTimeSet;
             }
             return false;
@@ -30,12 +28,12 @@ class GetCurrentTimeReplyDTO
 
         bool areDetailsSet() const
         {
-
             return false;
         }
     };
 
-    GetCurrentTimeReplyDTO() : m_currentDateTime(QDateTime())
+    GetCurrentTimeReplyDTO()
+        : m_currentDateTime(QDateTime())
     {
     }
 
@@ -43,19 +41,20 @@ class GetCurrentTimeReplyDTO
     {
     }
 
-    GetCurrentTimeReplyDTO(const QDateTime &currentDateTime) : m_currentDateTime(currentDateTime)
+    GetCurrentTimeReplyDTO(const QDateTime &currentDateTime)
+        : m_currentDateTime(currentDateTime)
     {
     }
 
     GetCurrentTimeReplyDTO(const GetCurrentTimeReplyDTO &other)
-        : m_metaData(other.m_metaData), m_currentDateTime(other.m_currentDateTime)
+        : m_metaData(other.m_metaData)
+        , m_currentDateTime(other.m_currentDateTime)
     {
     }
 
     GetCurrentTimeReplyDTO &operator=(const GetCurrentTimeReplyDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_currentDateTime = other.m_currentDateTime;
         }
@@ -64,8 +63,7 @@ class GetCurrentTimeReplyDTO
 
     GetCurrentTimeReplyDTO &operator=(const GetCurrentTimeReplyDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_currentDateTime = other.m_currentDateTime;
         }
@@ -74,10 +72,8 @@ class GetCurrentTimeReplyDTO
 
     GetCurrentTimeReplyDTO &mergeWith(const GetCurrentTimeReplyDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.currentDateTimeSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.currentDateTimeSet) {
                 m_currentDateTime = other.m_currentDateTime;
                 m_metaData.currentDateTimeSet = true;
             }
@@ -113,7 +109,7 @@ class GetCurrentTimeReplyDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     QDateTime m_currentDateTime;
@@ -121,7 +117,6 @@ class GetCurrentTimeReplyDTO
 
 inline bool operator==(const GetCurrentTimeReplyDTO &lhs, const GetCurrentTimeReplyDTO &rhs)
 {
-
     return lhs.m_currentDateTime == rhs.m_currentDateTime;
 }
 

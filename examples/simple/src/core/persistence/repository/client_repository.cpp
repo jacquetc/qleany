@@ -6,14 +6,12 @@
 #include <QObject>
 #endif
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
-using namespace Simple::Persistence::Repository;
+using namespace Simple using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
 ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<Simple::Entities::Client> *clientDatabase,
                                    InterfacePassengerRepository *passengerRepository)
-    : Qleany::Repository::GenericRepository<Simple::Entities::Client>(clientDatabase),
+    : Simple::Persistence::Repository::GenericRepository<Simple::Entities::Client>(clientDatabase),
       m_passengerRepository(passengerRepository)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
@@ -62,13 +60,13 @@ Result<Simple::Entities::Client> ClientRepository::update(Entities::Client &&ent
         QLN_RETURN_IF_ERROR(Entities::Client, clientFriendsResult)
     }
 
-    return Qleany::Repository::GenericRepository<Entities::Client>::update(std::move(entity));
+    return Simple::Persistence::Repository::GenericRepository<Entities::Client>::update(std::move(entity));
 }
 
 Result<Simple::Entities::Client> ClientRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Repository::GenericRepository<Entities::Client>::get(entityId);
+    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Client>::get(entityId);
 
     if (getResult.isError())
     {
@@ -170,8 +168,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // remove the client in cascade
 
-    Qleany::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerClientRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "client"_L1)
@@ -183,7 +181,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -207,8 +205,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // remove the clientFriends in cascade
 
-    Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "clientFriends"_L1)
@@ -220,7 +218,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -268,8 +266,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // cahnge active status of the client in cascade
 
-    Qleany::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerClientRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("client"))
@@ -281,7 +279,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -306,8 +304,8 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // cahnge active status of the clientFriends in cascade
 
-    Qleany::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Qleany::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("clientFriends"))
@@ -319,7 +317,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Qleany::Entities::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
         {
             // get foreign entities
 

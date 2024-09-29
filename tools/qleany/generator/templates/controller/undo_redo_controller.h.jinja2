@@ -9,9 +9,9 @@
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include "undo_redo/threaded_undo_redo_system.h"
 
-using namespace Qleany::Tools::UndoRedo;
+using namespace {{ application_cpp_domain_name }}::Controller::UndoRedo;
 
 namespace {{ application_cpp_domain_name }}::Controller::UndoRedo
 {

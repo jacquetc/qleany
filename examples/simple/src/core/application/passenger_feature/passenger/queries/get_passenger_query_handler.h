@@ -9,7 +9,7 @@
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Queries;

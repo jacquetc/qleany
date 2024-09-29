@@ -14,8 +14,9 @@ class ForeignClientController : public QObject
     QML_SINGLETON
     QML_NAMED_ELEMENT(ClientController)
 
-  public:
-    ForeignClientController(QObject *parent = nullptr) : QObject(parent)
+public:
+    ForeignClientController(QObject *parent = nullptr)
+        : QObject(parent)
     {
         s_controllerInstance = ClientController::instance();
     }
@@ -60,6 +61,6 @@ class ForeignClientController : public QObject
         return s_controllerInstance->remove(id);
     }
 
-  private:
+private:
     ClientController *s_controllerInstance = nullptr;
 };

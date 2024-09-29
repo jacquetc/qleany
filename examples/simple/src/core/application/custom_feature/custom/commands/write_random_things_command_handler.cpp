@@ -3,10 +3,10 @@
 #include "write_random_things_command_handler.h"
 #include "custom/validators/write_random_things_command_validator.h"
 #include "custom/write_random_things_dto.h"
+#include "tools/automapper.h"
 #include <QDebug>
-#include <qleany/tools/automapper/automapper.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Custom;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Custom::Validators;
@@ -64,7 +64,7 @@ Result<void> WriteRandomThingsCommandHandler::handleImpl(QPromise<Result<void>> 
     QLN_RETURN_IF_ERROR(void, validatorResult);
 
     // implement logic here which will not be repeated on restore
-    // custom = Qleany::Tools::AutoMapper::AutoMapper::map<WriteRandomThingsDTO, Simple::Entities::Custom>(request.req);
+    // custom = Simple::Tools::AutoMapper::map<WriteRandomThingsDTO, Simple::Entities::Custom>(request.req);
 
     m_carRepository->beginChanges();
 

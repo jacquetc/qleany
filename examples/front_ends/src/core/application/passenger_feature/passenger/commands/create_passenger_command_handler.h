@@ -6,10 +6,10 @@
 #include "passenger/commands/create_passenger_command.h"
 #include "passenger/passenger_dto.h"
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 using namespace FrontEnds::Contracts::Repository;

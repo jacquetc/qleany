@@ -1,6 +1,6 @@
 #pragma once
 
-#include <qleany/common/error.h>
+#include "common/error.h"
 #include "{{ export_header_file }}"
 #include <QObject>
 
@@ -16,7 +16,7 @@ class {{ export }} ErrorSignals : public QObject
     }
 
   Q_SIGNALS:
-    void warningSent(const Qleany::Error &error);
-    void errorSent(const Qleany::Error &error);
+    void warningSent(const {{ application_cpp_domain_name }}::Error &error);
+    void errorSent(const {{ application_cpp_domain_name }}::Error &error);
 };
 } // namespace {{ application_cpp_domain_name }}::Controller

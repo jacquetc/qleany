@@ -3,9 +3,9 @@
 #include "remove_client_command_handler.h"
 #include "client/validators/remove_client_command_validator.h"
 #include "repository/interface_client_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Client::Commands;
@@ -87,5 +87,5 @@ bool RemoveClientCommandHandler::s_mappingRegistered = false;
 
 void RemoveClientCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
 }

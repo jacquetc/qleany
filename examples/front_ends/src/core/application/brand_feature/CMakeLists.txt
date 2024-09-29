@@ -38,6 +38,7 @@ include(GenerateExportHeader)
 generate_export_header(${LIBRARY_NAME}
     BASE_NAME front_ends_example_application_brand)
 
+target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-common)
 target_link_libraries(${LIBRARY_NAME} PUBLIC front-ends-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE front-ends-example-entities)
 target_link_libraries(${LIBRARY_NAME} PRIVATE front-ends-example-persistence)

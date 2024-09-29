@@ -6,10 +6,10 @@
 #include "brand/commands/create_brand_command.h"
 #include "front_ends_example_application_brand_export.h"
 #include "repository/interface_brand_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;

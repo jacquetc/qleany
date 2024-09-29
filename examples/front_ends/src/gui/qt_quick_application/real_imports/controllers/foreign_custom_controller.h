@@ -14,8 +14,9 @@ class ForeignCustomController : public QObject
     QML_SINGLETON
     QML_NAMED_ELEMENT(CustomController)
 
-  public:
-    ForeignCustomController(QObject *parent = nullptr) : QObject(parent)
+public:
+    ForeignCustomController(QObject *parent = nullptr)
+        : QObject(parent)
     {
         s_controllerInstance = CustomController::instance();
     }
@@ -30,6 +31,11 @@ class ForeignCustomController : public QObject
         return s_controllerInstance->writeRandomThings(dto);
     }
 
+    Q_INVOKABLE WriteRandomThingsDTO getWriteRandomThingsDTO()
+    {
+        return s_controllerInstance->getWriteRandomThingsDTO();
+    }
+
     Q_INVOKABLE QCoro::QmlTask runLongOperation()
     {
         return s_controllerInstance->runLongOperation();
@@ -40,6 +46,6 @@ class ForeignCustomController : public QObject
         return s_controllerInstance->closeSystem();
     }
 
-  private:
+private:
     CustomController *s_controllerInstance = nullptr;
 };

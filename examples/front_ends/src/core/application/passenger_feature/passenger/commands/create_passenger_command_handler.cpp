@@ -2,11 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_passenger_command_handler.h"
 #include "passenger/validators/create_passenger_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
 #include "car.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 using namespace FrontEnds::Contracts::Repository;
@@ -70,7 +70,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
         // Map the create Passenger command to a domain Passenger object and
         // generate a UUID
-        passenger = Qleany::Tools::AutoMapper::AutoMapper::map<CreatePassengerDTO, FrontEnds::Entities::Passenger>(createDTO);
+        passenger = FrontEnds::Tools::AutoMapper::map<CreatePassengerDTO, FrontEnds::Entities::Passenger>(createDTO);
 
         // allow for forcing the uuid
         if (passenger.uuid().isNull()) {
@@ -144,7 +144,7 @@ Result<PassengerDTO> CreatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     m_newEntity = passengerResult;
 
-    auto passengerDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Passenger, PassengerDTO>(passengerResult.value());
+    auto passengerDTO = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Passenger, PassengerDTO>(passengerResult.value());
     Q_EMIT passengerCreated(passengerDTO);
 
     // send an insertion signal
@@ -178,6 +178,6 @@ bool CreatePassengerCommandHandler::s_mappingRegistered = false;
 
 void CreatePassengerCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::CreatePassengerDTO, FrontEnds::Entities::Passenger>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Passenger::CreatePassengerDTO, FrontEnds::Entities::Passenger>();
 }

@@ -14,16 +14,16 @@
 #include "car/queries/get_car_with_details_query_handler.h"
 // #include "car/commands/insert_car_into_xxx_command.h"
 // #include "car/commands/update_car_into_xxx_command_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace FrontEnds::Controller;
 using namespace FrontEnds::Controller::Car;
 using namespace FrontEnds::Application::Features::Car::Commands;
 using namespace FrontEnds::Application::Features::Car::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds::Controller::UndoRedo;
+using namespace FrontEnds::Contracts::Repository;
 
 QPointer<CarController> CarController::s_instance = nullptr;
 

@@ -6,8 +6,8 @@
 #include <QUuid>
 
 #include "entities.h"
-#include <qleany/entities/entity_base.h>
-#include <qleany/entities/entity_schema.h>
+#include "examples/simple/src/core/entities/entity_base.h"
+#include "examples/simple/src/core/entities/entity_schema.h"
 
 using namespace Qleany::Entities;
 

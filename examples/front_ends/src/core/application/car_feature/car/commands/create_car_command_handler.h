@@ -6,10 +6,10 @@
 #include "car/commands/create_car_command.h"
 #include "front_ends_example_application_car_export.h"
 #include "repository/interface_car_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Car;
 using namespace FrontEnds::Contracts::Repository;

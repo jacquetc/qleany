@@ -2,7 +2,6 @@
 # If you do, be careful to not overwrite it when you run the generator again.
 
 find_package(Qt6 COMPONENTS Core Sql REQUIRED)
-# find_package(qleany CONFIG REQUIRED)
 
 set(LIBRARY_NAME simple-example-persistence)
 
@@ -19,6 +18,15 @@ include(repositories.cmake)
 set(SRCS
     persistence_registration.h
     persistence_registration.cpp
+    database/database_context.h
+    database/database_context.cpp
+    database/database_table_group.h
+    database/many_to_many_unordered_associator.h
+    database/one_to_many_unordered_associator.h
+    database/one_to_many_ordered_associator.h
+    database/one_to_one_associator.h
+    database/tools.h
+    database/types.h
 )
 
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${REPOSITORY_LIST})
@@ -33,13 +41,13 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-common)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-contracts)
 target_link_libraries(${LIBRARY_NAME} PRIVATE simple-example-entities)
 
 target_link_libraries(${LIBRARY_NAME}
     PRIVATE Qt6::Core Qt6::Sql
 )
-target_link_libraries(${LIBRARY_NAME} PRIVATE qleany)
 
 if(IOS)
     install(TARGETS ${LIBRARY_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

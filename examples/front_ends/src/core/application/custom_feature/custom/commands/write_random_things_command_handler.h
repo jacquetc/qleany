@@ -10,10 +10,10 @@
 #include "repository/interface_car_repository.h"
 #include "repository/interface_client_repository.h"
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 
 using namespace FrontEnds::Contracts::Repository;
 
@@ -24,7 +24,7 @@ namespace FrontEnds::Application::Features::Custom::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT WriteRandomThingsCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     WriteRandomThingsCommandHandler(InterfaceCarRepository *carRepository,
                                     InterfacePassengerRepository *passengerRepository,
                                     InterfaceBrandRepository *brandRepository,
@@ -34,11 +34,11 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT WriteRandomThingsCommandHandl
 
     Result<void> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void writeRandomThingsChanged();
 
-  private:
+private:
     InterfaceCarRepository *m_carRepository;
     InterfacePassengerRepository *m_passengerRepository;
     InterfaceBrandRepository *m_brandRepository;

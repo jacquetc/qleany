@@ -1,9 +1,9 @@
 #pragma once
 
+#include "common/error.h"
 #include "simple_example_controller_export.h"
+#include "undo_redo/undo_redo_command.h"
 #include <QObject>
-#include <qleany/common/error.h>
-#include <qleany/tools/undo_redo/undo_redo_command.h>
 
 namespace Simple::Controller
 {
@@ -16,17 +16,17 @@ class SIMPLE_EXAMPLE_CONTROLLER_EXPORT ProgressSignals : public QObject
     {
     }
 
-    void bindToProgressSignals(Qleany::Tools::UndoRedo::UndoRedoCommand *undoRedoCommand)
+    void bindToProgressSignals(Simple::Controller::UndoRedo::UndoRedoCommand *undoRedoCommand)
     {
-        QObject::connect(undoRedoCommand, &Qleany::Tools::UndoRedo::UndoRedoCommand::progressStarted, this,
+        QObject::connect(undoRedoCommand, &Simple::Controller::UndoRedo::UndoRedoCommand::progressStarted, this,
                          &ProgressSignals::progressStarted, Qt::QueuedConnection);
-        QObject::connect(undoRedoCommand, &Qleany::Tools::UndoRedo::UndoRedoCommand::progressFinished, this,
+        QObject::connect(undoRedoCommand, &Simple::Controller::UndoRedo::UndoRedoCommand::progressFinished, this,
                          &ProgressSignals::progressFinished, Qt::QueuedConnection);
-        QObject::connect(undoRedoCommand, &Qleany::Tools::UndoRedo::UndoRedoCommand::progressRangeChanged, this,
+        QObject::connect(undoRedoCommand, &Simple::Controller::UndoRedo::UndoRedoCommand::progressRangeChanged, this,
                          &ProgressSignals::progressRangeChanged, Qt::QueuedConnection);
-        QObject::connect(undoRedoCommand, &Qleany::Tools::UndoRedo::UndoRedoCommand::progressTextChanged, this,
+        QObject::connect(undoRedoCommand, &Simple::Controller::UndoRedo::UndoRedoCommand::progressTextChanged, this,
                          &ProgressSignals::progressTextChanged, Qt::QueuedConnection);
-        QObject::connect(undoRedoCommand, &Qleany::Tools::UndoRedo::UndoRedoCommand::progressValueChanged, this,
+        QObject::connect(undoRedoCommand, &Simple::Controller::UndoRedo::UndoRedoCommand::progressValueChanged, this,
                          &ProgressSignals::progressValueChanged, Qt::QueuedConnection);
     }
 

@@ -1,0 +1,18 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "signal_holder.h"
+#include "{{ export_header_file }}"
+
+namespace {{ application_cpp_domain_name }}::Contracts::Repository
+{
+class {{ export }} InterfaceRepository
+{
+
+  public:
+    virtual ~InterfaceRepository() = default;
+
+    virtual SignalHolder *signalHolder() = 0;
+};
+} // namespace {{ application_cpp_domain_name }}::Contracts::Repository

@@ -30,6 +30,13 @@ def _get_generation_dict(manifest_data) -> dict:
         application_name
     ).strip("-_ ")
 
+    # application_cpp_domain_name
+    application_cpp_domain_name = manifest_data.get("global", {}).get(
+        "application_cpp_domain_name", "Undefined"
+    )
+    cmakelists_dict["application_cpp_domain_name"] = application_cpp_domain_name
+    
+
     # get the paths from the manifest file
     cmakelists_dict["entities_path"] = manifest_data.get("entities", {}).get(
         "folder_path", "src/entities"
@@ -54,6 +61,9 @@ def _get_generation_dict(manifest_data) -> dict:
     )
     cmakelists_dict["presenter_path"] = manifest_data.get("presenter", {}).get(
         "folder_path", "src/presenters"
+    )
+    cmakelists_dict["common_path"] = manifest_data.get("common", {}).get(
+        "folder_path", "src/common"
     )
 
     # get the front ends
@@ -155,6 +165,7 @@ def _generate_cmakelists_file(
         application_path=cmakelists_dict["application_path"],
         controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
+        common_path=cmakelists_dict["common_path"],
         front_ends=cmakelists_dict["front_ends"],
     )
 
@@ -201,6 +212,7 @@ def _generate_cmakelists_file_for_multiple_uis(
         application_path=cmakelists_dict["application_path"],
         controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
+        common_path=cmakelists_dict["common_path"],
         front_ends=cmakelists_dict["front_ends"],
     )
 
@@ -246,6 +258,7 @@ def _generate_cmakelists_file_for_no_ui(
         application_path=cmakelists_dict["application_path"],
         controller_path=cmakelists_dict["controller_path"],
         presenter_path=cmakelists_dict["presenter_path"],
+        common_path=cmakelists_dict["common_path"],
         front_ends=cmakelists_dict["front_ends"],
     )
 
@@ -581,6 +594,11 @@ def get_files_to_be_generated(
         files.extend(_get_files_to_be_generated_for_kf6_widgets(generation_dict))
     elif generation_dict["cmakelists"]["front_ends"]["kf6_kirigami"]["enabled"]:
         files.extend(_get_files_to_be_generated_for_kf6_kirigami(generation_dict))
+
+    # common files
+    files.append("common/result.h")
+    files.append("common/error.h")
+
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:

@@ -11,16 +11,16 @@
 #include "brand/commands/update_brand_command_handler.h"
 #include "brand/queries/get_all_brand_query_handler.h"
 #include "brand/queries/get_brand_query_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace FrontEnds::Controller;
 using namespace FrontEnds::Controller::Brand;
 using namespace FrontEnds::Application::Features::Brand::Commands;
 using namespace FrontEnds::Application::Features::Brand::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds::Controller::UndoRedo;
+using namespace FrontEnds::Contracts::Repository;
 
 QPointer<BrandController> BrandController::s_instance = nullptr;
 

@@ -1,0 +1,37 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include <QObject>
+#include "{{ snake_name }}.h"
+#include "{{ contracts_export_header_file }}" 
+#include "repository/interface_generic_repository.h"
+#include "repository/interface_repository.h"
+#include "result.h"
+
+using namespace {{ application_cpp_domain_name }};
+
+namespace {{ application_cpp_domain_name }}::Contracts::Repository
+{
+
+class {{ contracts_export }} Interface{{ name }}Repository
+    : public virtual {{ application_cpp_domain_name }}::Contracts::Repository::InterfaceGenericRepository<{{ application_cpp_domain_name }}::Entities::{{ name }}>,
+      public {{ application_cpp_domain_name }}::Contracts::Repository::InterfaceRepository
+{
+  public:
+    virtual ~Interface{{ name }}Repository()
+    {
+    }
+    {% if foreign_entities %}
+    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> update({{ application_cpp_domain_name }}::Entities::{{ name }} &&entity) override = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> getWithDetails(int entityId) = 0;
+    {% endif %}
+    {% for loader_function in loader_function_list_for_interface %}
+    {{ loader_function }}
+    {% endfor %}
+    virtual Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) = 0;
+    virtual Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) = 0;
+
+
+};
+} // namespace {{ application_cpp_domain_name }}::Contracts::Repository

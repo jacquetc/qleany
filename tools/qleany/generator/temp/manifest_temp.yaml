@@ -154,9 +154,14 @@ application:
       undo: false
       validator:
         enabled: false
+common:
+  folder_path: src/core/common/
 contracts:
   folder_path: src/core/contracts
   inverted_app_domain: eu.qleany
+controller:
+  create_undo_redo_controller: true
+  folder_path: src/core/controller/
 entities:
   folder_path: src/core/entities/
   list:
@@ -216,9 +221,18 @@ global:
   organisation:
     domain: qleany.eu
     name: frontendsexample
-controller:
-  create_undo_redo_controller: true
-  folder_path: src/core/controller/
+persistence:
+  base_folder_path: src/core/persistence/
+  list:
+  - entity_name: Car
+    lazy_loaders: true
+  - entity_name: Brand
+    lazy_loaders: true
+  - entity_name: Passenger
+    lazy_loaders: true
+  - entity_name: Client
+    lazy_loaders: true
+  repository_folder_path: src/core/persistence/repository/
 presenter:
   create_undo_and_redo_singles: true
   folder_path: src/gui/presenter
@@ -240,17 +254,5 @@ presenter:
     name: auto
   - entity: Client
     name: auto
-repositories:
-  base_folder_path: src/core/persistence/
-  list:
-  - entity_name: Car
-    lazy_loaders: true
-  - entity_name: Brand
-    lazy_loaders: true
-  - entity_name: Passenger
-    lazy_loaders: true
-  - entity_name: Client
-    lazy_loaders: true
-  repository_folder_path: src/core/persistence/repository/
 schema:
   version: 1

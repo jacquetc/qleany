@@ -7,17 +7,17 @@
 #include "car/create_car_dto.h"
 #include "car/update_car_dto.h"
 #include "event_dispatcher.h"
+#include "repository/interface_repository_provider.h"
 #include "simple_example_controller_export.h"
-#include <qleany/contracts/repository/interface_repository_provider.h>
 
+#include "undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
-using namespace Qleany::Contracts::Repository;
-using namespace Qleany::Tools::UndoRedo;
+using namespace Simple::Contracts::Repository;
+using namespace Simple::Controller::UndoRedo;
 using namespace Simple::Contracts::DTO::Car;
 
 namespace Simple::Controller::Car

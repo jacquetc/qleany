@@ -2,32 +2,27 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_client_with_details_query_handler.h"
 #include "repository/interface_client_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Application::Features::Client::Queries;
 
 GetClientWithDetailsQueryHandler::GetClientWithDetailsQueryHandler(InterfaceClientRepository *repository)
     : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
 }
 
-Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handle(QPromise<Result<void>> &progressPromise,
-                                                                      const GetClientQuery &query)
+Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handle(QPromise<Result<void>> &progressPromise, const GetClientQuery &query)
 {
     Result<ClientWithDetailsDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, query);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<ClientWithDetailsDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetClientQuery:" << ex.what();
     }
@@ -35,8 +30,7 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handle(QPromise<R
     return result;
 }
 
-Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                                          const GetClientQuery &query)
+Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromise<Result<void>> &progressPromise, const GetClientQuery &query)
 {
     qDebug() << "GetClientWithDetailsQueryHandler::handleImpl called with id" << query.id;
 
@@ -48,8 +42,7 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromi
     FrontEnds::Entities::Client client = clientResult.value();
 
     // map
-    auto clientWithDetailsDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Client, ClientWithDetailsDTO>(client);
+    auto clientWithDetailsDTO = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Client, ClientWithDetailsDTO>(client);
 
     qDebug() << "GetClientWithDetailsQueryHandler::handleImpl done";
 
@@ -60,6 +53,5 @@ bool GetClientWithDetailsQueryHandler::s_mappingRegistered = false;
 
 void GetClientWithDetailsQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Client,
-                                                           Contracts::DTO::Client::ClientWithDetailsDTO>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Client, Contracts::DTO::Client::ClientWithDetailsDTO>();
 }

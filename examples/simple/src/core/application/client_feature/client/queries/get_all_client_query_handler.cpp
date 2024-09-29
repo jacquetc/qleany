@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_client_query_handler.h"
 #include "repository/interface_client_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Client::Queries;
 
 GetAllClientQueryHandler::GetAllClientQueryHandler(InterfaceClientRepository *repository) : m_repository(repository)
@@ -49,7 +49,7 @@ Result<QList<ClientDTO>> GetAllClientQueryHandler::handleImpl(QPromise<Result<vo
 
     for (const Simple::Entities::Client &client : clientResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientDTO>(client);
+        auto dto = Simple::Tools::AutoMapper::map<Simple::Entities::Client, ClientDTO>(client);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,5 @@ bool GetAllClientQueryHandler::s_mappingRegistered = false;
 
 void GetAllClientQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(
-        true, true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Client, Contracts::DTO::Client::ClientDTO>(true, true);
 }

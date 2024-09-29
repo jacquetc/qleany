@@ -1,7 +1,7 @@
 #pragma once
 
-#include "qleany/common/result.h"
-#include "qleany/database/one_to_many_ordered_associator.h"
+#include "result.h"
+#include "examples/simple/src/core/persistence/database/one_to_many_ordered_associator.h"
 
 //---------------------------
 

@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_brand_query_handler.h"
 #include "repository/interface_brand_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Brand::Queries;
 
 GetAllBrandQueryHandler::GetAllBrandQueryHandler(InterfaceBrandRepository *repository) : m_repository(repository)
@@ -49,7 +49,7 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handleImpl(QPromise<Result<void
 
     for (const Simple::Entities::Brand &brand : brandResult.value())
     {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brand);
+        auto dto = Simple::Tools::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brand);
         dtoList.append(dto);
     }
 
@@ -62,6 +62,5 @@ bool GetAllBrandQueryHandler::s_mappingRegistered = false;
 
 void GetAllBrandQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
 }

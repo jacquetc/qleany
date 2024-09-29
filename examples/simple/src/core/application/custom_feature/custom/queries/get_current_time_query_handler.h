@@ -6,10 +6,10 @@
 #include "custom/queries/get_current_time_query.h"
 #include "simple_example_application_custom_export.h"
 
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Custom;
 
 using namespace Simple::Contracts::CQRS::Custom::Queries;

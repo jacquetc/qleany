@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_car_command_handler.h"
 #include "car/validators/create_car_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Car;
 using namespace FrontEnds::Contracts::Repository;
@@ -62,7 +62,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
         // Map the create Car command to a domain Car object and
         // generate a UUID
-        car = Qleany::Tools::AutoMapper::AutoMapper::map<CreateCarDTO, FrontEnds::Entities::Car>(createDTO);
+        car = FrontEnds::Tools::AutoMapper::map<CreateCarDTO, FrontEnds::Entities::Car>(createDTO);
 
         // allow for forcing the uuid
         if (car.uuid().isNull()) {
@@ -95,7 +95,7 @@ Result<CarDTO> CreateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
 
     m_newEntity = carResult;
 
-    auto carDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Car, CarDTO>(carResult.value());
+    auto carDTO = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Car, CarDTO>(carResult.value());
     Q_EMIT carCreated(carDTO);
 
     qDebug() << "Car added:" << carDTO.id();
@@ -124,6 +124,6 @@ bool CreateCarCommandHandler::s_mappingRegistered = false;
 
 void CreateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, FrontEnds::Entities::Car>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Car::CreateCarDTO, FrontEnds::Entities::Car>();
 }

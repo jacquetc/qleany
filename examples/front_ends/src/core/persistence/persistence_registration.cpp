@@ -1,21 +1,22 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "persistence_registration.h"
-#include <qleany/database/database_context.h>
-#include <qleany/database/database_table_group.h>
+#include "database/database_context.h"
+#include "database/database_table_group.h"
 
 #include "repository/brand_repository.h"
 #include "repository/car_repository.h"
 #include "repository/client_repository.h"
+#include "repository/generic_repository.h"
 #include "repository/passenger_repository.h"
+#include "repository/repository_provider.h"
 
-using namespace Qleany;
-using namespace Qleany::Database;
-using namespace Qleany::Repository;
+using namespace FrontEnds using namespace FrontEnds::Persistence::Database;
 using namespace FrontEnds::Persistence;
 using namespace FrontEnds::Persistence::Repository;
 
-PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{parent}
+PersistenceRegistration::PersistenceRegistration(QObject *parent)
+    : QObject{parent}
 {
     QSharedPointer<DatabaseContext> context(new DatabaseContext());
 
@@ -28,18 +29,17 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
 
     Result<void> initResult = context->init();
 
-    if (initResult.hasError())
-    {
+    if (initResult.hasError()) {
         Error error = initResult.error();
         qCritical() << error.className() + "\n"_L1 + error.code() + "\n"_L1 + error.message() + "\n"_L1 + error.data();
     }
 
     // repositories:
 
-    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
-    ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
     BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
     CarRepository *carRepository = new CarRepository(carDatabaseTableGroup, brandRepository, passengerRepository);
+    ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
+    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
 
     // register repositories:
 

@@ -2,16 +2,15 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_passenger_query_handler.h"
 #include "repository/interface_passenger_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Application::Features::Passenger::Queries;
 
 GetAllPassengerQueryHandler::GetAllPassengerQueryHandler(InterfacePassengerRepository *repository)
     : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
@@ -23,12 +22,9 @@ Result<QList<PassengerDTO>> GetAllPassengerQueryHandler::handle(QPromise<Result<
 
     Result<QList<PassengerDTO>> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<QList<PassengerDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllPassengerQuery:" << ex.what();
     }
@@ -48,9 +44,8 @@ Result<QList<PassengerDTO>> GetAllPassengerQueryHandler::handleImpl(QPromise<Res
     // map
     QList<PassengerDTO> dtoList;
 
-    for (const FrontEnds::Entities::Passenger &passenger : passengerResult.value())
-    {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Passenger, PassengerDTO>(passenger);
+    for (const FrontEnds::Entities::Passenger &passenger : passengerResult.value()) {
+        auto dto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Passenger, PassengerDTO>(passenger);
         dtoList.append(dto);
     }
 
@@ -63,6 +58,5 @@ bool GetAllPassengerQueryHandler::s_mappingRegistered = false;
 
 void GetAllPassengerQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Passenger,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

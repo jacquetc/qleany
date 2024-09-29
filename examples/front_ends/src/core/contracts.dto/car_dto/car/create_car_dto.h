@@ -27,9 +27,8 @@ class CreateCarDTO
     Q_PROPERTY(BrandDTO brand READ brand WRITE setBrand)
     Q_PROPERTY(QList<PassengerDTO> passengers READ passengers WRITE setPassengers)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool uuidSet = false;
         bool creationDateSet = false;
         bool updateDateSet = false;
@@ -38,28 +37,22 @@ class CreateCarDTO
         bool passengersSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
-            if (fieldName == "content"_L1)
-            {
+            if (fieldName == "content"_L1) {
                 return contentSet;
             }
-            if (fieldName == "brand"_L1)
-            {
+            if (fieldName == "brand"_L1) {
                 return brandSet;
             }
-            if (fieldName == "passengers"_L1)
-            {
+            if (fieldName == "passengers"_L1) {
                 return passengersSet;
             }
             return false;
@@ -67,7 +60,6 @@ class CreateCarDTO
 
         bool areDetailsSet() const
         {
-
             if (brandSet)
                 return true;
 
@@ -78,7 +70,11 @@ class CreateCarDTO
         }
     };
 
-    CreateCarDTO() : m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_content(QString())
+    CreateCarDTO()
+        : m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
+        , m_content(QString())
     {
     }
 
@@ -86,24 +82,35 @@ class CreateCarDTO
     {
     }
 
-    CreateCarDTO(const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate, const QString &content,
-                 const BrandDTO &brand, const QList<PassengerDTO> &passengers)
-        : m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_content(content), m_brand(brand),
-          m_passengers(passengers)
+    CreateCarDTO(const QUuid &uuid,
+                 const QDateTime &creationDate,
+                 const QDateTime &updateDate,
+                 const QString &content,
+                 const BrandDTO &brand,
+                 const QList<PassengerDTO> &passengers)
+        : m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
+        , m_content(content)
+        , m_brand(brand)
+        , m_passengers(passengers)
     {
     }
 
     CreateCarDTO(const CreateCarDTO &other)
-        : m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate), m_content(other.m_content), m_brand(other.m_brand),
-          m_passengers(other.m_passengers)
+        : m_metaData(other.m_metaData)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
+        , m_content(other.m_content)
+        , m_brand(other.m_brand)
+        , m_passengers(other.m_passengers)
     {
     }
 
     CreateCarDTO &operator=(const CreateCarDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -117,8 +124,7 @@ class CreateCarDTO
 
     CreateCarDTO &operator=(const CreateCarDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -132,35 +138,28 @@ class CreateCarDTO
 
     CreateCarDTO &mergeWith(const CreateCarDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.uuidSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
-            if (other.m_metaData.contentSet)
-            {
+            if (other.m_metaData.contentSet) {
                 m_content = other.m_content;
                 m_metaData.contentSet = true;
             }
-            if (other.m_metaData.brandSet)
-            {
+            if (other.m_metaData.brandSet) {
                 m_brand = other.m_brand;
                 m_metaData.brandSet = true;
             }
-            if (other.m_metaData.passengersSet)
-            {
+            if (other.m_metaData.passengersSet) {
                 m_passengers = other.m_passengers;
                 m_metaData.passengersSet = true;
             }
@@ -261,7 +260,7 @@ class CreateCarDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     QUuid m_uuid;
@@ -274,10 +273,8 @@ class CreateCarDTO
 
 inline bool operator==(const CreateCarDTO &lhs, const CreateCarDTO &rhs)
 {
-
-    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate && lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand &&
-           lhs.m_passengers == rhs.m_passengers;
+    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate && lhs.m_content == rhs.m_content
+        && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
 }
 
 inline uint qHash(const CreateCarDTO &dto, uint seed = 0) noexcept

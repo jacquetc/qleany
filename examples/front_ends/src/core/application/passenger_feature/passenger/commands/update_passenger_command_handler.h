@@ -7,10 +7,10 @@
 #include "passenger/passenger_dto.h"
 
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Passenger::Commands;
@@ -21,16 +21,16 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_PASSENGER_EXPORT UpdatePassengerCommandHand
 
 {
     Q_OBJECT
-  public:
+public:
     UpdatePassengerCommandHandler(InterfacePassengerRepository *repository);
     Result<PassengerDTO> handle(QPromise<Result<void>> &progressPromise, const UpdatePassengerCommand &request);
     Result<PassengerDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void passengerUpdated(FrontEnds::Contracts::DTO::Passenger::PassengerDTO passengerDto);
     void passengerDetailsUpdated(int id);
 
-  private:
+private:
     InterfacePassengerRepository *m_repository;
     Result<PassengerDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdatePassengerCommand &request);
     Result<PassengerDTO> restoreImpl();

@@ -8,7 +8,7 @@
 #include "repository/interface_passenger_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 using namespace FrontEnds::Contracts::Repository;
 
@@ -17,11 +17,11 @@ namespace FrontEnds::Application::Features::Passenger::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_PASSENGER_EXPORT GetAllPassengerQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetAllPassengerQueryHandler(InterfacePassengerRepository *repository);
     Result<QList<PassengerDTO>> handle(QPromise<Result<void>> &progressPromise);
 
-  private:
+private:
     InterfacePassengerRepository *m_repository;
     Result<QList<PassengerDTO>> handleImpl(QPromise<Result<void>> &progressPromise);
     static bool s_mappingRegistered;

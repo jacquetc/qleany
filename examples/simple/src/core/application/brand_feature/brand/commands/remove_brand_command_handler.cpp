@@ -3,9 +3,9 @@
 #include "remove_brand_command_handler.h"
 #include "brand/validators/remove_brand_command_validator.h"
 #include "repository/interface_brand_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Brand;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Brand::Commands;
@@ -95,6 +95,5 @@ bool RemoveBrandCommandHandler::s_mappingRegistered = false;
 
 void RemoveBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
 }

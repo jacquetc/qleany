@@ -8,7 +8,7 @@
 #include "repository/interface_car_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 

@@ -6,7 +6,7 @@
 
 #include "dummy_entity.h"
 #include "entities.h"
-#include "qleany/entities/entity_schema.h"
+#include "examples/simple/src/core/entities/entity_schema.h"
 
 using namespace Qleany::Entities;
 

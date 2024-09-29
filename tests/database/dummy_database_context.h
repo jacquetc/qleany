@@ -1,7 +1,7 @@
 #pragma once
 #include "QtSql/qsqlerror.h"
-#include "qleany/common/result.h"
-#include "qleany/contracts/database/interface_database_context.h"
+#include "examples/simple/src/core/common/result.h"
+#include "examples/simple/src/core/contracts/database/interface_database_context.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QString>

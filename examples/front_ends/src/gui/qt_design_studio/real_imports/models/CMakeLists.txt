@@ -13,8 +13,8 @@ qt6_add_qml_module(${PLUGIN_NAME}
     RESOURCE_PREFIX "/models"
     SOURCES
     
-    foreign_passenger_list_model_from_car_passengers_model.h
-    foreign_car_list_model_model.h
+    foreign_passenger_list_model_from_car_passengers.h
+    foreign_car_list_model.h
 
 )
 

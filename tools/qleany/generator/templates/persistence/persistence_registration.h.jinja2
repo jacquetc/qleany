@@ -1,0 +1,25 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ export_header_file }}"
+#include "repository/repository_provider.h"
+#include <QObject>
+
+namespace {{ application_cpp_domain_name }}::Persistence
+{
+class {{ export }} PersistenceRegistration : public QObject
+{
+    Q_OBJECT
+
+  public:
+    explicit PersistenceRegistration(QObject *parent);
+
+    {{ application_cpp_domain_name }}::Persistence::Repository::RepositoryProvider *repositoryProvider();
+
+  Q_SIGNALS:
+
+  private:
+    QScopedPointer<{{ application_cpp_domain_name }}::Persistence::Repository::RepositoryProvider> m_repositoryProvider;
+};
+} // namespace {{ application_cpp_domain_name }}::Persistence

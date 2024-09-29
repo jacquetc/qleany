@@ -7,16 +7,16 @@
 #include "passenger/create_passenger_dto.h"
 #include "passenger/passenger_dto.h"
 #include "passenger/update_passenger_dto.h"
-#include <qleany/contracts/repository/interface_repository_provider.h>
+#include "repository/interface_repository_provider.h"
 
+#include "undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
-using namespace Qleany::Contracts::Repository;
-using namespace Qleany::Tools::UndoRedo;
+using namespace FrontEnds::Contracts::Repository;
+using namespace FrontEnds::Controller::UndoRedo;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 
 namespace FrontEnds::Controller::Passenger

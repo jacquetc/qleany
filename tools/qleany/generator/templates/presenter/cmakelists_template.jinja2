@@ -3,7 +3,6 @@
 
 find_package(Qt6 COMPONENTS Core Gui REQUIRED)
 find_package(QCoro6 REQUIRED COMPONENTS Core)
-find_package(qleany CONFIG REQUIRED) 
 
 set(LIBRARY_NAME {{ application_spinalcase_name }}-presenter)
 
@@ -31,7 +30,7 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
-target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-common)
 target_link_libraries(${LIBRARY_NAME} PUBLIC {{ application_spinalcase_name }}-controller)
 
 if(IOS)

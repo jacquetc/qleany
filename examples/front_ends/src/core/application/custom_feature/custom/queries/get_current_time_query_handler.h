@@ -6,10 +6,10 @@
 #include "custom/queries/get_current_time_query.h"
 #include "front_ends_example_application_custom_export.h"
 
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Custom;
 
 using namespace FrontEnds::Contracts::CQRS::Custom::Queries;
@@ -19,17 +19,16 @@ namespace FrontEnds::Application::Features::Custom::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT GetCurrentTimeQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetCurrentTimeQueryHandler();
 
     Result<GetCurrentTimeReplyDTO> handle(QPromise<Result<void>> &progressPromise, const GetCurrentTimeQuery &request);
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void getCurrentTimeChanged(FrontEnds::Contracts::DTO::Custom::GetCurrentTimeReplyDTO getCurrentTimeReplyDTO);
 
-  private:
-    Result<GetCurrentTimeReplyDTO> handleImpl(QPromise<Result<void>> &progressPromise,
-                                              const GetCurrentTimeQuery &request);
+private:
+    Result<GetCurrentTimeReplyDTO> handleImpl(QPromise<Result<void>> &progressPromise, const GetCurrentTimeQuery &request);
     static bool s_mappingRegistered;
     void registerMappings();
 };

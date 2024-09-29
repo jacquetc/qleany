@@ -87,6 +87,8 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
 
             return;
         });
+
+        populate();
     });
 
     connect(EventDispatcher::instance()->car(), &CarSignals::relationRemoved, this, [this](CarRelationDTO dto) {
@@ -158,8 +160,6 @@ PassengerListModelFromCarPassengers::PassengerListModelFromCarPassengers(QObject
             }
         }
     });
-
-    populate();
 }
 
 QVariant PassengerListModelFromCarPassengers::headerData(int section, Qt::Orientation orientation, int role) const
@@ -387,8 +387,10 @@ void PassengerListModelFromCarPassengers::populate()
                 return;
             }
         }
-        if(passengerList.isEmpty())
+        if (passengerList.isEmpty())
+        {
             return;
+        }
         beginInsertRows(QModelIndex(), 0, passengerList.size() - 1);
         m_passengerList = passengerList;
         // fill m_passengerIdList

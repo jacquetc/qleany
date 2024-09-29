@@ -8,7 +8,7 @@
 #include "repository/interface_client_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
 
@@ -17,11 +17,11 @@ namespace FrontEnds::Application::Features::Client::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT GetAllClientQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetAllClientQueryHandler(InterfaceClientRepository *repository);
     Result<QList<ClientDTO>> handle(QPromise<Result<void>> &progressPromise);
 
-  private:
+private:
     InterfaceClientRepository *m_repository;
     Result<QList<ClientDTO>> handleImpl(QPromise<Result<void>> &progressPromise);
     static bool s_mappingRegistered;

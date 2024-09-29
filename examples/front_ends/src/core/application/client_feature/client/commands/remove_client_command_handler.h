@@ -7,10 +7,10 @@
 #include "front_ends_example_application_client_export.h"
 
 #include "repository/interface_client_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Client::Commands;
@@ -20,16 +20,16 @@ namespace FrontEnds::Application::Features::Client::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT RemoveClientCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     RemoveClientCommandHandler(InterfaceClientRepository *repository);
     Result<int> handle(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request);
     Result<int> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     // repositories handle remove Q_SIGNALS
     // void clientRemoved(int id);
 
-  private:
+private:
     InterfaceClientRepository *m_repository;
     Result<int> handleImpl(QPromise<Result<void>> &progressPromise, const RemoveClientCommand &request);
     Result<int> restoreImpl();

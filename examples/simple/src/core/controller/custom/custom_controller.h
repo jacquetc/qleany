@@ -4,18 +4,18 @@
 
 #include "custom/write_random_things_dto.h"
 #include "event_dispatcher.h"
+#include "repository/interface_repository_provider.h"
 #include "simple_example_controller_export.h"
-#include <qleany/contracts/repository/interface_repository_provider.h>
 
 #include "custom/get_current_time_reply_dto.h"
+#include "undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
-using namespace Qleany::Contracts::Repository;
-using namespace Qleany::Tools::UndoRedo;
+using namespace Simple::Contracts::Repository;
+using namespace Simple::Controller::UndoRedo;
 using namespace Simple::Contracts::DTO::Custom;
 
 namespace Simple::Controller::Custom
@@ -35,9 +35,8 @@ class SIMPLE_EXAMPLE_CONTROLLER_EXPORT CustomController : public QObject
   public Q_SLOTS:
 
     QCoro::Task<> writeRandomThings(WriteRandomThingsDTO dto);
-
+    WriteRandomThingsDTO getWriteRandomThingsDTO();
     QCoro::Task<> runLongOperation();
-
     QCoro::Task<> closeSystem();
 
   private:

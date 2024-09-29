@@ -9,6 +9,9 @@ global:
     name: simpleexample
     domain: qleany.eu
 
+common:
+  folder_path: src/core/common/
+
 entities:
   folder_path: src/core/entities/
   list:
@@ -54,7 +57,7 @@ entities:
         - type: QList<Passenger>
           name: clientFriends
 
-repositories:
+persistence:
   list:
     - entity_name: Car
       lazy_loaders: true

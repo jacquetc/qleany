@@ -3,8 +3,8 @@
 #pragma once
 
 #include "simple_example_controller_export.h"
+#include "undo_redo/undo_redo_scopes.h"
 #include <QObject>
-#include <qleany/tools/undo_redo/undo_redo_scopes.h>
 
 namespace Simple::Controller
 {
@@ -31,13 +31,13 @@ class SIMPLE_EXAMPLE_CONTROLLER_EXPORT UndoRedoSignals : public QObject
      *start redoing.
      * actions.
      */
-    void redoing(Qleany::Tools::UndoRedo::Scope scope, bool active);
+    void redoing(Simple::Controller::UndoRedo::Scope scope, bool active);
 
     /*!
      * \brief A signal that is emitted when the undo redo system is about to
      *start undoing.
      * actions.
      */
-    void undoing(Qleany::Tools::UndoRedo::Scope scope, bool active);
+    void undoing(Simple::Controller::UndoRedo::Scope scope, bool active);
 };
 } // namespace Simple::Controller

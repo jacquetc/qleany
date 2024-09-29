@@ -9,7 +9,7 @@ QtObject {
 
 
     function writeRandomThings(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the command's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -22,6 +22,7 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.custom().writeRandomThingsChanged(reply_dto);
             })
         }
@@ -29,9 +30,20 @@ QtObject {
         return task
     }
 
+    
+    function getWriteRandomThingsDTO() {
+    // TODO: change this dict below to conform to the command's dto in
+        return {
+            "id": 0,
+            "content": ""
+        }
+    }
+    
+
+
 
     function runLongOperation(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the command's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -44,6 +56,7 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.custom().runLongOperationChanged(reply_dto);
             })
         }
@@ -51,9 +64,12 @@ QtObject {
         return task
     }
 
+    
+
+
 
     function closeSystem(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the command's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -66,6 +82,7 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.custom().closeSystemChanged(reply_dto);
             })
         }
@@ -73,9 +90,12 @@ QtObject {
         return task
     }
 
+    
+
+
 
     function getCurrentTime(dto) {
-        // change this function to return the correct signal name, dto in and dto out
+        // TODO: change this dict below to conform to the query's dto out
         var reply_dto = {
             "id": 0,
             "content": ""
@@ -88,12 +108,16 @@ QtObject {
             task.setValue(reply_dto);
             task.setDelay(50);
             task.setSignalFn(function(){
+            // TODO: change this signal name to the correct one
                 EventDispatcher.custom().getCurrentTimeReplied(reply_dto);
             })
         }
 
         return task
     }
+
+    
+
 
 
 }

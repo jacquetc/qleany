@@ -47,7 +47,7 @@ Kirigami.ApplicationWindow {
             Kirigami.Action {
                 text: i18n("About FrontEndsExample")
                 icon.name: "help-about"
-                onTriggered: root.pageStack.pushDialogLayer("About.qml")
+                onTriggered: root.pageStack.pushDialogLayer("qrc:About.qml")
             },
             Kirigami.Action {
                 text: i18n("Quit")

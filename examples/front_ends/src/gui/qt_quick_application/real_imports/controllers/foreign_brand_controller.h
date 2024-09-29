@@ -14,8 +14,9 @@ class ForeignBrandController : public QObject
     QML_SINGLETON
     QML_NAMED_ELEMENT(BrandController)
 
-  public:
-    ForeignBrandController(QObject *parent = nullptr) : QObject(parent)
+public:
+    ForeignBrandController(QObject *parent = nullptr)
+        : QObject(parent)
     {
         s_controllerInstance = BrandController::instance();
     }
@@ -55,6 +56,6 @@ class ForeignBrandController : public QObject
         return s_controllerInstance->remove(id);
     }
 
-  private:
+private:
     BrandController *s_controllerInstance = nullptr;
 };
