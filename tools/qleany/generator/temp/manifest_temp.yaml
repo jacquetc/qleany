@@ -206,21 +206,12 @@ entities:
       type: QList<Passenger>
     name: Client
     parent: Entity
-front_ends:
-  kf6_kirigami:
-    folder_path: src/gui/kf6_kirigami_application/
-  qml_imports_integration:
-    folder_path: src/gui/qt_design_studio/
-  qt_quick:
-    folder_path: src/gui/qt_quick_application/
-  qt_widgets:
-    folder_path: src/gui/qt_widgets_application/
 global:
-  application_cpp_domain_name: FrontEnds
-  application_name: FrontEndsExample
+  application_cpp_domain_name: Simple
+  application_name: SimpleExample
   organisation:
     domain: qleany.eu
-    name: frontendsexample
+    name: simpleexample
 persistence:
   base_folder_path: src/core/persistence/
   list:
@@ -254,5 +245,7 @@ presenter:
     name: auto
   - entity: Client
     name: auto
+qml:
+  folder_path: src/gui/qml_application/
 schema:
   version: 1

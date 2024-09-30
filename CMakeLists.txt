@@ -20,7 +20,7 @@ project(
   Qleany
   VERSION ${QLEANY_VERSION}
   LANGUAGES CXX
-  DESCRIPTION "Qleany is a light framework for Clean Architecture with Qt6")
+  DESCRIPTION "Qleany is a generator for Clean Architecture with Qt6")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
 # Compiler settings
