@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_client_with_details_query_handler.h"
 #include "repository/interface_client_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Client::Queries;
 
 GetClientWithDetailsQueryHandler::GetClientWithDetailsQueryHandler(InterfaceClientRepository *repository)
@@ -48,8 +48,7 @@ Result<ClientWithDetailsDTO> GetClientWithDetailsQueryHandler::handleImpl(QPromi
     Simple::Entities::Client client = clientResult.value();
 
     // map
-    auto clientWithDetailsDTO =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Client, ClientWithDetailsDTO>(client);
+    auto clientWithDetailsDTO = Simple::Tools::AutoMapper::map<Simple::Entities::Client, ClientWithDetailsDTO>(client);
 
     qDebug() << "GetClientWithDetailsQueryHandler::handleImpl done";
 
@@ -60,6 +59,6 @@ bool GetClientWithDetailsQueryHandler::s_mappingRegistered = false;
 
 void GetClientWithDetailsQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Client,
-                                                           Contracts::DTO::Client::ClientWithDetailsDTO>();
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Client,
+                                               Contracts::DTO::Client::ClientWithDetailsDTO>();
 }

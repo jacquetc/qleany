@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_passenger_query_handler.h"
 #include "repository/interface_passenger_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Application::Features::Passenger::Queries;
 
 GetPassengerQueryHandler::GetPassengerQueryHandler(InterfacePassengerRepository *repository) : m_repository(repository)
@@ -45,8 +45,7 @@ Result<PassengerDTO> GetPassengerQueryHandler::handleImpl(QPromise<Result<void>>
     QLN_RETURN_IF_ERROR(PassengerDTO, passengerResult)
 
     // map
-    auto dto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
+    auto dto = Simple::Tools::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
     qDebug() << "GetPassengerQueryHandler::handleImpl done";
 
@@ -57,6 +56,6 @@ bool GetPassengerQueryHandler::s_mappingRegistered = false;
 
 void GetPassengerQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(
+        true, true);
 }

@@ -3,9 +3,9 @@
 #include "update_car_command_handler.h"
 #include "car/validators/update_car_command_validator.h"
 #include "repository/interface_car_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Commands;
@@ -73,14 +73,14 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
         QLN_RETURN_IF_ERROR(CarDTO, currentResult)
 
         // map
-        m_undoState = Result<CarDTO>(
-            Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(currentResult.value()));
+        m_undoState =
+            Result<CarDTO>(Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarDTO>(currentResult.value()));
     }
-    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<CarDTO, UpdateCarDTO>(m_undoState.value());
+    auto updateDto = Simple::Tools::AutoMapper::map<CarDTO, UpdateCarDTO>(m_undoState.value());
     updateDto << request.req;
 
     // map
-    auto car = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateCarDTO, Simple::Entities::Car>(updateDto);
+    auto car = Simple::Tools::AutoMapper::map<UpdateCarDTO, Simple::Entities::Car>(updateDto);
 
     // set update timestamp only on first pass
     if (m_undoState.isEmpty())
@@ -97,7 +97,7 @@ Result<CarDTO> UpdateCarCommandHandler::handleImpl(QPromise<Result<void>> &progr
     }
 
     // map
-    auto carDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
+    auto carDto = Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
 
     Q_EMIT carUpdated(carDto);
 
@@ -116,7 +116,7 @@ Result<CarDTO> UpdateCarCommandHandler::restoreImpl()
     qDebug() << "UpdateCarCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto car = Qleany::Tools::AutoMapper::AutoMapper::map<CarDTO, Simple::Entities::Car>(m_undoState.value());
+    auto car = Simple::Tools::AutoMapper::map<CarDTO, Simple::Entities::Car>(m_undoState.value());
 
     // do
     auto carResult = m_repository->update(std::move(car));
@@ -124,7 +124,7 @@ Result<CarDTO> UpdateCarCommandHandler::restoreImpl()
     QLN_RETURN_IF_ERROR(CarDTO, carResult)
 
     // map
-    auto carDto = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
+    auto carDto = Simple::Tools::AutoMapper::map<Simple::Entities::Car, CarDTO>(carResult.value());
 
     Q_EMIT carUpdated(carDto);
 
@@ -137,9 +137,8 @@ bool UpdateCarCommandHandler::s_mappingRegistered = false;
 
 void UpdateCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Car::UpdateCarDTO, Contracts::DTO::Car::CarDTO>(true,
                                                                                                                true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::UpdateCarDTO,
-                                                           Contracts::DTO::Car::CarDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Car::UpdateCarDTO, Simple::Entities::Car>();
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Car::UpdateCarDTO, Simple::Entities::Car>();
 }

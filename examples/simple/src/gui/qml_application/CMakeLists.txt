@@ -13,7 +13,6 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 COMPONENTS Core Gui Qml Quick Concurrent)
 find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
-# find_package(qleany CONFIG REQUIRED)
 
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
@@ -28,8 +27,6 @@ qt_add_executable(${APP_NAME} src/main.cpp)
 qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
                  qtquickcontrols2.conf)
 
-# Link the example against the Qleany library
-target_link_libraries(${APP_NAME} PUBLIC qleany)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-entities)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-persistence)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-controller)

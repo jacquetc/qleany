@@ -1,0 +1,313 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "{{ snake_name }}_repository.h"
+#ifdef QT_DEBUG
+#include <QObject>
+#include <QDebug>
+#endif
+
+using namespace {{ application_cpp_domain_name }};
+using namespace {{ application_cpp_domain_name }}::Persistence::Repository;
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+
+{{ name }}Repository::{{ name }}Repository(InterfaceDatabaseTableGroup<{{ application_cpp_domain_name }}::Entities::{{ name }}> *{{ camel_name }}Database{{ foreign_repository_constructor_arguments_string }})
+    : {{ application_cpp_domain_name }}::Persistence::Repository::GenericRepository<{{ application_cpp_domain_name }}::Entities::{{ name }}>({{ camel_name }}Database){{ fields_init_values}}
+{
+   m_signalHolder.reset(new SignalHolder(nullptr));
+}
+
+SignalHolder *{{ name }}Repository::signalHolder(){
+    QReadLocker locker(&m_lock);
+    return m_signalHolder.data();
+}
+
+{% if foreign_entities %}
+
+Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Repository::update(Entities::{{ name }} &&entity)
+{
+    QWriteLocker locker(&m_lock);
+{% for key, value in foreign_entities.items() %}
+    if (entity.metaData().{{ value["related_field_name"] }}Set)
+    {
+{% if value["is_list"] %}
+        Result<QList<Entities::{{ value["type_pascal_name"] }}>> {{ value["related_field_name"] }}Result =
+            m_{{ value["type_camel_name"] }}Repository->updateEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1, entity.{{ value["related_field_name"] }}());
+{% else %}
+        Result<Entities::{{ value["type_pascal_name"] }}> {{ value["related_field_name"] }}Result =
+            m_{{ value["type_camel_name"] }}Repository->updateEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1, entity.{{ value["related_field_name"] }}());
+{% endif %}
+
+#ifdef QT_DEBUG
+        if ({{ value["related_field_name"] }}Result.isError())
+        {
+            qCritical() << {{ value["related_field_name"] }}Result.error().code() << {{ value["related_field_name"] }}Result.error().message() << {{ value["related_field_name"] }}Result.error().data();
+            qFatal("Error found. The application will now exit");
+        }
+#endif
+        QLN_RETURN_IF_ERROR(Entities::{{ name }}, {{ value["related_field_name"] }}Result)
+
+    }
+{% endfor %}
+
+    return {{ application_cpp_domain_name }}::Persistence::Repository::GenericRepository<Entities::{{ name }}>::update(std::move(entity));
+}
+
+Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Repository::getWithDetails(int entityId)
+{
+    QWriteLocker locker(&m_lock);
+    auto getResult = {{ application_cpp_domain_name }}::Persistence::Repository::GenericRepository<Entities::{{ name }}>::get(entityId);
+
+    if (getResult.isError())
+    {
+        return getResult;
+    }
+
+    Entities::{{ name }} entity = getResult.value();
+
+{% for key, value in foreign_entities.items() %}
+
+{% if value["is_list"] %}
+        Result<QList<Entities::{{ value["type_pascal_name"] }}>> {{ value["related_field_name"] }}Result =
+            m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1);
+{% else %}
+        Result<Entities::{{ value["type_pascal_name"] }}> {{ value["related_field_name"] }}Result =
+            m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf(Entities::{{ name }}::schema, entity.id(), "{{ value["related_field_name"] }}"_L1);
+{% endif %}
+
+#ifdef QT_DEBUG
+        if ({{ value["related_field_name"] }}Result.isError())
+        {
+            qCritical() << {{ value["related_field_name"] }}Result.error().code() << {{ value["related_field_name"] }}Result.error().message() << {{ value["related_field_name"] }}Result.error().data();
+            qFatal("Error found. The application will now exit");
+        }
+#endif
+        QLN_RETURN_IF_ERROR(Entities::{{ name }}, {{ value["related_field_name"] }}Result)
+
+        entity.set{{ value["related_field_pascal_name"] }}({{ value["related_field_name"] }}Result.value());
+    
+{% endfor %}
+
+    return Result<Entities::{{ name }}> (entity);
+}
+{% endif %}
+
+{% if generate_lazy_loaders %}
+{% for key, value in foreign_entities.items() %}
+{{ application_cpp_domain_name }}::Entities::{{ name }}::{{ value["related_field_pascal_name"] }}Loader {{ name }}Repository::fetch{{ value["related_field_pascal_name"] }}Loader()
+{
+#ifdef QT_DEBUG
+  // verify the presence of "{{ value["related_field_name"] }}" property in the entity {{ name }} using staticMetaObject
+    int propertyIndex = {{ application_cpp_domain_name }}::Entities::{{ name }}::staticMetaObject.indexOfProperty("{{ value["related_field_name"] }}");
+    if (propertyIndex == -1)
+    {
+        qCritical() << "The entity {{ name }} doesn't have a property named {{ value["related_field_name"] }}";
+        qFatal("The application will now exit");
+    }
+#endif
+
+    return [this](int entityId) {
+
+    {% if value["is_list"] %}
+        auto foreignEntitiesResult = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
+
+        if (foreignEntitiesResult.isError())
+        {
+            qCritical() << foreignEntitiesResult.error().code() << foreignEntitiesResult.error().message() << foreignEntitiesResult.error().data();
+            return QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}>();
+        }
+
+        return foreignEntitiesResult.value();
+    {% else %}
+
+        auto foreignEntityResult = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}"_L1);
+
+        if (foreignEntityResult.isError())
+        {
+            qCritical() << foreignEntityResult.error().code() << foreignEntityResult.error().message() << foreignEntityResult.error().data();
+            return {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}();
+        }
+
+        return foreignEntityResult.value();
+    {% endif %}
+    };
+}
+{% endfor %}
+{% endif %}
+
+
+
+Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> {{ name }}Repository::remove(QList<int> ids)
+{
+    QWriteLocker locker(&m_lock);
+    QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithRemovedIds;
+
+    {% for key, value in foreign_entities.items() %}
+    // remove the {{ value["related_field_name"] }} in cascade
+
+    {{ application_cpp_domain_name }}::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
+    for(const {{ application_cpp_domain_name }}::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
+        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ value["type_pascal_name"] }} && relationship.fieldName == "{{ value["related_field_name"] }}"_L1){
+            {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
+            break;
+        }
+    }
+
+    for (int entityId : ids)
+    {
+        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::RelationshipStrength::Strong)
+        {
+            // get foreign entities
+            {% if value["is_list"] %}
+            {% if generate_lazy_loaders %}
+            QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
+                {% else %}
+                auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+                if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
+                {
+                    qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();
+                    continue;
+                }
+                QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = foreign{{ value["related_field_pascal_name"] }}Result.value();
+                {% endif %}            
+            if(foreign{{ value["related_field_pascal_name"] }}.isEmpty()){
+                continue;
+            }
+
+            {% else %}
+                {% if generate_lazy_loaders %}
+            {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
+                {% else %}
+            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, "{{ value["related_field_name"] }}");
+            if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
+            {
+                qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();
+                continue;
+            }
+            {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = foreign{{ value["related_field_pascal_name"] }}Result.value();
+                {% endif %}
+            
+            if(!foreign{{ value["related_field_pascal_name"] }}.isValid()){
+                continue;
+            }
+
+            {% endif %}
+
+            QList<int> foreignIds;
+
+            {% if value["is_list"] %}
+            for (const auto &{{ value["type_camel_name"] }} : foreign{{ value["related_field_pascal_name"] }})
+            {
+                foreignIds.append({{ value["type_camel_name"] }}.id());
+            }
+            {% else %}
+                foreignIds.append(foreign{{ value["related_field_pascal_name"] }}.id());
+            {% endif %}
+
+            auto removalResult = m_{{ value["type_camel_name"] }}Repository->remove(foreignIds);
+            QLN_RETURN_IF_ERROR(QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removalResult)
+
+            returnedHashOfEntityWithRemovedIds.insert(removalResult.value());
+        }
+    }
+    {% endfor %}
+
+           // finally remove the entites of this repository
+
+    Result<void> associationRemovalResult = this->databaseTable()->removeAssociationsWith(ids);  
+    QLN_RETURN_IF_ERROR(QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, associationRemovalResult)
+    Result<QList<int>> removedIdsResult =  this->databaseTable()->remove(ids);
+    QLN_RETURN_IF_ERROR(QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, removedIdsResult)
+
+    returnedHashOfEntityWithRemovedIds.insert({{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }}, removedIdsResult.value());
+
+    Q_EMIT m_signalHolder->removed(removedIdsResult.value());
+
+    return Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithRemovedIds);
+}
+
+Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> {{ name }}Repository::changeActiveStatusInCascade(QList<int> ids, bool active)
+{
+    QWriteLocker locker(&m_lock);
+    QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>> returnedHashOfEntityWithActiveChangedIds;
+
+    {% for key, value in foreign_entities.items() %}
+    // cahnge active status of the {{ value["related_field_name"] }} in cascade
+
+    {{ application_cpp_domain_name }}::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
+    for(const {{ application_cpp_domain_name }}::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
+        if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ value["type_pascal_name"] }} && relationship.fieldName == QString::fromLatin1("{{ value["related_field_name"] }}") ){
+            {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
+            break;
+        }
+    }
+
+    for (int entityId : ids)
+    {
+        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::RelationshipStrength::Strong)
+        {
+            // get foreign entities
+            {% if value["is_list"] %}
+            {% if generate_lazy_loaders %}
+            QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);            
+            {% else %}
+            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntitiesInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
+            if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
+            {
+                qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();
+                continue;
+            }
+            QList<{{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }}> foreign{{ value["related_field_pascal_name"] }} = foreign{{ value["related_field_pascal_name"] }}Result.value();
+            {% endif %}
+            if(foreign{{ value["related_field_pascal_name"] }}.isEmpty()){
+                continue;
+            }
+
+            {% else %}
+            {% if generate_lazy_loaders %}
+            {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = this->fetch{{ value["related_field_pascal_name"] }}Loader().operator()(entityId);
+            {% else %}
+            auto foreign{{ value["related_field_pascal_name"] }}Result = m_{{ value["type_camel_name"] }}Repository->getEntityInRelationOf({{ application_cpp_domain_name }}::Entities::{{ name }}::schema, entityId, QString::fromLatin1("{{ value["related_field_name"] }}"));
+            if (foreign{{ value["related_field_pascal_name"] }}Result.isError())
+            {
+                qCritical() << foreign{{ value["related_field_pascal_name"] }}Result.error().code() << foreign{{ value["related_field_pascal_name"] }}Result.error().message() << foreign{{ value["related_field_pascal_name"] }}Result.error().data();
+                continue;
+            }
+            {{ application_cpp_domain_name }}::Entities::{{ value["type_pascal_name"] }} foreign{{ value["related_field_pascal_name"] }} = foreign{{ value["related_field_pascal_name"] }}Result.value();
+            {% endif %}
+            if(!foreign{{ value["related_field_pascal_name"] }}.isValid()){
+                continue;
+            }
+            
+            {% endif %}
+
+            QList<int> foreignIds;
+
+            {% if value["is_list"] %}
+            for (const auto &{{ value["type_camel_name"] }} : foreign{{ value["related_field_pascal_name"] }})
+            {
+                foreignIds.append({{ value["type_camel_name"] }}.id());
+            }
+            {% else %}
+                foreignIds.append(foreign{{ value["related_field_pascal_name"] }}.id());
+            {% endif %}
+
+            auto changeResult = m_{{ value["type_camel_name"] }}Repository->changeActiveStatusInCascade(foreignIds, active);
+            
+            QLN_RETURN_IF_ERROR(QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changeResult)
+
+            returnedHashOfEntityWithActiveChangedIds.insert(changeResult.value());
+        }
+    }
+    {% endfor %}
+
+    // finally change the entites of this repository
+
+    Result<QList<int>> changedIdsResult =  this->databaseTable()->changeActiveStatus(ids, active);
+
+    QLN_RETURN_IF_ERROR(QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum QLN_COMMA QList<int>>, changedIdsResult)
+
+    returnedHashOfEntityWithActiveChangedIds.insert({{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }}, changedIdsResult.value());
+    Q_EMIT m_signalHolder->activeStatusChanged(changedIdsResult.value(), active);
+
+    return Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>>(returnedHashOfEntityWithActiveChangedIds);
+}

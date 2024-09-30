@@ -4,19 +4,19 @@
 
 #include "car.h"
 #include "front_ends_example_contracts_export.h"
+#include "repository/interface_generic_repository.h"
+#include "repository/interface_repository.h"
+#include "result.h"
 #include <QObject>
-#include <qleany/common/result.h>
-#include <qleany/contracts/repository/interface_generic_repository.h>
-#include <qleany/contracts/repository/interface_repository.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 
 namespace FrontEnds::Contracts::Repository
 {
 
 class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT InterfaceCarRepository
-    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<FrontEnds::Entities::Car>,
-      public Qleany::Contracts::Repository::InterfaceRepository
+    : public virtual FrontEnds::Contracts::Repository::InterfaceGenericRepository<FrontEnds::Entities::Car>,
+      public FrontEnds::Contracts::Repository::InterfaceRepository
 {
 public:
     virtual ~InterfaceCarRepository()

@@ -8,7 +8,7 @@
 #include "repository/interface_brand_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;
 
@@ -17,11 +17,11 @@ namespace FrontEnds::Application::Features::Brand::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT GetAllBrandQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetAllBrandQueryHandler(InterfaceBrandRepository *repository);
     Result<QList<BrandDTO>> handle(QPromise<Result<void>> &progressPromise);
 
-  private:
+private:
     InterfaceBrandRepository *m_repository;
     Result<QList<BrandDTO>> handleImpl(QPromise<Result<void>> &progressPromise);
     static bool s_mappingRegistered;

@@ -3,23 +3,22 @@
 #pragma once
 
 #include "car.h"
+#include "database/interface_database_table_group.h"
 #include "front_ends_example_persistence_export.h"
+#include "repository/generic_repository.h"
 #include "repository/interface_brand_repository.h"
 #include "repository/interface_car_repository.h"
 #include "repository/interface_passenger_repository.h"
 #include <QReadWriteLock>
-#include <qleany/contracts/database/interface_database_table_group.h>
-#include <qleany/repository/generic_repository.h>
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds;
+using namespace FrontEnds::Contracts::Database;
 using namespace FrontEnds::Contracts::Repository;
-using namespace Qleany::Contracts::Database;
 
 namespace FrontEnds::Persistence::Repository
 {
 
-class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT CarRepository final : public Qleany::Repository::GenericRepository<FrontEnds::Entities::Car>,
+class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT CarRepository final : public FrontEnds::Persistence::Repository::GenericRepository<FrontEnds::Entities::Car>,
                                                                   public FrontEnds::Contracts::Repository::InterfaceCarRepository
 {
 public:

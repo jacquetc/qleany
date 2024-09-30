@@ -3,20 +3,20 @@
 #pragma once
 
 #include "passenger.h"
+#include "repository/interface_generic_repository.h"
+#include "repository/interface_repository.h"
+#include "result.h"
 #include "simple_example_contracts_export.h"
 #include <QObject>
-#include <qleany/common/result.h>
-#include <qleany/contracts/repository/interface_generic_repository.h>
-#include <qleany/contracts/repository/interface_repository.h>
 
-using namespace Qleany;
+using namespace Simple;
 
 namespace Simple::Contracts::Repository
 {
 
 class SIMPLE_EXAMPLE_CONTRACTS_EXPORT InterfacePassengerRepository
-    : public virtual Qleany::Contracts::Repository::InterfaceGenericRepository<Simple::Entities::Passenger>,
-      public Qleany::Contracts::Repository::InterfaceRepository
+    : public virtual Simple::Contracts::Repository::InterfaceGenericRepository<Simple::Entities::Passenger>,
+      public Simple::Contracts::Repository::InterfaceRepository
 {
   public:
     virtual ~InterfacePassengerRepository()

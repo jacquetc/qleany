@@ -6,14 +6,13 @@
 
 using namespace FrontEnds::Controller::UndoRedo;
 
-struct ForeignUndoRedoController
-{
+struct ForeignUndoRedoController {
     Q_GADGET
     QML_FOREIGN(FrontEnds::Controller::UndoRedo::UndoRedoController)
     QML_SINGLETON
     QML_NAMED_ELEMENT(UndoRedoController)
 
-  public:
+public:
     // Initialize this singleton instance with the given engine.
 
     inline static UndoRedoController *s_singletonInstance = nullptr;
@@ -41,6 +40,6 @@ struct ForeignUndoRedoController
         return s_singletonInstance;
     }
 
-  private:
+private:
     inline static QJSEngine *s_engine = nullptr;
 };

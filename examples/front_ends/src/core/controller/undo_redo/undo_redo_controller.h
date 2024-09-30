@@ -5,13 +5,13 @@
 #include "event_dispatcher.h"
 #include "front_ends_example_controller_export.h"
 
+#include "undo_redo/threaded_undo_redo_system.h"
 #include <QAction>
 #include <QObject>
 #include <QPointer>
 #include <QSharedPointer>
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
 
-using namespace Qleany::Tools::UndoRedo;
+using namespace FrontEnds::Controller::UndoRedo;
 
 namespace FrontEnds::Controller::UndoRedo
 {

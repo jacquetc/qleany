@@ -1,0 +1,47 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#include "persistence_registration.h"
+#include "database/database_table_group.h"
+#include "database/database_context.h"
+{% for header in repository_headers %}
+#include "{{ header }}"
+{%- endfor %}
+
+using namespace {{ application_cpp_domain_name }};
+using namespace {{ application_cpp_domain_name }}::Persistence::Database;
+using namespace {{ application_cpp_domain_name }}::Persistence;
+using namespace {{ application_cpp_domain_name }}::Persistence::Repository;
+
+PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{parent}
+{
+    QSharedPointer<DatabaseContext> context(new DatabaseContext());
+
+    // database tables:
+    {% for entity in entities %}
+    auto *{{ entity.entity_camel_name }}DatabaseTableGroup = new DatabaseTableGroup<{{ application_cpp_domain_name }}::Entities::{{ entity.entity_pascal_name }}>(context);
+    {%- endfor %}
+
+    Result<void> initResult = context->init();
+
+    if (initResult.hasError())
+    {
+        Error error = initResult.error();
+        qCritical() << error.className() + "\n"_L1 + error.code() + "\n"_L1 + error.message() + "\n"_L1 + error.data();
+    }
+    
+    // repositories:
+    {% for entity in entities %}
+    {{ entity.entity_pascal_name }}Repository *{{ entity.entity_camel_name }}Repository = new {{ entity.entity_pascal_name }}Repository({{ entity.entity_camel_name }}DatabaseTableGroup 
+    {% for child in entity.children_entities %}, {{ child.child_camel_name }}Repository{% endfor %});
+    {%- endfor %}
+
+    // register repositories:
+    {% for entity in entities %}
+    RepositoryProvider::instance()->registerRepository("{{ entity.entity_camel_name }}", {{ entity.entity_camel_name }}Repository);
+    {%- endfor %}
+}
+
+RepositoryProvider *PersistenceRegistration::repositoryProvider()
+{
+    return RepositoryProvider::instance();
+}

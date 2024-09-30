@@ -22,6 +22,9 @@ find_package(QCoro6 REQUIRED COMPONENTS Core)
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
 
+# handles the common code
+add_subdirectory({{ common_path }})
+
 # handles the entities
 add_subdirectory({{ entities_path }})
 

@@ -3,7 +3,6 @@
 
 find_package(Qt6 COMPONENTS Core Gui REQUIRED)
 find_package(QCoro6 REQUIRED COMPONENTS Core)
-# find_package(qleany CONFIG REQUIRED)
 
 set(LIBRARY_NAME simple-example-presenter)
 
@@ -19,26 +18,19 @@ include(presenters.cmake)
 
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${PRESENTER_LIST})
 
-set_target_properties(${LIBRARY_NAME} PROPERTIES
-                    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
-                    )
-
-
 include(GenerateExportHeader)
 generate_export_header(${LIBRARY_NAME}
     BASE_NAME simple_example_presenter)
 
-
-target_include_directories(${LIBRARY_NAME} PUBLIC
+target_include_directories(${LIBRARY_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     Qt6::Core Qt6::Gui)
 target_link_libraries(${LIBRARY_NAME} PRIVATE QCoro::Core)
-target_link_libraries(${LIBRARY_NAME} PUBLIC qleany)
+target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-common)
 target_link_libraries(${LIBRARY_NAME} PUBLIC simple-example-controller)
 
 if(IOS)

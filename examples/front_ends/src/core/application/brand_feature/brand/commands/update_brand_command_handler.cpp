@@ -3,35 +3,31 @@
 #include "update_brand_command_handler.h"
 #include "brand/validators/update_brand_command_validator.h"
 #include "repository/interface_brand_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Brand::Commands;
 using namespace FrontEnds::Contracts::CQRS::Brand::Validators;
 using namespace FrontEnds::Application::Features::Brand::Commands;
 
-UpdateBrandCommandHandler::UpdateBrandCommandHandler(InterfaceBrandRepository *repository) : m_repository(repository)
+UpdateBrandCommandHandler::UpdateBrandCommandHandler(InterfaceBrandRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
 }
 
-Result<BrandDTO> UpdateBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise,
-                                                   const UpdateBrandCommand &request)
+Result<BrandDTO> UpdateBrandCommandHandler::handle(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request)
 {
     Result<BrandDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, request);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateBrandCommand:" << ex.what();
     }
@@ -43,20 +39,16 @@ Result<BrandDTO> UpdateBrandCommandHandler::restore()
 {
     Result<BrandDTO> result;
 
-    try
-    {
+    try {
         result = restoreImpl();
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling UpdateBrandCommand restore:" << ex.what();
     }
     return result;
 }
 
-Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise,
-                                                       const UpdateBrandCommand &request)
+Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request)
 {
     qDebug() << "UpdateBrandCommandHandler::handleImpl called with id" << request.req.id();
 
@@ -67,44 +59,38 @@ Result<BrandDTO> UpdateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
     QLN_RETURN_IF_ERROR(BrandDTO, validatorResult)
 
     // save old state
-    if (m_undoState.isEmpty())
-    {
+    if (m_undoState.isEmpty()) {
         Result<FrontEnds::Entities::Brand> currentResult = m_repository->get(request.req.id());
 
         QLN_RETURN_IF_ERROR(BrandDTO, currentResult)
 
         // map
-        m_undoState = Result<BrandDTO>(
-            Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(currentResult.value()));
+        m_undoState = Result<BrandDTO>(FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(currentResult.value()));
     }
-    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<BrandDTO, UpdateBrandDTO>(m_undoState.value());
+    auto updateDto = FrontEnds::Tools::AutoMapper::map<BrandDTO, UpdateBrandDTO>(m_undoState.value());
     updateDto << request.req;
 
     // map
-    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<UpdateBrandDTO, FrontEnds::Entities::Brand>(updateDto);
+    auto brand = FrontEnds::Tools::AutoMapper::map<UpdateBrandDTO, FrontEnds::Entities::Brand>(updateDto);
 
     // set update timestamp only on first pass
-    if (m_undoState.isEmpty())
-    {
+    if (m_undoState.isEmpty()) {
         brand.setUpdateDate(QDateTime::currentDateTime());
     }
 
     // do
     auto brandResult = m_repository->update(std::move(brand));
 
-    if (brandResult.hasError())
-    {
+    if (brandResult.hasError()) {
         return Result<BrandDTO>(brandResult.error());
     }
 
     // map
-    auto brandDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
+    auto brandDto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
 
     Q_EMIT brandUpdated(brandDto);
 
-    if (request.req.metaData().areDetailsSet())
-    {
+    if (request.req.metaData().areDetailsSet()) {
         Q_EMIT brandDetailsUpdated(brandDto.id());
     }
 
@@ -118,7 +104,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::restoreImpl()
     qDebug() << "UpdateBrandCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto brand = Qleany::Tools::AutoMapper::AutoMapper::map<BrandDTO, FrontEnds::Entities::Brand>(m_undoState.value());
+    auto brand = FrontEnds::Tools::AutoMapper::map<BrandDTO, FrontEnds::Entities::Brand>(m_undoState.value());
 
     // do
     auto brandResult = m_repository->update(std::move(brand));
@@ -126,8 +112,7 @@ Result<BrandDTO> UpdateBrandCommandHandler::restoreImpl()
     QLN_RETURN_IF_ERROR(BrandDTO, brandResult)
 
     // map
-    auto brandDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
+    auto brandDto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
 
     Q_EMIT brandUpdated(brandDto);
 
@@ -140,10 +125,7 @@ bool UpdateBrandCommandHandler::s_mappingRegistered = false;
 
 void UpdateBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO,
-                                                           Contracts::DTO::Brand::BrandDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO,
-                                                           FrontEnds::Entities::Brand>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO, Contracts::DTO::Brand::BrandDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Brand::UpdateBrandDTO, FrontEnds::Entities::Brand>();
 }

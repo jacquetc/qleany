@@ -6,7 +6,7 @@
 
 using namespace FrontEnds::Controller;
 using namespace FrontEnds::Controller::UndoRedo;
-using namespace Qleany::Tools::UndoRedo;
+using namespace FrontEnds::Controller::UndoRedo;
 
 QPointer<UndoRedoController> UndoRedoController::s_instance = nullptr;
 

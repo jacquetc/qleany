@@ -8,9 +8,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace Simple::Entities
 {
@@ -45,6 +43,7 @@ class Car : public Entity
         bool passengersSet = false;
         bool passengersLoaded = false;
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "content"_L1)
@@ -59,9 +58,11 @@ class Car : public Entity
             {
                 return passengersSet;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
 
@@ -77,6 +78,7 @@ class Car : public Entity
             {
                 return passengersLoaded;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
@@ -84,7 +86,7 @@ class Car : public Entity
         Car *m_entity = nullptr;
     };
 
-    Car() : Entity(), m_content(QString()), m_metaData(this)
+    Car() : Entity(), m_metaData(this), m_content(QString())
     {
     }
 
@@ -94,8 +96,8 @@ class Car : public Entity
 
     Car(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
         const QString &content, const Brand &brand, const QList<Passenger> &passengers)
-        : Entity(id, uuid, creationDate, updateDate), m_content(content), m_brand(brand), m_passengers(passengers),
-          m_metaData(this)
+        : Entity(id, uuid, creationDate, updateDate), m_metaData(this), m_content(content), m_brand(brand),
+          m_passengers(passengers)
     {
     }
 
@@ -194,7 +196,7 @@ class Car : public Entity
         m_passengersLoader = loader;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -215,7 +217,7 @@ class Car : public Entity
 inline bool operator==(const Car &lhs, const Car &rhs)
 {
 
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const Simple::Entities::Entity &>(lhs) == static_cast<const Simple::Entities::Entity &>(rhs) &&
 
            lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
 }
@@ -223,7 +225,7 @@ inline bool operator==(const Car &lhs, const Car &rhs)
 inline uint qHash(const Car &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const Simple::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_content, seed);
@@ -234,7 +236,7 @@ inline uint qHash(const Car &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Car entity
-inline Qleany::Entities::EntitySchema Car::schema = {
+inline Simple::Entities::EntitySchema Car::schema = {
     Simple::Entities::Entities::EntityEnum::Car,
     "Car"_L1,
 
@@ -252,8 +254,8 @@ inline Qleany::Entities::EntitySchema Car::schema = {
      {"creationDate"_L1, FieldType::DateTime, false, false},
      {"updateDate"_L1, FieldType::DateTime, false, false},
      {"content"_L1, FieldType::String, false, false},
-     {"brand"_L1, FieldType::Entity, false, true},
-     {"passengers"_L1, FieldType::Entity, false, true}}};
+     {"brand"_L1, FieldType::OtherEntity, false, true},
+     {"passengers"_L1, FieldType::OtherEntity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Car)

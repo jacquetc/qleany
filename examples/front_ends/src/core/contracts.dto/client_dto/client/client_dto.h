@@ -19,29 +19,24 @@ class ClientDTO
     Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate)
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool idSet = false;
         bool uuidSet = false;
         bool creationDateSet = false;
         bool updateDateSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id"_L1)
-            {
+            if (fieldName == "id"_L1) {
                 return idSet;
             }
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
             return false;
@@ -49,12 +44,15 @@ class ClientDTO
 
         bool areDetailsSet() const
         {
-
             return false;
         }
     };
 
-    ClientDTO() : m_id(0), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
+    ClientDTO()
+        : m_id(0)
+        , m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
     {
     }
 
@@ -63,13 +61,19 @@ class ClientDTO
     }
 
     ClientDTO(int id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate)
-        : m_id(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate)
+        : m_id(id)
+        , m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
     {
     }
 
     ClientDTO(const ClientDTO &other)
-        : m_metaData(other.m_metaData), m_id(other.m_id), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate)
+        : m_metaData(other.m_metaData)
+        , m_id(other.m_id)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
     {
     }
 
@@ -90,8 +94,7 @@ class ClientDTO
 
     ClientDTO &operator=(const ClientDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -103,8 +106,7 @@ class ClientDTO
 
     ClientDTO &operator=(const ClientDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -116,25 +118,20 @@ class ClientDTO
 
     ClientDTO &mergeWith(const ClientDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.idSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.idSet) {
                 m_id = other.m_id;
                 m_metaData.idSet = true;
             }
-            if (other.m_metaData.uuidSet)
-            {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
@@ -209,7 +206,7 @@ class ClientDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     int m_id;
@@ -220,9 +217,7 @@ class ClientDTO
 
 inline bool operator==(const ClientDTO &lhs, const ClientDTO &rhs)
 {
-
-    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate;
+    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate;
 }
 
 inline uint qHash(const ClientDTO &dto, uint seed = 0) noexcept

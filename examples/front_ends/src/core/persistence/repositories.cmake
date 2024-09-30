@@ -9,4 +9,7 @@ set(REPOSITORY_LIST
     repository/passenger_repository.cpp
     repository/client_repository.h
     repository/client_repository.cpp
+    repository/generic_repository.h
+    repository/repository_provider.h
+    repository/repository_provider.cpp
 )

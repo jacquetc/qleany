@@ -11,16 +11,16 @@
 #include "custom/commands/write_random_things_command_handler.h"
 #include "custom/queries/get_current_time_query.h"
 #include "custom/queries/get_current_time_query_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace Simple::Controller;
 using namespace Simple::Controller::Custom;
 using namespace Simple::Application::Features::Custom::Commands;
 using namespace Simple::Application::Features::Custom::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace Simple::Controller::UndoRedo;
+using namespace Simple::Contracts::Repository;
 
 QPointer<CustomController> CustomController::s_instance = nullptr;
 
@@ -80,6 +80,11 @@ QCoro::Task<> CustomController::writeRandomThings(WriteRandomThingsDTO dto)
     m_undo_redo_system->push(command, "custom"_L1);
 
     co_return;
+}
+
+WriteRandomThingsDTO CustomController::getWriteRandomThingsDTO()
+{
+    return WriteRandomThingsDTO();
 }
 
 QCoro::Task<> CustomController::runLongOperation()

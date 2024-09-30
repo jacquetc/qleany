@@ -5,11 +5,11 @@
 #include "passenger/commands/create_passenger_command.h"
 #include "passenger/passenger_dto.h"
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include "simple_example_application_passenger_export.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;

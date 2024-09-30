@@ -133,6 +133,9 @@ if(BUILD_KF6_KIRIGAMI)
 endif()
 {% endif %}
 
+# handles the common code
+add_subdirectory({{ common_path }})
+
 # handles the entities
 add_subdirectory({{ entities_path }})
 

@@ -6,10 +6,10 @@
 
 #include "custom/commands/run_long_operation_command.h"
 
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 
 using namespace Simple::Contracts::CQRS::Custom::Commands;
 

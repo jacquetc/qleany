@@ -5,11 +5,11 @@
 #include "car/car_dto.h"
 #include "car/commands/create_car_command.h"
 #include "repository/interface_car_repository.h"
+#include "result.h"
 #include "simple_example_application_car_export.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;

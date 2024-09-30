@@ -7,10 +7,10 @@
 #include "{{ feature_snake_name }}/commands/remove_{{ entity_mappable_with_snake }}_command.h"
 
 #include "repository/interface_{{ entity_mappable_with_snake }}_repository.h"
-#include <qleany/common/result.h>
+#include "result.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace {{ application_cpp_domain_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 using namespace {{ application_cpp_domain_name }}::Contracts::CQRS::{{ feature_pascal_name }}::Commands;

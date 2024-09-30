@@ -6,10 +6,10 @@
 
 #include "custom/commands/run_long_operation_command.h"
 
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 
 using namespace FrontEnds::Contracts::CQRS::Custom::Commands;
 
@@ -18,18 +18,18 @@ namespace FrontEnds::Application::Features::Custom::Commands
 class FRONT_ENDS_EXAMPLE_APPLICATION_CUSTOM_EXPORT RunLongOperationCommandHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     RunLongOperationCommandHandler();
 
     Result<void> handle(QPromise<Result<void>> &progressPromise, const RunLongOperationCommand &request);
 
     Result<void> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
 
     void runLongOperationChanged();
 
-  private:
+private:
     Result<void> handleImpl(QPromise<Result<void>> &progressPromise, const RunLongOperationCommand &request);
 
     static bool s_mappingRegistered;

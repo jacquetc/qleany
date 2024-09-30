@@ -7,10 +7,10 @@
 #include "simple_example_application_passenger_export.h"
 
 #include "repository/interface_passenger_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Commands;

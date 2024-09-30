@@ -1,0 +1,49 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "{{ snake_name }}.h"
+{% for foreign_repository_header in foreign_repository_header_list -%}
+#include {{ foreign_repository_header }}
+{% endfor -%}
+#include "database/interface_database_table_group.h"
+#include "repository/generic_repository.h"
+#include "repository/interface_{{ snake_name }}_repository.h"
+#include "{{ export_header_file }}"
+#include <QReadWriteLock>
+
+using namespace {{ application_cpp_domain_name }};
+using namespace {{ application_cpp_domain_name }}::Contracts::Database;
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+
+namespace {{ application_cpp_domain_name }}::Persistence::Repository
+{
+
+class {{ export }} {{ name }}Repository  final : public {{ application_cpp_domain_name }}::Persistence::Repository::GenericRepository<{{ application_cpp_domain_name }}::Entities::{{ name }}>,
+                                          public {{ application_cpp_domain_name }}::Contracts::Repository::Interface{{ name }}Repository
+{
+  public:
+    explicit {{ name }}Repository(InterfaceDatabaseTableGroup<{{ application_cpp_domain_name }}::Entities::{{ name }}> *{{ camel_name }}Database{{ foreign_repository_constructor_arguments_string }});
+
+    SignalHolder *signalHolder() override;
+    {% if foreign_entities %}
+    Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> update({{ application_cpp_domain_name }}::Entities::{{ name }} &&entity) override;
+    Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> getWithDetails(int entityId) override;
+    {% endif %}    
+    {% for loader_function in loader_function_list %}
+    {{ loader_function }}
+    {% endfor %}
+    Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> remove(QList<int> ids) override;
+    Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, QList<int>>> changeActiveStatusInCascade(QList<int> ids, bool active) override;
+
+
+  private:
+    {% for foreign_entities_private_member in foreign_entities_private_member_list -%}
+    {{ foreign_entities_private_member }}
+    {% endfor -%}
+    QScopedPointer<SignalHolder> m_signalHolder;
+    QReadWriteLock m_lock;
+
+};
+
+} // namespace {{ application_cpp_domain_name }}::Repository

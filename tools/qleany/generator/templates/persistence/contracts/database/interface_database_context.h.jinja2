@@ -1,0 +1,23 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+#include "result.h"
+#include "{{ export_header_file }}"
+#include <QSqlDatabase>
+#include <QThreadPool>
+
+namespace {{ application_cpp_domain_name }}::Contracts::Database
+{
+class {{ export }} InterfaceDatabaseContext
+{
+  public:
+    virtual ~InterfaceDatabaseContext()
+    {
+    }
+
+    virtual Result<void> init() = 0;
+    virtual void appendCreationSql(const char *type, const QString &sql) = 0;
+
+    virtual QSqlDatabase getConnection() = 0;
+};
+} // namespace {{ application_cpp_domain_name }}::Contracts::Database

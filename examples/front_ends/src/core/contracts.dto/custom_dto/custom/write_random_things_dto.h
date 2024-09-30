@@ -15,14 +15,12 @@ class WriteRandomThingsDTO
 
     Q_PROPERTY(QString randomCarName READ randomCarName WRITE setRandomCarName)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool randomCarNameSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "randomCarName"_L1)
-            {
+            if (fieldName == "randomCarName"_L1) {
                 return randomCarNameSet;
             }
             return false;
@@ -30,12 +28,12 @@ class WriteRandomThingsDTO
 
         bool areDetailsSet() const
         {
-
             return false;
         }
     };
 
-    WriteRandomThingsDTO() : m_randomCarName(QString())
+    WriteRandomThingsDTO()
+        : m_randomCarName(QString())
     {
     }
 
@@ -43,19 +41,20 @@ class WriteRandomThingsDTO
     {
     }
 
-    WriteRandomThingsDTO(const QString &randomCarName) : m_randomCarName(randomCarName)
+    WriteRandomThingsDTO(const QString &randomCarName)
+        : m_randomCarName(randomCarName)
     {
     }
 
     WriteRandomThingsDTO(const WriteRandomThingsDTO &other)
-        : m_metaData(other.m_metaData), m_randomCarName(other.m_randomCarName)
+        : m_metaData(other.m_metaData)
+        , m_randomCarName(other.m_randomCarName)
     {
     }
 
     WriteRandomThingsDTO &operator=(const WriteRandomThingsDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_randomCarName = other.m_randomCarName;
         }
@@ -64,8 +63,7 @@ class WriteRandomThingsDTO
 
     WriteRandomThingsDTO &operator=(const WriteRandomThingsDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_randomCarName = other.m_randomCarName;
         }
@@ -74,10 +72,8 @@ class WriteRandomThingsDTO
 
     WriteRandomThingsDTO &mergeWith(const WriteRandomThingsDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.randomCarNameSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.randomCarNameSet) {
                 m_randomCarName = other.m_randomCarName;
                 m_metaData.randomCarNameSet = true;
             }
@@ -113,7 +109,7 @@ class WriteRandomThingsDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     QString m_randomCarName;
@@ -121,7 +117,6 @@ class WriteRandomThingsDTO
 
 inline bool operator==(const WriteRandomThingsDTO &lhs, const WriteRandomThingsDTO &rhs)
 {
-
     return lhs.m_randomCarName == rhs.m_randomCarName;
 }
 

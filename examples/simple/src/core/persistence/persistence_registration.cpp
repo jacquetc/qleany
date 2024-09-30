@@ -1,17 +1,18 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "persistence_registration.h"
-#include <qleany/database/database_context.h>
-#include <qleany/database/database_table_group.h>
+#include "database/database_context.h"
+#include "database/database_table_group.h"
 
 #include "repository/brand_repository.h"
 #include "repository/car_repository.h"
 #include "repository/client_repository.h"
+#include "repository/generic_repository.h"
 #include "repository/passenger_repository.h"
+#include "repository/repository_provider.h"
 
-using namespace Qleany;
-using namespace Qleany::Database;
-using namespace Qleany::Repository;
+using namespace Simple;
+using namespace Simple::Persistence::Database;
 using namespace Simple::Persistence;
 using namespace Simple::Persistence::Repository;
 

@@ -9,7 +9,7 @@
 #include "repository/interface_client_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Client::Queries;
@@ -19,11 +19,11 @@ namespace FrontEnds::Application::Features::Client::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT GetClientQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetClientQueryHandler(InterfaceClientRepository *repository);
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const GetClientQuery &query);
 
-  private:
+private:
     InterfaceClientRepository *m_repository;
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const GetClientQuery &query);
     static bool s_mappingRegistered;

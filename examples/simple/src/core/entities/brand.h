@@ -6,9 +6,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace Simple::Entities
 {
@@ -27,17 +25,22 @@ class Brand : public Entity
         }
         MetaData(Brand *entity, const MetaData &other) : m_entity(entity)
         {
+
+            Q_UNUSED(other);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "name"_L1)
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
 
@@ -45,6 +48,7 @@ class Brand : public Entity
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
@@ -52,7 +56,7 @@ class Brand : public Entity
         Brand *m_entity = nullptr;
     };
 
-    Brand() : Entity(), m_name(QString()), m_metaData(this)
+    Brand() : Entity(), m_metaData(this), m_name(QString())
     {
     }
 
@@ -62,7 +66,7 @@ class Brand : public Entity
 
     Brand(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
           const QString &name)
-        : Entity(id, uuid, creationDate, updateDate), m_name(name), m_metaData(this)
+        : Entity(id, uuid, creationDate, updateDate), m_metaData(this), m_name(name)
     {
     }
 
@@ -105,7 +109,7 @@ class Brand : public Entity
         m_name = name;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -122,7 +126,7 @@ class Brand : public Entity
 inline bool operator==(const Brand &lhs, const Brand &rhs)
 {
 
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const Simple::Entities::Entity &>(lhs) == static_cast<const Simple::Entities::Entity &>(rhs) &&
 
            lhs.m_name == rhs.m_name;
 }
@@ -130,7 +134,7 @@ inline bool operator==(const Brand &lhs, const Brand &rhs)
 inline uint qHash(const Brand &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const Simple::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_name, seed);
@@ -139,7 +143,7 @@ inline uint qHash(const Brand &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Brand entity
-inline Qleany::Entities::EntitySchema Brand::schema = {
+inline Simple::Entities::EntitySchema Brand::schema = {
     Simple::Entities::Entities::EntityEnum::Brand,
     "Brand"_L1,
 

@@ -11,16 +11,16 @@
 #include "custom/commands/write_random_things_command_handler.h"
 #include "custom/queries/get_current_time_query.h"
 #include "custom/queries/get_current_time_query_handler.h"
-#include "qleany/tools/undo_redo/alter_command.h"
-#include "qleany/tools/undo_redo/query_command.h"
+#include "undo_redo/alter_command.h"
+#include "undo_redo/query_command.h"
 #include <QCoroSignal>
 
 using namespace FrontEnds::Controller;
 using namespace FrontEnds::Controller::Custom;
 using namespace FrontEnds::Application::Features::Custom::Commands;
 using namespace FrontEnds::Application::Features::Custom::Queries;
-using namespace Qleany::Tools::UndoRedo;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds::Controller::UndoRedo;
+using namespace FrontEnds::Contracts::Repository;
 
 QPointer<CustomController> CustomController::s_instance = nullptr;
 

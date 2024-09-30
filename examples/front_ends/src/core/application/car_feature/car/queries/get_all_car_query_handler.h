@@ -8,7 +8,7 @@
 #include "repository/interface_car_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Car;
 using namespace FrontEnds::Contracts::Repository;
 
@@ -17,11 +17,11 @@ namespace FrontEnds::Application::Features::Car::Queries
 class FRONT_ENDS_EXAMPLE_APPLICATION_CAR_EXPORT GetAllCarQueryHandler : public QObject
 {
     Q_OBJECT
-  public:
+public:
     GetAllCarQueryHandler(InterfaceCarRepository *repository);
     Result<QList<CarDTO>> handle(QPromise<Result<void>> &progressPromise);
 
-  private:
+private:
     InterfaceCarRepository *m_repository;
     Result<QList<CarDTO>> handleImpl(QPromise<Result<void>> &progressPromise);
     static bool s_mappingRegistered;

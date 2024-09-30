@@ -2,15 +2,15 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_car_query_handler.h"
 #include "repository/interface_car_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Application::Features::Car::Queries;
 
-GetCarQueryHandler::GetCarQueryHandler(InterfaceCarRepository *repository) : m_repository(repository)
+GetCarQueryHandler::GetCarQueryHandler(InterfaceCarRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
@@ -20,12 +20,9 @@ Result<CarDTO> GetCarQueryHandler::handle(QPromise<Result<void>> &progressPromis
 {
     Result<CarDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, query);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<CarDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetCarQuery:" << ex.what();
     }
@@ -43,7 +40,7 @@ Result<CarDTO> GetCarQueryHandler::handleImpl(QPromise<Result<void>> &progressPr
     QLN_RETURN_IF_ERROR(CarDTO, carResult)
 
     // map
-    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Car, CarDTO>(carResult.value());
+    auto dto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Car, CarDTO>(carResult.value());
 
     qDebug() << "GetCarQueryHandler::handleImpl done";
 
@@ -54,6 +51,5 @@ bool GetCarQueryHandler::s_mappingRegistered = false;
 
 void GetCarQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                                  true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
 }

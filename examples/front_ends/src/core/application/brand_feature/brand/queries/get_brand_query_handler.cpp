@@ -2,15 +2,15 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_brand_query_handler.h"
 #include "repository/interface_brand_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Application::Features::Brand::Queries;
 
-GetBrandQueryHandler::GetBrandQueryHandler(InterfaceBrandRepository *repository) : m_repository(repository)
+GetBrandQueryHandler::GetBrandQueryHandler(InterfaceBrandRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
@@ -20,12 +20,9 @@ Result<BrandDTO> GetBrandQueryHandler::handle(QPromise<Result<void>> &progressPr
 {
     Result<BrandDTO> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise, query);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<BrandDTO>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetBrandQuery:" << ex.what();
     }
@@ -43,7 +40,7 @@ Result<BrandDTO> GetBrandQueryHandler::handleImpl(QPromise<Result<void>> &progre
     QLN_RETURN_IF_ERROR(BrandDTO, brandResult)
 
     // map
-    auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
+    auto dto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
 
     qDebug() << "GetBrandQueryHandler::handleImpl done";
 
@@ -54,6 +51,5 @@ bool GetBrandQueryHandler::s_mappingRegistered = false;
 
 void GetBrandQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
 }

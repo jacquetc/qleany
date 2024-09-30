@@ -1,10 +1,8 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-
 #include "custom/write_random_things_dto.h"
-
 
 #include "repository/interface_car_repository.h"
 
@@ -14,9 +12,9 @@
 
 #include "repository/interface_client_repository.h"
 
-#include <qleany/common/result.h>
+#include "result.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 
 using namespace FrontEnds::Contracts::Repository;
 
@@ -26,26 +24,26 @@ namespace FrontEnds::Contracts::CQRS::Custom::Validators
 {
 class WriteRandomThingsCommandValidator
 {
-  public:
-    WriteRandomThingsCommandValidator(InterfaceCarRepository *carRepository,InterfacePassengerRepository *passengerRepository,InterfaceBrandRepository *brandRepository,InterfaceClientRepository *clientRepository)
-        :  m_carRepository(carRepository), m_passengerRepository(passengerRepository), m_brandRepository(brandRepository), m_clientRepository(clientRepository)
+public:
+    WriteRandomThingsCommandValidator(InterfaceCarRepository *carRepository,
+                                      InterfacePassengerRepository *passengerRepository,
+                                      InterfaceBrandRepository *brandRepository,
+                                      InterfaceClientRepository *clientRepository)
+        : m_carRepository(carRepository)
+        , m_passengerRepository(passengerRepository)
+        , m_brandRepository(brandRepository)
+        , m_clientRepository(clientRepository)
     {
     }
 
     Result<void> validate(const WriteRandomThingsDTO &dto) const
 
     {
-
-
-
-
-
         // Return that is Ok :
         return Result<void>();
     }
 
-  private:
-
+private:
     InterfaceCarRepository *m_carRepository;
 
     InterfacePassengerRepository *m_passengerRepository;
@@ -53,6 +51,5 @@ class WriteRandomThingsCommandValidator
     InterfaceBrandRepository *m_brandRepository;
 
     InterfaceClientRepository *m_clientRepository;
-
 };
 } // namespace FrontEnds::Contracts::CQRS::Custom::Validators

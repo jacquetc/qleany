@@ -24,9 +24,8 @@ class CreateClientDTO
     Q_PROPERTY(PassengerDTO client READ client WRITE setClient)
     Q_PROPERTY(QList<PassengerDTO> clientFriends READ clientFriends WRITE setClientFriends)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool uuidSet = false;
         bool creationDateSet = false;
         bool updateDateSet = false;
@@ -34,24 +33,19 @@ class CreateClientDTO
         bool clientFriendsSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
-            if (fieldName == "client"_L1)
-            {
+            if (fieldName == "client"_L1) {
                 return clientSet;
             }
-            if (fieldName == "clientFriends"_L1)
-            {
+            if (fieldName == "clientFriends"_L1) {
                 return clientFriendsSet;
             }
             return false;
@@ -59,7 +53,6 @@ class CreateClientDTO
 
         bool areDetailsSet() const
         {
-
             if (clientSet)
                 return true;
 
@@ -70,7 +63,10 @@ class CreateClientDTO
         }
     };
 
-    CreateClientDTO() : m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
+    CreateClientDTO()
+        : m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
     {
     }
 
@@ -78,23 +74,32 @@ class CreateClientDTO
     {
     }
 
-    CreateClientDTO(const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-                    const PassengerDTO &client, const QList<PassengerDTO> &clientFriends)
-        : m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_client(client),
-          m_clientFriends(clientFriends)
+    CreateClientDTO(const QUuid &uuid,
+                    const QDateTime &creationDate,
+                    const QDateTime &updateDate,
+                    const PassengerDTO &client,
+                    const QList<PassengerDTO> &clientFriends)
+        : m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
+        , m_client(client)
+        , m_clientFriends(clientFriends)
     {
     }
 
     CreateClientDTO(const CreateClientDTO &other)
-        : m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate), m_client(other.m_client), m_clientFriends(other.m_clientFriends)
+        : m_metaData(other.m_metaData)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
+        , m_client(other.m_client)
+        , m_clientFriends(other.m_clientFriends)
     {
     }
 
     CreateClientDTO &operator=(const CreateClientDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -107,8 +112,7 @@ class CreateClientDTO
 
     CreateClientDTO &operator=(const CreateClientDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -121,30 +125,24 @@ class CreateClientDTO
 
     CreateClientDTO &mergeWith(const CreateClientDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.uuidSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
-            if (other.m_metaData.clientSet)
-            {
+            if (other.m_metaData.clientSet) {
                 m_client = other.m_client;
                 m_metaData.clientSet = true;
             }
-            if (other.m_metaData.clientFriendsSet)
-            {
+            if (other.m_metaData.clientFriendsSet) {
                 m_clientFriends = other.m_clientFriends;
                 m_metaData.clientFriendsSet = true;
             }
@@ -232,7 +230,7 @@ class CreateClientDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     QUuid m_uuid;
@@ -244,10 +242,8 @@ class CreateClientDTO
 
 inline bool operator==(const CreateClientDTO &lhs, const CreateClientDTO &rhs)
 {
-
-    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate && lhs.m_client == rhs.m_client &&
-           lhs.m_clientFriends == rhs.m_clientFriends;
+    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate && lhs.m_client == rhs.m_client
+        && lhs.m_clientFriends == rhs.m_clientFriends;
 }
 
 inline uint qHash(const CreateClientDTO &dto, uint seed = 0) noexcept

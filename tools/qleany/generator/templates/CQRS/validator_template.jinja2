@@ -8,9 +8,9 @@
 {% for repository in validator.repositories %}
 #include "repository/interface_{{ repository.snake_name }}_repository.h"
 {% endfor %}
-#include <qleany/common/result.h>
+#include "result.h"
 
-using namespace Qleany;
+using namespace {{ validator.application_cpp_domain_name }};
 {% if validator.repositories|length %}
 using namespace {{ validator.application_cpp_domain_name }}::Contracts::Repository;
 {% endif %}

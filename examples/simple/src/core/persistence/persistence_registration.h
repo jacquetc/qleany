@@ -2,9 +2,9 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+#include "repository/repository_provider.h"
 #include "simple_example_persistence_export.h"
 #include <QObject>
-#include <qleany/repository/repository_provider.h>
 
 namespace Simple::Persistence
 {
@@ -15,11 +15,11 @@ class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT PersistenceRegistration : public QObject
   public:
     explicit PersistenceRegistration(QObject *parent);
 
-    Qleany::Repository::RepositoryProvider *repositoryProvider();
+    Simple::Persistence::Repository::RepositoryProvider *repositoryProvider();
 
   Q_SIGNALS:
 
   private:
-    QScopedPointer<Qleany::Repository::RepositoryProvider> m_repositoryProvider;
+    QScopedPointer<Simple::Persistence::Repository::RepositoryProvider> m_repositoryProvider;
 };
 } // namespace Simple::Persistence

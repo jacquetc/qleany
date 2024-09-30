@@ -5,11 +5,11 @@
 #include "client/client_dto.h"
 #include "client/commands/create_client_command.h"
 #include "repository/interface_client_repository.h"
+#include "result.h"
 #include "simple_example_application_client_export.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Client;
 using namespace Simple::Contracts::Repository;

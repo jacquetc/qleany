@@ -8,7 +8,7 @@
 #include "repository/interface_client_repository.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Client;
 using namespace Simple::Contracts::Repository;
 

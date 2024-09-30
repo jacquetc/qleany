@@ -84,7 +84,10 @@ int main(int argc, char *argv[])
         KAboutLicense::GPL,
         // Copyright Statement.
         i18n("(c) %{CURRENT_YEAR}"));
-    aboutData.addAuthor(i18nc("@info:credit", "%{AUTHOR}"), i18nc("@info:credit", "Maintainer"), u"%{EMAIL}"_s, u"https://yourwebsite.com"_s);
+    aboutData.addAuthor(i18nc("@info:credit", "%{AUTHOR}"),
+                        i18nc("@info:credit", "Maintainer"),
+                        u"%{EMAIL}"_s,
+                        u"https://yourwebsite.com"_s);
     aboutData.setTranslator(i18nc("NAME OF TRANSLATORS", "Your names"), i18nc("EMAIL OF TRANSLATORS", "Your emails"));
     KAboutData::setApplicationData(aboutData);
     QGuiApplication::setWindowIcon(QIcon::fromTheme(u"org.kde.frontendsexample"_s));
@@ -99,7 +102,7 @@ int main(int argc, char *argv[])
 #ifdef BUILD_WITH_MOCKS
     engine.addImportPath(QApplication::applicationDirPath() + QStringLiteral("/mock_imports"));
 #endif
-    engine.loadFromModule("org.kde.frontendsexample", u"Main.qml"_s);
+    engine.loadFromModule("org.kde.frontendsexample", u"Main.qml");
 
     if (engine.rootObjects().isEmpty()) {
         return -1;

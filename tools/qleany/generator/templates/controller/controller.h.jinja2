@@ -4,7 +4,7 @@
 
 #include "{{ export_header_file }}"
 #include "event_dispatcher.h"
-#include <qleany/contracts/repository/interface_repository_provider.h>
+#include "repository/interface_repository_provider.h"
 {% if feature.crud.enabled -%}
 #include "{{ feature_name_snake }}/{{ entity_name_snake }}_dto.h"
     {% if feature.crud.get_with_details -%}
@@ -25,14 +25,14 @@
 {% if query.dto_in_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_in_snake }}_dto.h"{% endif %}
 {% if query.dto_out_enabled %}#include "{{ feature_name_snake }}/{{ query.dto_out_snake }}_dto.h"{% endif %}
 {% endfor -%}
-#include <qleany/tools/undo_redo/threaded_undo_redo_system.h>
+#include "undo_redo/threaded_undo_redo_system.h"
 #include <QCoroTask>
 #include <QObject>
 #include <QSharedPointer>
 #include <QPointer>
 
-using namespace Qleany::Contracts::Repository;
-using namespace Qleany::Tools::UndoRedo;
+using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
+using namespace {{ application_cpp_domain_name }}::Controller::UndoRedo;
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_name_pascal }};
 
 namespace {{ application_cpp_domain_name }}::Controller::{{ feature_name_pascal }}

@@ -6,10 +6,8 @@
 #include <QUuid>
 
 #include "entities.h"
-#include <qleany/entities/entity_base.h>
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_base.h"
+#include "entity_schema.h"
 
 namespace Simple::Entities
 {
@@ -32,8 +30,11 @@ class Entity : public EntityBase
         }
         MetaData(Entity *entity, const MetaData &other) : m_entity(entity)
         {
+
+            Q_UNUSED(other);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
             if (fieldName == "uuid"_L1)
@@ -48,9 +49,11 @@ class Entity : public EntityBase
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->EntityBase::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
 
@@ -66,6 +69,7 @@ class Entity : public EntityBase
             {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->EntityBase::metaData().getLoaded(fieldName);
         }
 
@@ -73,7 +77,7 @@ class Entity : public EntityBase
         Entity *m_entity = nullptr;
     };
 
-    Entity() : EntityBase(), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_metaData(this)
+    Entity() : EntityBase(), m_metaData(this), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime())
     {
     }
 
@@ -82,7 +86,7 @@ class Entity : public EntityBase
     }
 
     Entity(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate)
-        : EntityBase(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_metaData(this)
+        : EntityBase(id), m_metaData(this), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate)
     {
     }
 
@@ -155,7 +159,7 @@ class Entity : public EntityBase
         m_updateDate = updateDate;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -174,7 +178,7 @@ class Entity : public EntityBase
 inline bool operator==(const Entity &lhs, const Entity &rhs)
 {
 
-    return static_cast<const EntityBase &>(lhs) == static_cast<const EntityBase &>(rhs) &&
+    return static_cast<const Simple::Entities::EntityBase &>(lhs) == static_cast<const Simple::Entities::EntityBase &>(rhs) &&
 
            lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate;
 }
@@ -182,7 +186,7 @@ inline bool operator==(const Entity &lhs, const Entity &rhs)
 inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const EntityBase &>(entity), seed);
+    hash ^= qHash(static_cast<const Simple::Entities::EntityBase &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_uuid, seed);
@@ -193,7 +197,7 @@ inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Entity entity
-inline Qleany::Entities::EntitySchema Entity::schema = {Simple::Entities::Entities::EntityEnum::Entity,
+inline Simple::Entities::EntitySchema Entity::schema = {Simple::Entities::Entities::EntityEnum::Entity,
                                                         "Entity"_L1,
 
                                                         // relationships:

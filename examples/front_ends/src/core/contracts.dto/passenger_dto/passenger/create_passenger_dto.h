@@ -22,9 +22,8 @@ class CreatePassengerDTO
     Q_PROPERTY(int carId READ carId WRITE setCarId)
     Q_PROPERTY(int position READ position WRITE setPosition)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool uuidSet = false;
         bool creationDateSet = false;
         bool updateDateSet = false;
@@ -33,28 +32,22 @@ class CreatePassengerDTO
         bool positionSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
-            if (fieldName == "name"_L1)
-            {
+            if (fieldName == "name"_L1) {
                 return nameSet;
             }
-            if (fieldName == "carId"_L1)
-            {
+            if (fieldName == "carId"_L1) {
                 return carIdSet;
             }
-            if (fieldName == "position"_L1)
-            {
+            if (fieldName == "position"_L1) {
                 return positionSet;
             }
             return false;
@@ -62,14 +55,17 @@ class CreatePassengerDTO
 
         bool areDetailsSet() const
         {
-
             return false;
         }
     };
 
     CreatePassengerDTO()
-        : m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_name(QString()), m_carId(0),
-          m_position(0)
+        : m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
+        , m_name(QString())
+        , m_carId(0)
+        , m_position(0)
     {
     }
 
@@ -77,23 +73,30 @@ class CreatePassengerDTO
     {
     }
 
-    CreatePassengerDTO(const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-                       const QString &name, int carId, int position)
-        : m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_name(name), m_carId(carId),
-          m_position(position)
+    CreatePassengerDTO(const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate, const QString &name, int carId, int position)
+        : m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
+        , m_name(name)
+        , m_carId(carId)
+        , m_position(position)
     {
     }
 
     CreatePassengerDTO(const CreatePassengerDTO &other)
-        : m_metaData(other.m_metaData), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate), m_name(other.m_name), m_carId(other.m_carId), m_position(other.m_position)
+        : m_metaData(other.m_metaData)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
+        , m_name(other.m_name)
+        , m_carId(other.m_carId)
+        , m_position(other.m_position)
     {
     }
 
     CreatePassengerDTO &operator=(const CreatePassengerDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -107,8 +110,7 @@ class CreatePassengerDTO
 
     CreatePassengerDTO &operator=(const CreatePassengerDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_uuid = other.m_uuid;
             m_creationDate = other.m_creationDate;
@@ -122,35 +124,28 @@ class CreatePassengerDTO
 
     CreatePassengerDTO &mergeWith(const CreatePassengerDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.uuidSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
-            if (other.m_metaData.nameSet)
-            {
+            if (other.m_metaData.nameSet) {
                 m_name = other.m_name;
                 m_metaData.nameSet = true;
             }
-            if (other.m_metaData.carIdSet)
-            {
+            if (other.m_metaData.carIdSet) {
                 m_carId = other.m_carId;
                 m_metaData.carIdSet = true;
             }
-            if (other.m_metaData.positionSet)
-            {
+            if (other.m_metaData.positionSet) {
                 m_position = other.m_position;
                 m_metaData.positionSet = true;
             }
@@ -251,7 +246,7 @@ class CreatePassengerDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     QUuid m_uuid;
@@ -264,10 +259,8 @@ class CreatePassengerDTO
 
 inline bool operator==(const CreatePassengerDTO &lhs, const CreatePassengerDTO &rhs)
 {
-
-    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate && lhs.m_name == rhs.m_name && lhs.m_carId == rhs.m_carId &&
-           lhs.m_position == rhs.m_position;
+    return lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate && lhs.m_name == rhs.m_name
+        && lhs.m_carId == rhs.m_carId && lhs.m_position == rhs.m_position;
 }
 
 inline uint qHash(const CreatePassengerDTO &dto, uint seed = 0) noexcept

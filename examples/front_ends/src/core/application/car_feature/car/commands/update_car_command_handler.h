@@ -7,10 +7,10 @@
 #include "front_ends_example_application_car_export.h"
 
 #include "repository/interface_car_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Car;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Car::Commands;
@@ -21,16 +21,16 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CAR_EXPORT UpdateCarCommandHandler : public
 
 {
     Q_OBJECT
-  public:
+public:
     UpdateCarCommandHandler(InterfaceCarRepository *repository);
     Result<CarDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateCarCommand &request);
     Result<CarDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void carUpdated(FrontEnds::Contracts::DTO::Car::CarDTO carDto);
     void carDetailsUpdated(int id);
 
-  private:
+private:
     InterfaceCarRepository *m_repository;
     Result<CarDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateCarCommand &request);
     Result<CarDTO> restoreImpl();

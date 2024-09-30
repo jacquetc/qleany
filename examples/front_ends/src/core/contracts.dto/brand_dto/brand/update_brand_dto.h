@@ -21,9 +21,8 @@ class UpdateBrandDTO
     Q_PROPERTY(QDateTime updateDate READ updateDate WRITE setUpdateDate)
     Q_PROPERTY(QString name READ name WRITE setName)
 
-  public:
-    struct MetaData
-    {
+public:
+    struct MetaData {
         bool idSet = false;
         bool uuidSet = false;
         bool creationDateSet = false;
@@ -31,24 +30,19 @@ class UpdateBrandDTO
         bool nameSet = false;
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id"_L1)
-            {
+            if (fieldName == "id"_L1) {
                 return idSet;
             }
-            if (fieldName == "uuid"_L1)
-            {
+            if (fieldName == "uuid"_L1) {
                 return uuidSet;
             }
-            if (fieldName == "creationDate"_L1)
-            {
+            if (fieldName == "creationDate"_L1) {
                 return creationDateSet;
             }
-            if (fieldName == "updateDate"_L1)
-            {
+            if (fieldName == "updateDate"_L1) {
                 return updateDateSet;
             }
-            if (fieldName == "name"_L1)
-            {
+            if (fieldName == "name"_L1) {
                 return nameSet;
             }
             return false;
@@ -56,13 +50,16 @@ class UpdateBrandDTO
 
         bool areDetailsSet() const
         {
-
             return false;
         }
     };
 
     UpdateBrandDTO()
-        : m_id(0), m_uuid(QUuid()), m_creationDate(QDateTime()), m_updateDate(QDateTime()), m_name(QString())
+        : m_id(0)
+        , m_uuid(QUuid())
+        , m_creationDate(QDateTime())
+        , m_updateDate(QDateTime())
+        , m_name(QString())
     {
     }
 
@@ -70,15 +67,22 @@ class UpdateBrandDTO
     {
     }
 
-    UpdateBrandDTO(int id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-                   const QString &name)
-        : m_id(id), m_uuid(uuid), m_creationDate(creationDate), m_updateDate(updateDate), m_name(name)
+    UpdateBrandDTO(int id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate, const QString &name)
+        : m_id(id)
+        , m_uuid(uuid)
+        , m_creationDate(creationDate)
+        , m_updateDate(updateDate)
+        , m_name(name)
     {
     }
 
     UpdateBrandDTO(const UpdateBrandDTO &other)
-        : m_metaData(other.m_metaData), m_id(other.m_id), m_uuid(other.m_uuid), m_creationDate(other.m_creationDate),
-          m_updateDate(other.m_updateDate), m_name(other.m_name)
+        : m_metaData(other.m_metaData)
+        , m_id(other.m_id)
+        , m_uuid(other.m_uuid)
+        , m_creationDate(other.m_creationDate)
+        , m_updateDate(other.m_updateDate)
+        , m_name(other.m_name)
     {
     }
 
@@ -99,8 +103,7 @@ class UpdateBrandDTO
 
     UpdateBrandDTO &operator=(const UpdateBrandDTO &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -113,8 +116,7 @@ class UpdateBrandDTO
 
     UpdateBrandDTO &operator=(const UpdateBrandDTO &&other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             m_metaData = other.m_metaData;
             m_id = other.m_id;
             m_uuid = other.m_uuid;
@@ -127,30 +129,24 @@ class UpdateBrandDTO
 
     UpdateBrandDTO &mergeWith(const UpdateBrandDTO &other)
     {
-        if (this != &other)
-        {
-            if (other.m_metaData.idSet)
-            {
+        if (this != &other) {
+            if (other.m_metaData.idSet) {
                 m_id = other.m_id;
                 m_metaData.idSet = true;
             }
-            if (other.m_metaData.uuidSet)
-            {
+            if (other.m_metaData.uuidSet) {
                 m_uuid = other.m_uuid;
                 m_metaData.uuidSet = true;
             }
-            if (other.m_metaData.creationDateSet)
-            {
+            if (other.m_metaData.creationDateSet) {
                 m_creationDate = other.m_creationDate;
                 m_metaData.creationDateSet = true;
             }
-            if (other.m_metaData.updateDateSet)
-            {
+            if (other.m_metaData.updateDateSet) {
                 m_updateDate = other.m_updateDate;
                 m_metaData.updateDateSet = true;
             }
-            if (other.m_metaData.nameSet)
-            {
+            if (other.m_metaData.nameSet) {
                 m_name = other.m_name;
                 m_metaData.nameSet = true;
             }
@@ -238,7 +234,7 @@ class UpdateBrandDTO
         return m_metaData;
     }
 
-  private:
+private:
     MetaData m_metaData;
 
     int m_id;
@@ -250,9 +246,8 @@ class UpdateBrandDTO
 
 inline bool operator==(const UpdateBrandDTO &lhs, const UpdateBrandDTO &rhs)
 {
-
-    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate &&
-           lhs.m_updateDate == rhs.m_updateDate && lhs.m_name == rhs.m_name;
+    return lhs.m_id == rhs.m_id && lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate
+        && lhs.m_name == rhs.m_name;
 }
 
 inline uint qHash(const UpdateBrandDTO &dto, uint seed = 0) noexcept

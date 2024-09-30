@@ -5,11 +5,11 @@
 #include "brand/brand_dto.h"
 #include "brand/commands/create_brand_command.h"
 #include "repository/interface_brand_repository.h"
+#include "result.h"
 #include "simple_example_application_brand_export.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Brand;
 using namespace Simple::Contracts::Repository;

@@ -28,8 +28,10 @@ add_test(${TEST_NAME} ${TEST_NAME})
 target_link_libraries(
   ${TEST_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Core
                        Qt${QT_VERSION_MAJOR}::Sql)
-
-target_link_libraries(${TEST_NAME} PUBLIC qleany)
+  target_link_libraries(${TEST_NAME} PRIVATE simple-example-common)
+  target_link_libraries(${TEST_NAME} PRIVATE simple-example-persistence)
+  target_link_libraries(${TEST_NAME} PRIVATE simple-example-contracts)
+  target_link_libraries(${TEST_NAME} PRIVATE simple-example-entities)
 
 # -----------------------------------------------------------------------------------
 
@@ -64,8 +66,10 @@ add_test(${TEST_NAME} ${TEST_NAME})
 target_link_libraries(
   ${TEST_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Core
                        Qt${QT_VERSION_MAJOR}::Sql)
-
-target_link_libraries(${TEST_NAME} PUBLIC qleany)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-common)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-persistence)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-contracts)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-entities)
 
 # -----------------------------------------------------------------------------------
 
@@ -92,5 +96,7 @@ add_test(${TEST_NAME} ${TEST_NAME})
 target_link_libraries(
   ${TEST_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Core
                        Qt${QT_VERSION_MAJOR}::Sql)
-
-target_link_libraries(${TEST_NAME} PUBLIC qleany)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-common)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-persistence)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-contracts)
+target_link_libraries(${TEST_NAME} PRIVATE simple-example-entities)

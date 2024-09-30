@@ -14,9 +14,9 @@
 
 #include "repository/interface_client_repository.h"
 
-#include <qleany/common/result.h>
+#include "result.h"
 
-using namespace Qleany;
+using namespace Simple;
 
 using namespace Simple::Contracts::Repository;
 

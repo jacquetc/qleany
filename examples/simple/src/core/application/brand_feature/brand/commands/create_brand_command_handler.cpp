@@ -2,11 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_brand_command_handler.h"
 #include "brand/validators/create_brand_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
 #include "car.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Entities;
 using namespace Simple::Contracts::DTO::Brand;
 using namespace Simple::Contracts::Repository;
@@ -79,7 +79,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
         // Map the create Brand command to a domain Brand object and
         // generate a UUID
-        brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, Simple::Entities::Brand>(createDTO);
+        brand = Simple::Tools::AutoMapper::map<CreateBrandDTO, Simple::Entities::Brand>(createDTO);
 
         // allow for forcing the uuid
         if (brand.uuid().isNull())
@@ -145,7 +145,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     m_newEntity = brandResult;
 
-    auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brandResult.value());
+    auto brandDTO = Simple::Tools::AutoMapper::map<Simple::Entities::Brand, BrandDTO>(brandResult.value());
     Q_EMIT brandCreated(brandDTO);
 
     // send an insertion signal
@@ -179,8 +179,6 @@ bool CreateBrandCommandHandler::s_mappingRegistered = false;
 
 void CreateBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO,
-                                                           Simple::Entities::Brand>();
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO, Simple::Entities::Brand>();
 }

@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "repository/interface_repository_provider.h"
 #include "simple_example_controller_export.h"
 #include <QObject>
-#include <qleany/contracts/repository/interface_repository_provider.h>
 
 namespace Simple::Controller
 {
@@ -15,7 +15,7 @@ class SIMPLE_EXAMPLE_CONTROLLER_EXPORT ControllerRegistration : public QObject
     Q_OBJECT
   public:
     explicit ControllerRegistration(QObject *parent,
-                                    Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
+                                    Simple::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
     ~ControllerRegistration();
 
   private:

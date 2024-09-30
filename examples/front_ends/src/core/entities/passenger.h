@@ -6,9 +6,7 @@
 
 #include "entities.h"
 #include "entity.h"
-#include <qleany/entities/entity_schema.h>
-
-using namespace Qleany::Entities;
+#include "entity_schema.h"
 
 namespace FrontEnds::Entities
 {
@@ -19,40 +17,46 @@ class Passenger : public Entity
 
     Q_PROPERTY(QString name READ name WRITE setName)
 
-  public:
-    struct MetaData
-    {
-        MetaData(Passenger *entity) : m_entity(entity)
+public:
+    struct MetaData {
+        MetaData(Passenger *entity)
+            : m_entity(entity)
         {
         }
-        MetaData(Passenger *entity, const MetaData &other) : m_entity(entity)
+        MetaData(Passenger *entity, const MetaData &other)
+            : m_entity(entity)
         {
+            Q_UNUSED(other);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "name"_L1)
-            {
+            if (fieldName == "name"_L1) {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getSet(fieldName);
         }
 
+        // Getters for the fields' metadata. Normal fields are always set, but lazy-loaded fields may not be
         bool getLoaded(const QString &fieldName) const
         {
-
-            if (fieldName == "name"_L1)
-            {
+            if (fieldName == "name"_L1) {
                 return true;
             }
+            // If the field is not found, we delegate to the parent class
             return m_entity->Entity::metaData().getLoaded(fieldName);
         }
 
-      private:
+    private:
         Passenger *m_entity = nullptr;
     };
 
-    Passenger() : Entity(), m_name(QString()), m_metaData(this)
+    Passenger()
+        : Entity()
+        , m_metaData(this)
+        , m_name(QString())
     {
     }
 
@@ -60,13 +64,17 @@ class Passenger : public Entity
     {
     }
 
-    Passenger(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate,
-              const QString &name)
-        : Entity(id, uuid, creationDate, updateDate), m_name(name), m_metaData(this)
+    Passenger(const int &id, const QUuid &uuid, const QDateTime &creationDate, const QDateTime &updateDate, const QString &name)
+        : Entity(id, uuid, creationDate, updateDate)
+        , m_metaData(this)
+        , m_name(name)
     {
     }
 
-    Passenger(const Passenger &other) : Entity(other), m_metaData(other.m_metaData), m_name(other.m_name)
+    Passenger(const Passenger &other)
+        : Entity(other)
+        , m_metaData(other.m_metaData)
+        , m_name(other.m_name)
     {
         m_metaData = MetaData(this, other.metaData());
     }
@@ -78,8 +86,7 @@ class Passenger : public Entity
 
     Passenger &operator=(const Passenger &other)
     {
-        if (this != &other)
-        {
+        if (this != &other) {
             Entity::operator=(other);
             m_name = other.m_name;
 
@@ -96,7 +103,6 @@ class Passenger : public Entity
 
     QString name() const
     {
-
         return m_name;
     }
 
@@ -105,32 +111,31 @@ class Passenger : public Entity
         m_name = name;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static FrontEnds::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
         return m_metaData;
     }
 
-  protected:
+protected:
     MetaData m_metaData;
 
-  private:
+private:
     QString m_name;
 };
 
 inline bool operator==(const Passenger &lhs, const Passenger &rhs)
 {
+    return static_cast<const FrontEnds::Entities::Entity &>(lhs) == static_cast<const FrontEnds::Entities::Entity &>(rhs) &&
 
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
-
-           lhs.m_name == rhs.m_name;
+        lhs.m_name == rhs.m_name;
 }
 
 inline uint qHash(const Passenger &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const FrontEnds::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_name, seed);
@@ -139,28 +144,44 @@ inline uint qHash(const Passenger &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Passenger entity
-inline Qleany::Entities::EntitySchema Passenger::schema = {
-    FrontEnds::Entities::Entities::EntityEnum::Passenger,
-    "Passenger"_L1,
+inline FrontEnds::Entities::EntitySchema Passenger::schema = {FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                              "Passenger"_L1,
 
-    // relationships:
-    {{FrontEnds::Entities::Entities::EntityEnum::Car, "Car"_L1, FrontEnds::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "passengers"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyOrdered, RelationshipDirection::Backward},
-     {FrontEnds::Entities::Entities::EntityEnum::Client, "Client"_L1,
-      FrontEnds::Entities::Entities::EntityEnum::Passenger, "Passenger"_L1, "client"_L1, RelationshipType::OneToOne,
-      RelationshipStrength::Weak, RelationshipCardinality::One, RelationshipDirection::Backward},
-     {FrontEnds::Entities::Entities::EntityEnum::Client, "Client"_L1,
-      FrontEnds::Entities::Entities::EntityEnum::Passenger, "Passenger"_L1, "clientFriends"_L1,
-      RelationshipType::OneToMany, RelationshipStrength::Strong, RelationshipCardinality::ManyUnordered,
-      RelationshipDirection::Backward}},
+                                                              // relationships:
+                                                              {{FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                                "Car"_L1,
+                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                "Passenger"_L1,
+                                                                "passengers"_L1,
+                                                                RelationshipType::OneToMany,
+                                                                RelationshipStrength::Strong,
+                                                                RelationshipCardinality::ManyOrdered,
+                                                                RelationshipDirection::Backward},
+                                                               {FrontEnds::Entities::Entities::EntityEnum::Client,
+                                                                "Client"_L1,
+                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                "Passenger"_L1,
+                                                                "client"_L1,
+                                                                RelationshipType::OneToOne,
+                                                                RelationshipStrength::Weak,
+                                                                RelationshipCardinality::One,
+                                                                RelationshipDirection::Backward},
+                                                               {FrontEnds::Entities::Entities::EntityEnum::Client,
+                                                                "Client"_L1,
+                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                "Passenger"_L1,
+                                                                "clientFriends"_L1,
+                                                                RelationshipType::OneToMany,
+                                                                RelationshipStrength::Strong,
+                                                                RelationshipCardinality::ManyUnordered,
+                                                                RelationshipDirection::Backward}},
 
-    // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"name"_L1, FieldType::String, false, false}}};
+                                                              // fields:
+                                                              {{"id"_L1, FieldType::Integer, true, false},
+                                                               {"uuid"_L1, FieldType::Uuid, false, false},
+                                                               {"creationDate"_L1, FieldType::DateTime, false, false},
+                                                               {"updateDate"_L1, FieldType::DateTime, false, false},
+                                                               {"name"_L1, FieldType::String, false, false}}};
 
 } // namespace FrontEnds::Entities
 Q_DECLARE_METATYPE(FrontEnds::Entities::Passenger)

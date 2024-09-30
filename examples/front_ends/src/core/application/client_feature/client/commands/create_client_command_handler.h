@@ -6,10 +6,10 @@
 #include "client/commands/create_client_command.h"
 #include "front_ends_example_application_client_export.h"
 #include "repository/interface_client_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;

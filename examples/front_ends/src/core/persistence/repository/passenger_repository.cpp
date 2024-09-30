@@ -6,13 +6,12 @@
 #include <QObject>
 #endif
 
-using namespace Qleany;
-using namespace Qleany::Contracts::Repository;
+using namespace FrontEnds;
 using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
 PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Passenger> *passengerDatabase)
-    : Qleany::Repository::GenericRepository<FrontEnds::Entities::Passenger>(passengerDatabase)
+    : FrontEnds::Persistence::Repository::GenericRepository<FrontEnds::Entities::Passenger>(passengerDatabase)
 {
     m_signalHolder.reset(new SignalHolder(nullptr));
 }

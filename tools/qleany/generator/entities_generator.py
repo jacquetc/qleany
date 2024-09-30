@@ -8,6 +8,46 @@ import uncrustify
 import clang_format_runner as clang_format_runner
 from pathlib import Path
 
+
+def _generate_entity_base_and_schema(
+    root_path: str,
+    path: str,
+    application_cpp_domain_name: str,
+    export: str,
+    export_header_file: str,
+    files_to_be_generated: dict[str, bool],
+):
+    template_env = Environment(loader=FileSystemLoader("templates/entities"))
+
+    files = ["entity_base.cpp", "entity_base.h", "entity_schema.h"]
+
+    for file in files:
+        # Load the template
+        template = template_env.get_template(file + ".jinja2")
+
+        # generate the real file if in the files_to_be_generated dict the value is True
+        if not files_to_be_generated.get(os.path.join(path, file), False):
+            continue
+
+        output_file = os.path.join(root_path, path, file)
+
+        # Render the template
+        output = template.render(
+            application_cpp_domain_name=application_cpp_domain_name,
+            export_header_file=export_header_file,
+            export=export,
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
+
+
 def generate_entities_enum_file(
     root_path: str,
     path: str,
@@ -232,9 +272,9 @@ def generate_entity_files(
                             "right_entity_name": other_entity_name,
                             "field_name": field["name"],
                             "type": relationship_type,
-                            "strength": "Strong"
-                            if field.get("strong", True)
-                            else "Weak",
+                            "strength": (
+                                "Strong" if field.get("strong", True) else "Weak"
+                            ),
                             "cardinality": cardinality,
                             "direction": direction,
                         }
@@ -304,7 +344,7 @@ def generate_entity_files(
 
         parent_header = f'"{stringcase.snakecase(parent)}.h"'
         if parent == "EntityBase":
-            parent_header = '<qleany/entities/entity_base.h>'
+            parent_header = "\"entity_base.h\""
 
         # If the parent is a custom entity defined in the manifest, include its fields as well. Also, it will add the fields parent of the parent recursively, butonly if the parent is defined in the
         # manifest. If the parent is not defined in the manifest, it will only add the fields of the current entity. But it adds the field "id" of type "int" from EntityBase.
@@ -480,6 +520,15 @@ def generate_entity_files(
         files_to_be_generated,
     )
 
+    _generate_entity_base_and_schema(
+        root_path,
+        path,
+        application_cpp_domain_name,
+        export,
+        export_header_file,
+        files_to_be_generated,
+    )
+
 
 def get_files_to_be_generated(
     manifest_file: str, files_to_be_generated: dict[str, bool] = None
@@ -504,13 +553,18 @@ def get_files_to_be_generated(
             os.path.join(folder_path, f"{stringcase.snakecase(entity_name)}.h")
         )
 
-    # add list cmake file:
-    list_file = os.path.join(folder_path, "entities.cmake")
-    files.append(list_file)
-
-    files.append(os.path.join(folder_path, "entities.h"))
-    files.append(os.path.join(folder_path, "entities_registration.h"))
-    files.append(os.path.join(folder_path, "CMakeLists.txt"))
+    # add files:
+    file_names = [
+        "entities.cmake",
+        "entities.h",
+        "entities_registration.h",
+        "CMakeLists.txt",
+        "entity_base.cpp",
+        "entity_base.h",
+        "entity_schema.h",
+    ]
+    for file_name in file_names:
+        files.append(os.path.join(folder_path, file_name))
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:

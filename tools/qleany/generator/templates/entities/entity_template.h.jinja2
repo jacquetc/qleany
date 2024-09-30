@@ -7,9 +7,8 @@
 {% endfor %}
 #include {{ parent_header }}
 #include "entities.h"
-#include <qleany/entities/entity_schema.h>
+#include "entity_schema.h"
 
-using namespace Qleany::Entities;
 
 namespace {{ application_cpp_domain_name }}::Entities
 {
@@ -161,7 +160,7 @@ class {{ name }} : public {{ parent }}
     {% endif %}
 {% endfor %}
 
-  static Qleany::Entities::EntitySchema schema;
+  static {{ application_cpp_domain_name }}::Entities::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -184,7 +183,7 @@ inline bool operator==(const {{ name }} &lhs, const {{ name }} &rhs)
 {
 
     return 
-            static_cast<const {{ parent }}&>(lhs) == static_cast<const {{ parent }}&>(rhs) &&
+            static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(lhs) == static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(rhs) &&
     
             {% for field in fields -%}
             lhs.m_{{ field.name }} == rhs.m_{{ field.name }} {% if not loop.last %} && {% endif %}
@@ -195,7 +194,7 @@ inline bool operator==(const {{ name }} &lhs, const {{ name }} &rhs)
 inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 {        // Seed the hash with the parent class's hash
         uint hash = 0;
-        hash ^= qHash(static_cast<const {{ parent }}&>(entity), seed);
+        hash ^= qHash(static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(entity), seed);
 
         // Combine with this class's properties
         {% for field in fields -%}
@@ -206,7 +205,7 @@ inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 }
 
 /// Schema for {{ name }} entity
-inline Qleany::Entities::EntitySchema {{ name }}::schema = {
+inline {{ application_cpp_domain_name }}::Entities::EntitySchema {{ name }}::schema = {
     {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ name }},
     "{{ name }}"_L1,
 

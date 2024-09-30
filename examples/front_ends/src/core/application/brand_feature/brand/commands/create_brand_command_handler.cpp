@@ -2,11 +2,11 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "create_brand_command_handler.h"
 #include "brand/validators/create_brand_command_validator.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
 #include "car.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Entities;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;
@@ -70,7 +70,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
         // Map the create Brand command to a domain Brand object and
         // generate a UUID
-        brand = Qleany::Tools::AutoMapper::AutoMapper::map<CreateBrandDTO, FrontEnds::Entities::Brand>(createDTO);
+        brand = FrontEnds::Tools::AutoMapper::map<CreateBrandDTO, FrontEnds::Entities::Brand>(createDTO);
 
         // allow for forcing the uuid
         if (brand.uuid().isNull()) {
@@ -128,7 +128,7 @@ Result<BrandDTO> CreateBrandCommandHandler::handleImpl(QPromise<Result<void>> &p
 
     m_newEntity = brandResult;
 
-    auto brandDTO = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
+    auto brandDTO = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brandResult.value());
     Q_EMIT brandCreated(brandDTO);
 
     // send an insertion signal
@@ -162,6 +162,6 @@ bool CreateBrandCommandHandler::s_mappingRegistered = false;
 
 void CreateBrandCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO, FrontEnds::Entities::Brand>();
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<Contracts::DTO::Brand::CreateBrandDTO, FrontEnds::Entities::Brand>();
 }

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "error.h"
 #include "front_ends_example_controller_export.h"
+#include "undo_redo/undo_redo_command.h"
 #include <QObject>
-#include <qleany/common/error.h>
-#include <qleany/tools/undo_redo/undo_redo_command.h>
 
 namespace FrontEnds::Controller
 {
@@ -17,30 +17,30 @@ public:
     {
     }
 
-    void bindToProgressSignals(Qleany::Tools::UndoRedo::UndoRedoCommand *undoRedoCommand)
+    void bindToProgressSignals(FrontEnds::Controller::UndoRedo::UndoRedoCommand *undoRedoCommand)
     {
         QObject::connect(undoRedoCommand,
-                         &Qleany::Tools::UndoRedo::UndoRedoCommand::progressStarted,
+                         &FrontEnds::Controller::UndoRedo::UndoRedoCommand::progressStarted,
                          this,
                          &ProgressSignals::progressStarted,
                          Qt::QueuedConnection);
         QObject::connect(undoRedoCommand,
-                         &Qleany::Tools::UndoRedo::UndoRedoCommand::progressFinished,
+                         &FrontEnds::Controller::UndoRedo::UndoRedoCommand::progressFinished,
                          this,
                          &ProgressSignals::progressFinished,
                          Qt::QueuedConnection);
         QObject::connect(undoRedoCommand,
-                         &Qleany::Tools::UndoRedo::UndoRedoCommand::progressRangeChanged,
+                         &FrontEnds::Controller::UndoRedo::UndoRedoCommand::progressRangeChanged,
                          this,
                          &ProgressSignals::progressRangeChanged,
                          Qt::QueuedConnection);
         QObject::connect(undoRedoCommand,
-                         &Qleany::Tools::UndoRedo::UndoRedoCommand::progressTextChanged,
+                         &FrontEnds::Controller::UndoRedo::UndoRedoCommand::progressTextChanged,
                          this,
                          &ProgressSignals::progressTextChanged,
                          Qt::QueuedConnection);
         QObject::connect(undoRedoCommand,
-                         &Qleany::Tools::UndoRedo::UndoRedoCommand::progressValueChanged,
+                         &FrontEnds::Controller::UndoRedo::UndoRedoCommand::progressValueChanged,
                          this,
                          &ProgressSignals::progressValueChanged,
                          Qt::QueuedConnection);

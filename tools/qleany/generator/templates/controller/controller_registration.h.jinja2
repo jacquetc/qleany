@@ -4,7 +4,7 @@
 #pragma once
 
 #include "{{ export_header_file }}"
-#include <qleany/contracts/repository/interface_repository_provider.h>
+#include "repository/interface_repository_provider.h"
 #include <QObject>
 
 namespace {{ application_cpp_domain_name }}::Controller
@@ -15,7 +15,7 @@ class {{ export }} ControllerRegistration : public QObject
     Q_OBJECT
   public:
     explicit ControllerRegistration(QObject *parent,
-                                    Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
+                                    {{ application_cpp_domain_name }}::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
     ~ControllerRegistration();
 
   private:

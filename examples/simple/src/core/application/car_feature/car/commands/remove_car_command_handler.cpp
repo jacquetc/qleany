@@ -3,9 +3,9 @@
 #include "remove_car_command_handler.h"
 #include "car/validators/remove_car_command_validator.h"
 #include "repository/interface_car_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Car;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Car::Commands;
@@ -94,6 +94,5 @@ bool RemoveCarCommandHandler::s_mappingRegistered = false;
 
 void RemoveCarCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true,
-                                                                                                               true);
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Car, Contracts::DTO::Car::CarDTO>(true, true);
 }

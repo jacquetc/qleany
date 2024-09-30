@@ -7,10 +7,10 @@
 #include "front_ends_example_application_brand_export.h"
 
 #include "repository/interface_brand_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Brand;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Brand::Commands;
@@ -21,16 +21,16 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_BRAND_EXPORT UpdateBrandCommandHandler : pu
 
 {
     Q_OBJECT
-  public:
+public:
     UpdateBrandCommandHandler(InterfaceBrandRepository *repository);
     Result<BrandDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request);
     Result<BrandDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void brandUpdated(FrontEnds::Contracts::DTO::Brand::BrandDTO brandDto);
     void brandDetailsUpdated(int id);
 
-  private:
+private:
     InterfaceBrandRepository *m_repository;
     Result<BrandDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateBrandCommand &request);
     Result<BrandDTO> restoreImpl();

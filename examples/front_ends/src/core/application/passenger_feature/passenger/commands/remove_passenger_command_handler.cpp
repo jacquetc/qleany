@@ -3,9 +3,9 @@
 #include "remove_passenger_command_handler.h"
 #include "passenger/validators/remove_passenger_command_validator.h"
 #include "repository/interface_passenger_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Passenger;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Passenger::Commands;
@@ -87,5 +87,5 @@ bool RemovePassengerCommandHandler::s_mappingRegistered = false;
 
 void RemovePassengerCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(true, true);
 }

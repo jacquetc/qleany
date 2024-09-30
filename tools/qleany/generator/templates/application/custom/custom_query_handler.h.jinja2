@@ -7,10 +7,10 @@
 #include "{{ feature_snake_name }}/queries/{{ query.snake_name }}_query.h"
 {% for repository in query.repositories %}
 #include "repository/interface_{{ repository.snake_name}}_repository.h"{% endfor %}
-#include <qleany/common/result.h>
+#include "result.h"
 #include <QPromise>
 
-using namespace Qleany;
+using namespace {{ application_cpp_domain_name }};
 using namespace {{ application_cpp_domain_name }}::Contracts::DTO::{{ feature_pascal_name }};
 {% if query.repositories %}
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;

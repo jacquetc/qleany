@@ -14,8 +14,9 @@ class ForeignCarController : public QObject
     QML_SINGLETON
     QML_NAMED_ELEMENT(CarController)
 
-  public:
-    ForeignCarController(QObject *parent = nullptr) : QObject(parent)
+public:
+    ForeignCarController(QObject *parent = nullptr)
+        : QObject(parent)
     {
         s_controllerInstance = CarController::instance();
     }
@@ -60,6 +61,6 @@ class ForeignCarController : public QObject
         return s_controllerInstance->remove(id);
     }
 
-  private:
+private:
     CarController *s_controllerInstance = nullptr;
 };

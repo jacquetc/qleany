@@ -1,0 +1,23 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include <QList>
+#include <QObject>
+#include "{{ export_header_file }}"
+
+namespace {{ application_cpp_domain_name }}::Contracts::Repository
+{
+
+class {{ export }} SignalHolder : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit SignalHolder(QObject *parent = nullptr);
+
+  Q_SIGNALS:
+    void removed(QList<int> removedIds);
+    void activeStatusChanged(QList<int> changedIds, bool active);
+};
+
+} // namespace {{ application_cpp_domain_name }}::Contracts::Repository

@@ -3,9 +3,9 @@
 #include "update_passenger_command_handler.h"
 #include "passenger/validators/update_passenger_command_validator.h"
 #include "repository/interface_passenger_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace Simple;
 using namespace Simple::Contracts::DTO::Passenger;
 using namespace Simple::Contracts::Repository;
 using namespace Simple::Contracts::CQRS::Passenger::Commands;
@@ -75,16 +75,14 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
         QLN_RETURN_IF_ERROR(PassengerDTO, currentResult)
 
         // map
-        m_undoState =
-            Result<PassengerDTO>(Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(
-                currentResult.value()));
+        m_undoState = Result<PassengerDTO>(
+            Simple::Tools::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(currentResult.value()));
     }
-    auto updateDto = Qleany::Tools::AutoMapper::AutoMapper::map<PassengerDTO, UpdatePassengerDTO>(m_undoState.value());
+    auto updateDto = Simple::Tools::AutoMapper::map<PassengerDTO, UpdatePassengerDTO>(m_undoState.value());
     updateDto << request.req;
 
     // map
-    auto passenger =
-        Qleany::Tools::AutoMapper::AutoMapper::map<UpdatePassengerDTO, Simple::Entities::Passenger>(updateDto);
+    auto passenger = Simple::Tools::AutoMapper::map<UpdatePassengerDTO, Simple::Entities::Passenger>(updateDto);
 
     // set update timestamp only on first pass
     if (m_undoState.isEmpty())
@@ -102,7 +100,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::handleImpl(QPromise<Result<v
 
     // map
     auto passengerDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
+        Simple::Tools::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
     Q_EMIT passengerUpdated(passengerDto);
 
@@ -121,8 +119,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::restoreImpl()
     qDebug() << "UpdatePassengerCommandHandler::restoreImpl called with id" << m_undoState.value().uuid();
 
     // map
-    auto passenger =
-        Qleany::Tools::AutoMapper::AutoMapper::map<PassengerDTO, Simple::Entities::Passenger>(m_undoState.value());
+    auto passenger = Simple::Tools::AutoMapper::map<PassengerDTO, Simple::Entities::Passenger>(m_undoState.value());
 
     // do
     auto passengerResult = m_repository->update(std::move(passenger));
@@ -131,7 +128,7 @@ Result<PassengerDTO> UpdatePassengerCommandHandler::restoreImpl()
 
     // map
     auto passengerDto =
-        Qleany::Tools::AutoMapper::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
+        Simple::Tools::AutoMapper::map<Simple::Entities::Passenger, PassengerDTO>(passengerResult.value());
 
     Q_EMIT passengerUpdated(passengerDto);
 
@@ -144,10 +141,10 @@ bool UpdatePassengerCommandHandler::s_mappingRegistered = false;
 
 void UpdatePassengerCommandHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Simple::Entities::Passenger,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
-                                                           Contracts::DTO::Passenger::PassengerDTO>(true, true);
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
-                                                           Simple::Entities::Passenger>();
+    Simple::Tools::AutoMapper::registerMapping<Simple::Entities::Passenger, Contracts::DTO::Passenger::PassengerDTO>(
+        true, true);
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
+                                               Contracts::DTO::Passenger::PassengerDTO>(true, true);
+    Simple::Tools::AutoMapper::registerMapping<Contracts::DTO::Passenger::UpdatePassengerDTO,
+                                               Simple::Entities::Passenger>();
 }

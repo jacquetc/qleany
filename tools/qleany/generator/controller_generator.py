@@ -51,8 +51,6 @@ def get_other_entities_relation_fields(
     return other_entities_relation_fields
 
 
-
-
 def get_generation_dict(
     folder_path: str,
     application_name: str,
@@ -84,8 +82,12 @@ def get_generation_dict(
     generation_dict["application_uppercase_name"] = application_name.upper()
 
     # add export_header
-    generation_dict["export_header"] = f"{stringcase.snakecase(application_name)}_controller_export.h"
-    generation_dict["export"] = f"{stringcase.snakecase(application_name).upper()}_CONTROLLER_EXPORT"
+    generation_dict["export_header"] = (
+        f"{stringcase.snakecase(application_name)}_controller_export.h"
+    )
+    generation_dict["export"] = (
+        f"{stringcase.snakecase(application_name).upper()}_CONTROLLER_EXPORT"
+    )
 
     generation_dict["features"] = []
 
@@ -115,9 +117,11 @@ def get_generation_dict(
             final_feature_dict["crud"]["entity_name_pascal"] = entity_pascal_name
             final_feature_dict["crud"]["entity_name_spinal"] = entity_spinal_name
             final_feature_dict["crud"]["entity_name_camel"] = entity_camel_name
-            final_feature_dict["crud"][
-                "entity_has_relation_fields"
-            ] = tools.does_entity_have_relation_fields(entity_name, entities_by_name, False)
+            final_feature_dict["crud"]["entity_has_relation_fields"] = (
+                tools.does_entity_have_relation_fields(
+                    entity_name, entities_by_name, False
+                )
+            )
 
             final_feature_dict["crud"]["get"] = (
                 feature["CRUD"].get("get", {}).get("enabled", False)
@@ -168,14 +172,14 @@ def get_generation_dict(
             final_feature_dict["crud"]["owner_field_name_snake"] = stringcase.snakecase(
                 owner_field_name
             )
-            final_feature_dict["crud"][
-                "owner_field_name_pascal"
-            ] = stringcase.pascalcase(owner_field_name)
+            final_feature_dict["crud"]["owner_field_name_pascal"] = (
+                stringcase.pascalcase(owner_field_name)
+            )
 
             # other entities relation fields
-            final_feature_dict["crud"][
-                "other_entities_relation_fields"
-            ] = get_other_entities_relation_fields(entity_name, entities_by_name)
+            final_feature_dict["crud"]["other_entities_relation_fields"] = (
+                get_other_entities_relation_fields(entity_name, entities_by_name)
+            )
 
         # files :
         generation_dict["all_controller_files"].append(
@@ -395,6 +399,64 @@ def generate_cmake_file(
         with open(cmake_file, "w") as fh:
             fh.write(rendered_template)
             print(f"Successfully wrote file {cmake_file}")
+
+
+def _generate_undo_redo_files(
+    root_path: str,
+    generation_dict: dict,
+    files_to_be_generated: dict[str, bool],
+):
+    template_env = Environment(
+        loader=FileSystemLoader("templates/controller/undo_redo")
+    )
+    application_cpp_domain_name = generation_dict["application_cpp_domain_name"]
+    export = generation_dict["export"]
+    export_header_file = generation_dict["export_header"]
+    folder_path = generation_dict["folder_path"]
+
+    files = [
+        "alter_command.h",
+        "query_command.cpp",
+        "query_command.h",
+        "threaded_undo_redo_system.cpp",
+        "threaded_undo_redo_system.h",
+        "undo_redo_command.cpp",
+        "undo_redo_command.h",
+        "undo_redo_scopes.cpp",
+        "undo_redo_scopes.h",
+        "undo_redo_stack.cpp",
+        "undo_redo_stack.h",
+        "undo_redo_system.cpp",
+        "undo_redo_system.h",
+    ]
+
+    for file in files:
+        # Load the template
+        template = template_env.get_template(file + ".jinja2")
+
+        # generate the real file if in the files_to_be_generated dict the value is True
+        if not files_to_be_generated.get(
+            os.path.join(folder_path, "undo_redo", file), False
+        ):
+            continue
+
+        output_file = os.path.join(root_path, folder_path, "undo_redo", file)
+
+        # Render the template
+        output = template.render(
+            application_cpp_domain_name=application_cpp_domain_name,
+            export_header_file=export_header_file,
+            export=export,
+        )
+
+        # Create the directory if it does not exist
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Write the output to the file
+        with open(output_file, "w") as fh:
+            fh.write(output)
+
+        print(f"Successfully wrote file {output_file}")
 
 
 def generate_event_dispatcher_files(
@@ -867,6 +929,7 @@ def generate_controller_files(
     )
     generate_error_signals_file(root_path, generation_dict, files_to_be_generated)
     generate_progress_signals_file(root_path, generation_dict, files_to_be_generated)
+    _generate_undo_redo_files(root_path, generation_dict, files_to_be_generated)
 
     # format the files
     for file, to_be_generated in files_to_be_generated.items():
@@ -947,57 +1010,49 @@ def get_files_to_be_generated(
             )
         )
 
+    undo_redo_files = [
+        "alter_command.h",
+        "query_command.cpp",
+        "query_command.h",
+        "threaded_undo_redo_system.cpp",
+        "threaded_undo_redo_system.h",
+        "undo_redo_command.cpp",
+        "undo_redo_command.h",
+        "undo_redo_scopes.cpp",
+        "undo_redo_scopes.h",
+        "undo_redo_stack.cpp",
+        "undo_redo_stack.h",
+        "undo_redo_system.cpp",
+        "undo_redo_system.h",
+    ]
+    for undo_redo_file in undo_redo_files:
+        files.append(
+            os.path.join(
+                folder_path,
+                "undo_redo",
+                undo_redo_file,
+            )
+        )
+
     # add list_file:
-    files.append(
-        os.path.join(
-            folder_path,
-            "controllers.cmake",
-        )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            "CMakeLists.txt",
-        )
-    )
 
-    files.append(
-        os.path.join(
-            folder_path,
-            "event_dispatcher.h",
+    other_files = [
+        "controllers.cmake",
+        "CMakeLists.txt",
+        "event_dispatcher.h",
+        "event_dispatcher.cpp",
+        "error_signals.h",
+        "progress_signals.h",
+        "controller_registration.h",
+        "controller_registration.cpp",
+    ]
+    for file in other_files:
+        files.append(
+            os.path.join(
+                folder_path,
+                file,
+            )
         )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            "event_dispatcher.cpp",
-        )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            "error_signals.h",
-        )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            "progress_signals.h",
-        )
-    )
-    files.append(
-        os.path.join(
-            folder_path,
-            "controller_registration.h",
-        )
-    )
-
-    files.append(
-        os.path.join(
-            folder_path,
-            "controller_registration.cpp",
-        )
-    )
 
     # strip from files if the value in files_to_be_generated is False
     if files_to_be_generated:

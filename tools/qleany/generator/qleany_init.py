@@ -58,7 +58,7 @@ entities:
         - type: int
           name: age
 
-repositories:
+persistence:
   list:
       - entity_name: FirstEntity
         lazy_loaders: true

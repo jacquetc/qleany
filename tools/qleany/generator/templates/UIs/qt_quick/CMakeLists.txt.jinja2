@@ -12,7 +12,6 @@ option(BUILD_WITH_MOCKS "Build with mocks" OFF)
 
 find_package(Qt6 COMPONENTS Core Gui Qml Quick Concurrent)
 find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
-find_package(qleany CONFIG REQUIRED)
 
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
@@ -27,8 +26,7 @@ qt_add_executable(${APP_NAME} main.cpp)
 qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
                  qtquickcontrols2.conf)
 
-# Link the example against the Qleany library
-target_link_libraries(${APP_NAME} PUBLIC qleany)
+target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-common)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-entities)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-persistence)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-controller)

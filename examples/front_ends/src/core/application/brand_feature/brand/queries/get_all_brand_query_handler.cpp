@@ -2,15 +2,15 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "get_all_brand_query_handler.h"
 #include "repository/interface_brand_repository.h"
-#include <qleany/tools/automapper/automapper.h>
+#include "tools/automapper.h"
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Application::Features::Brand::Queries;
 
-GetAllBrandQueryHandler::GetAllBrandQueryHandler(InterfaceBrandRepository *repository) : m_repository(repository)
+GetAllBrandQueryHandler::GetAllBrandQueryHandler(InterfaceBrandRepository *repository)
+    : m_repository(repository)
 {
-    if (!s_mappingRegistered)
-    {
+    if (!s_mappingRegistered) {
         registerMappings();
         s_mappingRegistered = true;
     }
@@ -22,12 +22,9 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handle(QPromise<Result<void>> &
 
     Result<QList<BrandDTO>> result;
 
-    try
-    {
+    try {
         result = handleImpl(progressPromise);
-    }
-    catch (const std::exception &ex)
-    {
+    } catch (const std::exception &ex) {
         result = Result<QList<BrandDTO>>(QLN_ERROR_2(Q_FUNC_INFO, Error::Critical, "Unknown error", ex.what()));
         qDebug() << "Error handling GetAllBrandQuery:" << ex.what();
     }
@@ -47,9 +44,8 @@ Result<QList<BrandDTO>> GetAllBrandQueryHandler::handleImpl(QPromise<Result<void
     // map
     QList<BrandDTO> dtoList;
 
-    for (const FrontEnds::Entities::Brand &brand : brandResult.value())
-    {
-        auto dto = Qleany::Tools::AutoMapper::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brand);
+    for (const FrontEnds::Entities::Brand &brand : brandResult.value()) {
+        auto dto = FrontEnds::Tools::AutoMapper::map<FrontEnds::Entities::Brand, BrandDTO>(brand);
         dtoList.append(dto);
     }
 
@@ -62,6 +58,5 @@ bool GetAllBrandQueryHandler::s_mappingRegistered = false;
 
 void GetAllBrandQueryHandler::registerMappings()
 {
-    Qleany::Tools::AutoMapper::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(
-        true, true);
+    FrontEnds::Tools::AutoMapper::registerMapping<FrontEnds::Entities::Brand, Contracts::DTO::Brand::BrandDTO>(true, true);
 }

@@ -4,8 +4,8 @@
 #pragma once
 
 #include "front_ends_example_controller_export.h"
+#include "repository/interface_repository_provider.h"
 #include <QObject>
-#include <qleany/contracts/repository/interface_repository_provider.h>
 
 namespace FrontEnds::Controller
 {
@@ -14,7 +14,7 @@ class FRONT_ENDS_EXAMPLE_CONTROLLER_EXPORT ControllerRegistration : public QObje
 {
     Q_OBJECT
 public:
-    explicit ControllerRegistration(QObject *parent, Qleany::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
+    explicit ControllerRegistration(QObject *parent, FrontEnds::Contracts::Repository::InterfaceRepositoryProvider *repositoryProvider);
     ~ControllerRegistration();
 
 private:

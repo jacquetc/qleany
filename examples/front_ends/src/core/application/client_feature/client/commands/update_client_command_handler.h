@@ -7,10 +7,10 @@
 #include "front_ends_example_application_client_export.h"
 
 #include "repository/interface_client_repository.h"
+#include "result.h"
 #include <QPromise>
-#include <qleany/common/result.h>
 
-using namespace Qleany;
+using namespace FrontEnds;
 using namespace FrontEnds::Contracts::DTO::Client;
 using namespace FrontEnds::Contracts::Repository;
 using namespace FrontEnds::Contracts::CQRS::Client::Commands;
@@ -21,16 +21,16 @@ class FRONT_ENDS_EXAMPLE_APPLICATION_CLIENT_EXPORT UpdateClientCommandHandler : 
 
 {
     Q_OBJECT
-  public:
+public:
     UpdateClientCommandHandler(InterfaceClientRepository *repository);
     Result<ClientDTO> handle(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restore();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void clientUpdated(FrontEnds::Contracts::DTO::Client::ClientDTO clientDto);
     void clientDetailsUpdated(int id);
 
-  private:
+private:
     InterfaceClientRepository *m_repository;
     Result<ClientDTO> handleImpl(QPromise<Result<void>> &progressPromise, const UpdateClientCommand &request);
     Result<ClientDTO> restoreImpl();

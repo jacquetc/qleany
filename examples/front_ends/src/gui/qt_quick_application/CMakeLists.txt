@@ -1,6 +1,5 @@
-# This file was generated automatically by Qleany's generator, edit at your own
-# risk! If you do, be careful to not overwrite it when you run the generator
-# again.
+# This file was generated automatically by Qleany's generator, edit at your own risk! 
+# If you do, be careful to not overwrite it when you run the generator again.
 
 cmake_minimum_required(VERSION 3.21)
 
@@ -13,7 +12,6 @@ option(BUILD_WITH_MOCKS "Build with mocks" OFF)
 
 find_package(Qt6 COMPONENTS Core Gui Qml Quick Concurrent)
 find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
-# find_package(qleany CONFIG REQUIRED)
 
 # Set necessary compiler flags to enable coroutine support
 qcoro_enable_coroutines()
@@ -29,7 +27,7 @@ qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
                  qtquickcontrols2.conf)
 
 # Link the example against the Qleany library
-target_link_libraries(${APP_NAME} PUBLIC qleany)
+target_link_libraries(${APP_NAME} PUBLIC front-ends-example-common)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-entities)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-persistence)
 target_link_libraries(${APP_NAME} PUBLIC front-ends-example-controller)
@@ -42,21 +40,21 @@ target_link_libraries(
           Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Qml
           Qt${QT_VERSION_MAJOR}::Concurrent)
 
-qt6_add_qml_module(
-  ${APP_NAME}
-  URI
-  "Main"
-  VERSION
-  1.0
-  RESOURCE_PREFIX
-  "/qt/qml"
-  NO_PLUGIN
-  QML_FILES
-  main.qml)
+
+qt6_add_qml_module(${APP_NAME}
+    URI "Main"
+    VERSION 1.0
+    RESOURCE_PREFIX "/qt/qml"
+    NO_PLUGIN
+    QML_FILES main.qml
+)
 
 add_subdirectory(content)
 
-target_link_libraries(${APP_NAME} PRIVATE contentplugin)
+
+target_link_libraries(${APP_NAME} PRIVATE
+    contentplugin
+)
 
 if(BUILD_WITH_MOCKS)
   # copy mock_imports in binary folder

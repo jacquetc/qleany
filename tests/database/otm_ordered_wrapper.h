@@ -1,19 +1,19 @@
 #pragma once
 
-#include "qleany/common/result.h"
-#include "qleany/database/one_to_many_ordered_associator.h"
+#include "result.h"
+#include "database/one_to_many_ordered_associator.h"
 
 //---------------------------
 
-using namespace Qleany;
+using namespace Simple;
 
 template <class RightEntity>
-class OneToManyOrderedAssociatorWrapper : public Qleany::Database::OneToManyOrderedAssociator<RightEntity>
+class OneToManyOrderedAssociatorWrapper : public Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>
 {
   public:
     OneToManyOrderedAssociatorWrapper(QSharedPointer<InterfaceDatabaseContext> context,
-                                      const Qleany::Entities::RelationshipInfo &relationship)
-        : Qleany::Database::OneToManyOrderedAssociator<RightEntity>(context, relationship)
+                                      const Simple::Entities::RelationshipInfo &relationship)
+        : Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>(context, relationship)
     {
     }
 
@@ -23,50 +23,50 @@ class OneToManyOrderedAssociatorWrapper : public Qleany::Database::OneToManyOrde
     Result<QList<RightEntity>> updateRightEntities(int leftEntityId, const QList<RightEntity> &rightEntities);
 
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Qleany::Entities::EntitySchema &entitySchema) const;
-    QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> mergeShadows(
-        const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
-        const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows)
+    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema &entitySchema) const;
+    QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> mergeShadows(
+        const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
+        const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows)
         const;
 };
 
 template <class RightEntity>
 Result<QList<RightEntity>> OneToManyOrderedAssociatorWrapper<RightEntity>::getRightEntities(int leftEntityId)
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::getRightEntities(leftEntityId);
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::getRightEntities(leftEntityId);
 }
 
 template <class RightEntity> QString OneToManyOrderedAssociatorWrapper<RightEntity>::getTableCreationSql() const
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::getTableCreationSql();
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::getTableCreationSql();
 }
 
 template <class RightEntity>
 Result<QList<RightEntity>> OneToManyOrderedAssociatorWrapper<RightEntity>::updateRightEntities(
     int leftEntityId, const QList<RightEntity> &rightEntities)
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::updateRightEntities(leftEntityId, rightEntities);
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::updateRightEntities(leftEntityId, rightEntities);
 }
 
 template <class RightEntity>
 Result<QList<RightEntity>> OneToManyOrderedAssociatorWrapper<RightEntity>::getRightEntitiesFromTheirIds(
     QList<int> rightEntityIds) const
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::getRightEntitiesFromTheirIds(rightEntityIds);
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::getRightEntitiesFromTheirIds(rightEntityIds);
 }
 
 template <class RightEntity>
 QStringList OneToManyOrderedAssociatorWrapper<RightEntity>::getTablePropertyColumns(
-    const Entities::EntitySchema &entitySchema) const
+    const Simple::Entities::EntitySchema &entitySchema) const
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(entitySchema);
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(entitySchema);
 }
 
 template <class RightEntity>
-QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow>
+QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow>
 OneToManyOrderedAssociatorWrapper<RightEntity>::mergeShadows(
-    const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
-    const QList<typename Qleany::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows) const
+    const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
+    const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows) const
 {
-    return Qleany::Database::OneToManyOrderedAssociator<RightEntity>::mergeShadows(originalShadows, newShadows);
+    return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::mergeShadows(originalShadows, newShadows);
 }
