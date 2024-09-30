@@ -6,7 +6,8 @@
 #include <QObject>
 #endif
 
-using namespace FrontEnds using namespace FrontEnds::Persistence::Repository;
+using namespace FrontEnds;
+using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
 CarRepository::CarRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Car> *carDatabase,
@@ -60,7 +61,7 @@ Result<FrontEnds::Entities::Car> CarRepository::update(Entities::Car &&entity)
 Result<FrontEnds::Entities::Car> CarRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
+    auto getResult = FrontEnds::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
 
     if (getResult.isError()) {
         return getResult;

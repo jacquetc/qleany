@@ -11,7 +11,6 @@
 #include <QReadWriteLock>
 #include <QUuid>
 
-using namespace FrontEnds::Persistence::Database;
 using namespace FrontEnds::Contracts::Database;
 
 namespace FrontEnds::Persistence::Repository

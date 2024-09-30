@@ -12,4 +12,5 @@ set(REPOSITORY_LIST
     repository/signal_holder.cpp
     database/interface_database_context.h
     database/interface_database_table_group.h
+    database/types.h
 )

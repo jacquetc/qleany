@@ -44,7 +44,7 @@ def _get_generation_dict(manifest_data) -> dict:
     cmakelists_dict["contracts_path"] = manifest_data.get("contracts", {}).get(
         "folder_path", "src/contracts"
     )
-    cmakelists_dict["persistence_path"] = manifest_data.get("repositories", {}).get(
+    cmakelists_dict["persistence_path"] = manifest_data.get("persistence", {}).get(
         "base_folder_path", "src/persistence"
     )
     cmakelists_dict["contracts_dto_path"] = manifest_data.get("DTOs", {}).get(

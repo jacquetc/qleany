@@ -26,7 +26,6 @@ set(SRCS
     database/one_to_many_ordered_associator.h
     database/one_to_one_associator.h
     database/tools.h
-    database/types.h
 )
 
 qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${REPOSITORY_LIST})

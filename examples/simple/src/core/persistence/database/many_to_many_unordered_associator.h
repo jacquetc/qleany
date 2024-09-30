@@ -1,15 +1,15 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "database/interface_database_context.h"
-#include "entity_schema.h"
-#include "result.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>
 #include <QSqlError>
 #include <QSqlQuery>
+#include "result.h"
+#include "entity_schema.h"
 
 using namespace Simple::Contracts::Database;
 
@@ -19,7 +19,7 @@ template <class RightEntity> class ManyToManyUnorderedAssociator
 {
   public:
     ManyToManyUnorderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                                  const Simple::Entities::RelationshipInfo &relationship)
+                                 const Simple::Entities::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 

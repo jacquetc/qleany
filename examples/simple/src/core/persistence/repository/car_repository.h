@@ -11,7 +11,8 @@
 #include "simple_example_persistence_export.h"
 #include <QReadWriteLock>
 
-using namespace Simple using namespace Simple::Contracts::Database;
+using namespace Simple;
+using namespace Simple::Contracts::Database;
 using namespace Simple::Contracts::Repository;
 
 namespace Simple::Persistence::Repository

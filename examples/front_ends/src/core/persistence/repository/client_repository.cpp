@@ -6,7 +6,8 @@
 #include <QObject>
 #endif
 
-using namespace FrontEnds using namespace FrontEnds::Persistence::Repository;
+using namespace FrontEnds;
+using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
 ClientRepository::ClientRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Client> *clientDatabase, InterfacePassengerRepository *passengerRepository)
@@ -58,7 +59,7 @@ Result<FrontEnds::Entities::Client> ClientRepository::update(Entities::Client &&
 Result<FrontEnds::Entities::Client> ClientRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Client>::get(entityId);
+    auto getResult = FrontEnds::Persistence::Repository::GenericRepository<Entities::Client>::get(entityId);
 
     if (getResult.isError()) {
         return getResult;

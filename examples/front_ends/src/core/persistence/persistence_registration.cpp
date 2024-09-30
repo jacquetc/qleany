@@ -11,7 +11,8 @@
 #include "repository/passenger_repository.h"
 #include "repository/repository_provider.h"
 
-using namespace FrontEnds using namespace FrontEnds::Persistence::Database;
+using namespace FrontEnds;
+using namespace FrontEnds::Persistence::Database;
 using namespace FrontEnds::Persistence;
 using namespace FrontEnds::Persistence::Repository;
 

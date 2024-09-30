@@ -17,9 +17,9 @@ enum FieldType
     String,
     Uuid,
     DateTime,
-    Entity
+    OtherEntity
 };
-Q_ENUM_NS(FieldType);
+Q_ENUM_NS(Simple::Entities::FieldType);
 
 enum RelationshipType
 {
@@ -27,14 +27,14 @@ enum RelationshipType
     OneToMany,
     ManyToMany
 };
-Q_ENUM_NS(RelationshipType);
+Q_ENUM_NS(Simple::Entities::RelationshipType);
 
 enum RelationshipStrength
 {
     Strong,
     Weak
 };
-Q_ENUM_NS(RelationshipStrength);
+Q_ENUM_NS(Simple::Entities::RelationshipStrength);
 
 /// @brief RelationshipDirection
 /// Forward: the relationship is defined in the current entity
@@ -46,7 +46,7 @@ enum RelationshipDirection
     Forward,
     Backward
 };
-Q_ENUM_NS(RelationshipDirection);
+Q_ENUM_NS(Simple::Entities::RelationshipDirection);
 
 /// @brief RelationshipCardinality
 /// One: the relationship is defined by a foreign key in the related entity
@@ -59,7 +59,7 @@ enum RelationshipCardinality
     ManyOrdered,
     ManyUnordered
 };
-Q_ENUM_NS(RelationshipCardinality);
+Q_ENUM_NS(Simple::Entities::RelationshipCardinality);
 
 struct RelationshipInfo
 {

@@ -5,10 +5,10 @@
 #include "dummy_entity.h"
 #include "dummy_other_entity.h"
 #include "entities.h"
-#include "examples/simple/src/core/entities/entity_schema.h"
+#include "entity_schema.h"
 #include <QString>
 
-using namespace Qleany::Entities;
+using namespace Simple::Entities;
 
 namespace DatabaseTest::Entities
 {
@@ -165,7 +165,7 @@ class DummyEntityWithForeign : public DummyEntity
         m_orderedListLoader = loader;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
   private:
     QString m_name;
@@ -204,7 +204,7 @@ inline uint qHash(const DummyEntityWithForeign &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyEntityWithForeign entity
-inline Qleany::Entities::EntitySchema DummyEntityWithForeign::schema = {
+inline Simple::Entities::EntitySchema DummyEntityWithForeign::schema = {
     DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign,
     "DummyEntityWithForeign"_L1,
 
@@ -228,9 +228,9 @@ inline Qleany::Entities::EntitySchema DummyEntityWithForeign::schema = {
      {"creationDate"_L1, FieldType::DateTime, false, false},
      {"updateDate"_L1, FieldType::DateTime, false, false},
      {"name"_L1, FieldType::String, false, false},
-     {"unique"_L1, FieldType::Entity, false, true},
-     {"unorderedList"_L1, FieldType::Entity, false, true},
-     {"orderedList"_L1, FieldType::Entity, false, true}}};
+     {"unique"_L1, FieldType::OtherEntity, false, true},
+     {"unorderedList"_L1, FieldType::OtherEntity, false, true},
+     {"orderedList"_L1, FieldType::OtherEntity, false, true}}};
 
 } // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyEntityWithForeign)

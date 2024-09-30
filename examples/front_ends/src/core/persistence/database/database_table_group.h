@@ -38,7 +38,7 @@ public:
     ListType listType;
 };
 
-namespace FrontEnds::Database
+namespace FrontEnds::Persistence::Database
 {
 
 template<class T>

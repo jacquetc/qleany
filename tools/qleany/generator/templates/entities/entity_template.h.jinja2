@@ -183,7 +183,7 @@ inline bool operator==(const {{ name }} &lhs, const {{ name }} &rhs)
 {
 
     return 
-            static_cast<const {{ parent }}&>(lhs) == static_cast<const {{ parent }}&>(rhs) &&
+            static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(lhs) == static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(rhs) &&
     
             {% for field in fields -%}
             lhs.m_{{ field.name }} == rhs.m_{{ field.name }} {% if not loop.last %} && {% endif %}
@@ -194,7 +194,7 @@ inline bool operator==(const {{ name }} &lhs, const {{ name }} &rhs)
 inline uint qHash(const {{ name }} &entity, uint seed = 0) noexcept
 {        // Seed the hash with the parent class's hash
         uint hash = 0;
-        hash ^= qHash(static_cast<const {{ parent }}&>(entity), seed);
+        hash ^= qHash(static_cast<const {{ application_cpp_domain_name }}::Entities::{{ parent }}&>(entity), seed);
 
         // Combine with this class's properties
         {% for field in fields -%}

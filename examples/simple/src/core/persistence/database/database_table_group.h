@@ -1,18 +1,18 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "QtCore/qdebug.h"
 #include "QtCore/qmetaobject.h"
+#include "one_to_many_ordered_associator.h"
+#include "one_to_many_unordered_associator.h"
+#include "many_to_many_unordered_associator.h"
+#include "one_to_one_associator.h"
+#include "result.h"
 #include "database/interface_database_context.h"
 #include "database/interface_database_table_group.h"
 #include "entity_base.h"
 #include "entity_schema.h"
-#include "many_to_many_unordered_associator.h"
-#include "one_to_many_ordered_associator.h"
-#include "one_to_many_unordered_associator.h"
-#include "one_to_one_associator.h"
-#include "result.h"
 #include "simple_example_persistence_export.h"
 #include "tools.h"
 #include <QDateTime>
@@ -43,7 +43,7 @@ struct SIMPLE_EXAMPLE_PERSISTENCE_EXPORT PropertyWithList
     ListType listType;
 };
 
-namespace Simple::Database
+namespace Simple::Persistence::Database
 {
 
 template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTableGroup<T>

@@ -415,6 +415,7 @@ def _generate_undo_redo_files(
     folder_path = generation_dict["folder_path"]
 
     files = [
+        "alter_command.h",
         "query_command.cpp",
         "query_command.h",
         "threaded_undo_redo_system.cpp",
@@ -1010,6 +1011,7 @@ def get_files_to_be_generated(
         )
 
     undo_redo_files = [
+        "alter_command.h",
         "query_command.cpp",
         "query_command.h",
         "threaded_undo_redo_system.cpp",

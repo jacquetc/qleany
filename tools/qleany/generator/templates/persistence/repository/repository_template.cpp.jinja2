@@ -6,7 +6,7 @@
 #include <QDebug>
 #endif
 
-using namespace {{ application_cpp_domain_name }}
+using namespace {{ application_cpp_domain_name }};
 using namespace {{ application_cpp_domain_name }}::Persistence::Repository;
 using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 
@@ -55,7 +55,7 @@ Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Reposi
 Result<{{ application_cpp_domain_name }}::Entities::{{ name }}> {{ name }}Repository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::{{ name }}>::get(entityId);
+    auto getResult = {{ application_cpp_domain_name }}::Persistence::Repository::GenericRepository<Entities::{{ name }}>::get(entityId);
 
     if (getResult.isError())
     {

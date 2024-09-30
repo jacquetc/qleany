@@ -6,7 +6,8 @@
 #include <QObject>
 #endif
 
-using namespace Simple using namespace Simple::Persistence::Repository;
+using namespace Simple;
+using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
 PassengerRepository::PassengerRepository(InterfaceDatabaseTableGroup<Simple::Entities::Passenger> *passengerDatabase)

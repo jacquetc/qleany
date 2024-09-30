@@ -6,7 +6,8 @@
 #include <QObject>
 #endif
 
-using namespace FrontEnds using namespace FrontEnds::Persistence::Repository;
+using namespace FrontEnds;
+using namespace FrontEnds::Persistence::Repository;
 using namespace FrontEnds::Contracts::Repository;
 
 BrandRepository::BrandRepository(InterfaceDatabaseTableGroup<FrontEnds::Entities::Brand> *brandDatabase)

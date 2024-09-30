@@ -4,7 +4,7 @@
 
 #include "result.h"
 #include "database/types.h"
-#include "entities/entity_schema.h"
+#include "entity_schema.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -32,8 +32,8 @@ template <class T> class InterfaceDatabaseTableGroup
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<bool> exists(int id) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<{{ application_cpp_domain_name }}::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const {{ application_cpp_domain_name }}::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const {{ application_cpp_domain_name }}::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginTransaction() = 0;
     virtual Result<void> commit() = 0;
     virtual Result<void> rollback() = 0;

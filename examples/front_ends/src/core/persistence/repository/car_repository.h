@@ -11,7 +11,8 @@
 #include "repository/interface_passenger_repository.h"
 #include <QReadWriteLock>
 
-using namespace FrontEnds using namespace FrontEnds::Contracts::Database;
+using namespace FrontEnds;
+using namespace FrontEnds::Contracts::Database;
 using namespace FrontEnds::Contracts::Repository;
 
 namespace FrontEnds::Persistence::Repository

@@ -1,15 +1,15 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "database/interface_database_context.h"
-#include "entity_schema.h"
-#include "result.h"
 #include "tools.h"
 #include <QList>
 #include <QSharedPointer>
 #include <QSqlError>
 #include <QSqlQuery>
+#include "result.h"
+#include "entity_schema.h"
 
 using namespace Simple::Contracts::Database;
 
@@ -29,9 +29,9 @@ template <class RightEntity> class OneToManyUnorderedAssociator
         m_junctionTableName =
             leftEntityName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityName + "_junction"_L1;
         m_junctionTableLeftEntityForeignKeyName = leftEntityName + "_id"_L1;
-        m_leftEntityForeignTableName = Simple::Database::Tools::fromPascalToSnakeCase(leftEntityName);
+        m_leftEntityForeignTableName = Simple::Persistence::Database::Tools::fromPascalToSnakeCase(leftEntityName);
         m_junctionTableRightEntityForeignKeyName = rightEntityName + "_id"_L1;
-        m_rightEntityForeignTableName = Simple::Database::TableTools<RightEntity>::getEntityTableName();
+        m_rightEntityForeignTableName = Simple::Persistence::Database::TableTools<RightEntity>::getEntityTableName();
     }
     ~OneToManyUnorderedAssociator() = default;
     Result<QList<RightEntity>> getRightEntities(int leftEntityId);

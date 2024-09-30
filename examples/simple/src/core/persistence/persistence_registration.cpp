@@ -11,7 +11,8 @@
 #include "repository/passenger_repository.h"
 #include "repository/repository_provider.h"
 
-using namespace Simple using namespace Simple::Persistence::Database;
+using namespace Simple;
+using namespace Simple::Persistence::Database;
 using namespace Simple::Persistence;
 using namespace Simple::Persistence::Repository;
 
@@ -36,10 +37,10 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent) : QObject{pare
 
     // repositories:
 
+    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
     BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
     CarRepository *carRepository = new CarRepository(carDatabaseTableGroup, brandRepository, passengerRepository);
     ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
-    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
 
     // register repositories:
 

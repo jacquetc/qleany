@@ -8,6 +8,8 @@ set(LIBRARY_NAME simple-example-common)
 set(SRC
     error.h
     result.h
+    tools/automapper.h
+    tools/automapper.cpp
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 

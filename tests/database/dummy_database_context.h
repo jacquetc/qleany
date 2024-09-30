@@ -1,14 +1,14 @@
 #pragma once
 #include "QtSql/qsqlerror.h"
-#include "examples/simple/src/core/common/result.h"
-#include "examples/simple/src/core/contracts/database/interface_database_context.h"
+#include "result.h"
+#include "database/interface_database_context.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QString>
 #include <QThreadPool>
 #include <QUuid>
 
-using namespace Qleany;
+using namespace Simple;
 
 template <class T, class U> class DummyDatabaseContext : public Contracts::Database::InterfaceDatabaseContext
 {

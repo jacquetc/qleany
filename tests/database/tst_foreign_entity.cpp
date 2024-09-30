@@ -2,8 +2,8 @@
 #include "dummy_entity_with_foreign.h"
 #include "dummy_other_entity.h"
 #include "otm_ordered_wrapper.h"
-#include "qleany/database/database_table_group.h"
-#include "qleany/database/tools.h"
+#include "database/database_table_group.h"
+#include "database/tools.h"
 #include <QDate>
 #include <QDateTime>
 #include <QDebug>
@@ -14,7 +14,10 @@
 #include <QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Qleany;
+using namespace Simple;
+using namespace Simple::Persistence;
+using namespace Simple::Persistence::Database;
+using namespace Simple::Entities;
 
 class ForeignEntityTest : public QObject
 {

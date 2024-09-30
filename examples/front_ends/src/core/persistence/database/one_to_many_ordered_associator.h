@@ -30,9 +30,9 @@ public:
 
         m_junctionTableName = leftEntityName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityName + "_junction"_L1;
         m_junctionTableLeftEntityForeignKeyName = leftEntityName + "_id"_L1;
-        m_leftEntityForeignTableName = FrontEnds::Database::Tools::fromPascalToSnakeCase(leftEntityName);
+        m_leftEntityForeignTableName = FrontEnds::Persistence::Database::Tools::fromPascalToSnakeCase(leftEntityName);
         m_junctionTableRightEntityForeignKeyName = rightEntityName + "_id"_L1;
-        m_rightEntityForeignTableName = FrontEnds::Database::TableTools<RightEntity>::getEntityTableName();
+        m_rightEntityForeignTableName = FrontEnds::Persistence::Database::TableTools<RightEntity>::getEntityTableName();
     }
     ~OneToManyOrderedAssociator() = default;
     Result<QList<RightEntity>> getRightEntities(int leftEntityId);

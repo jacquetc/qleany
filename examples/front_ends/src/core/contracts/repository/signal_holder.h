@@ -2,14 +2,14 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT"
+#include "front_ends_example_contracts_export.h"
 #include <QList>
 #include <QObject>
 
 namespace FrontEnds::Contracts::Repository
 {
 
-class front_ends_example_persistence_export.h SignalHolder : public QObject
+class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT SignalHolder : public QObject
 {
     Q_OBJECT
 public:

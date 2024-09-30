@@ -3,7 +3,7 @@
 #pragma once
 #include <QString>
 
-namespace Simple::Persistence::Database
+namespace FrontEnds::Contracts::Database
 {
 using SaveData = QMap<QString, QList<QVariantHash>>;
-} // namespace Simple::Persistence::Database
+} // namespace FrontEnds::Contracts::Database

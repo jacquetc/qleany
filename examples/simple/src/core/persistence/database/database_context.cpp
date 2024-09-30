@@ -1,4 +1,4 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "database/database_context.h"
 #include "QtSql/qsqlerror.h"
@@ -167,7 +167,7 @@ Simple::Result<QString> DatabaseContext::createEmptyDatabase()
 
 //---------------------------------------------------------
 
-void Simple::Database::DatabaseContext::appendCreationSql(const char *type, const QString &sql)
+void DatabaseContext::appendCreationSql(const char *type, const QString &sql)
 {
     m_creationSqlHash.insert(QString::fromLatin1(type), sql);
 }

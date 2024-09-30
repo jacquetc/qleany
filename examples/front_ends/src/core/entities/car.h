@@ -220,7 +220,7 @@ private:
 
 inline bool operator==(const Car &lhs, const Car &rhs)
 {
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const FrontEnds::Entities::Entity &>(lhs) == static_cast<const FrontEnds::Entities::Entity &>(rhs) &&
 
         lhs.m_content == rhs.m_content && lhs.m_brand == rhs.m_brand && lhs.m_passengers == rhs.m_passengers;
 }
@@ -228,7 +228,7 @@ inline bool operator==(const Car &lhs, const Car &rhs)
 inline uint qHash(const Car &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const FrontEnds::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_content, seed);

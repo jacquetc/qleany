@@ -1,13 +1,13 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "database/types.h"
-#include "entities/entity_schema.h"
-#include "result.h"
 #include <QCoreApplication>
 #include <QFuture>
 #include <QUuid>
+#include "result.h"
+#include "entity_schema.h"
 
 namespace Simple::Contracts::Repository
 {
@@ -31,8 +31,8 @@ template <class T> class InterfaceGenericRepository
     virtual Result<bool> exists(int id) = 0;
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<Simple::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const Simple::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<Simple::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const Simple::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginChanges() = 0;
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;

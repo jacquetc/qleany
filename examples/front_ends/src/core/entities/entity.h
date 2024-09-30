@@ -178,7 +178,7 @@ private:
 
 inline bool operator==(const Entity &lhs, const Entity &rhs)
 {
-    return static_cast<const EntityBase &>(lhs) == static_cast<const EntityBase &>(rhs) &&
+    return static_cast<const FrontEnds::Entities::EntityBase &>(lhs) == static_cast<const FrontEnds::Entities::EntityBase &>(rhs) &&
 
         lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate;
 }
@@ -186,7 +186,7 @@ inline bool operator==(const Entity &lhs, const Entity &rhs)
 inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const EntityBase &>(entity), seed);
+    hash ^= qHash(static_cast<const FrontEnds::Entities::EntityBase &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_uuid, seed);

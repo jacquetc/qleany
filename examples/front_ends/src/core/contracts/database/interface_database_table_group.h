@@ -3,7 +3,7 @@
 #pragma once
 
 #include "database/types.h"
-#include "entities/entity_schema.h"
+#include "entity_schema.h"
 #include "result.h"
 #include <QHash>
 #include <QString>
@@ -33,8 +33,8 @@ public:
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<bool> exists(int id) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<FrontEnds::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const FrontEnds::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<FrontEnds::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const FrontEnds::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginTransaction() = 0;
     virtual Result<void> commit() = 0;
     virtual Result<void> rollback() = 0;

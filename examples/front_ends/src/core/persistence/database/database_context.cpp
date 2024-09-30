@@ -149,7 +149,7 @@ FrontEnds::Result<QString> DatabaseContext::createEmptyDatabase()
 
 //---------------------------------------------------------
 
-void FrontEnds::Database::DatabaseContext::appendCreationSql(const char *type, const QString &sql)
+void DatabaseContext::appendCreationSql(const char *type, const QString &sql)
 {
     m_creationSqlHash.insert(QString::fromLatin1(type), sql);
 }

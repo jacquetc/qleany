@@ -7,7 +7,7 @@
 #include <QFuture>
 #include <QUuid>
 #include "result.h"
-#include "entities/entity_schema.h"
+#include "entity_schema.h"
 
 namespace {{ application_cpp_domain_name }}::Contracts::Repository
 {
@@ -31,8 +31,8 @@ template <class T> class InterfaceGenericRepository
     virtual Result<bool> exists(int id) = 0;
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<{{ application_cpp_domain_name }}::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const {{ application_cpp_domain_name }}::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<{{ application_cpp_domain_name }}::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const {{ application_cpp_domain_name }}::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginChanges() = 0;
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;

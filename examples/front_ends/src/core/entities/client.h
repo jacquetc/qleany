@@ -192,7 +192,7 @@ private:
 
 inline bool operator==(const Client &lhs, const Client &rhs)
 {
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const FrontEnds::Entities::Entity &>(lhs) == static_cast<const FrontEnds::Entities::Entity &>(rhs) &&
 
         lhs.m_client == rhs.m_client && lhs.m_clientFriends == rhs.m_clientFriends;
 }
@@ -200,7 +200,7 @@ inline bool operator==(const Client &lhs, const Client &rhs)
 inline uint qHash(const Client &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const FrontEnds::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_client, seed);

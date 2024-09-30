@@ -1,7 +1,7 @@
 #include "dummy_basic_entity.h"
 #include "dummy_database_context.h"
-#include "qleany/database/database_table_group.h"
-#include "qleany/database/tools.h"
+#include "database/database_table_group.h"
+#include "database/tools.h"
 #include <QDate>
 #include <QDateTime>
 #include <QDebug>
@@ -12,7 +12,9 @@
 #include <QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Qleany;
+using namespace Simple;
+using namespace Simple::Persistence;
+using namespace Simple::Entities;
 
 class DatabaseToolsTest : public QObject
 {

@@ -6,10 +6,10 @@
 #include <QUuid>
 
 #include "entities.h"
-#include "examples/simple/src/core/entities/entity_base.h"
-#include "examples/simple/src/core/entities/entity_schema.h"
+#include "entity_base.h"
+#include "entity_schema.h"
 
-using namespace Qleany::Entities;
+using namespace Simple::Entities;
 
 namespace DatabaseTest::Entities
 {
@@ -104,7 +104,7 @@ class DummyEntity : public EntityBase
         m_updateDate = updateDate;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
   private:
     QUuid m_uuid;
@@ -134,7 +134,7 @@ inline uint qHash(const DummyEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyEntity entity
-inline Qleany::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
+inline Simple::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
                                                              "DummyEntity"_L1,
 
                                                              // relationships:

@@ -126,7 +126,7 @@ class Brand : public Entity
 inline bool operator==(const Brand &lhs, const Brand &rhs)
 {
 
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const Simple::Entities::Entity &>(lhs) == static_cast<const Simple::Entities::Entity &>(rhs) &&
 
            lhs.m_name == rhs.m_name;
 }
@@ -134,7 +134,7 @@ inline bool operator==(const Brand &lhs, const Brand &rhs)
 inline uint qHash(const Brand &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const Simple::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_name, seed);

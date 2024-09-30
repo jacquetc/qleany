@@ -261,6 +261,3 @@ presenter:
       entity: Car  
       displayed_field: content
       
-
-qml:
-  folder_path: src/gui/qml_application/

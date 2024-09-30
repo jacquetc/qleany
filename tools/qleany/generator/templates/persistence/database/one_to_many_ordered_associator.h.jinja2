@@ -30,9 +30,9 @@ template <class RightEntity> class OneToManyOrderedAssociator
         m_junctionTableName =
             leftEntityName + "_"_L1 + relationship.fieldName + "_"_L1 + rightEntityName + "_junction"_L1;
         m_junctionTableLeftEntityForeignKeyName = leftEntityName + "_id"_L1;
-        m_leftEntityForeignTableName = {{ application_cpp_domain_name }}::Database::Tools::fromPascalToSnakeCase(leftEntityName);
+        m_leftEntityForeignTableName = {{ application_cpp_domain_name }}::Persistence::Database::Tools::fromPascalToSnakeCase(leftEntityName);
         m_junctionTableRightEntityForeignKeyName = rightEntityName + "_id"_L1;
-        m_rightEntityForeignTableName = {{ application_cpp_domain_name }}::Database::TableTools<RightEntity>::getEntityTableName();
+        m_rightEntityForeignTableName = {{ application_cpp_domain_name }}::Persistence::Database::TableTools<RightEntity>::getEntityTableName();
     }
     ~OneToManyOrderedAssociator() = default;
     Result<QList<RightEntity>> getRightEntities(int leftEntityId);

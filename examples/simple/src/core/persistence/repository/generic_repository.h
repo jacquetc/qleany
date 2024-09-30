@@ -1,17 +1,16 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+#include "result.h"
 #include "database/interface_database_table_group.h"
 #include "repository/interface_generic_repository.h"
-#include "result.h"
 
 #include <QFuture>
 #include <QObject>
 #include <QReadWriteLock>
 #include <QUuid>
 
-using namespace Simple::Persistence::Database;
 using namespace Simple::Contracts::Database;
 
 namespace Simple::Persistence::Repository

@@ -48,3 +48,6 @@ add_subdirectory(src/core/controller/)
 
 # handles the Qt models
 add_subdirectory(src/gui/presenter) 
+
+add_subdirectory(src/gui/desktop_application)
+add_subdirectory(src/gui/qml_application) 

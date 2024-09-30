@@ -26,7 +26,6 @@ qt_add_executable(${APP_NAME} main.cpp)
 qt_add_resources(${APP_NAME} "configuration" PREFIX "/" FILES
                  qtquickcontrols2.conf)
 
-# Link the example against the Qleany library
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-common)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-entities)
 target_link_libraries(${APP_NAME} PUBLIC {{ application_spinal_name }}-persistence)

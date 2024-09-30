@@ -1,4 +1,4 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk! 
+// This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
@@ -13,20 +13,20 @@ class EntityBase
     Q_GADGET
     Q_PROPERTY(int id READ id WRITE setId)
 
-  public:
-    struct MetaData
-    {
-        MetaData(EntityBase *entity) : m_entity(entity)
+public:
+    struct MetaData {
+        MetaData(EntityBase *entity)
+            : m_entity(entity)
         {
         }
-        MetaData(EntityBase *entity, const MetaData &other) : m_entity(entity)
+        MetaData(EntityBase *entity, const MetaData &other)
+            : m_entity(entity)
         {
         }
 
         bool getSet(const QString &fieldName) const
         {
-            if (fieldName == "id"_L1)
-            {
+            if (fieldName == "id"_L1) {
                 return true;
             }
             return false;
@@ -34,15 +34,13 @@ class EntityBase
 
         bool getLoaded(const QString &fieldName) const
         {
-
-            if (fieldName == "id"_L1)
-            {
+            if (fieldName == "id"_L1) {
                 return true;
             }
             return false;
         }
 
-      private:
+    private:
         EntityBase *m_entity = nullptr;
     };
 
@@ -72,16 +70,15 @@ class EntityBase
         return m_metaData;
     }
 
-  protected:
+protected:
     MetaData m_metaData;
 
-  private:
+private:
     int m_id;
 };
 
 inline bool operator==(const EntityBase &lhs, const EntityBase &rhs)
 {
-
     return
 
         lhs.m_id == rhs.m_id;

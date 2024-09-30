@@ -24,8 +24,6 @@ add_executable(
 
 target_link_libraries(${APP_NAME} PUBLIC Qt6::Core Qt6::Widgets Qt6::Concurrent
                                          Qt6::Sql)
-# Link the example against the Qleany library
-target_link_libraries(${APP_NAME} PUBLIC qleany)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-entities)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-persistence)
 target_link_libraries(${APP_NAME} PUBLIC simple-example-controller)

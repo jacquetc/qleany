@@ -1,9 +1,9 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "database/interface_database_context.h"
 #include "result.h"
+#include "database/interface_database_context.h"
 #include "simple_example_persistence_export.h"
 #include <QHash>
 #include <QMutexLocker>

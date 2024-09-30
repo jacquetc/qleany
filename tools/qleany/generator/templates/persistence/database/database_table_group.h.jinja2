@@ -43,7 +43,7 @@ struct {{ export }} PropertyWithList
     ListType listType;
 };
 
-namespace {{ application_cpp_domain_name }}::Database
+namespace {{ application_cpp_domain_name }}::Persistence::Database
 {
 
 template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTableGroup<T>

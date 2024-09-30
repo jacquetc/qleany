@@ -73,7 +73,6 @@ def _generate_database_files(
         "one_to_many_ordered_associator.h",
         "one_to_one_associator.h",
         "tools.h",
-        "types.h",
     ]
 
     for file in files:
@@ -115,7 +114,11 @@ def _generate_database_interfaces(
         loader=FileSystemLoader("templates/persistence/contracts/database")
     )
 
-    files = ["interface_database_context.h", "interface_database_table_group.h"]
+    files = [
+        "interface_database_context.h",
+        "interface_database_table_group.h",
+        "types.h",
+    ]
 
     for file in files:
         # Load the template
@@ -640,6 +643,11 @@ def generate_persistence_files(
                 absolute_interface_database_path, "interface_database_table_group.h"
             )
         )
+        all_interface_files.append(
+            os.path.join(
+                absolute_interface_database_path, "types.h"
+            )
+        )
 
         repositories = []
         for repository_interface in all_interface_files:
@@ -898,8 +906,8 @@ def generate_persistence_files(
         root_path,
         contracts_folder_path,
         application_cpp_domain_name,
-        export_header_file,
-        export,
+        contracts_export,
+        contracts_export_header_file,
         files_to_be_generated,
     )
 
@@ -907,8 +915,8 @@ def generate_persistence_files(
         root_path,
         contracts_folder_path,
         application_cpp_domain_name,
-        export_header_file,
-        export,
+        contracts_export,
+        contracts_export_header_file,
         files_to_be_generated,
     )
 
@@ -981,7 +989,6 @@ def get_files_to_be_generated(
         "one_to_many_ordered_associator.h",
         "one_to_one_associator.h",
         "tools.h",
-        "types.h",
     ]
 
     for database_file in database_files:
@@ -1010,6 +1017,7 @@ def get_files_to_be_generated(
     files.append(
         os.path.join(interface_database_folder_path, "interface_database_table_group.h")
     )
+    files.append(os.path.join(interface_database_folder_path, "types.h"))
 
     # add repository cmake file:
     files.append(os.path.join(base_folder_path, "repositories.cmake"))

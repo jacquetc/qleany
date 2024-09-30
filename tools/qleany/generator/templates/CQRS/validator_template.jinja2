@@ -10,7 +10,7 @@
 {% endfor %}
 #include "result.h"
 
-using namespace {{ application_cpp_domain_name }};
+using namespace {{ validator.application_cpp_domain_name }};
 {% if validator.repositories|length %}
 using namespace {{ validator.application_cpp_domain_name }}::Contracts::Repository;
 {% endif %}

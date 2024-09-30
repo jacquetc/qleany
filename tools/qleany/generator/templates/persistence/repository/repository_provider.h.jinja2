@@ -16,7 +16,7 @@ using namespace {{ application_cpp_domain_name }}::Contracts::Repository;
 namespace {{ application_cpp_domain_name }}::Persistence::Repository
 {
 class {{ export }} RepositoryProvider : public QObject,
-                                         public Qleany::Contracts::Repository::InterfaceRepositoryProvider
+                                         public InterfaceRepositoryProvider
 {
     Q_OBJECT
 

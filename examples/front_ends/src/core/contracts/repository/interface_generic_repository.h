@@ -3,7 +3,7 @@
 #pragma once
 
 #include "database/types.h"
-#include "entities/entity_schema.h"
+#include "entity_schema.h"
 #include "result.h"
 #include <QCoreApplication>
 #include <QFuture>
@@ -32,8 +32,8 @@ public:
     virtual Result<bool> exists(int id) = 0;
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<FrontEnds::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const FrontEnds::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<FrontEnds::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const FrontEnds::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginChanges() = 0;
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;

@@ -188,7 +188,7 @@ class Client : public Entity
 inline bool operator==(const Client &lhs, const Client &rhs)
 {
 
-    return static_cast<const Entity &>(lhs) == static_cast<const Entity &>(rhs) &&
+    return static_cast<const Simple::Entities::Entity &>(lhs) == static_cast<const Simple::Entities::Entity &>(rhs) &&
 
            lhs.m_client == rhs.m_client && lhs.m_clientFriends == rhs.m_clientFriends;
 }
@@ -196,7 +196,7 @@ inline bool operator==(const Client &lhs, const Client &rhs)
 inline uint qHash(const Client &entity, uint seed = 0) noexcept
 { // Seed the hash with the parent class's hash
     uint hash = 0;
-    hash ^= qHash(static_cast<const Entity &>(entity), seed);
+    hash ^= qHash(static_cast<const Simple::Entities::Entity &>(entity), seed);
 
     // Combine with this class's properties
     hash ^= ::qHash(entity.m_client, seed);
@@ -223,8 +223,8 @@ inline Simple::Entities::EntitySchema Client::schema = {
      {"uuid"_L1, FieldType::Uuid, false, false},
      {"creationDate"_L1, FieldType::DateTime, false, false},
      {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"client"_L1, FieldType::Entity, false, true},
-     {"clientFriends"_L1, FieldType::Entity, false, true}}};
+     {"client"_L1, FieldType::OtherEntity, false, true},
+     {"clientFriends"_L1, FieldType::OtherEntity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Client)

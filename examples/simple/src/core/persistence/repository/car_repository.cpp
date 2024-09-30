@@ -6,7 +6,8 @@
 #include <QObject>
 #endif
 
-using namespace Simple using namespace Simple::Persistence::Repository;
+using namespace Simple;
+using namespace Simple::Persistence::Repository;
 using namespace Simple::Contracts::Repository;
 
 CarRepository::CarRepository(InterfaceDatabaseTableGroup<Simple::Entities::Car> *carDatabase,
@@ -67,7 +68,7 @@ Result<Simple::Entities::Car> CarRepository::update(Entities::Car &&entity)
 Result<Simple::Entities::Car> CarRepository::getWithDetails(int entityId)
 {
     QWriteLocker locker(&m_lock);
-    auto getResult = Qleany::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
+    auto getResult = Simple::Persistence::Repository::GenericRepository<Entities::Car>::get(entityId);
 
     if (getResult.isError())
     {

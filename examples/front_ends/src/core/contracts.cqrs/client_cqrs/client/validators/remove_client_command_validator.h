@@ -6,7 +6,7 @@
 
 #include "result.h"
 
-using namespace;
+using namespace FrontEnds;
 
 using namespace FrontEnds::Contracts::Repository;
 

@@ -2,12 +2,12 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT"
+#include "front_ends_example_contracts_export.h"
 #include "signal_holder.h"
 
 namespace FrontEnds::Contracts::Repository
 {
-class front_ends_example_persistence_export.h InterfaceRepository
+class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT InterfaceRepository
 {
 public:
     virtual ~InterfaceRepository() = default;

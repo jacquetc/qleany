@@ -13,11 +13,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(BUILD_QT_QUICK "Build the QtQuick front end" ON)
+option(BUILD_QT_QUICK "Build the QtQuick front end" OFF)
 
 option(BUILD_QT_WIDGETS "Build the QtWidgets front end" OFF)
 
-option(BUILD_KF6_KIRIGAMI "Build the KF6Kirigami front end" OFF)
+option(BUILD_KF6_KIRIGAMI "Build the KF6Kirigami front end" ON)
 
 
 

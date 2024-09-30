@@ -1,14 +1,14 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
-#include "FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT"
+#include "front_ends_example_contracts_export.h"
 #include "result.h"
 #include <QSqlDatabase>
 #include <QThreadPool>
 
 namespace FrontEnds::Contracts::Database
 {
-class front_ends_example_persistence_export.h InterfaceDatabaseContext
+class FRONT_ENDS_EXAMPLE_CONTRACTS_EXPORT InterfaceDatabaseContext
 {
 public:
     virtual ~InterfaceDatabaseContext()

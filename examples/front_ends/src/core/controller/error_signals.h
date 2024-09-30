@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/error.h"
+#include "error.h"
 #include "front_ends_example_controller_export.h"
 #include <QObject>
 

@@ -15,7 +15,7 @@ using namespace FrontEnds::Contracts::Repository;
 
 namespace FrontEnds::Persistence::Repository
 {
-class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT RepositoryProvider : public QObject, public Qleany::Contracts::Repository::InterfaceRepositoryProvider
+class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT RepositoryProvider : public QObject, public InterfaceRepositoryProvider
 {
     Q_OBJECT
 

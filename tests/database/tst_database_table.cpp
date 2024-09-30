@@ -1,10 +1,10 @@
 #include "dummy_basic_entity.h"
 #include "dummy_database_context.h"
-#include "qleany/database/database_table_group.h"
+#include "database/database_table_group.h"
 #include <QtTest/QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Qleany;
+using namespace Simple;
 
 class TestDatabaseTable : public QObject
 {
@@ -20,14 +20,14 @@ class TestDatabaseTable : public QObject
     void testRemove();
 
   private:
-    Database::DatabaseTableGroup<DummyBasicEntity> *m_entityTable;
+    Persistence::Database::DatabaseTableGroup<DummyBasicEntity> *m_entityTable;
 };
 
 void TestDatabaseTable::initTestCase()
 {
     QSharedPointer<DummyDatabaseContext<DummyBasicEntity, DummyBasicEntity>> context(
         new DummyDatabaseContext<DummyBasicEntity, DummyBasicEntity>());
-    m_entityTable = new Database::DatabaseTableGroup<DummyBasicEntity>(context);
+    m_entityTable = new Persistence::Database::DatabaseTableGroup<DummyBasicEntity>(context);
     context->init();
 }
 

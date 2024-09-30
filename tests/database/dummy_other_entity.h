@@ -6,9 +6,9 @@
 
 #include "dummy_entity.h"
 #include "entities.h"
-#include "examples/simple/src/core/entities/entity_schema.h"
+#include "entity_schema.h"
 
-using namespace Qleany::Entities;
+using namespace Simple::Entities;
 
 namespace DatabaseTest::Entities
 {
@@ -70,7 +70,7 @@ class DummyOtherEntity : public DummyEntity
         m_name = name;
     }
 
-    static Qleany::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema schema;
 
   private:
     QString m_name;
@@ -96,7 +96,7 @@ inline uint qHash(const DummyOtherEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyOtherEntity entity
-inline Qleany::Entities::EntitySchema DummyOtherEntity::schema = {
+inline Simple::Entities::EntitySchema DummyOtherEntity::schema = {
     DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity,
     QString::fromLatin1("DummyOtherEntity"),
 

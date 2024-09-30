@@ -1,9 +1,12 @@
 FROM fedora:latest
 
 
-RUN dnf install -y build-ninja gcc cmake extra-cmake-modules gdb clang clang-tools-extra
-RUN dnf install -y qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtsvg-devel kirigami2-dev qcoro-qt6-devel
+RUN dnf install -y ninja-build gcc cmake extra-cmake-modules gdb clang clang-tools-extra
+RUN dnf install -y qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtsvg-devel qcoro-qt6-devel
+RUN dnf install -y kf6-kirigami-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-ki18n-devel
 RUN dnf install -y python3-poetry
+RUN dnf install -y git
+RUN mkdir .venv
 
 # ARG REINSTALL_CMAKE_VERSION_FROM_SOURCE="3.22.2"
 

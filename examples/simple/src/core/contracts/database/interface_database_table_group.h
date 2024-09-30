@@ -1,10 +1,10 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "database/types.h"
-#include "entities/entity_schema.h"
 #include "result.h"
+#include "database/types.h"
+#include "entity_schema.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -32,8 +32,8 @@ template <class T> class InterfaceDatabaseTableGroup
     virtual Result<bool> exists(const QUuid &uuid) = 0;
     virtual Result<bool> exists(int id) = 0;
     virtual Result<void> clear() = 0;
-    virtual Result<Simple::Persistence::Database::SaveData> save(const QList<int> &idList) = 0;
-    virtual Result<void> restore(const Simple::Persistence::Database::SaveData &saveData) = 0;
+    virtual Result<Simple::Contracts::Database::SaveData> save(const QList<int> &idList) = 0;
+    virtual Result<void> restore(const Simple::Contracts::Database::SaveData &saveData) = 0;
     virtual Result<void> beginTransaction() = 0;
     virtual Result<void> commit() = 0;
     virtual Result<void> rollback() = 0;

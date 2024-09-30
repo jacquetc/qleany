@@ -1,23 +1,22 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
-#include "repository/interface_repository.h"
-#include "repository/interface_repository_provider.h"
 #include "simple_example_persistence_export.h"
 #include <QDebug>
 #include <QHash>
 #include <QMutex>
 #include <QObject>
+#include "repository/interface_repository.h"
+#include "repository/interface_repository_provider.h"
 #include <type_traits>
 
 using namespace Simple::Contracts::Repository;
 
 namespace Simple::Persistence::Repository
 {
-class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT RepositoryProvider
-    : public QObject,
-      public Qleany::Contracts::Repository::InterfaceRepositoryProvider
+class SIMPLE_EXAMPLE_PERSISTENCE_EXPORT RepositoryProvider : public QObject,
+                                         public InterfaceRepositoryProvider
 {
     Q_OBJECT
 
