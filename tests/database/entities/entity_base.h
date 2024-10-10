@@ -97,5 +97,5 @@ inline uint qHash(const EntityBase &entity, uint seed = 0) noexcept
     return hash;
 }
 
-} // namespace FrontEnds::Entities
+} // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::EntityBase)

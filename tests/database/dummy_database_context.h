@@ -8,7 +8,7 @@
 #include <QThreadPool>
 #include <QUuid>
 
-using namespace Simple;
+using namespace DatabaseTest;
 
 template <class T, class U> class DummyDatabaseContext : public Contracts::Database::InterfaceDatabaseContext
 {

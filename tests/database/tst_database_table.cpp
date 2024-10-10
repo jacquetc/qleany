@@ -4,7 +4,6 @@
 #include <QtTest/QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Simple;
 
 class TestDatabaseTable : public QObject
 {

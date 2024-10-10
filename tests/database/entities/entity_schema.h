@@ -90,4 +90,4 @@ struct EntitySchema
     QList<FieldInfo> fields;
 };
 
-} // namespace DatabaseTest::EntitySchema::Schema
+} // namespace DatabaseTest::Entities::EntitySchema

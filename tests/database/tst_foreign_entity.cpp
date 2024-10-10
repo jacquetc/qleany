@@ -14,10 +14,10 @@
 #include <QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Simple;
-using namespace Simple::Persistence;
-using namespace Simple::Persistence::Database;
-using namespace Simple::Entities;
+using namespace DatabaseTest;
+using namespace DatabaseTest::Persistence;
+using namespace DatabaseTest::Persistence::Database;
+using namespace DatabaseTest::Entities;
 
 class ForeignEntityTest : public QObject
 {
@@ -67,23 +67,23 @@ ForeignEntityTest::~ForeignEntityTest()
 void ForeignEntityTest::initTestCase()
 {
 
-    RelationshipInfo otmOrderedRelationshipInfo;
-    RelationshipInfo otmUnorderedRelationshipInfo;
-    RelationshipInfo uniqueRelationshipInfo;
+    EntitySchema::RelationshipInfo otmOrderedRelationshipInfo;
+    EntitySchema::RelationshipInfo otmUnorderedRelationshipInfo;
+    EntitySchema::RelationshipInfo uniqueRelationshipInfo;
     for (const auto &relationship : DummyEntityWithForeign::schema.relationships)
     {
-        if (relationship.type == RelationshipType::OneToMany &&
-            relationship.cardinality == RelationshipCardinality::ManyOrdered)
+        if (relationship.type == EntitySchema::RelationshipType::OneToMany &&
+            relationship.cardinality == EntitySchema::RelationshipCardinality::ManyOrdered)
         {
             otmOrderedRelationshipInfo = relationship;
         }
-        else if (relationship.type == RelationshipType::OneToMany &&
-                 relationship.cardinality == RelationshipCardinality::ManyUnordered)
+        else if (relationship.type == EntitySchema::RelationshipType::OneToMany &&
+                 relationship.cardinality == EntitySchema::RelationshipCardinality::ManyUnordered)
         {
             otmUnorderedRelationshipInfo = relationship;
         }
-        else if (relationship.type == RelationshipType::OneToOne &&
-                 relationship.cardinality == RelationshipCardinality::One)
+        else if (relationship.type == EntitySchema::RelationshipType::OneToOne &&
+                 relationship.cardinality == EntitySchema::RelationshipCardinality::One)
         {
             uniqueRelationshipInfo = relationship;
         }

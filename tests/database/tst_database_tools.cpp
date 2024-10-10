@@ -12,9 +12,9 @@
 #include <QtTest>
 
 using namespace DatabaseTest::Entities;
-using namespace Simple;
-using namespace Simple::Persistence;
-using namespace Simple::Entities;
+using namespace DatabaseTest;
+using namespace DatabaseTest::Persistence;
+using namespace DatabaseTest::Entities;
 
 class DatabaseToolsTest : public QObject
 {

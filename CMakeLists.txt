@@ -79,7 +79,7 @@ qcoro_enable_coroutines()
 
 # Subdirectories that contain CMakeLists.txt for the framework tests and example
 if(QLEANY_BUILD_TESTS)
-  #add_subdirectory(tests)
+  add_subdirectory(tests)
 endif()
 
 if(QLEANY_BUILD_EXAMPLES)

@@ -1,8 +1,14 @@
 ---
-
+schema:
+  version: 1
+  
 global:
   application_name: DatabaseTest
   application_cpp_domain_name: DatabaseTest
+  organisation:
+    name: databasetest
+    domain: databasetest.eu
+
 
 entities:
   list:
@@ -45,4 +51,23 @@ entities:
           name: orderedList
           ordered: true
           strong: false
-  folder_path: ./
+  folder_path: entities/
+
+persistence:
+  list:
+    - entity_name: DummyBasicEntity
+      lazy_loaders: true
+    - entity_name: DummyOtherEntity
+      lazy_loaders: true
+    - entity_name: DummyEntityWithForeign
+      lazy_loaders: true
+  repository_folder_path: persistence/repository/
+  base_folder_path: persistence/
+
+  
+contracts:
+  inverted_app_domain: eu.databasetest
+  folder_path: contracts
+
+common:
+  folder_path: common/
