@@ -37,14 +37,14 @@ template <class T> class InterfaceGenericRepository
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;
 
-    virtual Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                      int entityId, const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
                                             const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                         int entityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
                                                const QString &field, const T &rightEntity) = 0;
 };
 } // namespace Simple::Contracts::Repository

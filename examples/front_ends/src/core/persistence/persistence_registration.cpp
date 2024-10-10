@@ -37,10 +37,10 @@ PersistenceRegistration::PersistenceRegistration(QObject *parent)
 
     // repositories:
 
+    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
     BrandRepository *brandRepository = new BrandRepository(brandDatabaseTableGroup);
     CarRepository *carRepository = new CarRepository(carDatabaseTableGroup, brandRepository, passengerRepository);
     ClientRepository *clientRepository = new ClientRepository(clientDatabaseTableGroup, passengerRepository);
-    PassengerRepository *passengerRepository = new PassengerRepository(passengerDatabaseTableGroup);
 
     // register repositories:
 

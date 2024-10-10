@@ -1,6 +1,6 @@
 #pragma once
 #include "QtSql/qsqlerror.h"
-#include "result.h"
+#include "error.h"
 #include "database/interface_database_context.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>

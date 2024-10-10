@@ -19,7 +19,7 @@ template <class RightEntity> class OneToManyUnorderedAssociator
 {
   public:
     OneToManyUnorderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                                 const {{ application_cpp_domain_name }}::Entities::RelationshipInfo &relationship)
+                                 const {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
@@ -41,7 +41,7 @@ template <class RightEntity> class OneToManyUnorderedAssociator
 
   private:
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const {{ application_cpp_domain_name }}::Entities::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const {{ application_cpp_domain_name }}::Entities::EntitySchema::EntitySchema &entitySchema) const;
     QSharedPointer<InterfaceDatabaseContext>
         m_databaseContext; /**< A QScopedPointer that holds the InterfaceDatabaseContext associated with this
                             * DatabaseTableGroup.
@@ -52,10 +52,10 @@ template <class RightEntity> class OneToManyUnorderedAssociator
     QString m_leftEntityForeignTableName;
     QString m_junctionTableRightEntityForeignKeyName;
     QString m_rightEntityForeignTableName;
-    {{ application_cpp_domain_name }}::Entities::RelationshipInfo m_relationship;
-    {{ application_cpp_domain_name }}::Entities::EntitySchema m_rightEntitySchema = RightEntity::schema;
+    {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo m_relationship;
+    {{ application_cpp_domain_name }}::Entities::EntitySchema::EntitySchema m_rightEntitySchema = RightEntity::schema;
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
-    {{ application_cpp_domain_name }}::Entities::EntitySchema m_leftEntitySchema;
+    {{ application_cpp_domain_name }}::Entities::EntitySchema::EntitySchema m_leftEntitySchema;
     QString m_fieldName;
 };
 
@@ -233,7 +233,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
 
 template <class RightEntity>
 QStringList OneToManyUnorderedAssociator<RightEntity>::getTablePropertyColumns(
-    const {{ application_cpp_domain_name }}::Entities::EntitySchema &entitySchema) const
+    const {{ application_cpp_domain_name }}::Entities::EntitySchema::EntitySchema &entitySchema) const
 {
     QStringList columns;
 

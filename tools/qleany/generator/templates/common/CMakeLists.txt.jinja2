@@ -8,7 +8,9 @@ set(LIBRARY_NAME {{ application_name_spinal }}-common)
 set(SRC
     error.h
     result.h
-)
+    tools/automapper.h
+    tools/automapper.cpp
+    )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

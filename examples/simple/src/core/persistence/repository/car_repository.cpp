@@ -170,8 +170,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // remove the brand in cascade
 
-    Simple::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo brandBrandRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Brand &&
             relationship.fieldName == "brand"_L1)
@@ -183,7 +184,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (brandBrandRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (brandBrandRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -207,8 +208,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // remove the passengers in cascade
 
-    Simple::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerPassengersRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "passengers"_L1)
@@ -220,7 +222,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (passengerPassengersRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerPassengersRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -267,8 +269,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // cahnge active status of the brand in cascade
 
-    Simple::Entities::RelationshipInfo brandBrandRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo brandBrandRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Brand &&
             relationship.fieldName == QString::fromLatin1("brand"))
@@ -280,7 +283,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (brandBrandRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (brandBrandRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -305,8 +308,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     // cahnge active status of the passengers in cascade
 
-    Simple::Entities::RelationshipInfo passengerPassengersRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Car::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerPassengersRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Car::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("passengers"))
@@ -318,7 +322,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> CarRepository:
 
     for (int entityId : ids)
     {
-        if (passengerPassengersRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerPassengersRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 

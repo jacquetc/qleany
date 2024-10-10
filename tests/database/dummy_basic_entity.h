@@ -8,8 +8,6 @@
 #include "entities.h"
 #include "entity_schema.h"
 
-using namespace Simple::Entities;
-
 namespace DatabaseTest::Entities
 {
 
@@ -86,7 +84,7 @@ class DummyBasicEntity : public DummyEntity
         m_author = author;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static DatabaseTest::Entities::EntitySchema::EntitySchema schema;
 
   private:
     QString m_name;
@@ -114,7 +112,7 @@ inline uint qHash(const DummyBasicEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyBasicEntity entity
-inline Simple::Entities::EntitySchema DummyBasicEntity::schema = {
+inline DatabaseTest::Entities::EntitySchema::EntitySchema DummyBasicEntity::schema = {
     DatabaseTest::Entities::Entities::EntityEnum::DummyBasicEntity,
     "DummyBasicEntity"_L1,
 
@@ -124,12 +122,12 @@ inline Simple::Entities::EntitySchema DummyBasicEntity::schema = {
     },
 
     // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"name"_L1, FieldType::String, false, false},
-     {"author"_L1, FieldType::String, false, false}}};
+    {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+     {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+     {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"name"_L1, EntitySchema::FieldType::String, false, false},
+     {"author"_L1, EntitySchema::FieldType::String, false, false}}};
 
 } // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyBasicEntity)

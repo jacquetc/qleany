@@ -19,7 +19,7 @@ template <class RightEntity> class OneToOneAssociator
 {
   public:
     OneToOneAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                       const Simple::Entities::RelationshipInfo &relationship)
+                       const Simple::Entities::EntitySchema::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
@@ -41,7 +41,7 @@ template <class RightEntity> class OneToOneAssociator
 
   private:
     Result<RightEntity> getRightEntityFromItsId(int rightEntityId) const;
-    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const;
     QSharedPointer<InterfaceDatabaseContext>
         m_databaseContext; /**< A QScopedPointer that holds the InterfaceDatabaseContext associated with this
                             * DatabaseTableGroup.
@@ -52,8 +52,8 @@ template <class RightEntity> class OneToOneAssociator
     QString m_leftEntityForeignTableName;
     QString m_junctionTableRightEntityForeignKeyName;
     QString m_rightEntityForeignTableName;
-    Simple::Entities::RelationshipInfo m_relationship;
-    Simple::Entities::EntitySchema m_rightEntitySchema = RightEntity::schema;
+    Simple::Entities::EntitySchema::RelationshipInfo m_relationship;
+    Simple::Entities::EntitySchema::EntitySchema m_rightEntitySchema = RightEntity::schema;
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
     QString m_fieldName;
 };
@@ -265,7 +265,7 @@ Result<RightEntity> OneToOneAssociator<RightEntity>::getRightEntityFromItsId(int
 
 template <class RightEntity>
 QStringList OneToOneAssociator<RightEntity>::getTablePropertyColumns(
-    const Simple::Entities::EntitySchema &entitySchema) const
+    const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const
 {
     QStringList columns;
 

@@ -160,7 +160,7 @@ public:
         m_updateDate = updateDate;
     }
 
-    static FrontEnds::Entities::EntitySchema schema;
+    static FrontEnds::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -197,19 +197,19 @@ inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Entity entity
-inline FrontEnds::Entities::EntitySchema Entity::schema = {FrontEnds::Entities::Entities::EntityEnum::Entity,
-                                                           "Entity"_L1,
+inline FrontEnds::Entities::EntitySchema::EntitySchema Entity::schema = {FrontEnds::Entities::Entities::EntityEnum::Entity,
+                                                                         "Entity"_L1,
 
-                                                           // relationships:
-                                                           {
+                                                                         // relationships:
+                                                                         {
 
-                                                           },
+                                                                         },
 
-                                                           // fields:
-                                                           {{"id"_L1, FieldType::Integer, true, false},
-                                                            {"uuid"_L1, FieldType::Uuid, false, false},
-                                                            {"creationDate"_L1, FieldType::DateTime, false, false},
-                                                            {"updateDate"_L1, FieldType::DateTime, false, false}}};
+                                                                         // fields:
+                                                                         {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+                                                                          {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+                                                                          {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                                          {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false}}};
 
 } // namespace FrontEnds::Entities
 Q_DECLARE_METATYPE(FrontEnds::Entities::Entity)

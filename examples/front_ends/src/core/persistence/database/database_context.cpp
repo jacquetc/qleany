@@ -1,4 +1,4 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "database/database_context.h"
 #include "QtSql/qsqlerror.h"
@@ -15,12 +15,14 @@ DatabaseContext::DatabaseContext()
 
 DatabaseContext::~DatabaseContext()
 {
+
     // remove m_databaseName file
     QFile::remove(m_databaseName);
 
     // remove all connection
     QStringList connectionNames = QSqlDatabase::connectionNames();
-    for (const QString &connectionName : connectionNames) {
+    for (const QString &connectionName : connectionNames)
+    {
         QSqlDatabase::removeDatabase(connectionName);
     }
 }
@@ -29,9 +31,11 @@ DatabaseContext::~DatabaseContext()
 
 FrontEnds::Result<void> DatabaseContext::init()
 {
+
     Result<QString> databaseNameResult = createEmptyDatabase();
 
-    if (databaseNameResult.isError()) {
+    if (databaseNameResult.isError())
+    {
         return Result<void>(databaseNameResult.error());
     }
     return Result<void>();
@@ -43,26 +47,28 @@ QSqlDatabase DatabaseContext::getConnection()
 {
     QMutexLocker locker(&mutex);
     QString connectionName = "Thread_%1"_L1.arg(QString::number(uintptr_t(QThread::currentThreadId())));
-    if (!QSqlDatabase::contains(connectionName)) {
+    if (!QSqlDatabase::contains(connectionName))
+    {
         QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE"_L1, connectionName);
         database.setDatabaseName(m_databaseName);
-        if (!database.open()) {
+        if (!database.open())
+        {
             QSqlDatabase::removeDatabase(connectionName);
             qDebug() << Q_FUNC_INFO << "sql_error" << database.lastError().text();
         }
 
         // List of PRAGMA statements to execute for the new connection
-        QStringList pragmas = {QStringLiteral("PRAGMA case_sensitive_like=true"),
-                               QStringLiteral("PRAGMA journal_mode=MEMORY"),
-                               QStringLiteral("PRAGMA temp_store=MEMORY"),
-                               QStringLiteral("PRAGMA locking_mode=NORMAL"),
-                               QStringLiteral("PRAGMA synchronous=OFF"),
-                               QStringLiteral("PRAGMA recursive_triggers=ON"),
-                               QStringLiteral("PRAGMA foreign_keys=ON")};
+        QStringList pragmas = {
+            QStringLiteral("PRAGMA case_sensitive_like=true"), QStringLiteral("PRAGMA journal_mode=MEMORY"),
+            QStringLiteral("PRAGMA temp_store=MEMORY"),        QStringLiteral("PRAGMA locking_mode=NORMAL"),
+            QStringLiteral("PRAGMA synchronous=OFF"),          QStringLiteral("PRAGMA recursive_triggers=ON"),
+            QStringLiteral("PRAGMA foreign_keys=ON")};
 
         QSqlQuery pragmaQuery(database);
-        for (const QString &pragma : pragmas) {
-            if (!pragmaQuery.exec(pragma)) {
+        for (const QString &pragma : pragmas)
+        {
+            if (!pragmaQuery.exec(pragma))
+            {
                 qDebug() << Q_FUNC_INFO << "pragma_error" << pragma << pragmaQuery.lastError().text();
                 // Decide on error handling: continue, abort, or some other strategy
             }
@@ -102,40 +108,52 @@ FrontEnds::Result<QString> DatabaseContext::createEmptyDatabase()
         // entity tables
         QList<QString> entityTableSqls = m_creationSqlHash.values("entity_table"_L1);
 
-        for (const QString &string : entityTableSqls) {
-            if (!query.prepare(string)) {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text().toLatin1().constData(), string.toLatin1().constData()));
+        for (const QString &string : entityTableSqls)
+        {
+            if (!query.prepare(string))
+            {
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
-            if (!query.exec()) {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text().toLatin1().constData(), string.toLatin1().constData()));
+            if (!query.exec())
+            {
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
         }
 
         // junction tables
         QList<QString> junctionTableSqls = m_creationSqlHash.values("junction_table"_L1);
 
-        for (const QString &string : junctionTableSqls) {
-            if (!query.prepare(string)) {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text().toLatin1().constData(), string.toLatin1().constData()));
+        for (const QString &string : junctionTableSqls)
+        {
+            if (!query.prepare(string))
+            {
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
-            if (!query.exec()) {
-                return Result<QString>(
-                    QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error", query.lastError().text().toLatin1().constData(), string.toLatin1().constData()));
+            if (!query.exec())
+            {
+                return Result<QString>(QLN_ERROR_3(Q_FUNC_INFO, Error::Critical, "sql_error",
+                                                   query.lastError().text().toLatin1().constData(),
+                                                   string.toLatin1().constData()));
             }
         }
 
         // database optimization options
         QStringList optimization;
-        optimization << QStringLiteral("PRAGMA case_sensitive_like=true") << QStringLiteral("PRAGMA journal_mode=MEMORY")
-                     << QStringLiteral("PRAGMA temp_store=MEMORY") << QStringLiteral("PRAGMA locking_mode=NORMAL") << QStringLiteral("PRAGMA synchronous = OFF")
+        optimization << QStringLiteral("PRAGMA case_sensitive_like=true")
+                     << QStringLiteral("PRAGMA journal_mode=MEMORY") << QStringLiteral("PRAGMA temp_store=MEMORY")
+                     << QStringLiteral("PRAGMA locking_mode=NORMAL") << QStringLiteral("PRAGMA synchronous = OFF")
                      << QStringLiteral("PRAGMA recursive_triggers = ON") << QStringLiteral("PRAGMA foreign_keys = ON");
 
         // execute each optimization option as a single query within the transaction
 
-        for (const QString &string : std::as_const(optimization)) {
+        for (const QString &string : std::as_const(optimization))
+        {
             query.prepare(string);
             query.exec();
         }

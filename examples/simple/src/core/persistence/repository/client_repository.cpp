@@ -169,8 +169,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // remove the client in cascade
 
-    Simple::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerClientRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "client"_L1)
@@ -182,7 +183,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -206,8 +207,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // remove the clientFriends in cascade
 
-    Simple::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == "clientFriends"_L1)
@@ -219,7 +221,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -267,8 +269,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // cahnge active status of the client in cascade
 
-    Simple::Entities::RelationshipInfo passengerClientRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerClientRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("client"))
@@ -280,7 +283,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerClientRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 
@@ -305,8 +308,9 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     // cahnge active status of the clientFriends in cascade
 
-    Simple::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const Simple::Entities::RelationshipInfo &relationship : Simple::Entities::Client::schema.relationships)
+    Simple::Entities::EntitySchema::RelationshipInfo passengerClientFriendsRelationship;
+    for (const Simple::Entities::EntitySchema::RelationshipInfo &relationship :
+         Simple::Entities::Client::schema.relationships)
     {
         if (relationship.rightEntityId == Simple::Entities::Entities::EntityEnum::Passenger &&
             relationship.fieldName == QString::fromLatin1("clientFriends"))
@@ -318,7 +322,7 @@ Result<QHash<Simple::Entities::Entities::EntityEnum, QList<int>>> ClientReposito
 
     for (int entityId : ids)
     {
-        if (passengerClientFriendsRelationship.strength == Simple::Entities::RelationshipStrength::Strong)
+        if (passengerClientFriendsRelationship.strength == Simple::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
 

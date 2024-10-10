@@ -2,7 +2,7 @@
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "entity_base.h"
 
-using namespace FrontEnds::Entities;
+using namespace DatabaseTest::Entities;
 
 EntityBase::EntityBase() : m_id(0), m_metaData(this)
 {

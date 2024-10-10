@@ -1,4 +1,4 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #include "repository_provider.h"
 
@@ -8,7 +8,8 @@ QScopedPointer<RepositoryProvider> RepositoryProvider::s_instance = QScopedPoint
 
 RepositoryProvider *RepositoryProvider::instance()
 {
-    if (s_instance.isNull()) {
+    if (s_instance.isNull())
+    {
         s_instance.reset(new RepositoryProvider());
     }
 
@@ -19,7 +20,8 @@ void RepositoryProvider::registerRepository(const char *name, InterfaceRepositor
 {
     QMutexLocker locker(&m_mutex);
 
-    if (m_repositories.contains(QString::fromLatin1(name).toCaseFolded())) {
+    if (m_repositories.contains(QString::fromLatin1(name).toCaseFolded()))
+    {
         qWarning() << "Repositories: m_repositories contains already this InterfaceRepository";
         return;
     }
@@ -31,7 +33,8 @@ InterfaceRepository *RepositoryProvider::repository(const char *name)
     QMutexLocker locker(&m_mutex);
     auto repository = m_repositories.value(QString::fromLatin1(name).toCaseFolded(), nullptr);
 
-    if (!repository) {
+    if (!repository)
+    {
         qCritical() << "No repository registered for type" << QString::fromLatin1(name).toCaseFolded();
     }
     return repository;

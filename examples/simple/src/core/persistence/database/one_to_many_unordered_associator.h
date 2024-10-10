@@ -19,7 +19,7 @@ template <class RightEntity> class OneToManyUnorderedAssociator
 {
   public:
     OneToManyUnorderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                                 const Simple::Entities::RelationshipInfo &relationship)
+                                 const Simple::Entities::EntitySchema::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
@@ -41,7 +41,7 @@ template <class RightEntity> class OneToManyUnorderedAssociator
 
   private:
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const;
     QSharedPointer<InterfaceDatabaseContext>
         m_databaseContext; /**< A QScopedPointer that holds the InterfaceDatabaseContext associated with this
                             * DatabaseTableGroup.
@@ -52,10 +52,10 @@ template <class RightEntity> class OneToManyUnorderedAssociator
     QString m_leftEntityForeignTableName;
     QString m_junctionTableRightEntityForeignKeyName;
     QString m_rightEntityForeignTableName;
-    Simple::Entities::RelationshipInfo m_relationship;
-    Simple::Entities::EntitySchema m_rightEntitySchema = RightEntity::schema;
+    Simple::Entities::EntitySchema::RelationshipInfo m_relationship;
+    Simple::Entities::EntitySchema::EntitySchema m_rightEntitySchema = RightEntity::schema;
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
-    Simple::Entities::EntitySchema m_leftEntitySchema;
+    Simple::Entities::EntitySchema::EntitySchema m_leftEntitySchema;
     QString m_fieldName;
 };
 
@@ -233,7 +233,7 @@ Result<QList<RightEntity>> OneToManyUnorderedAssociator<RightEntity>::getRightEn
 
 template <class RightEntity>
 QStringList OneToManyUnorderedAssociator<RightEntity>::getTablePropertyColumns(
-    const Simple::Entities::EntitySchema &entitySchema) const
+    const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const
 {
     QStringList columns;
 

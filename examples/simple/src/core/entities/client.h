@@ -168,7 +168,7 @@ class Client : public Entity
         m_clientFriendsLoader = loader;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -206,25 +206,26 @@ inline uint qHash(const Client &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Client entity
-inline Simple::Entities::EntitySchema Client::schema = {
+inline Simple::Entities::EntitySchema::EntitySchema Client::schema = {
     Simple::Entities::Entities::EntityEnum::Client,
     "Client"_L1,
 
     // relationships:
     {{Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "client"_L1, RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
-      RelationshipDirection::Forward},
+      "Passenger"_L1, "client"_L1, EntitySchema::RelationshipType::OneToOne, EntitySchema::RelationshipStrength::Weak,
+      EntitySchema::RelationshipCardinality::One, EntitySchema::RelationshipDirection::Forward},
      {Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "clientFriends"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyUnordered, RelationshipDirection::Forward}},
+      "Passenger"_L1, "clientFriends"_L1, EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Strong, EntitySchema::RelationshipCardinality::ManyUnordered,
+      EntitySchema::RelationshipDirection::Forward}},
 
     // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"client"_L1, FieldType::OtherEntity, false, true},
-     {"clientFriends"_L1, FieldType::OtherEntity, false, true}}};
+    {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+     {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+     {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"client"_L1, EntitySchema::FieldType::Entity, false, true},
+     {"clientFriends"_L1, EntitySchema::FieldType::Entity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Client)

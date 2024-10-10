@@ -111,7 +111,7 @@ public:
         m_name = name;
     }
 
-    static FrontEnds::Entities::EntitySchema schema;
+    static FrontEnds::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -144,44 +144,44 @@ inline uint qHash(const Passenger &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Passenger entity
-inline FrontEnds::Entities::EntitySchema Passenger::schema = {FrontEnds::Entities::Entities::EntityEnum::Passenger,
-                                                              "Passenger"_L1,
+inline FrontEnds::Entities::EntitySchema::EntitySchema Passenger::schema = {FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                            "Passenger"_L1,
 
-                                                              // relationships:
-                                                              {{FrontEnds::Entities::Entities::EntityEnum::Car,
-                                                                "Car"_L1,
-                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
-                                                                "Passenger"_L1,
-                                                                "passengers"_L1,
-                                                                RelationshipType::OneToMany,
-                                                                RelationshipStrength::Strong,
-                                                                RelationshipCardinality::ManyOrdered,
-                                                                RelationshipDirection::Backward},
-                                                               {FrontEnds::Entities::Entities::EntityEnum::Client,
-                                                                "Client"_L1,
-                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
-                                                                "Passenger"_L1,
-                                                                "client"_L1,
-                                                                RelationshipType::OneToOne,
-                                                                RelationshipStrength::Weak,
-                                                                RelationshipCardinality::One,
-                                                                RelationshipDirection::Backward},
-                                                               {FrontEnds::Entities::Entities::EntityEnum::Client,
-                                                                "Client"_L1,
-                                                                FrontEnds::Entities::Entities::EntityEnum::Passenger,
-                                                                "Passenger"_L1,
-                                                                "clientFriends"_L1,
-                                                                RelationshipType::OneToMany,
-                                                                RelationshipStrength::Strong,
-                                                                RelationshipCardinality::ManyUnordered,
-                                                                RelationshipDirection::Backward}},
+                                                                            // relationships:
+                                                                            {{FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                                              "Car"_L1,
+                                                                              FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                              "Passenger"_L1,
+                                                                              "passengers"_L1,
+                                                                              EntitySchema::RelationshipType::OneToMany,
+                                                                              EntitySchema::RelationshipStrength::Strong,
+                                                                              EntitySchema::RelationshipCardinality::ManyOrdered,
+                                                                              EntitySchema::RelationshipDirection::Backward},
+                                                                             {FrontEnds::Entities::Entities::EntityEnum::Client,
+                                                                              "Client"_L1,
+                                                                              FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                              "Passenger"_L1,
+                                                                              "client"_L1,
+                                                                              EntitySchema::RelationshipType::OneToOne,
+                                                                              EntitySchema::RelationshipStrength::Weak,
+                                                                              EntitySchema::RelationshipCardinality::One,
+                                                                              EntitySchema::RelationshipDirection::Backward},
+                                                                             {FrontEnds::Entities::Entities::EntityEnum::Client,
+                                                                              "Client"_L1,
+                                                                              FrontEnds::Entities::Entities::EntityEnum::Passenger,
+                                                                              "Passenger"_L1,
+                                                                              "clientFriends"_L1,
+                                                                              EntitySchema::RelationshipType::OneToMany,
+                                                                              EntitySchema::RelationshipStrength::Strong,
+                                                                              EntitySchema::RelationshipCardinality::ManyUnordered,
+                                                                              EntitySchema::RelationshipDirection::Backward}},
 
-                                                              // fields:
-                                                              {{"id"_L1, FieldType::Integer, true, false},
-                                                               {"uuid"_L1, FieldType::Uuid, false, false},
-                                                               {"creationDate"_L1, FieldType::DateTime, false, false},
-                                                               {"updateDate"_L1, FieldType::DateTime, false, false},
-                                                               {"name"_L1, FieldType::String, false, false}}};
+                                                                            // fields:
+                                                                            {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+                                                                             {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+                                                                             {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                                             {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                                             {"name"_L1, EntitySchema::FieldType::String, false, false}}};
 
 } // namespace FrontEnds::Entities
 Q_DECLARE_METATYPE(FrontEnds::Entities::Passenger)

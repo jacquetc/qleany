@@ -8,10 +8,12 @@ set(LIBRARY_NAME front-ends-example-common)
 set(SRC
     error.h
     result.h
+    tools/automapper.h
+    tools/automapper.cpp
 )
 qt_add_library(${LIBRARY_NAME} STATIC ${SRC})
 
-target_include_directories(${LIBRARY_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES
                     POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}

@@ -5,6 +5,7 @@
 #include "result.h"
 #include "database/types.h"
 #include "entity_schema.h"
+#include "types.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -39,14 +40,14 @@ template <class T> class InterfaceDatabaseTableGroup
     virtual Result<void> rollback() = 0;
 
     // get related entities
-    virtual Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                      int entityId, const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int entityId,
+    virtual Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
                                             const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                         int leftEntityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
+    virtual Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId,
                                                const QString &field, const T &rightEntity) = 0;
     virtual Result<void> removeAssociationsWith(QList<int> rightEntityIds) = 0;
 

@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 #ifdef BUILD_WITH_MOCKS
     engine.addImportPath(QApplication::applicationDirPath() + QStringLiteral("/mock_imports"));
 #endif
-    engine.loadFromModule("org.kde.frontendsexample", u"Main.qml");
+    engine.loadFromModule("org.kde.frontendsexample", u"Main");
 
     if (engine.rootObjects().isEmpty()) {
         return -1;

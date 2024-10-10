@@ -1,10 +1,10 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+#include "result.h"
 #include "database/interface_database_context.h"
 #include "front_ends_example_persistence_export.h"
-#include "result.h"
 #include <QHash>
 #include <QMutexLocker>
 #include <QReadWriteLock>
@@ -21,7 +21,7 @@ namespace FrontEnds::Persistence::Database
  */
 class FRONT_ENDS_EXAMPLE_PERSISTENCE_EXPORT DatabaseContext : public InterfaceDatabaseContext
 {
-public:
+  public:
     /**
      * @brief Constructs a new DatabaseContext object.
      */
@@ -42,9 +42,9 @@ public:
 
     void appendCreationSql(const char *type, const QString &sql) override;
 
-private:
+  private:
     QMutex mutex;
-    QUrl m_fileName; /**< The file name of the internal database. */
+    QUrl m_fileName;        /**< The file name of the internal database. */
     QString m_databaseName; /**< The name of the internal database. */
 
     QMultiHash<QString, QString> m_creationSqlHash;

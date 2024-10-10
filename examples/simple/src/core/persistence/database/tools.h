@@ -222,7 +222,7 @@ template <class T> bool TableTools<T>::isForeign(const QString &propertyName)
     for (const auto &relationship : T::schema.relationships)
     {
         if (relationship.fieldName == propertyName &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Forward)
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Forward)
         {
             result = true;
             break;

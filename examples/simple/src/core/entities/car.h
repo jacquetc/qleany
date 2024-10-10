@@ -196,7 +196,7 @@ class Car : public Entity
         m_passengersLoader = loader;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -236,26 +236,27 @@ inline uint qHash(const Car &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Car entity
-inline Simple::Entities::EntitySchema Car::schema = {
+inline Simple::Entities::EntitySchema::EntitySchema Car::schema = {
     Simple::Entities::Entities::EntityEnum::Car,
     "Car"_L1,
 
     // relationships:
     {{Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Brand, "Brand"_L1,
-      "brand"_L1, RelationshipType::OneToOne, RelationshipStrength::Strong, RelationshipCardinality::One,
-      RelationshipDirection::Forward},
+      "brand"_L1, EntitySchema::RelationshipType::OneToOne, EntitySchema::RelationshipStrength::Strong,
+      EntitySchema::RelationshipCardinality::One, EntitySchema::RelationshipDirection::Forward},
      {Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "passengers"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyOrdered, RelationshipDirection::Forward}},
+      "Passenger"_L1, "passengers"_L1, EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Strong, EntitySchema::RelationshipCardinality::ManyOrdered,
+      EntitySchema::RelationshipDirection::Forward}},
 
     // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"content"_L1, FieldType::String, false, false},
-     {"brand"_L1, FieldType::OtherEntity, false, true},
-     {"passengers"_L1, FieldType::OtherEntity, false, true}}};
+    {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+     {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+     {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"content"_L1, EntitySchema::FieldType::String, false, false},
+     {"brand"_L1, EntitySchema::FieldType::Entity, false, true},
+     {"passengers"_L1, EntitySchema::FieldType::Entity, false, true}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Car)

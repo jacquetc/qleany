@@ -5,14 +5,12 @@
 
 //---------------------------
 
-using namespace Simple;
-
 template <class RightEntity>
 class OneToManyOrderedAssociatorWrapper : public Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>
 {
   public:
     OneToManyOrderedAssociatorWrapper(QSharedPointer<InterfaceDatabaseContext> context,
-                                      const Simple::Entities::RelationshipInfo &relationship)
+                                      const DatabaseTest::Entities::EntitySchema::RelationshipInfo &relationship)
         : Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>(context, relationship)
     {
     }
@@ -23,7 +21,7 @@ class OneToManyOrderedAssociatorWrapper : public Simple::Persistence::Database::
     Result<QList<RightEntity>> updateRightEntities(int leftEntityId, const QList<RightEntity> &rightEntities);
 
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const DatabaseTest::Entities::EntitySchema::EntitySchema &entitySchema) const;
     QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> mergeShadows(
         const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &originalShadows,
         const QList<typename Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::EntityShadow> &newShadows)
@@ -57,7 +55,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociatorWrapper<RightEntity>::getRi
 
 template <class RightEntity>
 QStringList OneToManyOrderedAssociatorWrapper<RightEntity>::getTablePropertyColumns(
-    const Simple::Entities::EntitySchema &entitySchema) const
+    const DatabaseTest::Entities::EntitySchema::EntitySchema &entitySchema) const
 {
     return Simple::Persistence::Database::OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(entitySchema);
 }

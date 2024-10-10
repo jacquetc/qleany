@@ -4,7 +4,7 @@
 
 #include <QObject>
 
-namespace FrontEnds::Entities
+namespace DatabaseTest::Entities
 {
 using namespace Qt::Literals::StringLiterals;
 
@@ -98,4 +98,4 @@ inline uint qHash(const EntityBase &entity, uint seed = 0) noexcept
 }
 
 } // namespace FrontEnds::Entities
-Q_DECLARE_METATYPE(FrontEnds::Entities::EntityBase)
+Q_DECLARE_METATYPE(DatabaseTest::Entities::EntityBase)

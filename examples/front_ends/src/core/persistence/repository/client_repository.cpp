@@ -149,8 +149,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
 
     // remove the client in cascade
 
-    FrontEnds::Entities::RelationshipInfo passengerClientRelationship;
-    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+    FrontEnds::Entities::EntitySchema::RelationshipInfo passengerClientRelationship;
+    for (const FrontEnds::Entities::EntitySchema::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == "client"_L1) {
             passengerClientRelationship = relationship;
             break;
@@ -158,7 +158,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
     }
 
     for (int entityId : ids) {
-        if (passengerClientRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
+        if (passengerClientRelationship.strength == FrontEnds::Entities::EntitySchema::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
@@ -180,8 +180,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
 
     // remove the clientFriends in cascade
 
-    FrontEnds::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+    FrontEnds::Entities::EntitySchema::RelationshipInfo passengerClientFriendsRelationship;
+    for (const FrontEnds::Entities::EntitySchema::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == "clientFriends"_L1) {
             passengerClientFriendsRelationship = relationship;
             break;
@@ -189,7 +189,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
     }
 
     for (int entityId : ids) {
-        if (passengerClientFriendsRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
+        if (passengerClientFriendsRelationship.strength == FrontEnds::Entities::EntitySchema::RelationshipStrength::Strong) {
             // get foreign entities
 
             QList<FrontEnds::Entities::Passenger> foreignClientFriends = this->fetchClientFriendsLoader().operator()(entityId);
@@ -232,8 +232,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
 
     // cahnge active status of the client in cascade
 
-    FrontEnds::Entities::RelationshipInfo passengerClientRelationship;
-    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+    FrontEnds::Entities::EntitySchema::RelationshipInfo passengerClientRelationship;
+    for (const FrontEnds::Entities::EntitySchema::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger && relationship.fieldName == QString::fromLatin1("client")) {
             passengerClientRelationship = relationship;
             break;
@@ -241,7 +241,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
     }
 
     for (int entityId : ids) {
-        if (passengerClientRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
+        if (passengerClientRelationship.strength == FrontEnds::Entities::EntitySchema::RelationshipStrength::Strong) {
             // get foreign entities
 
             FrontEnds::Entities::Passenger foreignClient = this->fetchClientLoader().operator()(entityId);
@@ -264,8 +264,8 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
 
     // cahnge active status of the clientFriends in cascade
 
-    FrontEnds::Entities::RelationshipInfo passengerClientFriendsRelationship;
-    for (const FrontEnds::Entities::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
+    FrontEnds::Entities::EntitySchema::RelationshipInfo passengerClientFriendsRelationship;
+    for (const FrontEnds::Entities::EntitySchema::RelationshipInfo &relationship : FrontEnds::Entities::Client::schema.relationships) {
         if (relationship.rightEntityId == FrontEnds::Entities::Entities::EntityEnum::Passenger
             && relationship.fieldName == QString::fromLatin1("clientFriends")) {
             passengerClientFriendsRelationship = relationship;
@@ -274,7 +274,7 @@ Result<QHash<FrontEnds::Entities::Entities::EntityEnum, QList<int>>> ClientRepos
     }
 
     for (int entityId : ids) {
-        if (passengerClientFriendsRelationship.strength == FrontEnds::Entities::RelationshipStrength::Strong) {
+        if (passengerClientFriendsRelationship.strength == FrontEnds::Entities::EntitySchema::RelationshipStrength::Strong) {
             // get foreign entities
 
             QList<FrontEnds::Entities::Passenger> foreignClientFriends = this->fetchClientFriendsLoader().operator()(entityId);

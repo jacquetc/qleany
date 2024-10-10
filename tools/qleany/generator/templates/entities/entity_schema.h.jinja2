@@ -5,7 +5,7 @@
 #include <QList>
 #include <QString>
 
-namespace {{ application_cpp_domain_name }}::Entities
+namespace {{ application_cpp_domain_name }}::Entities::EntitySchema
 {
 Q_NAMESPACE
 
@@ -19,7 +19,7 @@ enum FieldType
     DateTime,
     Entity
 };
-Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::FieldType);
+Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::EntitySchema::FieldType);
 
 enum RelationshipType
 {
@@ -27,14 +27,14 @@ enum RelationshipType
     OneToMany,
     ManyToMany
 };
-Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::RelationshipType);
+Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipType);
 
 enum RelationshipStrength
 {
     Strong,
     Weak
 };
-Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::RelationshipStrength);
+Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipStrength);
 
 /// @brief RelationshipDirection
 /// Forward: the relationship is defined in the current entity
@@ -46,7 +46,7 @@ enum RelationshipDirection
     Forward,
     Backward
 };
-Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::RelationshipDirection);
+Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipDirection);
 
 /// @brief RelationshipCardinality
 /// One: the relationship is defined by a foreign key in the related entity
@@ -59,7 +59,7 @@ enum RelationshipCardinality
     ManyOrdered,
     ManyUnordered
 };
-Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::RelationshipCardinality);
+Q_ENUM_NS({{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipCardinality);
 
 struct RelationshipInfo
 {
@@ -90,4 +90,4 @@ struct EntitySchema
     QList<FieldInfo> fields;
 };
 
-} // namespace {{ application_cpp_domain_name }}::Entities
+} // namespace {{ application_cpp_domain_name }}::Entities::EntitySchema

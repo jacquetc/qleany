@@ -1,10 +1,11 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
+#include "result.h"
 #include "database/types.h"
 #include "entity_schema.h"
-#include "result.h"
+#include "types.h"
 #include <QHash>
 #include <QString>
 #include <QUuid>
@@ -12,10 +13,9 @@
 namespace FrontEnds::Contracts::Database
 {
 
-template<class T>
-class InterfaceDatabaseTableGroup
+template <class T> class InterfaceDatabaseTableGroup
 {
-public:
+  public:
     virtual ~InterfaceDatabaseTableGroup()
     {
     }
@@ -40,17 +40,18 @@ public:
     virtual Result<void> rollback() = 0;
 
     // get related entities
-    virtual Result<QList<T>> getEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int entityId, const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int entityId, const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema,
-                                                        int leftEntityId,
-                                                        const QString &field,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema,
+                                                     int entityId, const QString &field) = 0;
+    virtual Result<T> getEntityInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
+                                            const QString &field) = 0;
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema,
+                                                        int leftEntityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T>
-    updateEntityInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int leftEntityId, const QString &field, const T &rightEntity) = 0;
+    virtual Result<T> updateEntityInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId,
+                                               const QString &field, const T &rightEntity) = 0;
     virtual Result<void> removeAssociationsWith(QList<int> rightEntityIds) = 0;
 
-private:
+  private:
 };
 
 } // namespace FrontEnds::Contracts::Database

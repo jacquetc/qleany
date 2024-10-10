@@ -144,8 +144,8 @@ Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, 
     {% for key, value in foreign_entities.items() %}
     // remove the {{ value["related_field_name"] }} in cascade
 
-    {{ application_cpp_domain_name }}::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
-    for(const {{ application_cpp_domain_name }}::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
+    {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
+    for(const {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
         if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ value["type_pascal_name"] }} && relationship.fieldName == "{{ value["related_field_name"] }}"_L1){
             {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
             break;
@@ -154,7 +154,7 @@ Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, 
 
     for (int entityId : ids)
     {
-        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::RelationshipStrength::Strong)
+        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
             {% if value["is_list"] %}
@@ -233,8 +233,8 @@ Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, 
     {% for key, value in foreign_entities.items() %}
     // cahnge active status of the {{ value["related_field_name"] }} in cascade
 
-    {{ application_cpp_domain_name }}::Entities::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
-    for(const {{ application_cpp_domain_name }}::Entities::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
+    {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship;
+    for(const {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipInfo &relationship : {{ application_cpp_domain_name }}::Entities::{{ name }}::schema.relationships ){
         if(relationship.rightEntityId == {{ application_cpp_domain_name }}::Entities::Entities::EntityEnum::{{ value["type_pascal_name"] }} && relationship.fieldName == QString::fromLatin1("{{ value["related_field_name"] }}") ){
             {{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship = relationship;
             break;
@@ -243,7 +243,7 @@ Result<QHash<{{ application_cpp_domain_name }}::Entities::Entities::EntityEnum, 
 
     for (int entityId : ids)
     {
-        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::RelationshipStrength::Strong)
+        if ({{ value["type_camel_name"] }}{{ value["related_field_pascal_name"] }}Relationship.strength == {{ application_cpp_domain_name }}::Entities::EntitySchema::RelationshipStrength::Strong)
         {
             // get foreign entities
             {% if value["is_list"] %}

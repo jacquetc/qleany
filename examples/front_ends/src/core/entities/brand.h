@@ -111,7 +111,7 @@ public:
         m_name = name;
     }
 
-    static FrontEnds::Entities::EntitySchema schema;
+    static FrontEnds::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -144,26 +144,26 @@ inline uint qHash(const Brand &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Brand entity
-inline FrontEnds::Entities::EntitySchema Brand::schema = {FrontEnds::Entities::Entities::EntityEnum::Brand,
-                                                          "Brand"_L1,
+inline FrontEnds::Entities::EntitySchema::EntitySchema Brand::schema = {FrontEnds::Entities::Entities::EntityEnum::Brand,
+                                                                        "Brand"_L1,
 
-                                                          // relationships:
-                                                          {{FrontEnds::Entities::Entities::EntityEnum::Car,
-                                                            "Car"_L1,
-                                                            FrontEnds::Entities::Entities::EntityEnum::Brand,
-                                                            "Brand"_L1,
-                                                            "brand"_L1,
-                                                            RelationshipType::OneToOne,
-                                                            RelationshipStrength::Strong,
-                                                            RelationshipCardinality::One,
-                                                            RelationshipDirection::Backward}},
+                                                                        // relationships:
+                                                                        {{FrontEnds::Entities::Entities::EntityEnum::Car,
+                                                                          "Car"_L1,
+                                                                          FrontEnds::Entities::Entities::EntityEnum::Brand,
+                                                                          "Brand"_L1,
+                                                                          "brand"_L1,
+                                                                          EntitySchema::RelationshipType::OneToOne,
+                                                                          EntitySchema::RelationshipStrength::Strong,
+                                                                          EntitySchema::RelationshipCardinality::One,
+                                                                          EntitySchema::RelationshipDirection::Backward}},
 
-                                                          // fields:
-                                                          {{"id"_L1, FieldType::Integer, true, false},
-                                                           {"uuid"_L1, FieldType::Uuid, false, false},
-                                                           {"creationDate"_L1, FieldType::DateTime, false, false},
-                                                           {"updateDate"_L1, FieldType::DateTime, false, false},
-                                                           {"name"_L1, FieldType::String, false, false}}};
+                                                                        // fields:
+                                                                        {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+                                                                         {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+                                                                         {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                                         {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                                         {"name"_L1, EntitySchema::FieldType::String, false, false}}};
 
 } // namespace FrontEnds::Entities
 Q_DECLARE_METATYPE(FrontEnds::Entities::Brand)

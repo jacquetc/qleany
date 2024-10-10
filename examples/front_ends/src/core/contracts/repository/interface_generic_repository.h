@@ -1,20 +1,19 @@
-// This file was generated automatically by Qleany's generator, edit at your own risk!
+// This file was generated automatically by Qleany's generator, edit at your own risk! 
 // If you do, be careful to not overwrite it when you run the generator again.
 #pragma once
 
 #include "database/types.h"
-#include "entity_schema.h"
-#include "result.h"
 #include <QCoreApplication>
 #include <QFuture>
 #include <QUuid>
+#include "result.h"
+#include "entity_schema.h"
 
 namespace FrontEnds::Contracts::Repository
 {
-template<class T>
-class InterfaceGenericRepository
+template <class T> class InterfaceGenericRepository
 {
-public:
+  public:
     virtual ~InterfaceGenericRepository()
     {
     }
@@ -38,13 +37,14 @@ public:
     virtual Result<void> saveChanges() = 0;
     virtual Result<void> cancelChanges() = 0;
 
-    virtual Result<QList<T>> getEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int entityId, const QString &field) = 0;
-    virtual Result<T> getEntityInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int entityId, const QString &field) = 0;
-    virtual Result<QList<T>> updateEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema,
-                                                        int entityId,
-                                                        const QString &field,
+    virtual Result<QList<T>> getEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema,
+                                                     int entityId, const QString &field) = 0;
+    virtual Result<T> getEntityInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
+                                            const QString &field) = 0;
+    virtual Result<QList<T>> updateEntitiesInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema,
+                                                        int entityId, const QString &field,
                                                         const QList<T> &rightEntities) = 0;
-    virtual Result<T>
-    updateEntityInRelationOf(const FrontEnds::Entities::EntitySchema &leftEntitySchema, int entityId, const QString &field, const T &rightEntity) = 0;
+    virtual Result<T> updateEntityInRelationOf(const FrontEnds::Entities::EntitySchema::EntitySchema &leftEntitySchema, int entityId,
+                                               const QString &field, const T &rightEntity) = 0;
 };
 } // namespace FrontEnds::Contracts::Repository

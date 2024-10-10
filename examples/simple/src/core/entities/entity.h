@@ -159,7 +159,7 @@ class Entity : public EntityBase
         m_updateDate = updateDate;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -178,7 +178,8 @@ class Entity : public EntityBase
 inline bool operator==(const Entity &lhs, const Entity &rhs)
 {
 
-    return static_cast<const Simple::Entities::EntityBase &>(lhs) == static_cast<const Simple::Entities::EntityBase &>(rhs) &&
+    return static_cast<const Simple::Entities::EntityBase &>(lhs) ==
+               static_cast<const Simple::Entities::EntityBase &>(rhs) &&
 
            lhs.m_uuid == rhs.m_uuid && lhs.m_creationDate == rhs.m_creationDate && lhs.m_updateDate == rhs.m_updateDate;
 }
@@ -197,19 +198,20 @@ inline uint qHash(const Entity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Entity entity
-inline Simple::Entities::EntitySchema Entity::schema = {Simple::Entities::Entities::EntityEnum::Entity,
-                                                        "Entity"_L1,
+inline Simple::Entities::EntitySchema::EntitySchema Entity::schema = {
+    Simple::Entities::Entities::EntityEnum::Entity,
+    "Entity"_L1,
 
-                                                        // relationships:
-                                                        {
+    // relationships:
+    {
 
-                                                        },
+    },
 
-                                                        // fields:
-                                                        {{"id"_L1, FieldType::Integer, true, false},
-                                                         {"uuid"_L1, FieldType::Uuid, false, false},
-                                                         {"creationDate"_L1, FieldType::DateTime, false, false},
-                                                         {"updateDate"_L1, FieldType::DateTime, false, false}}};
+    // fields:
+    {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+     {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+     {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Entity)

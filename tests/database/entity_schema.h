@@ -5,7 +5,7 @@
 #include <QList>
 #include <QString>
 
-namespace Simple::Entities::EntitySchema
+namespace DatabaseTest::Entities::EntitySchema
 {
 Q_NAMESPACE
 
@@ -19,7 +19,7 @@ enum FieldType
     DateTime,
     Entity
 };
-Q_ENUM_NS(Simple::Entities::EntitySchema::FieldType);
+Q_ENUM_NS(DatabaseTest::Entities::EntitySchema::FieldType);
 
 enum RelationshipType
 {
@@ -27,14 +27,14 @@ enum RelationshipType
     OneToMany,
     ManyToMany
 };
-Q_ENUM_NS(Simple::Entities::EntitySchema::RelationshipType);
+Q_ENUM_NS(DatabaseTest::Entities::EntitySchema::RelationshipType);
 
 enum RelationshipStrength
 {
     Strong,
     Weak
 };
-Q_ENUM_NS(Simple::Entities::EntitySchema::RelationshipStrength);
+Q_ENUM_NS(DatabaseTest::Entities::EntitySchema::RelationshipStrength);
 
 /// @brief RelationshipDirection
 /// Forward: the relationship is defined in the current entity
@@ -46,7 +46,7 @@ enum RelationshipDirection
     Forward,
     Backward
 };
-Q_ENUM_NS(Simple::Entities::EntitySchema::RelationshipDirection);
+Q_ENUM_NS(DatabaseTest::Entities::EntitySchema::RelationshipDirection);
 
 /// @brief RelationshipCardinality
 /// One: the relationship is defined by a foreign key in the related entity
@@ -59,7 +59,7 @@ enum RelationshipCardinality
     ManyOrdered,
     ManyUnordered
 };
-Q_ENUM_NS(Simple::Entities::EntitySchema::RelationshipCardinality);
+Q_ENUM_NS(DatabaseTest::Entities::EntitySchema::RelationshipCardinality);
 
 struct RelationshipInfo
 {
@@ -90,4 +90,4 @@ struct EntitySchema
     QList<FieldInfo> fields;
 };
 
-} // namespace Simple::Entities::EntitySchema
+} // namespace DatabaseTest::EntitySchema::Schema

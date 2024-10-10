@@ -9,8 +9,6 @@
 #include "entity_base.h"
 #include "entity_schema.h"
 
-using namespace Simple::Entities;
-
 namespace DatabaseTest::Entities
 {
 
@@ -104,7 +102,7 @@ class DummyEntity : public EntityBase
         m_updateDate = updateDate;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static DatabaseTest::Entities::EntitySchema::EntitySchema schema;
 
   private:
     QUuid m_uuid;
@@ -134,7 +132,7 @@ inline uint qHash(const DummyEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyEntity entity
-inline Simple::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
+inline DatabaseTest::Entities::EntitySchema::EntitySchema DummyEntity::schema = {DatabaseTest::Entities::Entities::EntityEnum::DummyEntity,
                                                              "DummyEntity"_L1,
 
                                                              // relationships:
@@ -143,10 +141,10 @@ inline Simple::Entities::EntitySchema DummyEntity::schema = {DatabaseTest::Entit
                                                              },
 
                                                              // fields:
-                                                             {{"id"_L1, FieldType::Integer, true, false},
-                                                              {"uuid"_L1, FieldType::Uuid, false, false},
-                                                              {"creationDate"_L1, FieldType::DateTime, false, false},
-                                                              {"updateDate"_L1, FieldType::DateTime, false, false}}};
+                                                             {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+                                                              {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+                                                              {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+                                                              {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false}}};
 
 } // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyEntity)

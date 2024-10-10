@@ -22,7 +22,9 @@ find_package(
 # qt_add_resources(RESOURCES ${QRC})
 add_executable(
   ${TEST_NAME} ${TEST_NAME}.cpp ${RESOURCES} dummy_database_context.h
-               dummy_entity.h dummy_basic_entity.h entities.h)
+               dummy_entity.h dummy_basic_entity.h entities.h 
+               entity_base.h entity_base.cpp
+               entity_schema.h)
 add_test(${TEST_NAME} ${TEST_NAME})
 
 target_link_libraries(
@@ -60,6 +62,8 @@ add_executable(
   dummy_other_entity.h
   otm_ordered_wrapper.h
   entities.h
+  entity_base.h entity_base.cpp
+  entity_schema.h
   qleany.yaml)
 add_test(${TEST_NAME} ${TEST_NAME})
 
@@ -90,7 +94,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # qt_add_resources(RESOURCES ${QRC})
 add_executable(
   ${TEST_NAME} ${TEST_NAME}.cpp ${RESOURCES} dummy_entity.h
-               dummy_database_context.h dummy_basic_entity.h entities.h)
+               dummy_database_context.h dummy_basic_entity.h entities.h 
+               entity_base.h entity_base.cpp
+               entity_schema.h)
 add_test(${TEST_NAME} ${TEST_NAME})
 
 target_link_libraries(

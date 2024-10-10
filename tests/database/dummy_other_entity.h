@@ -8,8 +8,6 @@
 #include "entities.h"
 #include "entity_schema.h"
 
-using namespace Simple::Entities;
-
 namespace DatabaseTest::Entities
 {
 
@@ -70,7 +68,7 @@ class DummyOtherEntity : public DummyEntity
         m_name = name;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static DatabaseTest::Entities::EntitySchema::EntitySchema schema;
 
   private:
     QString m_name;
@@ -96,30 +94,30 @@ inline uint qHash(const DummyOtherEntity &entity, uint seed = 0) noexcept
 }
 
 /// Schema for DummyOtherEntity entity
-inline Simple::Entities::EntitySchema DummyOtherEntity::schema = {
+inline DatabaseTest::Entities::EntitySchema::EntitySchema DummyOtherEntity::schema = {
     DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity,
     QString::fromLatin1("DummyOtherEntity"),
 
     // relationships:
     {{DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign,
       QString::fromLatin1("DummyEntityWithForeign"), DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity,
-      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("unique"), RelationshipType::OneToOne,
-      RelationshipStrength::Weak, RelationshipCardinality::One, RelationshipDirection::Backward},
+      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("unique"), EntitySchema::RelationshipType::OneToOne,
+      EntitySchema::RelationshipStrength::Weak, EntitySchema::RelationshipCardinality::One, EntitySchema::RelationshipDirection::Backward},
      {DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign,
       QString::fromLatin1("DummyEntityWithForeign"), DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity,
-      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("unorderedList"), RelationshipType::OneToMany,
-      RelationshipStrength::Weak, RelationshipCardinality::ManyUnordered, RelationshipDirection::Backward},
+      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("unorderedList"), EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Weak, EntitySchema::RelationshipCardinality::ManyUnordered, EntitySchema::RelationshipDirection::Backward},
      {DatabaseTest::Entities::Entities::EntityEnum::DummyEntityWithForeign,
       QString::fromLatin1("DummyEntityWithForeign"), DatabaseTest::Entities::Entities::EntityEnum::DummyOtherEntity,
-      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("orderedList"), RelationshipType::OneToMany,
-      RelationshipStrength::Weak, RelationshipCardinality::ManyOrdered, RelationshipDirection::Backward}},
+      QString::fromLatin1("DummyOtherEntity"), QString::fromLatin1("orderedList"), EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Weak, EntitySchema::RelationshipCardinality::ManyOrdered, EntitySchema::RelationshipDirection::Backward}},
 
     // fields:
-    {{QString::fromLatin1("id"), FieldType::Integer, true, false},
-     {QString::fromLatin1("uuid"), FieldType::Uuid, false, false},
-     {QString::fromLatin1("creationDate"), FieldType::DateTime, false, false},
-     {QString::fromLatin1("updateDate"), FieldType::DateTime, false, false},
-     {QString::fromLatin1("name"), FieldType::String, false, false}}};
+    {{QString::fromLatin1("id"), EntitySchema::FieldType::Integer, true, false},
+     {QString::fromLatin1("uuid"), EntitySchema::FieldType::Uuid, false, false},
+     {QString::fromLatin1("creationDate"), EntitySchema::FieldType::DateTime, false, false},
+     {QString::fromLatin1("updateDate"), EntitySchema::FieldType::DateTime, false, false},
+     {QString::fromLatin1("name"), EntitySchema::FieldType::String, false, false}}};
 
 } // namespace DatabaseTest::Entities
 Q_DECLARE_METATYPE(DatabaseTest::Entities::DummyOtherEntity)

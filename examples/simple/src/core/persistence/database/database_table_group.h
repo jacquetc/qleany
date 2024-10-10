@@ -81,14 +81,14 @@ template <class T> class DatabaseTableGroup : public virtual InterfaceDatabaseTa
     Result<void> rollback() override;
 
     // get related entities
-    Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<QList<T>> getEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId,
                                              const QString &field) override;
-    Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<T> getEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId,
                                     const QString &field) override;
-    Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+    Result<QList<T>> updateEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                 int leftEntityId, const QString &field,
                                                 const QList<T> &rightEntities) override;
-    Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema, int leftEntityId,
+    Result<T> updateEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId,
                                        const QString &field, const T &rightEntity) override;
     Result<void> removeAssociationsWith(QList<int> rightEntityIds) override;
 
@@ -132,28 +132,28 @@ DatabaseTableGroup<T>::DatabaseTableGroup(QSharedPointer<InterfaceDatabaseContex
 
     for (const auto &relationship : T::schema.relationships)
     {
-        if (relationship.direction == Simple::Entities::RelationshipDirection::Backward)
+        if (relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Backward)
         {
             QString junctionCreationSql;
 
-            if (relationship.type == Simple::Entities::RelationshipType::OneToOne)
+            if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToOne)
             {
                 OneToOneAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                     relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyUnordered)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                     relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                     relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                     relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 m_databaseContext->appendCreationSql("junction_table", associator.getTableCreationSql());
             }
-            else if (relationship.type == Simple::Entities::RelationshipType::ManyToMany)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::ManyToMany)
             {
             }
         }
@@ -1276,7 +1276,7 @@ template <class T> QHash<QString, PropertyWithList> DatabaseTableGroup<T>::getEn
 //--------------------------------------------
 
 template <class T>
-Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                                 int leftEntityId, const QString &field)
 {
     Result<QList<T>> result;
@@ -1284,25 +1284,25 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Simple::En
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Forward &&
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Forward &&
             relationship.fieldName == field)
         {
             // One to Many Unordered:
-            if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyUnordered)
+            if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.getRightEntities(leftEntityId);
             }
             // One to Many Ordered:
-            else if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                     relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                     relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.getRightEntities(leftEntityId);
             }
             // Many to Many Unordered:
-            else if (relationship.type == Simple::Entities::RelationshipType::ManyToMany)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::ManyToMany)
             {
                 ManyToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.getRightEntities(leftEntityId);
@@ -1323,7 +1323,7 @@ Result<QList<T>> DatabaseTableGroup<T>::getEntitiesInRelationOf(const Simple::En
 
 template <class T>
 Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(
-    const Simple::Entities::EntitySchema &leftEntitySchema, int leftEntityId, const QString &field,
+    const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema, int leftEntityId, const QString &field,
     const QList<T> &rightEntities)
 {
     Result<QList<T>> result;
@@ -1331,25 +1331,25 @@ Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Forward &&
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Forward &&
             relationship.fieldName == field)
         {
             // One to Many Unordered:
-            if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyUnordered)
+            if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyUnordered)
             {
                 OneToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.updateRightEntities(leftEntityId, rightEntities);
             }
             // One to Many Ordered:
-            else if (relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-                     relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyOrdered)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+                     relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyOrdered)
             {
                 OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.updateRightEntities(leftEntityId, rightEntities);
             }
             // Many to Many Unordered:
-            else if (relationship.type == Simple::Entities::RelationshipType::ManyToMany)
+            else if (relationship.type == Simple::Entities::EntitySchema::RelationshipType::ManyToMany)
             {
                 ManyToManyUnorderedAssociator<T> associator(m_databaseContext, relationship);
                 result = associator.updateRightEntities(leftEntityId, rightEntities);
@@ -1369,7 +1369,7 @@ Result<QList<T>> DatabaseTableGroup<T>::updateEntitiesInRelationOf(
 //--------------------------------------------
 
 template <class T>
-Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                        int leftEntityId, const QString &field)
 {
 
@@ -1378,9 +1378,9 @@ Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Simple::Entities::E
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Forward &&
-            relationship.fieldName == field && relationship.type == Simple::Entities::RelationshipType::OneToOne &&
-            relationship.cardinality == Simple::Entities::RelationshipCardinality::One)
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Forward &&
+            relationship.fieldName == field && relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToOne &&
+            relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::One)
         {
 
             OneToOneAssociator<T> associator(m_databaseContext, relationship);
@@ -1395,7 +1395,7 @@ Result<T> DatabaseTableGroup<T>::getEntityInRelationOf(const Simple::Entities::E
 //--------------------------------------------
 
 template <class T>
-Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Simple::Entities::EntitySchema &leftEntitySchema,
+Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Simple::Entities::EntitySchema::EntitySchema &leftEntitySchema,
                                                           int leftEntityId, const QString &field, const T &rightEntity)
 {
     Result<T> result;
@@ -1403,9 +1403,9 @@ Result<T> DatabaseTableGroup<T>::updateEntityInRelationOf(const Simple::Entities
     for (const auto &relationship : leftEntitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Forward &&
-            relationship.fieldName == field && relationship.type == Simple::Entities::RelationshipType::OneToOne &&
-            relationship.cardinality == Simple::Entities::RelationshipCardinality::One)
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Forward &&
+            relationship.fieldName == field && relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToOne &&
+            relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::One)
         {
 
             OneToOneAssociator<T> associator(m_databaseContext, relationship);
@@ -1420,13 +1420,13 @@ template <class T> Result<void> DatabaseTableGroup<T>::removeAssociationsWith(QL
 {
     // only reordering OneToManyOrdered relationships on backward relationships, meaning this entity T is the "target"
     // of the relationship. Other associations types are deleted in cascade by the database.
-    const Simple::Entities::EntitySchema &entitySchema = T::schema;
+    const Simple::Entities::EntitySchema::EntitySchema &entitySchema = T::schema;
     for (const auto &relationship : entitySchema.relationships)
     {
         if (relationship.rightEntityId == T::enumValue() &&
-            relationship.direction == Simple::Entities::RelationshipDirection::Backward &&
-            relationship.type == Simple::Entities::RelationshipType::OneToMany &&
-            relationship.cardinality == Simple::Entities::RelationshipCardinality::ManyOrdered)
+            relationship.direction == Simple::Entities::EntitySchema::RelationshipDirection::Backward &&
+            relationship.type == Simple::Entities::EntitySchema::RelationshipType::OneToMany &&
+            relationship.cardinality == Simple::Entities::EntitySchema::RelationshipCardinality::ManyOrdered)
         {
             OneToManyOrderedAssociator<T> associator(m_databaseContext, relationship);
             auto result = associator.removeTheseRightIds(rightEntityIds);

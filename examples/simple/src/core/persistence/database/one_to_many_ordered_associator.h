@@ -20,7 +20,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
 {
   public:
     OneToManyOrderedAssociator(QSharedPointer<InterfaceDatabaseContext> context,
-                               const Simple::Entities::RelationshipInfo &relationship)
+                               const Simple::Entities::EntitySchema::RelationshipInfo &relationship)
         : m_databaseContext(context), m_relationship(relationship), m_fieldName(relationship.fieldName)
     {
 
@@ -75,7 +75,7 @@ template <class RightEntity> class OneToManyOrderedAssociator
 
   protected:
     Result<QList<RightEntity>> getRightEntitiesFromTheirIds(QList<int> rightEntityIds) const;
-    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema &entitySchema) const;
+    QStringList getTablePropertyColumns(const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const;
     QList<EntityShadow> mergeShadows(const QList<EntityShadow> &originalShadows,
                                      const QList<EntityShadow> &newShadows) const;
 
@@ -90,10 +90,10 @@ template <class RightEntity> class OneToManyOrderedAssociator
     QString m_leftEntityForeignTableName;
     QString m_junctionTableRightEntityForeignKeyName;
     QString m_rightEntityForeignTableName;
-    Simple::Entities::RelationshipInfo m_relationship;
-    Simple::Entities::EntitySchema m_rightEntitySchema = RightEntity::schema;
+    Simple::Entities::EntitySchema::RelationshipInfo m_relationship;
+    Simple::Entities::EntitySchema::EntitySchema m_rightEntitySchema = RightEntity::schema;
     const QStringList m_rightEntityPropertyColumns = getTablePropertyColumns(RightEntity::schema);
-    Simple::Entities::EntitySchema m_leftEntitySchema;
+    Simple::Entities::EntitySchema::EntitySchema m_leftEntitySchema;
     QString m_fieldName;
     QList<OneToManyOrderedAssociator<RightEntity>::EntityShadow> writePreviousAndNext(
         const QList<EntityShadow> &shadows) const;
@@ -326,7 +326,7 @@ Result<QList<RightEntity>> OneToManyOrderedAssociator<RightEntity>::getRightEnti
 
 template <class RightEntity>
 QStringList OneToManyOrderedAssociator<RightEntity>::getTablePropertyColumns(
-    const Simple::Entities::EntitySchema &entitySchema) const
+    const Simple::Entities::EntitySchema::EntitySchema &entitySchema) const
 {
     QStringList columns;
 

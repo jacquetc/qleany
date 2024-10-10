@@ -109,7 +109,7 @@ class Passenger : public Entity
         m_name = name;
     }
 
-    static Simple::Entities::EntitySchema schema;
+    static Simple::Entities::EntitySchema::EntitySchema schema;
 
     MetaData metaData() const
     {
@@ -143,27 +143,29 @@ inline uint qHash(const Passenger &entity, uint seed = 0) noexcept
 }
 
 /// Schema for Passenger entity
-inline Simple::Entities::EntitySchema Passenger::schema = {
+inline Simple::Entities::EntitySchema::EntitySchema Passenger::schema = {
     Simple::Entities::Entities::EntityEnum::Passenger,
     "Passenger"_L1,
 
     // relationships:
     {{Simple::Entities::Entities::EntityEnum::Car, "Car"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "passengers"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyOrdered, RelationshipDirection::Backward},
+      "Passenger"_L1, "passengers"_L1, EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Strong, EntitySchema::RelationshipCardinality::ManyOrdered,
+      EntitySchema::RelationshipDirection::Backward},
      {Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "client"_L1, RelationshipType::OneToOne, RelationshipStrength::Weak, RelationshipCardinality::One,
-      RelationshipDirection::Backward},
+      "Passenger"_L1, "client"_L1, EntitySchema::RelationshipType::OneToOne, EntitySchema::RelationshipStrength::Weak,
+      EntitySchema::RelationshipCardinality::One, EntitySchema::RelationshipDirection::Backward},
      {Simple::Entities::Entities::EntityEnum::Client, "Client"_L1, Simple::Entities::Entities::EntityEnum::Passenger,
-      "Passenger"_L1, "clientFriends"_L1, RelationshipType::OneToMany, RelationshipStrength::Strong,
-      RelationshipCardinality::ManyUnordered, RelationshipDirection::Backward}},
+      "Passenger"_L1, "clientFriends"_L1, EntitySchema::RelationshipType::OneToMany,
+      EntitySchema::RelationshipStrength::Strong, EntitySchema::RelationshipCardinality::ManyUnordered,
+      EntitySchema::RelationshipDirection::Backward}},
 
     // fields:
-    {{"id"_L1, FieldType::Integer, true, false},
-     {"uuid"_L1, FieldType::Uuid, false, false},
-     {"creationDate"_L1, FieldType::DateTime, false, false},
-     {"updateDate"_L1, FieldType::DateTime, false, false},
-     {"name"_L1, FieldType::String, false, false}}};
+    {{"id"_L1, EntitySchema::FieldType::Integer, true, false},
+     {"uuid"_L1, EntitySchema::FieldType::Uuid, false, false},
+     {"creationDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"updateDate"_L1, EntitySchema::FieldType::DateTime, false, false},
+     {"name"_L1, EntitySchema::FieldType::String, false, false}}};
 
 } // namespace Simple::Entities
 Q_DECLARE_METATYPE(Simple::Entities::Passenger)
