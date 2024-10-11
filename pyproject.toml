@@ -10,7 +10,7 @@ packages = [{ include = "qleany", from = "tools" }]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
-pyside6 = "^6.6.1"
+pyside6 = "^6.7.2"
 clang-format = "^17.0.6"
 stringcase = "^1.2.0"
 pyaml = "^23.12.0"

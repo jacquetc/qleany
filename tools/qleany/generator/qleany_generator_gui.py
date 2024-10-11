@@ -29,6 +29,7 @@ from PySide6.QtCore import (
     QSettings,
     QFileSystemWatcher,
     QTimer,
+    QDir
 )
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 import sys
@@ -78,17 +79,15 @@ class MainWindow(QMainWindow):
 
         self.settings = QSettings()
 
-        self.manifest_file = self.settings.value("last_selected_manifest_path", "")
-        self.temp_manifest_file = "temp/manifest_temp.yaml"
-        self.settings_file = "temp/settings.yaml"
+        self._manifest_file = self.settings.value("last_selected_manifest_path", "")
 
         # qleany file watcher
-        self.watcher = QFileSystemWatcher([self.manifest_file])
-        self.watcher.fileChanged.connect(self.on_manifest_file_changed)
+        self._watcher = QFileSystemWatcher([self._manifest_file])
+        self._watcher.fileChanged.connect(self.on_manifest_file_changed)
 
-        self.timer = QTimer()
-        self.timer.setInterval(1000)  # check every second
-        self.timer.timeout.connect(self.check_manifest_file)
+        self._timer = QTimer()
+        self._timer.setInterval(1000)  # check every second
+        self._timer.timeout.connect(self.check_manifest_file)
 
         self.uncrustify_config_file = "../uncrustify.cfg"
 
@@ -104,7 +103,7 @@ class MainWindow(QMainWindow):
         self.central_layout = QVBoxLayout()
         self.central_widget.setLayout(self.central_layout)
 
-        self.manifest_file_layout = QHBoxLayout()
+        self._manifest_file_layout = QHBoxLayout()
         # set entity relationship window launch button
 
         self.entity_relationship_window_button = QPushButton(
@@ -113,18 +112,18 @@ class MainWindow(QMainWindow):
         self.entity_relationship_window_button.clicked.connect(
             self.open_entity_relationship_window
         )
-        self.manifest_file_layout.addWidget(self.entity_relationship_window_button)
+        self._manifest_file_layout.addWidget(self.entity_relationship_window_button)
 
         # set qleany.yml selector
 
-        self.manifest_file_label = QLabel("Qleany YAML file:")
-        self.manifest_file_layout.addWidget(self.manifest_file_label)
-        self.manifest_file_text = QLabel(self.manifest_file)
-        self.manifest_file_layout.addWidget(self.manifest_file_text)
-        self.manifest_file_button = QPushButton("Select")
-        self.manifest_file_button.clicked.connect(self.select_qleany_manifest_file)
-        self.manifest_file_layout.addWidget(self.manifest_file_button)
-        self.central_layout.addLayout(self.manifest_file_layout)
+        self._manifest_file_label = QLabel("Qleany YAML file:")
+        self._manifest_file_layout.addWidget(self._manifest_file_label)
+        self._manifest_file_text = QLabel(self._manifest_file)
+        self._manifest_file_layout.addWidget(self._manifest_file_text)
+        self._manifest_file_button = QPushButton("Select")
+        self._manifest_file_button.clicked.connect(self.select_qleany_manifest_file)
+        self._manifest_file_layout.addWidget(self._manifest_file_button)
+        self.central_layout.addLayout(self._manifest_file_layout)
         self.central_layout.setStretch(0, 0)
 
         # set splitter for views
@@ -627,22 +626,31 @@ class MainWindow(QMainWindow):
         self.central_layout.setStretch(0, 1)
 
         # select qleany file
-        if self.manifest_file == "":
+        if self._manifest_file == "":
             self.select_qleany_manifest_file()
-        elif not Path(self.manifest_file).exists():
+        elif not Path(self._manifest_file).exists():
             self.select_qleany_manifest_file()
+        else:
+            # create a settings.yaml file in user config folder if it does not exist
+            user_config_path = Path(QSettings().fileName()).parent.resolve()
+            user_tmp_path = QDir.tempPath()
+            project_name = Path(self._manifest_file).parent.stem
+            
+            self._settings_file = f"{user_config_path}/qleany/{project_name}_settings.yaml"
+            self._temp_manifest_file = f"{user_tmp_path}/qleany/{project_name}_temp_manifest.yaml"
+            
         # set root path str
-        self.root_path = str(Path(self.manifest_file).parent.resolve())
+        self.root_path = str(Path(self._manifest_file).parent.resolve())
 
-        # create temp manifest file under temp folder
-        self.last_manifest_mtime = os.path.getmtime(self.manifest_file)
-
+        # get the last modified time of the manifest file
+        self.last_manifest_mtime = os.path.getmtime(self._manifest_file)
+        
         self.create_temp_manifest_file()
 
         self.load_data()
         self.load_settings()
         self.refresh()
-        self.timer.start()
+        self._timer.start()
 
     def on_manifest_file_changed(self, path):
         if self.manifest_refreshed_displayed:
@@ -655,9 +663,9 @@ class MainWindow(QMainWindow):
         self.manifest_refreshed_displayed = False
 
     def check_manifest_file(self):
-        new_mtime = os.path.getmtime(self.manifest_file)
+        new_mtime = os.path.getmtime(self._manifest_file)
         if new_mtime != self.last_manifest_mtime:
-            self.on_manifest_file_changed(self.manifest_file)
+            self.on_manifest_file_changed(self._manifest_file)
             self.last_manifest_mtime = new_mtime
 
     def clear_preview_folder(self):
@@ -671,17 +679,17 @@ class MainWindow(QMainWindow):
         self.create_temp_manifest_file()
         self.load_data()
         self.load_settings()
-        if self.manifest_file != "":
-            self.settings.setValue("last_selected_manifest_path", self.manifest_file)
+        if self._manifest_file != "":
+            self.settings.setValue("last_selected_manifest_path", self._manifest_file)
             self.settings.sync()
-            self.generate_qml_group_box.setEnabled(qml_imports_generator.is_qml_imports_integration_enabled(self.manifest_file))
-            self.generate_qt_widgets_ui_group_box.setEnabled(qt_widgets_generator.is_enabled(self.manifest_file))
-            self.generate_qt_quick_ui_group_box.setEnabled(qt_quick_generator.is_enabled(self.manifest_file))
-            self.generate_kf6_kirigami_ui_group_box.setEnabled(kf6_kirigami_generator.is_enabled(self.manifest_file))
+            self.generate_qml_group_box.setEnabled(qml_imports_generator.is_qml_imports_integration_enabled(self._manifest_file))
+            self.generate_qt_widgets_ui_group_box.setEnabled(qt_widgets_generator.is_enabled(self._manifest_file))
+            self.generate_qt_quick_ui_group_box.setEnabled(qt_quick_generator.is_enabled(self._manifest_file))
+            self.generate_kf6_kirigami_ui_group_box.setEnabled(kf6_kirigami_generator.is_enabled(self._manifest_file))
 
     def open_entity_relationship_window(self):
         self.relationship_viewer_window = (
-            entity_relationship_viewer.EntityRelationshipWindow(self.manifest_file)
+            entity_relationship_viewer.EntityRelationshipWindow(self._manifest_file)
         )
         self.relationship_viewer_window.show()
 
@@ -690,44 +698,44 @@ class MainWindow(QMainWindow):
     def list_all(self):
         list = []
         list.extend(
-            root_generator.get_files_to_be_generated(self.temp_manifest_file)
+            root_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
         list.extend(
-            common_generator.get_files_to_be_generated(self.temp_manifest_file)
+            common_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
         list.extend(
-            entities_generator.get_files_to_be_generated(self.temp_manifest_file)
+            entities_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
-        list.extend(dto_generator.get_files_to_be_generated(self.temp_manifest_file))
+        list.extend(dto_generator.get_files_to_be_generated(self._temp_manifest_file))
         list.extend(
-            persistence_generator.get_files_to_be_generated(self.temp_manifest_file)
+            persistence_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
-        list.extend(cqrs_generator.get_files_to_be_generated(self.temp_manifest_file))
+        list.extend(cqrs_generator.get_files_to_be_generated(self._temp_manifest_file))
         list.extend(
-            presenter_generator.get_files_to_be_generated(self.temp_manifest_file)
-        )
-        list.extend(
-            controller_generator.get_files_to_be_generated(self.temp_manifest_file)
+            presenter_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
         list.extend(
-            application_generator.get_files_to_be_generated(self.temp_manifest_file)
+            controller_generator.get_files_to_be_generated(self._temp_manifest_file)
         )
-        if qml_imports_generator.is_qml_imports_integration_enabled(self.temp_manifest_file):
-            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
-            list.extend(qml_imports_generator.get_files_to_be_generated(self.temp_manifest_file, {}, folder_path))
+        list.extend(
+            application_generator.get_files_to_be_generated(self._temp_manifest_file)
+        )
+        if qml_imports_generator.is_qml_imports_integration_enabled(self._temp_manifest_file):
+            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
+            list.extend(qml_imports_generator.get_files_to_be_generated(self._temp_manifest_file, {}, folder_path))
 
-        if qt_widgets_generator.is_enabled(self.manifest_file):
+        if qt_widgets_generator.is_enabled(self._manifest_file):
             list.extend(
-                qt_widgets_generator.get_files_to_be_generated(self.temp_manifest_file)
+                qt_widgets_generator.get_files_to_be_generated(self._temp_manifest_file)
             )
 
-        if qt_quick_generator.is_enabled(self.manifest_file):
+        if qt_quick_generator.is_enabled(self._manifest_file):
             list.extend(
-                qt_quick_generator.get_files_to_be_generated(self.manifest_file)
+                qt_quick_generator.get_files_to_be_generated(self._manifest_file)
             )
-        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+        if kf6_kirigami_generator.is_enabled(self._manifest_file):
             list.extend(
-                kf6_kirigami_generator.get_files_to_be_generated(self.manifest_file)
+                kf6_kirigami_generator.get_files_to_be_generated(self._manifest_file)
             )
 
         self.text_box.clear()
@@ -740,88 +748,88 @@ class MainWindow(QMainWindow):
         self.list_all()
         root_generator.preview_root_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         common_generator.preview_common_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         entities_generator.preview_entity_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         dto_generator.preview_dto_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         persistence_generator.preview_repository_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         cqrs_generator.preview_cqrs_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         presenter_generator.preview_presenter_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         controller_generator.preview_controller_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
         application_generator.preview_application_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
-        if qml_imports_generator.is_qml_imports_integration_enabled(self.temp_manifest_file):
-            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
+        if qml_imports_generator.is_qml_imports_integration_enabled(self._temp_manifest_file):
+            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
             qml_imports_generator.preview_qml_imports_files(
                 self.root_path,
                 folder_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
 
-        if qt_widgets_generator.is_enabled(self.manifest_file):
+        if qt_widgets_generator.is_enabled(self._manifest_file):
             qt_widgets_generator.preview_qt_widgets_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
 
-        if qt_quick_generator.is_enabled(self.manifest_file):
+        if qt_quick_generator.is_enabled(self._manifest_file):
             qt_quick_generator.preview_qt_quick_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
 
-        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+        if kf6_kirigami_generator.is_enabled(self._manifest_file):
             kf6_kirigami_generator.preview_kf6_kirigami_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -834,75 +842,75 @@ class MainWindow(QMainWindow):
         file_list = []
         file_list.extend(
             root_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             common_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             entities_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             dto_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             persistence_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             cqrs_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             controller_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             presenter_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
         file_list.extend(
             application_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         )
-        if qml_imports_generator.is_qml_imports_integration_enabled(self.temp_manifest_file):
-            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
+        if qml_imports_generator.is_qml_imports_integration_enabled(self._temp_manifest_file):
+            folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
             file_list.extend(
                 qml_imports_generator.get_files_to_be_generated(
-                    self.temp_manifest_file, self.file_list_view.fetch_file_states(), folder_path
+                    self._temp_manifest_file, self.file_list_view.fetch_file_states(), folder_path
                 )
             )
 
-        if qt_widgets_generator.is_enabled(self.manifest_file):
+        if qt_widgets_generator.is_enabled(self._manifest_file):
             file_list.extend(
                 qt_widgets_generator.get_files_to_be_generated(
-                    self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                    self._temp_manifest_file, self.file_list_view.fetch_file_states()
                 )
             )
 
-        if qt_quick_generator.is_enabled(self.manifest_file):
+        if qt_quick_generator.is_enabled(self._manifest_file):
             file_list.extend(
                 qt_quick_generator.get_files_to_be_generated(
-                    self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                    self._temp_manifest_file, self.file_list_view.fetch_file_states()
                 )
             )
 
-        if kf6_kirigami_generator.is_enabled(self.manifest_file):
+        if kf6_kirigami_generator.is_enabled(self._manifest_file):
             file_list.extend(
                 kf6_kirigami_generator.get_files_to_be_generated(
-                    self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                    self._temp_manifest_file, self.file_list_view.fetch_file_states()
                 )
             )
 
@@ -919,7 +927,7 @@ class MainWindow(QMainWindow):
 
             root_generator.generate_root_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -928,7 +936,7 @@ class MainWindow(QMainWindow):
 
             common_generator.generate_common_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -937,7 +945,7 @@ class MainWindow(QMainWindow):
             
             entities_generator.generate_entity_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -946,7 +954,7 @@ class MainWindow(QMainWindow):
 
             dto_generator.generate_dto_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -955,7 +963,7 @@ class MainWindow(QMainWindow):
 
             persistence_generator.generate_persistence_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -964,7 +972,7 @@ class MainWindow(QMainWindow):
 
             cqrs_generator.generate_cqrs_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -973,7 +981,7 @@ class MainWindow(QMainWindow):
 
             controller_generator.generate_controller_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -982,7 +990,7 @@ class MainWindow(QMainWindow):
 
             presenter_generator.generate_presenter_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -991,48 +999,48 @@ class MainWindow(QMainWindow):
 
             application_generator.generate_application_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
             progress.setValue(9)
             QCoreApplication.processEvents()
 
-            if qml_imports_generator.is_qml_imports_integration_enabled(self.temp_manifest_file):
+            if qml_imports_generator.is_qml_imports_integration_enabled(self._temp_manifest_file):
                 qml_imports_generator.generate_qml_imports_files(
                     self.root_path,
-                    qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file),
-                    self.temp_manifest_file,
+                    qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file),
+                    self._temp_manifest_file,
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
             progress.setValue(10)
             QCoreApplication.processEvents()
 
-            if qt_widgets_generator.is_enabled(self.temp_manifest_file):
+            if qt_widgets_generator.is_enabled(self._temp_manifest_file):
                 qt_widgets_generator.generate_qt_widgets_files(
                     self.root_path,
-                    self.temp_manifest_file,
+                    self._temp_manifest_file,
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
             progress.setValue(11)
             QCoreApplication.processEvents()
 
-            if qt_quick_generator.is_enabled(self.temp_manifest_file):
+            if qt_quick_generator.is_enabled(self._temp_manifest_file):
                 qt_quick_generator.generate_qt_quick_files(
                     self.root_path,
-                    self.temp_manifest_file,
+                    self._temp_manifest_file,
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
             progress.setValue(12)
             QCoreApplication.processEvents()
 
-            if kf6_kirigami_generator.is_enabled(self.temp_manifest_file):
+            if kf6_kirigami_generator.is_enabled(self._temp_manifest_file):
                 kf6_kirigami_generator.generate_kf6_kirigami_files(
                     self.root_path,
-                    self.temp_manifest_file,
+                    self._temp_manifest_file,
                     self.file_list_view.fetch_file_states(),
                     self.uncrustify_config_file,
                 )
@@ -1044,7 +1052,7 @@ class MainWindow(QMainWindow):
     # root functions
     
     def list_root(self):
-        list = root_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = root_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Root files:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1054,7 +1062,7 @@ class MainWindow(QMainWindow):
         self.list_root()
         root_generator.preview_root_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1070,12 +1078,12 @@ class MainWindow(QMainWindow):
         self.list_root()
         if self.display_overwrite_confirmation(
             root_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             root_generator.generate_root_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1085,7 +1093,7 @@ class MainWindow(QMainWindow):
     # common functions
     
     def list_common(self):
-        list = common_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = common_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Common files:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1095,7 +1103,7 @@ class MainWindow(QMainWindow):
         self.list_common()
         common_generator.preview_common_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1111,12 +1119,12 @@ class MainWindow(QMainWindow):
         self.list_common()
         if self.display_overwrite_confirmation(
             common_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             common_generator.generate_common_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1126,7 +1134,7 @@ class MainWindow(QMainWindow):
     # entities functions
 
     def list_entities(self):
-        list = entities_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = entities_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Entities:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1136,7 +1144,7 @@ class MainWindow(QMainWindow):
         self.list_entities()
         entities_generator.preview_entity_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1152,12 +1160,12 @@ class MainWindow(QMainWindow):
         self.list_entities()
         if self.display_overwrite_confirmation(
             entities_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             entities_generator.generate_entity_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1167,7 +1175,7 @@ class MainWindow(QMainWindow):
     # DTOs functions
 
     def list_dtos(self):
-        list = dto_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = dto_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("DTOs:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1177,7 +1185,7 @@ class MainWindow(QMainWindow):
         self.list_dtos()
         dto_generator.preview_dto_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1193,12 +1201,12 @@ class MainWindow(QMainWindow):
         self.list_dtos()
         if self.display_overwrite_confirmation(
             dto_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             dto_generator.generate_dto_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1208,7 +1216,7 @@ class MainWindow(QMainWindow):
     # Persistence functions
 
     def list_persistence(self):
-        list = persistence_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = persistence_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Persistence:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1218,7 +1226,7 @@ class MainWindow(QMainWindow):
         self.list_persistence()
         persistence_generator.preview_persistence_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1234,13 +1242,13 @@ class MainWindow(QMainWindow):
         self.list_persistence()
         if self.display_overwrite_confirmation(
             persistence_generator.get_files_to_be_generated(
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
             )
         ):
             persistence_generator.generate_persistence_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1250,7 +1258,7 @@ class MainWindow(QMainWindow):
     # CQRS functions
 
     def list_cqrs(self):
-        list = cqrs_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = cqrs_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.setPlainText("CQRS:\n\n")
         self.text_box.appendPlainText("\n".join(list))
         self.file_list_view.list_files(list)
@@ -1259,7 +1267,7 @@ class MainWindow(QMainWindow):
         self.list_cqrs()
         cqrs_generator.preview_cqrs_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1275,12 +1283,12 @@ class MainWindow(QMainWindow):
         self.list_cqrs()
         if self.display_overwrite_confirmation(
             cqrs_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             cqrs_generator.generate_cqrs_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1290,7 +1298,7 @@ class MainWindow(QMainWindow):
     # Presenters functions
 
     def list_presenters(self):
-        list = presenter_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = presenter_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Presenters:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1300,7 +1308,7 @@ class MainWindow(QMainWindow):
         self.list_presenters()
         presenter_generator.preview_presenter_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1316,12 +1324,12 @@ class MainWindow(QMainWindow):
         self.list_presenters()
         if self.display_overwrite_confirmation(
             presenter_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             presenter_generator.generate_presenter_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1331,7 +1339,7 @@ class MainWindow(QMainWindow):
     # Controllers functions
 
     def list_controllers(self):
-        list = controller_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = controller_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Controllers to be generated:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1341,7 +1349,7 @@ class MainWindow(QMainWindow):
         self.list_controllers()
         controller_generator.preview_controller_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1357,12 +1365,12 @@ class MainWindow(QMainWindow):
         self.list_controllers()
         if self.display_overwrite_confirmation(
             controller_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             controller_generator.generate_controller_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1372,7 +1380,7 @@ class MainWindow(QMainWindow):
     # Application functions
 
     def list_application(self):
-        list = application_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = application_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Application:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1382,7 +1390,7 @@ class MainWindow(QMainWindow):
         self.list_application()
         application_generator.preview_application_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1398,12 +1406,12 @@ class MainWindow(QMainWindow):
         self.list_application()
         if self.display_overwrite_confirmation(
             application_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             application_generator.generate_application_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1413,8 +1421,8 @@ class MainWindow(QMainWindow):
     # "QML imports integration" functions
 
     def list_qml_imports(self):
-        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
-        list = qml_imports_generator.get_files_to_be_generated(self.temp_manifest_file, {}, folder_path)
+        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
+        list = qml_imports_generator.get_files_to_be_generated(self._temp_manifest_file, {}, folder_path)
         self.text_box.clear()
         self.text_box.setPlainText("QML imports integration:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1422,11 +1430,11 @@ class MainWindow(QMainWindow):
 
     def preview_qml_imports(self):
         self.list_qml_imports()
-        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
+        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
         qml_imports_generator.preview_qml_imports_files(
             self.root_path,
             folder_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1440,16 +1448,16 @@ class MainWindow(QMainWindow):
 
     def generate_qml_imports(self):
         self.list_qml_imports()
-        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file)
+        folder_path = qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file)
         if self.display_overwrite_confirmation(
             qml_imports_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states(), folder_path
+                self._temp_manifest_file, self.file_list_view.fetch_file_states(), folder_path
             )
         ):
             qml_imports_generator.generate_qml_imports_files(
                 self.root_path,
-                qml_imports_generator.get_qml_imports_integration_folder_path(self.temp_manifest_file),
-                self.temp_manifest_file,
+                qml_imports_generator.get_qml_imports_integration_folder_path(self._temp_manifest_file),
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1459,7 +1467,7 @@ class MainWindow(QMainWindow):
     # Qt Widgets UI functions
             
     def list_qt_widgets_ui(self):
-        list = qt_widgets_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = qt_widgets_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Qt Widgets UI:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1469,7 +1477,7 @@ class MainWindow(QMainWindow):
         self.list_qt_widgets_ui()
         qt_widgets_generator.preview_qt_widgets_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1485,12 +1493,12 @@ class MainWindow(QMainWindow):
         self.list_qt_widgets_ui()
         if self.display_overwrite_confirmation(
             qt_widgets_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             qt_widgets_generator.generate_qt_widgets_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1500,7 +1508,7 @@ class MainWindow(QMainWindow):
     # Qt Quick UI functions
             
     def list_qt_quick_ui(self):
-        list = qt_quick_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = qt_quick_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("Qt Quick UI:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1510,7 +1518,7 @@ class MainWindow(QMainWindow):
         self.list_qt_quick_ui()
         qt_quick_generator.preview_qt_quick_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1526,12 +1534,12 @@ class MainWindow(QMainWindow):
         self.list_qt_quick_ui()
         if self.display_overwrite_confirmation(
             qt_quick_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             qt_quick_generator.generate_qt_quick_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1541,7 +1549,7 @@ class MainWindow(QMainWindow):
     # KF6 Kirigami UI functions
             
     def list_kf6_kirigami_ui(self):
-        list = kf6_kirigami_generator.get_files_to_be_generated(self.temp_manifest_file)
+        list = kf6_kirigami_generator.get_files_to_be_generated(self._temp_manifest_file)
         self.text_box.clear()
         self.text_box.setPlainText("KF6 Kirigami UI:\n\n")
         self.text_box.appendPlainText("\n".join(list))
@@ -1551,7 +1559,7 @@ class MainWindow(QMainWindow):
         self.list_kf6_kirigami_ui()
         kf6_kirigami_generator.preview_kf6_kirigami_files(
             self.root_path,
-            self.temp_manifest_file,
+            self._temp_manifest_file,
             self.file_list_view.fetch_file_states(),
             self.uncrustify_config_file,
         )
@@ -1567,12 +1575,12 @@ class MainWindow(QMainWindow):
         self.list_kf6_kirigami_ui()
         if self.display_overwrite_confirmation(
             kf6_kirigami_generator.get_files_to_be_generated(
-                self.temp_manifest_file, self.file_list_view.fetch_file_states()
+                self._temp_manifest_file, self.file_list_view.fetch_file_states()
             )
         ):
             kf6_kirigami_generator.generate_kf6_kirigami_files(
                 self.root_path,
-                self.temp_manifest_file,
+                self._temp_manifest_file,
                 self.file_list_view.fetch_file_states(),
                 self.uncrustify_config_file,
             )
@@ -1632,17 +1640,17 @@ class MainWindow(QMainWindow):
         self.tree.expandAll()
 
     def create_temp_manifest_file(self):
-        with open(self.manifest_file) as file:
+        with open(self._manifest_file) as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
         # create temp folder if not exists
-        Path(self.temp_manifest_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(self._temp_manifest_file).parent.mkdir(parents=True, exist_ok=True)
 
-        with open(self.temp_manifest_file, "w") as file:
+        with open(self._temp_manifest_file, "w") as file:
             yaml.dump(data, file)
 
     def load_data(self):
-        with open(self.temp_manifest_file) as file:
+        with open(self._temp_manifest_file) as file:
             self.data = yaml.load(file, Loader=yaml.FullLoader)
 
         self.model = self.create_model(self.data)
@@ -1685,11 +1693,11 @@ class MainWindow(QMainWindow):
 
     def on_check_item_changed(self, state, key):
         # Load the current state of the YAML file
-        with open(self.temp_manifest_file) as file:
+        with open(self._temp_manifest_file) as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
         # Write the updated state back to the YAML file
-        with open(self.temp_manifest_file, "w") as file:
+        with open(self._temp_manifest_file, "w") as file:
             yaml.dump(data, file)
 
     def handleItemChanged(self, item):
@@ -1718,7 +1726,7 @@ class MainWindow(QMainWindow):
             data[keys[-1]] = item.checkState() == Qt.Checked
 
             # Now we update the yaml file
-            with open(self.temp_manifest_file, "w") as file:
+            with open(self._temp_manifest_file, "w") as file:
                 yaml.dump(self.data, file)
 
             self.save_settings()
@@ -1741,20 +1749,28 @@ class MainWindow(QMainWindow):
         generate_items = list(self.get_generate_items(self.data))
 
         # clear the settings file
-        with open(self.settings_file, "w") as file:
+        with open(self._settings_file, "w") as file:
             file.write("")
 
         # create temp folder if not exists
-        Path(self.settings_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(self._settings_file).parent.mkdir(parents=True, exist_ok=True)
 
         # Saves the items to the settings file
-        with open(self.settings_file, "w") as file:
+        with open(self._settings_file, "w") as file:
             yaml.dump(generate_items, file)
 
     def load_settings(self):
+        
+        # create self._settings_file if not exists
+        if not Path(self._settings_file).exists():
+            Path(self._settings_file).parent.mkdir(parents=True, exist_ok=True)
+            with open(self._settings_file, "w") as file:
+                file.write("{}")
+            
+        
         # Load the saved state from the settings file
         try:
-            with open(self.settings_file, "r") as file:
+            with open(self._settings_file, "r") as file:
                 saved_generate_items = yaml.load(file, Loader=yaml.FullLoader)
         except FileNotFoundError:
             return
@@ -1772,8 +1788,8 @@ class MainWindow(QMainWindow):
 
             self.data[path[-1]] = value
 
-        # Update self.temp_manifest_file
-        with open(self.temp_manifest_file, "w") as file:
+        # Update self._temp_manifest_file
+        with open(self._temp_manifest_file, "w") as file:
             yaml.dump(self.data, file)
 
         # Update the tree view
@@ -1851,9 +1867,18 @@ class MainWindow(QMainWindow):
 
         if file_name:
             self.settings.setValue("last_selected_manifest_path", file_name)
-            self.manifest_file_text.setText(file_name)
-            self.manifest_file = file_name
-            self.root_path = str(Path(self.manifest_file).parent.resolve())
+            self._manifest_file_text.setText(file_name)
+            self._manifest_file = file_name
+            self.root_path = str(Path(self._manifest_file).parent.resolve())
+            
+            # create a settings.yaml file in user config folder if it does not exist
+            user_config_path = Path(QSettings().fileName()).parent.resolve()
+            user_tmp_path = QDir.tempPath()
+            project_name = Path(self._manifest_file).parent.stem
+            
+            self._settings_file = f"{user_config_path}/qleany/{project_name}_settings.yaml"
+            self._temp_manifest_file = f"{user_tmp_path}/qleany/{project_name}_temp_manifest.yaml"
+            
             self.refresh()
             self.list_all()
 
