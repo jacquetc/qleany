@@ -92,5 +92,5 @@ void TestDatabaseTable::testRemove()
     auto entities2 = m_entityTable->getAll().value();
     QCOMPARE(entities2.size(), 0);
 }
-QTEST_APPLESS_MAIN(TestDatabaseTable)
+QTEST_GUILESS_MAIN(TestDatabaseTable)
 #include "tst_database_table.moc"

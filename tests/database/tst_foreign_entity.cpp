@@ -288,6 +288,6 @@ void ForeignEntityTest::debugListsRelationshipTable()
     }
 }
 
-QTEST_APPLESS_MAIN(ForeignEntityTest)
+QTEST_GUILESS_MAIN(ForeignEntityTest)
 
 #include "tst_foreign_entity.moc"

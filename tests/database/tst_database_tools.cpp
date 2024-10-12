@@ -112,6 +112,6 @@ void DatabaseToolsTest::testGetEntityTableName()
     QCOMPARE(entityClassName, "dummy_basic_entity"_L1);
 }
 
-QTEST_APPLESS_MAIN(DatabaseToolsTest)
+QTEST_GUILESS_MAIN(DatabaseToolsTest)
 
 #include "tst_database_tools.moc"
