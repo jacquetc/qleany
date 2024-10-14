@@ -11,3 +11,11 @@ class IDbConnection(ABC):
     @abstractmethod
     def commit(self):
         pass
+
+    @abstractmethod
+    def rollback(self):
+        pass
+
+    @abstractmethod
+    def close(self):
+        pass

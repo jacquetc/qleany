@@ -9,6 +9,7 @@
 #include <QUuid>
 
 using namespace DatabaseTest;
+using namespace Qt::Literals::StringLiterals;
 
 template <class T, class U> class DummyDatabaseContext : public Contracts::Database::InterfaceDatabaseContext
 {

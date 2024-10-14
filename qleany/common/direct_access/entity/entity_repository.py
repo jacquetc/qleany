@@ -1,69 +1,65 @@
-from qleany.common.persistence.database.db_table_group import DbTableGroup
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
-from qleany.common.persistence.repositories.field_repository import (
-    FieldRepository,
-)
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
+from qleany.common.direct_access.common.repository.repository_factory import IRepositoryFactory
+from qleany.common.direct_access.entity.i_entity_db_table_group import IEntityDbTableGroup
+from qleany.common.persistence.repositories.interfaces.i_field_repository import IFieldRepository
 from qleany.common.persistence.repositories.relationship_repository import (
     RelationshipRepository,
 )
 
-from qleany.common.persistence.repositories.interfaces.i_entity_repository import (
+from qleany.common.direct_access.entity.i_entity_repository import (
     IEntityRepository,
 )
-from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.entity_enums import EntityEnum, RelationshipDirection
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import (
-    RepositoryObserver,
-    RepositorySubject,
-)
 import logging
 from qleany.common.entities.entity import Entity
 
 
-class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject):
+class EntityRepository(IEntityRepository):
 
     def __init__(
         self,
-        field_repository: FieldRepository,
-        relationship_repository: RelationshipRepository,
+        db_table_group: IEntityDbTableGroup,
+        db_connection: IDbConnection,
+        repository_factory: IRepositoryFactory
     ):
         super().__init__()
-        self._database = Database(db_context)
-        self._field_repository = field_repository
-        self._relationship_repository = relationship_repository
+        self._db_table_group = db_table_group
+        self._field_repository = repository_factory.create("FieldRepository", db_connection)
+        # self._relationship_repository = repository_factory.create("RelatinonshipRepository", db_connection)
 
         self._field_repository.attach(self)
-        self._relationship_repository.attach(self)
+        # self._relationship_repository.attach(self)
 
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Entity]:
+    def get(self, ids: list[int]) -> list[Entity]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
-            db_entities = self._database.get(db_connection, missing_ids)
+            db_entities = self._db_table_group.get(missing_ids)
             for entity in db_entities:
                 self._cache[entity.id_] = entity
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self, db_connection: IDbConnection) -> list[Entity]:
+    def get_all(self) -> list[Entity]:
         if not self._cache:
-            db_entities = self._database.get_all()
+            db_entities = self._db_table_group.get_all()
             for entity in db_entities:
                 self._cache[entity.id_] = entity
         return list(self._cache.values())
 
-    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
+    def get_all_ids(self) -> list[int]:
         if not self._cache:
             self.get_all()
         return list(self._cache.keys())
 
     def create(
-        self, db_connection: IDbConnection, entities: list[Entity]
+        self, entities: list[Entity]
     ) -> list[Entity]:
-        created_entities = self._database.create(entities)
+        created_entities = self._db_table_group.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
         self.get.cache_clear()
@@ -75,9 +71,9 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
         return created_entities
 
     def update(
-        self, db_connection: IDbConnection, entities: list[Entity]
+        self, entities: list[Entity]
     ) -> list[Entity]:
-        updated_entities = self._database.update(entities)
+        updated_entities = self._db_table_group.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
                 self._cache[entity.id_] = entity
@@ -89,14 +85,14 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
 
         return updated_entities
 
-    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
+    def remove(self, ids: list[int]) -> list[int]:
         # cascade remove for strong relationships
-        self._field_repository.cascade_remove(db_connection, "Entity", "fields", ids)
-        self._relationship_repository.cascade_remove(
-            db_connection, "Entity", "relationships", ids
-        )
+        self._field_repository.cascade_remove("Entity", "fields", ids)
+        # self._relationship_repository.cascade_remove(
+        #     db_connection, "Entity", "relationships", ids
+        # )
 
-        removed_ids = self._database.remove(ids)
+        removed_ids = self._db_table_group.remove(ids)
         for id in removed_ids:
             if id in self._cache:
                 del self._cache[id]
@@ -105,8 +101,7 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
         # signals all repos depending of this repo
         for relationship in Entity._schema().relationships:
             if relationship.relationship_direction == RelationshipDirection.Backward:
-                left_ids = self._database.get_left_ids(
-                    db_connection,
+                left_ids = self._db_table_group.get_left_ids(
                     relationship.left_entity_name,
                     relationship.field_name,
                     ids,
@@ -121,8 +116,8 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
 
         return removed_ids
 
-    def clear(self, db_connection: IDbConnection):
-        self._database.clear()
+    def clear(self):
+        self._db_table_group.clear()
         self._cache.clear()
         self.get.cache_clear()
 
@@ -132,13 +127,11 @@ class EntityRepository(IEntityRepository, RepositoryObserver, RepositorySubject)
 
     def cascade_remove(
         self,
-        db_connection: IDbConnection,
         left_entity: str,
         field_name: str,
         left_entity_ids: list[int],
     ):
-        right_ids = self._database.get_right_ids(
-            db_connection, left_entity, field_name, left_entity_ids
+        right_ids = self._db_table_group.get_right_ids(left_entity, field_name, left_entity_ids
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

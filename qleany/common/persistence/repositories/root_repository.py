@@ -1,9 +1,9 @@
 from qleany.common.persistence.database.db_table_group import DbTableGroup
 from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
-from qleany.common.persistence.repositories.feature_repository import (
+from qleany.common.direct_access.feature.feature_repository import (
     FeatureRepository,
 )
-from qleany.common.persistence.repositories.entity_repository import (
+from qleany.common.direct_access.entity.entity_repository import (
     EntityRepository,
 )
 from qleany.common.persistence.repositories.global_repository import (
@@ -15,7 +15,7 @@ from qleany.common.persistence.repositories.interfaces.i_root_repository import 
 from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.root import Root
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import (
+from qleany.common.direct_access.common.repository.repository_observer import (
     RepositoryObserver,
     RepositorySubject,
 )

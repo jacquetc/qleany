@@ -6,7 +6,7 @@ from qleany.common.persistence.repositories.interfaces.i_global_repository impor
 from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.global_ import Global
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import RepositorySubject
+from qleany.common.direct_access.common.repository.repository_observer import RepositorySubject
 import logging
 
 

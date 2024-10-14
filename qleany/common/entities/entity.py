@@ -19,7 +19,7 @@ class Entity(IEntity):
     id_: int
     only_for_heritage: bool
     fields: list[int]
-    relationships: list[int]
+    # relationships: list[int]
 
     @classmethod
     def _schema(cls) -> EntitySchema:
@@ -44,12 +44,12 @@ class Entity(IEntity):
                     is_primary_key=False,
                     has_relationship=True,
                 ),
-                FieldInfo(
-                    field_name="relationships",
-                    field_type=FieldType.Integer,
-                    is_primary_key=False,
-                    has_relationship=True,
-                ),
+                # FieldInfo(
+                #     field_name="relationships",
+                #     field_type=FieldType.Integer,
+                #     is_primary_key=False,
+                #     has_relationship=True,
+                # ),
             ],
             relationships=[
                 RelationshipInfo(
@@ -63,17 +63,17 @@ class Entity(IEntity):
                     relationship_direction=RelationshipDirection.Forward,
                     relationship_cardinality=RelationshipCardinality.ManyOrdered,
                 ),
-                RelationshipInfo(
-                    left_entity=EntityEnum.Entity,
-                    left_entity_name="Entity",
-                    right_entity=EntityEnum.Relationship,
-                    right_entity_name="Relationship",
-                    field_name="relationships",
-                    relationship_type=RelationshipType.OneToMany,
-                    relationship_strength=RelationshipStrength.Strong,
-                    relationship_direction=RelationshipDirection.Forward,
-                    relationship_cardinality=RelationshipCardinality.ManyOrdered,
-                ),
+                # RelationshipInfo(
+                #     left_entity=EntityEnum.Entity,
+                #     left_entity_name="Entity",
+                #     right_entity=EntityEnum.Relationship,
+                #     right_entity_name="Relationship",
+                #     field_name="relationships",
+                #     relationship_type=RelationshipType.OneToMany,
+                #     relationship_strength=RelationshipStrength.Strong,
+                #     relationship_direction=RelationshipDirection.Forward,
+                #     relationship_cardinality=RelationshipCardinality.ManyOrdered,
+                # ),
                 RelationshipInfo(
                     left_entity=EntityEnum.UseCase,
                     left_entity_name="UseCase",

@@ -2,7 +2,7 @@ from qleany.python_file_listing_feature.dtos import (
     ListDirectAccessFilesUcDto,
     ListDirectAccessFilesUcResponseDto,
 )
-from qleany.common.persistence.repositories.interfaces.i_entity_repository import (
+from qleany.common.direct_access.entity.i_entity_repository import (
     IEntityRepository,
 )
 from qleany.common.persistence.repositories.interfaces.i_field_repository import (

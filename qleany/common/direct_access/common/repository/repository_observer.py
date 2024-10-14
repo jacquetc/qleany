@@ -1,5 +1,3 @@
-from qleany.common.persistence.database.db_table_group import DbTableGroup
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
 from abc import ABC
 from qleany.common.entities.entity_enums import EntityEnum
 
@@ -18,7 +16,7 @@ class RepositoryObserver(ABC):
         pass
 
     def _on_related_ids_to_be_cleared_from_cache(
-        self, subject, left_entity, field_name, left_ids: list[int]
+        self, subject, left_entity, left_ids: list[int]
     ):
         pass
 
@@ -54,6 +52,4 @@ class RepositorySubject(ABC):
         self, left_entity: EntityEnum, left_ids: list[int]
     ):
         for observer in self._observers:
-            observer._on_related_ids_to_be_cleared_from_cache(
-                self, left_entity, left_ids
-            )
+            observer._on_related_ids_to_be_cleared_from_cache(self, left_entity, left_ids)

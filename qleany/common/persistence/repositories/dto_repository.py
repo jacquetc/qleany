@@ -9,7 +9,7 @@ from qleany.common.persistence.repositories.interfaces.i_dto_repository import (
 from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.dto import Dto
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import (
+from qleany.common.direct_access.common.repository.repository_observer import (
     RepositoryObserver,
     RepositorySubject,
 )

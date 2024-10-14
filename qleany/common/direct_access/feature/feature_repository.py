@@ -1,24 +1,32 @@
-from qleany.common.persistence.database.db_table_group import DbTableGroup
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
-from qleany.common.persistence.repositories.interfaces.i_field_repository import (
-    IFieldRepository,
+from qleany.common.persistence.repositories.use_case_repository import (
+    UseCaseRepository,
+)
+from qleany.common.direct_access.feature.i_feature_repository import (
+    IFeatureRepository,
 )
 from qleany.common.entities.entity_enums import EntityEnum
-from qleany.common.entities.field import Field
+from qleany.common.entities.feature import Feature
 from functools import lru_cache
+from qleany.common.direct_access.common.repository.repository_observer import (
+    RepositoryObserver,
+    RepositorySubject,
+)
 import logging
-from qleany.common.persistence.repositories.repository_observer import RepositorySubject
 
 
-class FieldRepository(IFieldRepository, RepositorySubject):
+class FeatureRepository(IFeatureRepository, RepositoryObserver, RepositorySubject):
 
-    def __init__(self):
+    def __init__(self, use_case_repository: UseCaseRepository):
         super().__init__()
         self._database = Database(db_context)
+        self._use_case_repository = use_case_repository
+
+        self._use_case_repository.attach(self)
+
         self._cache = {}
 
     @lru_cache(maxsize=None)
-    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Field]:
+    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Feature]:
         cached_entities = [self._cache[id] for id in ids if id in self._cache]
         missing_ids = [id for id in ids if id not in self._cache]
         if missing_ids:
@@ -28,7 +36,7 @@ class FieldRepository(IFieldRepository, RepositorySubject):
             cached_entities.extend(db_entities)
         return cached_entities
 
-    def get_all(self, db_connection: IDbConnection) -> list[Field]:
+    def get_all(self, db_connection: IDbConnection) -> list[Feature]:
         if not self._cache:
             db_entities = self._database.get_all()
             for entity in db_entities:
@@ -41,8 +49,8 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         return list(self._cache.keys())
 
     def create(
-        self, db_connection: IDbConnection, entities: list[Field]
-    ) -> list[Field]:
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         created_entities = self._database.create(entities)
         for entity in created_entities:
             self._cache[entity.id_] = entity
@@ -55,8 +63,8 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         return created_entities
 
     def update(
-        self, db_connection: IDbConnection, entities: list[Field]
-    ) -> list[Field]:
+        self, db_connection: IDbConnection, entities: list[Feature]
+    ) -> list[Feature]:
         updated_entities = self._database.update(entities)
         for entity in updated_entities:
             if entity.id_ in self._cache:
@@ -70,16 +78,19 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         return updated_entities
 
     def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
+        # cascade remove for strong relationships
+        self._use_case_repository.cascade_remove(
+            db_connection, "Feature", "use_cases", ids
+        )
 
-        # remove from database and cache
-        self._database.remove(ids)
-        for id in ids:
+        removed_ids = self._database.remove(ids)
+        for id in removed_ids:
             if id in self._cache:
                 del self._cache[id]
         self.get.cache_clear()
 
         # signals all repos depending of this repo
-        for relationship in Field._schema().relationships:
+        for relationship in Feature._schema().relationships:
             if relationship.relationship_direction == RelationshipDirection.Backward:
                 left_ids = self._database.get_left_ids(
                     db_connection,
@@ -91,11 +102,11 @@ class FieldRepository(IFieldRepository, RepositorySubject):
                     relationship.left_entity, left_ids
                 )
 
-        self._notify_removed(ids)
+        self._notify_removed(removed_ids)
 
-        logging.info(f"Removed {ids}")
+        logging.info(f"Removed {removed_ids}")
 
-        return ids
+        return removed_ids
 
     def clear(self, db_connection: IDbConnection):
         self._database.clear()
@@ -124,7 +135,7 @@ class FieldRepository(IFieldRepository, RepositorySubject):
     def _on_related_ids_to_be_cleared_from_cache(
         self, left_entity: EntityEnum, left_ids: list[int]
     ):
-        if left_entity != EntityEnum.Field:
+        if left_entity != EntityEnum.Entity:
             return
         self.get.cache_clear()
         [self._cache.pop(id, None) for id in left_ids]

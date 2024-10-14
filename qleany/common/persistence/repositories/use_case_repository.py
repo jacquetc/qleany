@@ -3,14 +3,14 @@ from qleany.common.persistence.database.interfaces.i_db_connection import IDbCon
 from qleany.common.persistence.repositories.dto_repository import (
     DtoRepository,
 )
-from qleany.common.persistence.repositories.entity_repository import EntityRepository
+from qleany.common.direct_access.entity.entity_repository import EntityRepository
 from qleany.common.persistence.repositories.interfaces.i_use_case_repository import (
     IUseCaseRepository,
 )
 from qleany.common.entities.entity_enums import EntityEnum, RelationshipDirection
 from qleany.common.entities.use_case import UseCase
 from functools import lru_cache
-from qleany.common.persistence.repositories.repository_observer import (
+from qleany.common.direct_access.common.repository.repository_observer import (
     RepositoryObserver,
     RepositorySubject,
 )

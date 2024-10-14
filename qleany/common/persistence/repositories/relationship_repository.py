@@ -7,7 +7,7 @@ from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.relationship import Relationship
 from functools import lru_cache
 import logging
-from qleany.common.persistence.repositories.repository_observer import RepositorySubject
+from qleany.common.direct_access.common.repository.repository_observer import RepositorySubject
 
 
 class RelationshipRepository(IRelationshipRepository, RepositorySubject):

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-import sqlite3
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
 
 
 class IDbContext(ABC):

@@ -1,11 +1,9 @@
 import sqlite3
 
-from qleany.common.persistence.database.interfaces.i_db_connection import (
-    IDbConnection,
-)
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
 
 
-class DbConnection(IDbConnection):
+class SqliteDbConnection(IDbConnection):
     def __init__(self, sqlite_connection: sqlite3.Connection):
         self._sqlite_connection = sqlite_connection
 
@@ -14,3 +12,9 @@ class DbConnection(IDbConnection):
 
     def commit(self):
         self._sqlite_connection.commit()
+
+    def rollback(self):
+        self._sqlite_connection.rollback()
+    
+    def close(self):
+        self._sqlite_connection.close()
