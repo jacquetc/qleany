@@ -1,11 +1,12 @@
+import sqlite3
+from typing import Sequence
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class OneToManyOrderedAssociator:
-    def __init__(self, relationship: RelationshipInfo, db_connection: SqliteDbConnection):
+    def __init__(self, relationship: RelationshipInfo, db_connection: sqlite3.Connection):
         self._relationship = relationship
         self._db_connection = db_connection
         self._field_name = relationship.field_name
@@ -32,8 +33,8 @@ class OneToManyOrderedAssociator:
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}));"
         )
 
-    def get_right_entities(self, left_entity_id: int):
-        connection = self._db_connection.connection()
+    def get_right_ids(self, left_entity_id: int) -> Sequence[int]:
+        connection = self._db_connection
         query_str = (
             f"WITH RECURSIVE ordered_relationships(id, {self._junction_table_right_entity_foreign_key_name}, row_number) AS ("
             f"  SELECT id, {self._junction_table_right_entity_foreign_key_name}, 1"
@@ -53,8 +54,8 @@ class OneToManyOrderedAssociator:
         right_entity_ids = [row[0] for row in cursor.fetchall()]
         return right_entity_ids
 
-    def update_right_entities(self, left_entity_id: int, right_entity_ids: list[int]) -> dict:
-        connection = self._db_connection.connection()
+    def update_right_ids(self, left_entity_id: int, right_entity_ids: Sequence[int]) -> dict:
+        connection = self._db_connection
         cursor = connection.cursor()
 
         # Fetch current associations
@@ -177,29 +178,32 @@ class OneToManyOrderedAssociator:
                 ))
 
 
-            # transform added_relationships into group of relationships by the left_entity_id
-            added_relationships_grouped = {}
-            for relationship in added_relationships:
-                left_entity_id = relationship["left_entity_id"]
-                if left_entity_id not in added_relationships_grouped:
-                    added_relationships_grouped[left_entity_id] = []
-                added_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
-            added_relationships = added_relationships_grouped
+        # transform added_relationships into group of relationships by the left_entity_id
+        added_relationships_grouped = {}
+        for relationship in added_relationships:
+            left_entity_id = relationship["left_entity_id"]
+            if left_entity_id not in added_relationships_grouped:
+                added_relationships_grouped[left_entity_id] = []
+            added_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
+        final_added_relationships = added_relationships_grouped
 
-            # transform deleted_relationships into group of relationships by the left_entity_id
-            deleted_relationships_grouped = {}
-            for relationship in deleted_relationships:
+        # transform deleted_relationships into group of relationships by the left_entity_id
+        deleted_relationships_grouped = {}
+        for relationship in deleted_relationships:
+            if relationship["left_entity_id"] is None:
+                left_entity_id = -1 # left entity ID is unknown
+            else:
                 left_entity_id = relationship["left_entity_id"]
-                if left_entity_id not in deleted_relationships_grouped:
-                    deleted_relationships_grouped[left_entity_id] = []
-                deleted_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
-            deleted_relationships = deleted_relationships_grouped
+            if left_entity_id not in deleted_relationships_grouped:
+                deleted_relationships_grouped[left_entity_id] = []
+            deleted_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
+        final_deleted_relationships = deleted_relationships_grouped
 
 
         return {
             "left_entity_name": self._relationship.left_entity_name,
             "left_entity_field_name": self._field_name,
             "right_entity_name": self._relationship.right_entity_name,
-            "added_relationships": added_relationships,
-            "deleted_relationships": deleted_relationships,
+            "added_relationships": final_added_relationships,
+            "deleted_relationships": final_deleted_relationships,
         }

@@ -1,116 +1,115 @@
-from qleany.common.direct_access.field.i_field_db_table_group import IFieldDbTableGroup
+from typing import Sequence
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
+    IDbConnection,
+)
+from qleany.common.direct_access.common.repository.repository_factory import (
+    IRepositoryFactory,
+)
+from qleany.common.direct_access.common.repository.repository_messenger import (
+    IMessenger,
+)
+from qleany.common.direct_access.field.i_field_db_table_group import (
+    IFieldDbTableGroup,
+)
 from qleany.common.direct_access.field.i_field_repository import (
     IFieldRepository,
 )
-from qleany.common.entities.entity_enums import EntityEnum
-from qleany.common.entities.field import Field
-from functools import lru_cache
+from qleany.common.entities.entity_enums import (
+    EntityEnum,
+    RelationshipDirection,
+    RelationshipStrength,
+)
 import logging
+from qleany.common.entities.field import Field
+from typing import Sequence
 
 
-class FieldRepository(IFieldRepository, RepositorySubject):
+class FieldRepository(IFieldRepository):
 
-    def __init__(self ,database: IFieldDbTableGroup):
+    def __init__(
+        self,
+        db_table_group: IFieldDbTableGroup,
+        db_connection: IDbConnection,
+        repository_factory: IRepositoryFactory,
+        messenger: IMessenger,
+    ):
         super().__init__()
-        self._database = database
-        self._cache = {}
+        self._db_table_group = db_table_group
+        self._db_connection = db_connection
+        self._repository_factory = repository_factory
+        self._messenger = messenger
 
-    @lru_cache(maxsize=None)
-    def get(self, ids: list[int]) -> list[Field]:
-        cached_entities = [self._cache[id] for id in ids if id in self._cache]
-        missing_ids = [id for id in ids if id not in self._cache]
-        if missing_ids:
-            db_entities = self._database.get(missing_ids)
-            for entity in db_entities:
-                self._cache[entity.id_] = entity
-            cached_entities.extend(db_entities)
-        return cached_entities
+    def get(self, ids: Sequence[int]) -> Sequence[Field]:
+        db_entities = self._db_table_group.get(ids)
+        return db_entities
 
-    def get_all(self) -> list[Field]:
-        if not self._cache:
-            db_entities = self._database.get_all()
-            for entity in db_entities:
-                self._cache[entity.id_] = entity
-        return list(self._cache.values())
+    def get_all(self) -> Sequence[Field]:
+        db_entities = self._db_table_group.get_all()
+        return db_entities
 
-    def get_all_ids(self) -> list[int]:
-        if not self._cache:
-            self.get_all()
-        return list(self._cache.keys())
+    def get_all_ids(self) -> Sequence[int]:
+        db_entities = self.get_all()
+        return [field.id_ for field in db_entities]
 
-    def create(
-        self, entities: list[Field]
-    ) -> list[Field]:
-        created_entities = self._database.create(entities)
-        for entity in created_entities:
-            self._cache[entity.id_] = entity
-        self.get.cache_clear()
+    def create(self, entities: Sequence[Field]) -> Sequence[Field]:
+        created_entities = self._db_table_group.create(entities)
 
-        self._notify_created([entity.id_ for entity in created_entities])
+        self._messenger.notify(
+            "Field", "created", {"ids": [field.id_ for field in created_entities]}
+        )
 
         logging.info(f"Created {created_entities}")
 
         return created_entities
 
-    def update(
-        self, entities: list[Field]
-    ) -> list[Field]:
-        updated_entities = self._database.update(entities)
-        for entity in updated_entities:
-            if entity.id_ in self._cache:
-                self._cache[entity.id_] = entity
-        self.get.cache_clear()
+    def update(self, entities: Sequence[Field]) -> Sequence[Field]:
+        updated_entities = self._db_table_group.update(entities)
 
-        self._notify_updated([entity.id_ for entity in updated_entities])
+        self._messenger.notify(
+            "Field", "updated", {"ids": [field.id_ for field in updated_entities]}
+        )
 
         logging.info(f"Updated {updated_entities}")
 
         return updated_entities
 
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, ids: Sequence[int]) -> Sequence[int]:
 
-        # remove from database and cache
-        self._database.remove(ids)
-        for id in ids:
-            if id in self._cache:
-                del self._cache[id]
-        self.get.cache_clear()
-
-        # signals all repos depending of this repo
+        # cascade remove relationships
         for relationship in Field._schema().relationships:
-            if relationship.relationship_direction == RelationshipDirection.Backward:
-                left_ids = self._database.get_left_ids(
-                    relationship.left_entity_name,
-                    relationship.field_name,
-                    ids,
+            if (
+                relationship.relationship_direction == RelationshipDirection.Forward
+                and relationship.relationship_strength == RelationshipStrength.Strong
+            ):
+                # get field name from relationship
+                repository_name = f"{relationship.right_entity_name}Repository"
+
+                # create repository from factory
+                repository = self._repository_factory.create(
+                    repository_name, self._db_connection
                 )
-                self._notify_related_ids_to_be_cleared_from_cache(
-                    relationship.left_entity, left_ids
-                )
+                
+                for left_id in ids:
+                    right_ids = self._db_table_group.get_right_ids(
+                        relationship=relationship,
+                        left_id=left_id,
+                    )
+                    repository.remove(
+                        right_ids,
+                    )
 
-        self._notify_removed(ids)
+        # remove entities
+        removed_ids = self._db_table_group.remove(ids)
 
-        logging.info(f"Removed {ids}")
+        self._messenger.notify("Field", "removed", {"ids": removed_ids})
 
-        return ids
+        logging.info(f"Removed {removed_ids}")
+
+        return removed_ids
 
     def clear(self):
-        self._database.clear()
-        self._cache.clear()
-        self.get.cache_clear()
+        self._db_table_group.clear()
 
-        self._notify_cleared()
+        self._messenger.notify("Field", "cleared", {})
 
         logging.info("Cache cleared")
-
-    def cascade_remove(
-        self,
-        left_entity: str,
-        field_name: str,
-        left_entity_ids: list[int],
-    ):
-        right_ids = self._database.get_right_ids(
-            left_entity, field_name, left_entity_ids
-        )
-        self.remove(right_ids)
-        logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

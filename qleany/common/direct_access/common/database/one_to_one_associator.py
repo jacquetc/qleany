@@ -1,14 +1,15 @@
+import sqlite3
 from typing import Optional
 
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.persistence.database.db_connection import DbConnection
 
 
 class OneToOneAssociator:
-    def __init__(self, relationship: RelationshipInfo):
+    def __init__(self, relationship: RelationshipInfo, db_connection: sqlite3.Connection):
         self._relationship = relationship
+        self._db_connection = db_connection
         self._field_name = relationship.field_name
 
         left_entity_name = relationship.left_entity_name
@@ -32,8 +33,8 @@ class OneToOneAssociator:
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}))"
         )
 
-    def get_right_entity(self, db_connection: DbConnection, left_entity_id: int) -> Optional[int]:
-        connection = db_connection.connection()
+    def get_right_id(self, left_entity_id: int) -> Optional[int]:
+        connection = self._db_connection
         cursor = connection.cursor()
         query = (
             f"SELECT {self._junction_table_right_entity_foreign_key_name} FROM {self._junction_table_name} "
@@ -43,8 +44,8 @@ class OneToOneAssociator:
         result = cursor.fetchone()
         return result[0] if result else None
 
-    def update_right_entity(self, db_connection: DbConnection, left_entity_id: int, right_entity_id: int) -> dict:
-        connection = db_connection.connection()
+    def update_right_id(self, left_entity_id: int, right_entity_id: int) -> dict:
+        connection = self._db_connection
         cursor = connection.cursor()
 
         deleted_relationships = []
@@ -58,7 +59,7 @@ class OneToOneAssociator:
             cursor.execute(delete_query, (left_entity_id,))
             deleted_relationships.append({
                 "left_entity_id": left_entity_id,
-                "right_entity_id": self.get_right_entity(db_connection, left_entity_id)
+                "right_entity_id": self.get_right_id(left_entity_id)
             })
         else:
             # Delete any existing association for the right entity

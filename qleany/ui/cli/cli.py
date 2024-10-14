@@ -1,10 +1,8 @@
-from qleany.common.persistence.persistence_registration import (
-    register as register_persistence,
-)
+from qleany.common.direct_access.persistence_registration import register_persistence
 
 
 def register():
-    provider = register_persistence()
+    repository_factory = register_persistence()
 
 
 def run_cli():

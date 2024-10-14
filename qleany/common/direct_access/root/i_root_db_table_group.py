@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Sequence, Any
+from typing import Sequence
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.entities.i_entity import IEntity
+from qleany.common.entities.root import Root
 
-class IDbTableGroup(ABC):
+class IRootDbTableGroup(ABC):
 
     @abstractmethod
-    def get(self, ids: Sequence[int]) -> Sequence[IEntity]:
+    def get(self, ids: Sequence[int]) -> Sequence[Root]:
         pass
 
     @abstractmethod
-    def get_all(self) -> Sequence[IEntity]:
+    def get_all(self) -> Sequence[Root]:
         pass
 
     @abstractmethod
@@ -18,11 +18,11 @@ class IDbTableGroup(ABC):
         pass
 
     @abstractmethod
-    def create(self, entities: Sequence[IEntity]) -> Sequence[IEntity]:
+    def create(self, entities: Sequence[Root]) -> Sequence[Root]:
         pass
 
     @abstractmethod
-    def update(self, entities: Sequence[IEntity]) -> Sequence[IEntity]:
+    def update(self, entities: Sequence[Root]) -> Sequence[Root]:
         pass
 
     @abstractmethod

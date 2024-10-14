@@ -1,27 +1,34 @@
+import sqlite3
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class ManyToManyOrderedAssociator:
-    def __init__(self, relationship: RelationshipInfo):
+    def __init__(
+        self, relationship: RelationshipInfo, db_connection: sqlite3.Connection
+    ):
         # unimplement exception
         raise NotImplementedError("ManyToManyOrderedAssociator is not implemented yet")
 
         self._relationship = relationship
+        self._db_connection = db_connection
         self._field_name = relationship.field_name
 
         left_entity_name = relationship.left_entity_name
         right_entity_name = relationship.right_entity_name
 
-        self._junction_table_name = f"{left_entity_name}_{relationship.field_name}_{right_entity_name}_junction"
+        self._junction_table_name = (
+            f"{left_entity_name}_{relationship.field_name}_{right_entity_name}_junction"
+        )
         self._junction_table_left_entity_foreign_key_name = f"{left_entity_name}_id"
         self._left_entity_foreign_table_name = stringcase.snakecase(left_entity_name)
         self._junction_table_right_entity_foreign_key_name = f"{right_entity_name}_id"
         self._right_entity_foreign_table_name = stringcase.snakecase(right_entity_name)
 
     def get_table_creation_sql(self):
+        # unimplement exception
+        raise NotImplementedError("ManyToManyOrderedAssociator is not implemented yet")
         return (
             f"CREATE TABLE IF NOT EXISTS {self._junction_table_name} "
             f"(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -33,7 +40,9 @@ class ManyToManyOrderedAssociator:
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}));"
         )
 
-    def get_right_entities(self, db_connection: DbConnection, left_entity_id: int):
+    def get_right_entities(self, left_entity_id: int):
+        # unimplement exception
+        raise NotImplementedError("ManyToManyOrderedAssociator is not implemented yet")
         connection = db_connection.connection()
         query_str = (
             f"WITH RECURSIVE ordered_relationships(id, {self._junction_table_right_entity_foreign_key_name}, row_number) AS ("
@@ -54,7 +63,9 @@ class ManyToManyOrderedAssociator:
         right_entity_ids = [row[0] for row in cursor.fetchall()]
         return right_entity_ids
 
-    def update_right_entities(self, db_connection: DbConnection, left_entity_id: int, right_entity_ids: list[int]):
+    def update_right_entities(self, left_entity_id: int, right_entity_ids: list[int]):
+        # unimplement exception
+        raise NotImplementedError("ManyToManyOrderedAssociator is not implemented yet")
         connection = db_connection.connection()
         cursor = connection.cursor()
 
@@ -79,7 +90,7 @@ class ManyToManyOrderedAssociator:
                 "common": False,
                 "new_previous": 0,
                 "new_next": 0,
-                "update_previous_or_next": False
+                "update_previous_or_next": False,
             }
             for row in current_associations
         ]
@@ -96,7 +107,7 @@ class ManyToManyOrderedAssociator:
                 "common": False,
                 "new_previous": 0,
                 "new_next": 0,
-                "update_previous_or_next": False
+                "update_previous_or_next": False,
             }
             for entity_id in right_entity_ids
         ]
@@ -107,7 +118,9 @@ class ManyToManyOrderedAssociator:
                 if current_shadow["entity_id"] == new_shadow["entity_id"]:
                     current_shadow["common"] = True
                     new_shadow["common"] = True
-                    new_shadow["junction_table_id"] = current_shadow["junction_table_id"]
+                    new_shadow["junction_table_id"] = current_shadow[
+                        "junction_table_id"
+                    ]
                     new_shadow["previous"] = current_shadow["previous"]
                     new_shadow["next"] = current_shadow["next"]
                     new_shadow["create"] = False
@@ -118,12 +131,23 @@ class ManyToManyOrderedAssociator:
                 current_shadow["remove"] = True
 
         # Merge shadows and update previous/next pointers
-        merged_shadows = new_shadows + [shadow for shadow in current_shadows if shadow["remove"]]
+        merged_shadows = new_shadows + [
+            shadow for shadow in current_shadows if shadow["remove"]
+        ]
         for i, shadow in enumerate(merged_shadows):
             if not shadow["remove"]:
-                shadow["new_previous"] = merged_shadows[i - 1]["entity_id"] if i > 0 else 0
-                shadow["new_next"] = merged_shadows[i + 1]["entity_id"] if i < len(merged_shadows) - 1 else 0
-                if shadow["previous"] != shadow["new_previous"] or shadow["next"] != shadow["new_next"]:
+                shadow["new_previous"] = (
+                    merged_shadows[i - 1]["entity_id"] if i > 0 else 0
+                )
+                shadow["new_next"] = (
+                    merged_shadows[i + 1]["entity_id"]
+                    if i < len(merged_shadows) - 1
+                    else 0
+                )
+                if (
+                    shadow["previous"] != shadow["new_previous"]
+                    or shadow["next"] != shadow["new_next"]
+                ):
                     shadow["update_previous_or_next"] = True
 
         # Apply changes to the database
@@ -134,12 +158,15 @@ class ManyToManyOrderedAssociator:
                     f"({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}, previous, next) "
                     f"VALUES (?, ?, ?, ?)"
                 )
-                cursor.execute(query_str, (
-                    left_entity_id,
-                    shadow["entity_id"],
-                    shadow["new_previous"] if shadow["new_previous"] != 0 else None,
-                    shadow["new_next"] if shadow["new_next"] != 0 else None
-                ))
+                cursor.execute(
+                    query_str,
+                    (
+                        left_entity_id,
+                        shadow["entity_id"],
+                        shadow["new_previous"] if shadow["new_previous"] != 0 else None,
+                        shadow["new_next"] if shadow["new_next"] != 0 else None,
+                    ),
+                )
             elif shadow["remove"]:
                 query_str = f"DELETE FROM {self._junction_table_name} WHERE id = ?"
                 cursor.execute(query_str, (shadow["junction_table_id"],))
@@ -149,10 +176,13 @@ class ManyToManyOrderedAssociator:
                     f"SET previous = ?, next = ? "
                     f"WHERE id = ?"
                 )
-                cursor.execute(query_str, (
-                    shadow["new_previous"] if shadow["new_previous"] != 0 else None,
-                    shadow["new_next"] if shadow["new_next"] != 0 else None,
-                    shadow["junction_table_id"]
-                ))
+                cursor.execute(
+                    query_str,
+                    (
+                        shadow["new_previous"] if shadow["new_previous"] != 0 else None,
+                        shadow["new_next"] if shadow["new_next"] != 0 else None,
+                        shadow["junction_table_id"],
+                    ),
+                )
 
         return self.get_right_entities(db_connection, left_entity_id)

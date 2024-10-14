@@ -1,38 +1,37 @@
 from abc import ABC, abstractmethod
 from qleany.common.entities.field import Field
-from functools import lru_cache
-from qleany.common.direct_access.common.repository.repository_observer import (
-    RepositorySubject,
-)
+from typing import Sequence
 
-class IFieldRepository(RepositorySubject, ABC):
-    @lru_cache(maxsize=None)
+from qleany.common.entities.entity_enums import EntityEnum
+
+
+class IFieldRepository(ABC):
     @abstractmethod
-    def get(self, ids: list[int]) -> list[Field]:
+    def get(self, ids: Sequence[int]) -> Sequence[Field]:
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Field]:
+    def get_all(self) -> Sequence[Field]:
         pass
 
     @abstractmethod
-    def get_all_ids(self) -> list[int]:
+    def get_all_ids(self) -> Sequence[int]:
         pass
 
     @abstractmethod
     def create(
-        self, entities: list[Field]
-    ) -> list[Field]:
+        self, entities: Sequence[Field]
+    ) -> Sequence[Field]:
         pass
 
     @abstractmethod
     def update(
-        self, entities: list[Field]
-    ) -> list[Field]:
+        self, entities: Sequence[Field]
+    ) -> Sequence[Field]:
         pass
 
     @abstractmethod
-    def remove(self, ids: list[int]) -> list[int]:
+    def remove(self, ids: Sequence[int]) -> Sequence[int]:
         pass
 
     @abstractmethod

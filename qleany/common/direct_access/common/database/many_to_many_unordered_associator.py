@@ -1,11 +1,12 @@
+import sqlite3
+from typing import Sequence
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class ManyToManyUnorderedAssociator:
-    def __init__(self, relationship: RelationshipInfo, db_connection: SqliteDbConnection):
+    def __init__(self, relationship: RelationshipInfo, db_connection: sqlite3.Connection):
         self._relationship = relationship
         self._db_connection = db_connection
         self._field_name = relationship.field_name
@@ -30,8 +31,8 @@ class ManyToManyUnorderedAssociator:
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}))"
         )
 
-    def get_right_entities(self, db_connection: DbConnection, left_entity_id: int):
-        connection = db_connection.connection()
+    def get_right_ids(self, left_entity_id: int) -> Sequence[int]:
+        connection = self._db_connection
         cursor = connection.cursor()
         query = (
             f"SELECT {self._junction_table_right_entity_foreign_key_name} FROM {self._junction_table_name} "
@@ -41,15 +42,15 @@ class ManyToManyUnorderedAssociator:
         right_entity_ids = [row[0] for row in cursor.fetchall()]
         return right_entity_ids
 
-    def update_right_entities(self, db_connection: DbConnection, left_entity_id: int, right_entity_ids: list[int]) -> dict:
-        connection = db_connection.connection()
+    def update_right_ids(self, left_entity_id: int, right_entity_ids: Sequence[int]) -> dict:
+        connection = self._db_connection
         cursor = connection.cursor()
 
         added_relationships = []
         deleted_relationships = []
 
         # Fetch existing right entity IDs
-        existing_right_entity_ids = self.get_right_entities(db_connection, left_entity_id)
+        existing_right_entity_ids = self.get_right_ids(left_entity_id)
 
         # Delete right entities that are no longer associated
         for right_entity_id in existing_right_entity_ids:
