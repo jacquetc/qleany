@@ -3,13 +3,13 @@ import sqlite3
 import tempfile
 import threading
 
-from qleany.common.persistence.database.db_connection import DbConnection
-from qleany.common.persistence.database.interfaces.i_db_connection import (
+from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
     IDbConnection,
 )
 
 
-class DbContext:
+class SqliteDbContext:
     def __init__(self):
         self.mutex = threading.Lock()
         self.file_name = ""
@@ -47,4 +47,4 @@ class DbContext:
             cursor = conn.cursor()
             for pragma in pragmas:
                 cursor.execute(pragma)
-            return DbConnection(conn)
+            return SqliteDbConnection(conn)

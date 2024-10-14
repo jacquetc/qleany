@@ -1,12 +1,13 @@
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.persistence.database.db_connection import DbConnection
+from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class ManyToManyUnorderedAssociator:
-    def __init__(self, relationship: RelationshipInfo):
+    def __init__(self, relationship: RelationshipInfo, db_connection: SqliteDbConnection):
         self._relationship = relationship
+        self._db_connection = db_connection
         self._field_name = relationship.field_name
 
         left_entity_name = relationship.left_entity_name

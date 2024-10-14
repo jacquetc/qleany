@@ -1,15 +1,15 @@
 from qleany.common.entities.entity import Entity
 from qleany.direct_access.entity.dtos import EntityDto
-from qleany.direct_access.entity.i_entity_uow import IEntityUnitOfWork
+from qleany.direct_access.entity.i_entity_uow import IEntityUow
 
 
 class Get:
-    def __init__(self, unit_of_work: IEntityUnitOfWork):
+    def __init__(self, unit_of_work: IEntityUow):
         self._unit_of_work = unit_of_work
 
     def execute(self, ids: list[int]) -> list[EntityDto]:
         with self._unit_of_work as uow:
-            entities = [uow.entity_repository.get(id_) for id_ in ids]
+            entities = uow.entity_repository.get(tuple(ids))
             return self._convert_entities_to_dtos(entities)
 
     def _convert_entity_to_dto(self, entity: Entity) -> EntityDto:

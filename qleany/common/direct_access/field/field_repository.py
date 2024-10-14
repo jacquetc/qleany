@@ -6,7 +6,6 @@ from qleany.common.entities.entity_enums import EntityEnum
 from qleany.common.entities.field import Field
 from functools import lru_cache
 import logging
-from qleany.common.direct_access.common.repository.repository_observer import RepositorySubject
 
 
 class FieldRepository(IFieldRepository, RepositorySubject):
@@ -115,13 +114,3 @@ class FieldRepository(IFieldRepository, RepositorySubject):
         )
         self.remove(right_ids)
         logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")
-
-    # observer methods
-
-    def _on_related_ids_to_be_cleared_from_cache(
-        self, left_entity: EntityEnum, left_ids: list[int]
-    ):
-        if left_entity != EntityEnum.Field:
-            return
-        self.get.cache_clear()
-        [self._cache.pop(id, None) for id in left_ids]

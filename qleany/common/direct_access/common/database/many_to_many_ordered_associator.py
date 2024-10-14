@@ -1,7 +1,7 @@
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.persistence.database.db_connection import DbConnection
+from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class ManyToManyOrderedAssociator:

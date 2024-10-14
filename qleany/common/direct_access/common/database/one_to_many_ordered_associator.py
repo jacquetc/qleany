@@ -1,12 +1,13 @@
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
-from qleany.common.persistence.database.db_connection import DbConnection
+from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 
 
 class OneToManyOrderedAssociator:
-    def __init__(self, relationship: RelationshipInfo):
+    def __init__(self, relationship: RelationshipInfo, db_connection: SqliteDbConnection):
         self._relationship = relationship
+        self._db_connection = db_connection
         self._field_name = relationship.field_name
 
         left_entity_name = relationship.left_entity_name
@@ -31,8 +32,8 @@ class OneToManyOrderedAssociator:
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}));"
         )
 
-    def get_right_entities(self, db_connection: DbConnection, left_entity_id: int):
-        connection = db_connection.connection()
+    def get_right_entities(self, left_entity_id: int):
+        connection = self._db_connection.connection()
         query_str = (
             f"WITH RECURSIVE ordered_relationships(id, {self._junction_table_right_entity_foreign_key_name}, row_number) AS ("
             f"  SELECT id, {self._junction_table_right_entity_foreign_key_name}, 1"
@@ -52,8 +53,8 @@ class OneToManyOrderedAssociator:
         right_entity_ids = [row[0] for row in cursor.fetchall()]
         return right_entity_ids
 
-    def update_right_entities(self, db_connection: DbConnection, left_entity_id: int, right_entity_ids: list[int]) -> dict:
-        connection = db_connection.connection()
+    def update_right_entities(self, left_entity_id: int, right_entity_ids: list[int]) -> dict:
+        connection = self._db_connection.connection()
         cursor = connection.cursor()
 
         # Fetch current associations
@@ -65,8 +66,8 @@ class OneToManyOrderedAssociator:
         cursor.execute(query_str, (left_entity_id,))
         current_associations = cursor.fetchall()
 
-        added_relationships = []
-        deleted_relationships = []
+        added_relationships: list[dict[str, int]] = []
+        deleted_relationships: list[dict[str, int|None]] = []
 
         # Create a list of current EntityShadow objects
         current_shadows = [
@@ -195,10 +196,10 @@ class OneToManyOrderedAssociator:
             deleted_relationships = deleted_relationships_grouped
 
 
-            return {
-                "left_entity_name": self._relationship.left_entity_name,
-                "left_entity_field_name": self._field_name,
-                "right_entity_name": self._relationship.right_entity_name,
-                "added_relationships": added_relationships,
-                "deleted_relationships": deleted_relationships,
-            }
+        return {
+            "left_entity_name": self._relationship.left_entity_name,
+            "left_entity_field_name": self._field_name,
+            "right_entity_name": self._relationship.right_entity_name,
+            "added_relationships": added_relationships,
+            "deleted_relationships": deleted_relationships,
+        }
