@@ -3,6 +3,7 @@ from qleany.common.direct_access.common.repository.repository_factory import IRe
 from qleany.common.direct_access.common.repository.repository_factory import RepositoryFactory
 from qleany.common.direct_access.entity.entity_repository import EntityRepository
 from qleany.common.direct_access.entity.i_entity_repository import IEntityRepository
+from qleany.common.direct_access.root.i_root_repository import IRootRepository
 from qleany.direct_access.entity.i_entity_uow import IEntityUow
 from qleany.common.direct_access.common.database.interfaces.i_db_context import IDbContext
 from typing import Optional
@@ -22,6 +23,13 @@ class EntityUow(IEntityUow):
         if self._connection is None:
             raise ValueError("Connection is not established.")
         return self._repository_factory.create("EntityRepository", self._connection)
+    
+    # owner:
+    @property
+    def root_repository(self) -> IRootRepository:
+        if self._connection is None:
+            raise ValueError("Connection is not established.")
+        return self._repository_factory.create("RootRepository", self._connection)
 
     def commit(self):
         if self._connection:

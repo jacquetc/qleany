@@ -1,3 +1,4 @@
+from typing import Sequence
 from qleany.common.entities.entity import Entity
 from qleany.direct_access.entity.dtos import EntityDto
 from qleany.direct_access.entity.i_entity_uow import IEntityUow
@@ -20,10 +21,10 @@ class Get:
             #relationships=entity.relationships,
         )
     
-    def _convert_entities_to_dtos(self, entities: list[Entity]) -> list[EntityDto]:
+    def _convert_entities_to_dtos(self, entities: Sequence[Entity]) -> list[EntityDto]:
         return [self._convert_entity_to_dto(entity) for entity in entities]
     
-    def _convert_dtos_to_entities(self, dtos: list[EntityDto]) -> list[Entity]:
+    def _convert_dtos_to_entities(self, dtos: Sequence[EntityDto]) -> list[Entity]:
         return [self._convert_dto_to_entity(dto) for dto in dtos]
     
     def _convert_dto_to_entity(self, dto: EntityDto) -> Entity:

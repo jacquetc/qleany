@@ -1,39 +1,40 @@
 from abc import ABC, abstractmethod
 from qleany.common.entities.feature import Feature
-from functools import lru_cache
-from qleany.common.persistence.database.interfaces.i_db_connection import IDbConnection
-
+from typing import Sequence
 
 class IFeatureRepository(ABC):
-    @lru_cache(maxsize=None)
     @abstractmethod
-    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Feature]:
+    def get(self, ids: Sequence[int]) -> Sequence[Feature]:
         pass
 
     @abstractmethod
-    def get_all(self, db_connection: IDbConnection) -> list[Feature]:
+    def get_all(self) -> Sequence[Feature]:
         pass
 
     @abstractmethod
-    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
+    def get_all_ids(self) -> Sequence[int]:
         pass
 
     @abstractmethod
     def create(
-        self, db_connection: IDbConnection, entities: list[Feature]
-    ) -> list[Feature]:
+        self, entities: Sequence[Feature]
+    ) -> Sequence[Feature]:
         pass
 
     @abstractmethod
     def update(
-        self, db_connection: IDbConnection, entities: list[Feature]
-    ) -> list[Feature]:
+        self, entities: Sequence[Feature]
+    ) -> Sequence[Feature]:
         pass
 
     @abstractmethod
-    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
+    def remove(self, ids: Sequence[int]) -> Sequence[int]:
         pass
 
     @abstractmethod
-    def clear(self, db_connection: IDbConnection):
+    def clear(self):
+        pass
+
+    @abstractmethod
+    def exists(self, id_: int) -> bool:
         pass

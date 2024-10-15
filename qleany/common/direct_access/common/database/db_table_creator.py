@@ -1,5 +1,6 @@
-from typing import List, Type
+from typing import List, Sequence, Type
 
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
 from qleany.common.entities.entity_enums import (
     FieldType,
     RelationshipCardinality,
@@ -7,29 +8,28 @@ from qleany.common.entities.entity_enums import (
     RelationshipType,
 )
 from qleany.common.entities.i_entity import IEntity
-from qleany.common.persistence.database.db_connection import DbConnection
-from qleany.common.persistence.database.many_to_many_unordered_associator import (
+from qleany.common.direct_access.common.database.many_to_many_unordered_associator import (
     ManyToManyUnorderedAssociator,
 )
-from qleany.common.persistence.database.one_to_many_ordered_associator import (
+from qleany.common.direct_access.common.database.one_to_many_ordered_associator import (
     OneToManyOrderedAssociator,
 )
-from qleany.common.persistence.database.one_to_many_unordered_associator import (
+from qleany.common.direct_access.common.database.one_to_many_unordered_associator import (
     OneToManyUnorderedAssociator,
 )
-from qleany.common.persistence.database.one_to_one_associator import (
+from qleany.common.direct_access.common.database.one_to_one_associator import (
     OneToOneAssociator,
 )
 
 
-class DBTableCreator:
+class DbTableCreator:
 
-    def __init__(self, db_connection: DbConnection):
+    def __init__(self, db_connection: IDbConnection):
         self._db_connection = db_connection
         self._entity_sqls: List[str] = []
         self._junction_sqls: List[str] = []
 
-    def add_tables(self, entities: List[Type[IEntity]]):
+    def add_tables(self, entities: Sequence[Type[IEntity]]):
         for entity_class in entities:
             self._add_entity_table_sql(entity_class)
             self._add_junction_tables_sql(entity_class)
@@ -70,18 +70,23 @@ class DBTableCreator:
 
     def _add_junction_tables_sql(self, entity_class: Type[IEntity]):
         schema = entity_class._schema()
+        connection = self._db_connection.connection()
         for relationship in schema.relationships:
             if relationship.relationship_direction == RelationshipDirection.Backward:
+                junction_sql: str = ""
                 if relationship.relationship_cardinality == RelationshipCardinality.One:
-                    OneToOneAssociator(relationship).get_table_creation_sql()
+                    junction_sql = OneToOneAssociator(relationship, connection).get_table_creation_sql()
                 elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.OneToMany:
-                    OneToManyOrderedAssociator(relationship).get_table_creation_sql()
+                    junction_sql = OneToManyOrderedAssociator(relationship, connection).get_table_creation_sql()
                 elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.OneToMany:
-                    OneToManyUnorderedAssociator(relationship).get_table_creation_sql()
+                    junction_sql = OneToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
                 elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.OneToMany:
                     raise ValueError("Many to Many Ordered relationships are not supported")
                 elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.OneToMany:
-                    ManyToManyUnorderedAssociator(relationship).get_table_creation_sql()
+                    junction_sql = ManyToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
+                
+                if junction_sql:
+                    self._junction_sqls.append(junction_sql)
 
 
     def create_empty_database(self):

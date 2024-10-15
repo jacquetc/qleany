@@ -1,131 +1,115 @@
-from qleany.common.persistence.repositories.use_case_repository import (
-    UseCaseRepository,
+from typing import Sequence
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
+    IDbConnection,
+)
+from qleany.common.direct_access.common.repository.repository_factory import (
+    IRepositoryFactory,
+)
+from qleany.common.direct_access.common.repository.repository_messenger import (
+    IMessenger,
+)
+from qleany.common.direct_access.feature.i_feature_db_table_group import (
+    IFeatureDbTableGroup,
 )
 from qleany.common.direct_access.feature.i_feature_repository import (
     IFeatureRepository,
 )
-from qleany.common.entities.entity_enums import EntityEnum
-from qleany.common.entities.feature import Feature
-from functools import lru_cache
-from qleany.common.direct_access.common.repository.repository_observer import (
-    RepositoryObserver,
-    RepositorySubject,
+from qleany.common.entities.entity_enums import (
+    EntityEnum,
+    RelationshipDirection,
+    RelationshipStrength,
 )
 import logging
+from qleany.common.entities.feature import Feature
+from typing import Sequence
 
 
 class FeatureRepository(IFeatureRepository):
 
-    def __init__(self, use_case_repository: UseCaseRepository):
+    def __init__(
+        self,
+        db_table_group: IFeatureDbTableGroup,
+        db_connection: IDbConnection,
+        repository_factory: IRepositoryFactory,
+        messenger: IMessenger,
+    ):
         super().__init__()
-        self._database = Database(db_context)
-        self._use_case_repository = use_case_repository
+        self._db_table_group = db_table_group
+        self._db_connection = db_connection
+        self._repository_factory = repository_factory
+        self._messenger = messenger
 
-        self._use_case_repository.attach(self)
+    def get(self, ids: Sequence[int]) -> Sequence[Feature]:
+        db_entities = self._db_table_group.get(ids)
+        return db_entities
 
-        self._cache = {}
+    def get_all(self) -> Sequence[Feature]:
+        db_entities = self._db_table_group.get_all()
+        return db_entities
 
-    @lru_cache(maxsize=None)
-    def get(self, db_connection: IDbConnection, ids: list[int]) -> list[Feature]:
-        cached_entities = [self._cache[id] for id in ids if id in self._cache]
-        missing_ids = [id for id in ids if id not in self._cache]
-        if missing_ids:
-            db_entities = self._database.get(db_connection, missing_ids)
-            for entity in db_entities:
-                self._cache[entity.id_] = entity
-            cached_entities.extend(db_entities)
-        return cached_entities
+    def get_all_ids(self) -> Sequence[int]:
+        db_entities = self.get_all()
+        return [feature.id_ for feature in db_entities]
 
-    def get_all(self, db_connection: IDbConnection) -> list[Feature]:
-        if not self._cache:
-            db_entities = self._database.get_all()
-            for entity in db_entities:
-                self._cache[entity.id_] = entity
-        return list(self._cache.values())
+    def create(self, entities: Sequence[Feature]) -> Sequence[Feature]:
+        created_entities = self._db_table_group.create(entities)
 
-    def get_all_ids(self, db_connection: IDbConnection) -> list[int]:
-        if not self._cache:
-            self.get_all()
-        return list(self._cache.keys())
-
-    def create(
-        self, db_connection: IDbConnection, entities: list[Feature]
-    ) -> list[Feature]:
-        created_entities = self._database.create(entities)
-        for entity in created_entities:
-            self._cache[entity.id_] = entity
-        self.get.cache_clear()
-
-        self._notify_created([entity.id_ for entity in created_entities])
+        self._messenger.notify(
+            "Feature", "created", {"ids": [feature.id_ for feature in created_entities]}
+        )
 
         logging.info(f"Created {created_entities}")
 
         return created_entities
 
-    def update(
-        self, db_connection: IDbConnection, entities: list[Feature]
-    ) -> list[Feature]:
-        updated_entities = self._database.update(entities)
-        for entity in updated_entities:
-            if entity.id_ in self._cache:
-                self._cache[entity.id_] = entity
-        self.get.cache_clear()
+    def update(self, entities: Sequence[Feature]) -> Sequence[Feature]:
+        updated_entities = self._db_table_group.update(entities)
 
-        self._notify_updated([entity.id_ for entity in updated_entities])
+        self._messenger.notify(
+            "Feature", "updated", {"ids": [feature.id_ for feature in updated_entities]}
+        )
 
         logging.info(f"Updated {updated_entities}")
 
         return updated_entities
 
-    def remove(self, db_connection: IDbConnection, ids: list[int]) -> list[int]:
-        # cascade remove for strong relationships
-        self._use_case_repository.cascade_remove(
-            db_connection, "Feature", "use_cases", ids
-        )
+    def remove(self, ids: Sequence[int]) -> Sequence[int]:
 
-        removed_ids = self._database.remove(ids)
-        for id in removed_ids:
-            if id in self._cache:
-                del self._cache[id]
-        self.get.cache_clear()
-
-        # signals all repos depending of this repo
+        # cascade remove relationships
         for relationship in Feature._schema().relationships:
-            if relationship.relationship_direction == RelationshipDirection.Backward:
-                left_ids = self._database.get_left_ids(
-                    db_connection,
-                    relationship.left_entity_name,
-                    relationship.field_name,
-                    ids,
-                )
-                self._notify_related_ids_to_be_cleared_from_cache(
-                    relationship.left_entity, left_ids
-                )
+            if (
+                relationship.relationship_direction == RelationshipDirection.Forward
+                and relationship.relationship_strength == RelationshipStrength.Strong
+            ):
+                # get feature name from relationship
+                repository_name = f"{relationship.right_entity_name}Repository"
 
-        self._notify_removed(removed_ids)
+                # create repository from factory
+                repository = self._repository_factory.create(
+                    repository_name, self._db_connection
+                )
+                
+                for left_id in ids:
+                    right_ids = self._db_table_group.get_right_ids(
+                        relationship=relationship,
+                        left_id=left_id,
+                    )
+                    repository.remove(
+                        right_ids,
+                    )
+
+        # remove entities
+        removed_ids = self._db_table_group.remove(ids)
+
+        self._messenger.notify("Feature", "removed", {"ids": removed_ids})
 
         logging.info(f"Removed {removed_ids}")
 
         return removed_ids
 
-    def clear(self, db_connection: IDbConnection):
-        self._database.clear()
-        self._cache.clear()
-        self.get.cache_clear()
+    def clear(self):
+        self._db_table_group.clear()
 
-        self._notify_cleared()
+        self._messenger.notify("Feature", "cleared", {})
 
         logging.info("Cache cleared")
-
-    def cascade_remove(
-        self,
-        db_connection: IDbConnection,
-        left_entity: str,
-        field_name: str,
-        left_entity_ids: list[int],
-    ):
-        right_ids = self._database.get_right_ids(
-            db_connection, left_entity, field_name, left_entity_ids
-        )
-        self.remove(right_ids)
-        logging.info(f"Cascade remove {right_ids} from {left_entity} {field_name}")

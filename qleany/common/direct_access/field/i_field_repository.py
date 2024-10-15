@@ -37,3 +37,7 @@ class IFieldRepository(ABC):
     @abstractmethod
     def clear(self):
         pass
+    
+    @abstractmethod
+    def exists(self, id_: int) -> bool:
+        pass
