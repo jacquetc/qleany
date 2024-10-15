@@ -20,7 +20,7 @@ class IEntityRepository(ABC):
 
     @abstractmethod
     def create(
-        self, entities: Sequence[Entity]
+        self, entities: Sequence[Entity], owner_id: int, position: int
     ) -> Sequence[Entity]:
         pass
 
@@ -36,4 +36,8 @@ class IEntityRepository(ABC):
 
     @abstractmethod
     def clear(self):
+        pass
+
+    @abstractmethod
+    def exists(self, id_: int) -> bool:
         pass

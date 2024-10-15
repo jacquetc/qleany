@@ -34,6 +34,10 @@ class IFieldDbTableGroup(ABC):
         pass
 
     @abstractmethod
+    def exists(self, id_: int) -> bool:
+        pass
+
+    @abstractmethod
     def get_left_ids(self, relationship: RelationshipInfo, right_id: int) -> Sequence[int]:
         pass
 

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -19,10 +19,10 @@ class UseCase(IEntity):
     id_: int
     name: str
     validator: bool
-    entities: list[int]
-    undoable: bool
-    dto_in: int | None
-    dto_out: int | None
+    entities: list[int] = field(default_factory= lambda: [])  
+    undoable: bool = False
+    dto_in: int | None = None
+    dto_out: int | None = None
 
     @classmethod
     def _schema(cls) -> EntitySchema:

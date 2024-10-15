@@ -16,8 +16,10 @@ from qleany.common.direct_access.root.i_root_repository import (
 )
 from qleany.common.entities.entity_enums import (
     EntityEnum,
+    RelationshipCardinality,
     RelationshipDirection,
     RelationshipStrength,
+    RelationshipType,
 )
 import logging
 from qleany.common.entities.root import Root
@@ -113,3 +115,7 @@ class RootRepository(IRootRepository):
         self._messenger.notify("Root", "cleared", {})
 
         logging.info("Cache cleared")
+
+    def exists(self, id_: int) -> bool:
+        return self._db_table_group.exists(id_)
+    

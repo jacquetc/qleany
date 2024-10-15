@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -27,7 +27,7 @@ class Field(IEntity):
     strong: bool
     ordered: bool
     list_model: bool
-    list_model_displayed_field: str | None
+    list_model_displayed_field: str
 
     @classmethod
     def _schema(cls) -> EntitySchema:

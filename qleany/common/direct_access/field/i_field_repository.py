@@ -20,7 +20,7 @@ class IFieldRepository(ABC):
 
     @abstractmethod
     def create(
-        self, entities: Sequence[Field]
+        self, entities: Sequence[Field], owner_id: int, position: int
     ) -> Sequence[Field]:
         pass
 

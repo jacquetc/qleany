@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -17,9 +17,9 @@ from qleany.common.entities.i_entity import IEntity
 @dataclass(slots=True)
 class Root(IEntity):
     id_: int
-    global_: int
-    entities: list[int]
-    features: list[int]
+    # global_: int
+    entities: list[int] = field(default_factory= lambda: [])  
+    features: list[int] = field(default_factory= lambda: [])  
 
     @classmethod
     def _schema(cls) -> EntitySchema:
@@ -44,12 +44,12 @@ class Root(IEntity):
                     is_primary_key=False,
                     has_relationship=True,
                 ),
-                # FieldInfo(
-                #     field_name="features",
-                #     field_type=FieldType.Integer,
-                #     is_primary_key=False,
-                #     has_relationship=True,
-                # ),
+                FieldInfo(
+                    field_name="features",
+                    field_type=FieldType.Integer,
+                    is_primary_key=False,
+                    has_relationship=True,
+                ),
             ],
             relationships=[
                 # RelationshipInfo(
@@ -74,16 +74,16 @@ class Root(IEntity):
                     relationship_direction=RelationshipDirection.Forward,
                     relationship_cardinality=RelationshipCardinality.ManyOrdered,
                 ),
-                # RelationshipInfo(
-                #     left_entity=EntityEnum.Root,
-                #     left_entity_name="Root",
-                #     right_entity=EntityEnum.Feature,
-                #     right_entity_name="Feature",
-                #     field_name="features",
-                #     relationship_type=RelationshipType.OneToMany,
-                #     relationship_strength=RelationshipStrength.Strong,
-                #     relationship_direction=RelationshipDirection.Forward,
-                #     relationship_cardinality=RelationshipCardinality.ManyOrdered,
-                # ),
+                RelationshipInfo(
+                    left_entity=EntityEnum.Root,
+                    left_entity_name="Root",
+                    right_entity=EntityEnum.Feature,
+                    right_entity_name="Feature",
+                    field_name="features",
+                    relationship_type=RelationshipType.OneToMany,
+                    relationship_strength=RelationshipStrength.Strong,
+                    relationship_direction=RelationshipDirection.Forward,
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered,
+                ),
             ],
         )

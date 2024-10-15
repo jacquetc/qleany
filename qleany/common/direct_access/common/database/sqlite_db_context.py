@@ -3,13 +3,14 @@ import sqlite3
 import tempfile
 import threading
 
+from qleany.common.direct_access.common.database.interfaces.i_db_context import IDbContext
 from qleany.common.direct_access.common.database.sqlite_db_connection import SqliteDbConnection
 from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
     IDbConnection,
 )
 
 
-class SqliteDbContext:
+class SqliteDbContext(IDbContext):
     def __init__(self):
         self.mutex = threading.Lock()
         self.file_name = ""

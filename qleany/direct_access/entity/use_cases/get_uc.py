@@ -4,11 +4,11 @@ from qleany.direct_access.entity.dtos import EntityDto
 from qleany.direct_access.entity.i_entity_uow import IEntityUow
 
 
-class Get:
+class GetUc:
     def __init__(self, unit_of_work: IEntityUow):
         self._unit_of_work = unit_of_work
 
-    def execute(self, ids: list[int]) -> list[EntityDto]:
+    def execute(self, ids: Sequence[int]) -> Sequence[EntityDto]:
         with self._unit_of_work as uow:
             entities = uow.entity_repository.get(tuple(ids))
             return self._convert_entities_to_dtos(entities)

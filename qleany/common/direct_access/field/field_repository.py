@@ -16,8 +16,10 @@ from qleany.common.direct_access.field.i_field_repository import (
 )
 from qleany.common.entities.entity_enums import (
     EntityEnum,
+    RelationshipCardinality,
     RelationshipDirection,
     RelationshipStrength,
+    RelationshipType,
 )
 import logging
 from qleany.common.entities.field import Field
@@ -51,8 +53,82 @@ class FieldRepository(IFieldRepository):
         db_entities = self.get_all()
         return [field.id_ for field in db_entities]
 
-    def create(self, entities: Sequence[Field]) -> Sequence[Field]:
+    def create(self, entities: Sequence[Field], owner_id: int, position: int) -> Sequence[Field]:
         created_entities = self._db_table_group.create(entities)
+
+        # create relationship
+        for relationship in Field._schema().relationships:
+            if (
+                relationship.relationship_direction == RelationshipDirection.Backward
+                and relationship.relationship_strength == RelationshipStrength.Strong
+            ):
+                # get entity name from relationship
+                repository_name = f"{relationship.right_entity_name}Repository"
+
+                # create repository from factory
+                owner_repository = self._repository_factory.create(
+                    repository_name, self._db_connection
+                )
+
+                # get owner entity
+                owner = owner_repository.get([owner_id])[0]
+
+                new_ids = [entity.id_ for entity in created_entities]
+
+                owner_field = getattr(owner, relationship.field_name)
+                # add new entities to owner
+                if relationship.relationship_type == RelationshipType.OneToOne:
+                    if owner_field != new_ids[0]:
+                        # remove old entity
+                        if owner_field != 0:
+                            self.remove([owner_field])
+
+                        setattr(owner, relationship.field_name, new_ids[0])
+                        owner_repository.update([owner])
+
+                elif relationship.relationship_type == RelationshipType.OneToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                    if owner_field is None:
+                        owner_field = []
+                    owner_field += new_ids
+                    setattr(owner, relationship.field_name, owner_field)
+                    owner_repository.update([owner])
+
+                elif relationship.relationship_type == RelationshipType.OneToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                    if owner_field is None:
+                        owner_field = []
+
+                    if position == -1: 
+                        owner_field += new_ids
+                    elif position == 0:
+                        owner_field = new_ids + owner_field
+                    elif position > 0 and position < len(owner_field):
+                        owner_field = owner_field[:position] + new_ids + owner_field[position:]
+                    elif position == len(owner_field):
+                        owner_field += new_ids
+                    elif position > len(owner_field):
+                        owner_field = new_ids + owner_field
+                    elif position < -1:
+                        raise ValueError(f"Invalid position {position}")
+                    else:
+                        raise ValueError(f"Invalid position {position}")
+
+                    setattr(owner, relationship.field_name, owner_field)
+                    owner_repository.update([owner])
+                    
+                elif relationship.relationship_type == RelationshipType.ManyToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                    if owner_field is None:
+                        owner_field = []
+                    owner_field += new_ids
+                    setattr(owner, relationship.field_name, owner_field)
+                    owner_repository.update([owner])
+
+                elif relationship.relationship_type == RelationshipType.ManyToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                    raise NotImplementedError()
+                else:
+                    # unreachable
+                    raise NotImplementedError()
+                
+                break
 
         self._messenger.notify(
             "Field", "created", {"ids": [field.id_ for field in created_entities]}
@@ -113,3 +189,7 @@ class FieldRepository(IFieldRepository):
         self._messenger.notify("Field", "cleared", {})
 
         logging.info("Cache cleared")
+
+    def exists(self, id_: int) -> bool:
+        return self._db_table_group.exists(id_)
+    

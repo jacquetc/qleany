@@ -6,6 +6,7 @@ from qleany.common.direct_access.common.repository.repository_messenger import I
 
 
 class IRepositoryFactory(ABC):
+
     @abstractmethod
     def register(self, repo_type: Type, table_group: Type):
         pass
@@ -26,8 +27,8 @@ class RepositoryFactory(IRepositoryFactory):
     _table_group_cache: Dict[str, Type] = {}
     _messenger: IMessenger
     
-    def __init__(self):
-        self._messenger = Messenger()
+    def __init__(self, messenger: IMessenger):
+        self._messenger = messenger
 
     def register(self, repo_type: Type, table_group: type):
         repo_name = repo_type.__class__.__name__

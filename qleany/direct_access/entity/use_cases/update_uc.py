@@ -7,7 +7,7 @@ class UpdateUc():
     def __init__(self, unit_of_work: IEntityUow):
         self._unit_of_work = unit_of_work
 
-    def execute(self, update_dtos: list[EntityDto]) -> list[EntityDto]:
+    def execute(self, update_dtos: Sequence[EntityDto]) -> Sequence[EntityDto]:
         
         self._validate(update_dtos)
         
@@ -16,7 +16,7 @@ class UpdateUc():
             updated_entities = uow.entity_repository.update(entities_to_update)
             return self._convert_entities_to_dtos(updated_entities)
     
-    def _validate(self, update_dtos: list[EntityDto]):
+    def _validate(self, update_dtos: Sequence[EntityDto]):
         entity_ids = [dto.id_ for dto in update_dtos]
         with self._unit_of_work as uow:
             entities = uow.entity_repository.get(entity_ids)

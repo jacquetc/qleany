@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -19,7 +19,7 @@ class Feature(IEntity):
     id_: int
     name: str
     description: str
-    # use_cases: list[int]
+    # use_cases: list[int] = field(default_factory= lambda: [])  
 
     @classmethod
     def _schema(cls) -> EntitySchema:

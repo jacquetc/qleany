@@ -17,7 +17,7 @@ class IFeatureRepository(ABC):
 
     @abstractmethod
     def create(
-        self, entities: Sequence[Feature]
+        self, entities: Sequence[Feature], owner_id: int, position: int
     ) -> Sequence[Feature]:
         pass
 

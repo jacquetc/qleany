@@ -1,19 +1,18 @@
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
 
 @dataclass(slots=True)
 class EntityDto:
-    id_: int
-    only_for_heritage: bool
-    fields: list[int]
+    id_: int = 0
+    only_for_heritage: bool = False
+    fields: list[int] = field(default_factory= lambda: [])  
 
 @dataclass(slots=True)
 class CreateEntitiesDto:
-    entities: List[EntityDto]
+    entities: list[EntityDto] = field(default_factory= lambda: [])  
     owner_id: int = 0
     position: int = -1
 
-    def from_dtos(self, dtos: List[EntityDto]):
+    def from_dtos(self, dtos: list[EntityDto]):
         return CreateEntitiesDto(
             entities=dtos,
             owner_id=self.owner_id,

@@ -8,7 +8,7 @@ class CreateUc():
     def __init__(self, unit_of_work: IEntityUow):
         self._unit_of_work = unit_of_work
 
-    def execute(self, create_dto: CreateEntitiesDto) -> list[EntityDto]:
+    def execute(self, create_dto: CreateEntitiesDto) -> Sequence[EntityDto]:
         
         self.validate(create_dto)
         
@@ -20,7 +20,7 @@ class CreateUc():
     def validate(self, create_dto: CreateEntitiesDto):
         # verify if exist
         with self._unit_of_work as uow:
-            if not uow.root_repository.exists([create_dto.owner_id]):
+            if not uow.root_repository.exists(create_dto.owner_id):
                 raise Exception("Root entity does not exist")
 
         

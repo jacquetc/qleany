@@ -209,6 +209,16 @@ class SqliteDbTableGroup(IDbTableGroup):
         cursor = self._db_connection.cursor()
         cursor.execute(f"DELETE FROM {self._entity_type.__name__}")
 
+    def exists(self, id_: int) -> bool:
+        # This method should return True if an entity with the given id exists in the database, otherwise False.
+        cursor = self._db_connection.cursor()
+        cursor.execute(
+            f"SELECT EXISTS(SELECT 1 FROM {self._entity_type.__name__} WHERE id=?)",
+            (id_,),
+        )
+
+        return cursor.fetchone()[0] == 1
+
     def get_left_ids(
         self, relationship: RelationshipInfo, right_id: int
     ) -> Sequence[int]:

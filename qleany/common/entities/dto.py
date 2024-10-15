@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -18,7 +18,7 @@ from qleany.common.entities.i_entity import IEntity
 class Dto(IEntity):
     id_: int
     name: str
-    fields: list[int]
+    fields: list[int] = field(default_factory= lambda: [])  
 
     @classmethod
     def _schema(cls) -> EntitySchema:

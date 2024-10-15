@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from qleany.common.entities.entity_enums import (
     EntityEnum,
@@ -18,7 +18,7 @@ from qleany.common.entities.i_entity import IEntity
 class Entity(IEntity):
     id_: int
     only_for_heritage: bool
-    fields: list[int]
+    fields: list[int] = field(default_factory= lambda: [])  
     # relationships: list[int]
 
     @classmethod

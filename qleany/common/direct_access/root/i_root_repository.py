@@ -19,15 +19,11 @@ class IRootRepository(ABC):
         pass
 
     @abstractmethod
-    def create(
-        self, entities: Sequence[Root]
-    ) -> Sequence[Root]:
+    def create(self, entities: Sequence[Root]) -> Sequence[Root]:
         pass
 
     @abstractmethod
-    def update(
-        self, entities: Sequence[Root]
-    ) -> Sequence[Root]:
+    def update(self, entities: Sequence[Root]) -> Sequence[Root]:
         pass
 
     @abstractmethod

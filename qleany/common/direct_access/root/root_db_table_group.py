@@ -33,6 +33,9 @@ class RootDbTableGroup(IRootDbTableGroup):
     def clear(self):
         self._sqlite_db_table_group.clear()
 
+    def exists(self, id_: int) -> bool:
+        return self._sqlite_db_table_group.exists(id_)
+
     def get_left_ids(self,relationship: RelationshipInfo, right_id: int) -> Sequence[int]:
         return self._sqlite_db_table_group.get_left_ids(relationship, right_id)
     
