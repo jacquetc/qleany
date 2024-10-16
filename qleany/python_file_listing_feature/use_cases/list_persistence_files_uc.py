@@ -33,4 +33,9 @@ class ListPersistenceFilesUc:
             "common/direct_access/common/repository/repository_messenger.py",
         ]
 
+        # keep the already existing files
+        if dto.existing:
+            for file in files:
+                pass
+
         return PythonFileListingResponseDto(files=files)

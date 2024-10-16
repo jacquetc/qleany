@@ -17,7 +17,7 @@ class ListDirectAccessFilesUc:
 
         self._validate(dto)
 
-        files = ["direct_access/__init__.py"]
+        files = ["direct_access/__init__.py", "common/direct_access/__init__.py", "common/direct_access/persistence_registration.py"]
 
         entities: list[Entity] = []
 
@@ -43,18 +43,18 @@ class ListDirectAccessFilesUc:
             files.append(f"direct_access/{entity_name_snake}/use_cases/get_uc.py")
             files.append(f"direct_access/{entity_name_snake}/use_cases/remove_uc.py")
             files.append(f"direct_access/{entity_name_snake}/use_cases/update_uc.py")
-            files.append(f"direct_access/common/{entity_name_snake}/__init__.py")
+            files.append(f"common/direct_access/{entity_name_snake}/__init__.py")
             files.append(
-                f"direct_access/common/{entity_name_snake}/i_{entity_name_snake}_repository.py"
+                f"common/direct_access/{entity_name_snake}/i_{entity_name_snake}_repository.py"
             )
             files.append(
-                f"direct_access/common/{entity_name_snake}/{entity_name_snake}_repository.py"
+                f"common/direct_access/{entity_name_snake}/{entity_name_snake}_repository.py"
             )
             files.append(
-                f"direct_access/common/{entity_name_snake}/i_{entity_name_snake}_db_table_group.py"
+                f"common/direct_access/{entity_name_snake}/i_{entity_name_snake}_db_table_group.py"
             )
             files.append(
-                f"direct_access/common/{entity_name_snake}/{entity_name_snake}_db_table_group.py"
+                f"common/direct_access/{entity_name_snake}/{entity_name_snake}_db_table_group.py"
             )
 
         return PythonFileListingResponseDto(files=files)

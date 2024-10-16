@@ -4,6 +4,7 @@ from dataclasses import dataclass
 class PythonFileListingDto:
     existing: bool = False
     sub_group: str = ""
+    manifest_path: str = ""
     
 @dataclass(slots=True)
 class PythonFileListingResponseDto:

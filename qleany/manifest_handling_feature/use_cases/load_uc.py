@@ -1,6 +1,8 @@
 import os
+import stringcase
 from pathlib import Path
 from qleany.common.entities.entity import Entity
+from qleany.common.entities.feature import Feature
 from qleany.common.entities.field import Field
 from qleany.common.entities.root import Root
 from qleany.manifest_handling_feature.dtos import LoadManifestDto
@@ -100,6 +102,23 @@ class LoadUc:
                         new_field.is_single = True
                         
                 uow.field_repository.update(entities=new_fields)
+
+
+            # add features
+            features_to_create = []
+            for json_feature, feature_data in manifest["features"].items():
+                features_to_create.append(
+                    Feature(
+                        id_=0,
+                        name=stringcase.pascalcase(json_feature),
+                        description=feature_data.get("description", ""),
+                        # use_cases=[] # to be set later
+                    )
+                )
+            # create features and add them to the root
+            new_features = uow.feature_repository.create(
+                entities=features_to_create, owner_id=root.id_, position=0
+            )
 
 
     def validate(self, dto: LoadManifestDto):
