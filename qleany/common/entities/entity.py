@@ -17,6 +17,7 @@ from qleany.common.entities.i_entity import IEntity
 @dataclass(slots=True)
 class Entity(IEntity):
     id_: int
+    name: str
     only_for_heritage: bool
     fields: list[int] = field(default_factory= lambda: [])  
     # relationships: list[int]
@@ -74,17 +75,17 @@ class Entity(IEntity):
                 #     relationship_direction=RelationshipDirection.Forward,
                 #     relationship_cardinality=RelationshipCardinality.ManyOrdered,
                 # ),
-                RelationshipInfo(
-                    left_entity=EntityEnum.UseCase,
-                    left_entity_name="UseCase",
-                    right_entity=EntityEnum.Entity,
-                    right_entity_name="Entity",
-                    field_name="entities",
-                    relationship_type=RelationshipType.ManyToMany,
-                    relationship_strength=RelationshipStrength.Weak,
-                    relationship_direction=RelationshipDirection.Backward,
-                    relationship_cardinality=RelationshipCardinality.ManyUnordered,
-                ),
+                # RelationshipInfo(
+                #     left_entity=EntityEnum.UseCase,
+                #     left_entity_name="UseCase",
+                #     right_entity=EntityEnum.Entity,
+                #     right_entity_name="Entity",
+                #     field_name="entities",
+                #     relationship_type=RelationshipType.ManyToMany,
+                #     relationship_strength=RelationshipStrength.Weak,
+                #     relationship_direction=RelationshipDirection.Backward,
+                #     relationship_cardinality=RelationshipCardinality.ManyUnordered,
+                # ),
                 RelationshipInfo(
                     left_entity=EntityEnum.Root,
                     left_entity_name="Root",
@@ -94,7 +95,7 @@ class Entity(IEntity):
                     relationship_type=RelationshipType.OneToMany,
                     relationship_strength=RelationshipStrength.Strong,
                     relationship_direction=RelationshipDirection.Backward,
-                    relationship_cardinality=RelationshipCardinality.ManyUnordered,
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered,
                 ),
                 RelationshipInfo(
                     left_entity=EntityEnum.Field,

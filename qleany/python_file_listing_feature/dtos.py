@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 
-
 @dataclass(slots=True)
-class ListCommonBaseFilesUcDto:
-    preview: bool
-
-
+class PythonFileListingDto:
+    existing: bool = False
+    sub_group: str = ""
+    
 @dataclass(slots=True)
-class ListCommonBaseFilesUcResponseDto:
+class PythonFileListingResponseDto:
     files: list[str]

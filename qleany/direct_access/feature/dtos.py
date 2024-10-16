@@ -3,9 +3,9 @@ from typing import List
 
 @dataclass(slots=True)
 class FeatureDto:
-    id_: int
-    name: str
-    description: str
+    id_: int = 0
+    name: str = ""
+    description: str = ""
     # use_cases: list[int] = field(default_factory= lambda: [])  
 
 @dataclass(slots=True)

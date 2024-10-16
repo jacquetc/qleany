@@ -31,7 +31,7 @@ class RepositoryFactory(IRepositoryFactory):
         self._messenger = messenger
 
     def register(self, repo_type: Type, table_group: type):
-        repo_name = repo_type.__class__.__name__
+        repo_name = repo_type.__name__
         self._repositories[repo_name] = repo_type
         self._table_group_cache[repo_name] = table_group
 

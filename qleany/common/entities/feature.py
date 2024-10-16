@@ -72,7 +72,7 @@ class Feature(IEntity):
                     relationship_type=RelationshipType.OneToMany,
                     relationship_strength=RelationshipStrength.Strong,
                     relationship_direction=RelationshipDirection.Backward,
-                    relationship_cardinality=RelationshipCardinality.ManyUnordered,
+                    relationship_cardinality=RelationshipCardinality.ManyOrdered,
                 ),
             ],
         )

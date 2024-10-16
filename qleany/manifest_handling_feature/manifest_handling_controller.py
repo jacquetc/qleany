@@ -2,13 +2,13 @@ from typing import Sequence
 from qleany.common.direct_access.common.database.interfaces.i_db_context import IDbContext
 from qleany.common.direct_access.common.repository.repository_factory import IRepositoryFactory
 from qleany.common.direct_access.common.repository.repository_messenger import IMessenger
-from qleany.python_file_listing_feature.dtos import PythonFileListingDto, PythonFileListingResponseDto
-from qleany.python_file_listing_feature.python_file_listing_uow import PythonFileListingUow
-from qleany.python_file_listing_feature.use_cases.list_common_base_files_uc import ListCommonBaseFilesUc
-from qleany.python_file_listing_feature.use_cases.list_direct_access_files_uc import ListDirectAccessFilesUc
+from qleany.manifest_handling_feature.dtos import LoadManifestDto
+from qleany.manifest_handling_feature.use_cases.load_uc import LoadUc
+from qleany.manifest_handling_feature.yaml_importer import YamlImporter
+from qleany.manifest_handling_feature.manifest_handling_uow import ManifestHandlingUow
 
 
-class PythonFileListingController:
+class ManifestHandlingController:
     _instance = None
     _db_context: IDbContext | None = None
     _repository_factory: IRepositoryFactory | None = None
@@ -32,17 +32,14 @@ class PythonFileListingController:
             cls._messenger = messenger
 
     def __init__(self, db_context: IDbContext, repository_factory: IRepositoryFactory, messenger: IMessenger):
-        if PythonFileListingController._instance is not None:
+        if ManifestHandlingController._instance is not None:
             raise Exception("This class is a singleton!")
 
         self._db_context = db_context
         self._repository_factory = repository_factory
         self._messenger = messenger
 
-    def list_common_base_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
-        return ListCommonBaseFilesUc(unit_of_work).execute(dto)
-
-    def list_direct_access_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
-        return ListDirectAccessFilesUc(unit_of_work).execute(dto)
+    def load_manifest(self, dto: LoadManifestDto):
+        unit_of_work = ManifestHandlingUow(self._db_context, self._repository_factory) # type: ignore
+        yaml_importer = YamlImporter()
+        return LoadUc(unit_of_work, yaml_importer).execute(dto)

@@ -18,6 +18,8 @@ class CreateUc():
             return self._convert_entities_to_dtos(new_entities)
         
     def validate(self, create_dto: CreateFieldsDto):
+        if not create_dto.entities:
+            raise ValueError("No entities to create")
         # verify if exist
         with self._unit_of_work as uow:
             if not uow.entity_repository.exists(create_dto.owner_id):

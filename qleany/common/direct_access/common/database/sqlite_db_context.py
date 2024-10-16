@@ -20,6 +20,7 @@ class SqliteDbContext(IDbContext):
             # Initialize the internal database
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             self.file_name = temp_file.name
+            print(f"Database file: {self.file_name}")
             temp_file.close()
         except Exception as e:
             raise RuntimeError(f"Error initializing database: {str(e)}")

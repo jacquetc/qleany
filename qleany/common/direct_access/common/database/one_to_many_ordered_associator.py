@@ -32,7 +32,7 @@ class OneToManyOrderedAssociator:
             f"UNIQUE ({self._junction_table_right_entity_foreign_key_name}), "  # Enforce uniqueness on the right entity foreign key
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}));"
         )
-
+    
     def get_right_ids(self, left_entity_id: int) -> Sequence[int]:
         connection = self._db_connection
         query_str = (

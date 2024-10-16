@@ -43,8 +43,12 @@ class DbTableCreator:
         for field in schema.fields:
             if field.has_relationship:
                 continue
-
-            field_sql = f"{field.field_name} {self._get_sql_type(field.field_type)}"
+            # renaming id:
+            field_name = field.field_name
+            if field_name == "id_":
+                field_name = "id"
+            # sql string:
+            field_sql = f"{field_name} {self._get_sql_type(field.field_type)}"
             if field.is_primary_key:
                 field_sql += " PRIMARY KEY"
             fields_sql.append(field_sql)
@@ -80,14 +84,13 @@ class DbTableCreator:
                     junction_sql = OneToManyOrderedAssociator(relationship, connection).get_table_creation_sql()
                 elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.OneToMany:
                     junction_sql = OneToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.OneToMany:
+                elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.ManyToMany:
                     raise ValueError("Many to Many Ordered relationships are not supported")
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.OneToMany:
+                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.ManyToMany:
                     junction_sql = ManyToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
                 
                 if junction_sql:
                     self._junction_sqls.append(junction_sql)
-
 
     def create_empty_database(self):
         try:

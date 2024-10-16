@@ -18,7 +18,8 @@ class CreateUc():
             return self._convert_entities_to_dtos(new_entities)
         
     def validate(self, create_dto: CreateRootsDto):
-        pass
+        if not create_dto.entities:
+            raise ValueError("No entities to create")
 
         
     def _convert_entity_to_dto(self, entity: Root) -> RootDto:

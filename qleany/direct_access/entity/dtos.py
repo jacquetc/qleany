@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 @dataclass(slots=True)
 class EntityDto:
     id_: int = 0
+    name: str = ""
     only_for_heritage: bool = False
     fields: list[int] = field(default_factory= lambda: [])  
 

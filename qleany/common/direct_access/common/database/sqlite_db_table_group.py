@@ -17,6 +17,7 @@ from qleany.common.direct_access.common.database.one_to_one_associator import (
     OneToOneAssociator,
 )
 from qleany.common.entities.entity_enums import (
+    FieldInfo,
     RelationshipCardinality,
     RelationshipDirection,
     RelationshipInfo,
@@ -85,7 +86,7 @@ class SqliteDbTableGroup(IDbTableGroup):
     def get_all_ids(self) -> Sequence[int]:
         # This method should return a list of all entity ids from the database.
         cursor = self._db_connection.cursor()
-        cursor.execute(f"SELECT id_ FROM {self._entity_type.__name__}")
+        cursor.execute(f"SELECT id FROM {self._entity_type.__name__}")
         return [row[0] for row in cursor.fetchall()]
 
     def create(self, entities: Sequence[IEntity]) -> Sequence[IEntity]:
@@ -94,10 +95,21 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         new_ids = []
         for entity in entities:
-            cursor.execute(
-                f"INSERT INTO {self._entity_type.__name__} ({','.join('?' for _ in self._fields_without_relationships())}) VALUES {','.join('?' for _ in self._fields_without_relationships())}",
-                self._convert_entity_to_tuple(entity),
-            )
+            
+            if len(self._fields_without_relationships()) > 0:
+                entity_tuple = self._convert_entity_to_tuple(entity)
+                #remove id
+                entity_tuple = entity_tuple[1:]
+                data = tuple(self._fields_without_relationships()) + entity_tuple
+                query = f"INSERT INTO {self._entity_type.__name__} ({','.join('?' for _ in self._fields_without_relationships())}) VALUES ({','.join('?' for _ in self._fields_without_relationships())})"
+                cursor.execute(
+                    f"INSERT INTO {self._entity_type.__name__} ({','.join('?' for _ in self._fields_without_relationships())}) VALUES ({','.join('?' for _ in self._fields_without_relationships())})",
+                    tuple(self._fields_without_relationships()) + entity_tuple,
+                )
+            else:
+                cursor.execute(
+                    f"INSERT INTO {self._entity_type.__name__} DEFAULT VALUES"
+                )
             # retrieve the id of the created entity
             last_row_id = cursor.lastrowid
             new_ids.append(last_row_id)
@@ -115,17 +127,32 @@ class SqliteDbTableGroup(IDbTableGroup):
                             ).update_right_id(last_row_id, right_ids)
                     else:
                         if right_ids:
-                            if relationship.relationship_type == RelationshipType.OneToMany:
-                                if relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                            if (
+                                relationship.relationship_type
+                                == RelationshipType.OneToMany
+                            ):
+                                if (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyOrdered
+                                ):
                                     OneToManyOrderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(last_row_id, right_ids)
-                                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                                elif (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyUnordered
+                                ):
                                     OneToManyUnorderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(last_row_id, right_ids)
-                            elif relationship.relationship_type == RelationshipType.ManyToMany:
-                                if relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                            elif (
+                                relationship.relationship_type
+                                == RelationshipType.ManyToMany
+                            ):
+                                if (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyUnordered
+                                ):
                                     ManyToManyUnorderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(last_row_id, right_ids)
@@ -135,21 +162,25 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         return entities
 
-    def _fields_without_relationships(self):
+    def _fields_without_relationships(self) -> list[FieldInfo]:
         return [
             field
             for field in self._entity_type._schema().fields
-            if field.has_relationship is False
+            if field.has_relationship is False and field.field_name != "id_"
         ]
 
-    def _fields_with_relationships(self):
+    def _fields_with_relationships(self) -> list[FieldInfo]:
         return [
             field
             for field in self._entity_type._schema().fields
-            if field.has_relationship is True
+            if field.has_relationship is True and field.field_name != "id_"
         ]
 
     def _convert_entity_to_tuple(self, entity: IEntity) -> tuple:
+        
+        for field in self._fields_without_relationships():
+            print(f"{self._entity_type}: {field.field_name}:", getattr(entity, field.field_name))
+        
         return tuple(
             getattr(entity, field.field_name)
             for field in self._fields_without_relationships()
@@ -165,7 +196,7 @@ class SqliteDbTableGroup(IDbTableGroup):
                 for entity in entities
             ],
         )
-        
+
         for entity in entities:
             for relationship in entity._schema().relationships:
                 if relationship.relationship_direction == RelationshipDirection.Forward:
@@ -177,17 +208,32 @@ class SqliteDbTableGroup(IDbTableGroup):
                             ).update_right_id(entity.id_, right_ids)
                     else:
                         if right_ids:
-                            if relationship.relationship_type == RelationshipType.OneToMany:
-                                if relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                            if (
+                                relationship.relationship_type
+                                == RelationshipType.OneToMany
+                            ):
+                                if (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyOrdered
+                                ):
                                     OneToManyOrderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(entity.id_, right_ids)
-                                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                                elif (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyUnordered
+                                ):
                                     OneToManyUnorderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(entity.id_, right_ids)
-                            elif relationship.relationship_type == RelationshipType.ManyToMany:
-                                if relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                            elif (
+                                relationship.relationship_type
+                                == RelationshipType.ManyToMany
+                            ):
+                                if (
+                                    relationship.relationship_cardinality
+                                    == RelationshipCardinality.ManyUnordered
+                                ):
                                     ManyToManyUnorderedAssociator(
                                         relationship, self._db_connection
                                     ).update_right_ids(entity.id_, right_ids)

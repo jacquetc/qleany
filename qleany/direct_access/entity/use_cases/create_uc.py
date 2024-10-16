@@ -18,6 +18,8 @@ class CreateUc():
             return self._convert_entities_to_dtos(new_entities)
         
     def validate(self, create_dto: CreateEntitiesDto):
+        if not create_dto.entities:
+            raise ValueError("No entities to create")
         # verify if exist
         with self._unit_of_work as uow:
             if not uow.root_repository.exists(create_dto.owner_id):
@@ -27,6 +29,7 @@ class CreateUc():
     def _convert_entity_to_dto(self, entity: Entity) -> EntityDto:
         return EntityDto(
             id_=entity.id_,
+            name=entity.name,
             only_for_heritage=entity.only_for_heritage,
             fields=entity.fields,
             #relationships=entity.relationships,
@@ -35,6 +38,7 @@ class CreateUc():
     def _convert_dto_to_entity(self, dto: EntityDto) -> Entity:
         return Entity(
             id_= 0,
+            name=dto.name,
             only_for_heritage=dto.only_for_heritage,
             fields=dto.fields,
             #relationships=dto.relationships,

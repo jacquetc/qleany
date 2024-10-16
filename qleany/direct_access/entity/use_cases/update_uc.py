@@ -26,6 +26,7 @@ class UpdateUc():
     def _convert_entity_to_dto(self, entity: Entity) -> EntityDto:
         return EntityDto(
             id_=entity.id_,
+            name=entity.name,
             only_for_heritage=entity.only_for_heritage,
             fields=entity.fields,
             #relationships=entity.relationships,
@@ -34,6 +35,7 @@ class UpdateUc():
     def _convert_dto_to_entity(self, dto: EntityDto) -> Entity:
         return Entity(
             id_=dto.id_,
+            name=dto.name,
             only_for_heritage=dto.only_for_heritage,
             fields=dto.fields,
             #relationships=dto.relationships,

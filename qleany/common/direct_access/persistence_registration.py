@@ -40,7 +40,8 @@ def register_persistence() -> Tuple[RepositoryFactory, SqliteDbContext, Messenge
     from qleany.common.direct_access.feature.feature_repository import FeatureRepository
     from qleany.common.direct_access.feature.feature_db_table_group import FeatureDbTableGroup
     factory.register(FeatureRepository, FeatureDbTableGroup)
-    
+    table_creator.add_tables([Feature])
+
     # finally, create the internal database
     table_creator.create_empty_database()
     

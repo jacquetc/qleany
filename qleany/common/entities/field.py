@@ -16,7 +16,7 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Field(IEntity):
-    id_: int
+    id_: int 
     name: str
     type_: str
     entity: int | None
