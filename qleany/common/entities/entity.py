@@ -16,9 +16,9 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Entity(IEntity):
-    id_: int
-    name: str
-    only_for_heritage: bool
+    id_: int = 0
+    name: str = ""
+    only_for_heritage: bool = False
     fields: list[int] = field(default_factory= lambda: [])  
     # relationships: list[int]
 
@@ -31,6 +31,12 @@ class Entity(IEntity):
                     field_name="id_",
                     field_type=FieldType.Integer,
                     is_primary_key=True,
+                    has_relationship=False,
+                ),
+                FieldInfo(
+                    field_name="name",
+                    field_type=FieldType.String,
+                    is_primary_key=False,
                     has_relationship=False,
                 ),
                 FieldInfo(

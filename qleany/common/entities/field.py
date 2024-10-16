@@ -16,18 +16,18 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Field(IEntity):
-    id_: int 
-    name: str
-    type_: str
-    entity: int | None
-    is_nullable: bool
-    is_primary_key: bool
-    is_list: bool
-    is_single: bool
-    strong: bool
-    ordered: bool
-    list_model: bool
-    list_model_displayed_field: str
+    id_: int = 0
+    name: str = ""
+    type_: str = ""
+    entity: int | None = None
+    is_nullable: bool = False
+    is_primary_key: bool = False
+    is_list: bool = False
+    is_single: bool = False
+    strong: bool = False
+    ordered: bool = False
+    list_model: bool = False
+    list_model_displayed_field: str = ""
 
     @classmethod
     def _schema(cls) -> EntitySchema:

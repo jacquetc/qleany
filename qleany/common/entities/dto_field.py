@@ -16,11 +16,11 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class DtoField(IEntity):
-    id_: int
-    name: str
-    type_: str
-    is_nullable: bool
-    is_list: bool
+    id_: int = 0
+    name: str = ""
+    type_: str = ""
+    is_nullable: bool = False
+    is_list: bool = False
 
     @classmethod
     def _schema(cls) -> EntitySchema:

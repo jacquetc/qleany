@@ -16,9 +16,9 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class UseCase(IEntity):
-    id_: int
-    name: str
-    validator: bool
+    id_: int = 0
+    name: str = ""
+    validator: bool = False
     entities: list[int] = field(default_factory= lambda: [])  
     undoable: bool = False
     dto_in: int | None = None

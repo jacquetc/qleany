@@ -42,7 +42,10 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         entities = []
         for row in cursor.fetchall():
-            entity = self._entity_type(*row)
+            entity = self._entity_type()
+            for field, value in zip(self._fields_without_relationships(with_id=True), row):
+                setattr(entity, field.field_name, value)
+
 
             for relationship in entity._schema().relationships:
                 if relationship.relationship_direction == RelationshipDirection.Forward:
@@ -97,14 +100,10 @@ class SqliteDbTableGroup(IDbTableGroup):
         for entity in entities:
             
             if len(self._fields_without_relationships()) > 0:
-                entity_tuple = self._convert_entity_to_tuple(entity)
-                #remove id
-                entity_tuple = entity_tuple[1:]
-                data = tuple(self._fields_without_relationships()) + entity_tuple
-                query = f"INSERT INTO {self._entity_type.__name__} ({','.join('?' for _ in self._fields_without_relationships())}) VALUES ({','.join('?' for _ in self._fields_without_relationships())})"
+                entity_tuple = self._convert_entity_values_to_tuple(entity)
                 cursor.execute(
-                    f"INSERT INTO {self._entity_type.__name__} ({','.join('?' for _ in self._fields_without_relationships())}) VALUES ({','.join('?' for _ in self._fields_without_relationships())})",
-                    tuple(self._fields_without_relationships()) + entity_tuple,
+                    f"INSERT INTO {self._entity_type.__name__} ({','.join(field.field_name for field in self._fields_without_relationships())}) VALUES ({','.join('?' for _ in self._fields_without_relationships())})",
+                    entity_tuple,
                 )
             else:
                 cursor.execute(
@@ -162,24 +161,27 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         return entities
 
-    def _fields_without_relationships(self) -> list[FieldInfo]:
-        return [
-            field
-            for field in self._entity_type._schema().fields
-            if field.has_relationship is False and field.field_name != "id_"
-        ]
+    def _fields_without_relationships(self, with_id:bool=False) -> list[FieldInfo]:
+        if with_id:
+            return [
+                field
+                for field in self._entity_type._schema().fields
+                if field.has_relationship == False
+            ]
+        else:
+            return [
+                field
+                for field in self._entity_type._schema().fields
+                if field.has_relationship == False and field.field_name != "id_"
+            ]
 
     def _fields_with_relationships(self) -> list[FieldInfo]:
         return [
             field
-            for field in self._entity_type._schema().fields
-            if field.has_relationship is True and field.field_name != "id_"
+            for field in self._entity_type._schema().fields if field.field_name != "id_"
         ]
 
-    def _convert_entity_to_tuple(self, entity: IEntity) -> tuple:
-        
-        for field in self._fields_without_relationships():
-            print(f"{self._entity_type}: {field.field_name}:", getattr(entity, field.field_name))
+    def _convert_entity_values_to_tuple(self, entity: IEntity) -> tuple:
         
         return tuple(
             getattr(entity, field.field_name)
@@ -189,13 +191,14 @@ class SqliteDbTableGroup(IDbTableGroup):
     def update(self, entities: Sequence[IEntity]) -> Sequence[IEntity]:
         # This method should update the given entities in the database and return a list of the updated entities.
         cursor = self._db_connection.cursor()
-        cursor.executemany(
-            f"UPDATE {self._entity_type.__name__} SET {','.join(f'{field.field_name}=?' for field in entities[0]._schema().fields)} WHERE id=?",
-            [
-                self._convert_entity_to_tuple(entity) + (entity.id_,)
-                for entity in entities
-            ],
-        )
+        if len(self._fields_without_relationships()) > 0:
+            cursor.executemany(
+                f"UPDATE {self._entity_type.__name__} SET {','.join(f'{field.field_name}=?' for field in self._fields_without_relationships())} WHERE id=?",
+                [
+                    self._convert_entity_values_to_tuple(entity) + (entity.id_,)
+                    for entity in entities
+                ],
+            )
 
         for entity in entities:
             for relationship in entity._schema().relationships:

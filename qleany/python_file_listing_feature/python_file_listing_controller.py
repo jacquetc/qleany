@@ -6,6 +6,10 @@ from qleany.python_file_listing_feature.dtos import PythonFileListingDto, Python
 from qleany.python_file_listing_feature.python_file_listing_uow import PythonFileListingUow
 from qleany.python_file_listing_feature.use_cases.list_common_base_files_uc import ListCommonBaseFilesUc
 from qleany.python_file_listing_feature.use_cases.list_direct_access_files_uc import ListDirectAccessFilesUc
+from qleany.python_file_listing_feature.use_cases.list_entity_files_uc import ListEntityFilesUc
+from qleany.python_file_listing_feature.use_cases.list_feature_files_uc import ListFeatureFilesUc
+from qleany.python_file_listing_feature.use_cases.list_persistence_files_uc import ListPersistenceFilesUc
+from qleany.python_file_listing_feature.use_cases.list_ui_files_uc import ListUiFilesUc
 
 
 class PythonFileListingController:
@@ -39,10 +43,27 @@ class PythonFileListingController:
         self._repository_factory = repository_factory
         self._messenger = messenger
 
-    def list_common_base_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
-        return ListCommonBaseFilesUc(unit_of_work).execute(dto)
-
     def list_direct_access_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
         unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
         return ListDirectAccessFilesUc(unit_of_work).execute(dto)
+    
+    def list_entity_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
+        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
+        return ListEntityFilesUc(unit_of_work).execute(dto)
+
+    def list_feature_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
+        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
+        return ListFeatureFilesUc(unit_of_work).execute(dto)
+    
+    def list_persistence_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
+        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
+        return ListPersistenceFilesUc(unit_of_work).execute(dto)
+    
+    def list_common_base_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
+        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
+        return ListCommonBaseFilesUc(unit_of_work).execute(dto)
+    
+    def list_ui_files(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
+        unit_of_work = PythonFileListingUow(self._db_context, self._repository_factory) # type: ignore
+        return ListUiFilesUc(unit_of_work).execute(dto)
+

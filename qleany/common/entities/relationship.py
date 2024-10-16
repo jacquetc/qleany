@@ -16,14 +16,14 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Relationship(IEntity):
-    id_: int
-    left_entity_name: str
-    right_entity_name: str
-    field_name: str
-    relationship_type: str
-    strength: str
-    direction: str
-    cardinality: str
+    id_: int = 0
+    left_entity_name: str = ""
+    right_entity_name: str = ""
+    field_name: str = ""
+    relationship_type: str = ""
+    strength: str = ""
+    direction: str = ""
+    cardinality: str = ""
 
     @classmethod
     def _schema(cls) -> EntitySchema:

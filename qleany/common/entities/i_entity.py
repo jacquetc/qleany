@@ -4,7 +4,7 @@ from qleany.common.entities.entity_enums import EntitySchema
 
 
 class IEntity(ABC):
-    id_: int
+    id_: int = 0
 
     @classmethod
     @abstractmethod

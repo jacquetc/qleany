@@ -16,8 +16,8 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Dto(IEntity):
-    id_: int
-    name: str
+    id_: int = 0
+    name: str = ""
     fields: list[int] = field(default_factory= lambda: [])  
 
     @classmethod

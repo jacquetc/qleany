@@ -63,7 +63,7 @@ class FeatureRepository(IFeatureRepository):
                 and relationship.relationship_strength == RelationshipStrength.Strong
             ):
                 # get entity name from relationship
-                repository_name = f"{relationship.right_entity_name}Repository"
+                repository_name = f"{relationship.left_entity_name}Repository"
 
                 # create repository from factory
                 owner_repository = self._repository_factory.create(

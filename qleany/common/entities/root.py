@@ -16,7 +16,7 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Root(IEntity):
-    id_: int
+    id_: int = 0
     # global_: int
     entities: list[int] = field(default_factory= lambda: [])  
     features: list[int] = field(default_factory= lambda: [])  

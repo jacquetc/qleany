@@ -46,29 +46,68 @@ def parse_list_command(args):
     
     ManifestHandlingController.get_instance().load_manifest(LoadManifestDto(file_path=manifest))
     
-    if group == "direct_access":
+    if group == "direct_access" or group == "direct" or group == "da":
         print("Listing files for direct access")
-        dto = PythonFileListingDto()
+        dto = PythonFileListingDto(existing = existing)
         response_dto = PythonFileListingController.get_instance().list_direct_access_files(dto)
-        print(file for file in response_dto.files)
+        for file in response_dto.files:
+            print(file)
         
-    if group == "entities" or group == "entity":
+    elif group == "entities" or group == "entity" or group == "e":
         print("Listing files for entities")
-        
-    elif group == "features" or group == "feature":
+        dto = PythonFileListingDto(existing = existing)
+        response_dto = PythonFileListingController.get_instance().list_entity_files(dto)
+        for file in response_dto.files:
+            print(file)
+
+    elif group == "features" or group == "feature" or group == "f":
         print("Listing files for features")
+        dto = PythonFileListingDto(existing = existing)
+        response_dto = PythonFileListingController.get_instance().list_feature_files(dto)
+        for file in response_dto.files:
+            print(file)
         
-    elif group == "persistence":
+    elif group == "persistence" or group == "persist" or group == "p":
         print("Listing files for persistence")
+        dto = PythonFileListingDto(existing = existing)
+        response_dto = PythonFileListingController.get_instance().list_persistence_files(dto)
+        for file in response_dto.files:
+            print(file)
         
-    elif group == "common":
+    elif group == "common" or group == "c":
         print("Listing common files")
+        dto = PythonFileListingDto(existing = existing)
+        response_dto = PythonFileListingController.get_instance().list_common_base_files(dto)
+        for file in response_dto.files:
+            print(file)
         
     elif group == "ui":
         print("Listing UI files")
+        dto = PythonFileListingDto(existing = existing)
+        response_dto = PythonFileListingController.get_instance().list_ui_files(dto)
+        for file in response_dto.files:
+            print(file)
         
     elif group == "all":
         print("Listing all files")
+        dto = PythonFileListingDto(existing = existing)
+        files = []
+        response_dto = PythonFileListingController.get_instance().list_direct_access_files(dto)
+        files.extend(response_dto.files)
+        response_dto = PythonFileListingController.get_instance().list_entity_files(dto)
+        files.extend(response_dto.files)
+        response_dto = PythonFileListingController.get_instance().list_feature_files(dto)
+        files.extend(response_dto.files)
+        response_dto = PythonFileListingController.get_instance().list_persistence_files(dto)
+        files.extend(response_dto.files)
+        response_dto = PythonFileListingController.get_instance().list_common_base_files(dto)
+        files.extend(response_dto.files)
+        response_dto = PythonFileListingController.get_instance().list_ui_files(dto)
+        files.extend(response_dto.files)
+
+        for file in files:
+            print(file)
+
     else:
         print("Invalid group")
     

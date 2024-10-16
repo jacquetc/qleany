@@ -16,11 +16,11 @@ from qleany.common.entities.i_entity import IEntity
 
 @dataclass(slots=True)
 class Global(IEntity):
-    id_: int
-    language: str
-    application_name: str
-    organisation_name: str
-    organisation_domain: str
+    id_: int = 0
+    language: str = ""
+    application_name: str = ""
+    organisation_name: str = ""
+    organisation_domain: str = ""
 
     @classmethod
     def _schema(cls) -> EntitySchema:
