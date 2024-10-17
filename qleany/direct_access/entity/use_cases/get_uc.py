@@ -1,4 +1,5 @@
 from typing import Sequence
+
 from qleany.common.entities.entity import Entity
 from qleany.direct_access.entity.dtos import EntityDto
 from qleany.direct_access.entity.i_entity_uow import IEntityUow
@@ -19,20 +20,20 @@ class GetUc:
             name=entity.name,
             only_for_heritage=entity.only_for_heritage,
             fields=entity.fields,
-            #relationships=entity.relationships,
+            # relationships=entity.relationships,
         )
-    
+
     def _convert_entities_to_dtos(self, entities: Sequence[Entity]) -> list[EntityDto]:
         return [self._convert_entity_to_dto(entity) for entity in entities]
-    
+
     def _convert_dtos_to_entities(self, dtos: Sequence[EntityDto]) -> list[Entity]:
         return [self._convert_dto_to_entity(dto) for dto in dtos]
-    
+
     def _convert_dto_to_entity(self, dto: EntityDto) -> Entity:
         return Entity(
             id_=dto.id_,
             name=dto.name,
             only_for_heritage=dto.only_for_heritage,
             fields=dto.fields,
-            #relationships=dto.relationships,
+            # relationships=dto.relationships,
         )

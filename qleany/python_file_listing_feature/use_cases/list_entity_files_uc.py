@@ -1,4 +1,5 @@
-from qleany.common.entities.entity import Entity
+import stringcase
+
 from qleany.python_file_listing_feature.dtos import (
     PythonFileListingDto,
     PythonFileListingResponseDto,
@@ -6,7 +7,6 @@ from qleany.python_file_listing_feature.dtos import (
 from qleany.python_file_listing_feature.i_python_file_listing_uow import (
     IPythonFileListingUow,
 )
-import stringcase
 
 
 class ListEntityFilesUc:
@@ -14,7 +14,6 @@ class ListEntityFilesUc:
         self._unit_of_work = unit_of_work
 
     def execute(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-
         self._validate(dto)
 
         files = [

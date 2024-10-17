@@ -12,7 +12,6 @@ class ListPersistenceFilesUc:
         self._unit_of_work = unit_of_work
 
     def execute(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-
         files = [
             "common/direct_access/common/__init__.py",
             "common/direct_access/common/database/__init__.py",

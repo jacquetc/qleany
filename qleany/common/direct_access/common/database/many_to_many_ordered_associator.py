@@ -1,4 +1,5 @@
 import sqlite3
+
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo

@@ -1,4 +1,6 @@
+import logging
 from typing import Sequence
+
 from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
     IDbConnection,
 )
@@ -15,19 +17,13 @@ from qleany.common.direct_access.root.i_root_repository import (
     IRootRepository,
 )
 from qleany.common.entities.entity_enums import (
-    EntityEnum,
-    RelationshipCardinality,
     RelationshipDirection,
     RelationshipStrength,
-    RelationshipType,
 )
-import logging
 from qleany.common.entities.root import Root
-from typing import Sequence
 
 
 class RootRepository(IRootRepository):
-
     def __init__(
         self,
         db_table_group: IRootDbTableGroup,
@@ -76,7 +72,6 @@ class RootRepository(IRootRepository):
         return updated_entities
 
     def remove(self, ids: Sequence[int]) -> Sequence[int]:
-
         # cascade remove relationships
         for relationship in Root._schema().relationships:
             if (
@@ -90,7 +85,7 @@ class RootRepository(IRootRepository):
                 repository = self._repository_factory.create(
                     repository_name, self._db_connection
                 )
-                
+
                 for left_id in ids:
                     right_ids = self._db_table_group.get_right_ids(
                         relationship=relationship,
@@ -118,4 +113,3 @@ class RootRepository(IRootRepository):
 
     def exists(self, id_: int) -> bool:
         return self._db_table_group.exists(id_)
-    

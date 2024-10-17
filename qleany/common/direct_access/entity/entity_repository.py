@@ -1,4 +1,6 @@
+import logging
 from typing import Sequence
+
 from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
     IDbConnection,
 )
@@ -11,24 +13,19 @@ from qleany.common.direct_access.common.repository.repository_messenger import (
 from qleany.common.direct_access.entity.i_entity_db_table_group import (
     IEntityDbTableGroup,
 )
-
 from qleany.common.direct_access.entity.i_entity_repository import (
     IEntityRepository,
 )
+from qleany.common.entities.entity import Entity
 from qleany.common.entities.entity_enums import (
-    EntityEnum,
     RelationshipCardinality,
     RelationshipDirection,
     RelationshipStrength,
     RelationshipType,
 )
-import logging
-from qleany.common.entities.entity import Entity
-from typing import Sequence
 
 
 class EntityRepository(IEntityRepository):
-
     def __init__(
         self,
         db_table_group: IEntityDbTableGroup,
@@ -54,8 +51,9 @@ class EntityRepository(IEntityRepository):
         db_entities = self.get_all()
         return [entity.id_ for entity in db_entities]
 
-    def create(self, entities: Sequence[Entity], owner_id: int, position: int) -> Sequence[Entity]:
-
+    def create(
+        self, entities: Sequence[Entity], owner_id: int, position: int
+    ) -> Sequence[Entity]:
         created_entities = self._db_table_group.create(entities)
 
         # create relationship
@@ -88,23 +86,33 @@ class EntityRepository(IEntityRepository):
                         setattr(owner, relationship.field_name, new_ids[0])
                         owner_repository.update([owner])
 
-                elif relationship.relationship_type == RelationshipType.OneToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+                elif (
+                    relationship.relationship_type == RelationshipType.OneToMany
+                    and relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyUnordered
+                ):
                     if owner_field is None:
                         owner_field = []
                     owner_field += new_ids
                     setattr(owner, relationship.field_name, owner_field)
                     owner_repository.update([owner])
 
-                elif relationship.relationship_type == RelationshipType.OneToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                elif (
+                    relationship.relationship_type == RelationshipType.OneToMany
+                    and relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyOrdered
+                ):
                     if owner_field is None:
                         owner_field = []
 
-                    if position == -1: 
+                    if position == -1:
                         owner_field += new_ids
                     elif position == 0:
                         owner_field = new_ids + owner_field
                     elif position > 0 and position < len(owner_field):
-                        owner_field = owner_field[:position] + new_ids + owner_field[position:]
+                        owner_field = (
+                            owner_field[:position] + new_ids + owner_field[position:]
+                        )
                     elif position == len(owner_field):
                         owner_field += new_ids
                     elif position > len(owner_field):
@@ -116,20 +124,28 @@ class EntityRepository(IEntityRepository):
 
                     setattr(owner, relationship.field_name, owner_field)
                     owner_repository.update([owner])
-                    
-                elif relationship.relationship_type == RelationshipType.ManyToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered:
+
+                elif (
+                    relationship.relationship_type == RelationshipType.ManyToMany
+                    and relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyUnordered
+                ):
                     if owner_field is None:
                         owner_field = []
                     owner_field += new_ids
                     setattr(owner, relationship.field_name, owner_field)
                     owner_repository.update([owner])
 
-                elif relationship.relationship_type == RelationshipType.ManyToMany and relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered:
+                elif (
+                    relationship.relationship_type == RelationshipType.ManyToMany
+                    and relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyOrdered
+                ):
                     raise NotImplementedError()
                 else:
                     # unreachable
                     raise NotImplementedError()
-                
+
                 break
 
         # notify
@@ -153,7 +169,6 @@ class EntityRepository(IEntityRepository):
         return updated_entities
 
     def remove(self, ids: Sequence[int]) -> Sequence[int]:
-
         # cascade remove relationships
         for relationship in Entity._schema().relationships:
             if (
@@ -167,7 +182,7 @@ class EntityRepository(IEntityRepository):
                 repository = self._repository_factory.create(
                     repository_name, self._db_connection
                 )
-                
+
                 for left_id in ids:
                     right_ids = self._db_table_group.get_right_ids(
                         relationship=relationship,
@@ -195,4 +210,3 @@ class EntityRepository(IEntityRepository):
 
     def exists(self, id_: int) -> bool:
         return self._db_table_group.exists(id_)
-    

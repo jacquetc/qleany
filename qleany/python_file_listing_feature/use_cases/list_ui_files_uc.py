@@ -12,7 +12,6 @@ class ListUiFilesUc:
         self._unit_of_work = unit_of_work
 
     def execute(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-
         files = ["ui/__init__.py", "ui/cli/__init__.py", "ui/cli/cli.py"]
 
         return PythonFileListingResponseDto(files=files)

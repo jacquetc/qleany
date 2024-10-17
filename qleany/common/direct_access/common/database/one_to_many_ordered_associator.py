@@ -1,12 +1,15 @@
 import sqlite3
 from typing import Sequence
+
 import stringcase
 
 from qleany.common.entities.entity_enums import RelationshipInfo
 
 
 class OneToManyOrderedAssociator:
-    def __init__(self, relationship: RelationshipInfo, db_connection: sqlite3.Connection):
+    def __init__(
+        self, relationship: RelationshipInfo, db_connection: sqlite3.Connection
+    ):
         self._relationship = relationship
         self._db_connection = db_connection
         self._field_name = relationship.field_name
@@ -14,7 +17,9 @@ class OneToManyOrderedAssociator:
         left_entity_name = relationship.left_entity_name
         right_entity_name = relationship.right_entity_name
 
-        self._junction_table_name = f"{left_entity_name}_{relationship.field_name}_{right_entity_name}_junction"
+        self._junction_table_name = (
+            f"{left_entity_name}_{relationship.field_name}_{right_entity_name}_junction"
+        )
         self._junction_table_left_entity_foreign_key_name = f"{left_entity_name}_id"
         self._left_entity_foreign_table_name = stringcase.snakecase(left_entity_name)
         self._junction_table_right_entity_foreign_key_name = f"{right_entity_name}_id"
@@ -32,7 +37,7 @@ class OneToManyOrderedAssociator:
             f"UNIQUE ({self._junction_table_right_entity_foreign_key_name}), "  # Enforce uniqueness on the right entity foreign key
             f"UNIQUE ({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}));"
         )
-    
+
     def get_right_ids(self, left_entity_id: int) -> Sequence[int]:
         connection = self._db_connection
         query_str = (
@@ -54,7 +59,9 @@ class OneToManyOrderedAssociator:
         right_entity_ids = [row[0] for row in cursor.fetchall()]
         return right_entity_ids
 
-    def update_right_ids(self, left_entity_id: int, right_entity_ids: Sequence[int]) -> dict:
+    def update_right_ids(
+        self, left_entity_id: int, right_entity_ids: Sequence[int]
+    ) -> dict:
         connection = self._db_connection
         cursor = connection.cursor()
 
@@ -68,7 +75,7 @@ class OneToManyOrderedAssociator:
         current_associations = cursor.fetchall()
 
         added_relationships: list[dict[str, int]] = []
-        deleted_relationships: list[dict[str, int|None]] = []
+        deleted_relationships: list[dict[str, int | None]] = []
 
         # Create a list of current EntityShadow objects
         current_shadows = [
@@ -82,7 +89,7 @@ class OneToManyOrderedAssociator:
                 "common": False,
                 "new_previous": 0,
                 "new_next": 0,
-                "update_previous_or_next": False
+                "update_previous_or_next": False,
             }
             for row in current_associations
         ]
@@ -99,7 +106,7 @@ class OneToManyOrderedAssociator:
                 "common": False,
                 "new_previous": 0,
                 "new_next": 0,
-                "update_previous_or_next": False
+                "update_previous_or_next": False,
             }
             for entity_id in right_entity_ids
         ]
@@ -110,7 +117,9 @@ class OneToManyOrderedAssociator:
                 if current_shadow["entity_id"] == new_shadow["entity_id"]:
                     current_shadow["common"] = True
                     new_shadow["common"] = True
-                    new_shadow["junction_table_id"] = current_shadow["junction_table_id"]
+                    new_shadow["junction_table_id"] = current_shadow[
+                        "junction_table_id"
+                    ]
                     new_shadow["previous"] = current_shadow["previous"]
                     new_shadow["next"] = current_shadow["next"]
                     new_shadow["create"] = False
@@ -121,12 +130,23 @@ class OneToManyOrderedAssociator:
                 current_shadow["remove"] = True
 
         # Merge shadows and update previous/next pointers
-        merged_shadows = new_shadows + [shadow for shadow in current_shadows if shadow["remove"]]
+        merged_shadows = new_shadows + [
+            shadow for shadow in current_shadows if shadow["remove"]
+        ]
         for i, shadow in enumerate(merged_shadows):
             if not shadow["remove"]:
-                shadow["new_previous"] = merged_shadows[i - 1]["entity_id"] if i > 0 else 0
-                shadow["new_next"] = merged_shadows[i + 1]["entity_id"] if i < len(merged_shadows) - 1 else 0
-                if shadow["previous"] != shadow["new_previous"] or shadow["next"] != shadow["new_next"]:
+                shadow["new_previous"] = (
+                    merged_shadows[i - 1]["entity_id"] if i > 0 else 0
+                )
+                shadow["new_next"] = (
+                    merged_shadows[i + 1]["entity_id"]
+                    if i < len(merged_shadows) - 1
+                    else 0
+                )
+                if (
+                    shadow["previous"] != shadow["new_previous"]
+                    or shadow["next"] != shadow["new_next"]
+                ):
                     shadow["update_previous_or_next"] = True
 
         # Apply changes to the database
@@ -138,45 +158,56 @@ class OneToManyOrderedAssociator:
                     f"{self._junction_table_right_entity_foreign_key_name} = ?"
                 )
                 cursor.execute(delete_existing_query, (shadow["entity_id"],))
-                deleted_relationships.append({
-                    "left_entity_id": None,  # Previous left entity ID is unknown
-                    "right_entity_id": shadow["entity_id"]
-                })
+                deleted_relationships.append(
+                    {
+                        "left_entity_id": None,  # Previous left entity ID is unknown
+                        "right_entity_id": shadow["entity_id"],
+                    }
+                )
 
                 query_str = (
                     f"INSERT INTO {self._junction_table_name} "
                     f"({self._junction_table_left_entity_foreign_key_name}, {self._junction_table_right_entity_foreign_key_name}, previous, next) "
                     f"VALUES (?, ?, ?, ?)"
                 )
-                cursor.execute(query_str, (
-                    left_entity_id,
-                    shadow["entity_id"],
-                    shadow["new_previous"] if shadow["new_previous"] != 0 else None,
-                    shadow["new_next"] if shadow["new_next"] != 0 else None
-                ))
-                added_relationships.append({
-                    "left_entity_id": left_entity_id,
-                    "right_entity_id": shadow["entity_id"]
-                })
+                cursor.execute(
+                    query_str,
+                    (
+                        left_entity_id,
+                        shadow["entity_id"],
+                        shadow["new_previous"] if shadow["new_previous"] != 0 else None,
+                        shadow["new_next"] if shadow["new_next"] != 0 else None,
+                    ),
+                )
+                added_relationships.append(
+                    {
+                        "left_entity_id": left_entity_id,
+                        "right_entity_id": shadow["entity_id"],
+                    }
+                )
             elif shadow["remove"]:
                 query_str = f"DELETE FROM {self._junction_table_name} WHERE id = ?"
                 cursor.execute(query_str, (shadow["junction_table_id"],))
-                deleted_relationships.append({
-                    "left_entity_id": left_entity_id,
-                    "right_entity_id": shadow["entity_id"]
-                })
+                deleted_relationships.append(
+                    {
+                        "left_entity_id": left_entity_id,
+                        "right_entity_id": shadow["entity_id"],
+                    }
+                )
             elif shadow["update_previous_or_next"]:
                 query_str = (
                     f"UPDATE {self._junction_table_name} "
                     f"SET previous = ?, next = ? "
                     f"WHERE id = ?"
                 )
-                cursor.execute(query_str, (
-                    shadow["new_previous"] if shadow["new_previous"] != 0 else None,
-                    shadow["new_next"] if shadow["new_next"] != 0 else None,
-                    shadow["junction_table_id"]
-                ))
-
+                cursor.execute(
+                    query_str,
+                    (
+                        shadow["new_previous"] if shadow["new_previous"] != 0 else None,
+                        shadow["new_next"] if shadow["new_next"] != 0 else None,
+                        shadow["junction_table_id"],
+                    ),
+                )
 
         # transform added_relationships into group of relationships by the left_entity_id
         added_relationships_grouped = {}
@@ -184,21 +215,24 @@ class OneToManyOrderedAssociator:
             left_entity_id = relationship["left_entity_id"]
             if left_entity_id not in added_relationships_grouped:
                 added_relationships_grouped[left_entity_id] = []
-            added_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
+            added_relationships_grouped[left_entity_id].append(
+                relationship["right_entity_id"]
+            )
         final_added_relationships = added_relationships_grouped
 
         # transform deleted_relationships into group of relationships by the left_entity_id
         deleted_relationships_grouped = {}
         for relationship in deleted_relationships:
             if relationship["left_entity_id"] is None:
-                left_entity_id = -1 # left entity ID is unknown
+                left_entity_id = -1  # left entity ID is unknown
             else:
                 left_entity_id = relationship["left_entity_id"]
             if left_entity_id not in deleted_relationships_grouped:
                 deleted_relationships_grouped[left_entity_id] = []
-            deleted_relationships_grouped[left_entity_id].append(relationship["right_entity_id"])
+            deleted_relationships_grouped[left_entity_id].append(
+                relationship["right_entity_id"]
+            )
         final_deleted_relationships = deleted_relationships_grouped
-
 
         return {
             "left_entity_name": self._relationship.left_entity_name,

@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.entity import Entity
 from typing import Sequence
 
-from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.entity import Entity
 
 
 class IEntityRepository(ABC):
@@ -25,9 +24,7 @@ class IEntityRepository(ABC):
         pass
 
     @abstractmethod
-    def update(
-        self, entities: Sequence[Entity]
-    ) -> Sequence[Entity]:
+    def update(self, entities: Sequence[Entity]) -> Sequence[Entity]:
         pass
 
     @abstractmethod

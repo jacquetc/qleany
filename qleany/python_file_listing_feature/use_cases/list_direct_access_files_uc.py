@@ -1,3 +1,5 @@
+import stringcase
+
 from qleany.common.entities.entity import Entity
 from qleany.python_file_listing_feature.dtos import (
     PythonFileListingDto,
@@ -6,7 +8,6 @@ from qleany.python_file_listing_feature.dtos import (
 from qleany.python_file_listing_feature.i_python_file_listing_uow import (
     IPythonFileListingUow,
 )
-import stringcase
 
 
 class ListDirectAccessFilesUc:
@@ -14,10 +15,13 @@ class ListDirectAccessFilesUc:
         self._unit_of_work = unit_of_work
 
     def execute(self, dto: PythonFileListingDto) -> PythonFileListingResponseDto:
-
         self._validate(dto)
 
-        files = ["direct_access/__init__.py", "common/direct_access/__init__.py", "common/direct_access/persistence_registration.py"]
+        files = [
+            "direct_access/__init__.py",
+            "common/direct_access/__init__.py",
+            "common/direct_access/persistence_registration.py",
+        ]
 
         entities: list[Entity] = []
 

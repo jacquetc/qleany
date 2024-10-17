@@ -27,7 +27,6 @@ from qleany.common.entities.i_entity import IEntity
 
 
 class SqliteDbTableGroup(IDbTableGroup):
-
     def __init__(self, entity_type: type[IEntity], db_connection: sqlite3.Connection):
         self._entity_type = entity_type
         self._db_connection = db_connection
@@ -43,9 +42,10 @@ class SqliteDbTableGroup(IDbTableGroup):
         entities = []
         for row in cursor.fetchall():
             entity = self._entity_type()
-            for field, value in zip(self._fields_without_relationships(with_id=True), row):
+            for field, value in zip(
+                self._fields_without_relationships(with_id=True), row
+            ):
                 setattr(entity, field.field_name, value)
-
 
             for relationship in entity._schema().relationships:
                 if relationship.relationship_direction == RelationshipDirection.Forward:
@@ -98,7 +98,6 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         new_ids = []
         for entity in entities:
-            
             if len(self._fields_without_relationships()) > 0:
                 entity_tuple = self._convert_entity_values_to_tuple(entity)
                 cursor.execute(
@@ -161,7 +160,7 @@ class SqliteDbTableGroup(IDbTableGroup):
 
         return entities
 
-    def _fields_without_relationships(self, with_id:bool=False) -> list[FieldInfo]:
+    def _fields_without_relationships(self, with_id: bool = False) -> list[FieldInfo]:
         if with_id:
             return [
                 field
@@ -178,11 +177,11 @@ class SqliteDbTableGroup(IDbTableGroup):
     def _fields_with_relationships(self) -> list[FieldInfo]:
         return [
             field
-            for field in self._entity_type._schema().fields if field.field_name != "id_"
+            for field in self._entity_type._schema().fields
+            if field.field_name != "id_"
         ]
 
     def _convert_entity_values_to_tuple(self, entity: IEntity) -> tuple:
-        
         return tuple(
             getattr(entity, field.field_name)
             for field in self._fields_without_relationships()
@@ -271,13 +270,11 @@ class SqliteDbTableGroup(IDbTableGroup):
     def get_left_ids(
         self, relationship: RelationshipInfo, right_id: int
     ) -> Sequence[int]:
-
         return []
 
     def get_right_ids(
         self, relationship: RelationshipInfo, left_id: int
     ) -> Sequence[int]:
-
         if relationship.relationship_direction == RelationshipDirection.Forward:
             if relationship.relationship_type == RelationshipType.OneToOne:
                 right_id = OneToOneAssociator(
@@ -320,7 +317,6 @@ class SqliteDbTableGroup(IDbTableGroup):
     def update_right_ids(
         self, relationship: RelationshipInfo, left_id: int, right_ids: Sequence[int]
     ) -> Sequence[int]:
-
         if relationship.relationship_direction == RelationshipDirection.Forward:
             if relationship.relationship_type == RelationshipType.OneToOne:
                 OneToOneAssociator(relationship, self._db_connection).update_right_id(

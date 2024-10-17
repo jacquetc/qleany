@@ -1,6 +1,7 @@
-import os
-import stringcase
 from pathlib import Path
+
+import stringcase
+
 from qleany.common.entities.entity import Entity
 from qleany.common.entities.feature import Feature
 from qleany.common.entities.field import Field
@@ -18,7 +19,6 @@ class LoadUc:
         self._importer = importer
 
     def execute(self, dto: LoadManifestDto):
-
         self.validate(dto)
         print(f"Loading manifest from {dto.file_path}")
 
@@ -70,20 +70,24 @@ class LoadUc:
                             type_=json_field["type"],
                             entity=None,  # to be set later
                             is_nullable=json_field.get("is_nullable", False),
-                            is_primary_key=True if json_field.get(json_field["name"], "") == "id" else False,
+                            is_primary_key=True
+                            if json_field.get(json_field["name"], "") == "id"
+                            else False,
                             is_list=json_field.get("is_list", False),
                             is_single=False,  # to be set later
                             strong=json_field.get("strong", False),
                             ordered=json_field.get("ordered", False),
                             list_model=json_field.get("list_model", False),
-                            list_model_displayed_field=json_field.get("list_model_displayed_field", ""),
+                            list_model_displayed_field=json_field.get(
+                                "list_model_displayed_field", ""
+                            ),
                         )
                     )
                 # create fields and add them to the entity
                 new_fields = uow.field_repository.create(
                     entities=fields_to_create, owner_id=entity.id_, position=0
                 )
-                
+
                 # set entity for field.entity
                 for json_field, new_field in zip(json_entity["fields"], new_fields):
                     related_entity = json_field.get("entity", None)
@@ -95,14 +99,13 @@ class LoadUc:
                     if related_entity is None:
                         raise ValueError(f"Entity {related_entity} not found")
                     new_field.entity = related_entity.id_
-                    
+
                 # set is_single
                 for new_field in new_fields:
                     if new_field.entity is not None and not new_field.is_list:
                         new_field.is_single = True
-                        
-                uow.field_repository.update(entities=new_fields)
 
+                uow.field_repository.update(entities=new_fields)
 
             # add features
             features_to_create = []
@@ -119,7 +122,6 @@ class LoadUc:
             new_features = uow.feature_repository.create(
                 entities=features_to_create, owner_id=root.id_, position=0
             )
-
 
     def validate(self, dto: LoadManifestDto):
         pass

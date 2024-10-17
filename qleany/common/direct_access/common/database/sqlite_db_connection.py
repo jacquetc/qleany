@@ -1,6 +1,8 @@
 import sqlite3
 
-from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
+    IDbConnection,
+)
 
 
 class SqliteDbConnection(IDbConnection):
@@ -15,6 +17,6 @@ class SqliteDbConnection(IDbConnection):
 
     def rollback(self):
         self._sqlite_connection.rollback()
-    
+
     def close(self):
         self._sqlite_connection.close()

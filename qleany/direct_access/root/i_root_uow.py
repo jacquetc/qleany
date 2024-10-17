@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from qleany.common.direct_access.root.i_root_repository import IRootRepository
-from qleany.common.direct_access.root.i_root_repository import IRootRepository
+
 
 class IRootUow(ABC):
     @property

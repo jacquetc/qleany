@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.field import Field
 from typing import Sequence
 
-from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.field import Field
 
 
 class IFieldRepository(ABC):
@@ -25,9 +24,7 @@ class IFieldRepository(ABC):
         pass
 
     @abstractmethod
-    def update(
-        self, entities: Sequence[Field]
-    ) -> Sequence[Field]:
+    def update(self, entities: Sequence[Field]) -> Sequence[Field]:
         pass
 
     @abstractmethod
@@ -37,7 +34,7 @@ class IFieldRepository(ABC):
     @abstractmethod
     def clear(self):
         pass
-    
+
     @abstractmethod
     def exists(self, id_: int) -> bool:
         pass

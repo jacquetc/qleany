@@ -1,4 +1,5 @@
 from typing import Sequence
+
 from qleany.common.entities.root import Root
 from qleany.direct_access.root.dtos import RootDto
 from qleany.direct_access.root.i_root_uow import IRootUow
@@ -29,7 +30,7 @@ class GetUc:
 
     def _convert_dto_to_entity(self, dto: RootDto) -> Root:
         return Root(
-            id_= dto.id_,
+            id_=dto.id_,
             # global_id=dto.global_id,
             entities=dto.entities,
             features=dto.features,

@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Sequence
+
 from qleany.common.entities.entity_enums import RelationshipInfo
 from qleany.common.entities.field import Field
 
-class IFieldDbTableGroup(ABC):
 
+class IFieldDbTableGroup(ABC):
     @abstractmethod
     def get(self, ids: Sequence[int]) -> Sequence[Field]:
         pass
@@ -38,9 +39,13 @@ class IFieldDbTableGroup(ABC):
         pass
 
     @abstractmethod
-    def get_left_ids(self, relationship: RelationshipInfo, right_id: int) -> Sequence[int]:
+    def get_left_ids(
+        self, relationship: RelationshipInfo, right_id: int
+    ) -> Sequence[int]:
         pass
 
     @abstractmethod
-    def get_right_ids(self, relationship: RelationshipInfo, left_id: int) -> Sequence[int]:
+    def get_right_ids(
+        self, relationship: RelationshipInfo, left_id: int
+    ) -> Sequence[int]:
         pass

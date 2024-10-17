@@ -1,8 +1,11 @@
-
-
 from typing import Sequence
-from qleany.common.direct_access.common.database.interfaces.i_db_context import IDbContext
-from qleany.common.direct_access.common.repository.repository_factory import IRepositoryFactory
+
+from qleany.common.direct_access.common.database.interfaces.i_db_context import (
+    IDbContext,
+)
+from qleany.common.direct_access.common.repository.repository_factory import (
+    IRepositoryFactory,
+)
 from qleany.direct_access.feature.dtos import CreateFeaturesDto, FeatureDto
 from qleany.direct_access.feature.feature_uow import FeatureUow
 from qleany.direct_access.feature.use_cases.create_uc import CreateUc
@@ -20,10 +23,12 @@ class FeatureController:
     def get_instance(cls):
         if cls._instance is None:
             if cls._db_context is None or cls._repository_factory is None:
-                raise ValueError("RootController must be initialized with db_context and repository_factory first")
+                raise ValueError(
+                    "RootController must be initialized with db_context and repository_factory first"
+                )
             cls._instance = cls(cls._db_context, cls._repository_factory)
         return cls._instance
-    
+
     @classmethod
     def initialize(cls, db_context: IDbContext, repository_factory: IRepositoryFactory):
         if cls._instance is None:
@@ -36,19 +41,19 @@ class FeatureController:
 
         self._db_context = db_context
         self._repository_factory = repository_factory
-        
+
     def create(self, dto: CreateFeaturesDto) -> Sequence[FeatureDto]:
-        unit_of_work = FeatureUow(self._db_context, self._repository_factory) # type: ignore
+        unit_of_work = FeatureUow(self._db_context, self._repository_factory)  # type: ignore
         return CreateUc(unit_of_work).execute(dto)
-        
+
     def get(self, ids: Sequence[int]) -> Sequence[FeatureDto]:
-        unit_of_work = FeatureUow(self._db_context, self._repository_factory) # type: ignore
+        unit_of_work = FeatureUow(self._db_context, self._repository_factory)  # type: ignore
         return GetUc(unit_of_work).execute(ids)
-    
+
     def update(self, update_dtos: Sequence[FeatureDto]) -> Sequence[FeatureDto]:
-        unit_of_work = FeatureUow(self._db_context, self._repository_factory) # type: ignore
+        unit_of_work = FeatureUow(self._db_context, self._repository_factory)  # type: ignore
         return UpdateUc(unit_of_work).execute(update_dtos)
-    
+
     def remove(self, ids: Sequence[int]) -> Sequence[int]:
-        unit_of_work = FeatureUow(self._db_context, self._repository_factory) # type: ignore
+        unit_of_work = FeatureUow(self._db_context, self._repository_factory)  # type: ignore
         return RemoveUc(unit_of_work).execute(ids)

@@ -17,9 +17,7 @@ root_path_str = str(root_path)
 # Add the root directory to the sys.path so that we can import the generated files
 sys.path.append(root_path_str)
 
-
 from qleany.ui.cli.cli import run_cli
-
 
 if __name__ == "__main__":
     run_cli()

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.feature import Feature
 from typing import Sequence
+
+from qleany.common.entities.feature import Feature
+
 
 class IFeatureRepository(ABC):
     @abstractmethod
@@ -22,9 +24,7 @@ class IFeatureRepository(ABC):
         pass
 
     @abstractmethod
-    def update(
-        self, entities: Sequence[Feature]
-    ) -> Sequence[Feature]:
+    def update(self, entities: Sequence[Feature]) -> Sequence[Feature]:
         pass
 
     @abstractmethod

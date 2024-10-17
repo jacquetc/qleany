@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
 
-from qleany.common.direct_access.field.i_field_repository import IFieldRepository
 from qleany.common.direct_access.entity.i_entity_repository import IEntityRepository
+from qleany.common.direct_access.field.i_field_repository import IFieldRepository
+
 
 class IFieldUow(ABC):
     @property
     @abstractmethod
     def field_repository(self) -> IFieldRepository:
         pass
-    
+
     @property
     @abstractmethod
     def entity_repository(self) -> IEntityRepository:

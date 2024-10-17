@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from qleany.common.entities.root import Root
 from typing import Sequence
 
-from qleany.common.entities.entity_enums import EntityEnum
+from qleany.common.entities.root import Root
 
 
 class IRootRepository(ABC):

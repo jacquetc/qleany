@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Sequence
+
 from qleany.common.entities.entity_enums import RelationshipInfo
 from qleany.common.entities.root import Root
 
-class IRootDbTableGroup(ABC):
 
+class IRootDbTableGroup(ABC):
     @abstractmethod
     def get(self, ids: Sequence[int]) -> Sequence[Root]:
         pass
@@ -36,11 +37,15 @@ class IRootDbTableGroup(ABC):
     @abstractmethod
     def exists(self, id_: int) -> bool:
         pass
-    
+
     @abstractmethod
-    def get_left_ids(self, relationship: RelationshipInfo, right_id: int) -> Sequence[int]:
+    def get_left_ids(
+        self, relationship: RelationshipInfo, right_id: int
+    ) -> Sequence[int]:
         pass
 
     @abstractmethod
-    def get_right_ids(self, relationship: RelationshipInfo, left_id: int) -> Sequence[int]:
+    def get_right_ids(
+        self, relationship: RelationshipInfo, left_id: int
+    ) -> Sequence[int]:
         pass

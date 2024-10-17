@@ -1,13 +1,8 @@
 from typing import List, Sequence, Type
 
-from qleany.common.direct_access.common.database.interfaces.i_db_connection import IDbConnection
-from qleany.common.entities.entity_enums import (
-    FieldType,
-    RelationshipCardinality,
-    RelationshipDirection,
-    RelationshipType,
+from qleany.common.direct_access.common.database.interfaces.i_db_connection import (
+    IDbConnection,
 )
-from qleany.common.entities.i_entity import IEntity
 from qleany.common.direct_access.common.database.many_to_many_unordered_associator import (
     ManyToManyUnorderedAssociator,
 )
@@ -20,10 +15,16 @@ from qleany.common.direct_access.common.database.one_to_many_unordered_associato
 from qleany.common.direct_access.common.database.one_to_one_associator import (
     OneToOneAssociator,
 )
+from qleany.common.entities.entity_enums import (
+    FieldType,
+    RelationshipCardinality,
+    RelationshipDirection,
+    RelationshipType,
+)
+from qleany.common.entities.i_entity import IEntity
 
 
 class DbTableCreator:
-
     def __init__(self, db_connection: IDbConnection):
         self._db_connection = db_connection
         self._entity_sqls: List[str] = []
@@ -35,7 +36,6 @@ class DbTableCreator:
             self._add_junction_tables_sql(entity_class)
 
     def _add_entity_table_sql(self, entity_class: Type[IEntity]):
-
         schema = entity_class._schema()
         table_name = schema.entity_name
         fields_sql = []
@@ -79,16 +79,42 @@ class DbTableCreator:
             if relationship.relationship_direction == RelationshipDirection.Backward:
                 junction_sql: str = ""
                 if relationship.relationship_cardinality == RelationshipCardinality.One:
-                    junction_sql = OneToOneAssociator(relationship, connection).get_table_creation_sql()
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.OneToMany:
-                    junction_sql = OneToManyOrderedAssociator(relationship, connection).get_table_creation_sql()
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.OneToMany:
-                    junction_sql = OneToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyOrdered and relationship.relationship_type == RelationshipType.ManyToMany:
-                    raise ValueError("Many to Many Ordered relationships are not supported")
-                elif relationship.relationship_cardinality == RelationshipCardinality.ManyUnordered and relationship.relationship_type == RelationshipType.ManyToMany:
-                    junction_sql = ManyToManyUnorderedAssociator(relationship, connection).get_table_creation_sql()
-                
+                    junction_sql = OneToOneAssociator(
+                        relationship, connection
+                    ).get_table_creation_sql()
+                elif (
+                    relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyOrdered
+                    and relationship.relationship_type == RelationshipType.OneToMany
+                ):
+                    junction_sql = OneToManyOrderedAssociator(
+                        relationship, connection
+                    ).get_table_creation_sql()
+                elif (
+                    relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyUnordered
+                    and relationship.relationship_type == RelationshipType.OneToMany
+                ):
+                    junction_sql = OneToManyUnorderedAssociator(
+                        relationship, connection
+                    ).get_table_creation_sql()
+                elif (
+                    relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyOrdered
+                    and relationship.relationship_type == RelationshipType.ManyToMany
+                ):
+                    raise ValueError(
+                        "Many to Many Ordered relationships are not supported"
+                    )
+                elif (
+                    relationship.relationship_cardinality
+                    == RelationshipCardinality.ManyUnordered
+                    and relationship.relationship_type == RelationshipType.ManyToMany
+                ):
+                    junction_sql = ManyToManyUnorderedAssociator(
+                        relationship, connection
+                    ).get_table_creation_sql()
+
                 if junction_sql:
                     self._junction_sqls.append(junction_sql)
 

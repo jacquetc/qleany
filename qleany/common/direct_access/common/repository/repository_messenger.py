@@ -1,7 +1,7 @@
-from datetime import datetime
-from typing import Callable, Tuple,Sequence, Any
 from abc import ABC, abstractmethod
-    
+from datetime import datetime
+from typing import Callable
+
 
 class MessageDTO:
     def __init__(self, source: str, message: str, data: dict):
@@ -15,7 +15,6 @@ class MessageDTO:
 
 
 class IMessenger(ABC):
-    
     @abstractmethod
     def notify(self, source: str, message: str, data: dict):
         pass
@@ -36,6 +35,7 @@ class IMessenger(ABC):
     def remove_listeners_by_owner(self, owner: object):
         pass
 
+
 class Messenger(IMessenger):
     def __init__(self):
         self._listeners = []
@@ -54,7 +54,9 @@ class Messenger(IMessenger):
             self._listeners.append((owner, listener))
 
     def unsubscribe(self, listener: Callable):
-        self._listeners = [(owner, lst) for owner, lst in self._listeners if lst != listener]
+        self._listeners = [
+            (owner, lst) for owner, lst in self._listeners if lst != listener
+        ]
 
     def remove_listeners_by_owner(self, owner: object):
         self._listeners = [(own, lst) for own, lst in self._listeners if own != owner]
