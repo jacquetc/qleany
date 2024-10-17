@@ -1,0 +1,15 @@
+[package]
+name = "common_persistence"
+version = "0.0.0"
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror = "1.0"
+direct_access = { path = "../direct_access"}
+common_entities = { path = "../common_entities"}
+
+[lints]
+workspace = true

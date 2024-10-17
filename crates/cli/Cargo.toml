@@ -1,0 +1,11 @@
+
+[package]
+name = "qleany-cli"
+version = "0.0.0"
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }

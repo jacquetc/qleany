@@ -180,3 +180,8 @@ build-dir/
 #vcpkg
 .vcpkg/
 .vcpkg_installed/
+
+# Added by cargo
+
+/target
+out/

@@ -1,0 +1,13 @@
+[workspace]
+
+members = ["crates/*"]
+
+resolver = "2"
+
+[workspace.package]
+homepage = "https://github.com/jacquetc/qleany"
+repository = "https://github.com/jacquetc/qleany"
+license = "MPL-2.0"
+edition = "2021"
+
+[workspace.lints.rust]

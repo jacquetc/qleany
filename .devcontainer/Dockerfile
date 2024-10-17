@@ -6,6 +6,7 @@ RUN dnf install -y qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtsvg-devel qcor
 RUN dnf install -y kf6-kirigami-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-ki18n-devel kf6-qqc2-desktop-style
 RUN dnf install -y python3-poetry python3-pip 
 RUN dnf install -y git
+RUN dnf install -y rust cargo clippy rustfmt rust-src
 
 # ARG REINSTALL_CMAKE_VERSION_FROM_SOURCE="3.22.2"
 

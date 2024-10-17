@@ -15,7 +15,11 @@
 				"twxs.cmake",
 				"ms-vscode.cmake-tools",
 				"vadimcn.vscode-lldb",
-				"hbenl.vscode-test-explorer"
+				"hbenl.vscode-test-explorer",
+				"tamasfe.even-better-toml",
+				"rust-lang.rust-analyzer",
+				"Swellaby.vscode-rust-test-adapter",
+				"fill-labs.dependi"
 			]
 		}
 	}
