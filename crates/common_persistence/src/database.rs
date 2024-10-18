@@ -1,20 +1,19 @@
 pub mod sqlite_database_access;
-
+pub mod sqlite_db_context;
+pub mod sqlite_db_connection;
 use direct_access::RepositoryError;
 use thiserror::Error;
 
-
-pub trait DbContextTrait : Send + Sync + 'static  {
-    fn get_connection(&self) -> &str;
+pub trait DbContextTrait{
+    fn get_connection(&self) -> Result<rusqlite::Connection, rusqlite::Error>;
 }
 
 pub trait DatabaseAccessTrait<T> {
     fn create(&self, entities: &[T]) -> Result<Vec<T>, DatabaseError>;
     fn get(&self, id: &[i64]) -> Result<Vec<T>, DatabaseError>;
     fn update(&self, entities: &[T]) -> Result<Vec<T>, DatabaseError>;
-    fn remove(&self, id: &[i64])-> Result<(), DatabaseError>;
+    fn remove(&self, id: &[i64]) -> Result<(), DatabaseError>;
 }
-
 
 #[derive(Error, Debug)]
 pub enum DatabaseError {
@@ -23,7 +22,7 @@ pub enum DatabaseError {
     #[error("Entity already exists")]
     AlreadyExists,
     #[error("Database error")]
-    DatabaseError()
+    DatabaseError(),
 }
 
 impl From<DatabaseError> for RepositoryError {

@@ -1,23 +1,24 @@
-use common_persistence::database::DbContextTrait;
+use std::rc::Rc;
+
+use direct_access::DbConnectionTrait;
 use direct_access::{root::RootRepositoryTrait, RepositoryFactoryTrait};
 use crate::root::root_database_access::RootDatabaseAccess;
 use crate::root::root_repository::RootRepository;
 
 pub struct RepositoryFactory {
-    pub db_context: Box<dyn DbContextTrait>,
 }
 
 impl RepositoryFactory {
-    pub fn new(db_context: Box<dyn DbContextTrait> ) -> RepositoryFactory {
+    pub fn new() -> RepositoryFactory {
         RepositoryFactory {
-            db_context,
+            
         }
     }
 }
 
 impl RepositoryFactoryTrait for RepositoryFactory {
-    fn get_root_repository(&self) -> Box<dyn RootRepositoryTrait> {
-        let database = Box::new(RootDatabaseAccess::new(self.db_context));
+    fn get_root_repository(&self, db_connection: Rc<dyn DbConnectionTrait>) -> Box<dyn RootRepositoryTrait> {
+        let database = Box::new(RootDatabaseAccess::new(db_connection));
         Box::new(RootRepository::new(database))
     }
 }
