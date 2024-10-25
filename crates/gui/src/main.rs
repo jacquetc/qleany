@@ -1,18 +1,22 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+// Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use std::error::Error;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+slint::include_modules!();
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), Box<dyn Error>> {
+    let ui = AppWindow::new()?;
+
+    ui.on_request_increase_value({
+        let ui_handle = ui.as_weak();
+        move || {
+            let ui = ui_handle.unwrap();
+            ui.set_counter(ui.get_counter() + 1);
+        }
+    });
+
+    ui.run()?;
+
+    Ok(())
 }

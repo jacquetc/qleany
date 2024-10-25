@@ -8,3 +8,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+slint = "1.8.0"
+
+[build-dependencies]
+slint-build = "1.8.0"
