@@ -1,6 +1,7 @@
+use crate::direct_access::DbConnectionTrait;
 use tempfile::NamedTempFile;
 use crate::database::DbContextTrait;
-use rusqlite::Connection;
+use super::{sqlite_db_connection::SqliteDbConnection, DatabaseError};
 
 #[derive(Debug)]    
 pub struct SqliteDbContext {
@@ -15,7 +16,8 @@ impl SqliteDbContext {
     }
 }
 impl DbContextTrait for SqliteDbContext {
-    fn get_connection(&self) -> Result<rusqlite::Connection, rusqlite::Error> {
-        Connection::open(self.temp_database.path())
+    fn create_connection(&self) -> Result<impl DbConnectionTrait, DatabaseError> {
+
+        Ok(SqliteDbConnection::new(self.temp_database.path()))
     }
 }

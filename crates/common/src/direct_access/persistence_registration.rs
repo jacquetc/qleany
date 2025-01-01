@@ -1,5 +1,5 @@
-use crate::repository_factory::RepositoryFactory;
-use common_persistence::database::sqlite_db_context::SqliteDbContext;
+use crate::direct_access::repository_factory::RepositoryFactory;
+use crate::database::sqlite_db_context::SqliteDbContext;
 
 pub fn register() -> RepositoryFactory {
     let db_context = Box::new(SqliteDbContext::new());

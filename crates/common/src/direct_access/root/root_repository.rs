@@ -1,7 +1,7 @@
 
 use common_entities::root::Root;
-use common_persistence::database::DatabaseAccessTrait;
-use direct_access::{root::RootRepositoryTrait, RepositoryError, RepositoryTrait};
+use crate::database::DatabaseAccessTrait;
+use crate::direct_access::{root::RootRepositoryTrait, RepositoryError, RepositoryTrait};
 
 
 pub(crate) trait RootDatabaseAccessTrait : DatabaseAccessTrait<Root> {}
