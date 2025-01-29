@@ -83,7 +83,7 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
     }
     
     
-    fn set_relationships(&mut self, field: &common::direct_access::entity::EntityRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
+    fn set_relationships(&self, field: &common::direct_access::entity::EntityRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
         let mut entity_repo = repository_factory::write::create_entity_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );

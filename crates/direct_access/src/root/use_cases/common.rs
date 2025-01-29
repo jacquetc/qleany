@@ -9,5 +9,5 @@ pub trait RootUnitOfWorkTrait : CommandUnitOfWork {
     fn update_root(&self, root: &Root) -> Result<Root>;
     fn delete_root(&self, id: &EntityId) -> Result<()>;
     fn get_relationships_of(&self, field: &RootRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>;
-    fn set_relationships(&mut self, field: &RootRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>;
+    fn set_relationships(&self, field: &RootRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>;
 }

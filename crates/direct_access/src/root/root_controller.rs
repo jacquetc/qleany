@@ -12,25 +12,25 @@ use common::{database::db_context::DbContext, entities::EntityId};
 
 pub fn create(db_context: &DbContext, root: &CreateRootDto) -> Result<RootDto> {
     let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = CreateRootUseCase::new(&mut uow);
+    let mut use_case = CreateRootUseCase::new(Box::new(uow));
     use_case.execute(root.clone())
 }
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<RootDto>> {
     let uow = RootUnitOfWorkRO::new(&db_context);
-    let use_case = GetRootUseCase::new(&uow);
+    let use_case = GetRootUseCase::new(Box::new(uow));
     use_case.execute(id)
 }
 
 pub fn update(db_context: &DbContext, root: &RootDto) -> Result<RootDto> {
     let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = UpdateRootUseCase::new(&mut uow);
+    let mut use_case = UpdateRootUseCase::new(Box::new(uow));
     use_case.execute(root)
 }
 
 pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
     // delete root
     let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = RemoveRootUseCase::new(&mut uow);
+    let mut use_case = RemoveRootUseCase::new(Box::new(uow));
     use_case.execute(id)?;
 
     Ok(())

@@ -7,18 +7,21 @@ pub trait UseCaseUnitOfWorkTraitRO : QueryUnitOfWork {
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>>;
 }
 
-pub struct GetUseCaseUseCase<'a> {
-    uow: &'a dyn UseCaseUnitOfWorkTraitRO,
+pub struct GetUseCaseUseCase {
+    uow: Box<dyn UseCaseUnitOfWorkTraitRO>,
 }
 
-impl<'a> GetUseCaseUseCase<'a> {
-    pub fn new(uow: &'a dyn UseCaseUnitOfWorkTraitRO) -> Self {
+impl GetUseCaseUseCase {
+    pub fn new(uow: Box<dyn UseCaseUnitOfWorkTraitRO>) -> Self {
         GetUseCaseUseCase { uow }
     }
 
     pub fn execute(&self, id: &EntityId) -> Result<Option<UseCaseDto>> {
         self.uow.begin_transaction()?;
-        let use_case_option = self.uow.get_use_case(&id)?;
+        let use_case_option = self.uow.get_use_case(&id).map_err(|e| {
+            self.uow.end_transaction().unwrap_or_else(|_| ());
+            e
+        })?;
         self.uow.end_transaction()?;
 
         Ok(use_case_option.map(|use_case| use_case.into()))

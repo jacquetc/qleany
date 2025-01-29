@@ -7,18 +7,21 @@ pub trait RootUnitOfWorkTraitRO : QueryUnitOfWork {
     fn get_root(&self, id: &EntityId) -> Result<Option<Root>>;
 }
 
-pub struct GetRootUseCase<'a> {
-    uow: &'a dyn RootUnitOfWorkTraitRO,
+pub struct GetRootUseCase {
+    uow: Box<dyn RootUnitOfWorkTraitRO>,
 }
 
-impl<'a> GetRootUseCase<'a> {
-    pub fn new(uow: &'a dyn RootUnitOfWorkTraitRO) -> Self {
+impl GetRootUseCase {
+    pub fn new(uow: Box<dyn RootUnitOfWorkTraitRO>) -> Self {
         GetRootUseCase { uow }
     }
 
     pub fn execute(&self, id: &EntityId) -> Result<Option<RootDto>> {
         self.uow.begin_transaction()?;
-        let root_option = self.uow.get_root(&id)?;
+        let root_option = self.uow.get_root(&id).map_err(|e| {
+            self.uow.end_transaction().unwrap_or_else(|_| ());
+            e
+        })?;
         self.uow.end_transaction()?;
 
         Ok(root_option.map(|root| root.into()))

@@ -82,7 +82,7 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         Ok(value)
     }
     
-    fn set_relationships(&mut self, field: &common::direct_access::root::RootRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
+    fn set_relationships(&self, field: &common::direct_access::root::RootRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
         let mut root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );

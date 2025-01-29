@@ -2,7 +2,7 @@ mod model_structs;
 mod relationship_generator;
 mod validation_schema;
 
-use anyhow::{Result};
+use anyhow::Result;
 use common::{
     database::CommandUnitOfWork,
     entities::{Entity, EntityId, Feature, Field, FieldType, Global, Root, UseCase},

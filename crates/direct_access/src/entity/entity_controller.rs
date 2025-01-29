@@ -14,18 +14,18 @@ use super::{
 
 pub fn create(db_context: &DbContext, entity: &CreateEntityDto) -> Result<EntityDto> {
     let mut uow = EntityUnitOfWork::new(&db_context);
-    let mut use_case = CreateEntityUseCase::new(&mut uow);
+    let mut use_case = CreateEntityUseCase::new(Box::new(uow));
     use_case.execute(entity.clone())
 }
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<EntityDto>> {
     let uow = EntityUnitOfWorkRO::new(&db_context);
-    let use_case = GetEntityUseCase::new(&uow);
+    let use_case = GetEntityUseCase::new(Box::new(uow));
     use_case.execute(id)
 }
 
 pub fn update(db_context: &DbContext, entity: &EntityDto) -> Result<EntityDto> {
     let mut uow = EntityUnitOfWork::new(&db_context);
-    let mut use_case = UpdateEntityUseCase::new(&mut uow);
+    let mut use_case = UpdateEntityUseCase::new(Box::new(uow));
     use_case.execute(entity)
 }
 
@@ -33,7 +33,7 @@ pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
 
     // delete entity
     let mut uow = EntityUnitOfWork::new(&db_context);
-    let mut use_case = RemoveEntityUseCase::new(&mut uow);
+    let mut use_case = RemoveEntityUseCase::new(Box::new(uow));
     use_case.execute(id)?;
 
     Ok(())

@@ -9,5 +9,5 @@ pub trait UseCaseUnitOfWorkTrait : CommandUnitOfWork {
     fn update_use_case(&self, use_case: &UseCase) -> Result<UseCase>;
     fn delete_use_case(&self, id: &EntityId) -> Result<()>;
     fn get_relationships_of(&self, field: &UseCaseRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>;
-    fn set_relationships(&mut self, field: &UseCaseRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>;
+    fn set_relationships(&self, field: &UseCaseRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>;
 }

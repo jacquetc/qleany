@@ -82,7 +82,7 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         Ok(value)
     }
     
-    fn set_relationships(&mut self, field: &common::direct_access::use_case::UseCaseRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
+    fn set_relationships(&self, field: &common::direct_access::use_case::UseCaseRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );

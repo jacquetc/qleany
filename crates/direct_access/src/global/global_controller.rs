@@ -12,24 +12,24 @@ use super::{
 
 pub fn create(db_context: &DbContext, global: &CreateGlobalDto) -> Result<GlobalDto> {
     let mut uow = GlobalUnitOfWork::new(&db_context);
-    let mut global_uc = CreateGlobalUseCase::new(&mut uow);
+    let mut global_uc = CreateGlobalUseCase::new(Box::new(uow));
     global_uc.execute(global.clone())
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<GlobalDto>> {
     let uow = GlobalUnitOfWorkRO::new(&db_context);
-    let global = GetGlobalUseCase::new(&uow);
+    let global = GetGlobalUseCase::new(Box::new(uow));
     global.execute(id)
 }
 
 pub fn update(db_context: &DbContext, global: &GlobalDto) -> Result<GlobalDto> {
     let mut uow = GlobalUnitOfWork::new(&db_context);
-    let mut global_uc = UpdateGlobalUseCase::new(&mut uow);
+    let mut global_uc = UpdateGlobalUseCase::new(Box::new(uow));
     global_uc.execute(global)
 }
 
 pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
     let mut uow = GlobalUnitOfWork::new(&db_context);
-    let mut global_uc = RemoveGlobalUseCase::new(&mut uow);
+    let mut global_uc = RemoveGlobalUseCase::new(Box::new(uow));
     global_uc.execute(id)
 }
