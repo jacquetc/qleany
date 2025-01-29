@@ -1,39 +1,69 @@
+use crate::entities::{EntityId, Root};
 
-use common_entities::root::Root;
-use crate::database::DatabaseAccessTrait;
-use crate::direct_access::{root::RootRepositoryTrait, RepositoryError, RepositoryTrait};
+use super::root_table::{RootRelationshipField, RootTable, RootTableRO};
+use redb::Error;
 
-
-pub(crate) trait RootDatabaseAccessTrait : DatabaseAccessTrait<Root> {}
-
-
-pub(crate) struct RootRepository {
-    database: Box<dyn RootDatabaseAccessTrait>,
+pub struct RootRepository<'a> {
+    redb_table: Box<dyn RootTable + 'a>,
 }
 
-impl RootRepository {
-    pub fn new(database: Box<dyn RootDatabaseAccessTrait>) -> RootRepository {
-        RootRepository {
-            database,
-        }
+impl<'a> RootRepository<'a> {
+    pub fn new(redb_table: Box<dyn RootTable + 'a>) -> Self {
+        RootRepository { redb_table }
     }
+
+    pub fn create(&mut self, root: &Root) -> Result<Root, Error> {
+        self.redb_table.create(root)
+    }
+
+    pub fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
+        self.redb_table.get(id)
+    }
+
+    pub fn update(&mut self, root: &Root) -> Result<Root, Error> {
+        self.redb_table.update(root)
+    }
+
+    pub fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
+        self.redb_table.delete(id)
+    }
+
+    pub fn get_relationships_of(
+        &self,
+        field: &RootRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        self.redb_table.get_relationships_of(field, right_ids)
+    }
+
+    pub fn delete_all_relationships_with(
+        &mut self,
+        field: &RootRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error> {
+        self.redb_table.delete_all_relationships_with(field, right_ids)
+    }
+
+    pub fn set_relationships(
+        &mut self,
+        field: &RootRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error> {
+        self.redb_table.set_relationships(field, relationships)
+    }
+
 }
 
-impl RootRepositoryTrait for RootRepository {}
-
-impl RepositoryTrait<Root> for RootRepository {
-    fn get(&self, ids: &[i64]) -> Result<Vec<Root>, RepositoryError> {
-        self.database.get(ids).map_err(|e| e.into())
-    }
-    fn update(&self, entities: &[Root]) -> Result<Vec<Root>, RepositoryError> {
-        self.database.update(entities).map_err(|e| e.into())
-    }
-    fn remove(&self, ids: &[i64]) -> Result<(), RepositoryError> {
-        self.database.remove(ids).map_err(|e| e.into())
-    }
-    fn create(&self, entities: &[Root]) -> Result<Vec<Root>, RepositoryError> {
-        self.database.create(entities).map_err(|e| e.into())
-    }
-
+pub struct RootRepositoryRO<'a> {
+    redb_table: Box<dyn RootTableRO + 'a>,
 }
 
+impl<'a> RootRepositoryRO<'a> {
+    pub fn new(redb_table: Box<dyn RootTableRO + 'a>) -> Self {
+        RootRepositoryRO { redb_table }
+    }
+
+    pub fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
+        self.redb_table.get(id)
+    }
+}

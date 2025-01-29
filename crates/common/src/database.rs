@@ -1,42 +1,74 @@
-pub mod sqlite_db_context;
-pub mod sqlite_db_connection;
-use std::any::Any;
+pub mod db_context;
+pub mod transactions;
+pub(crate) mod db_helpers;
+use anyhow::Result;
 
-use crate::direct_access::{DbConnectionTrait, RepositoryError};
-use sqlite_db_connection::SqliteDbConnection;
-use thiserror::Error;
-
-pub trait DbContextTrait{
-    fn create_connection(&self) -> Result<impl DbConnectionTrait, DatabaseError>;
+pub trait CommandUnitOfWork {
+    fn begin_transaction(&mut self) -> Result<()>;
+    fn commit(&mut self) -> Result<()>;
+    fn rollback(&mut self) -> Result<()>;
 }
 
-
-pub trait DatabaseAccessTrait<T> : Any {
-    fn create(&self, entities: &[T]) -> Result<Vec<T>, DatabaseError>;
-    fn get(&self, id: &[i64]) -> Result<Vec<T>, DatabaseError>;
-    fn update(&self, entities: &[T]) -> Result<Vec<T>, DatabaseError>;
-    fn remove(&self, id: &[i64]) -> Result<(), DatabaseError>;
+pub trait QueryUnitOfWork {
+    fn begin_transaction(&self) -> Result<()>;
+    fn end_transaction(&self) -> Result<()>;
 }
 
-#[derive(Error, Debug)]
-pub enum DatabaseError {
-    #[error("Entity not found")]
-    NotFound,
-    #[error("Entity already exists")]
-    AlreadyExists,
-    #[error("Database error")]
-    DatabaseError(#[from] rusqlite::Error),
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
+use bincode::{deserialize, serialize};
+use redb::Key;
+use redb::{TypeName, Value};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::any::type_name;
+use std::cmp::Ordering;
+use std::fmt::Debug;
+
+/// Wrapper type to handle keys and values using bincode serialization
+#[derive(Debug)]
+pub struct Bincode<T>(pub T);
+
+impl<T> Value for Bincode<T>
+where
+    T: Debug + Serialize + for<'a> Deserialize<'a>,
+{
+    type SelfType<'a>
+        = T
+    where
+        Self: 'a;
+
+    type AsBytes<'a>
+        = Vec<u8>
+    where
+        Self: 'a;
+
+    fn fixed_width() -> Option<usize> {
+        None
+    }
+
+    fn from_bytes<'a>(data: &'a [u8]) -> Self::SelfType<'a>
+    where
+        Self: 'a,
+    {
+        deserialize(data).unwrap()
+    }
+
+    fn as_bytes<'a, 'b: 'a>(value: &'a Self::SelfType<'b>) -> Self::AsBytes<'a>
+    where
+        Self: 'a,
+        Self: 'b,
+    {
+        serialize(value).unwrap()
+    }
+
+    fn type_name() -> TypeName {
+        TypeName::new(&format!("Bincode<{}>", type_name::<T>()))
+    }
 }
 
-impl From<DatabaseError> for RepositoryError {
-    fn from(error: DatabaseError) -> Self {
-        match error {
-            DatabaseError::NotFound => RepositoryError::NotFound,
-            DatabaseError::AlreadyExists => RepositoryError::AlreadyExists,
-            DatabaseError::DatabaseError(e) => RepositoryError::DatabaseError(e.to_string()),
-            DatabaseError::Other(_) => todo!(),
-        }
+impl<T> Key for Bincode<T>
+where
+    T: Debug + Serialize + DeserializeOwned + Ord,
+{
+    fn compare(data1: &[u8], data2: &[u8]) -> Ordering {
+        Self::from_bytes(data1).cmp(&Self::from_bytes(data2))
     }
 }

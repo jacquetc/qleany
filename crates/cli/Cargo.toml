@@ -8,4 +8,5 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
+anyhow = { workspace = true }

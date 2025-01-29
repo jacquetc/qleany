@@ -11,180 +11,179 @@ global:
   prefix_path: qleany
 
 entities:
-  list:
-    - name: EntityBase
-      only_for_heritage: true
-      fields:
-        - name: id
-          type: int
+  - name: EntityBase
+    only_for_heritage: true
+    fields:
+      - name: id
+        type: int
 
-    - name: Root
-      parent: EntityBase
-      fields:
-        - name: global
-          type: Global
-          is_list: false
-          ordered: false
-          strong: true
-          list_model: false
-        - name: entities
-          type: Entity
-          is_list: false
-          ordered: false
-          strong: true
-          list_model: false
-        - name: features
-          type: Feature
-          is_list: false
-          ordered: false
-          strong: true
-          list_model: false
-          
-    - name: Entity
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: fields
-          type: Field
-          is_list: true
-          ordered: true
-          strong: true
-          list_model: true
-          list_model_displayed_field: name
-        - name: relationships
-          type: Relationship
-          is_list: true
-          ordered: false
-          strong: true
-          list_model: false
+  - name: Root
+    parent: EntityBase
+    fields:
+      - name: global
+        type: Global
+        is_list: false
+        ordered: false
+        strong: true
+        list_model: false
+      - name: entities
+        type: Entity
+        is_list: false
+        ordered: false
+        strong: true
+        list_model: false
+      - name: features
+        type: Feature
+        is_list: false
+        ordered: false
+        strong: true
+        list_model: false
+        
+  - name: Entity
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: fields
+        type: Field
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: relationships
+        type: Relationship
+        is_list: true
+        ordered: false
+        strong: true
+        list_model: false
 
-    - name: Field
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: type
-          type: string
-        - name: entity
-          type: Entity
-          strong: false
-          is_nullable: true
-        - name: is_nullable
-          type: bool
-        - name: is_primary_key
-          type: bool
-        - name: is_list
-          type: bool
-        - name: single
-          type: bool
-        - name: strong
-          type: bool
-        - name: ordered
-          type: bool
-        - name: list_model
-          type: bool
-        - name: list_model_displayed_field
-          type: string
+  - name: Field
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: type
+        type: string
+      - name: entity
+        type: Entity
+        strong: false
+        is_nullable: true
+      - name: is_nullable
+        type: bool
+      - name: is_primary_key
+        type: bool
+      - name: is_list
+        type: bool
+      - name: single
+        type: bool
+      - name: strong
+        type: bool
+      - name: ordered
+        type: bool
+      - name: list_model
+        type: bool
+      - name: list_model_displayed_field
+        type: string
 
-    - name: Feature
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: use_cases
-          type: UseCase
-          is_list: true
-          strong: true
-          list_model: true
-          list_model_displayed_field: name
-          ordered: true
+  - name: Feature
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: use_cases
+        type: UseCase
+        is_list: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+        ordered: true
 
-    - name: UseCase
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: validator
-          type: bool
-        - name: entities
-          type: Entity
-          is_list: true
-          list_model: true
-          list_model_displayed_field: name
-          ordered: true
-        - name: undoable
-          type: bool
-        - name: dto_in
-          type: Dto
-          strong: true
-          is_nullable: true
-        - name: dto_out
-          type: Dto
-          strong: true
-          is_nullable: true
+  - name: UseCase
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: validator
+        type: bool
+      - name: entities
+        type: Entity
+        is_list: true
+        list_model: true
+        list_model_displayed_field: name
+        ordered: true
+      - name: undoable
+        type: bool
+      - name: dto_in
+        type: Dto
+        strong: true
+        is_nullable: true
+      - name: dto_out
+        type: Dto
+        strong: true
+        is_nullable: true
 
-    - name: Dto
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: fields
-          type: DtoField
-          is_list: true
-          ordered: true
-          strong: true
-          list_model: true
-          list_model_displayed_field: name
+  - name: Dto
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: fields
+        type: DtoField
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
 
-    - name: DtoField
-      parent: EntityBase
-      fields:
-        - name: name
-          type: string
-        - name: type
-          type: string
-        - name: is_nullable
-          type: bool
-        - name: is_list
-          type: bool
+  - name: DtoField
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: type
+        type: string
+      - name: is_nullable
+        type: bool
+      - name: is_list
+        type: bool
 
-    - name: Global
-      parent: EntityBase
-      fields:
-        - name: language
-          type: string
-        - name: application_name
-          type: string
-        - name: organisation_name
-          type: string
-        - name: organisation_domain
-          type: string
-        - name: prefix_path
-          type: string
+  - name: Global
+    parent: EntityBase
+    fields:
+      - name: language
+        type: string
+      - name: application_name
+        type: string
+      - name: organisation_name
+        type: string
+      - name: organisation_domain
+        type: string
+      - name: prefix_path
+        type: string
 
-    - name: Relationship
-      parent: EntityBase
-      fields:
-        - name: left_entity_name
-          type: string
-        - name: right_entity_name
-          type: string
-        - name: field_name
-          type: string
-        - name: relationship_type
-          type: string
-        - name: strength
-          type: string
-        - name: direction
-          type: string
-        - name: cardinality
-          type: string
+  - name: Relationship
+    parent: EntityBase
+    fields:
+      - name: left_entity_name
+        type: string
+      - name: right_entity_name
+        type: string
+      - name: field_name
+        type: string
+      - name: relationship_type
+        type: string
+      - name: strength
+        type: string
+      - name: direction
+        type: string
+      - name: cardinality
+        type: string
 
 features:
-  manifest_handling_listing: 
+  - name: manifest_handling_listing 
     use_cases:
-      load:
+      - name: load
         validator: true
         entities:
           - Root
@@ -202,7 +201,7 @@ features:
           fields:
             - name: manifest_path
               type: string
-      save:
+      - name: save
         validator: true
         entities:
           - Root
@@ -220,9 +219,9 @@ features:
           fields:
             - name: manifest_path
               type: string
-  python_file_listing: 
+  - name: python_file_listing
     use_cases:
-      list_direct_access_files:
+      - name: list_direct_access_files
         validator: true
         entities:
           - Root
@@ -244,7 +243,7 @@ features:
               type: string
               is_list: true
 
-      list_entity_files:
+      - name: list_entity_files
         validator: true
         entities:
           - Root
@@ -264,7 +263,7 @@ features:
               type: string
               is_list: true
         
-      list_feature_files:
+      - name: list_feature_files
         validator: true
         entities:
           - Root
@@ -288,7 +287,7 @@ features:
               type: string
               is_list: true
  
-      list_persistence_files:
+      - name: list_persistence_files
         validator: true
         undoable: false
         dto_in: 
@@ -305,7 +304,7 @@ features:
               type: string
               is_list: true
       
-      list_common_base_files:
+      - name: list_common_base_files
         validator: true
         undoable: false
         dto_in: 
@@ -322,7 +321,7 @@ features:
               type: string
               is_list: true
 
-      list_base_files:
+      - name: list_base_files
         validator: true
         undoable: false
         dto_in: 
@@ -339,7 +338,7 @@ features:
               type: string
               is_list: true
       
-      list_ui_files:
+      - name: list_ui_files
         validator: true
         undoable: false
         dto_in: 

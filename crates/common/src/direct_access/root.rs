@@ -1,8 +1,4 @@
-pub(crate) mod root_database_access;
-pub(crate) mod root_repository;
+pub mod root_repository;
+pub(super) mod root_table;
 
-
-use common_entities::root::Root;
-use crate::direct_access::RepositoryTrait;
-
-pub trait RootRepositoryTrait : RepositoryTrait<Root> {}
+pub use root_table::RootRelationshipField;
