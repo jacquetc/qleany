@@ -1,23 +1,21 @@
-use anyhow::{Ok, Result};
+use super::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
 use crate::global::dtos::GlobalDto;
-use super::common::GlobalUnitOfWorkTrait;
+use anyhow::{Ok, Result};
 
 pub struct UpdateGlobalUseCase {
-    uow: Box<dyn GlobalUnitOfWorkTrait>,
+    uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>,
 }
 
 impl UpdateGlobalUseCase {
-    pub fn new(uow: Box<dyn GlobalUnitOfWorkTrait>) -> Self {
-        UpdateGlobalUseCase { uow }
+    pub fn new(uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>) -> Self {
+        UpdateGlobalUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: &GlobalDto) -> Result<GlobalDto> {
-        self.uow.begin_transaction()?;
-        let global = self.uow.update_global(&dto.into()).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let global = uow.update_global(&dto.into())?;
+        uow.commit()?;
         Ok(global.into())
     }
 }

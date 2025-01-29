@@ -3,6 +3,10 @@ use common::direct_access::use_case::UseCaseRelationshipField;
 use common::entities::{EntityId, UseCase};
 use anyhow::Result;
 
+pub trait UseCaseUnitOfWorkFactoryTrait {
+    fn create(&self) -> Box<dyn UseCaseUnitOfWorkTrait>;
+}
+
 pub trait UseCaseUnitOfWorkTrait : CommandUnitOfWork {
     fn create_use_case(&self, use_case: &UseCase) -> Result<UseCase>;
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>>;

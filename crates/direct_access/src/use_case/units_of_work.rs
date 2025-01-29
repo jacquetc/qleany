@@ -2,13 +2,14 @@ use std::cell::RefCell;
 
 use anyhow::{Ok, Result};
 
-use crate::use_case::use_cases::get_use_case_uc::UseCaseUnitOfWorkTraitRO;
+use crate::use_case::use_cases::get_use_case_uc::UseCaseUnitOfWorkROTrait;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, UseCase};
 
-use super::use_cases::common::UseCaseUnitOfWorkTrait;
+use super::use_cases::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
+use super::use_cases::get_use_case_uc::UseCaseUnitOfWorkROFactoryTrait;
 
 pub struct UseCaseUnitOfWork {
     context: DbContext,
@@ -91,6 +92,24 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
     }
 }
 
+pub struct UseCaseUnitOfWorkFactory {
+    context: DbContext,
+}
+
+impl UseCaseUnitOfWorkFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        UseCaseUnitOfWorkFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl UseCaseUnitOfWorkFactoryTrait for UseCaseUnitOfWorkFactory{
+    fn create(&self) -> Box<dyn UseCaseUnitOfWorkTrait> {
+        Box::new(UseCaseUnitOfWork::new(&self.context))
+    }
+ }
+
 pub struct UseCaseUnitOfWorkRO {
     context: DbContext,
     transaction: RefCell<Option<Transaction>>,
@@ -118,7 +137,7 @@ impl QueryUnitOfWork for UseCaseUnitOfWorkRO {
     }
 }
 
-impl UseCaseUnitOfWorkTraitRO for UseCaseUnitOfWorkRO {
+impl UseCaseUnitOfWorkROTrait for UseCaseUnitOfWorkRO {
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
         let borrowed_transaction = self.transaction.borrow();
         let use_case_repo = repository_factory::read::create_use_case_repository(
@@ -130,3 +149,21 @@ impl UseCaseUnitOfWorkTraitRO for UseCaseUnitOfWorkRO {
         Ok(use_case)
     }
 }
+
+pub struct UseCaseUnitOfWorkROFactory {
+    context: DbContext,
+}
+
+impl UseCaseUnitOfWorkROFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        UseCaseUnitOfWorkROFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl UseCaseUnitOfWorkROFactoryTrait for UseCaseUnitOfWorkROFactory{
+    fn create(&self) -> Box<dyn UseCaseUnitOfWorkROTrait> {
+        Box::new(UseCaseUnitOfWorkRO::new(&self.context))
+    }
+ }

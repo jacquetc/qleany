@@ -1,6 +1,6 @@
 use super::{
     dtos::{CreateRootDto, RootDto},
-    units_of_work::{RootUnitOfWork, RootUnitOfWorkRO},
+    units_of_work::{RootUnitOfWorkFactory, RootUnitOfWorkROFactory},
     use_cases::{
         create_root_uc::CreateRootUseCase, get_root_uc::GetRootUseCase,
         remove_root_uc::RemoveRootUseCase, update_root_uc::UpdateRootUseCase,
@@ -11,26 +11,27 @@ use common::{database::db_context::DbContext, entities::EntityId};
 //use crate::entity::entity_controller;
 
 pub fn create(db_context: &DbContext, root: &CreateRootDto) -> Result<RootDto> {
-    let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = CreateRootUseCase::new(Box::new(uow));
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+    let mut use_case = CreateRootUseCase::new(Box::new(uow_factory));
     use_case.execute(root.clone())
 }
+
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<RootDto>> {
-    let uow = RootUnitOfWorkRO::new(&db_context);
-    let use_case = GetRootUseCase::new(Box::new(uow));
+    let uow_factory = RootUnitOfWorkROFactory::new(&db_context);
+    let use_case = GetRootUseCase::new(Box::new(uow_factory));
     use_case.execute(id)
 }
 
 pub fn update(db_context: &DbContext, root: &RootDto) -> Result<RootDto> {
-    let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = UpdateRootUseCase::new(Box::new(uow));
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+    let mut use_case = UpdateRootUseCase::new(Box::new(uow_factory));
     use_case.execute(root)
 }
 
 pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
     // delete root
-    let mut uow = RootUnitOfWork::new(&db_context);
-    let mut use_case = RemoveRootUseCase::new(Box::new(uow));
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+    let mut use_case = RemoveRootUseCase::new(Box::new(uow_factory));
     use_case.execute(id)?;
 
     Ok(())

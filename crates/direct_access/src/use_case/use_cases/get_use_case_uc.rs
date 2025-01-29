@@ -1,28 +1,33 @@
-use common::{database::QueryUnitOfWork, entities::{EntityId, UseCase}};
 use anyhow::Result;
+use common::{
+    database::QueryUnitOfWork,
+    entities::{EntityId, UseCase},
+};
 
 use crate::use_case::dtos::UseCaseDto;
 
-pub trait UseCaseUnitOfWorkTraitRO : QueryUnitOfWork {
+pub trait UseCaseUnitOfWorkROFactoryTrait {
+    fn create(&self) -> Box<dyn UseCaseUnitOfWorkROTrait>;
+}
+
+pub trait UseCaseUnitOfWorkROTrait: QueryUnitOfWork {
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>>;
 }
 
 pub struct GetUseCaseUseCase {
-    uow: Box<dyn UseCaseUnitOfWorkTraitRO>,
+    uow_factory: Box<dyn UseCaseUnitOfWorkROFactoryTrait>,
 }
 
 impl GetUseCaseUseCase {
-    pub fn new(uow: Box<dyn UseCaseUnitOfWorkTraitRO>) -> Self {
-        GetUseCaseUseCase { uow }
+    pub fn new(uow_factory: Box<dyn UseCaseUnitOfWorkROFactoryTrait>) -> Self {
+        GetUseCaseUseCase { uow_factory }
     }
 
     pub fn execute(&self, id: &EntityId) -> Result<Option<UseCaseDto>> {
-        self.uow.begin_transaction()?;
-        let use_case_option = self.uow.get_use_case(&id).map_err(|e| {
-            self.uow.end_transaction().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.end_transaction()?;
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let use_case_option = uow.get_use_case(&id)?;
+        uow.end_transaction()?;
 
         Ok(use_case_option.map(|use_case| use_case.into()))
     }

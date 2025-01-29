@@ -2,24 +2,22 @@ use anyhow::Result;
 
 use crate::entity::dtos::{CreateEntityDto, EntityDto};
 
-use super::common::EntityUnitOfWorkTrait;
+use super::common::EntityUnitOfWorkFactoryTrait;
 
 pub struct CreateEntityUseCase {
-    uow: Box<dyn EntityUnitOfWorkTrait>,
+    uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
 }
 
 impl CreateEntityUseCase {
-    pub fn new(uow: Box<dyn EntityUnitOfWorkTrait>) -> Self {
-        CreateEntityUseCase { uow }
+    pub fn new(uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>) -> Self {
+        CreateEntityUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: CreateEntityDto) -> Result<EntityDto> {
-        self.uow.begin_transaction()?;
-        let entity = self.uow.create_entity(&dto.into()).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let entity = uow.create_entity(&dto.into())?;
+        uow.commit()?;
         Ok(entity.into())
     }
 }

@@ -1,28 +1,34 @@
-use common::{database::QueryUnitOfWork, entities::{EntityId, Entity}};
 use anyhow::Result;
+use common::{
+    database::QueryUnitOfWork,
+    entities::{Entity, EntityId},
+};
 
 use crate::entity::dtos::EntityDto;
 
-pub trait EntityUnitOfWorkTraitRO : QueryUnitOfWork {
+pub trait EntityUnitOfWorkROTrait: QueryUnitOfWork {
     fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>>;
 }
 
+pub trait EntityUnitOfWorkROFactoryTrait {
+    fn create(&self) -> Box<dyn EntityUnitOfWorkROTrait>;
+}
+
 pub struct GetEntityUseCase {
-    uow: Box<dyn EntityUnitOfWorkTraitRO>,
+    uow_factory: Box<dyn EntityUnitOfWorkROFactoryTrait>,
 }
 
 impl GetEntityUseCase {
-    pub fn new(uow: Box<dyn EntityUnitOfWorkTraitRO>) -> Self {
-        GetEntityUseCase { uow }
+    pub fn new(uow_factory: Box<dyn EntityUnitOfWorkROFactoryTrait>) -> Self {
+        GetEntityUseCase { uow_factory }
     }
 
     pub fn execute(&self, id: &EntityId) -> Result<Option<EntityDto>> {
-        self.uow.begin_transaction()?;
-        let entity_option = self.uow.get_entity(&id).map_err(|e| {
-            self.uow.end_transaction().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.end_transaction()?;
+        let uow = self.uow_factory.create();
+
+        uow.begin_transaction()?;
+        let entity_option = uow.get_entity(&id)?;
+        uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))
     }

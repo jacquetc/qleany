@@ -1,11 +1,11 @@
 use common::database::db_context::DbContext;
 use anyhow::Result;
-use crate::{units_of_work::LoadUnitOfWork, use_cases::load_uc::LoadUseCase, LoadDto};
+use crate::{units_of_work::LoadUnitOfWorkFactory, use_cases::load_uc::LoadUseCase, LoadDto};
 
 
 pub fn load(db_context: &DbContext, dto: &LoadDto) -> Result<()> {
-    let mut uow = LoadUnitOfWork::new(&db_context);
-    let mut laod_uc = LoadUseCase::new(&mut uow);
+    let uow_context = LoadUnitOfWorkFactory::new(&db_context);
+    let mut laod_uc = LoadUseCase::new(Box::new(uow_context));
     laod_uc.execute(dto)
 }
 

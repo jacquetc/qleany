@@ -1,7 +1,7 @@
 
 use anyhow::{Ok, Result};
 
-use crate::use_cases::load_uc::LoadUnitOfWorkTrait;
+use crate::use_cases::load_uc::{LoadUnitOfWorkFactoryTrait, LoadUnitOfWorkTrait};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
@@ -120,3 +120,21 @@ impl LoadUnitOfWorkTrait for LoadUnitOfWork {
         Ok(field)
     }
 }
+
+pub struct LoadUnitOfWorkFactory {
+    context: DbContext,
+}
+
+impl LoadUnitOfWorkFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        LoadUnitOfWorkFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl LoadUnitOfWorkFactoryTrait for LoadUnitOfWorkFactory{
+    fn create(&self) -> Box<dyn LoadUnitOfWorkTrait> {
+        Box::new(LoadUnitOfWork::new(&self.context))
+    }
+ }

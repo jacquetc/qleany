@@ -2,13 +2,14 @@ use std::cell::RefCell;
 
 use anyhow::{Ok, Result};
 
-use crate::root::use_cases::get_root_uc::RootUnitOfWorkTraitRO;
+use crate::root::use_cases::get_root_uc::RootUnitOfWorkROTrait;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, Root};
 
-use super::use_cases::common::RootUnitOfWorkTrait;
+use super::use_cases::common::{RootUnitOfWorkFactoryTrait, RootUnitOfWorkTrait};
+use super::use_cases::get_root_uc::RootUnitOfWorkROFactoryTrait;
 
 pub struct RootUnitOfWork {
     context: DbContext,
@@ -73,16 +74,24 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         root_repo.delete(id)?;
         Ok(())
     }
-    
-    fn get_relationships_of(&self, field: &common::direct_access::root::RootRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+
+    fn get_relationships_of(
+        &self,
+        field: &common::direct_access::root::RootRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
         let root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
         let value = root_repo.get_relationships_of(field, right_ids)?;
         Ok(value)
     }
-    
-    fn set_relationships(&self, field: &common::direct_access::root::RootRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
+
+    fn set_relationships(
+        &self,
+        field: &common::direct_access::root::RootRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<()> {
         let mut root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
@@ -90,6 +99,24 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         Ok(())
     }
 }
+
+pub struct RootUnitOfWorkFactory {
+    context: DbContext,
+}
+
+impl RootUnitOfWorkFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        RootUnitOfWorkFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+impl RootUnitOfWorkFactoryTrait for RootUnitOfWorkFactory{
+    fn create(&self) -> Box<dyn RootUnitOfWorkTrait> {
+        Box::new(RootUnitOfWork::new(&self.context))
+    }
+ }
 
 pub struct RootUnitOfWorkRO {
     context: DbContext,
@@ -118,7 +145,7 @@ impl QueryUnitOfWork for RootUnitOfWorkRO {
     }
 }
 
-impl RootUnitOfWorkTraitRO for RootUnitOfWorkRO {
+impl RootUnitOfWorkROTrait for RootUnitOfWorkRO {
     fn get_root(&self, id: &EntityId) -> Result<Option<Root>> {
         let borrowed_transaction = self.transaction.borrow();
         let root_repo = repository_factory::read::create_root_repository(
@@ -130,3 +157,21 @@ impl RootUnitOfWorkTraitRO for RootUnitOfWorkRO {
         Ok(root)
     }
 }
+
+pub struct RootUnitOfWorkROFactory {
+    context: DbContext,
+}
+
+impl RootUnitOfWorkROFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        RootUnitOfWorkROFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl RootUnitOfWorkROFactoryTrait for RootUnitOfWorkROFactory{
+    fn create(&self) -> Box<dyn RootUnitOfWorkROTrait> {
+        Box::new(RootUnitOfWorkRO::new(&self.context))
+    }
+ }

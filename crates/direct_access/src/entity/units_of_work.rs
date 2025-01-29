@@ -2,13 +2,14 @@ use std::cell::RefCell;
 
 use anyhow::{Ok, Result};
 
-use crate::entity::use_cases::get_entity_uc::EntityUnitOfWorkTraitRO;
+use crate::entity::use_cases::get_entity_uc::EntityUnitOfWorkROTrait;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, Entity};
 
-use super::use_cases::common::EntityUnitOfWorkTrait;
+use super::use_cases::common::{EntityUnitOfWorkFactoryTrait, EntityUnitOfWorkTrait};
+use super::use_cases::get_entity_uc::EntityUnitOfWorkROFactoryTrait;
 
 pub struct EntityUnitOfWork {
     context: DbContext,
@@ -92,6 +93,25 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
     }
 }
 
+
+pub struct EntityUnitOfWorkFactory {
+    context: DbContext,
+}
+
+impl EntityUnitOfWorkFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        EntityUnitOfWorkFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl EntityUnitOfWorkFactoryTrait for EntityUnitOfWorkFactory{
+    fn create(&self) -> Box<dyn EntityUnitOfWorkTrait> {
+        Box::new(EntityUnitOfWork::new(&self.context))
+    }
+ }
+
 pub struct EntityUnitOfWorkRO {
     context: DbContext,
     transaction: RefCell<Option<Transaction>>,
@@ -119,7 +139,7 @@ impl QueryUnitOfWork for EntityUnitOfWorkRO {
     }
 }
 
-impl EntityUnitOfWorkTraitRO for EntityUnitOfWorkRO {
+impl EntityUnitOfWorkROTrait for EntityUnitOfWorkRO {
     fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
         let borrowed_transaction = self.transaction.borrow();
         let entity_repo = repository_factory::read::create_entity_repository(
@@ -131,3 +151,21 @@ impl EntityUnitOfWorkTraitRO for EntityUnitOfWorkRO {
         Ok(entity)
     }
 }
+
+pub struct EntityUnitOfWorkROFactory {
+    context: DbContext,
+}
+
+impl EntityUnitOfWorkROFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        EntityUnitOfWorkROFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl EntityUnitOfWorkROFactoryTrait for EntityUnitOfWorkROFactory{
+    fn create(&self) -> Box<dyn EntityUnitOfWorkROTrait> {
+        Box::new(EntityUnitOfWorkRO::new(&self.context))
+    }
+ }

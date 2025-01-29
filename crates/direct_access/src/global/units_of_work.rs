@@ -2,13 +2,14 @@ use std::cell::RefCell;
 
 use anyhow::{Ok, Result};
 
-use crate::global::use_cases::get_global_uc::GlobalUnitOfWorkTraitRO;
+use crate::global::use_cases::get_global_uc::GlobalUnitOfWorkROTrait;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, Global};
 
-use super::use_cases::common::GlobalUnitOfWorkTrait;
+use super::use_cases::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
+use super::use_cases::get_global_uc::GlobalUnitOfWorkROFactoryTrait;
 
 pub struct GlobalUnitOfWork {
     context: DbContext,
@@ -75,6 +76,24 @@ impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
     }
 }
 
+pub struct GlobalUnitOfWorkFactory {
+    context: DbContext,
+}
+
+impl GlobalUnitOfWorkFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        GlobalUnitOfWorkFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl GlobalUnitOfWorkFactoryTrait for GlobalUnitOfWorkFactory{
+    fn create(&self) -> Box<dyn GlobalUnitOfWorkTrait> {
+        Box::new(GlobalUnitOfWork::new(&self.context))
+    }
+ }
+
 pub struct GlobalUnitOfWorkRO {
     context: DbContext,
     transaction: RefCell<Option<Transaction>>,
@@ -102,7 +121,7 @@ impl QueryUnitOfWork for GlobalUnitOfWorkRO {
     }
 }
 
-impl GlobalUnitOfWorkTraitRO for GlobalUnitOfWorkRO {
+impl GlobalUnitOfWorkROTrait for GlobalUnitOfWorkRO {
     fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
         let borrowed_transaction = self.transaction.borrow();
         let global_repo = repository_factory::read::create_global_repository(
@@ -114,3 +133,21 @@ impl GlobalUnitOfWorkTraitRO for GlobalUnitOfWorkRO {
         Ok(global)
     }
 }
+
+pub struct GlobalUnitOfWorkROFactory {
+    context: DbContext,
+}
+
+impl GlobalUnitOfWorkROFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        GlobalUnitOfWorkROFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+ impl GlobalUnitOfWorkROFactoryTrait for GlobalUnitOfWorkROFactory{
+    fn create(&self) -> Box<dyn GlobalUnitOfWorkROTrait> {
+        Box::new(GlobalUnitOfWorkRO::new(&self.context))
+    }
+ }

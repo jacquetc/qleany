@@ -3,6 +3,10 @@ use common::direct_access::root::RootRelationshipField;
 use common::entities::{EntityId, Root};
 use anyhow::Result;
 
+pub trait RootUnitOfWorkFactoryTrait {
+    fn create(&self) -> Box<dyn RootUnitOfWorkTrait>;
+}
+
 pub trait RootUnitOfWorkTrait : CommandUnitOfWork {
     fn create_root(&self, root: &Root) -> Result<Root>;
     fn get_root(&self, id: &EntityId) -> Result<Option<Root>>;

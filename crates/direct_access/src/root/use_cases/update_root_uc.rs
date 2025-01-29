@@ -1,29 +1,27 @@
 use anyhow::{Ok, Result, anyhow};
 use crate::root::dtos::RootDto;
-use super::common::RootUnitOfWorkTrait;
+use super::common::RootUnitOfWorkFactoryTrait;
 
 pub struct UpdateRootUseCase {
-    uow: Box<dyn RootUnitOfWorkTrait>,
+    uow_factory: Box<dyn RootUnitOfWorkFactoryTrait>,
 }
 
 impl UpdateRootUseCase {
-    pub fn new(uow: Box<dyn RootUnitOfWorkTrait>) -> Self {
-        UpdateRootUseCase { uow }
+    pub fn new(uow_factory: Box<dyn RootUnitOfWorkFactoryTrait>) -> Self {
+        UpdateRootUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: &RootDto) -> Result<RootDto> {
-        self.uow.begin_transaction()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
 
         // validate the dto
-        if self.uow.get_root(&dto.id)?.is_none() {
+        if uow.get_root(&dto.id)?.is_none() {
             return Err(anyhow!("Root with id {} not found", dto.id));
         }
 
-        let root = self.uow.update_root(&dto.into()).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let root = uow.update_root(&dto.into())?;
+        uow.commit()?;
         Ok(root.into())
     }
 }

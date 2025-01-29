@@ -1,23 +1,21 @@
-use anyhow::{Ok, Result};
+use super::common::{EntityUnitOfWorkFactoryTrait, EntityUnitOfWorkTrait};
 use crate::entity::dtos::EntityDto;
-use super::common::EntityUnitOfWorkTrait;
+use anyhow::{Ok, Result};
 
 pub struct UpdateEntityUseCase {
-    uow: Box<dyn EntityUnitOfWorkTrait>,
+    uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
 }
 
 impl UpdateEntityUseCase {
-    pub fn new(uow: Box<dyn EntityUnitOfWorkTrait>) -> Self {
-        UpdateEntityUseCase { uow }
+    pub fn new(uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>) -> Self {
+        UpdateEntityUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: &EntityDto) -> Result<EntityDto> {
-        self.uow.begin_transaction()?;
-        let entity = self.uow.update_entity(&dto.into()).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let entity = uow.update_entity(&dto.into())?;
+        uow.commit()?;
         Ok(entity.into())
     }
 }

@@ -1,23 +1,21 @@
+use super::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::entities::EntityId;
-use super::common::GlobalUnitOfWorkTrait;
 
 pub struct RemoveGlobalUseCase {
-    uow: Box<dyn GlobalUnitOfWorkTrait>,
+    uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>,
 }
 
 impl RemoveGlobalUseCase {
-    pub fn new(uow: Box<dyn GlobalUnitOfWorkTrait>) -> Self {
-        RemoveGlobalUseCase { uow }
+    pub fn new(uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>) -> Self {
+        RemoveGlobalUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, id: &EntityId) -> Result<()> {
-        self.uow.begin_transaction()?;
-        self.uow.delete_global(&id).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        uow.delete_global(&id)?;
+        uow.commit()?;
         Ok(())
     }
 }

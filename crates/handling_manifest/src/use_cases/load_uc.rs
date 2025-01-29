@@ -10,6 +10,10 @@ use common::{
 
 use crate::LoadDto;
 
+pub trait LoadUnitOfWorkFactoryTrait {
+    fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;
+}
+
 pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {
     fn create_root(&self, root: &Root) -> Result<Root>;
     fn get_root(&self, id: &EntityId) -> Result<Option<Root>>;
@@ -23,13 +27,13 @@ pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {
     fn create_field(&self, field: &Field) -> Result<Field>;
 }
 
-pub struct LoadUseCase<'a> {
-    uow: &'a mut dyn LoadUnitOfWorkTrait,
+pub struct LoadUseCase {
+    uow_factory: Box<dyn LoadUnitOfWorkFactoryTrait>,
 }
 
-impl<'a> LoadUseCase<'a> {
-    pub fn new(uow: &'a mut dyn LoadUnitOfWorkTrait) -> Self {
-        LoadUseCase { uow }
+impl LoadUseCase {
+    pub fn new(uow_factory: Box<dyn LoadUnitOfWorkFactoryTrait>) -> Self {
+        LoadUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: &LoadDto) -> Result<()> {
@@ -73,12 +77,12 @@ impl<'a> LoadUseCase<'a> {
         // apply the json to the model
         let manifest: model_structs::Manifest = serde_json::from_value(json_value)?;
 
-        self.uow.begin_transaction()?;
+        let mut uow = self.uow_factory.create();
 
-        let result: Result<()> = {
+        uow.begin_transaction()?;
 
             // create global
-            let global = self.uow.create_global(&Global {
+            let global = uow.create_global(&Global {
                 id: 0,
                 language: manifest.global.language,
                 application_name: manifest.global.application_name,
@@ -89,7 +93,7 @@ impl<'a> LoadUseCase<'a> {
             let global_id = global.id;
 
             // create root
-            let root = self.uow.create_root(&Root {
+            let root = uow.create_root(&Root {
                 id: 0,
                 global: global_id,
                 entities: vec![],
@@ -101,7 +105,7 @@ impl<'a> LoadUseCase<'a> {
             let mut entity_ids = vec![];
             let mut entities = vec![];
             for model_entity in manifest.entities.iter() {
-                let entity = self.uow.create_entity(&Entity {
+                let entity = uow.create_entity(&Entity {
                     id: 0,
                     name: model_entity.name.clone(),
                     only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
@@ -130,10 +134,10 @@ impl<'a> LoadUseCase<'a> {
                         .iter()
                         .find(|e| e.name == model_field.r#type)
                         .map(|e| e.id);
-                    let field_type = match field_entity_id{
+                    let field_type = match field_entity_id {
                         Some(_id) => FieldType::Entity,
                         None => match model_field.r#type.clone().as_str() {
-                            "Boolean"|"Bool" => FieldType::Boolean,
+                            "Boolean" | "Bool" => FieldType::Boolean,
                             "Integer" => FieldType::Integer,
                             "UInteger" => FieldType::UInteger,
                             "Float" => FieldType::Float,
@@ -143,10 +147,9 @@ impl<'a> LoadUseCase<'a> {
                             _ => FieldType::String,
                         },
                     };
-                    
 
                     // create field
-                    let field = self.uow.create_field(&Field {
+                    let field = uow.create_field(&Field {
                         id: 0,
                         name: model_field.name.clone(),
                         field_type: field_type,
@@ -164,7 +167,7 @@ impl<'a> LoadUseCase<'a> {
                 }
 
                 // get entity from repo
-                let mut entity = self.uow.get_entity(&entity_id)?.expect("Entity not found");
+                let mut entity = uow.get_entity(&entity_id)?.expect("Entity not found");
 
                 // update entity with fields
                 entity.fields = field_ids;
@@ -181,7 +184,7 @@ impl<'a> LoadUseCase<'a> {
                 }
 
                 // update entity in repo
-                self.uow.update_entity(&entity)?;
+                uow.update_entity(&entity)?;
             }
 
             // create features
@@ -208,7 +211,7 @@ impl<'a> LoadUseCase<'a> {
                         }
                     }
 
-                    let use_case = self.uow.create_use_case(&UseCase {
+                    let use_case = uow.create_use_case(&UseCase {
                         id: 0,
                         name: model_use_case.name.clone(),
                         validator: model_use_case.validator,
@@ -220,7 +223,7 @@ impl<'a> LoadUseCase<'a> {
                     use_case_ids.push(use_case.id);
                 }
 
-                let feature = self.uow.create_feature(&Feature {
+                let feature = uow.create_feature(&Feature {
                     id: 0,
                     name: model_feature.name.clone(),
                     use_cases: use_case_ids,
@@ -230,23 +233,16 @@ impl<'a> LoadUseCase<'a> {
 
             // update root with entities
             // good practice to get the root again, to make sure it is not stale
-            let root = self.uow.get_root(&root_id)?.expect("Root not found");
+            let root = uow.get_root(&root_id)?.expect("Root not found");
             let root = Root {
                 id: root.id,
                 global: global_id,
                 entities: entity_ids,
                 features: feature_ids,
             };
-            self.uow.update_root(&root)?;
+            uow.update_root(&root)?;
 
-            Ok(())
-        };
-        if let Err(e) = result {
-            self.uow.rollback()?;
-            return Err(e);
-        }
-
-        self.uow.commit()?;
+        uow.commit()?;
 
         Ok(())
     }

@@ -1,23 +1,21 @@
 use anyhow::{Ok, Result};
 use common::entities::EntityId;
-use super::common::UseCaseUnitOfWorkTrait;
+use super::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
 
 pub struct RemoveUseCaseUseCase {
-    uow: Box<dyn UseCaseUnitOfWorkTrait>,
+    uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
 }
 
 impl RemoveUseCaseUseCase {
-    pub fn new(uow: Box<dyn UseCaseUnitOfWorkTrait>) -> Self {
-        RemoveUseCaseUseCase { uow }
+    pub fn new(uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>) -> Self {
+        RemoveUseCaseUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, id: &EntityId) -> Result<()> {
-        self.uow.begin_transaction()?;
-        self.uow.delete_use_case(&id).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        uow.delete_use_case(&id)?;
+        uow.commit()?;
         Ok(())
     }
 }

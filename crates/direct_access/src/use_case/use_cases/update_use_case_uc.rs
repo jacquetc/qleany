@@ -1,23 +1,21 @@
 use anyhow::{Ok, Result};
 use crate::use_case::dtos::UseCaseDto;
-use super::common::UseCaseUnitOfWorkTrait;
+use super::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
 
 pub struct UpdateUseCaseUseCase {
-    uow: Box<dyn UseCaseUnitOfWorkTrait>,
+    uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
 }
 
 impl UpdateUseCaseUseCase {
-    pub fn new(uow: Box<dyn UseCaseUnitOfWorkTrait>) -> Self {
-        UpdateUseCaseUseCase { uow }
+    pub fn new(uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>) -> Self {
+        UpdateUseCaseUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dto: &UseCaseDto) -> Result<UseCaseDto> {
-        self.uow.begin_transaction()?;
-        let use_case = self.uow.update_use_case(&dto.into()).map_err(|e| {
-            self.uow.rollback().unwrap_or_else(|_| ());
-            e
-        })?;
-        self.uow.commit()?;
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let use_case = uow.update_use_case(&dto.into())?;
+        uow.commit()?;
         Ok(use_case.into())
     }
 }
