@@ -1,4 +1,4 @@
-use super::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
+use super::common::GlobalUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
 use common::entities::EntityId;
 

@@ -1,6 +1,3 @@
-use anyhow::Result;
-use common::{database::db_context::DbContext, entities::EntityId};
-
 use super::{
     dtos::{CreateGlobalDto, GlobalDto},
     units_of_work::{GlobalUnitOfWorkFactory, GlobalUnitOfWorkROFactory},
@@ -9,9 +6,16 @@ use super::{
         remove_global_uc::RemoveGlobalUseCase, update_global_uc::UpdateGlobalUseCase,
     },
 };
+use anyhow::Result;
+use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
+use std::rc::Rc;
 
-pub fn create(db_context: &DbContext, global: &CreateGlobalDto) -> Result<GlobalDto> {
-    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context);
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Rc<EventHub>,
+    global: &CreateGlobalDto,
+) -> Result<GlobalDto> {
+    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = CreateGlobalUseCase::new(Box::new(uow_factory));
     global_uc.execute(global.clone())
 }
@@ -22,14 +26,18 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<GlobalDto>> {
     global.execute(id)
 }
 
-pub fn update(db_context: &DbContext, global: &GlobalDto) -> Result<GlobalDto> {
-    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context);
+pub fn update(
+    db_context: &DbContext,
+    event_hub: &Rc<EventHub>,
+    global: &GlobalDto,
+) -> Result<GlobalDto> {
+    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = UpdateGlobalUseCase::new(Box::new(uow_factory));
     global_uc.execute(global)
 }
 
-pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
-    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context);
+pub fn remove(db_context: &DbContext, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<()> {
+    let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = RemoveGlobalUseCase::new(Box::new(uow_factory));
     global_uc.execute(id)
 }

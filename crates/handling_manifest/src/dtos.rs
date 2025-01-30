@@ -1,4 +1,4 @@
 #[derive(Debug)]
 pub struct LoadDto {
-   pub manifest_path: String,
+    pub manifest_path: String,
 }

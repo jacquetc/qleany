@@ -1,4 +1,4 @@
-use super::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
+use super::common::GlobalUnitOfWorkFactoryTrait;
 use crate::global::dtos::GlobalDto;
 use anyhow::{Ok, Result};
 

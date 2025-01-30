@@ -21,7 +21,7 @@ impl From<EntityDto> for Entity {
             only_for_heritage: entity_dto.only_for_heritage,
             parent: entity_dto.parent,
             fields: entity_dto.fields,
-            relationships: entity_dto.relationships
+            relationships: entity_dto.relationships,
         }
     }
 }
@@ -70,7 +70,6 @@ impl From<CreateEntityDto> for Entity {
             parent: create_entity_dto.parent,
             fields: create_entity_dto.fields,
             relationships: create_entity_dto.relationships,
-
         }
     }
 }

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::{
     dtos::{CreateRootDto, RootDto},
     units_of_work::{RootUnitOfWorkFactory, RootUnitOfWorkROFactory},
@@ -7,11 +9,15 @@ use super::{
     },
 };
 use anyhow::{Ok, Result};
-use common::{database::db_context::DbContext, entities::EntityId};
+use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
 //use crate::entity::entity_controller;
 
-pub fn create(db_context: &DbContext, root: &CreateRootDto) -> Result<RootDto> {
-    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Rc<EventHub>,
+    root: &CreateRootDto,
+) -> Result<RootDto> {
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case = CreateRootUseCase::new(Box::new(uow_factory));
     use_case.execute(root.clone())
 }
@@ -22,15 +28,15 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<RootDto>> {
     use_case.execute(id)
 }
 
-pub fn update(db_context: &DbContext, root: &RootDto) -> Result<RootDto> {
-    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+pub fn update(db_context: &DbContext, event_hub: &Rc<EventHub>, root: &RootDto) -> Result<RootDto> {
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case = UpdateRootUseCase::new(Box::new(uow_factory));
     use_case.execute(root)
 }
 
-pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
+pub fn remove(db_context: &DbContext, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<()> {
     // delete root
-    let uow_factory = RootUnitOfWorkFactory::new(&db_context);
+    let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case = RemoveRootUseCase::new(Box::new(uow_factory));
     use_case.execute(id)?;
 
@@ -41,17 +47,18 @@ pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::database::db_context::DbContext;
+    use common::{database::db_context::DbContext, event};
 
     #[test]
     fn test_create_root() {
         let db_context = DbContext::new().unwrap();
+        let event_hub = Rc::new(EventHub::new());
         let root = CreateRootDto {
             global: 1,
             entities: vec![1],
             features: vec![1],
         };
-        let result = create(&db_context, &root);
+        let result = create(&db_context, &event_hub, &root);
         assert!(result.is_ok());
     }
 
@@ -59,6 +66,7 @@ mod tests {
     fn test_get_root() {
         // get with invalid id
         let db_context = DbContext::new().unwrap();
+        let event_hub = Rc::new(EventHub::new());
         let id = 115;
         let result = get(&db_context, &id);
         assert!(result.is_err());
@@ -69,7 +77,7 @@ mod tests {
             entities: vec![1],
             features: vec![1],
         };
-        let result = create(&db_context, &root);
+        let result = create(&db_context, &event_hub, &root);
         assert!(result.is_ok());
 
         // get with valid id
@@ -85,13 +93,14 @@ mod tests {
     fn test_update_root() {
         // update with invalid id
         let db_context = DbContext::new().unwrap();
+        let event_hub = Rc::new(EventHub::new());
         let root = RootDto {
             id: 115,
             global: 1,
             entities: vec![1],
             features: vec![1],
         };
-        let result = update(&db_context, &root);
+        let result = update(&db_context, &event_hub, &root);
         assert!(result.is_err());
 
         // create
@@ -100,7 +109,7 @@ mod tests {
             entities: vec![1],
             features: vec![1],
         };
-        let result = create(&db_context, &root);
+        let result = create(&db_context, &event_hub, &root);
         assert!(result.is_ok());
 
         // update with valid id
@@ -110,7 +119,7 @@ mod tests {
             entities: vec![2],
             features: vec![2],
         };
-        let result = update(&db_context, &root);
+        let result = update(&db_context, &event_hub, &root);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().global, 2);
     }

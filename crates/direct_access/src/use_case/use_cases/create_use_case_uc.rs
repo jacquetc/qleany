@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 
 use crate::use_case::dtos::{CreateUseCaseDto, UseCaseDto};
 
-use super::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
+use super::common::UseCaseUnitOfWorkFactoryTrait;
 
 pub struct CreateUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,

@@ -1,12 +1,14 @@
 pub mod db_context;
-pub mod transactions;
 pub(crate) mod db_helpers;
+pub mod transactions;
 use anyhow::Result;
 
 pub trait CommandUnitOfWork {
     fn begin_transaction(&mut self) -> Result<()>;
     fn commit(&mut self) -> Result<()>;
     fn rollback(&mut self) -> Result<()>;
+    fn create_savepoint(&self) -> Result<()>;
+    fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()>;
 }
 
 pub trait QueryUnitOfWork {
@@ -21,6 +23,8 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::any::type_name;
 use std::cmp::Ordering;
 use std::fmt::Debug;
+
+use crate::types;
 
 /// Wrapper type to handle keys and values using bincode serialization
 #[derive(Debug)]

@@ -1,8 +1,7 @@
-
 use std::convert::From;
 
-use common::entities::Root;
 use common::entities::EntityId;
+use common::entities::Root;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RootDto {

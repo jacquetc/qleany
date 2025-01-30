@@ -4,156 +4,188 @@ use crate::entities::Entity;
 use crate::entities::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
+use super::entity_repository::EntityRelationshipField;
+use super::entity_repository::EntityTable;
+use super::entity_repository::EntityTableRO;
+
 const ENTITY_TABLE: TableDefinition<EntityId, Bincode<Entity>> = TableDefinition::new("entity");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
-const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("field_from_entity_fields_junction");
-const RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("relationship_from_entity_relationships_junction");
+const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("field_from_entity_fields_junction");
+const RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE: TableDefinition<
+    EntityId,
+    Vec<EntityId>,
+> = TableDefinition::new("relationship_from_entity_relationships_junction");
 // backward relationships
-const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("entity_from_root_entities_junction");
-const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("entity_from_use_case_entities_junction");
-const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("entity_from_field_entity_junction");
+const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_root_entities_junction");
+const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_use_case_entities_junction");
+const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_field_entity_junction");
 
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EntityRelationshipField  {
-    Field,
-    Relationship
-}
-
-pub trait EntityTable {
-    fn create(&mut self, entity: &Entity) -> Result<Entity, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
-    fn update(&mut self, entity: &Entity) -> Result<Entity, Error>;
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn get_relationships_of(&self, field: &EntityRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-    fn delete_all_relationships_with(&mut self, field: &EntityRelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
-    fn set_relationships(&mut self, field: &EntityRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
-
-}
-
-pub trait EntityTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
-}
-
-#[derive(Clone)]
 pub struct EntityRedbTable<'a> {
     transaction: &'a WriteTransaction,
 }
 
 impl<'a> EntityRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
-        EntityRedbTable {
-            transaction,
-        }
+        EntityRedbTable { transaction }
     }
 }
 
 impl<'a> EntityTable for EntityRedbTable<'a> {
     fn create(&mut self, entity: &Entity) -> Result<Entity, Error> {
-        // retrieve the counter
+        let entities = self.create_multi(&[entity.clone()])?;
+        Ok(entities.into_iter().next().unwrap())
+    }
+
+    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error> {
+        let entities = self.get_multi(&[id.clone()])?;
+        Ok(entities.into_iter().next().unwrap())
+    }
+
+    fn update(&mut self, entity: &Entity) -> Result<Entity, Error> {
+        let entities = self.update_multi(&[entity.clone()])?;
+        Ok(entities.into_iter().next().unwrap())
+    }
+
+    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
+        self.delete_multi(&[id.clone()])
+    }
+
+    fn create_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error> {
+        let mut created_entities = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
-        let counter = if let Some(counter) = counter_table.get(&"entity".to_string())? {
+        let mut counter = if let Some(counter) = counter_table.get(&"entity".to_string())? {
             counter.value() + 1
         } else {
             1
         };
 
-        let mut table = self.transaction.open_table(ENTITY_TABLE)?;
+        let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let mut relationship_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        let entity = Entity {
-            id: counter,
-            ..entity.clone()
-        };
-        table.insert(entity.id, entity.clone())?;
-
-        // update the counter
-        counter_table.insert("entity".to_string(), counter)?;
-
-        // add fields to junction table
-        let mut junction_table = self.transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        junction_table.insert(entity.id, entity.fields.clone())?;
-
-        // add relationships to junction table
-        let mut junction_table = self.transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-        junction_table.insert(entity.id, entity.relationships.clone())?;
-
-        Ok(entity)
-    }
-
-    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error> {
-        let table = self.transaction.open_table(ENTITY_TABLE)?;
-        let guard = table.get(id)?;
-        let entity = guard.map(|guard| guard.value().clone());
-
-        if entity.is_none() {
-            return Ok(None);
+        for entity in entities {
+            let new_entity = Entity {
+                id: counter,
+                ..entity.clone()
+            };
+            entity_table.insert(new_entity.id, new_entity.clone())?;
+            field_junction_table.insert(new_entity.id, new_entity.fields.clone())?;
+            relationship_junction_table.insert(new_entity.id, new_entity.relationships.clone())?;
+            created_entities.push(new_entity);
+            counter += 1;
         }
 
-        // get fields from junction table
-        let junction_table = self.transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let fields = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
+        counter_table.insert("entity".to_string(), counter)?;
 
-        // get relationships from junction table
-        let junction_table = self.transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-        let relationships = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
-
-        Ok(entity.map(|mut entity| {
-            entity.fields = fields;
-            entity.relationships = relationships;
-            entity
-        }))
+        Ok(created_entities)
     }
 
-    fn update(&mut self, entity: &Entity) -> Result<Entity, Error> {
-        // update the entity table
-        let mut table = self.transaction.open_table(ENTITY_TABLE)?;
-        table.insert(entity.id, entity)?;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        let mut entities = Vec::new();
+        let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        let field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let relationship_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        // update the junction table
-        let mut junction_table = self.transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        junction_table.insert(entity.id, entity.fields.clone())?;
+        for id in ids {
+            let entity = if let Some(guard) = entity_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-        // update the junction table
-        let mut junction_table = self.transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-        junction_table.insert(entity.id, entity.relationships.clone())?;
+                // get fields from junction table
+                let fields = field_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
 
-        Ok(entity.clone())
+                // get relationships from junction table
+                let relationships = relationship_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
+
+                entity.fields = fields;
+                entity.relationships = relationships;
+                Some(entity)
+            } else {
+                None
+            };
+            entities.push(entity);
+        }
+        Ok(entities)
     }
 
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        // delete from entity table
-        let mut table = self.transaction.open_table(ENTITY_TABLE)?;
-        table.remove(id)?;
+    fn update_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error> {
+        let mut updated_entities = Vec::new();
+        let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let mut relationship_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        // delete from junction table
-        let mut junction_table = self.transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        junction_table.remove(id)?;
+        for entity in entities {
+            entity_table.insert(entity.id, entity)?;
+            field_junction_table.insert(entity.id, entity.fields.clone())?;
+            relationship_junction_table.insert(entity.id, entity.relationships.clone())?;
+            updated_entities.push(entity.clone());
+        }
 
-        // delete from junction table
-        let mut junction_table = self.transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-        junction_table.remove(id)?;
+        Ok(updated_entities)
+    }
 
-        // delete from backward junction tables, where the id may be in the Vec in the value
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+        let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let mut relationship_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+        let mut root_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
+        let mut use_case_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        let mut field_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
-
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+        for id in ids {
+            entity_table.remove(id)?;
+            field_junction_table.remove(id)?;
+            relationship_junction_table.remove(id)?;
+            db_helpers::delete_from_backward_junction_table(&mut root_junction_table, id)?;
+            db_helpers::delete_from_backward_junction_table(&mut use_case_junction_table, id)?;
+            db_helpers::delete_from_backward_junction_table(&mut field_entity_junction_table, id)?;
+        }
 
         Ok(())
     }
 
-    
-    fn get_relationships_of(&self, field: &EntityRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let junction_table_definition =
-            match field {
-                EntityRelationshipField::Field => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
-                EntityRelationshipField::Relationship => RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE,
-            
+    fn get_relationships_of(
+        &self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        let junction_table_definition = match field {
+            EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
+            EntityRelationshipField::Relationships => {
+                RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
+            }
         };
         let junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
@@ -161,7 +193,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
             let left_id = left_id.value();
             let right_entities = right_entities.value();
-            if right_ids.iter().any(|entity_id| right_entities.contains(entity_id)) {
+            if right_ids
+                .iter()
+                .any(|entity_id| right_entities.contains(entity_id))
+            {
                 relationships.push((left_id, right_entities));
             }
         }
@@ -170,12 +205,17 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
     /// Deletes all relationships between all root entities and the entities in `right_ids`.
     /// If the root has no relationship with an entity in `right_ids`, it is ignored.
-    fn delete_all_relationships_with(&mut self, field: &EntityRelationshipField, right_ids: &[EntityId]) -> Result<(), Error> {
-        // delete from junction table        
-        let junction_table_definition =
-            match field {
-                EntityRelationshipField::Field => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
-                EntityRelationshipField::Relationship => RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE,
+    fn delete_all_relationships_with(
+        &mut self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error> {
+        // delete from junction table
+        let junction_table_definition = match field {
+            EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
+            EntityRelationshipField::Relationships => {
+                RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
+            }
         };
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
@@ -183,29 +223,34 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
             let left_id = left_id.value();
             let right_entities = right_entities.value();
-            let entities_left: Vec<EntityId> = right_entities.clone().into_iter().filter(|entity_id| !right_ids.contains(entity_id)).collect();
-            
+            let entities_left: Vec<EntityId> = right_entities
+                .clone()
+                .into_iter()
+                .filter(|entity_id| !right_ids.contains(entity_id))
+                .collect();
+
             if entities_left.len() == right_entities.len() {
                 continue;
             }
             junctions_to_modify.push((left_id, entities_left));
-
         }
         for (left_id, entities) in junctions_to_modify {
             junction_table.insert(left_id, entities)?;
-        }      
-        
+        }
 
         Ok(())
     }
 
-
-    fn set_relationships(&mut self, field: &EntityRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error> {
-        let junction_table_definition =
-            match field {
-                EntityRelationshipField::Field => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
-                EntityRelationshipField::Relationship => RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE,
-            
+    fn set_relationships(
+        &mut self,
+        field: &EntityRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error> {
+        let junction_table_definition = match field {
+            EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
+            EntityRelationshipField::Relationships => {
+                RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
+            }
         };
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         for (left_id, entities) in relationships {
@@ -227,26 +272,44 @@ impl<'a> EntityRedbTableRO<'a> {
 
 impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error> {
-        let table = self.transaction.open_table(ENTITY_TABLE)?;
-        let guard = table.get(id)?;
-        let entity = guard.map(|guard| guard.value().clone());
-        
-        if entity.is_none() {
-            return Ok(None);
+        let entities = self.get_multi(&[id.clone()])?;
+        Ok(entities.into_iter().next().unwrap())
+    }
+
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        let mut entities = Vec::new();
+        let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        let field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let relationship_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+
+        for id in ids {
+            let entity = if let Some(guard) = entity_table.get(id)? {
+                let mut entity = guard.value().clone();
+
+                // get fields from junction table
+                let fields = field_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
+
+                // get relationships from junction table
+                let relationships = relationship_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
+
+                entity.fields = fields;
+                entity.relationships = relationships;
+                Some(entity)
+            } else {
+                None
+            };
+            entities.push(entity);
         }
-
-        // get fields from junction table
-        let junction_table = self.transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let fields = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
-
-        // get relationships from junction table
-        let junction_table = self.transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-        let relationships = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
-
-        Ok(entity.map(|mut entity| {
-            entity.fields = fields;
-            entity.relationships = relationships;
-            entity
-        }))
+        Ok(entities)
     }
 }

@@ -1,4 +1,4 @@
-use super::common::{EntityUnitOfWorkFactoryTrait, EntityUnitOfWorkTrait};
+use super::common::EntityUnitOfWorkFactoryTrait;
 use crate::entity::dtos::EntityDto;
 use anyhow::{Ok, Result};
 

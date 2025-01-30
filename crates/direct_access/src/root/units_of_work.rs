@@ -1,26 +1,28 @@
-use std::cell::RefCell;
-
-use anyhow::{Ok, Result};
-
+use super::use_cases::common::{RootUnitOfWorkFactoryTrait, RootUnitOfWorkTrait};
+use super::use_cases::get_root_uc::RootUnitOfWorkROFactoryTrait;
 use crate::root::use_cases::get_root_uc::RootUnitOfWorkROTrait;
+use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, Root};
-
-use super::use_cases::common::{RootUnitOfWorkFactoryTrait, RootUnitOfWorkTrait};
-use super::use_cases::get_root_uc::RootUnitOfWorkROFactoryTrait;
+use common::event::*;
+use common::types;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct RootUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
+    event_hub: Rc<EventHub>,
 }
 
 impl RootUnitOfWork {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         RootUnitOfWork {
             context: db_context.clone(),
             transaction: None,
+            event_hub: event_hub.clone(),
         }
     }
 }
@@ -40,6 +42,24 @@ impl CommandUnitOfWork for RootUnitOfWork {
         self.transaction.take().unwrap().rollback()?;
         Ok(())
     }
+
+    fn create_savepoint(&self) -> Result<()> {
+        self.transaction.as_ref().unwrap().create_savepoint()?;
+        Ok(())
+    }
+
+    fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
+        let mut transaction = self.transaction.take().unwrap();
+        transaction.restore_to_savepoint(savepoint)?;
+
+        self.event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![],
+            data: None,
+        });
+
+        Ok(())
+    }
 }
 
 impl RootUnitOfWorkTrait for RootUnitOfWork {
@@ -55,7 +75,7 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         let mut root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let root = root_repo.create(root)?;
+        let root = root_repo.create(&self.event_hub, root)?;
         Ok(root)
     }
 
@@ -63,7 +83,7 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         let mut root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let root = root_repo.update(root)?;
+        let root = root_repo.update(&self.event_hub, root)?;
         Ok(root)
     }
 
@@ -71,7 +91,7 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
         let mut root_repo = repository_factory::write::create_root_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        root_repo.delete(id)?;
+        root_repo.delete(&self.event_hub, id)?;
         Ok(())
     }
 
@@ -102,21 +122,23 @@ impl RootUnitOfWorkTrait for RootUnitOfWork {
 
 pub struct RootUnitOfWorkFactory {
     context: DbContext,
+    event_hub: Rc<EventHub>,
 }
 
 impl RootUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         RootUnitOfWorkFactory {
             context: db_context.clone(),
+            event_hub: event_hub.clone(),
         }
     }
 }
 
-impl RootUnitOfWorkFactoryTrait for RootUnitOfWorkFactory{
+impl RootUnitOfWorkFactoryTrait for RootUnitOfWorkFactory {
     fn create(&self) -> Box<dyn RootUnitOfWorkTrait> {
-        Box::new(RootUnitOfWork::new(&self.context))
+        Box::new(RootUnitOfWork::new(&self.context, &self.event_hub))
     }
- }
+}
 
 pub struct RootUnitOfWorkRO {
     context: DbContext,
@@ -170,8 +192,8 @@ impl RootUnitOfWorkROFactory {
     }
 }
 
- impl RootUnitOfWorkROFactoryTrait for RootUnitOfWorkROFactory{
+impl RootUnitOfWorkROFactoryTrait for RootUnitOfWorkROFactory {
     fn create(&self) -> Box<dyn RootUnitOfWorkROTrait> {
         Box::new(RootUnitOfWorkRO::new(&self.context))
     }
- }
+}

@@ -1,26 +1,28 @@
-use std::cell::RefCell;
-
-use anyhow::{Ok, Result};
-
+use super::use_cases::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
+use super::use_cases::get_use_case_uc::UseCaseUnitOfWorkROFactoryTrait;
 use crate::use_case::use_cases::get_use_case_uc::UseCaseUnitOfWorkROTrait;
+use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, UseCase};
-
-use super::use_cases::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
-use super::use_cases::get_use_case_uc::UseCaseUnitOfWorkROFactoryTrait;
+use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
+use common::types;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct UseCaseUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
+    event_hub: Rc<EventHub>,
 }
 
 impl UseCaseUnitOfWork {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         UseCaseUnitOfWork {
             context: db_context.clone(),
             transaction: None,
+            event_hub: event_hub.clone(),
         }
     }
 }
@@ -40,6 +42,24 @@ impl CommandUnitOfWork for UseCaseUnitOfWork {
         self.transaction.take().unwrap().rollback()?;
         Ok(())
     }
+
+    fn create_savepoint(&self) -> Result<()> {
+        self.transaction.as_ref().unwrap().create_savepoint()?;
+        Ok(())
+    }
+
+    fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
+        let mut transaction = self.transaction.take().unwrap();
+        transaction.restore_to_savepoint(savepoint)?;
+
+        self.event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![],
+            data: None,
+        });
+
+        Ok(())
+    }
 }
 
 impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
@@ -55,7 +75,7 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let use_case = use_case_repo.create(use_case)?;
+        let use_case = use_case_repo.create(&self.event_hub, use_case)?;
         Ok(use_case)
     }
 
@@ -63,7 +83,7 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let use_case = use_case_repo.update(use_case)?;
+        let use_case = use_case_repo.update(&self.event_hub, use_case)?;
         Ok(use_case)
     }
 
@@ -71,19 +91,27 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        use_case_repo.delete(id)?;
+        use_case_repo.delete(&self.event_hub, id)?;
         Ok(())
     }
-    
-    fn get_relationships_of(&self, field: &common::direct_access::use_case::UseCaseRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+
+    fn get_relationships_of(
+        &self,
+        field: &common::direct_access::use_case::UseCaseRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
         let use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
         let value = use_case_repo.get_relationships_of(field, right_ids)?;
         Ok(value)
     }
-    
-    fn set_relationships(&self, field: &common::direct_access::use_case::UseCaseRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()> {
+
+    fn set_relationships(
+        &self,
+        field: &common::direct_access::use_case::UseCaseRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<()> {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
@@ -94,21 +122,23 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
 
 pub struct UseCaseUnitOfWorkFactory {
     context: DbContext,
+    event_hub: Rc<EventHub>,
 }
 
 impl UseCaseUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         UseCaseUnitOfWorkFactory {
             context: db_context.clone(),
+            event_hub: event_hub.clone(),
         }
     }
 }
 
- impl UseCaseUnitOfWorkFactoryTrait for UseCaseUnitOfWorkFactory{
+impl UseCaseUnitOfWorkFactoryTrait for UseCaseUnitOfWorkFactory {
     fn create(&self) -> Box<dyn UseCaseUnitOfWorkTrait> {
-        Box::new(UseCaseUnitOfWork::new(&self.context))
+        Box::new(UseCaseUnitOfWork::new(&self.context, &self.event_hub))
     }
- }
+}
 
 pub struct UseCaseUnitOfWorkRO {
     context: DbContext,
@@ -162,8 +192,8 @@ impl UseCaseUnitOfWorkROFactory {
     }
 }
 
- impl UseCaseUnitOfWorkROFactoryTrait for UseCaseUnitOfWorkROFactory{
+impl UseCaseUnitOfWorkROFactoryTrait for UseCaseUnitOfWorkROFactory {
     fn create(&self) -> Box<dyn UseCaseUnitOfWorkROTrait> {
         Box::new(UseCaseUnitOfWorkRO::new(&self.context))
     }
- }
+}

@@ -1,7 +1,8 @@
-use redb::{ReadTransaction, WriteTransaction};
 use crate::database::db_context::DbContext;
-use anyhow::Result;
+use anyhow::{Ok, Result};
+use redb::{ReadTransaction, WriteTransaction};
 
+use crate::types;
 
 enum TransactionType {
     Read(Option<ReadTransaction>),
@@ -28,16 +29,20 @@ impl Transaction {
     }
     pub fn commit(&mut self) -> Result<()> {
         match &mut self.transaction {
-            TransactionType::Read(_) => Ok(()),
-            TransactionType::Write(transaction_option) => transaction_option.take().unwrap().commit(),
+            TransactionType::Read(_) => panic!("Transaction is not a write transaction"),
+            TransactionType::Write(transaction_option) => {
+                transaction_option.take().unwrap().commit()
+            }
         }?;
         Ok(())
     }
 
     pub fn rollback(&mut self) -> Result<()> {
         match &mut self.transaction {
-            TransactionType::Read(_) => Ok(()),
-            TransactionType::Write(transaction_option) => transaction_option.take().unwrap().abort(),
+            TransactionType::Read(_) => panic!("Transaction is not a write transaction"),
+            TransactionType::Write(transaction_option) => {
+                transaction_option.take().unwrap().abort()
+            }
         }?;
         Ok(())
     }
@@ -48,7 +53,7 @@ impl Transaction {
                 transaction_option.take().unwrap().close()?;
                 Ok(())
             }
-            TransactionType::Write(_) => Ok(()),
+            TransactionType::Write(_) => panic!("Transaction is not a read transaction"),
         }
     }
 
@@ -61,10 +66,35 @@ impl Transaction {
 
     pub(crate) fn get_write_transaction(&self) -> &WriteTransaction {
         match &self.transaction {
-            TransactionType::Write(Some(transaction)) => transaction,
+            TransactionType::Write(Some(transaction)) => &transaction,
             _ => panic!("Transaction is not a write transaction"),
         }
     }
+
+    pub fn create_savepoint(&self) -> Result<types::Savepoint> {
+        let savepoint = match &self.transaction {
+            TransactionType::Read(_) => panic!("Transaction is not a write transaction"),
+            TransactionType::Write(transaction_option) => {
+                transaction_option.as_ref().unwrap().persistent_savepoint()
+            }
+        };
+        Ok(savepoint?)
+    }
+    pub fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
+        match &mut self.transaction {
+            TransactionType::Read(_) => panic!("Transaction is not a write transaction"),
+            TransactionType::Write(transaction_option) => {
+                let redb_savepoint = transaction_option
+                    .as_ref()
+                    .unwrap()
+                    .get_persistent_savepoint(savepoint)?;
+                transaction_option
+                    .as_mut()
+                    .take()
+                    .unwrap()
+                    .restore_savepoint(&redb_savepoint)
+            }
+        }?;
+        Ok(())
+    }
 }
-
-

@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use redb::{Database, Error};
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct DbContext {
@@ -8,7 +8,6 @@ pub struct DbContext {
 
 impl DbContext {
     pub fn new() -> Result<Self, Error> {
-
         let db = DbContext::create_db_in_memory()?;
         Ok(DbContext {
             database: Rc::new(db),
@@ -25,5 +24,4 @@ impl DbContext {
     pub fn get_database(&self) -> &Database {
         &self.database
     }
-
 }

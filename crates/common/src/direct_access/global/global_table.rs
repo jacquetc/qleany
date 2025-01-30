@@ -1,81 +1,111 @@
 use crate::database::db_helpers;
 use crate::database::Bincode;
-use crate::entities::Global;
 use crate::entities::EntityId;
+use crate::entities::Global;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+
+use super::global_repository::GlobalTable;
+use super::global_repository::GlobalTableRO;
 
 const GLOBAL_TABLE: TableDefinition<EntityId, Bincode<Global>> = TableDefinition::new("global");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // backward relationships
-const GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("global_from_root_global_junction");
+const GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("global_from_root_global_junction");
 
-pub trait GlobalTable {
-    fn create(&mut self, global: &Global) -> Result<Global, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
-    fn update(&mut self, global: &Global) -> Result<Global, Error>;
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-}
-
-pub trait GlobalTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
-}
-
-#[derive(Clone)]
 pub struct GlobalRedbTable<'a> {
     transaction: &'a WriteTransaction,
 }
 
 impl<'a> GlobalRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
-        GlobalRedbTable {
-            transaction,
-        }
+        GlobalRedbTable { transaction }
     }
 }
 
 impl<'a> GlobalTable for GlobalRedbTable<'a> {
     fn create(&mut self, global: &Global) -> Result<Global, Error> {
-        // retrieve the counter
+        let globals = self.create_multi(&[global.clone()])?;
+        Ok(globals.into_iter().next().unwrap())
+    }
+
+    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
+        let globals = self.get_multi(&[id.clone()])?;
+        Ok(globals.into_iter().next().unwrap())
+    }
+
+    fn update(&mut self, global: &Global) -> Result<Global, Error> {
+        let globals = self.update_multi(&[global.clone()])?;
+        Ok(globals.into_iter().next().unwrap())
+    }
+
+    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
+        self.delete_multi(&[id.clone()])
+    }
+
+    fn create_multi(&mut self, globals: &[Global]) -> Result<Vec<Global>, Error> {
+        let mut created_globals = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
-        let counter = if let Some(counter) = counter_table.get(&"global".to_string())? {
+        let mut counter = if let Some(counter) = counter_table.get(&"global".to_string())? {
             counter.value() + 1
         } else {
             1
         };
 
-        let mut table = self.transaction.open_table(GLOBAL_TABLE)?;
+        let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-        let global = Global {
-            id: counter,
-            ..global.clone()
-        };
-        table.insert(global.id, global.clone())?;
+        for global in globals {
+            let new_global = Global {
+                id: counter,
+                ..global.clone()
+            };
+            global_table.insert(new_global.id, new_global.clone())?;
+            created_globals.push(new_global);
+            counter += 1;
+        }
 
-        // update the counter
         counter_table.insert("global".to_string(), counter)?;
 
-        Ok(global)
+        Ok(created_globals)
     }
 
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
-        let table = self.transaction.open_table(GLOBAL_TABLE)?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|guard| guard.value().clone()))
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+        let mut globals = Vec::new();
+        let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
+
+        for id in ids {
+            let global = if let Some(guard) = global_table.get(id)? {
+                Some(guard.value().clone())
+            } else {
+                None
+            };
+            globals.push(global);
+        }
+        Ok(globals)
     }
 
-    fn update(&mut self, global: &Global) -> Result<Global, Error> {
-        let mut table = self.transaction.open_table(GLOBAL_TABLE)?;
-        table.insert(global.id, global)?;
-        Ok(global.clone())
+    fn update_multi(&mut self, globals: &[Global]) -> Result<Vec<Global>, Error> {
+        let mut updated_globals = Vec::new();
+        let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
+
+        for global in globals {
+            global_table.insert(global.id, global)?;
+            updated_globals.push(global.clone());
+        }
+
+        Ok(updated_globals)
     }
 
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        let mut table = self.transaction.open_table(GLOBAL_TABLE)?;
-        table.remove(id)?;
+    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+        let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
+        let mut junction_table = self
+            .transaction
+            .open_table(GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE)?;
 
-        // delete from backward junction tables, where the id may be in the Vec in the value
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+        for id in ids {
+            global_table.remove(id)?;
+            db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+        }
 
         Ok(())
     }
@@ -93,8 +123,22 @@ impl<'a> GlobalRedbTableRO<'a> {
 
 impl<'a> GlobalTableRO for GlobalRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
-        let table = self.transaction.open_table(GLOBAL_TABLE)?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|guard| guard.value().clone()))
+        let globals = self.get_multi(&[id.clone()])?;
+        Ok(globals.into_iter().next().unwrap())
+    }
+
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+        let mut globals = Vec::new();
+        let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
+
+        for id in ids {
+            let global = if let Some(guard) = global_table.get(id)? {
+                Some(guard.value().clone())
+            } else {
+                None
+            };
+            globals.push(global);
+        }
+        Ok(globals)
     }
 }

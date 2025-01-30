@@ -72,7 +72,7 @@ pub enum FieldType {
     String,
     Uuid,
     DateTime,
-    Entity
+    Entity,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -96,19 +96,19 @@ pub enum RelationshipType {
     OneToOne,
     OneToMany,
     ManyToOne,
-    ManyToMany
+    ManyToMany,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Strength {
     Weak,
-    Strong
+    Strong,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Direction {
     Forward,
-    Backward
+    Backward,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -116,16 +116,14 @@ pub enum Cardinality {
     ZeroOrOne,
     One,
     ZeroOrMore,
-    OneOrMore
+    OneOrMore,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum Order
-{
+pub enum Order {
     Ordered,
-    Unordered
+    Unordered,
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Relationship {

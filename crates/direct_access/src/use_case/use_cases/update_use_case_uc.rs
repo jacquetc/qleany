@@ -1,6 +1,6 @@
-use anyhow::{Ok, Result};
+use super::common::UseCaseUnitOfWorkFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
-use super::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
+use anyhow::{Ok, Result};
 
 pub struct UpdateUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,

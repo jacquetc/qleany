@@ -1,6 +1,6 @@
-use anyhow::{Ok, Result, anyhow};
-use crate::root::dtos::RootDto;
 use super::common::RootUnitOfWorkFactoryTrait;
+use crate::root::dtos::RootDto;
+use anyhow::{anyhow, Ok, Result};
 
 pub struct UpdateRootUseCase {
     uow_factory: Box<dyn RootUnitOfWorkFactoryTrait>,

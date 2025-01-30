@@ -81,166 +81,166 @@ impl LoadUseCase {
 
         uow.begin_transaction()?;
 
-            // create global
-            let global = uow.create_global(&Global {
+        // create global
+        let global = uow.create_global(&Global {
+            id: 0,
+            language: manifest.global.language,
+            application_name: manifest.global.application_name,
+            organisation_name: manifest.global.organisation.name,
+            organisation_domain: manifest.global.organisation.domain,
+            prefix_path: manifest.global.prefix_path,
+        })?;
+        let global_id = global.id;
+
+        // create root
+        let root = uow.create_root(&Root {
+            id: 0,
+            global: global_id,
+            entities: vec![],
+            features: vec![],
+        })?;
+        let root_id = root.id;
+
+        // create entities
+        let mut entity_ids = vec![];
+        let mut entities = vec![];
+        for model_entity in manifest.entities.iter() {
+            let entity = uow.create_entity(&Entity {
                 id: 0,
-                language: manifest.global.language,
-                application_name: manifest.global.application_name,
-                organisation_name: manifest.global.organisation.name,
-                organisation_domain: manifest.global.organisation.domain,
-                prefix_path: manifest.global.prefix_path,
+                name: model_entity.name.clone(),
+                only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
+                parent: None,          // will be filled in later
+                fields: vec![],        // will be filled in later
+                relationships: vec![], // will be filled in later
             })?;
-            let global_id = global.id;
+            entity_ids.push(entity.id);
+            entities.push(entity);
+        }
 
-            // create root
-            let root = uow.create_root(&Root {
-                id: 0,
-                global: global_id,
-                entities: vec![],
-                features: vec![],
-            })?;
-            let root_id = root.id;
+        // create fields
+        for model_entity in manifest.entities.iter() {
+            // find the entity id
+            let entity_id = entities
+                .iter()
+                .find(|e| e.name == model_entity.name)
+                .map(|e| e.id)
+                .expect("Entity not found");
 
-            // create entities
-            let mut entity_ids = vec![];
-            let mut entities = vec![];
-            for model_entity in manifest.entities.iter() {
-                let entity = uow.create_entity(&Entity {
-                    id: 0,
-                    name: model_entity.name.clone(),
-                    only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
-                    parent: None,          // will be filled in later
-                    fields: vec![],        // will be filled in later
-                    relationships: vec![], // will be filled in later
-                })?;
-                entity_ids.push(entity.id);
-                entities.push(entity);
-            }
+            let mut field_ids = vec![];
 
-            // create fields
-            for model_entity in manifest.entities.iter() {
-                // find the entity id
-                let entity_id = entities
+            for model_field in model_entity.fields.iter() {
+                // determine if model_field.type is another entity name
+                let field_entity_id = entities
                     .iter()
-                    .find(|e| e.name == model_entity.name)
-                    .map(|e| e.id)
-                    .expect("Entity not found");
+                    .find(|e| e.name == model_field.r#type)
+                    .map(|e| e.id);
+                let field_type = match field_entity_id {
+                    Some(_id) => FieldType::Entity,
+                    None => match model_field.r#type.clone().as_str() {
+                        "Boolean" | "Bool" => FieldType::Boolean,
+                        "Integer" => FieldType::Integer,
+                        "UInteger" => FieldType::UInteger,
+                        "Float" => FieldType::Float,
+                        "String" => FieldType::String,
+                        "Uuid" => FieldType::Uuid,
+                        "DateTime" => FieldType::DateTime,
+                        _ => FieldType::String,
+                    },
+                };
 
-                let mut field_ids = vec![];
-
-                for model_field in model_entity.fields.iter() {
-                    // determine if model_field.type is another entity name
-                    let field_entity_id = entities
-                        .iter()
-                        .find(|e| e.name == model_field.r#type)
-                        .map(|e| e.id);
-                    let field_type = match field_entity_id {
-                        Some(_id) => FieldType::Entity,
-                        None => match model_field.r#type.clone().as_str() {
-                            "Boolean" | "Bool" => FieldType::Boolean,
-                            "Integer" => FieldType::Integer,
-                            "UInteger" => FieldType::UInteger,
-                            "Float" => FieldType::Float,
-                            "String" => FieldType::String,
-                            "Uuid" => FieldType::Uuid,
-                            "DateTime" => FieldType::DateTime,
-                            _ => FieldType::String,
-                        },
-                    };
-
-                    // create field
-                    let field = uow.create_field(&Field {
-                        id: 0,
-                        name: model_field.name.clone(),
-                        field_type: field_type,
-                        entity: field_entity_id,
-                        is_nullable: model_field.is_nullable.unwrap_or_default(),
-                        is_primary_key: model_field.is_primary_key.unwrap_or_default(),
-                        is_list: model_field.is_list.unwrap_or_default(),
-                        single: model_field.single.unwrap_or_default(),
-                        strong: model_field.strong.unwrap_or_default(),
-                        ordered: model_field.ordered.unwrap_or_default(),
-                        list_model: model_field.list_model.unwrap_or_default(),
-                        list_model_displayed_field: model_field.list_model_displayed_field.clone(),
-                    })?;
-                    field_ids.push(field.id);
-                }
-
-                // get entity from repo
-                let mut entity = uow.get_entity(&entity_id)?.expect("Entity not found");
-
-                // update entity with fields
-                entity.fields = field_ids;
-
-                // update entity with parent
-
-                if let Some(parent_name) = model_entity.parent.clone() {
-                    let parent_id = entities
-                        .iter()
-                        .find(|e| e.name == parent_name)
-                        .map(|e| e.id)
-                        .expect("Parent not found");
-                    entity.parent = Some(parent_id);
-                }
-
-                // update entity in repo
-                uow.update_entity(&entity)?;
+                // create field
+                let field = uow.create_field(&Field {
+                    id: 0,
+                    name: model_field.name.clone(),
+                    field_type: field_type,
+                    entity: field_entity_id,
+                    is_nullable: model_field.is_nullable.unwrap_or_default(),
+                    is_primary_key: model_field.is_primary_key.unwrap_or_default(),
+                    is_list: model_field.is_list.unwrap_or_default(),
+                    single: model_field.single.unwrap_or_default(),
+                    strong: model_field.strong.unwrap_or_default(),
+                    ordered: model_field.ordered.unwrap_or_default(),
+                    list_model: model_field.list_model.unwrap_or_default(),
+                    list_model_displayed_field: model_field.list_model_displayed_field.clone(),
+                })?;
+                field_ids.push(field.id);
             }
 
-            // create features
-            let mut feature_ids = vec![];
-            for model_feature in manifest.features.iter() {
-                // create use cases
-                let mut use_case_ids = vec![];
-                for model_use_case in model_feature.use_cases.iter() {
-                    // match entity names to ids
-                    let use_case_entity_names = model_use_case.entities.clone();
-                    let mut use_case_entity_ids = vec![];
-                    if let Some(use_case_entity_names) = use_case_entity_names {
-                        for entity in entities.iter() {
-                            if use_case_entity_names.contains(&entity.name) {
-                                use_case_entity_ids.push(entity.id);
-                            }
-                        }
-                        // error if not all entities found
-                        if use_case_entity_ids.len() != use_case_entity_names.len() {
-                            return Err(anyhow::anyhow!(
-                                "Not all entities found in use case {}",
-                                model_use_case.name
-                            ));
+            // get entity from repo
+            let mut entity = uow.get_entity(&entity_id)?.expect("Entity not found");
+
+            // update entity with fields
+            entity.fields = field_ids;
+
+            // update entity with parent
+
+            if let Some(parent_name) = model_entity.parent.clone() {
+                let parent_id = entities
+                    .iter()
+                    .find(|e| e.name == parent_name)
+                    .map(|e| e.id)
+                    .expect("Parent not found");
+                entity.parent = Some(parent_id);
+            }
+
+            // update entity in repo
+            uow.update_entity(&entity)?;
+        }
+
+        // create features
+        let mut feature_ids = vec![];
+        for model_feature in manifest.features.iter() {
+            // create use cases
+            let mut use_case_ids = vec![];
+            for model_use_case in model_feature.use_cases.iter() {
+                // match entity names to ids
+                let use_case_entity_names = model_use_case.entities.clone();
+                let mut use_case_entity_ids = vec![];
+                if let Some(use_case_entity_names) = use_case_entity_names {
+                    for entity in entities.iter() {
+                        if use_case_entity_names.contains(&entity.name) {
+                            use_case_entity_ids.push(entity.id);
                         }
                     }
-
-                    let use_case = uow.create_use_case(&UseCase {
-                        id: 0,
-                        name: model_use_case.name.clone(),
-                        validator: model_use_case.validator,
-                        entities: use_case_entity_ids,
-                        undoable: model_use_case.undoable,
-                        dto_in: None,
-                        dto_out: None,
-                    })?;
-                    use_case_ids.push(use_case.id);
+                    // error if not all entities found
+                    if use_case_entity_ids.len() != use_case_entity_names.len() {
+                        return Err(anyhow::anyhow!(
+                            "Not all entities found in use case {}",
+                            model_use_case.name
+                        ));
+                    }
                 }
 
-                let feature = uow.create_feature(&Feature {
+                let use_case = uow.create_use_case(&UseCase {
                     id: 0,
-                    name: model_feature.name.clone(),
-                    use_cases: use_case_ids,
+                    name: model_use_case.name.clone(),
+                    validator: model_use_case.validator,
+                    entities: use_case_entity_ids,
+                    undoable: model_use_case.undoable,
+                    dto_in: None,
+                    dto_out: None,
                 })?;
-                feature_ids.push(feature.id);
+                use_case_ids.push(use_case.id);
             }
 
-            // update root with entities
-            // good practice to get the root again, to make sure it is not stale
-            let root = uow.get_root(&root_id)?.expect("Root not found");
-            let root = Root {
-                id: root.id,
-                global: global_id,
-                entities: entity_ids,
-                features: feature_ids,
-            };
-            uow.update_root(&root)?;
+            let feature = uow.create_feature(&Feature {
+                id: 0,
+                name: model_feature.name.clone(),
+                use_cases: use_case_ids,
+            })?;
+            feature_ids.push(feature.id);
+        }
+
+        // update root with entities
+        // good practice to get the root again, to make sure it is not stale
+        let root = uow.get_root(&root_id)?.expect("Root not found");
+        let root = Root {
+            id: root.id,
+            global: global_id,
+            entities: entity_ids,
+            features: feature_ids,
+        };
+        uow.update_root(&root)?;
 
         uow.commit()?;
 

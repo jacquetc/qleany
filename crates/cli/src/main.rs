@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use clap::Arg;
 use clap::{Parser, Subcommand};
@@ -37,11 +36,10 @@ enum ProjectCommands {
     // Status { project_id: Option<u32> },
 }
 
-
-fn main() { 
-       let cli = Cli::parse();
+fn main() {
+    let cli = Cli::parse();
 
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
-   // match &cli.command {
+    // match &cli.command {
 }

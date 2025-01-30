@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 
 use crate::global::dtos::{CreateGlobalDto, GlobalDto};
 
-use super::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
+use super::common::GlobalUnitOfWorkFactoryTrait;
 
 pub struct CreateGlobalUseCase {
     uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>,

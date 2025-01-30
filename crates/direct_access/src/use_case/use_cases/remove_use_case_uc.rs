@@ -1,6 +1,6 @@
+use super::common::UseCaseUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
 use common::entities::EntityId;
-use super::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
 
 pub struct RemoveUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,

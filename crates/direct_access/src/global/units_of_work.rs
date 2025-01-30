@@ -1,26 +1,28 @@
-use std::cell::RefCell;
-
-use anyhow::{Ok, Result};
-
+use super::use_cases::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
+use super::use_cases::get_global_uc::GlobalUnitOfWorkROFactoryTrait;
 use crate::global::use_cases::get_global_uc::GlobalUnitOfWorkROTrait;
+use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
 use common::entities::{EntityId, Global};
-
-use super::use_cases::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
-use super::use_cases::get_global_uc::GlobalUnitOfWorkROFactoryTrait;
+use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
+use common::types;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct GlobalUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
+    event_hub: Rc<EventHub>,
 }
 
 impl GlobalUnitOfWork {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         GlobalUnitOfWork {
             context: db_context.clone(),
             transaction: None,
+            event_hub: event_hub.clone(),
         }
     }
 }
@@ -40,6 +42,24 @@ impl CommandUnitOfWork for GlobalUnitOfWork {
         self.transaction.take().unwrap().rollback()?;
         Ok(())
     }
+
+    fn create_savepoint(&self) -> Result<()> {
+        self.transaction.as_ref().unwrap().create_savepoint()?;
+        Ok(())
+    }
+
+    fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
+        let mut transaction = self.transaction.take().unwrap();
+        transaction.restore_to_savepoint(savepoint)?;
+
+        self.event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![],
+            data: None,
+        });
+
+        Ok(())
+    }
 }
 
 impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
@@ -55,7 +75,7 @@ impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
         let mut global_repo = repository_factory::write::create_global_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let global = global_repo.create(global)?;
+        let global = global_repo.create(&self.event_hub, global)?;
         Ok(global)
     }
 
@@ -63,7 +83,7 @@ impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
         let mut global_repo = repository_factory::write::create_global_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let global = global_repo.update(global)?;
+        let global = global_repo.update(&self.event_hub, global)?;
         Ok(global)
     }
 
@@ -71,28 +91,30 @@ impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
         let mut global_repo = repository_factory::write::create_global_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        global_repo.delete(id)?;
+        global_repo.delete(&self.event_hub, id)?;
         Ok(())
     }
 }
 
 pub struct GlobalUnitOfWorkFactory {
     context: DbContext,
+    event_hub: Rc<EventHub>,
 }
 
 impl GlobalUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
         GlobalUnitOfWorkFactory {
             context: db_context.clone(),
+            event_hub: event_hub.clone(),
         }
     }
 }
 
- impl GlobalUnitOfWorkFactoryTrait for GlobalUnitOfWorkFactory{
+impl GlobalUnitOfWorkFactoryTrait for GlobalUnitOfWorkFactory {
     fn create(&self) -> Box<dyn GlobalUnitOfWorkTrait> {
-        Box::new(GlobalUnitOfWork::new(&self.context))
+        Box::new(GlobalUnitOfWork::new(&self.context, &self.event_hub))
     }
- }
+}
 
 pub struct GlobalUnitOfWorkRO {
     context: DbContext,
@@ -146,8 +168,8 @@ impl GlobalUnitOfWorkROFactory {
     }
 }
 
- impl GlobalUnitOfWorkROFactoryTrait for GlobalUnitOfWorkROFactory{
+impl GlobalUnitOfWorkROFactoryTrait for GlobalUnitOfWorkROFactory {
     fn create(&self) -> Box<dyn GlobalUnitOfWorkROTrait> {
         Box::new(GlobalUnitOfWorkRO::new(&self.context))
     }
- }
+}

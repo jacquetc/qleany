@@ -1,7 +1,7 @@
 use std::convert::From;
 
-use common::entities::Global;
 use common::entities::EntityId;
+use common::entities::Global;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalDto {

@@ -4,35 +4,21 @@ use crate::entities::Dto;
 use crate::entities::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
+use super::dto_repository::DtoRelationshipField;
+use super::dto_repository::DtoTable;
+use super::dto_repository::DtoTableRO;
+
 const DTO_TABLE: TableDefinition<EntityId, Bincode<Dto>> = TableDefinition::new("dto");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
-const DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("dto_field_from_dto_fields_junction");
+const DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("dto_field_from_dto_fields_junction");
 // backward relationships
-const DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("dto_from_use_case_dto_in_junction");
-const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("dto_from_use_case_dto_out_junction");
+const DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("dto_from_use_case_dto_in_junction");
+const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("dto_from_use_case_dto_out_junction");
 
-
-pub enum DtoRelationshipField {
-    Fields
-}
-
-pub trait DtoTable {
-    fn create(&mut self, dto: &Dto) -> Result<Dto, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
-    fn update(&mut self, dto: &Dto) -> Result<Dto, Error>;
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn get_relationships_of(&self, field: &DtoRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-    fn delete_all_relationships_with(&mut self, field: &DtoRelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
-    fn set_relationships(&mut self, field: &DtoRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
-
-}
-
-pub trait DtoTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
-}
-
-#[derive(Clone)]
 pub struct DtoRedbTable<'a> {
     transaction: &'a WriteTransaction,
 }
@@ -45,88 +31,126 @@ impl<'a> DtoRedbTable<'a> {
 
 impl<'a> DtoTable for DtoRedbTable<'a> {
     fn create(&mut self, dto: &Dto) -> Result<Dto, Error> {
-        // retrieve the counter
+        let dtos = self.create_multi(&[dto.clone()])?;
+        Ok(dtos.into_iter().next().unwrap())
+    }
+
+    fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error> {
+        let dtos = self.get_multi(&[id.clone()])?;
+        Ok(dtos.into_iter().next().unwrap())
+    }
+
+    fn update(&mut self, dto: &Dto) -> Result<Dto, Error> {
+        let dtos = self.update_multi(&[dto.clone()])?;
+        Ok(dtos.into_iter().next().unwrap())
+    }
+
+    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
+        self.delete_multi(&[id.clone()])
+    }
+
+    fn create_multi(&mut self, dtos: &[Dto]) -> Result<Vec<Dto>, Error> {
+        let mut created_dtos = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
-        let counter = if let Some(counter) = counter_table.get(&"feature".to_string())? {
+        let mut counter = if let Some(counter) = counter_table.get(&"dto".to_string())? {
             counter.value() + 1
         } else {
             1
         };
 
-        let mut table = self.transaction.open_table(DTO_TABLE)?;
+        let mut dto_table = self.transaction.open_table(DTO_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
-        let new_dto = Dto {
-            id: counter,
-            ..dto.clone()
-        };
-        table.insert(new_dto.id, new_dto.clone())?;
-
-        // update the counter
-        counter_table.insert("feature".to_string(), counter)?;
-
-        // add use cases to junction table
-        let mut junction_table = self.transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
-        junction_table.insert(new_dto.id, new_dto.fields.clone())?;
-
-        Ok(new_dto)
-    }
-
-    fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error> {
-        let table = self.transaction.open_table(DTO_TABLE)?;
-        let guard = table.get(id)?;
-        let dto = guard.map(|guard| guard.value().clone());
-
-        if dto.is_none() {
-            return Ok(None);
+        for dto in dtos {
+            let new_dto = Dto {
+                id: counter,
+                ..dto.clone()
+            };
+            dto_table.insert(new_dto.id, new_dto.clone())?;
+            field_junction_table.insert(new_dto.id, new_dto.fields.clone())?;
+            created_dtos.push(new_dto);
+            counter += 1;
         }
 
-        // get fields from junction table
-        let junction_table = self.transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
-        let fields = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
+        counter_table.insert("dto".to_string(), counter)?;
 
-        Ok(dto.map(|mut dto| {
-            dto.fields = fields;
-            dto
-        }))
+        Ok(created_dtos)
     }
 
-    fn update(&mut self, dto: &Dto) -> Result<Dto, Error> {
-        // update the dto table
-        let mut table = self.transaction.open_table(DTO_TABLE)?;
-        table.insert(dto.id, dto)?;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
+        let mut dtos = Vec::new();
+        let dto_table = self.transaction.open_table(DTO_TABLE)?;
+        let field_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
-        // update the junction table
-        let mut junction_table = self.transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
-        junction_table.insert(dto.id, dto.fields.clone())?;
+        for id in ids {
+            let dto = if let Some(guard) = dto_table.get(id)? {
+                let mut dto = guard.value().clone();
 
-        Ok(dto.clone())
+                // get fields from junction table
+                let fields = field_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
+
+                dto.fields = fields;
+                Some(dto)
+            } else {
+                None
+            };
+            dtos.push(dto);
+        }
+        Ok(dtos)
     }
 
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        // delete from dto table
-        let mut table = self.transaction.open_table(DTO_TABLE)?;
-        table.remove(id)?;
+    fn update_multi(&mut self, dtos: &[Dto]) -> Result<Vec<Dto>, Error> {
+        let mut updated_dtos = Vec::new();
+        let mut dto_table = self.transaction.open_table(DTO_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
-        // delete from junction table
-        let mut junction_table = self.transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
-        junction_table.remove(id)?;
+        for dto in dtos {
+            dto_table.insert(dto.id, dto)?;
+            field_junction_table.insert(dto.id, dto.fields.clone())?;
+            updated_dtos.push(dto.clone());
+        }
 
-        // delete from backward junction tables, where the id may be in the Vec in the value
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+        Ok(updated_dtos)
+    }
 
-        let mut junction_table: redb::Table<'_, u64, Vec<u64>> = self.transaction.open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
-        db_helpers::delete_from_backward_junction_table(&mut junction_table, id)?;
+    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+        let mut dto_table = self.transaction.open_table(DTO_TABLE)?;
+        let mut field_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
+        let mut dto_in_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+        let mut dto_out_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+
+        for id in ids {
+            dto_table.remove(id)?;
+            field_junction_table.remove(id)?;
+            db_helpers::delete_from_backward_junction_table(&mut dto_in_junction_table, id)?;
+            db_helpers::delete_from_backward_junction_table(&mut dto_out_junction_table, id)?;
+        }
 
         Ok(())
-
-
     }
-    
-    fn get_relationships_of(&self, field: &DtoRelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let junction_table_definition =
-            match field {
-                DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
+
+    fn get_relationships_of(
+        &self,
+        field: &DtoRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        let junction_table_definition = match field {
+            DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
         };
         let junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
@@ -134,18 +158,24 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
         while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
             let left_id = left_id.value();
             let right_entities = right_entities.value();
-            if right_ids.iter().any(|entity_id| right_entities.contains(entity_id)) {
+            if right_ids
+                .iter()
+                .any(|entity_id| right_entities.contains(entity_id))
+            {
                 relationships.push((left_id, right_entities));
             }
         }
         Ok(relationships)
     }
-    
-    fn delete_all_relationships_with(&mut self, field: &DtoRelationshipField, right_ids: &[EntityId]) -> Result<(), Error> {
-        // delete from junction table        
-        let junction_table_definition =
-            match field {
-                DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
+
+    fn delete_all_relationships_with(
+        &mut self,
+        field: &DtoRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error> {
+        // delete from junction table
+        let junction_table_definition = match field {
+            DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
         };
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
@@ -153,8 +183,12 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
         while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
             let left_id = left_id.value();
             let right_entities = right_entities.value();
-            let entities_left: Vec<EntityId> = right_entities.clone().into_iter().filter(|entity_id| !right_ids.contains(entity_id)).collect();
-            
+            let entities_left: Vec<EntityId> = right_entities
+                .clone()
+                .into_iter()
+                .filter(|entity_id| !right_ids.contains(entity_id))
+                .collect();
+
             if entities_left.len() == right_entities.len() {
                 continue;
             }
@@ -162,15 +196,18 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
         }
         for (left_id, entities) in junctions_to_modify {
             junction_table.insert(left_id, entities)?;
-        }      
+        }
 
         Ok(())
     }
-    
-    fn set_relationships(&mut self, field: &DtoRelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error> {
-        let junction_table_definition =
-            match field {
-                DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
+
+    fn set_relationships(
+        &mut self,
+        field: &DtoRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error> {
+        let junction_table_definition = match field {
+            DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
         };
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         for (left_id, entities) in relationships {
@@ -192,21 +229,34 @@ impl<'a> DtoRedbTableRO<'a> {
 
 impl<'a> DtoTableRO for DtoRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error> {
-        let table = self.transaction.open_table(DTO_TABLE)?;
-        let guard = table.get(id)?;
-        let dto = guard.map(|guard| guard.value().clone());
+        let dtos = self.get_multi(&[id.clone()])?;
+        Ok(dtos.into_iter().next().unwrap())
+    }
 
-        if dto.is_none() {
-            return Ok(None);
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
+        let mut dtos = Vec::new();
+        let dto_table = self.transaction.open_table(DTO_TABLE)?;
+        let field_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
+
+        for id in ids {
+            let dto = if let Some(guard) = dto_table.get(id)? {
+                let mut dto = guard.value().clone();
+
+                // get fields from junction table
+                let fields = field_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default();
+
+                dto.fields = fields;
+                Some(dto)
+            } else {
+                None
+            };
+            dtos.push(dto);
         }
-
-        // get fields from junction table
-        let junction_table = self.transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
-        let fields = junction_table.get(id)?.map(|guard| guard.value().clone()).unwrap_or_default();
-
-        Ok(dto.map(|mut dto| {
-            dto.fields = fields;
-            dto
-        }))
+        Ok(dtos)
     }
 }

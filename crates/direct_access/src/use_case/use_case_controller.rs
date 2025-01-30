@@ -1,8 +1,3 @@
-use anyhow::{Ok, Result};
-use common::{
-    database::db_context::DbContext, entities::EntityId,
-};
-
 use super::{
     dtos::{CreateUseCaseDto, UseCaseDto},
     units_of_work::{UseCaseUnitOfWorkFactory, UseCaseUnitOfWorkROFactory},
@@ -11,28 +6,39 @@ use super::{
         remove_use_case_uc::RemoveUseCaseUseCase, update_use_case_uc::UpdateUseCaseUseCase,
     },
 };
+use anyhow::{Ok, Result};
+use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
+use std::rc::Rc;
 
-pub fn create(db_context: &DbContext, use_case: &CreateUseCaseDto) -> Result<UseCaseDto> {
-    let mut uow_factory = UseCaseUnitOfWorkFactory::new(&db_context);
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Rc<EventHub>,
+    use_case: &CreateUseCaseDto,
+) -> Result<UseCaseDto> {
+    let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = CreateUseCaseUseCase::new(Box::new(uow_factory));
     use_case_uc.execute(use_case.clone())
 }
+
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<UseCaseDto>> {
     let uow_factory = UseCaseUnitOfWorkROFactory::new(&db_context);
     let use_case = GetUseCaseUseCase::new(Box::new(uow_factory));
     use_case.execute(id)
 }
 
-pub fn update(db_context: &DbContext, use_case: &UseCaseDto) -> Result<UseCaseDto> {
-    let mut uow_factory = UseCaseUnitOfWorkFactory::new(&db_context);
+pub fn update(
+    db_context: &DbContext,
+    event_hub: &Rc<EventHub>,
+    use_case: &UseCaseDto,
+) -> Result<UseCaseDto> {
+    let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = UpdateUseCaseUseCase::new(Box::new(uow_factory));
     use_case_uc.execute(use_case)
 }
 
-pub fn remove(db_context: &DbContext, id: &EntityId) -> Result<()> {
-
+pub fn remove(db_context: &DbContext, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<()> {
     // delete use case
-    let mut uow_factory = UseCaseUnitOfWorkFactory::new(&db_context);
+    let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case = RemoveUseCaseUseCase::new(Box::new(uow_factory));
     use_case.execute(id)?;
 
