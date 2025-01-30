@@ -41,9 +41,8 @@ impl CommandUnitOfWork for LoadUnitOfWork {
         Ok(())
     }
 
-    fn create_savepoint(&self) -> Result<()> {
-        self.transaction.as_ref().unwrap().create_savepoint()?;
-        Ok(())
+    fn create_savepoint(&self) -> Result<types::Savepoint> {
+        self.transaction.as_ref().unwrap().create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {

@@ -73,15 +73,30 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         for entity in entities {
-            let new_entity = Entity {
-                id: counter,
-                ..entity.clone()
+            // if the id is default, create a new id
+            let new_entity = if entity.id == EntityId::default() {
+                Entity {
+                    id: counter,
+                    ..entity.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if entity_table.get(&entity.id)?.is_some() {
+                    panic!(
+                        "Entity id already in use while creating it: {:?}",
+                        entity.id
+                    );
+                }
+                entity.clone()
             };
             entity_table.insert(new_entity.id, new_entity.clone())?;
             field_junction_table.insert(new_entity.id, new_entity.fields.clone())?;
             relationship_junction_table.insert(new_entity.id, new_entity.relationships.clone())?;
             created_entities.push(new_entity);
-            counter += 1;
+
+            if entity.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("entity".to_string(), counter)?;

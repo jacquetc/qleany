@@ -3,21 +3,23 @@ use crate::use_case::dtos::UseCaseDto;
 use anyhow::Result;
 use common::entities::EntityId;
 
-pub struct GetUseCaseUseCase {
+pub struct GetUseCaseMultiUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkROFactoryTrait>,
 }
 
-impl GetUseCaseUseCase {
+impl GetUseCaseMultiUseCase {
     pub fn new(uow_factory: Box<dyn UseCaseUnitOfWorkROFactoryTrait>) -> Self {
-        GetUseCaseUseCase { uow_factory }
+        GetUseCaseMultiUseCase { uow_factory }
     }
 
-    pub fn execute(&self, id: &EntityId) -> Result<Option<UseCaseDto>> {
+    pub fn execute(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCaseDto>>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let use_case_option = uow.get_use_case(&id)?;
+        let use_cases = uow.get_use_case_multi(ids)?;
         uow.end_transaction()?;
-
-        Ok(use_case_option.map(|use_case| use_case.into()))
+        Ok(use_cases
+            .into_iter()
+            .map(|use_case| use_case.map(|uc| uc.into()))
+            .collect())
     }
 }

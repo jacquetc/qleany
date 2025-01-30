@@ -62,9 +62,19 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
         for field in fields {
-            let new_field = Field {
-                id: counter,
-                ..field.clone()
+            // if the id is default, create a new id
+
+            let new_field = if field.id == EntityId::default() {
+                Field {
+                    id: counter,
+                    ..field.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if field_table.get(&field.id)?.is_some() {
+                    panic!("Field id already in use while creating it: {:?}", field.id);
+                }
+                field.clone()
             };
             field_table.insert(new_field.id, new_field.clone())?;
             entity_junction_table.insert(
@@ -76,7 +86,10 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                     .collect::<Vec<EntityId>>(),
             )?;
             created_fields.push(new_field);
-            counter += 1;
+
+            if field.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("field".to_string(), counter)?;

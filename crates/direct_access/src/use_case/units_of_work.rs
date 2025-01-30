@@ -1,6 +1,7 @@
-use super::use_cases::common::{UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkTrait};
-use super::use_cases::get_use_case_uc::UseCaseUnitOfWorkROFactoryTrait;
-use crate::use_case::use_cases::get_use_case_uc::UseCaseUnitOfWorkROTrait;
+use super::use_cases::common::{
+    UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkROFactoryTrait, UseCaseUnitOfWorkROTrait,
+    UseCaseUnitOfWorkTrait,
+};
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -43,9 +44,8 @@ impl CommandUnitOfWork for UseCaseUnitOfWork {
         Ok(())
     }
 
-    fn create_savepoint(&self) -> Result<()> {
-        self.transaction.as_ref().unwrap().create_savepoint()?;
-        Ok(())
+    fn create_savepoint(&self) -> Result<types::Savepoint> {
+        self.transaction.as_ref().unwrap().create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
@@ -71,12 +71,28 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         Ok(value)
     }
 
+    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
+        let use_case_repo = repository_factory::write::create_use_case_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let value = use_case_repo.get_multi(ids)?;
+        Ok(value)
+    }
+
     fn create_use_case(&self, use_case: &UseCase) -> Result<UseCase> {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
         let use_case = use_case_repo.create(&self.event_hub, use_case)?;
         Ok(use_case)
+    }
+
+    fn create_use_case_multi(&self, use_cases: &[UseCase]) -> Result<Vec<UseCase>> {
+        let mut use_case_repo = repository_factory::write::create_use_case_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let use_cases = use_case_repo.create_multi(&self.event_hub, use_cases)?;
+        Ok(use_cases)
     }
 
     fn update_use_case(&self, use_case: &UseCase) -> Result<UseCase> {
@@ -87,11 +103,27 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         Ok(use_case)
     }
 
+    fn update_use_case_multi(&self, use_cases: &[UseCase]) -> Result<Vec<UseCase>> {
+        let mut use_case_repo = repository_factory::write::create_use_case_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let use_cases = use_case_repo.update_multi(&self.event_hub, use_cases)?;
+        Ok(use_cases)
+    }
+
     fn delete_use_case(&self, id: &EntityId) -> Result<()> {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
         use_case_repo.delete(&self.event_hub, id)?;
+        Ok(())
+    }
+
+    fn delete_use_case_multi(&self, ids: &[EntityId]) -> Result<()> {
+        let mut use_case_repo = repository_factory::write::create_use_case_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        use_case_repo.delete_multi(&self.event_hub, ids)?;
         Ok(())
     }
 
@@ -177,6 +209,17 @@ impl UseCaseUnitOfWorkROTrait for UseCaseUnitOfWorkRO {
         );
         let use_case = use_case_repo.get(id)?;
         Ok(use_case)
+    }
+
+    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
+        let borrowed_transaction = self.transaction.borrow();
+        let use_case_repo = repository_factory::read::create_use_case_repository(
+            &borrowed_transaction
+                .as_ref()
+                .expect("Transaction not started"),
+        );
+        let use_cases = use_case_repo.get_multi(ids)?;
+        Ok(use_cases)
     }
 }
 

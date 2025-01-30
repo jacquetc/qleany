@@ -55,13 +55,25 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
         for global in globals {
-            let new_global = Global {
-                id: counter,
-                ..global.clone()
+            // id the id is default, create a new id
+            let new_global = if global.id == EntityId::default() {
+                Global {
+                    id: counter,
+                    ..global.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if global_table.get(&global.id)?.is_some() {
+                    panic!("Global id already in use while creating it: {:?}", global.id);
+                }
+                global.clone()
             };
             global_table.insert(new_global.id, new_global.clone())?;
             created_globals.push(new_global);
-            counter += 1;
+            
+            if global.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("global".to_string(), counter)?;

@@ -7,7 +7,7 @@ pub trait CommandUnitOfWork {
     fn begin_transaction(&mut self) -> Result<()>;
     fn commit(&mut self) -> Result<()>;
     fn rollback(&mut self) -> Result<()>;
-    fn create_savepoint(&self) -> Result<()>;
+    fn create_savepoint(&self) -> Result<types::Savepoint>;
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()>;
 }
 

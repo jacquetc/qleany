@@ -56,9 +56,18 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         let mut dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
         for dto_field in dto_fields {
-            let new_dto_field = DtoField {
-                id: counter,
-                ..dto_field.clone()
+            // if the id is default, create a new id
+            let new_dto_field = if dto_field.id == EntityId::default() {
+                DtoField {
+                    id: counter,
+                    ..dto_field.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if dto_field_table.get(&dto_field.id)?.is_some() {
+                    panic!("DtoField id already in use while creating it: {}", dto_field.id);
+                }
+                dto_field.clone()
             };
             dto_field_table.insert(new_dto_field.id, new_dto_field.clone())?;
             created_dto_fields.push(new_dto_field);

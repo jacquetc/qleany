@@ -60,13 +60,25 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
         for relationship in relationships {
-            let new_relationship = Relationship {
-                id: counter,
-                ..relationship.clone()
+            // if the id is default, create a new id
+            let new_relationship= if relationship.id == EntityId::default() {
+                Relationship {
+                    id: counter,
+                    ..relationship.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if relationship_table.get(&relationship.id)?.is_some() {
+                    panic!("Relationship id already in use while creating it: {}", relationship.id);
+                }
+                relationship.clone()
             };
             relationship_table.insert(new_relationship.id, new_relationship.clone())?;
             created_relationships.push(new_relationship);
-            counter += 1;
+
+            if relationship.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("relationship".to_string(), counter)?;

@@ -62,14 +62,27 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
             .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
 
         for feature in features {
-            let new_feature = Feature {
-                id: counter,
-                ..feature.clone()
+            // if the id is default, create a new id
+            let new_feature = if feature.id == EntityId::default() {
+                Feature {
+                    id: counter,
+                    ..feature.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if feature_table.get(&feature.id)?.is_some() {
+                    panic!("Feature id already in use while creating it: {:?}", feature.id);
+                }
+                feature.clone()
             };
+            
             feature_table.insert(new_feature.id, new_feature.clone())?;
             use_case_junction_table.insert(new_feature.id, new_feature.use_cases.clone())?;
             created_features.push(new_feature);
-            counter += 1;
+
+            if feature.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("feature".to_string(), counter)?;

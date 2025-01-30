@@ -145,16 +145,28 @@ impl<'a> RootTable for RootRedbTable<'a> {
             .open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
 
         for root in roots {
-            let new_root = Root {
-                id: counter,
-                ..root.clone()
+            // if the id is default, create a new id
+            let new_root = if root.id == EntityId::default() {
+                Root {
+                    id: counter,
+                    ..root.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if root_table.get(&root.id)?.is_some() {
+                    panic!("Root id already in use while creating it: {}", root.id);
+                }
+                root.clone()
             };
             root_table.insert(new_root.id, new_root.clone())?;
             global_junction_table.insert(new_root.id, vec![new_root.global] as Vec<EntityId>)?;
             entity_junction_table.insert(new_root.id, new_root.entities.clone())?;
             feature_junction_table.insert(new_root.id, new_root.features.clone())?;
             created_roots.push(new_root);
-            counter += 1;
+
+            if root.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("root".to_string(), counter)?;

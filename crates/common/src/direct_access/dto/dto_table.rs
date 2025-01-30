@@ -64,14 +64,30 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
             .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
         for dto in dtos {
-            let new_dto = Dto {
+            // if the id is default, create a new id
+            let new_dto = if dto.id == EntityId::default() {
+                Dto {
+                    id: counter,
+                    ..dto.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if dto_table.get(&dto.id)?.is_some() {
+                    panic!("Dto id already in use while creating it: {:?}", dto.id);
+                }
+                dto.clone()
+            };
+            Dto {
                 id: counter,
                 ..dto.clone()
             };
             dto_table.insert(new_dto.id, new_dto.clone())?;
             field_junction_table.insert(new_dto.id, new_dto.fields.clone())?;
             created_dtos.push(new_dto);
-            counter += 1;
+
+            if dto.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("dto".to_string(), counter)?;

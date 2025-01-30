@@ -73,9 +73,21 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
         for use_case in use_cases {
-            let new_use_case = UseCase {
-                id: counter,
-                ..use_case.clone()
+            // if the id is default, create a new id
+            let new_use_case = if use_case.id == EntityId::default() {
+                UseCase {
+                    id: counter,
+                    ..use_case.clone()
+                }
+            } else {
+                // ensure that the id is not already in use
+                if use_case_table.get(&use_case.id)?.is_some() {
+                    panic!(
+                        "UseCase id already in use while creating it: {:?}",
+                        use_case.id
+                    );
+                }
+                use_case.clone()
             };
             use_case_table.insert(new_use_case.id, new_use_case.clone())?;
             entity_junction_table.insert(new_use_case.id, new_use_case.entities.clone())?;
@@ -96,7 +108,10 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     .collect::<Vec<EntityId>>(),
             )?;
             created_use_cases.push(new_use_case);
-            counter += 1;
+
+            if use_case.id == EntityId::default() {
+                counter += 1;
+            }
         }
 
         counter_table.insert("use_case".to_string(), counter)?;
