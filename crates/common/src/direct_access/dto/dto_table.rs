@@ -53,7 +53,7 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
         let mut created_dtos = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"dto".to_string())? {
-            counter.value() + 1
+            counter.value()
         } else {
             1
         };

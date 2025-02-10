@@ -1,5 +1,4 @@
-use std::rc::Rc;
-
+use std::sync::Arc;
 use crate::use_cases::load_uc::{LoadUnitOfWorkFactoryTrait, LoadUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
@@ -12,11 +11,11 @@ use common::types;
 pub struct LoadUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl LoadUnitOfWork {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         LoadUnitOfWork {
             context: db_context.clone(),
             transaction: None,
@@ -143,11 +142,11 @@ impl LoadUnitOfWorkTrait for LoadUnitOfWork {
 
 pub struct LoadUnitOfWorkFactory {
     context: DbContext,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl LoadUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         LoadUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),

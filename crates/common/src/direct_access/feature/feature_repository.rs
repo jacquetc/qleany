@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -60,7 +60,7 @@ impl<'a> FeatureRepository<'a> {
 
     pub fn create(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         feature: &Feature,
     ) -> Result<Feature, Error> {
         let new = self.redb_table.create(feature)?;
@@ -74,7 +74,7 @@ impl<'a> FeatureRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         features: &[Feature],
     ) -> Result<Vec<Feature>, Error> {
         let new_features = self.redb_table.create_multi(features)?;
@@ -100,7 +100,7 @@ impl<'a> FeatureRepository<'a> {
 
     pub fn update(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         feature: &Feature,
     ) -> Result<Feature, Error> {
         let updated_feature = self.redb_table.update(feature)?;
@@ -114,7 +114,7 @@ impl<'a> FeatureRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         features: &[Feature],
     ) -> Result<Vec<Feature>, Error> {
         let updated_features = self.redb_table.update_multi(features)?;
@@ -130,7 +130,7 @@ impl<'a> FeatureRepository<'a> {
         Ok(updated_features)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let feature = match self.redb_table.get(id)? {
             Some(feature) => feature,
             None => return Ok(()),
@@ -156,7 +156,7 @@ impl<'a> FeatureRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let features = self.redb_table.get_multi(ids)?;

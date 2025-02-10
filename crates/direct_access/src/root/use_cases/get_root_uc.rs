@@ -3,16 +3,8 @@ use common::{
     database::QueryUnitOfWork,
     entities::{EntityId, Root},
 };
-
+use super::common::RootUnitOfWorkROFactoryTrait;
 use crate::root::dtos::RootDto;
-
-pub trait RootUnitOfWorkROFactoryTrait {
-    fn create(&self) -> Box<dyn RootUnitOfWorkROTrait>;
-}
-
-pub trait RootUnitOfWorkROTrait: QueryUnitOfWork {
-    fn get_root(&self, id: &EntityId) -> Result<Option<Root>>;
-}
 
 pub struct GetRootUseCase {
     uow_factory: Box<dyn RootUnitOfWorkROFactoryTrait>,

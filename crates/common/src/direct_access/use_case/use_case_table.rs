@@ -56,7 +56,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         let mut created_use_cases = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"use_case".to_string())? {
-            counter.value() + 1
+            counter.value()
         } else {
             1
         };

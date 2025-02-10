@@ -3,6 +3,7 @@ use crate::use_case::dtos::{CreateUseCaseDto, UseCaseDto};
 use super::common::UseCaseUnitOfWorkFactoryTrait;
 use common::entities::UseCase;
 use std::collections::VecDeque;
+use common::undo_redo::UndoRedoCommand;
 
 pub struct CreateUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
@@ -31,8 +32,11 @@ impl CreateUseCaseUseCase {
 
         Ok(use_case.into())
     }
+}
 
-    pub fn undo(&mut self) -> Result<()> {
+impl UndoRedoCommand for CreateUseCaseUseCase {
+
+    fn undo(&mut self) -> Result<()> {
         if let Some(last_use_case) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
@@ -43,7 +47,7 @@ impl CreateUseCaseUseCase {
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<()> {
+    fn redo(&mut self) -> Result<()> {
         if let Some(last_use_case) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;

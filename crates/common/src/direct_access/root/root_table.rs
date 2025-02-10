@@ -128,7 +128,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         let mut created_roots = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"root".to_string())? {
-            counter.value() + 1
+            counter.value()
         } else {
             1
         };

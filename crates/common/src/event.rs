@@ -1,36 +1,39 @@
+
+use flume::{unbounded, Receiver, Sender};
+use serde::Serialize;
+
+use crate::entities::EntityId; 
 use std::{
     collections::HashMap,
     sync::{atomic::AtomicBool, Arc, Mutex},
     thread,
 };
 
-use flume::{unbounded, Receiver, Sender};
 
-use crate::entities::EntityId;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum HandlingManifestEvent {
     Loaded,
 }
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum EntityEvent {
     Created,
     Updated,
     Removed,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum AllEvent {
     Reset,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Origin {
     DirectAccess(DirectAccessEntity),
     HandlingManifest(HandlingManifestEvent),
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum DirectAccessEntity {
     All(AllEvent),
     Root(EntityEvent),
@@ -44,17 +47,37 @@ pub enum DirectAccessEntity {
     Global(EntityEvent),
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum HandlingManifest {
     Load,
 }
 
 /// Event struct with metadata
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Serialize)]
 pub struct Event {
     pub origin: Origin,
     pub ids: Vec<EntityId>,
     pub data: Option<String>,
+}
+
+impl Event {
+    pub fn origin_string(&self) -> String {
+        match &self.origin {
+            Origin::DirectAccess(entity) => match entity {
+                DirectAccessEntity::All(event) => format!("direct_access_all_{:?}", event),
+                DirectAccessEntity::Root(event) => format!("direct_access_root_{:?}", event),
+                DirectAccessEntity::Entity(event) => format!("direct_access_entity_{:?}", event),
+                DirectAccessEntity::Feature(event) => format!("direct_access_feature_{:?}", event),
+                DirectAccessEntity::UseCase(event) => format!("direct_access_use_case_{:?}", event),
+                DirectAccessEntity::Field(event) => format!("direct_access_field_{:?}", event),
+                DirectAccessEntity::DtoField(event) => format!("direct_access_dto_field_{:?}", event),
+                DirectAccessEntity::Relationship(event) => format!("direct_access_relationship_{:?}", event),
+                DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
+                DirectAccessEntity::Global(event) => format!("direct_access_global_{:?}", event),
+            },
+            Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
+        }.to_lowercase()
+    }
 }
 
 pub type Queue = Arc<Mutex<Vec<Event>>>;
@@ -99,5 +122,64 @@ impl EventHub {
 
     pub fn get_queue(&self) -> Queue {
         self.queue.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_origin_string_direct_access_all() {
+        let event = Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![EntityId::default()],
+            data: None,
+        };
+        assert_eq!(event.origin_string(), "direct_access_all_Reset");
+    }
+
+    #[test]
+    fn test_origin_string_direct_access_root() {
+        let event = Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
+            ids: vec![EntityId::default()],
+            data: None,
+        };
+        assert_eq!(event.origin_string(), "direct_access_root_Created");
+    }
+
+    #[test]
+    fn test_origin_string_handling_manifest() {
+        let event = Event {
+            origin: Origin::HandlingManifest(HandlingManifestEvent::Loaded),
+            ids: vec![EntityId::default()],
+            data: None,
+        };
+        assert_eq!(event.origin_string(), "handling_manifest_Loaded");
+    }
+
+    #[test]
+    fn test_event_hub_send_and_receive() {
+        let event_hub = EventHub::new();
+        let stop_signal = Arc::new(AtomicBool::new(false));
+        event_hub.start_event_loop(stop_signal.clone());
+
+        let event = Event {
+            origin: Origin::HandlingManifest(HandlingManifestEvent::Loaded),
+            ids: vec![EntityId::default()],
+            data: Some("test_data".to_string()),
+        };
+
+        event_hub.send_event(event.clone());
+
+        thread::sleep(std::time::Duration::from_millis(100));
+
+        let queue = event_hub.get_queue();
+        let queue = queue.lock().unwrap();
+        assert_eq!(queue.len(), 1);
+        assert_eq!(queue[0], event);
+
+        stop_signal.store(true, std::sync::atomic::Ordering::Relaxed);
     }
 }

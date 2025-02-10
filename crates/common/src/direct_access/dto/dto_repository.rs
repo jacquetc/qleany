@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -57,7 +57,7 @@ impl<'a> DtoRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Rc<EventHub>, dto: &Dto) -> Result<Dto, Error> {
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, dto: &Dto) -> Result<Dto, Error> {
         let new = self.redb_table.create(dto)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
@@ -69,7 +69,7 @@ impl<'a> DtoRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dtos: &[Dto],
     ) -> Result<Vec<Dto>, Error> {
         let new_dtos = self.redb_table.create_multi(dtos)?;
@@ -90,7 +90,7 @@ impl<'a> DtoRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Rc<EventHub>, dto: &Dto) -> Result<Dto, Error> {
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, dto: &Dto) -> Result<Dto, Error> {
         let updated_dto = self.redb_table.update(dto)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
@@ -102,7 +102,7 @@ impl<'a> DtoRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dtos: &[Dto],
     ) -> Result<Vec<Dto>, Error> {
         let updated_dtos = self.redb_table.update_multi(dtos)?;
@@ -115,7 +115,7 @@ impl<'a> DtoRepository<'a> {
         Ok(updated_dtos)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let dto = match self.redb_table.get(id)? {
             Some(dto) => dto,
             None => return Ok(()),
@@ -141,7 +141,7 @@ impl<'a> DtoRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let dtos = self.redb_table.get_multi(ids)?;

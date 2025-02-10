@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -59,7 +59,7 @@ impl<'a> EntityRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Rc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
         let new = self.redb_table.create(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Created)),
@@ -71,7 +71,7 @@ impl<'a> EntityRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         entities: &[Entity],
     ) -> Result<Vec<Entity>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
@@ -95,7 +95,7 @@ impl<'a> EntityRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Rc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
         let updated_entity = self.redb_table.update(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
@@ -107,7 +107,7 @@ impl<'a> EntityRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         entities: &[Entity],
     ) -> Result<Vec<Entity>, Error> {
         let updated_entities = self.redb_table.update_multi(entities)?;
@@ -123,7 +123,7 @@ impl<'a> EntityRepository<'a> {
         Ok(updated_entities)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let entity = match self.redb_table.get(id)? {
             Some(entity) => entity,
             None => return Ok(()),
@@ -152,7 +152,7 @@ impl<'a> EntityRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let entities = self.redb_table.get_multi(ids)?;

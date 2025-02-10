@@ -1,16 +1,17 @@
+use std::sync::Arc;
+
 use redb::{Database, Error};
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct DbContext {
-    database: Rc<Database>,
+    database: Arc<Database>,
 }
 
 impl DbContext {
     pub fn new() -> Result<Self, Error> {
         let db = DbContext::create_db_in_memory()?;
         Ok(DbContext {
-            database: Rc::new(db),
+        database: Arc::new(db),
         })
     }
 

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -39,7 +39,7 @@ impl<'a> DtoFieldRepository<'a> {
 
     pub fn create(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dto_field: &DtoField,
     ) -> Result<DtoField, Error> {
         let new = self.redb_table.create(dto_field)?;
@@ -53,7 +53,7 @@ impl<'a> DtoFieldRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dto_fields: &[DtoField],
     ) -> Result<Vec<DtoField>, Error> {
         let new_dto_fields = self.redb_table.create_multi(dto_fields)?;
@@ -79,7 +79,7 @@ impl<'a> DtoFieldRepository<'a> {
 
     pub fn update(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dto_field: &DtoField,
     ) -> Result<DtoField, Error> {
         let updated_dto_field = self.redb_table.update(dto_field)?;
@@ -93,7 +93,7 @@ impl<'a> DtoFieldRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         dto_fields: &[DtoField],
     ) -> Result<Vec<DtoField>, Error> {
         let updated_dto_fields = self.redb_table.update_multi(dto_fields)?;
@@ -109,7 +109,7 @@ impl<'a> DtoFieldRepository<'a> {
         Ok(updated_dto_fields)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let _dto_field = match self.redb_table.get(id)? {
             Some(dto_field) => dto_field,
             None => return Ok(()),
@@ -128,7 +128,7 @@ impl<'a> DtoFieldRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let dto_fields = self.redb_table.get_multi(ids)?;

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -37,7 +37,7 @@ impl<'a> GlobalRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Rc<EventHub>, global: &Global) -> Result<Global, Error> {
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, global: &Global) -> Result<Global, Error> {
         let new = self.redb_table.create(global)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Created)),
@@ -49,7 +49,7 @@ impl<'a> GlobalRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         globals: &[Global],
     ) -> Result<Vec<Global>, Error> {
         let new_globals = self.redb_table.create_multi(globals)?;
@@ -70,7 +70,7 @@ impl<'a> GlobalRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Rc<EventHub>, global: &Global) -> Result<Global, Error> {
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, global: &Global) -> Result<Global, Error> {
         let updated_global = self.redb_table.update(global)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
@@ -82,7 +82,7 @@ impl<'a> GlobalRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         globals: &[Global],
     ) -> Result<Vec<Global>, Error> {
         let updated_globals = self.redb_table.update_multi(globals)?;
@@ -98,7 +98,7 @@ impl<'a> GlobalRepository<'a> {
         Ok(updated_globals)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let _global = match self.redb_table.get(id)? {
             Some(global) => global,
             None => return Ok(()),
@@ -117,7 +117,7 @@ impl<'a> GlobalRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let globals = self.redb_table.get_multi(ids)?;

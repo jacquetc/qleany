@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -56,7 +56,7 @@ impl<'a> FieldRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Rc<EventHub>, field: &Field) -> Result<Field, Error> {
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, field: &Field) -> Result<Field, Error> {
         let new = self.redb_table.create(field)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Created)),
@@ -68,7 +68,7 @@ impl<'a> FieldRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         fields: &[Field],
     ) -> Result<Vec<Field>, Error> {
         let new_fields = self.redb_table.create_multi(fields)?;
@@ -89,7 +89,7 @@ impl<'a> FieldRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Rc<EventHub>, field: &Field) -> Result<Field, Error> {
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, field: &Field) -> Result<Field, Error> {
         let updated_field = self.redb_table.update(field)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
@@ -101,7 +101,7 @@ impl<'a> FieldRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         fields: &[Field],
     ) -> Result<Vec<Field>, Error> {
         let updated_fields = self.redb_table.update_multi(fields)?;
@@ -117,7 +117,7 @@ impl<'a> FieldRepository<'a> {
         Ok(updated_fields)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let _field = match self.redb_table.get(id)? {
             Some(field) => field,
             None => return Ok(()),
@@ -136,7 +136,7 @@ impl<'a> FieldRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let globals = self.redb_table.get_multi(ids)?;

@@ -1,6 +1,6 @@
 use super::common::UseCaseUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::entities::EntityId;
+use common::{entities::EntityId, undo_redo::UndoRedoCommand};
 use std::collections::VecDeque;
 use common::types::Savepoint;
 
@@ -32,8 +32,11 @@ impl RemoveUseCaseMultiUseCase {
 
         Ok(())
     }
+}
 
-    pub fn undo(&mut self) -> Result<()> {
+impl UndoRedoCommand for RemoveUseCaseMultiUseCase {
+
+    fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
@@ -43,7 +46,7 @@ impl RemoveUseCaseMultiUseCase {
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<()> {
+    fn redo(&mut self) -> Result<()> {
         if let Some(ids) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;

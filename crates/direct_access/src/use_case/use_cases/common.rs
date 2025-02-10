@@ -3,7 +3,7 @@ use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::entities::{EntityId, UseCase};
 
-pub trait UseCaseUnitOfWorkFactoryTrait {
+pub trait UseCaseUnitOfWorkFactoryTrait : Send + Sync {
     fn create(&self) -> Box<dyn UseCaseUnitOfWorkTrait>;
 }
 

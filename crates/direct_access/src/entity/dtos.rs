@@ -1,9 +1,10 @@
 use std::convert::From;
+use serde::{Deserialize, Serialize};
 
 use common::entities::Entity;
 use common::entities::EntityId;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EntityDto {
     pub id: EntityId,
     pub name: String,
@@ -52,7 +53,7 @@ impl From<Entity> for EntityDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CreateEntityDto {
     pub name: String,
     pub only_for_heritage: bool,

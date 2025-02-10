@@ -10,16 +10,16 @@ use common::event::EventHub;
 use common::event::*;
 use common::types;
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct EntityUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl EntityUnitOfWork {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         EntityUnitOfWork {
             context: db_context.clone(),
             transaction: None,
@@ -122,11 +122,11 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
 
 pub struct EntityUnitOfWorkFactory {
     context: DbContext,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl EntityUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         EntityUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),

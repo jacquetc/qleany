@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -60,7 +60,7 @@ impl<'a> RootRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Rc<EventHub>, root: &Root) -> Result<Root, Error> {
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, root: &Root) -> Result<Root, Error> {
         let new = self.redb_table.create(root)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
@@ -72,7 +72,7 @@ impl<'a> RootRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         roots: &[Root],
     ) -> Result<Vec<Root>, Error> {
         let new_roots = self.redb_table.create_multi(roots)?;
@@ -93,7 +93,7 @@ impl<'a> RootRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Rc<EventHub>, root: &Root) -> Result<Root, Error> {
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, root: &Root) -> Result<Root, Error> {
         let updated_root = self.redb_table.update(root)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
@@ -105,7 +105,7 @@ impl<'a> RootRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         roots: &[Root],
     ) -> Result<Vec<Root>, Error> {
         let updated_roots = self.redb_table.update_multi(roots)?;
@@ -118,7 +118,7 @@ impl<'a> RootRepository<'a> {
         Ok(updated_roots)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let root = match self.redb_table.get(id)? {
             Some(root) => root,
             None => return Ok(()),
@@ -149,7 +149,7 @@ impl<'a> RootRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let roots = self.redb_table.get_multi(ids)?;

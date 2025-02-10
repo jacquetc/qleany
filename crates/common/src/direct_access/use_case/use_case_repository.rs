@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -62,7 +62,7 @@ impl<'a> UseCaseRepository<'a> {
 
     pub fn create(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         use_case: &UseCase,
     ) -> Result<UseCase, Error> {
         let new = self.redb_table.create(use_case)?;
@@ -76,7 +76,7 @@ impl<'a> UseCaseRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         use_cases: &[UseCase],
     ) -> Result<Vec<UseCase>, Error> {
         let new_use_cases = self.redb_table.create_multi(use_cases)?;
@@ -102,7 +102,7 @@ impl<'a> UseCaseRepository<'a> {
 
     pub fn update(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         use_case: &UseCase,
     ) -> Result<UseCase, Error> {
         let updated_use_case = self.redb_table.update(use_case)?;
@@ -116,7 +116,7 @@ impl<'a> UseCaseRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         use_cases: &[UseCase],
     ) -> Result<Vec<UseCase>, Error> {
         let updated_use_cases = self.redb_table.update_multi(use_cases)?;
@@ -132,7 +132,7 @@ impl<'a> UseCaseRepository<'a> {
         Ok(updated_use_cases)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let use_case = match self.redb_table.get(id)? {
             Some(use_case) => use_case,
             None => return Ok(()),
@@ -165,7 +165,7 @@ impl<'a> UseCaseRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let use_cases = self.redb_table.get_multi(ids)?;

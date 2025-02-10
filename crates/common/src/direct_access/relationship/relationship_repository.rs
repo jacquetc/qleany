@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
@@ -45,7 +45,7 @@ impl<'a> RelationshipRepository<'a> {
 
     pub fn create(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         relationship: &Relationship,
     ) -> Result<Relationship, Error> {
         let new = self.redb_table.create(relationship)?;
@@ -59,7 +59,7 @@ impl<'a> RelationshipRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         relationships: &[Relationship],
     ) -> Result<Vec<Relationship>, Error> {
         let new_relationships = self.redb_table.create_multi(relationships)?;
@@ -85,7 +85,7 @@ impl<'a> RelationshipRepository<'a> {
 
     pub fn update(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         relationship: &Relationship,
     ) -> Result<Relationship, Error> {
         let updated_relationship = self.redb_table.update(relationship)?;
@@ -99,7 +99,7 @@ impl<'a> RelationshipRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         relationships: &[Relationship],
     ) -> Result<Vec<Relationship>, Error> {
         let updated_relationships = self.redb_table.update_multi(relationships)?;
@@ -115,7 +115,7 @@ impl<'a> RelationshipRepository<'a> {
         Ok(updated_relationships)
     }
 
-    pub fn delete(&mut self, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let _relationship = match self.redb_table.get(id)? {
             Some(relationship) => relationship,
             None => return Ok(()),
@@ -134,7 +134,7 @@ impl<'a> RelationshipRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Rc<EventHub>,
+        event_hub: &Arc<EventHub>,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let relationships = self.redb_table.get_multi(ids)?;

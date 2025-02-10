@@ -2,12 +2,16 @@
 
 members = [
     "crates/common", 
-    "crates/gui", 
     "crates/cli", 
     "crates/direct_access", 
     "crates/handling_manifest",
     "crates/cpp_qt_file_listing",
     "crates/python_file_listing",
+    "crates/qleany-app/src-tauri"
+    ]
+
+exclude = [
+    "crates/qleany-app-svelte/src-tauri"
     ]
 
 resolver = "2"
@@ -23,6 +27,7 @@ thiserror = "2.0.11"
 anyhow = "1.0"
 redb = "2.4.0" 
 flume = "0.11.1"
+serde = { version = "1", features = ["derive"] }
 
 [workspace.lints.rust]
 

@@ -10,16 +10,16 @@ use common::entities::{EntityId, UseCase};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct UseCaseUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl UseCaseUnitOfWork {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         UseCaseUnitOfWork {
             context: db_context.clone(),
             transaction: None,
@@ -154,11 +154,11 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
 
 pub struct UseCaseUnitOfWorkFactory {
     context: DbContext,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl UseCaseUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         UseCaseUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),

@@ -8,11 +8,11 @@ use super::{
 };
 use anyhow::Result;
 use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub fn create(
     db_context: &DbContext,
-    event_hub: &Rc<EventHub>,
+    event_hub: &Arc<EventHub>,
     global: &CreateGlobalDto,
 ) -> Result<GlobalDto> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -28,7 +28,7 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<GlobalDto>> {
 
 pub fn update(
     db_context: &DbContext,
-    event_hub: &Rc<EventHub>,
+    event_hub: &Arc<EventHub>,
     global: &GlobalDto,
 ) -> Result<GlobalDto> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -36,7 +36,7 @@ pub fn update(
     global_uc.execute(global)
 }
 
-pub fn remove(db_context: &DbContext, event_hub: &Rc<EventHub>, id: &EntityId) -> Result<()> {
+pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<()> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = RemoveGlobalUseCase::new(Box::new(uow_factory));
     global_uc.execute(id)

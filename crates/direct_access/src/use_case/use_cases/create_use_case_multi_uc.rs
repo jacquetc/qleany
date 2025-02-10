@@ -3,6 +3,7 @@ use crate::use_case::dtos::{CreateUseCaseDto, UseCaseDto};
 use anyhow::{Ok, Result};
 use std::collections::VecDeque;
 use common::entities::UseCase;
+use common::undo_redo::UndoRedoCommand;
 
 pub struct CreateUseCaseMultiUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
@@ -18,7 +19,6 @@ impl CreateUseCaseMultiUseCase {
             redo_stack: VecDeque::new(),
         }
     }
-
     pub fn execute(&mut self, dtos: &[CreateUseCaseDto]) -> Result<Vec<UseCaseDto>> {
         // create
         let mut uow = self.uow_factory.create();
@@ -30,14 +30,18 @@ impl CreateUseCaseMultiUseCase {
         //store in undo stack
         self.undo_stack.push_back(use_cases.clone());
         self.redo_stack.clear();
-        
+
         Ok(use_cases
             .into_iter()
             .map(|use_case| use_case.into())
             .collect())
     }
 
-    pub fn undo(&mut self) -> Result<()> {
+}
+
+impl UndoRedoCommand for CreateUseCaseMultiUseCase {
+
+    fn undo(&mut self) -> Result<()> {
         if let Some(last_use_cases) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
@@ -48,7 +52,7 @@ impl CreateUseCaseMultiUseCase {
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<()> {
+    fn redo(&mut self) -> Result<()> {
         if let Some(last_use_cases) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;

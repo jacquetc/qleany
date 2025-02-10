@@ -9,16 +9,16 @@ use common::entities::{EntityId, Global};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct GlobalUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl GlobalUnitOfWork {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         GlobalUnitOfWork {
             context: db_context.clone(),
             transaction: None,
@@ -97,11 +97,11 @@ impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
 
 pub struct GlobalUnitOfWorkFactory {
     context: DbContext,
-    event_hub: Rc<EventHub>,
+    event_hub: Arc<EventHub>,
 }
 
 impl GlobalUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext, event_hub: &Rc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         GlobalUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),

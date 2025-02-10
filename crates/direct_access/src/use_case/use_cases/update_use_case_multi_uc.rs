@@ -1,7 +1,7 @@
 use super::common::UseCaseUnitOfWorkFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
 use anyhow::{Ok, Result};
-use common::entities::UseCase;
+use common::{entities::UseCase, undo_redo::UndoRedoCommand};
 use std::collections::VecDeque;
 
 pub struct UpdateUseCaseMultiUseCase {
@@ -31,8 +31,11 @@ impl UpdateUseCaseMultiUseCase {
 
         Ok(use_cases.into_iter().map(|use_case| use_case.into()).collect())
     }
+}
 
-    pub fn undo(&mut self) -> Result<()> {
+impl UndoRedoCommand for UpdateUseCaseMultiUseCase {
+
+    fn undo(&mut self) -> Result<()> {
         if let Some(last_use_cases) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
@@ -45,7 +48,7 @@ impl UpdateUseCaseMultiUseCase {
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<()> {
+    fn redo(&mut self) -> Result<()> {
         if let Some(last_use_cases) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
