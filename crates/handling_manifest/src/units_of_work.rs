@@ -4,7 +4,7 @@ use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
-use common::entities::{Entity, EntityId, Feature, Field, Global, Root, UseCase};
+use common::entities::{Dto, Entity, EntityId, Feature, Field, Global, Root, UseCase, DtoField, Relationship};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 
@@ -138,6 +138,42 @@ impl LoadUnitOfWorkTrait for LoadUnitOfWork {
         let field = field_repo.create(&self.event_hub, field)?;
         Ok(field)
     }
+
+    fn get_fields(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
+        let field_repo = repository_factory::write::create_field_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let value = field_repo.get_multi(ids)?;
+        Ok(value)
+    }
+
+
+    fn create_dto(&self, dto: &Dto) -> Result<Dto> {
+        let mut dto_repo = repository_factory::write::create_dto_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let dto = dto_repo.create(&self.event_hub, dto)?;
+        Ok(dto)
+    }
+
+    fn create_dto_field(&self, dto_field: &DtoField) -> Result<DtoField> {
+        let mut dto_field_repo = repository_factory::write::create_dto_field_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let dto_field = dto_field_repo.create(&self.event_hub, dto_field)?;
+        Ok(dto_field)
+    }
+
+    fn create_relationships(&self, relationships: &[Relationship]) -> Result<Vec<Relationship>> {
+        let mut relationship_repo = repository_factory::write::create_relationship_repository(
+            &self.transaction.as_ref().expect("Transaction not started"),
+        );
+        let relationships = relationship_repo.create_multi(&self.event_hub, relationships)?;
+        Ok(relationships)
+    }
+
+
+
 }
 
 pub struct LoadUnitOfWorkFactory {

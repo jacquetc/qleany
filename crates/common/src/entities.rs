@@ -58,7 +58,7 @@ pub struct Dto {
 pub struct DtoField {
     pub id: EntityId,
     pub name: String,
-    pub field_type: String, // FieldType,
+    pub field_type: FieldType,
     pub is_nullable: bool,
     pub is_list: bool,
 }
@@ -128,8 +128,8 @@ pub enum Order {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Relationship {
     pub id: EntityId,
-    pub left_entity_name: String,
-    pub right_entity_name: String,
+    pub left_entity: EntityId,
+    pub right_entity: EntityId,
     pub field_name: String,
     pub relationship_type: RelationshipType,
     pub strength: Strength,

@@ -10,24 +10,34 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.5",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "theme-change": "^2.5.0"
+    "@hello-pangea/dnd": "^18.0.1",
+    "@mantine/core": "^7.17.2",
+    "@mantine/form": "^7.17.2",
+    "@mantine/hooks": "^7.17.2",
+    "@mantine/modals": "^7.17.2",
+    "@mantine/notifications": "^7.17.2",
+    "@tabler/icons-react": "^3.31.0",
+    "@tauri-apps/api": "^2.3.0",
+    "@tauri-apps/plugin-log": "2.2.1",
+    "@tauri-apps/plugin-opener": "^2.2.6",
+    "clsx": "^2.1.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-i18next": "^15.4.1",
+    "react-router": "7.2.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.1",
+    "@tauri-apps/cli": "^2.3.1",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "daisyui": "5.0.0-beta.7",
-    "postcss": "^8.5.1",
-    "tailwindcss": "^4.0.5",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3"
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "5.8.2",
+    "vite": "^6.2.2",
+    "vite-plugin-svgr": "^4.3.0"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

@@ -9,7 +9,9 @@ members = [
     "crates/python_file_listing",
     "crates/qleany-app/src-tauri"
     ]
-
+default-members = [    
+"crates/qleany-app/src-tauri"
+    ]
 exclude = [
     "crates/qleany-app-svelte/src-tauri"
     ]

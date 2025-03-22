@@ -1,14 +1,74 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod event_hub_client;
+mod handling_manifest_commands;
+mod direct_access_commands;
+use std::{cell::RefCell, rc::Rc, sync::Arc};
+
+use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
+use tauri::async_runtime::Mutex;
+use tauri::Manager;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+#[derive(Clone)]
+struct AppContext {
+    pub db_context: DbContext,
+    pub event_hub: Arc<EventHub>,
+    pub event_hub_client: event_hub_client::EventHubClient,
+    pub quit_signal: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub undo_redo_manager: Arc<Mutex<UndoRedoManager>>,
+}
+
+impl AppContext {
+    fn new(app_handle: tauri::AppHandle) -> Self {
+        let db_context = DbContext::new().unwrap();
+
+        let event_hub = Arc::new(EventHub::new());
+        let atomic_bool = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        event_hub.start_event_loop(atomic_bool.clone());
+        let event_hub_client: event_hub_client::EventHubClient =
+            event_hub_client::EventHubClient::new(&event_hub);
+        event_hub_client.start(app_handle, atomic_bool.clone());
+
+        Self {
+            db_context,
+            event_hub,
+            event_hub_client,
+            quit_signal: atomic_bool,
+            undo_redo_manager: Arc::new(Mutex::new(UndoRedoManager::new())),
+        }
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+
     tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
+        .setup(|app| {
+            app.manage(Mutex::new(AppContext::new(app.handle().clone())));
+            Ok(())
+        })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
+        .plugin(tauri_plugin_log::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![
+            greet, 
+            direct_access_commands::create_entity,
+            handling_manifest_commands::load_manifest,
+            ]).
+        on_window_event( |app, event| {
+            let app_context = app.state::<Mutex<AppContext>>();
+            let app_context = app_context.blocking_lock();
+            match event {
+                tauri::WindowEvent::CloseRequested { .. } => {
+                    app_context.quit_signal.store(true, std::sync::atomic::Ordering::Relaxed);
+                }
+                _ => {}
+            }
+        })
+            .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
 }

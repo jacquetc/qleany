@@ -1,11 +1,11 @@
 mod model_structs;
-mod relationship_generator;
+mod tools;
 mod validation_schema;
 
 use anyhow::Result;
 use common::{
     database::CommandUnitOfWork,
-    entities::{Entity, EntityId, Feature, Field, FieldType, Global, Root, UseCase},
+    entities::{Dto, DtoField, Entity, EntityId, Feature, Field, FieldType, Global, Relationship, Root, UseCase},
 };
 
 use crate::LoadDto;
@@ -25,6 +25,10 @@ pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {
     fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>>;
     fn update_entity(&self, entity: &Entity) -> Result<Entity>;
     fn create_field(&self, field: &Field) -> Result<Field>;
+    fn get_fields(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>>;
+    fn create_dto(&self, dto: &Dto) -> Result<Dto>;
+    fn create_dto_field(&self, dto_field: &DtoField) -> Result<DtoField>;
+    fn create_relationships(&self, relationships: &[Relationship]) -> Result<Vec<Relationship>>;
 }
 
 pub struct LoadUseCase {
@@ -118,13 +122,15 @@ impl LoadUseCase {
         }
 
         // create fields
+        let mut all_field_ids = vec![];
+
         for model_entity in manifest.entities.iter() {
             // find the entity id
             let entity_id = entities
                 .iter()
                 .find(|e| e.name == model_entity.name)
                 .map(|e| e.id)
-                .expect("Entity not found");
+                .ok_or(anyhow::anyhow!("Entity not found"))?;
 
             let mut field_ids = vec![];
 
@@ -136,16 +142,7 @@ impl LoadUseCase {
                     .map(|e| e.id);
                 let field_type = match field_entity_id {
                     Some(_id) => FieldType::Entity,
-                    None => match model_field.r#type.clone().as_str() {
-                        "Boolean" | "Bool" => FieldType::Boolean,
-                        "Integer" => FieldType::Integer,
-                        "UInteger" => FieldType::UInteger,
-                        "Float" => FieldType::Float,
-                        "String" => FieldType::String,
-                        "Uuid" => FieldType::Uuid,
-                        "DateTime" => FieldType::DateTime,
-                        _ => FieldType::String,
-                    },
+                    None => tools::str_to_field_type(&model_field.r#type),
                 };
 
                 // create field
@@ -164,10 +161,11 @@ impl LoadUseCase {
                     list_model_displayed_field: model_field.list_model_displayed_field.clone(),
                 })?;
                 field_ids.push(field.id);
+                all_field_ids.push(field.id);
             }
 
             // get entity from repo
-            let mut entity = uow.get_entity(&entity_id)?.expect("Entity not found");
+            let mut entity = uow.get_entity(&entity_id)?.ok_or(anyhow::anyhow!("Entity not found"))?;
 
             // update entity with fields
             entity.fields = field_ids;
@@ -179,11 +177,29 @@ impl LoadUseCase {
                     .iter()
                     .find(|e| e.name == parent_name)
                     .map(|e| e.id)
-                    .expect("Parent not found");
+                    .ok_or(anyhow::anyhow!("Parent not found"))?;
                 entity.parent = Some(parent_id);
             }
 
             // update entity in repo
+            uow.update_entity(&entity)?;
+        }
+
+        // create relationships
+        let all_fields = uow.get_fields(&all_field_ids)?;
+        let all_fields = all_fields.into_iter().flatten().collect::<Vec<Field>>();
+        let all_relationships = tools::generate_relationships(&entities, &all_fields);
+
+        for (entity_id, relationships) in all_relationships.iter() {
+
+            let new_relationship_ids = uow.create_relationships(relationships)?.iter().map(|new_relationship| {
+            new_relationship.id
+            }).collect::<Vec<EntityId>>();
+
+            let mut entity = uow.get_entity(entity_id)?.ok_or(anyhow::anyhow!("Entity not found"))?;
+
+            entity.relationships = new_relationship_ids.clone();
+
             uow.update_entity(&entity)?;
         }
 
@@ -211,14 +227,73 @@ impl LoadUseCase {
                     }
                 }
 
+                // create dto_in
+                let mut dto_in_id = None;
+                if let Some(dto_in) = &model_use_case.dto_in {
+
+                    // create DtoFields
+                    let mut dto_field_ids = vec![];
+                    for model_dto_field in dto_in.fields.iter() {
+
+                        let field_type = tools::str_to_field_type(&model_dto_field.r#type);
+
+                        let dto_field = uow.create_dto_field(&DtoField {
+                            id: 0,
+                            name: model_dto_field.name.clone(),
+                            field_type: field_type,
+                            is_nullable: model_dto_field.is_nullable.unwrap_or_default(),
+                            is_list: model_dto_field.is_list.unwrap_or_default(),
+                        })?;
+                        dto_field_ids.push(dto_field.id);
+                    }
+
+
+
+                    let dto_in = uow.create_dto(&Dto {
+                        id: 0,
+                        name: dto_in.name.clone(),
+                        fields: dto_field_ids,
+                    })?;
+                    dto_in_id = Some(dto_in.id);
+                }
+
+                // create dto_out
+                let mut dto_out_id = None;
+                if let Some(dto_out) = &model_use_case.dto_out {
+
+                    // create DtoFields
+                    let mut dto_field_ids = vec![];
+                    for model_dto_field in dto_out.fields.iter() {
+
+                        let field_type = tools::str_to_field_type(&model_dto_field.r#type);
+
+                        let dto_field = uow.create_dto_field(&DtoField {
+                            id: 0,
+                            name: model_dto_field.name.clone(),
+                            field_type: field_type,
+                            is_nullable: model_dto_field.is_nullable.unwrap_or_default(),
+                            is_list: model_dto_field.is_list.unwrap_or_default(),
+                        })?;
+                        dto_field_ids.push(dto_field.id);
+                    }
+
+                    let dto_out = uow.create_dto(&Dto {
+                        id: 0,
+                        name: dto_out.name.clone(),
+                        fields: dto_field_ids,
+                    })?;
+                    dto_out_id = Some(dto_out.id);
+                }
+                
+
                 let use_case = uow.create_use_case(&UseCase {
                     id: 0,
                     name: model_use_case.name.clone(),
                     validator: model_use_case.validator,
                     entities: use_case_entity_ids,
                     undoable: model_use_case.undoable,
-                    dto_in: None,
-                    dto_out: None,
+                    dto_in: dto_in_id,
+                    dto_out: dto_out_id,
                 })?;
                 use_case_ids.push(use_case.id);
             }
@@ -231,9 +306,9 @@ impl LoadUseCase {
             feature_ids.push(feature.id);
         }
 
-        // update root with entities
+        // update root with all ids
         // good practice to get the root again, to make sure it is not stale
-        let root = uow.get_root(&root_id)?.expect("Root not found");
+        let root = uow.get_root(&root_id)?.ok_or(anyhow::anyhow!("Root not found"))?;
         let root = Root {
             id: root.id,
             global: global_id,
