@@ -1,6 +1,6 @@
 [package]
 name = "cpp_qt_file_listing"
-version = "0.0.0"
+version.workspace = true
 edition.workspace = true
 homepage.workspace = true
 repository.workspace = true
