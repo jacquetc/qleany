@@ -10,7 +10,11 @@ use super::{
         update_use_case_uc::UpdateUseCaseUseCase,
     },
 };
+use crate::use_case::use_cases::get_use_case_relationship_uc::GetUseCaseRelationshipUseCase;
+use crate::use_case::use_cases::set_use_case_relationship_uc::SetUseCaseRelationshipUseCase;
+use crate::UseCaseRelationshipDto;
 use anyhow::{Ok, Result};
+use common::direct_access::use_case::UseCaseRelationshipField;
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
@@ -102,6 +106,29 @@ pub fn remove_multi(
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = RemoveUseCaseMultiUseCase::new(Box::new(uow_factory));
     use_case_uc.execute(ids)?;
+    undo_redo_manager.add_command(Box::new(use_case_uc));
+    Ok(())
+}
+
+pub fn get_relationship(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &UseCaseRelationshipField,
+) -> Result<Vec<EntityId>> {
+    let uow_factory = UseCaseUnitOfWorkROFactory::new(&db_context);
+    let use_case_uc = GetUseCaseRelationshipUseCase::new(Box::new(uow_factory));
+    use_case_uc.execute(id, field)
+}
+
+pub fn set_relationship(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    dto: &UseCaseRelationshipDto,
+) -> Result<()> {
+    let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
+    let mut use_case_uc = SetUseCaseRelationshipUseCase::new(Box::new(uow_factory));
+    use_case_uc.execute(dto)?;
     undo_redo_manager.add_command(Box::new(use_case_uc));
     Ok(())
 }

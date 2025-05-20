@@ -3,7 +3,7 @@ use std::convert::From;
 use common::entities::UseCase;
 use common::types::EntityId;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct UseCaseDto {
     pub id: EntityId,
     pub name: String,
@@ -110,7 +110,8 @@ impl From<UseCase> for CreateUseCaseDto {
 pub use common::direct_access::use_case::UseCaseRelationshipField;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoveUseCaseRelationshipsDto {
+pub struct UseCaseRelationshipDto {
+    pub id: EntityId,
     pub field: UseCaseRelationshipField,
-    pub ids_to_remove: Vec<EntityId>,
+    pub right_ids: Vec<EntityId>,
 }

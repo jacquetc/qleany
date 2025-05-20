@@ -1,4 +1,4 @@
-use super::common::UseCaseUnitOfWorkFactoryTrait;
+use super::UseCaseUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
 use common::types::Savepoint;
 use common::{types::EntityId, undo_redo::UndoRedoCommand};
@@ -23,6 +23,17 @@ impl RemoveUseCaseMultiUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
         let savepoint = uow.create_savepoint()?;
+        // check if id exists
+        let mut exists = true;
+        for id in ids {
+            if uow.get_use_case(id)?.is_none() {
+                exists = false;
+                break;
+            }
+        }
+        if !exists {
+            return Err(anyhow::anyhow!("One or more ids do not exist"));
+        }
         uow.delete_use_case_multi(ids)?;
         uow.commit()?;
 

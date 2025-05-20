@@ -1,44 +1,40 @@
 use super::UseCaseUnitOfWorkFactoryTrait;
-use anyhow::{Ok, Result};
+use crate::UseCaseRelationshipDto;
+use anyhow::Result;
 use common::types::Savepoint;
-use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use common::undo_redo::UndoRedoCommand;
 use std::collections::VecDeque;
 
-pub struct RemoveUseCaseUseCase {
+pub struct SetUseCaseRelationshipUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
     undo_stack: VecDeque<Savepoint>,
-    redo_stack: VecDeque<EntityId>,
+    redo_stack: VecDeque<UseCaseRelationshipDto>,
 }
 
-impl RemoveUseCaseUseCase {
+impl SetUseCaseRelationshipUseCase {
     pub fn new(uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>) -> Self {
-        RemoveUseCaseUseCase {
+        SetUseCaseRelationshipUseCase {
             uow_factory,
             undo_stack: VecDeque::new(),
             redo_stack: VecDeque::new(),
         }
     }
 
-    pub fn execute(&mut self, id: &EntityId) -> Result<()> {
+    pub fn execute(&mut self, dto: &UseCaseRelationshipDto) -> Result<()> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
         let savepoint = uow.create_savepoint()?;
-        // check if id exists
-        if uow.get_use_case(&id)?.is_none() {
-            return Err(anyhow::anyhow!("Root with id {} does not exist", id));
-        }
-        uow.delete_use_case(id)?;
+        uow.set_use_case_relationship(&dto.id, &dto.field, dto.right_ids.as_slice())?;
         uow.commit()?;
-
         // store savepoint in undo stack
         self.undo_stack.push_back(savepoint);
-        self.redo_stack.push_back(id.clone());
+        self.redo_stack.push_back(dto.clone());
 
         Ok(())
     }
 }
 
-impl UndoRedoCommand for RemoveUseCaseUseCase {
+impl UndoRedoCommand for SetUseCaseRelationshipUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
@@ -46,18 +42,23 @@ impl UndoRedoCommand for RemoveUseCaseUseCase {
             uow.restore_to_savepoint(savepoint)?;
             uow.commit()?;
         }
-        Ok(())
+        anyhow::Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(id) = self.redo_stack.pop_back() {
+        if let Some(UseCaseRelationshipDto {
+            id,
+            field,
+            right_ids,
+        }) = self.redo_stack.pop_back()
+        {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
             let savepoint = uow.create_savepoint()?;
-            uow.delete_use_case(&id)?;
+            uow.set_use_case_relationship(&id, &field, &right_ids)?;
             uow.commit()?;
             self.undo_stack.push_back(savepoint);
         }
-        Ok(())
+        anyhow::Ok(())
     }
 }

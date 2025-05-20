@@ -1,4 +1,4 @@
-use super::common::UseCaseUnitOfWorkFactoryTrait;
+use super::UseCaseUnitOfWorkFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
 use anyhow::{Ok, Result};
 use common::{entities::UseCase, undo_redo::UndoRedoCommand};
@@ -22,26 +22,40 @@ impl UpdateUseCaseMultiUseCase {
     pub fn execute(&mut self, dtos: &[UseCaseDto]) -> Result<Vec<UseCaseDto>> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let use_cases = uow.update_use_case_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+
+        // check if id exists
+        let mut exists = true;
+        for UseCaseDto { id, .. } in dtos {
+            if uow.get_use_case(id)?.is_none() {
+                exists = false;
+                break;
+            }
+        }
+        if !exists {
+            return Err(anyhow::anyhow!("One or more ids do not exist"));
+        }
+
+        let use_cases =
+            uow.update_use_case_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
         // store in undo stack
         self.undo_stack.push_back(use_cases.clone());
         self.redo_stack.clear();
 
-        Ok(use_cases.into_iter().map(|use_case| use_case.into()).collect())
+        Ok(use_cases
+            .into_iter()
+            .map(|use_case| use_case.into())
+            .collect())
     }
 }
 
 impl UndoRedoCommand for UpdateUseCaseMultiUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(last_use_cases) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            for use_case in &last_use_cases {
-                uow.delete_use_case(&use_case.id)?;
-            }
+            uow.update_use_case_multi(&last_use_cases)?;
             uow.commit()?;
             self.redo_stack.push_back(last_use_cases);
         }

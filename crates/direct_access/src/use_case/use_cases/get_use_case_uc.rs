@@ -1,4 +1,4 @@
-use super::common::UseCaseUnitOfWorkROFactoryTrait;
+use super::UseCaseUnitOfWorkROFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
 use anyhow::Result;
 use common::types::EntityId;

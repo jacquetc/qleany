@@ -12,6 +12,7 @@ use crate::root::use_cases::get_root_relationship_uc::GetRootRelationshipUseCase
 use crate::root::use_cases::set_root_relationship_uc::SetRootRelationshipUseCase;
 use crate::RootRelationshipDto;
 use anyhow::{Ok, Result};
+use common::direct_access::root::RootRelationshipField;
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
@@ -110,7 +111,7 @@ pub fn remove_multi(
 pub fn get_relationship(
     db_context: &DbContext,
     id: &EntityId,
-    field: &common::direct_access::root::RootRelationshipField,
+    field: &RootRelationshipField,
 ) -> Result<Vec<EntityId>> {
     let uow_factory = RootUnitOfWorkROFactory::new(&db_context);
     let root_uc = GetRootRelationshipUseCase::new(Box::new(uow_factory));

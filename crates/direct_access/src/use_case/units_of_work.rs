@@ -1,11 +1,10 @@
-use super::use_cases::common::{
+use super::use_cases::{
     UseCaseUnitOfWorkFactoryTrait, UseCaseUnitOfWorkROFactoryTrait, UseCaseUnitOfWorkROTrait,
     UseCaseUnitOfWorkTrait,
 };
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
-use common::direct_access::repository_factory;
 use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
@@ -63,95 +62,19 @@ impl CommandUnitOfWork for UseCaseUnitOfWork {
     }
 }
 
-impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
-    fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
-        let use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = use_case_repo.get(id)?;
-        Ok(value)
-    }
-
-    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
-        let use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = use_case_repo.get_multi(ids)?;
-        Ok(value)
-    }
-
-    fn create_use_case(&self, use_case: &UseCase) -> Result<UseCase> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let use_case = use_case_repo.create(&self.event_hub, use_case)?;
-        Ok(use_case)
-    }
-
-    fn create_use_case_multi(&self, use_cases: &[UseCase]) -> Result<Vec<UseCase>> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let use_cases = use_case_repo.create_multi(&self.event_hub, use_cases)?;
-        Ok(use_cases)
-    }
-
-    fn update_use_case(&self, use_case: &UseCase) -> Result<UseCase> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let use_case = use_case_repo.update(&self.event_hub, use_case)?;
-        Ok(use_case)
-    }
-
-    fn update_use_case_multi(&self, use_cases: &[UseCase]) -> Result<Vec<UseCase>> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let use_cases = use_case_repo.update_multi(&self.event_hub, use_cases)?;
-        Ok(use_cases)
-    }
-
-    fn delete_use_case(&self, id: &EntityId) -> Result<()> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        use_case_repo.delete(&self.event_hub, id)?;
-        Ok(())
-    }
-
-    fn delete_use_case_multi(&self, ids: &[EntityId]) -> Result<()> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        use_case_repo.delete_multi(&self.event_hub, ids)?;
-        Ok(())
-    }
-
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &common::direct_access::use_case::UseCaseRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
-        let use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = use_case_repo.get_relationships_from_right_ids(field, right_ids)?;
-        Ok(value)
-    }
-
-    fn set_relationship_multi(
-        &self,
-        field: &common::direct_access::use_case::UseCaseRelationshipField,
-        relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<()> {
-        let mut use_case_repo = repository_factory::write::create_use_case_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        use_case_repo.set_relationship_multi(&self.event_hub, field, relationships)?;
-        Ok(())
-    }
-}
+#[macros::uow_action(entity = "UseCase", action = "Create")]
+#[macros::uow_action(entity = "UseCase", action = "CreateMulti")]
+#[macros::uow_action(entity = "UseCase", action = "Get")]
+#[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "UseCase", action = "Update")]
+#[macros::uow_action(entity = "UseCase", action = "UpdateMulti")]
+#[macros::uow_action(entity = "UseCase", action = "Delete")]
+#[macros::uow_action(entity = "UseCase", action = "DeleteMulti")]
+#[macros::uow_action(entity = "UseCase", action = "GetRelationship")]
+#[macros::uow_action(entity = "UseCase", action = "GetRelationshipsFromRightIds")]
+#[macros::uow_action(entity = "UseCase", action = "SetRelationship")]
+#[macros::uow_action(entity = "UseCase", action = "SetRelationshipMulti")]
+impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {}
 
 pub struct UseCaseUnitOfWorkFactory {
     context: DbContext,
@@ -200,29 +123,11 @@ impl QueryUnitOfWork for UseCaseUnitOfWorkRO {
     }
 }
 
-impl UseCaseUnitOfWorkROTrait for UseCaseUnitOfWorkRO {
-    fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
-        let borrowed_transaction = self.transaction.borrow();
-        let use_case_repo = repository_factory::read::create_use_case_repository(
-            &borrowed_transaction
-                .as_ref()
-                .expect("Transaction not started"),
-        );
-        let use_case = use_case_repo.get(id)?;
-        Ok(use_case)
-    }
-
-    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
-        let borrowed_transaction = self.transaction.borrow();
-        let use_case_repo = repository_factory::read::create_use_case_repository(
-            &borrowed_transaction
-                .as_ref()
-                .expect("Transaction not started"),
-        );
-        let use_cases = use_case_repo.get_multi(ids)?;
-        Ok(use_cases)
-    }
-}
+#[macros::uow_action(entity = "UseCase", action = "GetRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetRelationshipsFromRightIdsRO")]
+impl UseCaseUnitOfWorkROTrait for UseCaseUnitOfWorkRO {}
 
 pub struct UseCaseUnitOfWorkROFactory {
     context: DbContext,
