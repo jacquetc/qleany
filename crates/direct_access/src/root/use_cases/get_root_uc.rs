@@ -1,10 +1,7 @@
-use anyhow::Result;
-use common::{
-    database::QueryUnitOfWork,
-    entities::{EntityId, Root},
-};
-use super::common::RootUnitOfWorkROFactoryTrait;
+use super::RootUnitOfWorkROFactoryTrait;
 use crate::root::dtos::RootDto;
+use anyhow::Result;
+use common::types::EntityId;
 
 pub struct GetRootUseCase {
     uow_factory: Box<dyn RootUnitOfWorkROFactoryTrait>,

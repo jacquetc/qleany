@@ -1,9 +1,9 @@
-use super::common::RootUnitOfWorkFactoryTrait;
+use super::RootUnitOfWorkFactoryTrait;
 use crate::root::dtos::{CreateRootDto, RootDto};
 use anyhow::{Ok, Result};
-use std::collections::VecDeque;
 use common::entities::Root;
 use common::undo_redo::UndoRedoCommand;
+use std::collections::VecDeque;
 
 pub struct CreateRootMultiUseCase {
     uow_factory: Box<dyn RootUnitOfWorkFactoryTrait>,
@@ -31,21 +31,21 @@ impl CreateRootMultiUseCase {
         self.undo_stack.push_back(roots.clone());
         self.redo_stack.clear();
 
-        Ok(roots
-            .into_iter()
-            .map(|root| root.into())
-            .collect())
+        Ok(roots.into_iter().map(|root| root.into()).collect())
     }
-
 }
 
 impl UndoRedoCommand for CreateRootMultiUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(last_roots) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_root_multi(&last_roots.iter().map(|root| root.id.clone()).collect::<Vec<_>>())?;
+            uow.delete_root_multi(
+                &last_roots
+                    .iter()
+                    .map(|root| root.id.clone())
+                    .collect::<Vec<_>>(),
+            )?;
             uow.commit()?;
             self.redo_stack.push_back(last_roots);
         }

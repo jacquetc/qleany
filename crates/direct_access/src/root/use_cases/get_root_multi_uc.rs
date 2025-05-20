@@ -1,7 +1,7 @@
-use super::common::RootUnitOfWorkROFactoryTrait;
+use super::RootUnitOfWorkROFactoryTrait;
 use crate::root::dtos::RootDto;
 use anyhow::Result;
-use common::entities::EntityId;
+use common::types::EntityId;
 
 pub struct GetRootMultiUseCase {
     uow_factory: Box<dyn RootUnitOfWorkROFactoryTrait>,

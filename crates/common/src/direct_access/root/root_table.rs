@@ -1,9 +1,8 @@
-use crate::database::Bincode;
-use crate::entities::EntityId;
-use crate::entities::Root;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
-
 use super::root_repository::{RootRelationshipField, RootTable, RootTableRO};
+use crate::database::Bincode;
+use crate::entities::Root;
+use crate::types::EntityId;
+use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const ROOT_TABLE: TableDefinition<EntityId, Bincode<Root>> = TableDefinition::new("root");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
@@ -14,6 +13,16 @@ const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
     TableDefinition::new("entity_from_root_entities_junction");
 const FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("feature_from_root_features_junction");
+
+fn get_junction_table_definition(
+    field: &RootRelationshipField,
+) -> TableDefinition<EntityId, Vec<EntityId>> {
+    match field {
+        RootRelationshipField::Global => GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE,
+        RootRelationshipField::Entities => ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE,
+        RootRelationshipField::Features => FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE,
+    }
+}
 
 pub struct RootRedbTable<'a> {
     transaction: &'a WriteTransaction,
@@ -45,16 +54,12 @@ impl<'a> RootTable for RootRedbTable<'a> {
         self.delete_multi(&[id.clone()])
     }
 
-    fn get_relationships_of(
+    fn get_relationships_from_right_ids(
         &self,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let junction_table_definition = match field {
-            RootRelationshipField::Global => GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE,
-            RootRelationshipField::Entities => ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE,
-            RootRelationshipField::Features => FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE,
-        };
+        let junction_table_definition = get_junction_table_definition(field);
         let junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
         let mut relationships = vec![];
@@ -71,53 +76,21 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(relationships)
     }
 
-    /// Deletes all relationships between all root entities and the entities in `right_ids`.
-    /// If the root has no relationship with an entity in `right_ids`, it is ignored.
-    fn delete_all_relationships_with(
+    fn set_relationship(
         &mut self,
+        id: &EntityId,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error> {
-        // delete from junction table
-        let junction_table_definition = match field {
-            RootRelationshipField::Global => GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE,
-            RootRelationshipField::Entities => ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE,
-            RootRelationshipField::Features => FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE,
-        };
-        let mut junction_table = self.transaction.open_table(junction_table_definition)?;
-        let mut relationship_iter = junction_table.iter()?;
-        let mut junctions_to_modify: Vec<(EntityId, Vec<EntityId>)> = vec![];
-        while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            let entities_left: Vec<EntityId> = right_entities
-                .clone()
-                .into_iter()
-                .filter(|entity_id| !right_ids.contains(entity_id))
-                .collect();
-
-            if entities_left.len() == right_entities.len() {
-                continue;
-            }
-            junctions_to_modify.push((left_id, entities_left));
-        }
-        for (left_id, entities) in junctions_to_modify {
-            junction_table.insert(left_id, entities)?;
-        }
-
-        Ok(())
+        self.set_relationship_multi(field, vec![(id.clone(), right_ids.to_vec())])
     }
 
-    fn set_relationships(
+    fn set_relationship_multi(
         &mut self,
         field: &RootRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
-        let junction_table_definition = match field {
-            RootRelationshipField::Global => GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE,
-            RootRelationshipField::Entities => ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE,
-            RootRelationshipField::Features => FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE,
-        };
+        let junction_table_definition = get_junction_table_definition(field);
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         for (left_id, entities) in relationships {
             junction_table.insert(left_id, entities)?;
@@ -268,6 +241,20 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
         Ok(())
     }
+
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &RootRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let relationship: Vec<EntityId> = junction_table
+            .get(id)?
+            .map(|guard| guard.value().clone())
+            .unwrap_or_default();
+        Ok(relationship)
+    }
 }
 
 pub struct RootRedbTableRO<'a> {
@@ -333,5 +320,41 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
             roots.push(root);
         }
         Ok(roots)
+    }
+
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &RootRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let relationship: Vec<EntityId> = junction_table
+            .get(id)?
+            .map(|guard| guard.value().clone())
+            .unwrap_or_default();
+        Ok(relationship)
+    }
+
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &RootRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let mut relationship_iter = junction_table.iter()?;
+        let mut relationships = vec![];
+        while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
+            let left_id = left_id.value();
+            let right_entities = right_entities.value();
+            if right_ids
+                .iter()
+                .any(|entity_id| right_entities.contains(entity_id))
+            {
+                relationships.push((left_id, right_entities));
+            }
+        }
+        Ok(relationships)
     }
 }

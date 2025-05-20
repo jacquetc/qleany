@@ -1,4 +1,4 @@
-use super::common::RootUnitOfWorkFactoryTrait;
+use super::RootUnitOfWorkFactoryTrait;
 use crate::root::dtos::RootDto;
 use anyhow::{Ok, Result};
 use common::{entities::Root, undo_redo::UndoRedoCommand};
@@ -18,7 +18,7 @@ impl UpdateRootUseCase {
             redo_stack: VecDeque::new(),
         }
     }
-    
+
     pub fn description(&self) -> &str {
         "Update Root"
     }
@@ -26,6 +26,11 @@ impl UpdateRootUseCase {
     pub fn execute(&mut self, dto: &RootDto) -> Result<RootDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
+        // check if id exists
+        if uow.get_root(&dto.id)?.is_none() {
+            return Err(anyhow::anyhow!("Root with id {} does not exist", dto.id));
+        }
+
         let root = uow.update_root(&dto.into())?;
         uow.commit()?;
 
@@ -38,12 +43,11 @@ impl UpdateRootUseCase {
 }
 
 impl UndoRedoCommand for UpdateRootUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(last_root) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_root(&last_root.id)?;
+            uow.update_root(&last_root)?;
             uow.commit()?;
             self.redo_stack.push_back(last_root);
         }
@@ -51,12 +55,12 @@ impl UndoRedoCommand for UpdateRootUseCase {
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_root) = self.redo_stack.pop_back() {
+        if let Some(root) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.update_root(&last_root)?;
+            uow.update_root(&root)?;
             uow.commit()?;
-            self.undo_stack.push_back(last_root);
+            self.undo_stack.push_back(root);
         }
         Ok(())
     }

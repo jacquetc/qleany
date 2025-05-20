@@ -1,9 +1,9 @@
 use std::convert::From;
 
-use common::entities::EntityId;
 use common::entities::Root;
+use common::types::EntityId;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct RootDto {
     pub id: EntityId,
     pub global: EntityId,
@@ -44,7 +44,7 @@ impl From<Root> for RootDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct CreateRootDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
@@ -86,7 +86,8 @@ impl From<Root> for CreateRootDto {
 pub use common::direct_access::root::RootRelationshipField;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoveRootRelationshipsDto {
+pub struct RootRelationshipDto {
+    pub id: EntityId,
     pub field: RootRelationshipField,
-    pub ids_to_remove: Vec<EntityId>,
+    pub right_ids: Vec<EntityId>,
 }
