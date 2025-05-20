@@ -197,7 +197,7 @@ impl<'a> DtoRepository<'a> {
         Ok(())
     }
 
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &DtoRelationshipField,
@@ -287,7 +287,7 @@ impl<'a> DtoRepositoryRO<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &DtoRelationshipField,
@@ -295,7 +295,7 @@ impl<'a> DtoRepositoryRO<'a> {
         self.redb_table.get_relationship(id, field)
     }
 
-    fn get_relationships_from_right_ids(
+    pub fn get_relationships_from_right_ids(
         &self,
         field: &DtoRelationshipField,
         right_ids: &[EntityId],

@@ -4,7 +4,7 @@ use std::convert::From;
 use common::entities::Entity;
 use common::types::EntityId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct EntityDto {
     pub id: EntityId,
     pub name: String,
@@ -53,7 +53,7 @@ impl From<Entity> for EntityDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateEntityDto {
     pub name: String,
     pub only_for_heritage: bool,
@@ -102,8 +102,9 @@ impl From<Entity> for CreateEntityDto {
 
 pub use common::direct_access::entity::EntityRelationshipField;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct RemoveEntityRelationshipsDto {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EntityRelationshipDto {
+    pub id: EntityId,
     pub field: EntityRelationshipField,
-    pub ids_to_remove: Vec<EntityId>,
+    pub right_ids: Vec<EntityId>,
 }

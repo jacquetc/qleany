@@ -1,0 +1,65 @@
+use super::EntityUnitOfWorkFactoryTrait;
+use crate::entity::dtos::{CreateEntityDto, EntityDto};
+use anyhow::{Ok, Result};
+use common::entities::Entity;
+use common::undo_redo::UndoRedoCommand;
+use std::collections::VecDeque;
+
+pub struct CreateEntityMultiUseCase {
+    uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
+    undo_stack: VecDeque<Vec<Entity>>,
+    redo_stack: VecDeque<Vec<Entity>>,
+}
+
+impl CreateEntityMultiUseCase {
+    pub fn new(uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>) -> Self {
+        CreateEntityMultiUseCase {
+            uow_factory,
+            undo_stack: VecDeque::new(),
+            redo_stack: VecDeque::new(),
+        }
+    }
+    pub fn execute(&mut self, dtos: &[CreateEntityDto]) -> Result<Vec<EntityDto>> {
+        // create
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let entitys =
+            uow.create_entity_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+        uow.commit()?;
+
+        //store in undo stack
+        self.undo_stack.push_back(entitys.clone());
+        self.redo_stack.clear();
+
+        Ok(entitys.into_iter().map(|entity| entity.into()).collect())
+    }
+}
+
+impl UndoRedoCommand for CreateEntityMultiUseCase {
+    fn undo(&mut self) -> Result<()> {
+        if let Some(last_entitys) = self.undo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.delete_entity_multi(
+                &last_entitys
+                    .iter()
+                    .map(|entity| entity.id.clone())
+                    .collect::<Vec<_>>(),
+            )?;
+            uow.commit()?;
+            self.redo_stack.push_back(last_entitys);
+        }
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        if let Some(last_entitys) = self.redo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.create_entity_multi(&last_entitys)?;
+            uow.commit()?;
+            self.undo_stack.push_back(last_entitys);
+        }
+        Ok(())
+    }
+}

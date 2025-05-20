@@ -1,21 +1,67 @@
-use super::common::EntityUnitOfWorkFactoryTrait;
+use super::EntityUnitOfWorkFactoryTrait;
 use crate::entity::dtos::EntityDto;
 use anyhow::{Ok, Result};
+use common::{entities::Entity, undo_redo::UndoRedoCommand};
+use std::collections::VecDeque;
 
 pub struct UpdateEntityUseCase {
     uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
+    undo_stack: VecDeque<Entity>,
+    redo_stack: VecDeque<Entity>,
 }
 
 impl UpdateEntityUseCase {
     pub fn new(uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>) -> Self {
-        UpdateEntityUseCase { uow_factory }
+        UpdateEntityUseCase {
+            uow_factory,
+            undo_stack: VecDeque::new(),
+            redo_stack: VecDeque::new(),
+        }
+    }
+
+    pub fn description(&self) -> &str {
+        "Update Entity"
     }
 
     pub fn execute(&mut self, dto: &EntityDto) -> Result<EntityDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
+        // check if id exists
+        if uow.get_entity(&dto.id)?.is_none() {
+            return Err(anyhow::anyhow!("Entity with id {} does not exist", dto.id));
+        }
+
         let entity = uow.update_entity(&dto.into())?;
         uow.commit()?;
+
+        // store in undo stack
+        self.undo_stack.push_back(entity.clone());
+        self.redo_stack.clear();
+
         Ok(entity.into())
+    }
+}
+
+impl UndoRedoCommand for UpdateEntityUseCase {
+    fn undo(&mut self) -> Result<()> {
+        if let Some(last_entity) = self.undo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.update_entity(&last_entity)?;
+            uow.commit()?;
+            self.redo_stack.push_back(last_entity);
+        }
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        if let Some(entity) = self.redo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.update_entity(&entity)?;
+            uow.commit()?;
+            self.undo_stack.push_back(entity);
+        }
+        Ok(())
     }
 }

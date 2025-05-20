@@ -3,7 +3,7 @@ use std::convert::From;
 use common::entities::Global;
 use common::types::EntityId;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct GlobalDto {
     pub id: EntityId,
     pub language: String,
@@ -52,7 +52,7 @@ impl From<Global> for GlobalDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct CreateGlobalDto {
     pub language: String,
     pub application_name: String,

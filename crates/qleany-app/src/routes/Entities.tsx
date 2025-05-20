@@ -1,15 +1,41 @@
 import {useRef, useState} from 'react';
+import {createEntity} from "../controller/entity_controller";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import {IconGripVertical} from '@tabler/icons-react';
 import cx from 'clsx';
 import {ActionIcon, Box, Divider, Flex, Group, ScrollArea, Stack, Text, Title, Tooltip} from '@mantine/core';
 import {useListState} from '@mantine/hooks';
 import classes from './DndListHandle.module.css';
+import {listen} from '@tauri-apps/api/event';
+import {info} from '@tauri-apps/plugin-log';
 
 const Entities = () => {
     const [selectedEntity, setSelectedEntity] = useState('');
     const [selectedField, setSelectedField] = useState('');
     const scrollAreaRef = useRef(null);
+
+
+    async function createNewEntity() {
+        const dto = {
+            name: 'New Entity',
+            only_for_heritage: false,
+            parent: null,
+            fields: [],
+            relationships: [],
+        };
+        await createEntity(dto)
+            .then((res) => {
+                return info(res.id.toString());
+            })
+            .catch((error) => console.error(error));
+        info("Entity created");
+    }
+
+    listen('direct_access_entity_created', (event) => {
+        const payload = event.payload as { ids: string[] };
+        info(`Entity created event received: ${payload.ids}`);
+        // Handle the event, e.g., update the UI
+    });
 
     const handleNavigate = (direction: 'up' | 'down') => {
         const entities = ['Entity 1', 'Entity 2']; // Add more entities as needed
@@ -90,7 +116,8 @@ const Entities = () => {
                 <Stack miw={300}>
                     <Group>
                         <Title order={2} id="entitiesListHeading">Entities</Title>
-                        <ActionIcon variant="filled" aria-label="Add new entity">+</ActionIcon>
+                        <ActionIcon variant="filled" aria-label="Add new entity"
+                                    onClick={createNewEntity}>+</ActionIcon>
                     </Group>
 
                     <DragDropContext

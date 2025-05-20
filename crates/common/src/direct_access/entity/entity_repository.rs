@@ -6,10 +6,11 @@ use crate::{
     types::EntityId,
 };
 use redb::Error;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EntityRelationshipField {
     Fields,
     Relationships,
@@ -215,7 +216,7 @@ impl<'a> EntityRepository<'a> {
 
         Ok(())
     }
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &EntityRelationshipField,
@@ -305,14 +306,14 @@ impl<'a> EntityRepositoryRO<'a> {
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
         self.redb_table.get_multi(ids)
     }
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &EntityRelationshipField,
     ) -> Result<Vec<EntityId>, Error> {
         self.redb_table.get_relationship(id, field)
     }
-    fn get_relationships_from_right_ids(
+    pub fn get_relationships_from_right_ids(
         &self,
         field: &EntityRelationshipField,
         right_ids: &[EntityId],

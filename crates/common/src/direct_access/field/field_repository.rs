@@ -178,7 +178,7 @@ impl<'a> FieldRepository<'a> {
 
         Ok(())
     }
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &FieldRelationshipField,
@@ -268,7 +268,7 @@ impl<'a> FieldRepositoryRO<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &FieldRelationshipField,

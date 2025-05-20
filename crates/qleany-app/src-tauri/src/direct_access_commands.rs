@@ -1,7 +1,8 @@
-use direct_access::{entity_controller, CreateEntityDto, EntityDto};
-use tauri::Manager;
-use tauri::async_runtime::Mutex;
 use crate::AppContext;
+use direct_access::{entity_controller, CreateEntityDto, EntityDto};
+use std::ops::{Deref, DerefMut};
+use tauri::async_runtime::Mutex;
+use tauri::Manager;
 
 #[tauri::command]
 pub async fn create_entity(
@@ -10,8 +11,14 @@ pub async fn create_entity(
 ) -> Result<EntityDto, String> {
     let app_context = handle.state::<Mutex<AppContext>>();
     let app_context = app_context.lock().await;
-    entity_controller::create(&app_context.db_context, &app_context.event_hub, &dto)
-        .map_err(|e| format!("Error creating entity: {:?}", e))
+    let mut undo_redo_manager = app_context.undo_redo_manager.lock().await;
+    entity_controller::create(
+        &app_context.db_context,
+        &app_context.event_hub,
+        &mut *undo_redo_manager,
+        &dto,
+    )
+    .map_err(|e| format!("Error creating entity: {:?}", e))
 }
 
 // #[tauri::command]

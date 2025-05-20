@@ -1,10 +1,10 @@
-use super::use_cases::common::{GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkTrait};
-use super::use_cases::get_global_uc::GlobalUnitOfWorkROFactoryTrait;
-use crate::global::use_cases::get_global_uc::GlobalUnitOfWorkROTrait;
+use super::use_cases::{
+    GlobalUnitOfWorkFactoryTrait, GlobalUnitOfWorkROFactoryTrait, GlobalUnitOfWorkROTrait,
+    GlobalUnitOfWorkTrait,
+};
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
-use common::direct_access::repository_factory;
 use common::entities::Global;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
@@ -62,39 +62,15 @@ impl CommandUnitOfWork for GlobalUnitOfWork {
     }
 }
 
-impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {
-    fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
-        let global_repo = repository_factory::write::create_global_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = global_repo.get(id)?;
-        Ok(value)
-    }
-
-    fn create_global(&self, global: &Global) -> Result<Global> {
-        let mut global_repo = repository_factory::write::create_global_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let global = global_repo.create(&self.event_hub, global)?;
-        Ok(global)
-    }
-
-    fn update_global(&self, global: &Global) -> Result<Global> {
-        let mut global_repo = repository_factory::write::create_global_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let global = global_repo.update(&self.event_hub, global)?;
-        Ok(global)
-    }
-
-    fn delete_global(&self, id: &EntityId) -> Result<()> {
-        let mut global_repo = repository_factory::write::create_global_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        global_repo.delete(&self.event_hub, id)?;
-        Ok(())
-    }
-}
+#[macros::uow_action(entity = "Global", action = "Create")]
+#[macros::uow_action(entity = "Global", action = "CreateMulti")]
+#[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "Global", action = "GetMulti")]
+#[macros::uow_action(entity = "Global", action = "Update")]
+#[macros::uow_action(entity = "Global", action = "UpdateMulti")]
+#[macros::uow_action(entity = "Global", action = "Delete")]
+#[macros::uow_action(entity = "Global", action = "DeleteMulti")]
+impl GlobalUnitOfWorkTrait for GlobalUnitOfWork {}
 
 pub struct GlobalUnitOfWorkFactory {
     context: DbContext,
@@ -143,18 +119,9 @@ impl QueryUnitOfWork for GlobalUnitOfWorkRO {
     }
 }
 
-impl GlobalUnitOfWorkROTrait for GlobalUnitOfWorkRO {
-    fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
-        let borrowed_transaction = self.transaction.borrow();
-        let global_repo = repository_factory::read::create_global_repository(
-            &borrowed_transaction
-                .as_ref()
-                .expect("Transaction not started"),
-        );
-        let global = global_repo.get(id)?;
-        Ok(global)
-    }
-}
+#[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "Global", action = "GetMultiRO")]
+impl GlobalUnitOfWorkROTrait for GlobalUnitOfWorkRO {}
 
 pub struct GlobalUnitOfWorkROFactory {
     context: DbContext,

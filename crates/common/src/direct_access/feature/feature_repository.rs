@@ -211,7 +211,7 @@ impl<'a> FeatureRepository<'a> {
 
         Ok(())
     }
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
@@ -302,14 +302,14 @@ impl<'a> FeatureRepositoryRO<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    fn get_relationship(
+    pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
     ) -> Result<Vec<EntityId>, Error> {
         self.redb_table.get_relationship(id, field)
     }
-    fn get_relationships_from_right_ids(
+    pub fn get_relationships_from_right_ids(
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],

@@ -1,13 +1,12 @@
-use super::use_cases::common::{EntityUnitOfWorkFactoryTrait, EntityUnitOfWorkTrait};
-use super::use_cases::get_entity_uc::EntityUnitOfWorkROFactoryTrait;
-use crate::entity::use_cases::get_entity_uc::EntityUnitOfWorkROTrait;
+use super::use_cases::{
+    EntityUnitOfWorkFactoryTrait, EntityUnitOfWorkROFactoryTrait, EntityUnitOfWorkROTrait,
+    EntityUnitOfWorkTrait,
+};
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
-use common::direct_access::repository_factory;
 use common::entities::Entity;
-use common::event::EventHub;
-use common::event::*;
+use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
@@ -63,63 +62,19 @@ impl CommandUnitOfWork for EntityUnitOfWork {
     }
 }
 
-impl EntityUnitOfWorkTrait for EntityUnitOfWork {
-    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
-        let entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = entity_repo.get(id)?;
-        Ok(value)
-    }
-
-    fn create_entity(&self, entity: &Entity) -> Result<Entity> {
-        let mut entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let entity = entity_repo.create(&self.event_hub, entity)?;
-        Ok(entity)
-    }
-
-    fn update_entity(&self, entity: &Entity) -> Result<Entity> {
-        let mut entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let entity = entity_repo.update(&self.event_hub, entity)?;
-        Ok(entity)
-    }
-
-    fn delete_entity(&self, id: &EntityId) -> Result<()> {
-        let mut entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        entity_repo.delete(&self.event_hub, id)?;
-        Ok(())
-    }
-
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &common::direct_access::entity::EntityRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
-        let entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        let value = entity_repo.get_relationships_from_right_ids(field, right_ids)?;
-        Ok(value)
-    }
-
-    fn set_relationship_multi(
-        &self,
-        field: &common::direct_access::entity::EntityRelationshipField,
-        relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<()> {
-        let mut entity_repo = repository_factory::write::create_entity_repository(
-            &self.transaction.as_ref().expect("Transaction not started"),
-        );
-        entity_repo.set_relationship_multi(&self.event_hub, field, relationships)?;
-        Ok(())
-    }
-}
+#[macros::uow_action(entity = "Entity", action = "Create")]
+#[macros::uow_action(entity = "Entity", action = "CreateMulti")]
+#[macros::uow_action(entity = "Entity", action = "Get")]
+#[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "Update")]
+#[macros::uow_action(entity = "Entity", action = "UpdateMulti")]
+#[macros::uow_action(entity = "Entity", action = "Delete")]
+#[macros::uow_action(entity = "Entity", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationship")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIds")]
+#[macros::uow_action(entity = "Entity", action = "SetRelationship")]
+#[macros::uow_action(entity = "Entity", action = "SetRelationshipMulti")]
+impl EntityUnitOfWorkTrait for EntityUnitOfWork {}
 
 pub struct EntityUnitOfWorkFactory {
     context: DbContext,
@@ -168,18 +123,11 @@ impl QueryUnitOfWork for EntityUnitOfWorkRO {
     }
 }
 
-impl EntityUnitOfWorkROTrait for EntityUnitOfWorkRO {
-    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
-        let borrowed_transaction = self.transaction.borrow();
-        let entity_repo = repository_factory::read::create_entity_repository(
-            &borrowed_transaction
-                .as_ref()
-                .expect("Transaction not started"),
-        );
-        let entity = entity_repo.get(id)?;
-        Ok(entity)
-    }
-}
+#[macros::uow_action(entity = "Entity", action = "GetRO")]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIdsRO")]
+impl EntityUnitOfWorkROTrait for EntityUnitOfWorkRO {}
 
 pub struct EntityUnitOfWorkROFactory {
     context: DbContext,

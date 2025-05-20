@@ -3,21 +3,23 @@ use crate::entity::dtos::EntityDto;
 use anyhow::Result;
 use common::types::EntityId;
 
-pub struct GetEntityUseCase {
+pub struct GetEntityMultiUseCase {
     uow_factory: Box<dyn EntityUnitOfWorkROFactoryTrait>,
 }
 
-impl GetEntityUseCase {
+impl GetEntityMultiUseCase {
     pub fn new(uow_factory: Box<dyn EntityUnitOfWorkROFactoryTrait>) -> Self {
-        GetEntityUseCase { uow_factory }
+        GetEntityMultiUseCase { uow_factory }
     }
 
-    pub fn execute(&self, id: &EntityId) -> Result<Option<EntityDto>> {
+    pub fn execute(&self, ids: &[EntityId]) -> Result<Vec<Option<EntityDto>>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_entity(&id)?;
+        let entitys = uow.get_entity_multi(ids)?;
         uow.end_transaction()?;
-
-        Ok(entity_option.map(|entity| entity.into()))
+        Ok(entitys
+            .into_iter()
+            .map(|entity| entity.map(|r| r.into()))
+            .collect())
     }
 }
