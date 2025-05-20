@@ -7,27 +7,35 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.6.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^7.17.2",
     "@mantine/form": "^7.17.2",
     "@mantine/hooks": "^7.17.2",
     "@mantine/modals": "^7.17.2",
     "@mantine/notifications": "^7.17.2",
+    "@radix-ui/react-slot": "^1.1.2",
     "@tabler/icons-react": "^3.31.0",
-    "@tauri-apps/api": "^2.3.0",
+    "@tauri-apps/api": "^2.4.0",
     "@tauri-apps/plugin-log": "2.2.1",
     "@tauri-apps/plugin-opener": "^2.2.6",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.484.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-i18next": "^15.4.1",
-    "react-router": "7.2.0"
+    "react-router": "7.2.0",
+    "tiny-invariant": "^1.3.3"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.3.1",
+    "@tauri-apps/cli": "^2.4.0",
+    "@types/node": "^22.13.13",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -35,8 +43,9 @@
     "postcss": "^8.5.3",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
+    "theme-change": "^2.5.0",
     "typescript": "5.8.2",
-    "vite": "^6.2.2",
+    "vite": "^6.2.3",
     "vite-plugin-svgr": "^4.3.0"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"

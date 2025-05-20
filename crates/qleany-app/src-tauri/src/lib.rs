@@ -1,8 +1,8 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod direct_access_commands;
 mod event_hub_client;
 mod handling_manifest_commands;
-mod direct_access_commands;
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
 use tauri::async_runtime::Mutex;
@@ -44,7 +44,6 @@ impl AppContext {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().build())
         .setup(|app| {
@@ -54,21 +53,22 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            greet, 
+            greet,
             direct_access_commands::create_entity,
             handling_manifest_commands::load_manifest,
-            ]).
-        on_window_event( |app, event| {
+        ])
+        .on_window_event(|app, event| {
             let app_context = app.state::<Mutex<AppContext>>();
             let app_context = app_context.blocking_lock();
             match event {
                 tauri::WindowEvent::CloseRequested { .. } => {
-                    app_context.quit_signal.store(true, std::sync::atomic::Ordering::Relaxed);
+                    app_context
+                        .quit_signal
+                        .store(true, std::sync::atomic::Ordering::Relaxed);
                 }
                 _ => {}
             }
         })
-            .run(tauri::generate_context!())
+        .run(tauri::generate_context!())
         .expect("error while running tauri application");
-
 }

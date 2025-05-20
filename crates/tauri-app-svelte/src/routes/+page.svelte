@@ -31,6 +31,7 @@
     info("Entity created");
   }
 
+
   listen('direct_access_entity_created', (event) => {
     const payload = event.payload as { ids: string[] };
     info(`Entity created event received: ${payload.ids}`);
@@ -64,7 +65,7 @@
   </div>
   <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
 
-  <form class="row" onsubmit={greet}>
+  <form class="row" on:submit={greet}>
     <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
     <button type="submit">Greet</button>
   </form>
@@ -75,7 +76,7 @@
     placeholder="Enter entity name..."
     bind:value={entityName}
   />
-  <button onclick={createNewEntity}>Create Entity</button>
+  <button on:click={createNewEntity}>Create Entity</button>
 </main>
 
 <style>

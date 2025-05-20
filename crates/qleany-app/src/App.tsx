@@ -1,39 +1,43 @@
-
-import { MantineProvider, createTheme } from '@mantine/core';
-import { BrowserRouter, Routes, Route } from "react-router";
+import {createTheme, MantineProvider} from '@mantine/core';
+import {BrowserRouter, Route, Routes} from "react-router";
 import Root from "./routes/Root";
 import Home from "./routes/Home";
 import Entities from "./routes/Entities";
 import Features from "./routes/Features";
-import { useState } from 'react';
+import Project from "./routes/Project";
+import Generate from "./routes/Generate.tsx";
+import {useState} from 'react';
 
 
 const App = () => {
 
 
-  const [theme, setTheme] = useState(createTheme({
-    primaryColor: 'teal',
+    // @ts-ignore
+    const [theme, setTheme] = useState(createTheme({
+        primaryColor: 'teal'
 
-  }));
+    }));
 
-  return (
+    return (
 
-    <MantineProvider theme={theme}>
+        <MantineProvider theme={theme}>
 
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Root />}>
-            <Route index element={<Home />} />
-            <Route path="home" element={<Home />} />
-            <Route path="entities" element={<Entities />} />
-            <Route path="features" element={<Features />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" element={<Root/>}>
+                        <Route index element={<Home/>}/>
+                        <Route path="home" element={<Home/>}/>
+                        <Route path="project" element={<Project/>}/>
+                        <Route path="entities" element={<Entities/>}/>
+                        <Route path="features" element={<Features/>}/>
+                        <Route path="generate" element={<Generate/>}/>
+                    </Route>
+                </Routes>
+            </BrowserRouter>
 
-    </MantineProvider>
+        </MantineProvider>
 
-  );
+    );
 
 }
 
