@@ -794,7 +794,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "bincode",
@@ -871,7 +871,7 @@ dependencies = [
 
 [[package]]
 name = "cpp_qt_file_listing"
-version = "0.0.0"
+version = "0.0.1"
 
 [[package]]
 name = "cpufeatures"
@@ -1023,10 +1023,11 @@ dependencies = [
 
 [[package]]
 name = "direct_access"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "common",
+ "macros",
  "serde",
  "thiserror 2.0.11",
 ]
@@ -1804,7 +1805,7 @@ dependencies = [
 
 [[package]]
 name = "handling_manifest"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "common",
@@ -2443,6 +2444,16 @@ name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
+
+[[package]]
+name = "macros"
+version = "0.0.1"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
 
 [[package]]
 name = "malloc_buf"
@@ -3423,11 +3434,11 @@ dependencies = [
 
 [[package]]
 name = "python_file_listing"
-version = "0.0.0"
+version = "0.0.1"
 
 [[package]]
 name = "qleany-app"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "common",
  "direct_access",
@@ -3445,7 +3456,7 @@ dependencies = [
 
 [[package]]
 name = "qleany-cli"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "clap",
