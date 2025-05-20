@@ -1,8 +1,5 @@
 use anyhow::Result;
-use common::{
-    database::QueryUnitOfWork,
-    entities::{EntityId, Global},
-};
+use common::{database::QueryUnitOfWork, entities::Global, types::EntityId};
 
 use crate::global::dtos::GlobalDto;
 

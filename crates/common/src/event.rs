@@ -1,15 +1,10 @@
-
+use crate::types::EntityId;
 use flume::{unbounded, Receiver, Sender};
 use serde::Serialize;
-
-use crate::entities::EntityId; 
 use std::{
-    collections::HashMap,
     sync::{atomic::AtomicBool, Arc, Mutex},
     thread,
 };
-
-
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum HandlingManifestEvent {
@@ -70,13 +65,18 @@ impl Event {
                 DirectAccessEntity::Feature(event) => format!("direct_access_feature_{:?}", event),
                 DirectAccessEntity::UseCase(event) => format!("direct_access_use_case_{:?}", event),
                 DirectAccessEntity::Field(event) => format!("direct_access_field_{:?}", event),
-                DirectAccessEntity::DtoField(event) => format!("direct_access_dto_field_{:?}", event),
-                DirectAccessEntity::Relationship(event) => format!("direct_access_relationship_{:?}", event),
+                DirectAccessEntity::DtoField(event) => {
+                    format!("direct_access_dto_field_{:?}", event)
+                }
+                DirectAccessEntity::Relationship(event) => {
+                    format!("direct_access_relationship_{:?}", event)
+                }
                 DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
                 DirectAccessEntity::Global(event) => format!("direct_access_global_{:?}", event),
             },
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
-        }.to_lowercase()
+        }
+        .to_lowercase()
     }
 }
 

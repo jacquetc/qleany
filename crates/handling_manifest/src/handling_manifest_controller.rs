@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 pub fn load(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &LoadDto) -> Result<()> {
     let uow_context = LoadUnitOfWorkFactory::new(&db_context, &event_hub);
-    let mut laod_uc = LoadUseCase::new(Box::new(uow_context));
-    laod_uc.execute(dto)
+    let mut load_uc = LoadUseCase::new(Box::new(uow_context));
+    load_uc.execute(dto)
 }
 
 // test

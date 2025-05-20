@@ -11,13 +11,13 @@ use super::{
     },
 };
 use anyhow::{Ok, Result};
-use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
 use common::undo_redo::UndoRedoManager;
+use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
-  
+
 pub fn create(
     db_context: &DbContext,
-    event_hub: &Arc<EventHub>, 
+    event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
     use_case: &CreateUseCaseDto,
 ) -> Result<UseCaseDto> {

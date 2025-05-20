@@ -1,9 +1,10 @@
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::use_case::UseCaseRelationshipField;
-use common::entities::{EntityId, UseCase};
+use common::entities::UseCase;
+use common::types::EntityId;
 
-pub trait UseCaseUnitOfWorkFactoryTrait : Send + Sync {
+pub trait UseCaseUnitOfWorkFactoryTrait: Send + Sync {
     fn create(&self) -> Box<dyn UseCaseUnitOfWorkTrait>;
 }
 
@@ -16,12 +17,12 @@ pub trait UseCaseUnitOfWorkTrait: CommandUnitOfWork {
     fn update_use_case_multi(&self, use_cases: &[UseCase]) -> Result<Vec<UseCase>>;
     fn delete_use_case(&self, id: &EntityId) -> Result<()>;
     fn delete_use_case_multi(&self, ids: &[EntityId]) -> Result<()>;
-    fn get_relationships_of(
+    fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>>;
-    fn set_relationships(
+    fn set_relationship_multi(
         &self,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,

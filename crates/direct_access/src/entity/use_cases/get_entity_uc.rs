@@ -1,8 +1,6 @@
 use anyhow::Result;
-use common::{
-    database::QueryUnitOfWork,
-    entities::{Entity, EntityId},
-};
+use common::types::EntityId;
+use common::{database::QueryUnitOfWork, entities::Entity};
 
 use crate::entity::dtos::EntityDto;
 

@@ -1,8 +1,8 @@
-use std::convert::From;
 use serde::{Deserialize, Serialize};
+use std::convert::From;
 
 use common::entities::Entity;
-use common::entities::EntityId;
+use common::types::EntityId;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EntityDto {

@@ -1,7 +1,7 @@
 use crate::database::db_helpers;
 use crate::database::Bincode;
-use crate::entities::EntityId;
 use crate::entities::UseCase;
+use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 use super::use_case_repository::UseCaseTable;
@@ -21,6 +21,16 @@ const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
 // backward relationships
 const USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("use_case_from_feature_use_cases_junction");
+
+fn get_junction_table_definition(
+    field: &UseCaseRelationshipField,
+) -> TableDefinition<EntityId, Vec<EntityId>> {
+    match field {
+        UseCaseRelationshipField::Entities => ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE,
+        UseCaseRelationshipField::DtoIn => DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE,
+        UseCaseRelationshipField::DtoOut => DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE,
+    }
+}
 
 pub struct UseCaseRedbTable<'a> {
     transaction: &'a WriteTransaction,
@@ -235,16 +245,23 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(())
     }
 
-    fn get_relationships_of(
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let guard = junction_table.get(id)?;
+        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
+    }
+
+    fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let junction_table_definition = match field {
-            UseCaseRelationshipField::Entities => ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoIn => DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoOut => DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE,
-        };
+        let junction_table_definition = get_junction_table_definition(field);
         let junction_table = self.transaction.open_table(junction_table_definition)?;
         let mut relationship_iter = junction_table.iter()?;
         let mut relationships = vec![];
@@ -261,51 +278,21 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(relationships)
     }
 
-    fn delete_all_relationships_with(
+    fn set_relationship(
         &mut self,
+        id: &EntityId,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error> {
-        // delete from junction table
-        let junction_table_definition = match field {
-            UseCaseRelationshipField::Entities => ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoIn => DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoOut => DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE,
-        };
-        let mut junction_table = self.transaction.open_table(junction_table_definition)?;
-        let mut relationship_iter = junction_table.iter()?;
-        let mut junctions_to_modify: Vec<(EntityId, Vec<EntityId>)> = vec![];
-        while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            let entities_left: Vec<EntityId> = right_entities
-                .clone()
-                .into_iter()
-                .filter(|entity_id| !right_ids.contains(entity_id))
-                .collect();
-
-            if entities_left.len() == right_entities.len() {
-                continue;
-            }
-            junctions_to_modify.push((left_id, entities_left));
-        }
-        for (left_id, entities) in junctions_to_modify {
-            junction_table.insert(left_id, entities)?;
-        }
-
-        Ok(())
+        self.set_relationship_multi(field, vec![(id.clone(), right_ids.to_vec())])
     }
 
-    fn set_relationships(
+    fn set_relationship_multi(
         &mut self,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
-        let junction_table_definition = match field {
-            UseCaseRelationshipField::Entities => ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoIn => DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE,
-            UseCaseRelationshipField::DtoOut => DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE,
-        };
+        let junction_table_definition = get_junction_table_definition(field);
         let mut junction_table = self.transaction.open_table(junction_table_definition)?;
         for (left_id, entities) in relationships {
             junction_table.insert(left_id, entities)?;
@@ -377,5 +364,38 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
             use_cases.push(use_case);
         }
         Ok(use_cases)
+    }
+
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let guard = junction_table.get(id)?;
+        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
+    }
+
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &UseCaseRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        let junction_table_definition = get_junction_table_definition(field);
+        let junction_table = self.transaction.open_table(junction_table_definition)?;
+        let mut relationship_iter = junction_table.iter()?;
+        let mut relationships = vec![];
+        while let Some(Ok((left_id, right_entities))) = relationship_iter.next() {
+            let left_id = left_id.value();
+            let right_entities = right_entities.value();
+            if right_ids
+                .iter()
+                .any(|entity_id| right_entities.contains(entity_id))
+            {
+                relationships.push((left_id, right_entities));
+            }
+        }
+        Ok(relationships)
     }
 }

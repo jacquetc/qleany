@@ -1,6 +1,6 @@
 use super::common::GlobalUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::entities::EntityId;
+use common::types::EntityId;
 
 pub struct RemoveGlobalUseCase {
     uow_factory: Box<dyn GlobalUnitOfWorkFactoryTrait>,

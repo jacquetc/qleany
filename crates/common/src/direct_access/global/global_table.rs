@@ -1,7 +1,7 @@
 use crate::database::db_helpers;
 use crate::database::Bincode;
-use crate::entities::EntityId;
 use crate::entities::Global;
+use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 use super::global_repository::GlobalTable;
@@ -64,13 +64,16 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
             } else {
                 // ensure that the id is not already in use
                 if global_table.get(&global.id)?.is_some() {
-                    panic!("Global id already in use while creating it: {:?}", global.id);
+                    panic!(
+                        "Global id already in use while creating it: {:?}",
+                        global.id
+                    );
                 }
                 global.clone()
             };
             global_table.insert(new_global.id, new_global.clone())?;
             created_globals.push(new_global);
-            
+
             if global.id == EntityId::default() {
                 counter += 1;
             }

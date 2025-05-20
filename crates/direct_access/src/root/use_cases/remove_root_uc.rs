@@ -1,8 +1,8 @@
-use super::common::RootUnitOfWorkFactoryTrait;
+use super::RootUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::{entities::EntityId, undo_redo::UndoRedoCommand};
-use std::collections::VecDeque;
 use common::types::Savepoint;
+use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use std::collections::VecDeque;
 
 pub struct RemoveRootUseCase {
     uow_factory: Box<dyn RootUnitOfWorkFactoryTrait>,
@@ -23,6 +23,10 @@ impl RemoveRootUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
         let savepoint = uow.create_savepoint()?;
+        // check if id exists
+        if uow.get_root(&id)?.is_none() {
+            return Err(anyhow::anyhow!("Root with id {} does not exist", id));
+        }
         uow.delete_root(id)?;
         uow.commit()?;
 
@@ -35,7 +39,6 @@ impl RemoveRootUseCase {
 }
 
 impl UndoRedoCommand for RemoveRootUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();

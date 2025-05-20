@@ -1,12 +1,15 @@
-use std::sync::Arc;
 use crate::use_cases::load_uc::{LoadUnitOfWorkFactoryTrait, LoadUnitOfWorkTrait};
 use anyhow::{Ok, Result};
+use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
-use common::entities::{Dto, Entity, EntityId, Feature, Field, Global, Root, UseCase, DtoField, Relationship};
+use common::entities::{
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase,
+};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
+use common::types::EntityId;
+use std::sync::Arc;
 
 pub struct LoadUnitOfWork {
     context: DbContext,
@@ -147,7 +150,6 @@ impl LoadUnitOfWorkTrait for LoadUnitOfWork {
         Ok(value)
     }
 
-
     fn create_dto(&self, dto: &Dto) -> Result<Dto> {
         let mut dto_repo = repository_factory::write::create_dto_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
@@ -171,9 +173,6 @@ impl LoadUnitOfWorkTrait for LoadUnitOfWork {
         let relationships = relationship_repo.create_multi(&self.event_hub, relationships)?;
         Ok(relationships)
     }
-
-
-
 }
 
 pub struct LoadUnitOfWorkFactory {

@@ -1,4 +1,4 @@
-use crate::entities::EntityId;
+use crate::types::EntityId;
 use redb::{Error, ReadableTable};
 
 pub(crate) fn delete_from_backward_junction_table(

@@ -1,7 +1,7 @@
 use crate::database::db_helpers;
 use crate::database::Bincode;
 use crate::entities::DtoField;
-use crate::entities::EntityId;
+use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 use super::dto_field_repository::DtoFieldTable;
@@ -65,7 +65,10 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
             } else {
                 // ensure that the id is not already in use
                 if dto_field_table.get(&dto_field.id)?.is_some() {
-                    panic!("DtoField id already in use while creating it: {}", dto_field.id);
+                    panic!(
+                        "DtoField id already in use while creating it: {}",
+                        dto_field.id
+                    );
                 }
                 dto_field.clone()
             };

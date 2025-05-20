@@ -1,8 +1,8 @@
 use super::common::UseCaseUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::{entities::EntityId, undo_redo::UndoRedoCommand};
-use std::collections::VecDeque;
 use common::types::Savepoint;
+use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use std::collections::VecDeque;
 
 pub struct RemoveUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkFactoryTrait>,
@@ -35,7 +35,6 @@ impl RemoveUseCaseUseCase {
 }
 
 impl UndoRedoCommand for RemoveUseCaseUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();

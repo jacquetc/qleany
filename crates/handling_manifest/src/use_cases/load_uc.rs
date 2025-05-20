@@ -3,9 +3,12 @@ mod tools;
 mod validation_schema;
 
 use anyhow::Result;
+use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork,
-    entities::{Dto, DtoField, Entity, EntityId, Feature, Field, FieldType, Global, Relationship, Root, UseCase},
+    entities::{
+        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, Root, UseCase,
+    },
 };
 
 use crate::LoadDto;
@@ -165,7 +168,9 @@ impl LoadUseCase {
             }
 
             // get entity from repo
-            let mut entity = uow.get_entity(&entity_id)?.ok_or(anyhow::anyhow!("Entity not found"))?;
+            let mut entity = uow
+                .get_entity(&entity_id)?
+                .ok_or(anyhow::anyhow!("Entity not found"))?;
 
             // update entity with fields
             entity.fields = field_ids;
@@ -191,12 +196,15 @@ impl LoadUseCase {
         let all_relationships = tools::generate_relationships(&entities, &all_fields);
 
         for (entity_id, relationships) in all_relationships.iter() {
+            let new_relationship_ids = uow
+                .create_relationships(relationships)?
+                .iter()
+                .map(|new_relationship| new_relationship.id)
+                .collect::<Vec<EntityId>>();
 
-            let new_relationship_ids = uow.create_relationships(relationships)?.iter().map(|new_relationship| {
-            new_relationship.id
-            }).collect::<Vec<EntityId>>();
-
-            let mut entity = uow.get_entity(entity_id)?.ok_or(anyhow::anyhow!("Entity not found"))?;
+            let mut entity = uow
+                .get_entity(entity_id)?
+                .ok_or(anyhow::anyhow!("Entity not found"))?;
 
             entity.relationships = new_relationship_ids.clone();
 
@@ -230,11 +238,9 @@ impl LoadUseCase {
                 // create dto_in
                 let mut dto_in_id = None;
                 if let Some(dto_in) = &model_use_case.dto_in {
-
                     // create DtoFields
                     let mut dto_field_ids = vec![];
                     for model_dto_field in dto_in.fields.iter() {
-
                         let field_type = tools::str_to_field_type(&model_dto_field.r#type);
 
                         let dto_field = uow.create_dto_field(&DtoField {
@@ -247,8 +253,6 @@ impl LoadUseCase {
                         dto_field_ids.push(dto_field.id);
                     }
 
-
-
                     let dto_in = uow.create_dto(&Dto {
                         id: 0,
                         name: dto_in.name.clone(),
@@ -260,11 +264,9 @@ impl LoadUseCase {
                 // create dto_out
                 let mut dto_out_id = None;
                 if let Some(dto_out) = &model_use_case.dto_out {
-
                     // create DtoFields
                     let mut dto_field_ids = vec![];
                     for model_dto_field in dto_out.fields.iter() {
-
                         let field_type = tools::str_to_field_type(&model_dto_field.r#type);
 
                         let dto_field = uow.create_dto_field(&DtoField {
@@ -284,7 +286,6 @@ impl LoadUseCase {
                     })?;
                     dto_out_id = Some(dto_out.id);
                 }
-                
 
                 let use_case = uow.create_use_case(&UseCase {
                     id: 0,
@@ -308,7 +309,9 @@ impl LoadUseCase {
 
         // update root with all ids
         // good practice to get the root again, to make sure it is not stale
-        let root = uow.get_root(&root_id)?.ok_or(anyhow::anyhow!("Root not found"))?;
+        let root = uow
+            .get_root(&root_id)?
+            .ok_or(anyhow::anyhow!("Root not found"))?;
         let root = Root {
             id: root.id,
             global: global_id,

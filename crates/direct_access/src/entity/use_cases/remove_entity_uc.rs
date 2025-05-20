@@ -1,6 +1,6 @@
 use super::common::EntityUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::entities::EntityId;
+use common::types::EntityId;
 
 pub struct RemoveEntityUseCase {
     uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,

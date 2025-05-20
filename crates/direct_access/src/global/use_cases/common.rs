@@ -1,6 +1,7 @@
 use anyhow::Result;
 use common::database::CommandUnitOfWork;
-use common::entities::{EntityId, Global};
+use common::entities::Global;
+use common::types::EntityId;
 
 pub trait GlobalUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn GlobalUnitOfWorkTrait>;

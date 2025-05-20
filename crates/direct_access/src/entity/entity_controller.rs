@@ -7,7 +7,7 @@ use super::{
     },
 };
 use anyhow::{Ok, Result};
-use common::{database::db_context::DbContext, entities::EntityId, event::EventHub};
+use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
 pub fn create(

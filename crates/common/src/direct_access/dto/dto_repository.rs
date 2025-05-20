@@ -1,16 +1,24 @@
+use std::fmt::Display;
 use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
     direct_access::repository_factory,
-    entities::{Dto, EntityId},
+    entities::Dto,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    types::EntityId,
 };
-
 use redb::Error;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DtoRelationshipField {
     Fields,
+}
+
+impl Display for DtoRelationshipField {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub trait DtoTable {
@@ -22,26 +30,42 @@ pub trait DtoTable {
     fn update_multi(&mut self, dtos: &[Dto]) -> Result<Vec<Dto>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn get_relationships_of(
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &DtoRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
         &self,
         field: &DtoRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-    fn delete_all_relationships_with(
-        &mut self,
-        field: &DtoRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error>;
-    fn set_relationships(
+    fn set_relationship_multi(
         &mut self,
         field: &DtoRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error>;
+    fn set_relationship(
+        &mut self,
+        id: &EntityId,
+        field: &DtoRelationshipField,
+        right_ids: &[EntityId],
     ) -> Result<(), Error>;
 }
 
 pub trait DtoTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error>;
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &DtoRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &DtoRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
 }
 
 pub struct DtoRepository<'a> {
@@ -151,11 +175,13 @@ impl<'a> DtoRepository<'a> {
         }
 
         // get all strong forward relationship fields
-        let fields: Vec<EntityId> = dtos
+        let mut fields: Vec<EntityId> = dtos
             .iter()
             .flat_map(|dto| dto.as_ref().map(|dto| dto.fields.clone()))
             .flatten()
             .collect();
+        fields.sort();
+        fields.dedup();
 
         // delete all strong relationships, initiating a cascade delete
         repository_factory::write::create_dto_field_repository(self.transaction)
@@ -171,29 +197,76 @@ impl<'a> DtoRepository<'a> {
         Ok(())
     }
 
-    pub fn get_relationships_of(
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &DtoRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+
+    pub fn get_relationships_from_right_ids(
         &self,
         field: &DtoRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        self.redb_table.get_relationships_of(field, right_ids)
+        self.redb_table
+            .get_relationships_from_right_ids(field, right_ids)
     }
 
-    pub fn delete_all_relationships_with(
+    pub fn set_relationship(
         &mut self,
+        event_hub: &Arc<EventHub>,
+        id: &EntityId,
         field: &DtoRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error> {
-        self.redb_table
-            .delete_all_relationships_with(field, right_ids)
+        self.redb_table.set_relationship(id, field, right_ids)?;
+
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
+            ids: vec![id.clone()],
+            data: Some(format!(
+                "{}:{}",
+                field,
+                right_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )),
+        });
+
+        Ok(())
     }
 
-    pub fn set_relationships(
+    pub fn set_relationship_multi(
         &mut self,
+        event_hub: &Arc<EventHub>,
         field: &DtoRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
-        self.redb_table.set_relationships(field, relationships)
+        self.redb_table
+            .set_relationship_multi(field, relationships.clone())?;
+
+        for relationship in relationships {
+            let (left_id, right_ids) = relationship;
+            event_hub.send_event(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
+                ids: vec![left_id],
+                data: Some(format!(
+                    "{}:{}",
+                    field,
+                    right_ids
+                        .iter()
+                        .map(|id| id.to_string())
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )),
+            });
+        }
+
+        Ok(())
     }
 }
 
@@ -212,5 +285,22 @@ impl<'a> DtoRepositoryRO<'a> {
 
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &DtoRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &DtoRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        self.redb_table
+            .get_relationships_from_right_ids(field, right_ids)
     }
 }

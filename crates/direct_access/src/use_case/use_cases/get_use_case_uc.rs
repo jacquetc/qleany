@@ -1,7 +1,7 @@
 use super::common::UseCaseUnitOfWorkROFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
 use anyhow::Result;
-use common::entities::EntityId;
+use common::types::EntityId;
 
 pub struct GetUseCaseUseCase {
     uow_factory: Box<dyn UseCaseUnitOfWorkROFactoryTrait>,

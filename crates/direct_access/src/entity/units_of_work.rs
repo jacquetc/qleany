@@ -5,10 +5,11 @@ use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
-use common::entities::{Entity, EntityId};
+use common::entities::Entity;
 use common::event::EventHub;
 use common::event::*;
 use common::types;
+use common::types::EntityId;
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -95,7 +96,7 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
         Ok(())
     }
 
-    fn get_relationships_of(
+    fn get_relationships_from_right_ids(
         &self,
         field: &common::direct_access::entity::EntityRelationshipField,
         right_ids: &[EntityId],
@@ -103,11 +104,11 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
         let entity_repo = repository_factory::write::create_entity_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let value = entity_repo.get_relationships_of(field, right_ids)?;
+        let value = entity_repo.get_relationships_from_right_ids(field, right_ids)?;
         Ok(value)
     }
 
-    fn set_relationships(
+    fn set_relationship_multi(
         &self,
         field: &common::direct_access::entity::EntityRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
@@ -115,7 +116,7 @@ impl EntityUnitOfWorkTrait for EntityUnitOfWork {
         let mut entity_repo = repository_factory::write::create_entity_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        entity_repo.set_relationships(field, relationships)?;
+        entity_repo.set_relationship_multi(&self.event_hub, field, relationships)?;
         Ok(())
     }
 }

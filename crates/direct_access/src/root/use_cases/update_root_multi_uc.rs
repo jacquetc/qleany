@@ -1,4 +1,4 @@
-use super::common::RootUnitOfWorkFactoryTrait;
+use super::RootUnitOfWorkFactoryTrait;
 use crate::root::dtos::RootDto;
 use anyhow::{Ok, Result};
 use common::{entities::Root, undo_redo::UndoRedoCommand};
@@ -22,7 +22,21 @@ impl UpdateRootMultiUseCase {
     pub fn execute(&mut self, dtos: &[RootDto]) -> Result<Vec<RootDto>> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let roots = uow.update_root_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+
+        // check if id exists
+        let mut exists = true;
+        for RootDto { id, .. } in dtos {
+            if uow.get_root(id)?.is_none() {
+                exists = false;
+                break;
+            }
+        }
+        if !exists {
+            return Err(anyhow::anyhow!("One or more ids do not exist"));
+        }
+
+        let roots =
+            uow.update_root_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
         // store in undo stack
@@ -34,14 +48,11 @@ impl UpdateRootMultiUseCase {
 }
 
 impl UndoRedoCommand for UpdateRootMultiUseCase {
-
     fn undo(&mut self) -> Result<()> {
         if let Some(last_roots) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            for root in &last_roots {
-                uow.delete_root(&root.id)?;
-            }
+            uow.update_root_multi(&last_roots)?;
             uow.commit()?;
             self.redo_stack.push_back(last_roots);
         }
@@ -49,12 +60,12 @@ impl UndoRedoCommand for UpdateRootMultiUseCase {
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_roots) = self.redo_stack.pop_back() {
+        if let Some(roots) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.update_root_multi(&last_roots)?;
+            uow.update_root_multi(&roots)?;
             uow.commit()?;
-            self.undo_stack.push_back(last_roots);
+            self.undo_stack.push_back(roots);
         }
         Ok(())
     }

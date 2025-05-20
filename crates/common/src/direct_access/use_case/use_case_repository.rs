@@ -1,19 +1,25 @@
-use std::sync::Arc;
-
 use crate::{
     database::transactions::Transaction,
     direct_access::repository_factory,
-    entities::{EntityId, UseCase},
+    entities::UseCase,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    types::EntityId,
 };
-
 use redb::Error;
+use std::fmt::Display;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UseCaseRelationshipField {
     Entities,
     DtoIn,
     DtoOut,
+}
+
+impl Display for UseCaseRelationshipField {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub trait UseCaseTable {
@@ -25,26 +31,42 @@ pub trait UseCaseTable {
     fn update_multi(&mut self, use_cases: &[UseCase]) -> Result<Vec<UseCase>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn get_relationships_of(
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-    fn delete_all_relationships_with(
-        &mut self,
-        field: &UseCaseRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error>;
-    fn set_relationships(
+    fn set_relationship_multi(
         &mut self,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error>;
+    fn set_relationship(
+        &mut self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+        right_ids: &[EntityId],
     ) -> Result<(), Error>;
 }
 
 pub trait UseCaseTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error>;
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &UseCaseRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
 }
 
 pub struct UseCaseRepository<'a> {
@@ -175,7 +197,7 @@ impl<'a> UseCaseRepository<'a> {
         }
 
         // get all strong forward relationship fields
-        let dto_ins: Vec<EntityId> = use_cases
+        let mut dto_ins: Vec<EntityId> = use_cases
             .iter()
             .filter_map(|use_case| {
                 use_case
@@ -183,7 +205,11 @@ impl<'a> UseCaseRepository<'a> {
                     .and_then(|use_case| use_case.dto_in.clone())
             })
             .collect();
-        let dto_outs: Vec<EntityId> = use_cases
+        // remove duplicates
+        dto_ins.sort();
+        dto_ins.dedup();
+
+        let mut dto_outs: Vec<EntityId> = use_cases
             .iter()
             .filter_map(|use_case| {
                 use_case
@@ -191,6 +217,9 @@ impl<'a> UseCaseRepository<'a> {
                     .and_then(|use_case| use_case.dto_out.clone())
             })
             .collect();
+        // remove duplicates
+        dto_outs.sort();
+        dto_outs.dedup();
 
         // delete all strong relationships, initiating a cascade delete
         repository_factory::write::create_dto_repository(self.transaction)
@@ -208,29 +237,74 @@ impl<'a> UseCaseRepository<'a> {
         Ok(())
     }
 
-    pub fn get_relationships_of(
+    pub fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+    pub fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        self.redb_table.get_relationships_of(field, right_ids)
-    }
-
-    pub fn delete_all_relationships_with(
-        &mut self,
-        field: &UseCaseRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error> {
         self.redb_table
-            .delete_all_relationships_with(field, right_ids)
+            .get_relationships_from_right_ids(field, right_ids)
     }
 
-    pub fn set_relationships(
+    pub fn set_relationship_multi(
         &mut self,
+        event_hub: &Arc<EventHub>,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
-        self.redb_table.set_relationships(field, relationships)
+        self.redb_table
+            .set_relationship_multi(field, relationships.clone())?;
+
+        for relationship in relationships {
+            let (left_id, right_ids) = relationship;
+            event_hub.send_event(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Updated)),
+                ids: vec![left_id],
+                data: Some(format!(
+                    "{}:{}",
+                    field,
+                    right_ids
+                        .iter()
+                        .map(|id| id.to_string())
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )),
+            });
+        }
+
+        Ok(())
+    }
+
+    pub fn set_relationship(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error> {
+        self.redb_table.set_relationship(id, field, right_ids)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Updated)),
+            ids: vec![id.clone()],
+            data: Some(format!(
+                "{}:{}",
+                field,
+                right_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )),
+        });
+
+        Ok(())
     }
 }
 
@@ -249,5 +323,22 @@ impl<'a> UseCaseRepositoryRO<'a> {
 
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+
+    pub fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &UseCaseRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+
+    pub fn get_relationships_from_right_ids(
+        &self,
+        field: &UseCaseRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        self.redb_table
+            .get_relationships_from_right_ids(field, right_ids)
     }
 }

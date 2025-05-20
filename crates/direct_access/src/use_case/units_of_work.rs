@@ -6,9 +6,10 @@ use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
-use common::entities::{EntityId, UseCase};
+use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
+use common::types::EntityId;
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -127,7 +128,7 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         Ok(())
     }
 
-    fn get_relationships_of(
+    fn get_relationships_from_right_ids(
         &self,
         field: &common::direct_access::use_case::UseCaseRelationshipField,
         right_ids: &[EntityId],
@@ -135,11 +136,11 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         let use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        let value = use_case_repo.get_relationships_of(field, right_ids)?;
+        let value = use_case_repo.get_relationships_from_right_ids(field, right_ids)?;
         Ok(value)
     }
 
-    fn set_relationships(
+    fn set_relationship_multi(
         &self,
         field: &common::direct_access::use_case::UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
@@ -147,7 +148,7 @@ impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
         let mut use_case_repo = repository_factory::write::create_use_case_repository(
             &self.transaction.as_ref().expect("Transaction not started"),
         );
-        use_case_repo.set_relationships(field, relationships)?;
+        use_case_repo.set_relationship_multi(&self.event_hub, field, relationships)?;
         Ok(())
     }
 }

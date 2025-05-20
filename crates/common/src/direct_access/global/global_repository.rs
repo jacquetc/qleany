@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
-    entities::{EntityId, Global},
+    entities::Global,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    types::EntityId,
 };
 
 use redb::Error;

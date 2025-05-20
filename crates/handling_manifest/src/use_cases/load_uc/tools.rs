@@ -1,13 +1,9 @@
-use anyhow::Result;
-use std::collections::HashMap;
-
-use common::{
-    direct_access::relationship,
-    entities::{
-        Cardinality, Direction, Entity, EntityId, Field, FieldType, Order, Relationship,
-        RelationshipType, Strength,
-    },
+use common::entities::{
+    Cardinality, Direction, Entity, Field, FieldType, Order, Relationship, RelationshipType,
+    Strength,
 };
+use common::types::EntityId;
+use std::collections::HashMap;
 
 pub fn generate_relationships(
     entities: &Vec<Entity>,
@@ -48,11 +44,7 @@ pub fn generate_relationships(
     all_relationships_per_entity
 }
 
-fn get_forward_relationships(
-    entity: &Entity,
-    fields: &Vec<Field>,
-) -> Vec<Relationship> {
-
+fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relationship> {
     entity
         .fields
         .iter()
@@ -107,14 +99,12 @@ fn get_forward_relationships(
             }
         })
         .collect()
-
 }
 
 fn get_backward_relationships(
     entity_id: &EntityId,
     all_forward_relationships_per_entity: &HashMap<EntityId, Vec<Relationship>>,
 ) -> Vec<Relationship> {
-    
     all_forward_relationships_per_entity
         .values()
         .flatten()

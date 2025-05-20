@@ -1,5 +1,5 @@
+use crate::types::EntityId;
 use serde::{Deserialize, Serialize};
-pub type EntityId = u64;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Root {
@@ -64,18 +64,6 @@ pub struct DtoField {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum FieldType {
-    Boolean,
-    Integer,
-    UInteger,
-    Float,
-    String,
-    Uuid,
-    DateTime,
-    Entity,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Field {
     pub id: EntityId,
     pub name: String,
@@ -89,6 +77,30 @@ pub struct Field {
     pub ordered: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Relationship {
+    pub id: EntityId,
+    pub left_entity: EntityId,
+    pub right_entity: EntityId,
+    pub field_name: String,
+    pub relationship_type: RelationshipType,
+    pub strength: Strength,
+    pub direction: Direction,
+    pub cardinality: Cardinality,
+    pub order: Option<Order>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum FieldType {
+    Boolean,
+    Integer,
+    UInteger,
+    Float,
+    String,
+    Uuid,
+    DateTime,
+    Entity,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -123,17 +135,4 @@ pub enum Cardinality {
 pub enum Order {
     Ordered,
     Unordered,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Relationship {
-    pub id: EntityId,
-    pub left_entity: EntityId,
-    pub right_entity: EntityId,
-    pub field_name: String,
-    pub relationship_type: RelationshipType,
-    pub strength: Strength,
-    pub direction: Direction,
-    pub cardinality: Cardinality,
-    pub order: Option<Order>,
 }

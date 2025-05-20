@@ -5,9 +5,10 @@ use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::direct_access::repository_factory;
-use common::entities::{EntityId, Global};
+use common::entities::Global;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
+use common::types::EntityId;
 use std::cell::RefCell;
 use std::sync::Arc;
 
