@@ -60,7 +60,7 @@ pub struct Dto {
 pub struct DtoField {
     pub id: EntityId,
     pub name: String,
-    pub field_type: FieldType,
+    pub field_type: DtoFieldType,
     pub is_nullable: bool,
     pub is_list: bool,
 }
@@ -93,6 +93,23 @@ pub struct Relationship {
     pub cardinality: Cardinality,
     pub order: Option<Order>,
 }
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum DtoFieldType {
+    Boolean,
+    Integer,
+    UInteger,
+    Float,
+    String,
+    Uuid,
+    DateTime,
+}
+
+impl Default for DtoFieldType {
+    fn default() -> Self {
+        DtoFieldType::String
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum FieldType {
     Boolean,

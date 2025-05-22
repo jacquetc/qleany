@@ -134,6 +134,15 @@ pub fn run() {
             direct_access_commands::dto_commands::remove_dto_multi,
             direct_access_commands::dto_commands::get_dto_relationship,
             direct_access_commands::dto_commands::set_dto_relationship,
+            //dto field
+            direct_access_commands::dto_field_commands::get_dto_field,
+            direct_access_commands::dto_field_commands::get_dto_field_multi,
+            direct_access_commands::dto_field_commands::create_dto_field,
+            direct_access_commands::dto_field_commands::create_dto_field_multi,
+            direct_access_commands::dto_field_commands::update_dto_field,
+            direct_access_commands::dto_field_commands::update_dto_field_multi,
+            direct_access_commands::dto_field_commands::remove_dto_field,
+            direct_access_commands::dto_field_commands::remove_dto_field_multi,
             // handling manifest
             handling_manifest_commands::load_manifest,
         ])

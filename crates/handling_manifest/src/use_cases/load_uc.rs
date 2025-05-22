@@ -242,7 +242,7 @@ impl LoadUseCase {
                     // create DtoFields
                     let mut dto_field_ids = vec![];
                     for model_dto_field in dto_in.fields.iter() {
-                        let field_type = tools::str_to_field_type(&model_dto_field.r#type);
+                        let field_type = tools::str_to_dto_field_type(&model_dto_field.r#type);
 
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,
@@ -268,7 +268,7 @@ impl LoadUseCase {
                     // create DtoFields
                     let mut dto_field_ids = vec![];
                     for model_dto_field in dto_out.fields.iter() {
-                        let field_type = tools::str_to_field_type(&model_dto_field.r#type);
+                        let field_type = tools::str_to_dto_field_type(&model_dto_field.r#type);
 
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,

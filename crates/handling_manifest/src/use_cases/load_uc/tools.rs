@@ -1,6 +1,6 @@
 use common::entities::{
-    Cardinality, Direction, Entity, Field, FieldType, Order, Relationship, RelationshipType,
-    Strength,
+    Cardinality, Direction, DtoFieldType, Entity, Field, FieldType, Order, Relationship,
+    RelationshipType, Strength,
 };
 use common::types::EntityId;
 use std::collections::HashMap;
@@ -133,5 +133,18 @@ pub fn str_to_field_type(s: &str) -> FieldType {
         "Uuid" => FieldType::Uuid,
         "DateTime" => FieldType::DateTime,
         _ => FieldType::String,
+    }
+}
+
+pub fn str_to_dto_field_type(s: &str) -> DtoFieldType {
+    match s {
+        "Boolean" | "Bool" => DtoFieldType::Boolean,
+        "Integer" => DtoFieldType::Integer,
+        "UInteger" => DtoFieldType::UInteger,
+        "Float" => DtoFieldType::Float,
+        "String" => DtoFieldType::String,
+        "Uuid" => DtoFieldType::Uuid,
+        "DateTime" => DtoFieldType::DateTime,
+        _ => DtoFieldType::String,
     }
 }

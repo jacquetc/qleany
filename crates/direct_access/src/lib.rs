@@ -1,4 +1,5 @@
 pub mod dto;
+pub mod dto_field;
 pub mod entity;
 pub mod feature;
 mod field;
@@ -9,6 +10,8 @@ pub mod use_case;
 
 pub use dto::dto_controller;
 pub use dto::dtos::*;
+pub use dto_field::dto_field_controller;
+pub use dto_field::dtos::*;
 pub use entity::dtos::*;
 pub use entity::entity_controller;
 pub use feature::dtos::*;

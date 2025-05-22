@@ -1,0 +1,59 @@
+use super::DtoFieldUnitOfWorkFactoryTrait;
+use crate::dto_field::dtos::{CreateDtoFieldDto, DtoFieldDto};
+use anyhow::{Ok, Result};
+use common::entities::DtoField;
+use common::undo_redo::UndoRedoCommand;
+use std::collections::VecDeque;
+
+pub struct CreateDtoFieldUseCase {
+    uow_factory: Box<dyn DtoFieldUnitOfWorkFactoryTrait>,
+    undo_stack: VecDeque<DtoField>,
+    redo_stack: VecDeque<DtoField>,
+}
+
+impl CreateDtoFieldUseCase {
+    pub fn new(uow_factory: Box<dyn DtoFieldUnitOfWorkFactoryTrait>) -> Self {
+        CreateDtoFieldUseCase {
+            uow_factory,
+            undo_stack: VecDeque::new(),
+            redo_stack: VecDeque::new(),
+        }
+    }
+
+    pub fn execute(&mut self, dto: CreateDtoFieldDto) -> Result<DtoFieldDto> {
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let dto_field = uow.create_dto_field(&dto.into())?;
+        uow.commit()?;
+
+        // store in undo stack
+        self.undo_stack.push_back(dto_field.clone());
+        self.redo_stack.clear();
+
+        Ok(dto_field.into())
+    }
+}
+
+impl UndoRedoCommand for CreateDtoFieldUseCase {
+    fn undo(&mut self) -> Result<()> {
+        if let Some(last_dto_field) = self.undo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.delete_dto_field(&last_dto_field.id)?;
+            uow.commit()?;
+            self.redo_stack.push_back(last_dto_field);
+        }
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        if let Some(last_dto_field) = self.redo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.create_dto_field(&last_dto_field)?;
+            uow.commit()?;
+            self.undo_stack.push_back(last_dto_field);
+        }
+        Ok(())
+    }
+}
