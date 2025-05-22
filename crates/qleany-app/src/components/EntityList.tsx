@@ -1,9 +1,9 @@
-import {useEffect, useRef} from 'react';
+import {useEffect} from 'react';
 import {EntityDto} from "../controller/entity_controller";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import {IconGripVertical} from '@tabler/icons-react';
 import cx from 'clsx';
-import {ActionIcon, Group, ScrollArea, Title} from '@mantine/core';
+import {ActionIcon, Group, Title} from '@mantine/core';
 import {useListState} from '@mantine/hooks';
 import classes from '../routes/DndListHandle.module.css';
 import {error, info} from '@tauri-apps/plugin-log';
@@ -24,7 +24,6 @@ const EntityList = ({
                         onCreateEntity,
                         onEntitiesReordered
                     }: EntityListProps) => {
-    const scrollAreaRef = useRef<HTMLDivElement | null>(null);
     const [listState, handlers] = useListState(entities);
 
     useEffect(() => {
@@ -103,19 +102,19 @@ const EntityList = ({
             >
                 <Droppable droppableId="dnd-list" direction="vertical" type="entity">
                     {(provided) => (
-                        <ScrollArea
-                            type="auto"
-                            offsetScrollbars="present"
-                            style={{flexGrow: 1}}
-                            {...provided.droppableProps}
-                            ref={(node) => {
-                                scrollAreaRef.current = node;
-                                provided.innerRef(node);
+                        <div
+                            style={{
+                                height: '100%',
+                                //maxHeight: '60vh',
+                                overflow: 'auto',
+                                flexGrow: 1
                             }}
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
                         >
                             {items}
                             {provided.placeholder}
-                        </ScrollArea>
+                        </div>
                     )}
                 </Droppable>
             </DragDropContext>
