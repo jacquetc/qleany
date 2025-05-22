@@ -61,10 +61,11 @@ impl EventHubClient {
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 if quit_signal.load(std::sync::atomic::Ordering::Relaxed) {
+                    println!("EventHubClient quitting event loop");
+                    log::info!("EventHubClient quitting event loop");
                     break;
                 }
             }
         });
-
     }
 }

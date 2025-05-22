@@ -2,16 +2,12 @@
 mod direct_access_commands;
 mod event_hub_client;
 mod handling_manifest_commands;
-use std::sync::Arc;
-
 use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
+use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::Manager;
+use tauri_plugin_log::{Target, TargetKind};
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 #[derive(Clone)]
 struct AppContext {
     pub db_context: DbContext,
@@ -45,7 +41,6 @@ impl AppContext {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
         .setup(|app| {
             app.manage(Mutex::new(AppContext::new(app.handle().clone())));
             Ok(())
@@ -53,8 +48,49 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            greet,
-            direct_access_commands::create_entity,
+            // root
+            direct_access_commands::root_commands::get_root,
+            direct_access_commands::root_commands::get_root_multi,
+            direct_access_commands::root_commands::create_root,
+            direct_access_commands::root_commands::create_root_multi,
+            direct_access_commands::root_commands::update_root,
+            direct_access_commands::root_commands::update_root_multi,
+            direct_access_commands::root_commands::remove_root,
+            direct_access_commands::root_commands::remove_root_multi,
+            direct_access_commands::root_commands::get_root_relationship,
+            direct_access_commands::root_commands::set_root_relationship,
+            // entity
+            direct_access_commands::entity_commands::get_entity,
+            direct_access_commands::entity_commands::get_entity_multi,
+            direct_access_commands::entity_commands::create_entity,
+            direct_access_commands::entity_commands::create_entity_multi,
+            direct_access_commands::entity_commands::update_entity,
+            direct_access_commands::entity_commands::update_entity_multi,
+            direct_access_commands::entity_commands::remove_entity,
+            direct_access_commands::entity_commands::remove_entity_multi,
+            direct_access_commands::entity_commands::get_entity_relationship,
+            direct_access_commands::entity_commands::set_entity_relationship,
+            // global
+            direct_access_commands::global_commands::get_global,
+            direct_access_commands::global_commands::get_global_multi,
+            direct_access_commands::global_commands::create_global,
+            direct_access_commands::global_commands::create_global_multi,
+            direct_access_commands::global_commands::update_global,
+            direct_access_commands::global_commands::update_global_multi,
+            direct_access_commands::global_commands::remove_global,
+            direct_access_commands::global_commands::remove_global_multi,
+            // relationship
+            direct_access_commands::relationship_commands::get_relationship,
+            direct_access_commands::relationship_commands::get_relationship_multi,
+            direct_access_commands::relationship_commands::create_relationship,
+            direct_access_commands::relationship_commands::create_relationship_multi,
+            direct_access_commands::relationship_commands::update_relationship,
+            direct_access_commands::relationship_commands::update_relationship_multi,
+            direct_access_commands::relationship_commands::remove_relationship,
+            direct_access_commands::relationship_commands::remove_relationship_multi,
+            direct_access_commands::relationship_commands::get_relationship_relationship,
+            direct_access_commands::relationship_commands::set_relationship_relationship,
+            // handling manifest
             handling_manifest_commands::load_manifest,
         ])
         .on_window_event(|app, event| {
