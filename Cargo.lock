@@ -3443,6 +3443,7 @@ dependencies = [
  "common",
  "direct_access",
  "handling_manifest",
+ "log",
  "pkg-config",
  "serde",
  "serde_json",

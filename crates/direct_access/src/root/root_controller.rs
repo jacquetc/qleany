@@ -142,9 +142,7 @@ mod tests {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());
         let root = CreateRootDto {
-            global: 1,
-            entities: vec![1],
-            features: vec![1],
+            ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
@@ -163,8 +161,7 @@ mod tests {
         // create
         let root = CreateRootDto {
             global: 1,
-            entities: vec![1],
-            features: vec![1],
+            ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
@@ -186,9 +183,7 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let root = RootDto {
             id: 115,
-            global: 1,
-            entities: vec![1],
-            features: vec![1],
+            ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
         let result = update(&db_context, &event_hub, &mut undo_redo_manager, &root);
@@ -196,9 +191,7 @@ mod tests {
 
         // create
         let root = CreateRootDto {
-            global: 1,
-            entities: vec![1],
-            features: vec![1],
+            ..Default::default()
         };
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
         assert!(result.is_ok());
@@ -207,8 +200,7 @@ mod tests {
         let root = RootDto {
             id: 1,
             global: 2,
-            entities: vec![2],
-            features: vec![2],
+            ..Default::default()
         };
         let result = update(&db_context, &event_hub, &mut undo_redo_manager, &root);
         assert!(result.is_ok());

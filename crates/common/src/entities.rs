@@ -1,3 +1,4 @@
+use crate::entities::Order::Ordered;
 use crate::types::EntityId;
 use serde::{Deserialize, Serialize};
 
@@ -103,6 +104,12 @@ pub enum FieldType {
     Entity,
 }
 
+impl Default for FieldType {
+    fn default() -> Self {
+        FieldType::String
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum RelationshipType {
     OneToOne,
@@ -111,16 +118,34 @@ pub enum RelationshipType {
     ManyToMany,
 }
 
+impl Default for RelationshipType {
+    fn default() -> Self {
+        RelationshipType::ManyToMany
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Strength {
     Weak,
     Strong,
 }
 
+impl Default for Strength {
+    fn default() -> Self {
+        Strength::Strong
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Direction {
     Forward,
     Backward,
+}
+
+impl Default for Direction {
+    fn default() -> Self {
+        Direction::Forward
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -131,8 +156,20 @@ pub enum Cardinality {
     OneOrMore,
 }
 
+impl Default for Cardinality {
+    fn default() -> Self {
+        Cardinality::ZeroOrMore
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Order {
     Ordered,
     Unordered,
+}
+
+impl Default for Order {
+    fn default() -> Self {
+        Ordered
+    }
 }

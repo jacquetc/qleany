@@ -6,10 +6,11 @@ use crate::{
     types::EntityId,
 };
 use redb::Error;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UseCaseRelationshipField {
     Entities,
     DtoIn,

@@ -1,9 +1,9 @@
-use std::convert::From;
-
 use common::entities::Global;
 use common::types::EntityId;
+use serde::{Deserialize, Serialize};
+use std::convert::From;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct GlobalDto {
     pub id: EntityId,
     pub language: String,
@@ -52,7 +52,7 @@ impl From<Global> for GlobalDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateGlobalDto {
     pub language: String,
     pub application_name: String,

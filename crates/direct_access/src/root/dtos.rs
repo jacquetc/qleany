@@ -1,9 +1,9 @@
-use std::convert::From;
-
 use common::entities::Root;
 use common::types::EntityId;
+use serde::{Deserialize, Serialize};
+use std::convert::From;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RootDto {
     pub id: EntityId,
     pub global: EntityId,
@@ -44,7 +44,7 @@ impl From<Root> for RootDto {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateRootDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
@@ -85,7 +85,7 @@ impl From<Root> for CreateRootDto {
 
 pub use common::direct_access::root::RootRelationshipField;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RootRelationshipDto {
     pub id: EntityId,
     pub field: RootRelationshipField,
