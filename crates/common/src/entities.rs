@@ -16,6 +16,7 @@ pub struct Entity {
     pub name: String,
     pub only_for_heritage: bool,
     pub parent: Option<EntityId>,
+    pub allow_direct_access: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
 }

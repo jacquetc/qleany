@@ -10,6 +10,7 @@ pub struct EntityDto {
     pub name: String,
     pub only_for_heritage: bool,
     pub parent: Option<EntityId>,
+    pub allow_direct_access: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
 }
@@ -21,6 +22,7 @@ impl From<EntityDto> for Entity {
             name: entity_dto.name,
             only_for_heritage: entity_dto.only_for_heritage,
             parent: entity_dto.parent,
+            allow_direct_access: entity_dto.allow_direct_access,
             fields: entity_dto.fields,
             relationships: entity_dto.relationships,
         }
@@ -34,6 +36,7 @@ impl From<&EntityDto> for Entity {
             name: entity_dto.name.clone(),
             only_for_heritage: entity_dto.only_for_heritage,
             parent: entity_dto.parent,
+            allow_direct_access: entity_dto.allow_direct_access,
             fields: entity_dto.fields.clone(),
             relationships: entity_dto.relationships.clone(),
         }
@@ -47,6 +50,7 @@ impl From<Entity> for EntityDto {
             name: entity.name,
             only_for_heritage: entity.only_for_heritage,
             parent: entity.parent,
+            allow_direct_access: entity.allow_direct_access,
             fields: entity.fields,
             relationships: entity.relationships,
         }
@@ -58,6 +62,7 @@ pub struct CreateEntityDto {
     pub name: String,
     pub only_for_heritage: bool,
     pub parent: Option<EntityId>,
+    pub allow_direct_access: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
 }
@@ -69,6 +74,7 @@ impl From<CreateEntityDto> for Entity {
             name: create_entity_dto.name,
             only_for_heritage: create_entity_dto.only_for_heritage,
             parent: create_entity_dto.parent,
+            allow_direct_access: create_entity_dto.allow_direct_access,
             fields: create_entity_dto.fields,
             relationships: create_entity_dto.relationships,
         }
@@ -82,6 +88,7 @@ impl From<&CreateEntityDto> for Entity {
             name: create_entity_dto.name.clone(),
             only_for_heritage: create_entity_dto.only_for_heritage,
             parent: create_entity_dto.parent,
+            allow_direct_access: create_entity_dto.allow_direct_access,
             fields: create_entity_dto.fields.clone(),
             relationships: create_entity_dto.relationships.clone(),
         }
@@ -94,6 +101,7 @@ impl From<Entity> for CreateEntityDto {
             name: entity.name,
             only_for_heritage: entity.only_for_heritage,
             parent: entity.parent,
+            allow_direct_access: entity.allow_direct_access,
             fields: entity.fields,
             relationships: entity.relationships,
         }

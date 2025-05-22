@@ -90,6 +90,17 @@ pub fn run() {
             direct_access_commands::relationship_commands::remove_relationship_multi,
             direct_access_commands::relationship_commands::get_relationship_relationship,
             direct_access_commands::relationship_commands::set_relationship_relationship,
+            // field
+            direct_access_commands::field_commands::get_field,
+            direct_access_commands::field_commands::get_field_multi,
+            direct_access_commands::field_commands::create_field,
+            direct_access_commands::field_commands::create_field_multi,
+            direct_access_commands::field_commands::update_field,
+            direct_access_commands::field_commands::update_field_multi,
+            direct_access_commands::field_commands::remove_field,
+            direct_access_commands::field_commands::remove_field_multi,
+            direct_access_commands::field_commands::get_field_relationship,
+            direct_access_commands::field_commands::set_field_relationship,
             // handling manifest
             handling_manifest_commands::load_manifest,
         ])

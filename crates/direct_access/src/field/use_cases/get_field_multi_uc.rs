@@ -1,0 +1,25 @@
+use super::FieldUnitOfWorkROFactoryTrait;
+use crate::field::dtos::FieldDto;
+use anyhow::Result;
+use common::types::EntityId;
+
+pub struct GetFieldMultiUseCase {
+    uow_factory: Box<dyn FieldUnitOfWorkROFactoryTrait>,
+}
+
+impl GetFieldMultiUseCase {
+    pub fn new(uow_factory: Box<dyn FieldUnitOfWorkROFactoryTrait>) -> Self {
+        GetFieldMultiUseCase { uow_factory }
+    }
+
+    pub fn execute(&self, ids: &[EntityId]) -> Result<Vec<Option<FieldDto>>> {
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let fields = uow.get_field_multi(ids)?;
+        uow.end_transaction()?;
+        Ok(fields
+            .into_iter()
+            .map(|field| field.map(|r| r.into()))
+            .collect())
+    }
+}

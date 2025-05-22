@@ -1,10 +1,17 @@
 import {invoke} from "@tauri-apps/api/core";
 
 
+export enum EntityRelationshipField {
+    Parent = "Parent",
+    Fields = "Fields",
+    Relationships = "Relationships"
+}
+
 export type CreateEntityDTO = {
     name: string;
     only_for_heritage: boolean;
     parent: number | null;
+    allow_direct_access: boolean;
     fields: number[];
     relationships: number[];
 }
@@ -14,6 +21,7 @@ export type EntityDto = {
     name: string;
     only_for_heritage: boolean;
     parent: number | null;
+    allow_direct_access: boolean;
     fields: number[];
     relationships: number[];
 }
@@ -23,6 +31,7 @@ export type EntityRelationshipDto = {
     field: string;
     right_ids: number[];
 }
+
 
 export async function createEntity(dto: CreateEntityDTO): Promise<EntityDto> {
     return await invoke("create_entity", {dto});

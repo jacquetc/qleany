@@ -7,8 +7,8 @@ const DropIndicator: React.FC<{ edge: "top" | "bottom"; gap: string | number }> 
     };
 
     const edgeClass = edgeClassMap[edge as "top" | "bottom"];
-    const style: React.CSSProperties = {
-        "--gap": gap as string | number,
+    const style = {
+        ["--gap" as string]: gap,
     };
 
     return <div className={`drop-indicator ${edgeClass}`} style={style}></div>;

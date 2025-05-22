@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EntityRelationshipField {
+    Parent,
     Fields,
     Relationships,
 }

@@ -1,26 +1,34 @@
 import {invoke} from "@tauri-apps/api/core";
 
 
+export enum UseCaseRelationshipField {
+    Entities = "Entities",
+    DtoIn = "DtoIn",
+    DtoOut = "DtoOut"
+}
+
 export type CreateUseCaseDTO = {
     name: string;
-    only_for_heritage: boolean;
-    parent: number | null;
-    fields: number[];
-    relationships: number[];
+    validator: boolean;
+    entities: number[];
+    undoable: boolean;
+    dto_in: number | null;
+    dto_out: number | null;
 }
 
 export type UseCaseDto = {
     id: number;
     name: string;
-    only_for_heritage: boolean;
-    parent: number | null;
-    fields: number[];
-    relationships: number[];
+    validator: boolean;
+    entities: number[];
+    undoable: boolean;
+    dto_in: number | null;
+    dto_out: number | null;
 }
 
 export type UseCaseRelationshipDto = {
     id: number;
-    field: string;
+    field: UseCaseRelationshipField;
     right_ids: number[];
 }
 
@@ -56,7 +64,7 @@ export async function removeUseCaseMulti(ids: number[]): Promise<void> {
     return await invoke("remove_use_case_multi", {ids});
 }
 
-export async function getUseCaseRelationship(id: number, field: string): Promise<number[]> {
+export async function getUseCaseRelationship(id: number, field: UseCaseRelationshipField): Promise<number[]> {
     return await invoke("get_use_case_relationship", {id, field});
 }
 

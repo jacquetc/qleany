@@ -116,7 +116,8 @@ impl LoadUseCase {
                 id: 0,
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
-                parent: None,          // will be filled in later
+                parent: None, // will be filled in later
+                allow_direct_access: model_entity.only_for_heritage.unwrap_or_else(|| true),
                 fields: vec![],        // will be filled in later
                 relationships: vec![], // will be filled in later
             })?;

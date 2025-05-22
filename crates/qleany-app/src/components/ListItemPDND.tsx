@@ -4,6 +4,7 @@ import {draggable, dropTargetForElements} from "@atlaskit/pragmatic-drag-and-dro
 import {combine} from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {attachClosestEdge, extractClosestEdge} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import DropIndicator from "./DropIndicator";
+import {Edge} from "@atlaskit/pragmatic-drag-and-drop-hitbox/types";
 
 interface ListItemProps {
     id: number;
@@ -14,7 +15,7 @@ interface ListItemProps {
 const ListItemPDND: FC<ListItemProps> = ({children, ...card}) => {
     const cardRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [closestEdge, setClosestEdge] = useState(null);
+    const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
 
     useEffect(() => {
         const cardEl = cardRef.current;
@@ -78,7 +79,7 @@ const ListItemPDND: FC<ListItemProps> = ({children, ...card}) => {
         <div className={`card ${isDragging ? "dragging" : "cursor-grab"}`} ref={cardRef}>
             {children}
             {/* render the DropIndicator if there's a closest edge */}
-            {closestEdge && <DropIndicator edge={closestEdge} gap="8px"/>}
+            {(closestEdge === "top" || closestEdge === "bottom") && <DropIndicator edge={closestEdge} gap="8px"/>}
         </div>
     );
 };

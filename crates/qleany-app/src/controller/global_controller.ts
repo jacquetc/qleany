@@ -2,20 +2,20 @@ import {invoke} from "@tauri-apps/api/core";
 
 
 export type CreateGlobalDTO = {
-    name: string;
-    only_for_heritage: boolean;
-    parent: number | null;
-    fields: number[];
-    relationships: number[];
+    language: string;
+    application_name: string;
+    organisation_name: string;
+    organisation_domain: string;
+    prefix_path: string;
 }
 
 export type GlobalDto = {
     id: number;
-    name: string;
-    only_for_heritage: boolean;
-    parent: number | null;
-    fields: number[];
-    relationships: number[];
+    language: string;
+    application_name: string;
+    organisation_name: string;
+    organisation_domain: string;
+    prefix_path: string;
 }
 
 export async function createGlobal(dto: CreateGlobalDTO): Promise<GlobalDto> {

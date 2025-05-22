@@ -23,11 +23,14 @@ const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Ve
     TableDefinition::new("entity_from_use_case_entities_junction");
 const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("entity_from_field_entity_junction");
+const ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_entity_parent_junction");
 
 fn get_junction_table_definition(
     field: &EntityRelationshipField,
 ) -> TableDefinition<EntityId, Vec<EntityId>> {
     match field {
+        EntityRelationshipField::Parent => ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE,
         EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
         EntityRelationshipField::Relationships => {
             RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
@@ -75,6 +78,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         };
 
         let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        // open junction tables
+        let mut parent_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -100,6 +107,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                 entity.clone()
             };
             entity_table.insert(new_entity.id, new_entity.clone())?;
+            // insert into junction tables
+            if let Some(parent) = new_entity.parent {
+                parent_junction_table.insert(new_entity.id, vec![parent])?;
+            }
             field_junction_table.insert(new_entity.id, new_entity.fields.clone())?;
             relationship_junction_table.insert(new_entity.id, new_entity.relationships.clone())?;
             created_entities.push(new_entity);
@@ -117,6 +128,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
         let mut entities = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        // open junction tables
+        let parent_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
         let field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -127,6 +142,13 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         for id in ids {
             let entity = if let Some(guard) = entity_table.get(id)? {
                 let mut entity = guard.value().clone();
+
+                // get parent from junction table
+                let parent = parent_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default()
+                    .pop();
 
                 // get fields from junction table
                 let fields = field_junction_table
@@ -140,6 +162,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
+                entity.parent = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
                 Some(entity)
@@ -154,6 +177,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
     fn update_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error> {
         let mut updated_entities = Vec::new();
         let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        // open junction tables
+        let mut parent_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -163,6 +190,12 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         for entity in entities {
             entity_table.insert(entity.id, entity)?;
+            // update parent in junction table
+            if let Some(parent) = entity.parent {
+                parent_junction_table.insert(entity.id, vec![parent])?;
+            } else {
+                parent_junction_table.remove(entity.id)?;
+            }
             field_junction_table.insert(entity.id, entity.fields.clone())?;
             relationship_junction_table.insert(entity.id, entity.relationships.clone())?;
             updated_entities.push(entity.clone());
@@ -173,12 +206,17 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
         let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        // open junction tables
+        let mut parent_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
         let mut relationship_junction_table = self
             .transaction
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+        // open backward junction tables
         let mut root_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
@@ -191,8 +229,11 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         for id in ids {
             entity_table.remove(id)?;
+            // remove from junction tables
+            parent_junction_table.remove(id)?;
             field_junction_table.remove(id)?;
             relationship_junction_table.remove(id)?;
+            db_helpers::delete_from_backward_junction_table(&mut parent_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(&mut root_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(&mut use_case_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(&mut field_entity_junction_table, id)?;
@@ -279,6 +320,10 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
         let mut entities = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+        // open junction tables
+        let parent_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
         let field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -289,6 +334,13 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
         for id in ids {
             let entity = if let Some(guard) = entity_table.get(id)? {
                 let mut entity = guard.value().clone();
+
+                // get parent from junction table
+                let parent = parent_junction_table
+                    .get(id)?
+                    .map(|guard| guard.value().clone())
+                    .unwrap_or_default()
+                    .pop();
 
                 // get fields from junction table
                 let fields = field_junction_table
@@ -302,6 +354,7 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
+                entity.parent = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
                 Some(entity)

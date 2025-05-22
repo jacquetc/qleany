@@ -24,6 +24,11 @@
     box-shadow: var(--mantine-shadow-sm);
 }
 
+.itemSelected {
+    background-color: light-dark(var(--mantine-color-blue-0), var(--mantine-color-blue-8));
+    border-color: light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7));
+}
+
 .symbol {
     font-size: 30px;
     font-weight: 700;
