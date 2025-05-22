@@ -101,6 +101,17 @@ pub fn run() {
             direct_access_commands::field_commands::remove_field_multi,
             direct_access_commands::field_commands::get_field_relationship,
             direct_access_commands::field_commands::set_field_relationship,
+            // feature
+            direct_access_commands::feature_commands::get_feature,
+            direct_access_commands::feature_commands::get_feature_multi,
+            direct_access_commands::feature_commands::create_feature,
+            direct_access_commands::feature_commands::create_feature_multi,
+            direct_access_commands::feature_commands::update_feature,
+            direct_access_commands::feature_commands::update_feature_multi,
+            direct_access_commands::feature_commands::remove_feature,
+            direct_access_commands::feature_commands::remove_feature_multi,
+            direct_access_commands::feature_commands::get_feature_relationship,
+            direct_access_commands::feature_commands::set_feature_relationship,
             // handling manifest
             handling_manifest_commands::load_manifest,
         ])

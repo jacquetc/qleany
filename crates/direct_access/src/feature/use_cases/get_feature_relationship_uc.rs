@@ -1,0 +1,25 @@
+use super::FeatureUnitOfWorkROFactoryTrait;
+use anyhow::Result;
+use common::types::EntityId;
+
+pub struct GetFeatureRelationshipUseCase {
+    uow_factory: Box<dyn FeatureUnitOfWorkROFactoryTrait>,
+}
+
+impl GetFeatureRelationshipUseCase {
+    pub fn new(uow_factory: Box<dyn FeatureUnitOfWorkROFactoryTrait>) -> Self {
+        GetFeatureRelationshipUseCase { uow_factory }
+    }
+
+    pub fn execute(
+        &self,
+        id: &EntityId,
+        field: &common::direct_access::feature::FeatureRelationshipField,
+    ) -> Result<Vec<EntityId>> {
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let features = uow.get_feature_relationship(id, field)?;
+        uow.end_transaction()?;
+        Ok(features)
+    }
+}

@@ -11,8 +11,12 @@ function forwardConsole(
     logger: (message: string) => Promise<void>
 ) {
     const original = console[fnName];
-    console[fnName] = (message) => {
-        original(message);
+    console[fnName] = (...args) => {
+        original(...args);
+        // Convert all arguments to a single string for logging
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
         logger(message);
     };
 }

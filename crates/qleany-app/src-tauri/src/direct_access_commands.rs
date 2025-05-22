@@ -1,4 +1,5 @@
 pub mod entity_commands;
+pub mod feature_commands;
 pub mod field_commands;
 pub mod global_commands;
 pub mod relationship_commands;

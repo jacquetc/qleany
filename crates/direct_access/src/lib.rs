@@ -1,4 +1,5 @@
 pub mod entity;
+pub mod feature;
 mod field;
 pub mod global;
 mod relationship;
@@ -7,6 +8,8 @@ pub mod use_case;
 
 pub use entity::dtos::*;
 pub use entity::entity_controller;
+pub use feature::dtos::*;
+pub use feature::feature_controller;
 pub use field::dtos::*;
 pub use field::field_controller;
 pub use global::dtos::*;
