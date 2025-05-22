@@ -1,3 +1,4 @@
+pub mod dto;
 pub mod entity;
 pub mod feature;
 mod field;
@@ -6,6 +7,8 @@ mod relationship;
 pub mod root;
 pub mod use_case;
 
+pub use dto::dto_controller;
+pub use dto::dtos::*;
 pub use entity::dtos::*;
 pub use entity::entity_controller;
 pub use feature::dtos::*;

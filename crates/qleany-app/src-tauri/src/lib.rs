@@ -112,6 +112,28 @@ pub fn run() {
             direct_access_commands::feature_commands::remove_feature_multi,
             direct_access_commands::feature_commands::get_feature_relationship,
             direct_access_commands::feature_commands::set_feature_relationship,
+            // use case
+            direct_access_commands::use_case_commands::get_use_case,
+            direct_access_commands::use_case_commands::get_use_case_multi,
+            direct_access_commands::use_case_commands::create_use_case,
+            direct_access_commands::use_case_commands::create_use_case_multi,
+            direct_access_commands::use_case_commands::update_use_case,
+            direct_access_commands::use_case_commands::update_use_case_multi,
+            direct_access_commands::use_case_commands::remove_use_case,
+            direct_access_commands::use_case_commands::remove_use_case_multi,
+            direct_access_commands::use_case_commands::get_use_case_relationship,
+            direct_access_commands::use_case_commands::set_use_case_relationship,
+            // dto
+            direct_access_commands::dto_commands::get_dto,
+            direct_access_commands::dto_commands::get_dto_multi,
+            direct_access_commands::dto_commands::create_dto,
+            direct_access_commands::dto_commands::create_dto_multi,
+            direct_access_commands::dto_commands::update_dto,
+            direct_access_commands::dto_commands::update_dto_multi,
+            direct_access_commands::dto_commands::remove_dto,
+            direct_access_commands::dto_commands::remove_dto_multi,
+            direct_access_commands::dto_commands::get_dto_relationship,
+            direct_access_commands::dto_commands::set_dto_relationship,
             // handling manifest
             handling_manifest_commands::load_manifest,
         ])
