@@ -1,13 +1,9 @@
-import {useEffect, useState} from 'react';
+import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
 import {EntityRelationshipField, getEntity, setEntityRelationship, updateEntity} from "../controller/entity_controller";
-import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
-import {IconGripVertical} from '@tabler/icons-react';
-import cx from 'clsx';
-import {useListState} from '@mantine/hooks';
-import classes from '../routes/DndListHandle.module.css';
 import {error, info} from '@tauri-apps/plugin-log';
 import {createField, FieldDto, FieldType, getFieldMulti} from "../controller/field_controller.ts";
+import ReorderableList from './ReorderableList';
 
 interface FieldsListProps {
     selectedEntity: number | null;
@@ -18,7 +14,6 @@ const FieldsList = ({
                         selectedEntity, onSelectField
                     }: FieldsListProps) => {
     const [fields, setFields] = useState<FieldDto[]>([]);
-    const [listState, handlers] = useListState<FieldDto>([]);
     const [selectedField, setSelectedField] = useState<number | null>(null);
 
     // Find the selected entity data
@@ -119,111 +114,77 @@ const FieldsList = ({
         }
     }, [selectedEntity]);
 
-    useEffect(() => {
-        handlers.setState(fields);
-    }, [fields]);
 
     if (!selectedEntity) {
         return null;
     }
 
-    const items = listState.map((field, index) => (
-        <Draggable key={field.id} index={index} draggableId={`field-${field.id}`}>
-            {(provided, snapshot) => (
-                <Group
-                    align="left"
-                    className={cx(classes.item, {
-                        [classes.itemDragging]: snapshot.isDragging,
-                        [classes.itemSelected]: field.id === selectedField
-                    })}
-                    ref={provided.innerRef}
-                    onClick={() => {
-                        setSelectedField(field.id);
-                        onSelectField(field.id)
-                    }
-                    }
-                    {...provided.draggableProps}
+    // Create header component for ReorderableList
+    const header = (
+        <Group id="fieldsListHeading">
+            <Title order={3}>Fields</Title>
+            <Tooltip label="Add new field">
+                <ActionIcon
+                    variant="filled"
+                    aria-label="Add new field"
+                    onClick={createNewField}
                 >
-                    <div {...provided.dragHandleProps} className={`${classes.dragHandle} cursor-grab`}>
-                        <IconGripVertical size={18} stroke={1.5}/>
-                    </div>
-                    <div>
-                        <div>{field.name}</div>
-                        <div style={{color: 'dimmed', fontSize: 'small'}}>
-                            {field.field_type}
-                            {field.is_primary_key ? ' (PK)' : ''}
-                            {field.is_nullable ? ' (nullable)' : ''}
-                        </div>
-                    </div>
-                </Group>
-            )}
-        </Draggable>
-    ));
+                    +
+                </ActionIcon>
+            </Tooltip>
+        </Group>
+    );
+
+    // Define renderItemContent function for field items
+    const renderFieldContent = (field: FieldDto): ReactNode => (
+        <div>
+            <div>{field.name}</div>
+            <div style={{color: 'dimmed', fontSize: 'small'}}>
+                {field.field_type}
+                {field.is_primary_key ? ' (PK)' : ''}
+                {field.is_nullable ? ' (nullable)' : ''}
+            </div>
+        </div>
+    );
+
+    // Define onReorder function to handle reordering
+    const handleReorder = async (reorderedIds: number[]): Promise<void> => {
+        if (!selectedEntity) return;
+
+        try {
+            // Update the entity with the new field order
+            await setEntityRelationship({
+                id: selectedEntity,
+                field: EntityRelationshipField.Fields,
+                right_ids: reorderedIds,
+            });
+
+            info("Field order updated successfully");
+            await fetchFieldData();
+        } catch (err) {
+            error(`Failed to update field order: ${err}`);
+        }
+    };
+
+    // Define onSelectItem function
+    const handleSelectItem = (fieldId: number): void => {
+        setSelectedField(fieldId);
+        onSelectField(fieldId);
+    };
 
     return (
-        <>
-            <Group id="fieldsListHeading">
-                <Title order={3}>Fields</Title>
-                <Tooltip label="Add new field">
-                    <ActionIcon
-                        variant="filled"
-                        aria-label="Add new field"
-                        onClick={createNewField}
-                    >
-                        +
-                    </ActionIcon>
-                </Tooltip>
-            </Group>
-
-            <DragDropContext
-                onDragEnd={async ({destination, source}) => {
-                    if (!destination || !selectedEntity) return;
-
-                    // Update local state
-                    handlers.reorder({from: source.index, to: destination.index});
-
-                    // Persist changes to backend
-                    try {
-                        // Get the current order of fields
-                        const reorderedIds = listState.map(field => field.id);
-
-                        // Reorder the IDs based on the drag operation
-                        const [removed] = reorderedIds.splice(source.index, 1);
-                        reorderedIds.splice(destination.index, 0, removed);
-
-                        // Update the entity with the new field order
-                        await setEntityRelationship({
-                            id: selectedEntity,
-                            field: EntityRelationshipField.Fields,
-                            right_ids: reorderedIds,
-                        });
-
-                        info("Field order updated successfully");
-                        await fetchFieldData();
-                    } catch (err) {
-                        error(`Failed to update field order: ${err}`);
-                    }
-                }}
-            >
-                <Droppable droppableId="fields-list" direction="vertical" type="field">
-                    {(provided) => (
-                        <div
-                            style={{
-                                height: '100%',
-                                maxHeight: '60vh',
-                                overflow: 'auto',
-                                flexGrow: 1
-                            }}
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                        >
-                            {items}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </Droppable>
-            </DragDropContext>
-        </>
+        <ReorderableList
+            items={fields}
+            selectedItemId={selectedField}
+            onSelectItem={handleSelectItem}
+            onReorder={handleReorder}
+            getItemId={(field) => field.id}
+            renderItemContent={renderFieldContent}
+            droppableId="fields-list"
+            draggableIdPrefix="field"
+            itemType="field"
+            header={header}
+        />
     );
 };
 

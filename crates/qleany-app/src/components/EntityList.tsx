@@ -1,13 +1,9 @@
-import {useEffect} from 'react';
+import {ReactNode} from 'react';
 import {EntityDto} from "../controller/entity_controller";
-import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
-import {IconGripVertical} from '@tabler/icons-react';
-import cx from 'clsx';
 import {ActionIcon, Group, Title} from '@mantine/core';
-import {useListState} from '@mantine/hooks';
-import classes from '../routes/DndListHandle.module.css';
 import {error, info} from '@tauri-apps/plugin-log';
 import {RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
+import ReorderableList from './ReorderableList';
 
 interface EntityListProps {
     entities: EntityDto[];
@@ -24,101 +20,61 @@ const EntityList = ({
                         onCreateEntity,
                         onEntitiesReordered
                     }: EntityListProps) => {
-    const [listState, handlers] = useListState(entities);
 
-    useEffect(() => {
-        handlers.setState(entities);
-    }, [entities]);
+    // Create header component for ReorderableList
+    const header = (
+        <Group>
+            <Title order={2} id="entitiesListHeading">Entities</Title>
+            <ActionIcon
+                variant="filled"
+                aria-label="Add new entity"
+                onClick={onCreateEntity}
+            >
+                +
+            </ActionIcon>
+        </Group>
+    );
 
-    const items = listState.map((item, index) => (
-        <Draggable key={item.id} index={index} draggableId={`entity-${item.id}`}>
-            {(provided, snapshot) => (
-                <Group
-                    align="left"
-                    className={cx(classes.item, {
-                        [classes.itemDragging]: snapshot.isDragging,
-                        [classes.itemSelected]: item.id === selectedEntity
-                    })}
-                    ref={provided.innerRef}
-                    onClick={() => onSelectEntity(item.id)}
-                    {...provided.draggableProps}
-                >
-                    <div {...provided.dragHandleProps} className={`${classes.dragHandle} cursor-grab`}>
-                        <IconGripVertical size={18} stroke={1.5}/>
-                    </div>
-                    <div>
-                        <div>{item.name}</div>
-                        <div style={{color: 'dimmed', fontSize: 'small'}}>
-                            {item.only_for_heritage ? 'heritage' : ''}
-                        </div>
-                    </div>
-                </Group>
-            )}
-        </Draggable>
-    ));
+    // Define renderItemContent function for entity items
+    const renderEntityContent = (entity: EntityDto): ReactNode => (
+        <div>
+            <div>{entity.name}</div>
+            <div style={{color: 'dimmed', fontSize: 'small'}}>
+                {entity.only_for_heritage ? 'heritage' : ''}
+            </div>
+        </div>
+    );
+
+    // Define onReorder function to handle reordering
+    const handleReorder = async (reorderedIds: number[]): Promise<void> => {
+        try {
+            // Update the root relationship with the new order
+            await setRootRelationship({
+                id: 1,
+                field: RootRelationshipField.Entities,
+                right_ids: reorderedIds,
+            });
+
+            info("Entity order updated successfully");
+            onEntitiesReordered();
+        } catch (err) {
+            error(`Failed to update entity order: ${err}`);
+        }
+    };
 
     return (
-        <>
-            <Group>
-                <Title order={2} id="entitiesListHeading">Entities</Title>
-                <ActionIcon
-                    variant="filled"
-                    aria-label="Add new entity"
-                    onClick={onCreateEntity}
-                >
-                    +
-                </ActionIcon>
-            </Group>
-
-            <DragDropContext
-                onDragEnd={async ({destination, source}) => {
-                    if (!destination) return;
-
-                    // Update local state
-                    handlers.reorder({from: source.index, to: destination.index});
-
-                    // Persist changes to backend
-                    try {
-                        // Get the current order of entities
-                        const reorderedIds = listState.map(entity => entity.id);
-
-                        // Reorder the IDs based on the drag operation
-                        const [removed] = reorderedIds.splice(source.index, 1);
-                        reorderedIds.splice(destination.index, 0, removed);
-
-                        // Update the root relationship with the new order
-                        await setRootRelationship({
-                            id: 1,
-                            field: RootRelationshipField.Entities,
-                            right_ids: reorderedIds,
-                        });
-
-                        info("Entity order updated successfully");
-                        onEntitiesReordered();
-                    } catch (err) {
-                        error(`Failed to update entity order: ${err}`);
-                    }
-                }}
-            >
-                <Droppable droppableId="dnd-list" direction="vertical" type="entity">
-                    {(provided) => (
-                        <div
-                            style={{
-                                height: '100%',
-                                //maxHeight: '60vh',
-                                overflow: 'auto',
-                                flexGrow: 1
-                            }}
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                        >
-                            {items}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </Droppable>
-            </DragDropContext>
-        </>
+        <ReorderableList
+            items={entities}
+            selectedItemId={selectedEntity}
+            onSelectItem={onSelectEntity}
+            onReorder={handleReorder}
+            getItemId={(entity) => entity.id}
+            renderItemContent={renderEntityContent}
+            droppableId="dnd-list"
+            draggableIdPrefix="entity"
+            itemType="entity"
+            header={header}
+        />
     );
 };
 
