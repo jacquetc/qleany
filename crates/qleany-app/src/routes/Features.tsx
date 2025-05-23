@@ -1,7 +1,7 @@
-import "./DndListHandle.module.css"
+import "../components/DndListHandle.module.css"
 import {useEffect, useState} from 'react';
 import {createFeature, FeatureDto, getFeatureMulti} from "../controller/feature_controller";
-import {Box, Divider, Flex, Stack, Title} from '@mantine/core';
+import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
 import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
@@ -71,51 +71,45 @@ const Features = () => {
     }, []);
 
     return (
-        <Box style={{display: 'flex', flexDirection: 'column', height: '80vh'}}>
-            <Title order={1} id="featuresTitle">Features</Title>
-            <Flex style={{
-                height: '100%',
-                margin: '0 20px',
-            }}>
-                <Stack miw={300}>
-                    <FeatureList
-                        features={featureData}
-                        selectedFeature={selectedFeature}
-                        onSelectFeature={setSelectedFeature}
-                        onCreateFeature={createNewFeature}
-                        onFeaturesReordered={fetchFeatureData}
-                    />
-                </Stack>
-                <Divider orientation="vertical" style={{
-                    height: '100%',
-                    margin: '0 20px',
-                }}></Divider>
+        <Flex direction="row" style={{
+            height: '100%',
+            margin: '0 0px',
+        }}>
+            <Stack miw={300} style={{ overflow: 'auto', height: '100%' }}>
+                <FeatureList
+                    features={featureData}
+                    selectedFeature={selectedFeature}
+                    onSelectFeature={setSelectedFeature}
+                    onCreateFeature={createNewFeature}
+                    onFeaturesReordered={fetchFeatureData}
+                />
+            </Stack>
+            <Divider orientation="vertical" mb={0} mt={0} ml={5}></Divider>
 
-                <Stack flex={1}>
-                    <FeatureDetails
-                        selectedFeature={selectedFeature}
-                        features={featureData}
-                        onFeatureUpdated={fetchFeatureData}
-                    />
-                    <UseCaseList
-                        selectedFeature={selectedFeature}
-                        onSelectUseCase={setSelectedUseCase}
-                    />
-                </Stack>
-                {selectedUseCase !== null && selectedUseCase > 0 && (
-                    <>
-                        <Divider orientation="vertical" style={{
-                            height: '100%',
-                            margin: '0 20px',
-                        }}></Divider>
+            <Stack flex={1} style={{ overflow: 'auto', height: '100%' }}>
+                <FeatureDetails
+                    selectedFeature={selectedFeature}
+                    features={featureData}
+                    onFeatureUpdated={fetchFeatureData}
+                />
+                <UseCaseList
+                    selectedFeature={selectedFeature}
+                    onSelectUseCase={setSelectedUseCase}
+                />
+            </Stack>
+            {selectedUseCase !== null && selectedUseCase > 0 && (
+                <>
+                    <Divider orientation="vertical" style={{
+                        height: '100%',
+                        margin: '0 5px',
+                    }}></Divider>
 
-                        <Stack className="flex-1" miw={400}>
-                            <UseCaseDetails selectedUseCase={selectedUseCase}/>
-                        </Stack>
-                    </>
-                )}
-            </Flex>
-        </Box>
+                    <Stack className="flex-1" miw={400} style={{ overflow: 'auto', height: '100%' }}>
+                        <UseCaseDetails selectedUseCase={selectedUseCase}/>
+                    </Stack>
+                </>
+            )}
+        </Flex>
     );
 }
 

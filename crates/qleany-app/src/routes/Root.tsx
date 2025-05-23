@@ -18,7 +18,7 @@ const Root = () => {
                 collapsed: {mobile: !opened},
             }}
             padding="md"
-
+            style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             onContextMenu={(e) => e.preventDefault()}
         >
             <AppShell.Header>
@@ -30,8 +30,17 @@ const Root = () => {
             <AppShell.Navbar p="md" maw={200}>
                 <NavBar/>
             </AppShell.Navbar>
-            <AppShell.Main pl={210} pb={20}
-            > <Outlet/>
+            <AppShell.Main 
+                pl={205} 
+                pb={5} 
+                pt={80}
+                style={{ 
+                    flex: '1 1 auto', 
+                    overflow: 'auto',
+                    height: 'calc(100% - 80px)' /* Subtract header height */
+                }}
+            > 
+                <Outlet/>
             </AppShell.Main>
         </AppShell>
 

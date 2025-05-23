@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {createEntity, EntityDto, getEntityMulti} from "../controller/entity_controller";
-import {Box, Divider, Flex, Stack, Title} from '@mantine/core';
+import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
 import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
@@ -78,51 +78,46 @@ const Entities = () => {
 
 
     return (
-        <Box style={{display: 'flex', flexDirection: 'column', height: '80vh'}}>
-            <Title order={1} id="entitiesTitle">Entities</Title>
-            <Flex style={{
-                height: '100%',
-                margin: '0 20px',
-            }}>
-                <Stack miw={300}>
-                    <EntityList
-                        entities={entityData}
-                        selectedEntity={selectedEntity}
-                        onSelectEntity={setSelectedEntity}
-                        onCreateEntity={createNewEntity}
-                        onEntitiesReordered={fetchEntityData}
-                    />
-                </Stack>
-                <Divider orientation="vertical" style={{
-                    height: '100%',
-                    margin: '0 20px',
-                }}></Divider>
+        <Flex direction="row" style={{
+            height: '100%',
+            margin: '0 0px',
+        }}>
+            <Stack miw={300} style={{ overflow: 'auto', height: '100%' }}>
+                <EntityList
+                    entities={entityData}
+                    selectedEntity={selectedEntity}
+                    onSelectEntity={setSelectedEntity}
+                    onCreateEntity={createNewEntity}
+                    onEntitiesReordered={fetchEntityData}
+                />
+            </Stack>
+            <Divider orientation="vertical" mb={0} mt={0} ml={5}
+            ></Divider>
 
-                <Stack flex={1}>
-                    <EntityDetails
-                        selectedEntity={selectedEntity}
-                        entities={entityData}
-                        onEntityUpdated={fetchEntityData}
-                    />
-                    <FieldsList
-                        selectedEntity={selectedEntity}
-                        onSelectField={setSelectedField}
-                    />
-                </Stack>
-                {selectedField !== null && selectedField > 0 && (
-                    <>
-                        <Divider orientation="vertical" style={{
-                            height: '100%',
-                            margin: '0 20px',
-                        }}></Divider>
+            <Stack flex={1} style={{ overflow: 'auto', height: '100%' }}>
+                <EntityDetails
+                    selectedEntity={selectedEntity}
+                    entities={entityData}
+                    onEntityUpdated={fetchEntityData}
+                />
+                <FieldsList
+                    selectedEntity={selectedEntity}
+                    onSelectField={setSelectedField}
+                />
+            </Stack>
+            {selectedField !== null && selectedField > 0 && (
+                <>
+                    <Divider orientation="vertical" style={{
+                        height: '100%',
+                        margin: '0 5px',
+                    }}></Divider>
 
-                        <Stack className="flex-1">
-                            <FieldDetails selectedField={selectedField}/>
-                        </Stack>
-                    </>
-                )}
-            </Flex>
-        </Box>
+                    <Stack className="flex-1" style={{ overflow: 'auto', height: '100%' }}>
+                        <FieldDetails selectedField={selectedField}/>
+                    </Stack>
+                </>
+            )}
+        </Flex>
     );
 }
 
