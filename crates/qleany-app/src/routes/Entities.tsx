@@ -82,7 +82,7 @@ const Entities = () => {
             height: '100%',
             margin: '0 0px',
         }}>
-            <Stack miw={300} style={{ overflow: 'auto', height: '100%' }}>
+            <Stack miw={300} style={{overflow: 'auto', height: '100%'}}>
                 <EntityList
                     entities={entityData}
                     selectedEntity={selectedEntity}
@@ -91,10 +91,10 @@ const Entities = () => {
                     onEntitiesReordered={fetchEntityData}
                 />
             </Stack>
-            <Divider orientation="vertical" mb={0} mt={0} ml={5}
+            <Divider orientation="vertical" mb={0} mt={0} ml={5} mr={5}
             ></Divider>
 
-            <Stack flex={1} style={{ overflow: 'auto', height: '100%' }}>
+            <Stack flex={1} style={{overflow: 'auto', height: '100%'}}>
                 <EntityDetails
                     selectedEntity={selectedEntity}
                     entities={entityData}
@@ -112,7 +112,7 @@ const Entities = () => {
                         margin: '0 5px',
                     }}></Divider>
 
-                    <Stack className="flex-1" style={{ overflow: 'auto', height: '100%' }}>
+                    <Stack className="flex-1" style={{overflow: 'auto', height: '100%'}}>
                         <FieldDetails selectedField={selectedField}/>
                     </Stack>
                 </>

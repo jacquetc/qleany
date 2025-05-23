@@ -1,18 +1,20 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { ActionIcon, Group, Title, Tooltip } from '@mantine/core';
-import { DtoRelationshipField, getDto, setDtoRelationship } from "../controller/dto_controller";
-import { error, info } from '@tauri-apps/plugin-log';
-import { createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti } from "../controller/dto_field_controller.ts";
+import {ReactNode, useEffect, useState} from 'react';
+import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
+import {DtoRelationshipField, getDto, setDtoRelationship} from "../controller/dto_controller";
+import {error, info} from '@tauri-apps/plugin-log';
+import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "../controller/dto_field_controller.ts";
 import ReorderableList from './ReorderableList';
+import {listen} from '@tauri-apps/api/event';
 
 interface DtoFieldsListProps {
     selectedDto: number | null;
     onSelectDtoField: (fieldId: number | null) => void;
 }
 
+
 const DtoFieldsList = ({
-    selectedDto, onSelectDtoField
-}: DtoFieldsListProps) => {
+                           selectedDto, onSelectDtoField
+                       }: DtoFieldsListProps) => {
     const [fields, setFields] = useState<DtoFieldDto[]>([]);
     const [selectedField, setSelectedField] = useState<number | null>(null);
 
@@ -42,7 +44,7 @@ const DtoFieldsList = ({
 
             // Update DTO with the new field
             const updatedFields = [...dto.fields, newField.id];
-            
+
             // Update the relationship
             await setDtoRelationship({
                 id: dto.id,
@@ -61,6 +63,40 @@ const DtoFieldsList = ({
             await error(`Failed to create DTO field: ${err}`);
         }
     }
+
+    useEffect(() => {
+
+        // mounting the event listeners
+        const unlisten_direct_access_dto_field_updated = listen('direct_access_dto_field_updated', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Dto Field updated event received: ${payload.ids}`);
+            const updatedDtoFields = await getDtoFieldMulti(payload.ids);
+
+            for (const updatedDtoField of updatedDtoFields) {
+                if (!updatedDtoField) {
+                    info(`Use case not found in the current state.`);
+                    continue;
+                }
+
+                const index = fields.findIndex((dtoField) => dtoField.id === updatedDtoField.id);
+                if (index !== -1) {
+                    const updatedDtoFieldsList = [...fields];
+                    updatedDtoFieldsList[index] = updatedDtoField;
+                    setFields(updatedDtoFieldsList);
+                } else {
+                    info(`Use case not found in the current state.`);
+                }
+
+            }
+
+        });
+
+
+        return () => {
+            unlisten_direct_access_dto_field_updated.then(f => f());
+        };
+
+    }, [fields]);
 
     // Function to fetch field data from the backend
     async function fetchFieldData() {
@@ -127,7 +163,7 @@ const DtoFieldsList = ({
     const renderFieldContent = (field: DtoFieldDto): ReactNode => (
         <div>
             <div>{field.name}</div>
-            <div style={{ color: 'dimmed', fontSize: 'small' }}>
+            <div style={{color: 'dimmed', fontSize: 'small'}}>
                 {field.field_type}
                 {field.is_nullable ? ' (nullable)' : ''}
                 {field.is_list ? ' (list)' : ''}

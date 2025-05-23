@@ -1,9 +1,15 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {FeatureRelationshipField, getFeature, setFeatureRelationship, updateFeature} from "../controller/feature_controller";
+import {
+    FeatureRelationshipField,
+    getFeature,
+    setFeatureRelationship,
+    updateFeature
+} from "../controller/feature_controller";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createUseCase, UseCaseDto, getUseCaseMulti} from "../controller/use_case_controller.ts";
+import {createUseCase, getUseCaseMulti, UseCaseDto} from "../controller/use_case_controller.ts";
 import ReorderableList from './ReorderableList';
+import {listen} from '@tauri-apps/api/event';
 
 interface UseCaseListProps {
     selectedFeature: number | null;
@@ -11,8 +17,8 @@ interface UseCaseListProps {
 }
 
 const UseCaseList = ({
-                        selectedFeature, onSelectUseCase
-                    }: UseCaseListProps) => {
+                         selectedFeature, onSelectUseCase
+                     }: UseCaseListProps) => {
     const [useCases, setUseCases] = useState<UseCaseDto[]>([]);
     const [selectedUseCase, setSelectedUseCase] = useState<number | null>(null);
 
@@ -76,8 +82,44 @@ const UseCaseList = ({
         setUseCases(useCases.filter((useCase) => useCase !== null) as UseCaseDto[]);
     }
 
+    useEffect(() => {
+
+        // mounting the event listeners
+        const unlisten_direct_access_use_case_updated = listen('direct_access_use_case_updated', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Use case updated event received: ${payload.ids}`);
+            const updatedUseCases = await getUseCaseMulti(payload.ids);
+
+            for (const updatedUseCase of updatedUseCases) {
+                if (!updatedUseCase) {
+                    info(`Use case not found in the current state.`);
+                    continue;
+                }
+
+                const index = useCases.findIndex((useCase) => useCase.id === updatedUseCase.id);
+                if (index !== -1) {
+                    const updatedUseCasesList = [...useCases];
+                    updatedUseCasesList[index] = updatedUseCase;
+                    setUseCases(updatedUseCasesList);
+                } else {
+                    info(`Use case not found in the current state.`);
+                }
+
+            }
+
+            //fetchUseCaseData().catch((err => error(err)));
+        });
+
+
+        return () => {
+            unlisten_direct_access_use_case_updated.then(f => f());
+        };
+
+    }, [useCases]);
+
     // change use cases when selected feature changes
     useEffect(() => {
+        console.info("Selected feature changed:", selectedFeature);
         if (selectedFeature) {
             // Fetch use case data using the use case IDs from the selected feature
             const fetchUseCases = async () => {
@@ -99,10 +141,12 @@ const UseCaseList = ({
                 }
             };
 
-            fetchUseCases();
+            fetchUseCases().catch((err => error(err)));
         } else {
             setUseCases([]);
         }
+
+
     }, [selectedFeature]);
 
     if (!selectedFeature) {

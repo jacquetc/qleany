@@ -4,6 +4,7 @@ import {EntityRelationshipField, getEntity, setEntityRelationship, updateEntity}
 import {error, info} from '@tauri-apps/plugin-log';
 import {createField, FieldDto, FieldType, getFieldMulti} from "../controller/field_controller.ts";
 import ReorderableList from './ReorderableList';
+import {listen} from '@tauri-apps/api/event';
 
 interface FieldsListProps {
     selectedEntity: number | null;
@@ -69,6 +70,40 @@ const FieldsList = ({
             await error(`Failed to create field: ${err}`);
         }
     }
+
+    useEffect(() => {
+
+        // mounting the event listeners
+        const unlisten_direct_access_field_updated = listen('direct_access_field_updated', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Field updated event received: ${payload.ids}`);
+            const updatedFields = await getFieldMulti(payload.ids);
+
+            for (const updatedField of updatedFields) {
+                if (!updatedField) {
+                    info(`Use case not found in the current state.`);
+                    continue;
+                }
+
+                const index = fields.findIndex((field) => field.id === updatedField.id);
+                if (index !== -1) {
+                    const updatedFieldsList = [...fields];
+                    updatedFieldsList[index] = updatedField;
+                    setFields(updatedFieldsList);
+                } else {
+                    info(`Use case not found in the current state.`);
+                }
+
+            }
+
+        });
+
+
+        return () => {
+            unlisten_direct_access_field_updated.then(f => f());
+        };
+
+    }, [fields]);
 
     // Function to fetch field data from the backend
     async function fetchFieldData() {

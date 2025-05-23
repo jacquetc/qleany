@@ -75,7 +75,7 @@ const Features = () => {
             height: '100%',
             margin: '0 0px',
         }}>
-            <Stack miw={300} style={{ overflow: 'auto', height: '100%' }}>
+            <Stack miw={300} style={{overflow: 'auto', height: '100%'}}>
                 <FeatureList
                     features={featureData}
                     selectedFeature={selectedFeature}
@@ -84,9 +84,9 @@ const Features = () => {
                     onFeaturesReordered={fetchFeatureData}
                 />
             </Stack>
-            <Divider orientation="vertical" mb={0} mt={0} ml={5}></Divider>
+            <Divider orientation="vertical" mb={0} mt={0} ml={5} mr={5}></Divider>
 
-            <Stack flex={1} style={{ overflow: 'auto', height: '100%' }}>
+            <Stack flex={1} style={{overflow: 'auto', height: '100%'}}>
                 <FeatureDetails
                     selectedFeature={selectedFeature}
                     features={featureData}
@@ -104,7 +104,7 @@ const Features = () => {
                         margin: '0 5px',
                     }}></Divider>
 
-                    <Stack className="flex-1" miw={400} style={{ overflow: 'auto', height: '100%' }}>
+                    <Stack className="flex-1" miw={400} style={{overflow: 'auto', height: '100%'}}>
                         <UseCaseDetails selectedUseCase={selectedUseCase}/>
                     </Stack>
                 </>
