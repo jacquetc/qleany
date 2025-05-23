@@ -12,8 +12,6 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.6.0",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^7.17.2",
     "@mantine/form": "^7.17.2",
