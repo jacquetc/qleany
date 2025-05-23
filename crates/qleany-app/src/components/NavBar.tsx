@@ -2,7 +2,7 @@ import EntitiesIcon from "../assets/entities.svg?react";
 import FeaturesIcon from "../assets/features.svg?react";
 import {NavLink as RouterNavLink} from "react-router";
 import {Box, MantineColorScheme, NavLink as MantineNavLink, Select, useMantineColorScheme} from '@mantine/core';
-import {IconBuildingFactory2, IconHome2, IconTag} from '@tabler/icons-react';
+import {IconBuildingFactory2, IconHome2, IconSitemap, IconTag} from '@tabler/icons-react';
 import {useState} from "react";
 
 const data = [
@@ -22,6 +22,11 @@ const data = [
         href: "/entities",
         icon: EntitiesIcon,
         label: 'Entities',
+    },
+    {
+        href: "/entity-map",
+        icon: IconSitemap,
+        label: 'Entity Map',
     },
     {
         href: "/features",
