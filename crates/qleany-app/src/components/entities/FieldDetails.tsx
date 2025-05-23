@@ -1,13 +1,8 @@
 import {useEffect, useState} from 'react';
-import {
-    FieldDto, 
-    FieldType, 
-    getField, 
-    updateField
-} from "../controller/field_controller";
+import {FieldDto, FieldType, getField, updateField} from "../../controller/field_controller.ts";
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "../controller/entity_controller";
+import {EntityDto, getEntityMulti} from "../../controller/entity_controller.ts";
 
 interface FieldDetailsProps {
     selectedField: number | null;
@@ -147,7 +142,7 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
                         onChange={(value) => {
                             if (value) {
                                 setFormData({
-                                    ...formData, 
+                                    ...formData,
                                     field_type: value as FieldType,
                                     // Reset entity if type is not Entity
                                     entity: value === FieldType.Entity ? formData.entity : null
@@ -239,7 +234,7 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
                             label="List Model Displayed Field"
                             value={formData.list_model_displayed_field || ''}
                             onChange={(e) => setFormData({
-                                ...formData, 
+                                ...formData,
                                 list_model_displayed_field: e.target.value || null
                             })}
                         />

@@ -1,9 +1,9 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {DtoRelationshipField, getDto, setDtoRelationship} from "../controller/dto_controller";
+import {DtoRelationshipField, getDto, setDtoRelationship} from "../../controller/dto_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "../controller/dto_field_controller.ts";
-import ReorderableList from './ReorderableList';
+import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "../../controller/dto_field_controller.ts";
+import ReorderableList from '../ReorderableList.tsx';
 import {listen} from '@tauri-apps/api/event';
 
 interface DtoFieldsListProps {

@@ -1,9 +1,14 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {EntityRelationshipField, getEntity, setEntityRelationship, updateEntity} from "../controller/entity_controller";
+import {
+    EntityRelationshipField,
+    getEntity,
+    setEntityRelationship,
+    updateEntity
+} from "../../controller/entity_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createField, FieldDto, FieldType, getFieldMulti} from "../controller/field_controller.ts";
-import ReorderableList from './ReorderableList';
+import {createField, FieldDto, FieldType, getFieldMulti} from "../../controller/field_controller.ts";
+import ReorderableList from '../ReorderableList.tsx';
 import {listen} from '@tauri-apps/api/event';
 
 interface FieldsListProps {

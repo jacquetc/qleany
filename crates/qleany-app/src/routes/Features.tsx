@@ -5,10 +5,10 @@ import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
 import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
-import FeatureList from '../components/FeatureList';
-import FeatureDetails from '../components/FeatureDetails';
-import UseCaseList from '../components/UseCaseList';
-import UseCaseDetails from '../components/UseCaseDetails';
+import FeatureList from '../components/features/FeatureList.tsx';
+import FeatureDetails from '../components/features/FeatureDetails.tsx';
+import UseCaseList from '../components/features/UseCaseList.tsx';
+import UseCaseDetails from '../components/features/UseCaseDetails.tsx';
 
 const Features = () => {
     const [selectedFeature, setSelectedFeature] = useState<number | null>(0);

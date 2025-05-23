@@ -1,9 +1,9 @@
 import {ReactNode} from 'react';
-import {FeatureDto} from "../controller/feature_controller";
+import {FeatureDto} from "../../controller/feature_controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
-import ReorderableList from './ReorderableList';
+import {RootRelationshipField, setRootRelationship} from "../../controller/root_controller.ts";
+import ReorderableList from '../ReorderableList.tsx';
 
 interface FeatureListProps {
     features: FeatureDto[];
@@ -14,12 +14,12 @@ interface FeatureListProps {
 }
 
 const FeatureList = ({
-                        features,
-                        selectedFeature,
-                        onSelectFeature,
-                        onCreateFeature,
-                        onFeaturesReordered
-                    }: FeatureListProps) => {
+                         features,
+                         selectedFeature,
+                         onSelectFeature,
+                         onCreateFeature,
+                         onFeaturesReordered
+                     }: FeatureListProps) => {
 
     // Create header component for ReorderableList
     const header = (

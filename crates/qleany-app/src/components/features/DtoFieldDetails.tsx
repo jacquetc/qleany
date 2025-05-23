@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Button, Checkbox, Select, Stack, TextInput, Title } from '@mantine/core';
-import { DtoFieldDto, DtoFieldType, getDtoField, updateDtoField } from "../controller/dto_field_controller";
-import { error, info } from '@tauri-apps/plugin-log';
+import {useEffect, useState} from 'react';
+import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
+import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "../../controller/dto_field_controller.ts";
+import {error, info} from '@tauri-apps/plugin-log';
 
 interface DtoFieldDetailsProps {
     selectedDtoField: number | null;
 }
 
-const DtoFieldDetails = ({ selectedDtoField }: DtoFieldDetailsProps) => {
+const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
     const [formData, setFormData] = useState<{
         name: string;
         field_type: DtoFieldType;
@@ -92,7 +92,7 @@ const DtoFieldDetails = ({ selectedDtoField }: DtoFieldDetailsProps) => {
                         id="dtoFieldName"
                         label="Name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
                     />
 
                     <Select
@@ -101,7 +101,7 @@ const DtoFieldDetails = ({ selectedDtoField }: DtoFieldDetailsProps) => {
                         value={formData.field_type}
                         onChange={(value) => {
                             if (value) {
-                                setFormData({ ...formData, field_type: value as DtoFieldType });
+                                setFormData({...formData, field_type: value as DtoFieldType});
                             }
                         }}
                         data={Object.values(DtoFieldType).map(type => ({
@@ -114,14 +114,14 @@ const DtoFieldDetails = ({ selectedDtoField }: DtoFieldDetailsProps) => {
                         id="dtoFieldNullable"
                         label="Nullable"
                         checked={formData.is_nullable}
-                        onChange={(e) => setFormData({ ...formData, is_nullable: e.target.checked })}
+                        onChange={(e) => setFormData({...formData, is_nullable: e.target.checked})}
                     />
 
                     <Checkbox
                         id="dtoFieldList"
                         label="List"
                         checked={formData.is_list}
-                        onChange={(e) => setFormData({ ...formData, is_list: e.target.checked })}
+                        onChange={(e) => setFormData({...formData, is_list: e.target.checked})}
                     />
 
                     <Button type="submit" loading={loading}>Save Changes</Button>

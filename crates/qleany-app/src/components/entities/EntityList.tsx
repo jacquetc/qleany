@@ -1,9 +1,9 @@
 import {ReactNode} from 'react';
-import {EntityDto} from "../controller/entity_controller";
+import {EntityDto} from "../../controller/entity_controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
-import ReorderableList from './ReorderableList';
+import {RootRelationshipField, setRootRelationship} from "../../controller/root_controller.ts";
+import ReorderableList from '../ReorderableList.tsx';
 
 interface EntityListProps {
     entities: EntityDto[];

@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {EntityDto, updateEntity, updateEntityMulti} from "../controller/entity_controller";
+import {EntityDto, updateEntity, updateEntityMulti} from "../../controller/entity_controller.ts";
 import {Button, Checkbox, Modal, Select, Stack, Text, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 

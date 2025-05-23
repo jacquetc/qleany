@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Button, Divider, Stack, TextInput, Title } from '@mantine/core';
-import { DtoDto, getDto, updateDto } from "../controller/dto_controller";
-import { error, info } from '@tauri-apps/plugin-log';
-import DtoFieldsList from './DtoFieldsList';
-import DtoFieldDetails from './DtoFieldDetails';
+import {useEffect, useState} from 'react';
+import {Button, Divider, Stack, TextInput, Title} from '@mantine/core';
+import {DtoDto, getDto, updateDto} from "../../controller/dto_controller.ts";
+import {error, info} from '@tauri-apps/plugin-log';
+import DtoFieldsList from './DtoFieldsList.tsx';
+import DtoFieldDetails from './DtoFieldDetails.tsx';
 
 interface DtoDetailsProps {
     selectedDto: number | null;
 }
 
-const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
+const DtoDetails = ({selectedDto}: DtoDetailsProps) => {
     const [formData, setFormData] = useState<{
         name: string;
     }>({
@@ -83,14 +83,14 @@ const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
                         id="dtoName"
                         label="Name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
                     />
 
                     <Button type="submit" loading={loading}>Save Changes</Button>
                 </Stack>
             </form>
 
-            <Divider my="md" />
+            <Divider my="md"/>
 
             <Stack>
                 <DtoFieldsList
@@ -101,9 +101,9 @@ const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
 
             {selectedDtoField && (
                 <>
-                    <Divider my="md" />
+                    <Divider my="md"/>
                     <Stack>
-                        <DtoFieldDetails selectedDtoField={selectedDtoField} />
+                        <DtoFieldDetails selectedDtoField={selectedDtoField}/>
                     </Stack>
                 </>
             )}

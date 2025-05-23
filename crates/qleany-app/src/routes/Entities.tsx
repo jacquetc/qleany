@@ -4,10 +4,10 @@ import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
 import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
-import EntityList from '../components/EntityList';
-import EntityDetails from '../components/EntityDetails';
-import FieldsList from '../components/FieldsList';
-import FieldDetails from '../components/FieldDetails';
+import EntityList from '../components/entities/EntityList.tsx';
+import EntityDetails from '../components/entities/EntityDetails.tsx';
+import FieldsList from '../components/entities/FieldsList.tsx';
+import FieldDetails from '../components/entities/FieldDetails.tsx';
 
 const Entities = () => {
     const [selectedEntity, setSelectedEntity] = useState<number | null>(0);

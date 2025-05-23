@@ -5,12 +5,12 @@ import {
     updateUseCase,
     UseCaseDto,
     UseCaseRelationshipField
-} from "../controller/use_case_controller";
+} from "../../controller/use_case_controller.ts";
 import {Button, Checkbox, Stack, Tabs, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "../controller/entity_controller";
-import DtoSelector from './DtoSelector';
-import DtoDetails from './DtoDetails';
+import {EntityDto, getEntityMulti} from "../../controller/entity_controller.ts";
+import DtoSelector from './DtoSelector.tsx';
+import DtoDetails from './DtoDetails.tsx';
 
 interface UseCaseDetailsProps {
     selectedUseCase: number | null;
