@@ -6,6 +6,7 @@ import Entities from "./routes/Entities";
 import Features from "./routes/Features";
 import Project from "./routes/Project";
 import Generate from "./routes/Generate.tsx";
+import EntityMap from "./routes/EntityMap.tsx";
 import {useState} from 'react';
 
 
@@ -29,6 +30,7 @@ const App = () => {
                         <Route path="home" element={<Home/>}/>
                         <Route path="project" element={<Project/>}/>
                         <Route path="entities" element={<Entities/>}/>
+                        <Route path="entity-map" element={<EntityMap/>}/>
                         <Route path="features" element={<Features/>}/>
                         <Route path="generate" element={<Generate/>}/>
                     </Route>
