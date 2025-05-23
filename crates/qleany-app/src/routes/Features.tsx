@@ -109,8 +109,8 @@ const Features = () => {
                             margin: '0 20px',
                         }}></Divider>
 
-                        <Stack className="flex-1">
-                            <UseCaseDetails selectedUseCase={selectedUseCase} />
+                        <Stack className="flex-1" miw={400}>
+                            <UseCaseDetails selectedUseCase={selectedUseCase}/>
                         </Stack>
                     </>
                 )}

@@ -1,15 +1,16 @@
 import {useEffect, useState} from 'react';
 import {
-    UseCaseDto, 
-    UseCaseRelationshipField,
-    getUseCase, 
+    getUseCase,
+    setUseCaseRelationship,
     updateUseCase,
-    getUseCaseRelationship,
-    setUseCaseRelationship
+    UseCaseDto,
+    UseCaseRelationshipField
 } from "../controller/use_case_controller";
-import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
+import {Button, Checkbox, Stack, Tabs, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 import {EntityDto, getEntityMulti} from "../controller/entity_controller";
+import DtoSelector from './DtoSelector';
+import DtoDetails from './DtoDetails';
 
 interface UseCaseDetailsProps {
     selectedUseCase: number | null;
@@ -34,6 +35,7 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
     const [entities, setEntities] = useState<EntityDto[]>([]);
     const [selectedEntities, setSelectedEntities] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<string | null>("details");
 
     // Fetch use case data when selected use case changes
     useEffect(() => {
@@ -96,7 +98,7 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
             };
 
             await updateUseCase(updatedUseCase);
-            
+
             // Update entities relationship
             await setUseCaseRelationship({
                 id: useCaseData.id,
@@ -131,76 +133,84 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
 
     return (
         <>
-            <Title order={2}>"{formData.name}" details</Title>
-            <form onSubmit={handleSubmit}>
-                <Stack>
-                    <TextInput
-                        id="useCaseName"
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
+            <Tabs value={activeTab} onChange={setActiveTab}>
+                <Tabs.List>
+                    <Tabs.Tab value="details">Use Case Details</Tabs.Tab>
+                    {formData.dto_in !== null && <Tabs.Tab value="dto_in">DTO In</Tabs.Tab>}
+                    {formData.dto_out !== null && <Tabs.Tab value="dto_out">DTO Out</Tabs.Tab>}
+                </Tabs.List>
 
-                    <Checkbox
-                        id="useCaseValidator"
-                        label="Validator"
-                        checked={formData.validator}
-                        onChange={(e) => setFormData({...formData, validator: e.target.checked})}
-                    />
-
-                    <Checkbox
-                        id="useCaseUndoable"
-                        label="Undoable"
-                        checked={formData.undoable}
-                        onChange={(e) => setFormData({...formData, undoable: e.target.checked})}
-                    />
-
-                    <Title order={4}>Entities</Title>
-                    <Stack>
-                        {entities.map(entity => (
-                            <Checkbox
-                                key={entity.id}
-                                id={`entity-${entity.id}`}
-                                label={entity.name}
-                                checked={selectedEntities.includes(entity.id)}
-                                onChange={(e) => handleEntityChange(entity.id, e.target.checked)}
+                <Tabs.Panel value="details">
+                    <Title order={2}>"{formData.name}" details</Title>
+                    <form onSubmit={handleSubmit}>
+                        <Stack>
+                            <TextInput
+                                id="useCaseName"
+                                label="Name"
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})}
                             />
-                        ))}
-                    </Stack>
 
-                    <Select
-                        id="useCaseDtoIn"
-                        label="DTO In"
-                        placeholder="Select a DTO"
-                        value={formData.dto_in !== null ? formData.dto_in.toString() : ''}
-                        onChange={(value) => {
-                            const dtoValue = !value || value === '' ? null : parseInt(value, 10);
-                            setFormData({...formData, dto_in: dtoValue});
-                        }}
-                        data={[
-                            {value: '', label: 'None'},
-                            // In a real app, you'd fetch DTOs here
-                        ]}
-                    />
+                            <Checkbox
+                                id="useCaseValidator"
+                                label="Validator"
+                                checked={formData.validator}
+                                onChange={(e) => setFormData({...formData, validator: e.target.checked})}
+                            />
 
-                    <Select
-                        id="useCaseDtoOut"
-                        label="DTO Out"
-                        placeholder="Select a DTO"
-                        value={formData.dto_out !== null ? formData.dto_out.toString() : ''}
-                        onChange={(value) => {
-                            const dtoValue = !value || value === '' ? null : parseInt(value, 10);
-                            setFormData({...formData, dto_out: dtoValue});
-                        }}
-                        data={[
-                            {value: '', label: 'None'},
-                            // In a real app, you'd fetch DTOs here
-                        ]}
-                    />
+                            <Checkbox
+                                id="useCaseUndoable"
+                                label="Undoable"
+                                checked={formData.undoable}
+                                onChange={(e) => setFormData({...formData, undoable: e.target.checked})}
+                            />
 
-                    <Button type="submit" loading={loading}>Save Changes</Button>
-                </Stack>
-            </form>
+                            <Title order={4}>Entities</Title>
+                            <Stack>
+                                {entities.map(entity => (
+                                    <Checkbox
+                                        key={entity.id}
+                                        id={`entity-${entity.id}`}
+                                        label={entity.name}
+                                        checked={selectedEntities.includes(entity.id)}
+                                        onChange={(e) => handleEntityChange(entity.id, e.target.checked)}
+                                    />
+                                ))}
+                            </Stack>
+
+                            <DtoSelector
+                                label="DTO In"
+                                value={formData.dto_in}
+                                useCaseId={selectedUseCase}
+                                isDtoOut={false}
+                                onChange={(dtoId) => setFormData({...formData, dto_in: dtoId})}
+                            />
+
+                            <DtoSelector
+                                label="DTO Out"
+                                value={formData.dto_out}
+                                useCaseId={selectedUseCase}
+                                isDtoOut={true}
+                                onChange={(dtoId) => setFormData({...formData, dto_out: dtoId})}
+                            />
+
+                            <Button type="submit" loading={loading}>Save Changes</Button>
+                        </Stack>
+                    </form>
+                </Tabs.Panel>
+
+                {formData.dto_in !== null && (
+                    <Tabs.Panel value="dto_in">
+                        <DtoDetails selectedDto={formData.dto_in}/>
+                    </Tabs.Panel>
+                )}
+
+                {formData.dto_out !== null && (
+                    <Tabs.Panel value="dto_out">
+                        <DtoDetails selectedDto={formData.dto_out}/>
+                    </Tabs.Panel>
+                )}
+            </Tabs>
         </>
     );
 };

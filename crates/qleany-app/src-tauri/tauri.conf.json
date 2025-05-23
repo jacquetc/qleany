@@ -13,11 +13,10 @@
     "windows": [
       {
         "title": "qleany-app",
-        "width": 1000,
+        "width": 1200,
         "height": 800,
-        "minWidth": 800,
-        "minHeight": 600
-
+        "minWidth": 1200,
+        "minHeight": 800
       }
     ],
     "security": {
