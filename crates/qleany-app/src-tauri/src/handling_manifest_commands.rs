@@ -8,5 +8,9 @@ pub async fn load_manifest(handle: tauri::AppHandle, dto: LoadDto) -> Result<(),
     let app_context = handle.state::<Mutex<AppContext>>();
     let app_context = app_context.lock().await;
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &dto)
-        .map_err(|e| format!("Error while loading manifest: {:?}", e))
+        .map_err(|e| format!("Error while loading manifest: {:?}", e))?;
+
+    // clear undo/redo stacks
+    app_context.undo_redo_manager.lock().await.clear();
+    Ok(())
 }
