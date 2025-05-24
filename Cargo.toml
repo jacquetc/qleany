@@ -8,7 +8,7 @@ members = [
     "crates/cpp_qt_file_listing",
     "crates/python_file_listing",
     "crates/qleany-app/src-tauri"
-, "crates/macros"]
+    , "crates/macros"]
 default-members = [
     "crates/qleany-app/src-tauri"
 ]
@@ -28,7 +28,7 @@ version = "0.0.1"
 [workspace.dependencies]
 thiserror = "2.0.11"
 anyhow = "1.0"
-redb = "2.4.0"
+redb = "2.6.0"
 flume = "0.11.1"
 serde = { version = "1", features = ["derive"] }
 
