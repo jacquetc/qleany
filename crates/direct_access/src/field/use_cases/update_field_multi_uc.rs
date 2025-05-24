@@ -2,6 +2,7 @@ use super::FieldUnitOfWorkFactoryTrait;
 use crate::field::dtos::FieldDto;
 use anyhow::{Ok, Result};
 use common::{entities::Field, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateFieldMultiUseCase {
@@ -34,13 +35,18 @@ impl UpdateFieldMultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
+        // store in undo stack
+        let fields = uow.get_field_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?;
+        let fields = fields
+            .into_iter()
+            .filter_map(|field| field)
+            .collect::<Vec<_>>();
+        self.undo_stack.push_back(fields);
 
         let fields =
             uow.update_field_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
-        // store in undo stack
-        self.undo_stack.push_back(fields.clone());
         self.redo_stack.clear();
 
         Ok(fields.into_iter().map(|field| field.into()).collect())
@@ -68,5 +74,8 @@ impl UndoRedoCommand for UpdateFieldMultiUseCase {
             self.undo_stack.push_back(fields);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

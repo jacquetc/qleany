@@ -2,6 +2,7 @@ use super::RelationshipUnitOfWorkFactoryTrait;
 use crate::relationship::dtos::RelationshipDto;
 use anyhow::{Ok, Result};
 use common::{entities::Relationship, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateRelationshipUseCase {
@@ -66,5 +67,8 @@ impl UndoRedoCommand for UpdateRelationshipUseCase {
             self.undo_stack.push_back(relationship);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

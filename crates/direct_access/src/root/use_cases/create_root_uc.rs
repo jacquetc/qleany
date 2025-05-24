@@ -3,6 +3,7 @@ use crate::root::dtos::{CreateRootDto, RootDto};
 use anyhow::{Ok, Result};
 use common::entities::Root;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateRootUseCase {
@@ -55,5 +56,8 @@ impl UndoRedoCommand for CreateRootUseCase {
             self.undo_stack.push_back(last_root);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

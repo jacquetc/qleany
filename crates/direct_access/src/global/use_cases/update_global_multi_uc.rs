@@ -2,6 +2,7 @@ use super::GlobalUnitOfWorkFactoryTrait;
 use crate::global::dtos::GlobalDto;
 use anyhow::{Ok, Result};
 use common::{entities::Global, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateGlobalMultiUseCase {
@@ -35,12 +36,18 @@ impl UpdateGlobalMultiUseCase {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
 
+        // store in undo stack
+        let globals = uow.get_global_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?;
+        let globals = globals
+            .into_iter()
+            .filter_map(|global| global.map(|g| g.into()))
+            .collect::<Vec<_>>();
+        self.undo_stack.push_back(globals);
+
         let globals =
             uow.update_global_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
-        // store in undo stack
-        self.undo_stack.push_back(globals.clone());
         self.redo_stack.clear();
 
         Ok(globals.into_iter().map(|global| global.into()).collect())
@@ -68,5 +75,8 @@ impl UndoRedoCommand for UpdateGlobalMultiUseCase {
             self.undo_stack.push_back(globals);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

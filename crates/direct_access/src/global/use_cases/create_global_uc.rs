@@ -3,6 +3,7 @@ use crate::global::dtos::{CreateGlobalDto, GlobalDto};
 use anyhow::{Ok, Result};
 use common::entities::Global;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateGlobalUseCase {
@@ -55,5 +56,8 @@ impl UndoRedoCommand for CreateGlobalUseCase {
             self.undo_stack.push_back(last_global);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

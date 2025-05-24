@@ -3,6 +3,7 @@ use crate::UseCaseRelationshipDto;
 use anyhow::Result;
 use common::types::Savepoint;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct SetUseCaseRelationshipUseCase {
@@ -60,5 +61,8 @@ impl UndoRedoCommand for SetUseCaseRelationshipUseCase {
             self.undo_stack.push_back(savepoint);
         }
         anyhow::Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

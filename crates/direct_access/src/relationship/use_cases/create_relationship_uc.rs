@@ -3,6 +3,7 @@ use crate::relationship::dtos::{CreateRelationshipDto, RelationshipDto};
 use anyhow::{Ok, Result};
 use common::entities::Relationship;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateRelationshipUseCase {
@@ -55,5 +56,8 @@ impl UndoRedoCommand for CreateRelationshipUseCase {
             self.undo_stack.push_back(last_relationship);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

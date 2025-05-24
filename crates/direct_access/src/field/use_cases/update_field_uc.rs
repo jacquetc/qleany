@@ -2,6 +2,7 @@ use super::FieldUnitOfWorkFactoryTrait;
 use crate::field::dtos::FieldDto;
 use anyhow::{Ok, Result};
 use common::{entities::Field, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateFieldUseCase {
@@ -30,13 +31,12 @@ impl UpdateFieldUseCase {
         if uow.get_field(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("Field with id {} does not exist", dto.id));
         }
+        // store in undo stack
+        let field = uow.get_field(&dto.id)?.unwrap();
+        self.undo_stack.push_back(field);
 
         let field = uow.update_field(&dto.into())?;
         uow.commit()?;
-
-        // store in undo stack
-        self.undo_stack.push_back(field.clone());
-        self.redo_stack.clear();
 
         Ok(field.into())
     }
@@ -63,5 +63,8 @@ impl UndoRedoCommand for UpdateFieldUseCase {
             self.undo_stack.push_back(field);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

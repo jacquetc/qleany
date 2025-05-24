@@ -136,7 +136,7 @@ mod tests {
             ids: vec![EntityId::default()],
             data: None,
         };
-        assert_eq!(event.origin_string(), "direct_access_all_Reset");
+        assert_eq!(event.origin_string(), "direct_access_all_reset");
     }
 
     #[test]
@@ -146,7 +146,7 @@ mod tests {
             ids: vec![EntityId::default()],
             data: None,
         };
-        assert_eq!(event.origin_string(), "direct_access_root_Created");
+        assert_eq!(event.origin_string(), "direct_access_root_created");
     }
 
     #[test]
@@ -156,7 +156,7 @@ mod tests {
             ids: vec![EntityId::default()],
             data: None,
         };
-        assert_eq!(event.origin_string(), "handling_manifest_Loaded");
+        assert_eq!(event.origin_string(), "handling_manifest_loaded");
     }
 
     #[test]

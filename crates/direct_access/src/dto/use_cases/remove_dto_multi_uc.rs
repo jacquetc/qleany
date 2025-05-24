@@ -2,6 +2,7 @@ use super::DtoUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
 use common::types::Savepoint;
 use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct RemoveDtoMultiUseCase {
@@ -66,5 +67,8 @@ impl UndoRedoCommand for RemoveDtoMultiUseCase {
             self.undo_stack.push_back(savepoint);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

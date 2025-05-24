@@ -3,6 +3,7 @@ use crate::RootRelationshipDto;
 use anyhow::Result;
 use common::types::Savepoint;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct SetRootRelationshipUseCase {
@@ -60,5 +61,8 @@ impl UndoRedoCommand for SetRootRelationshipUseCase {
             self.undo_stack.push_back(savepoint);
         }
         anyhow::Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

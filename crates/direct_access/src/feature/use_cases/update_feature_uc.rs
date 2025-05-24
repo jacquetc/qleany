@@ -2,6 +2,7 @@ use super::FeatureUnitOfWorkFactoryTrait;
 use crate::feature::dtos::FeatureDto;
 use anyhow::{Ok, Result};
 use common::{entities::Feature, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateFeatureUseCase {
@@ -63,5 +64,8 @@ impl UndoRedoCommand for UpdateFeatureUseCase {
             self.undo_stack.push_back(feature);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

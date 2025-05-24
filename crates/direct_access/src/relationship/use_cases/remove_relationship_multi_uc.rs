@@ -2,6 +2,7 @@ use super::RelationshipUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
 use common::types::Savepoint;
 use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct RemoveRelationshipMultiUseCase {
@@ -66,5 +67,8 @@ impl UndoRedoCommand for RemoveRelationshipMultiUseCase {
             self.undo_stack.push_back(savepoint);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

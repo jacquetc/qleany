@@ -2,6 +2,7 @@ use super::UseCaseUnitOfWorkFactoryTrait;
 use crate::use_case::dtos::UseCaseDto;
 use anyhow::{Ok, Result};
 use common::{entities::UseCase, undo_redo::UndoRedoCommand};
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct UpdateUseCaseMultiUseCase {
@@ -71,5 +72,8 @@ impl UndoRedoCommand for UpdateUseCaseMultiUseCase {
             self.undo_stack.push_back(last_use_cases);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

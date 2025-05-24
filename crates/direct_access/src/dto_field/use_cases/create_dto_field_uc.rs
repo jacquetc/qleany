@@ -3,6 +3,7 @@ use crate::dto_field::dtos::{CreateDtoFieldDto, DtoFieldDto};
 use anyhow::{Ok, Result};
 use common::entities::DtoField;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateDtoFieldUseCase {
@@ -55,5 +56,8 @@ impl UndoRedoCommand for CreateDtoFieldUseCase {
             self.undo_stack.push_back(last_dto_field);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

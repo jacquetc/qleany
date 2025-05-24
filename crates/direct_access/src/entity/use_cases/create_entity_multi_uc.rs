@@ -3,6 +3,7 @@ use crate::entity::dtos::{CreateEntityDto, EntityDto};
 use anyhow::{Ok, Result};
 use common::entities::Entity;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateEntityMultiUseCase {
@@ -61,5 +62,8 @@ impl UndoRedoCommand for CreateEntityMultiUseCase {
             self.undo_stack.push_back(last_entitys);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

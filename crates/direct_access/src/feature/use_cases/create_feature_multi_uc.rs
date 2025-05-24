@@ -3,6 +3,7 @@ use crate::feature::dtos::{CreateFeatureDto, FeatureDto};
 use anyhow::{Ok, Result};
 use common::entities::Feature;
 use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct CreateFeatureMultiUseCase {
@@ -61,5 +62,8 @@ impl UndoRedoCommand for CreateFeatureMultiUseCase {
             self.undo_stack.push_back(last_features);
         }
         Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
