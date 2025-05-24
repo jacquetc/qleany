@@ -4,7 +4,7 @@ import {createFeature, FeatureDto, getFeatureMulti} from "../controller/feature_
 import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
-import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
+import {getRootMulti, getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
 import FeatureList from '../components/features/FeatureList.tsx';
 import FeatureDetails from '../components/features/FeatureDetails.tsx';
 import UseCaseList from '../components/features/UseCaseList.tsx';
@@ -14,6 +14,17 @@ const Features = () => {
     const [selectedFeature, setSelectedFeature] = useState<number | null>(0);
     const [featureData, setFeatureData] = useState<FeatureDto[]>([]);
     const [selectedUseCase, setSelectedUseCase] = useState<number | null>(0);
+    const [rootId, setRootId] = useState<number>(1);
+
+    // Function to get the root ID
+    async function getRootId() {
+        const roots = await getRootMulti([]);
+        if (roots.length > 0 && roots[0] !== null) {
+            setRootId(roots[0]!.id);
+            return roots[0]!.id;
+        }
+        return 1; // Fallback to default
+    }
 
     async function createNewFeature() {
         try {
@@ -26,10 +37,11 @@ const Features = () => {
             const newFeature = await createFeature(dto);
 
             // Update root relationship
-            const rootFeatures = await getRootRelationship(1, RootRelationshipField.Features) || [];
+            const currentRootId = await getRootId();
+            const rootFeatures = await getRootRelationship(currentRootId, RootRelationshipField.Features) || [];
 
             await setRootRelationship({
-                id: 1,
+                id: currentRootId,
                 field: RootRelationshipField.Features,
                 right_ids: [...rootFeatures, newFeature.id],
             });
@@ -48,7 +60,8 @@ const Features = () => {
 
     // Function to fetch feature data from the backend
     async function fetchFeatureData() {
-        const featureIds = await getRootRelationship(1, RootRelationshipField.Features);
+        const currentRootId = await getRootId();
+        const featureIds = await getRootRelationship(currentRootId, RootRelationshipField.Features);
         const features = await getFeatureMulti(featureIds);
         setFeatureData(features.filter((feature) => feature !== null) as FeatureDto[]);
     }

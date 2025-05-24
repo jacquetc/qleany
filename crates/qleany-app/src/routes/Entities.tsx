@@ -3,7 +3,12 @@ import {createEntity, EntityDto, getEntityMulti} from "../controller/entity_cont
 import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
-import {getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
+import {
+    getRootMulti,
+    getRootRelationship,
+    RootRelationshipField,
+    setRootRelationship
+} from "../controller/root_controller.ts";
 import EntityList from '../components/entities/EntityList.tsx';
 import EntityDetails from '../components/entities/EntityDetails.tsx';
 import FieldsList from '../components/entities/FieldsList.tsx';
@@ -13,6 +18,17 @@ const Entities = () => {
     const [selectedEntity, setSelectedEntity] = useState<number | null>(0);
     const [entityData, setEntityData] = useState<EntityDto[]>([]);
     const [selectedField, setSelectedField] = useState<number | null>(0);
+    const [_, setRootId] = useState<number>(1);
+
+    // Function to get the root ID
+    async function getRootId() {
+        const roots = await getRootMulti([]);
+        if (roots.length > 0 && roots[0] !== null) {
+            setRootId(roots[0]!.id);
+            return roots[0]!.id;
+        }
+        return 1; // Fallback to default
+    }
 
     async function createNewEntity() {
         try {
@@ -29,10 +45,11 @@ const Entities = () => {
             const newEntity = await createEntity(dto);
 
             // Update root relationship
-            const rootEntities = await getRootRelationship(1, RootRelationshipField.Entities) || [];
+            const currentRootId = await getRootId();
+            const rootEntities = await getRootRelationship(currentRootId, RootRelationshipField.Entities) || [];
 
             await setRootRelationship({
-                id: 1,
+                id: currentRootId,
                 field: RootRelationshipField.Entities,
                 right_ids: [...rootEntities, newEntity.id],
             });
@@ -53,7 +70,8 @@ const Entities = () => {
 
     // Function to fetch entity data from the backend
     async function fetchEntityData() {
-        const entityIds = await getRootRelationship(1, RootRelationshipField.Entities);
+        const currentRootId = await getRootId();
+        const entityIds = await getRootRelationship(currentRootId, RootRelationshipField.Entities);
         const entities = await getEntityMulti(entityIds);
         setEntityData(entities.filter((entity) => entity !== null) as EntityDto[]);
     }

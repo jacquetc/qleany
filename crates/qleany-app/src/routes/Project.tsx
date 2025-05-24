@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import {Button, Group, Paper, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '../controller/global_controller';
-import {getRootRelationship, RootRelationshipField} from '../controller/root_controller';
+import {getRootMulti, getRootRelationship, RootRelationshipField} from '../controller/root_controller';
 
 const Project = () => {
     const [globalId, setGlobalId] = useState<number | null>(null);
@@ -15,6 +15,17 @@ const Project = () => {
     });
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [rootId, setRootId] = useState<number>(1);
+
+    // Function to get the root ID
+    async function getRootId() {
+        const roots = await getRootMulti([]);
+        if (roots.length > 0 && roots[0] !== null) {
+            setRootId(roots[0]!.id);
+            return roots[0]!.id;
+        }
+        return 1; // Fallback to default
+    }
 
     // Language options
     const languageOptions = [
@@ -33,7 +44,8 @@ const Project = () => {
         try {
             setLoading(true);
             // Get the global ID from the root relationship
-            const rootGlobalId = await getRootRelationship(1, RootRelationshipField.Global);
+            const currentRootId = await getRootId();
+            const rootGlobalId = await getRootRelationship(currentRootId, RootRelationshipField.Global);
 
             if (rootGlobalId && rootGlobalId.length > 0) {
                 const id = rootGlobalId[0];

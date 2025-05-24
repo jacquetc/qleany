@@ -1,6 +1,6 @@
 import {memo, useEffect, useState} from 'react';
 import {Box, Paper, Stack, Text, Title} from '@mantine/core';
-import {getRootRelationship, RootRelationshipField} from "../controller/root_controller";
+import {getRootMulti, getRootRelationship, RootRelationshipField} from "../controller/root_controller";
 import {EntityDto, getEntityMulti} from "../controller/entity_controller";
 import {FieldDto, FieldType, getFieldMulti} from "../controller/field_controller";
 import {error} from '@tauri-apps/plugin-log';
@@ -97,6 +97,17 @@ const EntityMapFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [loading, setLoading] = useState(false);
+    const [rootId, setRootId] = useState<number>(1);
+
+    // Function to get the root ID
+    async function getRootId() {
+        const roots = await getRootMulti([]);
+        if (roots.length > 0 && roots[0] !== null) {
+            setRootId(roots[0]!.id);
+            return roots[0]!.id;
+        }
+        return 1; // Fallback to default
+    }
 
     // Function to fetch entity data from the backend
     async function fetchEntityData() {
@@ -104,7 +115,8 @@ const EntityMapFlow = () => {
             setLoading(true);
 
             // Get all entity IDs from the root
-            const entityIds = await getRootRelationship(1, RootRelationshipField.Entities);
+            const currentRootId = await getRootId();
+            const entityIds = await getRootRelationship(currentRootId, RootRelationshipField.Entities);
 
             // Fetch all entities
             const entitiesData = await getEntityMulti(entityIds);
