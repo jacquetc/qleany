@@ -2,6 +2,7 @@
 mod direct_access_commands;
 mod event_hub_client;
 mod handling_manifest_commands;
+mod undo_redo_commands;
 use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
@@ -185,6 +186,14 @@ pub fn run() {
             // handling manifest
             handling_manifest_commands::load_manifest,
             //handling_manifest_commands::save_manifest,
+
+            // undo redo
+            undo_redo_commands::undo,
+            undo_redo_commands::redo,
+            undo_redo_commands::can_undo,
+            undo_redo_commands::can_redo,
+            undo_redo_commands::begin_composite,
+            undo_redo_commands::end_composite,
         ])
         .on_window_event(|app, event| {
             let app_context = app.state::<Mutex<AppContext>>();
