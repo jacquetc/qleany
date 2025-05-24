@@ -125,26 +125,26 @@ fn get_backward_relationships(
 
 pub fn str_to_field_type(s: &str) -> FieldType {
     match s {
-        "Boolean" | "Bool" => FieldType::Boolean,
-        "Integer" => FieldType::Integer,
-        "UInteger" => FieldType::UInteger,
-        "Float" => FieldType::Float,
-        "String" => FieldType::String,
-        "Uuid" => FieldType::Uuid,
-        "DateTime" => FieldType::DateTime,
+        "boolean" | "bool" => FieldType::Boolean,
+        "int" => FieldType::Integer,
+        "uint" => FieldType::UInteger,
+        "float" => FieldType::Float,
+        "string" => FieldType::String,
+        "uuid" => FieldType::Uuid,
+        "datetime" => FieldType::DateTime,
         _ => FieldType::String,
     }
 }
 
 pub fn str_to_dto_field_type(s: &str) -> DtoFieldType {
     match s {
-        "Boolean" | "Bool" => DtoFieldType::Boolean,
-        "Integer" => DtoFieldType::Integer,
-        "UInteger" => DtoFieldType::UInteger,
-        "Float" => DtoFieldType::Float,
-        "String" => DtoFieldType::String,
-        "Uuid" => DtoFieldType::Uuid,
-        "DateTime" => DtoFieldType::DateTime,
+        "boolean" | "bool" => DtoFieldType::Boolean,
+        "int" => DtoFieldType::Integer,
+        "uint" => DtoFieldType::UInteger,
+        "float" => DtoFieldType::Float,
+        "string" => DtoFieldType::String,
+        "uuid" => DtoFieldType::Uuid,
+        "datetime" => DtoFieldType::DateTime,
         _ => DtoFieldType::String,
     }
 }

@@ -1783,6 +1783,7 @@ dependencies = [
  "anyhow",
  "common",
  "jsonschema",
+ "macros",
  "serde",
  "serde_json",
  "serde_yml",

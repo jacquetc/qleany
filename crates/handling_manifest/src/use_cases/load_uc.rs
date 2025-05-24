@@ -17,22 +17,21 @@ pub trait LoadUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;
 }
 
-pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {
-    fn create_root(&self, root: &Root) -> Result<Root>;
-    fn get_root(&self, id: &EntityId) -> Result<Option<Root>>;
-    fn update_root(&self, root: &Root) -> Result<Root>;
-    fn create_global(&self, global: &Global) -> Result<Global>;
-    fn create_feature(&self, feature: &Feature) -> Result<Feature>;
-    fn create_use_case(&self, use_case: &UseCase) -> Result<UseCase>;
-    fn create_entity(&self, entity: &Entity) -> Result<Entity>;
-    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>>;
-    fn update_entity(&self, entity: &Entity) -> Result<Entity>;
-    fn create_field(&self, field: &Field) -> Result<Field>;
-    fn get_fields(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>>;
-    fn create_dto(&self, dto: &Dto) -> Result<Dto>;
-    fn create_dto_field(&self, dto_field: &DtoField) -> Result<DtoField>;
-    fn create_relationships(&self, relationships: &[Relationship]) -> Result<Vec<Relationship>>;
-}
+#[macros::uow_action(entity = "Root", action = "Create")]
+#[macros::uow_action(entity = "Root", action = "Get")]
+#[macros::uow_action(entity = "Root", action = "Update")]
+#[macros::uow_action(entity = "Global", action = "Create")]
+#[macros::uow_action(entity = "Feature", action = "Create")]
+#[macros::uow_action(entity = "UseCase", action = "Create")]
+#[macros::uow_action(entity = "Entity", action = "Create")]
+#[macros::uow_action(entity = "Entity", action = "Get")]
+#[macros::uow_action(entity = "Entity", action = "Update")]
+#[macros::uow_action(entity = "Field", action = "Create")]
+#[macros::uow_action(entity = "Field", action = "GetMulti")]
+#[macros::uow_action(entity = "Dto", action = "Create")]
+#[macros::uow_action(entity = "DtoField", action = "Create")]
+#[macros::uow_action(entity = "Relationship", action = "CreateMulti")]
+pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct LoadUseCase {
     uow_factory: Box<dyn LoadUnitOfWorkFactoryTrait>,
@@ -192,13 +191,13 @@ impl LoadUseCase {
         }
 
         // create relationships
-        let all_fields = uow.get_fields(&all_field_ids)?;
+        let all_fields = uow.get_field_multi(&all_field_ids)?;
         let all_fields = all_fields.into_iter().flatten().collect::<Vec<Field>>();
         let all_relationships = tools::generate_relationships(&entities, &all_fields);
 
         for (entity_id, relationships) in all_relationships.iter() {
             let new_relationship_ids = uow
-                .create_relationships(relationships)?
+                .create_relationship_multi(relationships)?
                 .iter()
                 .map(|new_relationship| new_relationship.id)
                 .collect::<Vec<EntityId>>();
