@@ -111,24 +111,52 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let field = if let Some(guard) = field_table.get(id)? {
-                let mut field = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut field_iter = field_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, field_data))) = field_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut field = field_data.value().clone();
 
                 // get entity from junction table
                 let entity: Option<EntityId> = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 field.entity = entity;
-                Some(field)
-            } else {
-                None
-            };
-            fields.push(field);
+                fields.push(Some(field));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let field = if let Some(guard) = field_table.get(id)? {
+                    let mut field = guard.value().clone();
+
+                    // get entity from junction table
+                    let entity: Option<EntityId> = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    field.entity = entity;
+                    Some(field)
+                } else {
+                    None
+                };
+                fields.push(field);
+            }
         }
+
         Ok(fields)
     }
 
@@ -249,24 +277,52 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let field = if let Some(guard) = field_table.get(id)? {
-                let mut field = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut field_iter = field_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, field_data))) = field_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut field = field_data.value().clone();
 
                 // get entity from junction table
                 let entity: Option<EntityId> = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 field.entity = entity;
-                Some(field)
-            } else {
-                None
-            };
-            fields.push(field);
+                fields.push(Some(field));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let field = if let Some(guard) = field_table.get(id)? {
+                    let mut field = guard.value().clone();
+
+                    // get entity from junction table
+                    let entity: Option<EntityId> = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    field.entity = entity;
+                    Some(field)
+                } else {
+                    None
+                };
+                fields.push(field);
+            }
         }
+
         Ok(fields)
     }
 

@@ -133,33 +133,71 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let relationship = if let Some(guard) = relationship_table.get(id)? {
-                let relationship = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut relationship_iter = relationship_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, relationship_data))) = relationship_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let relationship = relationship_data.value().clone();
+
                 let left_entity = left_entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("relationship has no left entity");
 
                 let right_entity = right_entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("relationship has no right entity");
 
-                Some(Relationship {
+                relationships.push(Some(Relationship {
                     left_entity,
                     right_entity,
                     ..relationship
-                })
-            } else {
-                None
-            };
-            relationships.push(relationship);
+                }));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let relationship = if let Some(guard) = relationship_table.get(id)? {
+                    let relationship = guard.value().clone();
+                    let left_entity = left_entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("relationship has no left entity");
+
+                    let right_entity = right_entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("relationship has no right entity");
+
+                    Some(Relationship {
+                        left_entity,
+                        right_entity,
+                        ..relationship
+                    })
+                } else {
+                    None
+                };
+                relationships.push(relationship);
+            }
         }
+
         Ok(relationships)
     }
 
@@ -293,14 +331,31 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         let mut relationships = Vec::new();
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
-        for id in ids {
-            let relationship = if let Some(guard) = relationship_table.get(id)? {
-                Some(guard.value().clone())
-            } else {
-                None
-            };
-            relationships.push(relationship);
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut relationship_iter = relationship_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((_, relationship_data))) = relationship_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                relationships.push(Some(relationship_data.value().clone()));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let relationship = if let Some(guard) = relationship_table.get(id)? {
+                    Some(guard.value().clone())
+                } else {
+                    None
+                };
+                relationships.push(relationship);
+            }
         }
+
         Ok(relationships)
     }
 

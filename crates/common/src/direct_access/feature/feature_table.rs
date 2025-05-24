@@ -107,23 +107,50 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
             .transaction
             .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let feature = if let Some(guard) = feature_table.get(id)? {
-                let mut feature = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut feature_iter = feature_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, feature_data))) = feature_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut feature = feature_data.value().clone();
 
                 // get use cases from junction table
                 let use_cases = use_case_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 feature.use_cases = use_cases;
-                Some(feature)
-            } else {
-                None
-            };
-            features.push(feature);
+                features.push(Some(feature));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let feature = if let Some(guard) = feature_table.get(id)? {
+                    let mut feature = guard.value().clone();
+
+                    // get use cases from junction table
+                    let use_cases = use_case_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    feature.use_cases = use_cases;
+                    Some(feature)
+                } else {
+                    None
+                };
+                features.push(feature);
+            }
         }
+
         Ok(features)
     }
 
@@ -243,23 +270,50 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
             .transaction
             .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let feature = if let Some(guard) = feature_table.get(id)? {
-                let mut feature = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut feature_iter = feature_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, feature_data))) = feature_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut feature = feature_data.value().clone();
 
                 // get use cases from junction table
                 let use_cases = use_case_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 feature.use_cases = use_cases;
-                Some(feature)
-            } else {
-                None
-            };
-            features.push(feature);
+                features.push(Some(feature));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let feature = if let Some(guard) = feature_table.get(id)? {
+                    let mut feature = guard.value().clone();
+
+                    // get use cases from junction table
+                    let use_cases = use_case_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    feature.use_cases = use_cases;
+                    Some(feature)
+                } else {
+                    None
+                };
+                features.push(feature);
+            }
         }
+
         Ok(features)
     }
     fn get_relationship(

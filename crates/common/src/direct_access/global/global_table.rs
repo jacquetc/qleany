@@ -88,14 +88,31 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         let mut globals = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-        for id in ids {
-            let global = if let Some(guard) = global_table.get(id)? {
-                Some(guard.value().clone())
-            } else {
-                None
-            };
-            globals.push(global);
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut global_iter = global_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((_, global_data))) = global_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                globals.push(Some(global_data.value().clone()));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let global = if let Some(guard) = global_table.get(id)? {
+                    Some(guard.value().clone())
+                } else {
+                    None
+                };
+                globals.push(global);
+            }
         }
+
         Ok(globals)
     }
 
@@ -146,14 +163,31 @@ impl<'a> GlobalTableRO for GlobalRedbTableRO<'a> {
         let mut globals = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-        for id in ids {
-            let global = if let Some(guard) = global_table.get(id)? {
-                Some(guard.value().clone())
-            } else {
-                None
-            };
-            globals.push(global);
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut global_iter = global_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((_, global_data))) = global_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                globals.push(Some(global_data.value().clone()));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let global = if let Some(guard) = global_table.get(id)? {
+                    Some(guard.value().clone())
+                } else {
+                    None
+                };
+                globals.push(global);
+            }
         }
+
         Ok(globals)
     }
 }

@@ -142,26 +142,35 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let use_case = if let Some(guard) = use_case_table.get(id)? {
-                let mut use_case = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut use_case_iter = use_case_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, use_case_data))) = use_case_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut use_case = use_case_data.value().clone();
 
                 // get entities from junction table
                 let entities = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get dto_in from junction table
                 let dto_in: Option<EntityId> = dto_in_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 // get dto_out from junction table
                 let dto_out: Option<EntityId> = dto_out_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
@@ -169,12 +178,46 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 use_case.entities = entities;
                 use_case.dto_in = dto_in;
                 use_case.dto_out = dto_out;
-                Some(use_case)
-            } else {
-                None
-            };
-            use_cases.push(use_case);
+                use_cases.push(Some(use_case));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let use_case = if let Some(guard) = use_case_table.get(id)? {
+                    let mut use_case = guard.value().clone();
+
+                    // get entities from junction table
+                    let entities = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get dto_in from junction table
+                    let dto_in: Option<EntityId> = dto_in_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    // get dto_out from junction table
+                    let dto_out: Option<EntityId> = dto_out_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    use_case.entities = entities;
+                    use_case.dto_in = dto_in;
+                    use_case.dto_out = dto_out;
+                    Some(use_case)
+                } else {
+                    None
+                };
+                use_cases.push(use_case);
+            }
         }
+
         Ok(use_cases)
     }
 
@@ -330,26 +373,35 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let use_case = if let Some(guard) = use_case_table.get(id)? {
-                let mut use_case = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut use_case_iter = use_case_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, use_case_data))) = use_case_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut use_case = use_case_data.value().clone();
 
                 // get entities from junction table
                 let entities = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get dto_in from junction table
                 let dto_in: Option<EntityId> = dto_in_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 // get dto_out from junction table
                 let dto_out: Option<EntityId> = dto_out_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
@@ -357,12 +409,46 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
                 use_case.entities = entities;
                 use_case.dto_in = dto_in;
                 use_case.dto_out = dto_out;
-                Some(use_case)
-            } else {
-                None
-            };
-            use_cases.push(use_case);
+                use_cases.push(Some(use_case));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let use_case = if let Some(guard) = use_case_table.get(id)? {
+                    let mut use_case = guard.value().clone();
+
+                    // get entities from junction table
+                    let entities = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get dto_in from junction table
+                    let dto_in: Option<EntityId> = dto_in_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    // get dto_out from junction table
+                    let dto_out: Option<EntityId> = dto_out_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    use_case.entities = entities;
+                    use_case.dto_in = dto_in;
+                    use_case.dto_out = dto_out;
+                    Some(use_case)
+                } else {
+                    None
+                };
+                use_cases.push(use_case);
+            }
         }
+
         Ok(use_cases)
     }
 

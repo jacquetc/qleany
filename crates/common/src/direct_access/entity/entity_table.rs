@@ -139,38 +139,80 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             .transaction
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let entity = if let Some(guard) = entity_table.get(id)? {
-                let mut entity = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut entity_iter = entity_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, entity_data))) = entity_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut entity = entity_data.value().clone();
 
                 // get parent from junction table
                 let parent = parent_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 // get fields from junction table
                 let fields = field_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get relationships from junction table
                 let relationships = relationship_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 entity.parent = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
-                Some(entity)
-            } else {
-                None
-            };
-            entities.push(entity);
+                entities.push(Some(entity));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let entity = if let Some(guard) = entity_table.get(id)? {
+                    let mut entity = guard.value().clone();
+
+                    // get parent from junction table
+                    let parent = parent_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    // get fields from junction table
+                    let fields = field_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get relationships from junction table
+                    let relationships = relationship_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    entity.parent = parent;
+                    entity.fields = fields;
+                    entity.relationships = relationships;
+                    Some(entity)
+                } else {
+                    None
+                };
+                entities.push(entity);
+            }
         }
+
         Ok(entities)
     }
 
@@ -331,38 +373,80 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
             .transaction
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let entity = if let Some(guard) = entity_table.get(id)? {
-                let mut entity = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut entity_iter = entity_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, entity_data))) = entity_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut entity = entity_data.value().clone();
 
                 // get parent from junction table
                 let parent = parent_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop();
 
                 // get fields from junction table
                 let fields = field_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get relationships from junction table
                 let relationships = relationship_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 entity.parent = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
-                Some(entity)
-            } else {
-                None
-            };
-            entities.push(entity);
+                entities.push(Some(entity));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let entity = if let Some(guard) = entity_table.get(id)? {
+                    let mut entity = guard.value().clone();
+
+                    // get parent from junction table
+                    let parent = parent_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop();
+
+                    // get fields from junction table
+                    let fields = field_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get relationships from junction table
+                    let relationships = relationship_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    entity.parent = parent;
+                    entity.fields = fields;
+                    entity.relationships = relationships;
+                    Some(entity)
+                } else {
+                    None
+                };
+                entities.push(entity);
+            }
         }
+
         Ok(entities)
     }
 

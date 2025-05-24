@@ -6,7 +6,6 @@ use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRe
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::Manager;
-use tauri_plugin_log::Target;
 
 #[cfg(test)]
 mod tests {

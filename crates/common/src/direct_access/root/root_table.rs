@@ -160,13 +160,22 @@ impl<'a> RootTable for RootRedbTable<'a> {
             .transaction
             .open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let root = if let Some(guard) = root_table.get(id)? {
-                let mut root = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut root_iter = root_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, root_data))) = root_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut root = root_data.value().clone();
 
                 // get globals from junction table
                 let global: EntityId = global_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -174,25 +183,59 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
                 // get entities from junction table
                 let entities = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get features from junction table
                 let features = feature_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 root.global = global;
                 root.entities = entities;
                 root.features = features;
-                Some(root)
-            } else {
-                None
-            };
-            roots.push(root);
+                roots.push(Some(root));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let root = if let Some(guard) = root_table.get(id)? {
+                    let mut root = guard.value().clone();
+
+                    // get globals from junction table
+                    let global: EntityId = global_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("root has no global");
+
+                    // get entities from junction table
+                    let entities = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get features from junction table
+                    let features = feature_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    root.global = global;
+                    root.entities = entities;
+                    root.features = features;
+                    Some(root)
+                } else {
+                    None
+                };
+                roots.push(root);
+            }
         }
+
         Ok(roots)
     }
 
@@ -286,13 +329,22 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
             .transaction
             .open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
 
-        for id in ids {
-            let root = if let Some(guard) = root_table.get(id)? {
-                let mut root = guard.value().clone();
+        // If ids is empty, return all entities (up to 1000)
+        if ids.is_empty() {
+            let mut root_iter = root_table.iter()?;
+            let mut count = 0;
+
+            while let Some(Ok((id, root_data))) = root_iter.next() {
+                if count >= 1000 {
+                    break;
+                }
+
+                let id = id.value();
+                let mut root = root_data.value().clone();
 
                 // get globals from junction table
                 let global: EntityId = global_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -300,25 +352,59 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
 
                 // get entities from junction table
                 let entities = entity_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 // get features from junction table
                 let features = feature_junction_table
-                    .get(id)?
+                    .get(&id)?
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
                 root.global = global;
                 root.entities = entities;
                 root.features = features;
-                Some(root)
-            } else {
-                None
-            };
-            roots.push(root);
+                roots.push(Some(root));
+                count += 1;
+            }
+        } else {
+            // Original behavior for non-empty ids
+            for id in ids {
+                let root = if let Some(guard) = root_table.get(id)? {
+                    let mut root = guard.value().clone();
+
+                    // get globals from junction table
+                    let global: EntityId = global_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("root has no global");
+
+                    // get entities from junction table
+                    let entities = entity_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    // get features from junction table
+                    let features = feature_junction_table
+                        .get(id)?
+                        .map(|guard| guard.value().clone())
+                        .unwrap_or_default();
+
+                    root.global = global;
+                    root.entities = entities;
+                    root.features = features;
+                    Some(root)
+                } else {
+                    None
+                };
+                roots.push(root);
+            }
         }
+
         Ok(roots)
     }
 
