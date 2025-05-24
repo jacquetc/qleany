@@ -6,7 +6,45 @@ use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRe
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::Manager;
-use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::Target;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use common::types::EntityId;
+    use direct_access::root_controller;
+    use handling_manifest::{handling_manifest_controller, LoadDto};
+
+    #[test]
+    fn test_load_and_remove_manifest() {
+        // Create a new app context for testing
+        let db_context = DbContext::new().unwrap();
+        let event_hub = Arc::new(EventHub::new());
+        let atomic_bool = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        event_hub.start_event_loop(atomic_bool.clone());
+        let mut undo_redo_manager = UndoRedoManager::new();
+
+        // Load the manifest
+        let load_dto = LoadDto {
+            manifest_path: "../../../qleany.yaml".to_string(),
+        };
+        let result = handling_manifest_controller::load(&db_context, &event_hub, &load_dto);
+        assert!(
+            result.is_ok(),
+            "Failed to load manifest: {:?}",
+            result.err()
+        );
+
+        // Remove the root with ID 1 (assuming it's the first root created)
+        let root_id: EntityId = 1;
+        let result =
+            root_controller::remove(&db_context, &event_hub, &mut undo_redo_manager, &root_id);
+        assert!(result.is_ok(), "Failed to remove root: {:?}", result.err());
+
+        // Signal the event hub to stop
+        atomic_bool.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+}
 
 #[derive(Clone)]
 struct AppContext {
