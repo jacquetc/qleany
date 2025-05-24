@@ -1,25 +1,24 @@
-import {ReactNode} from 'react';
+import {ReactNode, useState} from 'react';
 import {EntityDto} from "../../controller/entity_controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
-import {error, info} from '@tauri-apps/plugin-log';
-import {RootRelationshipField, setRootRelationship} from "../../controller/root_controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
+import {useEntityListModel} from './EntityListModel.ts';
 
 interface EntityListProps {
-    entities: EntityDto[];
-    selectedEntity: number | null;
     onSelectEntity: (entityId: number) => void;
-    onCreateEntity: () => void;
-    onEntitiesReordered: () => void;
 }
 
 const EntityList = ({
-                        entities,
-                        selectedEntity,
                         onSelectEntity,
-                        onCreateEntity,
-                        onEntitiesReordered
                     }: EntityListProps) => {
+    const [selectedEntity, setSelectedEntity] = useState<number | null>(null);
+
+    // Use the entity list model
+    const {entities, createNewEntity, handleReorder} = useEntityListModel({
+        onEntitiesChanged: (__newEntities) => {
+            // If needed, you can perform additional actions when entities change
+        }
+    });
 
     // Create header component for ReorderableList
     const header = (
@@ -28,7 +27,7 @@ const EntityList = ({
             <ActionIcon
                 variant="filled"
                 aria-label="Add new entity"
-                onClick={onCreateEntity}
+                onClick={createNewEntity}
             >
                 +
             </ActionIcon>
@@ -45,28 +44,17 @@ const EntityList = ({
         </div>
     );
 
-    // Define onReorder function to handle reordering
-    const handleReorder = async (reorderedIds: number[]): Promise<void> => {
-        try {
-            // Update the root relationship with the new order
-            await setRootRelationship({
-                id: 1,
-                field: RootRelationshipField.Entities,
-                right_ids: reorderedIds,
-            });
-
-            info("Entity order updated successfully");
-            onEntitiesReordered();
-        } catch (err) {
-            error(`Failed to update entity order: ${err}`);
-        }
+    // Handle entity selection
+    const handleSelectEntity = (entityId: number) => {
+        setSelectedEntity(entityId);
+        onSelectEntity(entityId);
     };
 
     return (
         <ReorderableList
             items={entities}
             selectedItemId={selectedEntity}
-            onSelectItem={onSelectEntity}
+            onSelectItem={handleSelectEntity}
             onReorder={handleReorder}
             getItemId={(entity) => entity.id}
             renderItemContent={renderEntityContent}

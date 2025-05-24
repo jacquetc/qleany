@@ -1,14 +1,5 @@
-import {useEffect, useState} from 'react';
-import {createEntity, EntityDto, getEntityMulti} from "../controller/entity_controller";
+import {useState} from 'react';
 import {Divider, Flex, Stack} from '@mantine/core';
-import {listen} from '@tauri-apps/api/event';
-import {error, info} from '@tauri-apps/plugin-log';
-import {
-    getRootMulti,
-    getRootRelationship,
-    RootRelationshipField,
-    setRootRelationship
-} from "../controller/root_controller.ts";
 import EntityList from '../components/entities/EntityList.tsx';
 import EntityDetails from '../components/entities/EntityDetails.tsx';
 import FieldsList from '../components/entities/FieldsList.tsx';
@@ -16,83 +7,7 @@ import FieldDetails from '../components/entities/FieldDetails.tsx';
 
 const Entities = () => {
     const [selectedEntity, setSelectedEntity] = useState<number | null>(0);
-    const [entityData, setEntityData] = useState<EntityDto[]>([]);
     const [selectedField, setSelectedField] = useState<number | null>(0);
-    const [_, setRootId] = useState<number>(1);
-
-    // Function to get the root ID
-    async function getRootId() {
-        const roots = await getRootMulti([]);
-        if (roots.length > 0 && roots[0] !== null) {
-            setRootId(roots[0]!.id);
-            return roots[0]!.id;
-        }
-        return 1; // Fallback to default
-    }
-
-    async function createNewEntity() {
-        try {
-            // Create entity
-            const dto = {
-                name: 'New Entity',
-                only_for_heritage: false,
-                parent: null,
-                allow_direct_access: true,
-                fields: [],
-                relationships: [],
-            };
-
-            const newEntity = await createEntity(dto);
-
-            // Update root relationship
-            const currentRootId = await getRootId();
-            const rootEntities = await getRootRelationship(currentRootId, RootRelationshipField.Entities) || [];
-
-            await setRootRelationship({
-                id: currentRootId,
-                field: RootRelationshipField.Entities,
-                right_ids: [...rootEntities, newEntity.id],
-            });
-
-            // Update UI state
-            setEntityData(prevData => [...prevData, newEntity]);
-
-            // Optional: Select the newly created entity
-            setSelectedEntity(newEntity.id);
-
-            await info("Entity created successfully");
-        } catch (err) {
-            await error(`Failed to create entity: ${err}`);
-            // You could add user-facing error handling here
-            // e.g., setError("Failed to create entity")
-        }
-    }
-
-    // Function to fetch entity data from the backend
-    async function fetchEntityData() {
-        const currentRootId = await getRootId();
-        const entityIds = await getRootRelationship(currentRootId, RootRelationshipField.Entities);
-        const entities = await getEntityMulti(entityIds);
-        setEntityData(entities.filter((entity) => entity !== null) as EntityDto[]);
-    }
-
-    useEffect(() => {
-        fetchEntityData().catch((err => error(err)));
-
-        // mounting the event listeners
-        const unlisten_direct_access_entity_created = listen('direct_access_entity_created', (event) => {
-            const payload = event.payload as { ids: string[] };
-            info(`Entity created event received: ${payload.ids}`);
-
-            fetchEntityData().catch((err => error(err)));
-        });
-
-
-        return () => {
-            unlisten_direct_access_entity_created.then(f => f());
-        };
-
-    }, []);
 
 
     return (
@@ -102,11 +17,7 @@ const Entities = () => {
         }}>
             <Stack miw={300} style={{overflow: 'auto', height: '100%'}}>
                 <EntityList
-                    entities={entityData}
-                    selectedEntity={selectedEntity}
                     onSelectEntity={setSelectedEntity}
-                    onCreateEntity={createNewEntity}
-                    onEntitiesReordered={fetchEntityData}
                 />
             </Stack>
             <Divider orientation="vertical" mb={0} mt={0} ml={5} mr={5}
@@ -115,8 +26,6 @@ const Entities = () => {
             <Stack flex={1} style={{overflow: 'auto', height: '100%'}}>
                 <EntityDetails
                     selectedEntity={selectedEntity}
-                    entities={entityData}
-                    onEntityUpdated={fetchEntityData}
                 />
                 <FieldsList
                     selectedEntity={selectedEntity}
