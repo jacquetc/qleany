@@ -35,12 +35,18 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.5.0
         version: 2.5.0
+      '@tauri-apps/plugin-dialog':
+        specifier: ~2
+        version: 2.2.2
       '@tauri-apps/plugin-log':
         specifier: 2.2.1
         version: 2.2.1
       '@tauri-apps/plugin-opener':
         specifier: ^2.2.7
         version: 2.2.7
+      '@tauri-apps/plugin-process':
+        specifier: ~2
+        version: 2.2.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -762,11 +768,17 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
+  '@tauri-apps/plugin-dialog@2.2.2':
+    resolution: {integrity: sha512-Pm9qnXQq8ZVhAMFSEPwxvh+nWb2mk7LASVlNEHYaksHvcz8P6+ElR5U5dNL9Ofrm+uwhh1/gYKWswK8JJJAh6A==}
+
   '@tauri-apps/plugin-log@2.2.1':
     resolution: {integrity: sha512-bOz9w0hhlXLGLc1ZR37GqkXvTqkykl4A3GEKLjRIs0dq3n0BzLyoRDMPcpt7PdUHqaq6WISME+zEX2bqjSbJ2A==}
 
   '@tauri-apps/plugin-opener@2.2.7':
     resolution: {integrity: sha512-uduEyvOdjpPOEeDRrhwlCspG/f9EQalHumWBtLBnp3fRp++fKGLqDOyUhSIn7PzX45b/rKep//ZQSAQoIxobLA==}
+
+  '@tauri-apps/plugin-process@2.2.1':
+    resolution: {integrity: sha512-cF/k8J+YjjuowhNG1AboHNTlrGiOwgX5j6NzsX6WFf9FMzyZUchkCgZMxCdSE5NIgFX0vvOgLQhODFJgbMenLg==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2253,11 +2265,19 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.5.0
       '@tauri-apps/cli-win32-x64-msvc': 2.5.0
 
+  '@tauri-apps/plugin-dialog@2.2.2':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
   '@tauri-apps/plugin-log@2.2.1':
     dependencies:
       '@tauri-apps/api': 2.5.0
 
   '@tauri-apps/plugin-opener@2.2.7':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+
+  '@tauri-apps/plugin-process@2.2.1':
     dependencies:
       '@tauri-apps/api': 2.5.0
 

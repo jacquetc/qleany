@@ -47,6 +47,8 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             // root
             direct_access_commands::root_commands::get_root,
@@ -145,6 +147,7 @@ pub fn run() {
             direct_access_commands::dto_field_commands::remove_dto_field_multi,
             // handling manifest
             handling_manifest_commands::load_manifest,
+            //handling_manifest_commands::save_manifest,
         ])
         .on_window_event(|app, event| {
             let app_context = app.state::<Mutex<AppContext>>();

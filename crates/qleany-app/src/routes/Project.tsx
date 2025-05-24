@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Button, Select, Stack, TextInput, Title, Paper, Group } from '@mantine/core';
-import { error, info } from '@tauri-apps/plugin-log';
-import { CreateGlobalDTO, GlobalDto, createGlobal, getGlobal, updateGlobal } from '../controller/global_controller';
-import { getRootRelationship, RootRelationshipField } from '../controller/root_controller';
+import {useEffect, useState} from 'react';
+import {Button, Group, Paper, Select, Stack, TextInput, Title} from '@mantine/core';
+import {error, info} from '@tauri-apps/plugin-log';
+import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '../controller/global_controller';
+import {getRootRelationship, RootRelationshipField} from '../controller/root_controller';
 
 const Project = () => {
     const [globalId, setGlobalId] = useState<number | null>(null);
@@ -18,10 +18,10 @@ const Project = () => {
 
     // Language options
     const languageOptions = [
-        { value: 'Rust', label: 'Rust' },
-        { value: 'C++', label: 'C++' },
-        { value: 'C++ / Qt', label: 'C++ / Qt' },
-        { value: 'Python', label: 'Python' },
+        {value: 'Rust', label: 'Rust'},
+        {value: 'C++', label: 'C++'},
+        {value: 'C++ / Qt', label: 'C++ / Qt'},
+        {value: 'Python', label: 'Python'},
     ];
 
     // Fetch global data on component mount
@@ -94,7 +94,7 @@ const Project = () => {
 
             <Paper shadow="xs" p="md" withBorder>
                 <form onSubmit={handleSubmit}>
-                    <Stack spacing="md">
+                    <Stack gap="md">
                         <Select
                             label="Language"
                             placeholder="Select a language"
@@ -133,10 +133,10 @@ const Project = () => {
                             placeholder="Enter prefix path"
                             value={formData.prefix_path}
                             onChange={(e) => setFormData({...formData, prefix_path: e.target.value})}
-                            required
+
                         />
 
-                        <Group position="right" mt="md">
+                        <Group align="right" mt="md">
                             <Button type="submit" loading={loading}>
                                 {isEditing ? 'Update Settings' : 'Create Settings'}
                             </Button>

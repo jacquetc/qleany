@@ -31,3 +31,5 @@ common = { path = "../../common" }
 direct_access = { path = "../../direct_access" }
 handling_manifest = { path = "../../handling_manifest" }
 tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-process = "2"

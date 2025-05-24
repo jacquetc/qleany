@@ -8,6 +8,8 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "log:default"
+    "log:default",
+    "dialog:default",
+    "process:default"
   ]
 }
