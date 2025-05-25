@@ -1,13 +1,13 @@
 import {useEffect, useState} from 'react';
 import {listen} from "@tauri-apps/api/event";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createEntity, EntityDto, getEntityMulti} from "#controller/entity_controller.ts";
+import {createEntity, EntityDto, getEntityMulti} from "#controller/entity-controller.ts";
 import {
     getRootMulti,
     getRootRelationship,
     RootRelationshipField,
     setRootRelationship
-} from "#controller/root_controller.ts";
+} from "@/controller/root-controller.ts";
 
 export interface EntityListModelCallbacks {
     onEntitiesChanged: (entities: EntityDto[]) => void;

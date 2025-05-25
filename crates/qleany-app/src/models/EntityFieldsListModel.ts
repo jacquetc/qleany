@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
 import {listen} from "@tauri-apps/api/event";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createField, FieldDto, FieldType, getFieldMulti} from "#controller/field_controller.ts";
-import {EntityRelationshipField, getEntityRelationship, setEntityRelationship} from "#controller/entity_controller.ts";
+import {createField, FieldDto, FieldType, getFieldMulti} from "@/controller/field-controller.ts";
+import {EntityRelationshipField, getEntityRelationship, setEntityRelationship} from "@/controller/entity-controller.ts";
 
 export interface EntityFieldsListModelProps {
     entityId: number | null;
