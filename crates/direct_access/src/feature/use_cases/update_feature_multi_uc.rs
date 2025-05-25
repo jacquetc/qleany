@@ -35,14 +35,17 @@ impl UpdateFeatureMultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
+        // store in undo stack
+        let features = uow
+            .get_feature_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?
+            .iter()
+            .filter_map(|feature| feature.clone())
+            .collect();
+        self.undo_stack.push_back(features);
 
         let features =
             uow.update_feature_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
-
-        // store in undo stack
-        self.undo_stack.push_back(features.clone());
-        self.redo_stack.clear();
 
         Ok(features.into_iter().map(|feature| feature.into()).collect())
     }

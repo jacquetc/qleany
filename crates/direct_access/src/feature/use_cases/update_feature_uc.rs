@@ -31,13 +31,12 @@ impl UpdateFeatureUseCase {
         if uow.get_feature(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("Feature with id {} does not exist", dto.id));
         }
+        // store in undo stack
+        let feature = uow.get_feature(&dto.id)?.unwrap();
+        self.undo_stack.push_back(feature.clone());
 
         let feature = uow.update_feature(&dto.into())?;
         uow.commit()?;
-
-        // store in undo stack
-        self.undo_stack.push_back(feature.clone());
-        self.redo_stack.clear();
 
         Ok(feature.into())
     }
