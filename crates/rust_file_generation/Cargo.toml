@@ -1,0 +1,12 @@
+[package]
+name = "rust_file_generation"
+version.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

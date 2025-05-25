@@ -7,8 +7,10 @@ members = [
     "crates/handling_manifest",
     "crates/cpp_qt_file_listing",
     "crates/python_file_listing",
-    "crates/qleany-app/src-tauri"
-    , "crates/macros"]
+    "crates/rust_file_listing",
+    "crates/rust_file_generation",
+    "crates/qleany-app/src-tauri",
+    "crates/macros"]
 default-members = [
     "crates/qleany-app/src-tauri"
 ]

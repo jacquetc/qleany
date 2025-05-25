@@ -38,7 +38,7 @@ entities:
         ordered: false
         strong: true
         list_model: false
-        
+
   - name: Entity
     parent: EntityBase
     fields:
@@ -181,7 +181,7 @@ entities:
         type: string
 
 features:
-  - name: manifest_handling_listing 
+  - name: manifest_handling_listing
     use_cases:
       - name: load
         validator: true
@@ -196,7 +196,7 @@ features:
           - Relationship
           - Global
         undoable: false
-        dto_in: 
+        dto_in:
           name: LoadManifestDtoIn
           fields:
             - name: manifest_path
@@ -214,7 +214,7 @@ features:
           - Relationship
           - Global
         undoable: false
-        dto_in: 
+        dto_in:
           name: LoadManifestDtoIn
           fields:
             - name: manifest_path
@@ -227,7 +227,7 @@ features:
           - Root
           - Entity
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListDirectAccessFilesDtoIn
           fields:
             - name: already_existing
@@ -249,20 +249,19 @@ features:
           - Root
           - Entity
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListEntityFilesDtoIn
           fields:
             - name: existing
               type: bool
-            - name: manifest_path
-              type: string
+                      
         dto_out:
           name: ListEntityFilesDtoOut
           fields:
             - name: files
               type: string
               is_list: true
-        
+
       - name: list_feature_files
         validator: true
         entities:
@@ -271,14 +270,12 @@ features:
           - UseCase
           - Dto
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListFeatureFilesDtoIn
           fields:
             - name: existing
               type: bool
             - name: sub_group
-              type: string
-            - name: manifest_path
               type: string
         dto_out:
           name: ListFeatureFilesDtoOut
@@ -286,34 +283,30 @@ features:
             - name: files
               type: string
               is_list: true
- 
+
       - name: list_persistence_files
         validator: true
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListPersistenceFilesDtoIn
           fields:
             - name: existing
               type: bool
-            - name: manifest_path
-              type: string
         dto_out:
           name: ListPersistenceFilesDtoOut
           fields:
             - name: files
               type: string
               is_list: true
-      
+
       - name: list_common_base_files
         validator: true
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListCommonBaseFilesDtoIn
           fields:
             - name: existing
               type: bool
-            - name: manifest_path
-              type: string
         dto_out:
           name: ListCommonBaseFilesDtoOut
           fields:
@@ -324,30 +317,26 @@ features:
       - name: list_base_files
         validator: true
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListBaseFilesDtoIn
           fields:
             - name: existing
               type: bool
-            - name: manifest_path
-              type: string
         dto_out:
           name: ListBaseFilesDtoOut
           fields:
             - name: files
               type: string
               is_list: true
-      
+
       - name: list_ui_files
         validator: true
         undoable: false
-        dto_in: 
+        dto_in:
           name: ListUiFilesDtoIn
           fields:
             - name: existing
               type: bool
-            - name: manifest_path
-              type: string
         dto_out:
           name: ListUiFilesDtoOut
           fields:
