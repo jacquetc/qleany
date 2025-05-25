@@ -207,7 +207,7 @@ impl<'a> FieldRepository<'a> {
         for relationship in relationships {
             let (left_id, right_ids) = relationship;
             event_hub.send_event(Event {
-                origin: Origin::DirectAccess(DirectAccessEntity::Relationship(
+                origin: Origin::DirectAccess(DirectAccessEntity::Field(
                     EntityEvent::Updated,
                 )),
                 ids: vec![left_id],
@@ -235,7 +235,7 @@ impl<'a> FieldRepository<'a> {
     ) -> Result<(), Error> {
         self.redb_table.set_relationship(id, field, right_ids)?;
         event_hub.send_event(Event {
-            origin: Origin::DirectAccess(DirectAccessEntity::Relationship(EntityEvent::Updated)),
+            origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
             ids: vec![id.clone()],
             data: Some(format!(
                 "{}:{}",
