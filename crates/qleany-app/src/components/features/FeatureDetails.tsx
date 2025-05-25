@@ -1,56 +1,46 @@
 import {useEffect, useState} from 'react';
-import {FeatureDto, updateFeature} from "#controller/feature-controller.ts";
 import {Button, Stack, TextInput, Title} from '@mantine/core';
-import {error, info} from '@tauri-apps/plugin-log';
+import {useSingleFeatureModel} from "#models/SingleFeature.ts";
 
 interface FeatureDetailsProps {
     selectedFeature: number | null;
-    features: FeatureDto[];
-    onFeatureUpdated: () => void;
 }
 
-const FeatureDetails = ({selectedFeature, features, onFeatureUpdated}: FeatureDetailsProps) => {
+const FeatureDetails = ({selectedFeature}: FeatureDetailsProps) => {
+    const {feature, updateFeatureData} = useSingleFeatureModel({
+        featureId: selectedFeature
+    });
+
     const [formData, setFormData] = useState<{
         name: string;
     }>({
         name: '',
     });
 
-    // Update form data when selected feature changes
+    // Update form data when feature changes
     useEffect(() => {
-        if (selectedFeature) {
-            const featureData = features.find(feature => feature.id === selectedFeature);
-            if (featureData) {
-                setFormData({
-                    name: featureData.name,
-                });
-            }
+        if (feature) {
+            setFormData({
+                name: feature.name,
+            });
         }
-    }, [selectedFeature, features]);
+    }, [feature]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Find the selected feature in the data
-        const selectedFeatureData = features.find(feature => feature.id === selectedFeature);
-
-        if (selectedFeatureData) {
+        if (feature) {
             try {
                 // Update the feature with the form data
                 const updatedFeature = {
-                    ...selectedFeatureData,
+                    ...feature,
                     name: formData.name,
                 };
 
-                // Call the API to update the feature
-                await updateFeature(updatedFeature);
-
-                // Notify parent component to refresh data
-                onFeatureUpdated();
-
-                await info("Feature updated successfully");
+                // Call the model's update function
+                await updateFeatureData(updatedFeature);
             } catch (err) {
-                await error(`Failed to update feature: ${err}`);
+                // Error handling is done in the model
             }
         }
     };
