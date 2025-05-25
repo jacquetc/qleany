@@ -1,14 +1,14 @@
 use super::EntityUnitOfWorkFactoryTrait;
 use crate::EntityRelationshipDto;
 use anyhow::Result;
-use common::types::Savepoint;
+use common::types::{EntityId, Savepoint};
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
 use std::collections::VecDeque;
 
 pub struct SetEntityRelationshipUseCase {
     uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Savepoint>,
+    undo_stack: VecDeque<EntityRelationshipDto>,
     redo_stack: VecDeque<EntityRelationshipDto>,
 }
 
@@ -24,11 +24,18 @@ impl SetEntityRelationshipUseCase {
     pub fn execute(&mut self, dto: &EntityRelationshipDto) -> Result<()> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let savepoint = uow.create_savepoint()?;
+        // savepoint for undo
+        let saved_relationship_ids = uow.get_entity_relationship(&dto.id, &dto.field)?;
+        let undo_relationship = EntityRelationshipDto {
+            id: dto.id.clone(),
+            field: dto.field.clone(),
+            right_ids: saved_relationship_ids,
+        };
+        //
         uow.set_entity_relationship(&dto.id, &dto.field, dto.right_ids.as_slice())?;
         uow.commit()?;
         // store savepoint in undo stack
-        self.undo_stack.push_back(savepoint);
+        self.undo_stack.push_back(undo_relationship);
         self.redo_stack.push_back(dto.clone());
 
         Ok(())
@@ -37,28 +44,22 @@ impl SetEntityRelationshipUseCase {
 
 impl UndoRedoCommand for SetEntityRelationshipUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(savepoint) = self.undo_stack.pop_back() {
+        if let Some(undo_relationship) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.restore_to_savepoint(savepoint)?;
+            uow.set_entity_relationship(
+                &undo_relationship.id,
+                &undo_relationship.field,
+                &undo_relationship.right_ids,
+            )?;
             uow.commit()?;
         }
         anyhow::Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(EntityRelationshipDto {
-            id,
-            field,
-            right_ids,
-        }) = self.redo_stack.pop_back()
-        {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            let savepoint = uow.create_savepoint()?;
-            uow.set_entity_relationship(&id, &field, &right_ids)?;
-            uow.commit()?;
-            self.undo_stack.push_back(savepoint);
+        if let Some(dto) = self.redo_stack.pop_back() {
+            self.execute(&dto)?;
         }
         anyhow::Ok(())
     }

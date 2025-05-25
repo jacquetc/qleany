@@ -3,6 +3,8 @@ import {listen} from "@tauri-apps/api/event";
 import {error, info} from '@tauri-apps/plugin-log';
 import {createField, FieldDto, FieldType, getFieldMulti} from "@/controller/field-controller.ts";
 import {EntityRelationshipField, getEntityRelationship, setEntityRelationship} from "@/controller/entity-controller.ts";
+import {beginComposite, endComposite} from "#controller/undo-redo-controller.ts";
+import {useDebouncedCallback} from "@mantine/hooks";
 
 export interface EntityFieldsListModelProps {
     entityId: number | null;
@@ -49,7 +51,7 @@ export function useEntityFieldsListModel(
                 list_model: false,
                 list_model_displayed_field: null,
             };
-
+            await beginComposite()
             const newField = await createField(dto);
 
             if (!entityId) {
@@ -64,6 +66,7 @@ export function useEntityFieldsListModel(
                 field: EntityRelationshipField.Fields,
                 right_ids: [...entityFields, newField.id],
             });
+            await endComposite();
 
             // Update fields state
             const updatedFields = [...fields, newField];
@@ -101,6 +104,56 @@ export function useEntityFieldsListModel(
         }
     }
 
+    const entityUpdaterHandler = useDebouncedCallback(async (event) => {
+            const payload = event.payload as { ids: number[] };
+
+            if (!entityId) {
+                return;
+            }
+
+            if (!payload.ids.includes(entityId)) {
+                return; // Ignore updates for other entities
+            }
+
+            info(`Entity updated event received: ${payload.ids}`);
+            const updatedEntities = await getEntityRelationship(entityId, EntityRelationshipField.Fields);
+
+            // If the fields relationship has changed, fetch the updated fields
+            const fieldsIds = fields.map(field => field.id);
+
+            if (JSON.stringify(updatedEntities) !== JSON.stringify(fieldsIds)) {
+                info(`Fields relationship has changed for entity ${entityId}, fetching updated fields`);
+                await fetchFieldData().catch((err) => error(err));
+            } else {
+                info(`Fields relationship has not changed for entity ${entityId}`);
+            }
+        }
+        , 1000);
+
+    const fieldUpdaterHandler = useDebouncedCallback(async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Field updated event received: ${payload.ids}`);
+            const updatedFields = await getFieldMulti(payload.ids);
+
+            for (const updatedField of updatedFields) {
+
+                if (!updatedField) {
+                    info(`Field not found in the current state.`);
+                    continue;
+                }
+                const index = fields.findIndex((field) => field.id === updatedField.id);
+                if (index !== -1) {
+                    const updatedFieldsList = [...fields];
+                    updatedFieldsList[index] = updatedField;
+                    setFields(updatedFieldsList);
+                    onFieldsChanged(updatedFieldsList);
+                } else {
+                    info(`Field not found in the current state.`);
+                }
+            }
+        }
+        , 1000);
+
     // Setup event listeners
     useEffect(() => {
         fetchFieldData().catch((err) => error(err));
@@ -113,38 +166,39 @@ export function useEntityFieldsListModel(
             fetchFieldData().catch((err) => error(err));
         });
 
-        const unlisten_direct_access_field_updated = listen('direct_access_field_updated', async (event) => {
-                const payload = event.payload as { ids: number[] };
-                info(`Field updated event received: ${payload.ids}`);
-                const updatedFields = await getFieldMulti(payload.ids);
+        // Listen for field removal events
+        const unlisten_direct_access_field_removed = listen('direct_access_field_removed', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Field removed event received: ${payload.ids}`);
 
-                for (const updatedField of updatedFields) {
+            // Filter out the removed fields from the current state
+            const updatedFields = fields.filter(field => !payload.ids.includes(field.id));
+            setFields(updatedFields);
+            onFieldsChanged(updatedFields);
+        });
 
-                    if (!updatedField) {
-                        info(`Field not found in the current state.`);
-                        continue;
-                    }
-                    const index = fields.findIndex((field) => field.id === updatedField.id);
-                    if (index !== -1) {
-                        const updatedFieldsList = [...fields];
-                        updatedFieldsList[index] = updatedField;
-                        setFields(updatedFieldsList);
-                        onFieldsChanged(updatedFieldsList);
-                    } else {
-                        info(`Field not found in the current state.`);
-                    }
-                }
-            }
-        );
+        // Listen for field updates
+
+
+        const unlisten_direct_access_field_updated = listen('direct_access_field_updated', fieldUpdaterHandler);
+
+        // listen to any entity update event, filter to the current entity, check if the "fields" relationship has changed
+        // and update the fields state accordingly
+
+
+        const unlisten_direct_access_entity_updated = listen('direct_access_entity_updated', entityUpdaterHandler);
 
         const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
             info(`Direct access all reset event received`);
-            fetchFieldData().catch((err) => error(err));
+            fetchFieldData().then((dtos) => info(`Fields data reset successfully: ${JSON.stringify(dtos)}`)
+            ).catch((err) => error(err));
         });
 
         return () => {
             unlisten_direct_access_field_created.then(f => f());
+            unlisten_direct_access_field_removed.then(f => f());
             unlisten_direct_access_field_updated.then(f => f());
+            unlisten_direct_access_entity_updated.then(f => f());
             unlisten_direct_access_all_reset.then(f => f());
         };
     }, [fields, entityId]);
