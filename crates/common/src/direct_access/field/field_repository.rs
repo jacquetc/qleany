@@ -207,9 +207,7 @@ impl<'a> FieldRepository<'a> {
         for relationship in relationships {
             let (left_id, right_ids) = relationship;
             event_hub.send_event(Event {
-                origin: Origin::DirectAccess(DirectAccessEntity::Field(
-                    EntityEvent::Updated,
-                )),
+                origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
                 ids: vec![left_id],
                 data: Some(format!(
                     "{}:{}",
