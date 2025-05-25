@@ -1,7 +1,8 @@
 import {useEffect, useState} from 'react';
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
-import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "../../controller/dto_field_controller.ts";
+import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "#controller/dto_field_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
+import {listen} from '@tauri-apps/api/event';
 
 interface DtoFieldDetailsProps {
     selectedDtoField: number | null;
@@ -47,6 +48,16 @@ const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
             };
 
             fetchDtoFieldData();
+
+            // Listen for direct_access_all_reset event
+            const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+                info(`Direct access all reset event received in DtoFieldDetails`);
+                fetchDtoFieldData().catch((err => error(err)));
+            });
+
+            return () => {
+                unlisten_direct_access_all_reset.then(f => f());
+            };
         }
     }, [selectedDtoField]);
 

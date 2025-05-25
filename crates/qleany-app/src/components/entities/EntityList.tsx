@@ -1,8 +1,8 @@
 import {ReactNode, useState} from 'react';
-import {EntityDto} from "../../controller/entity_controller.ts";
+import {EntityDto} from "#controller/entity_controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
 import ReorderableList from '../ReorderableList.tsx';
-import {useEntityListModel} from './EntityListModel.ts';
+import {useEntityListModel} from './RootEntitiesListModel.ts';
 
 interface EntityListProps {
     onSelectEntity: (entityId: number) => void;

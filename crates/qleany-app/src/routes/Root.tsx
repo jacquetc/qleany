@@ -1,9 +1,9 @@
 import {Outlet} from "react-router";
-import NavBar from "../components/NavBar";
+import NavBar from "#components/NavBar";
 import {ActionIcon, AppShell, Burger, Group, Title} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {IconArrowBackUp, IconArrowForwardUp} from '@tabler/icons-react';
-import {canRedo, canUndo, redo, undo} from '../controller/undo_redo_controller';
+import {canRedo, canUndo, redo, undo} from '#controller/undo_redo_controller';
 import {useEffect, useState} from 'react';
 
 

@@ -1,15 +1,15 @@
 import {useEffect, useState} from 'react';
-import {EntityDto, updateEntity, updateEntityMulti} from "../../controller/entity_controller.ts";
+import {EntityDto, getEntity, getEntityMulti, updateEntity, updateEntityMulti} from "#controller/entity_controller.ts";
 import {Button, Checkbox, Modal, Select, Stack, Text, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
+import {listen} from "@tauri-apps/api/event";
 
 interface EntityDetailsProps {
     selectedEntity: number | null;
-    entities: EntityDto[];
-    onEntityUpdated: () => void;
 }
 
-const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetailsProps) => {
+const EntityDetails = ({selectedEntity}: EntityDetailsProps) => {
+
     const [formData, setFormData] = useState<{
         name: string;
         directAccess: boolean;
@@ -25,27 +25,84 @@ const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetail
     // State for confirmation modal
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [tempFormData, setTempFormData] = useState<typeof formData | null>(null);
+    const [entitiesWithHeritage, setEntitiesWithHeritage] = useState<EntityDto[]>([]);
 
     // Update form data when selected entity changes
     useEffect(() => {
         if (selectedEntity) {
-            const entityData = entities.find(entity => entity.id === selectedEntity);
-            if (entityData) {
-                setFormData({
-                    name: entityData.name,
-                    directAccess: entityData.allow_direct_access,
-                    parent: entityData.parent,
-                    only_for_heritage: entityData.only_for_heritage
-                });
+            async function fetchEntityData() {
+                try {
+                    if (!selectedEntity) {
+                        return;
+                    }
+                    const entityData = await getEntity(selectedEntity);
+                    if (entityData) {
+                        setFormData({
+                            name: entityData.name,
+                            directAccess: entityData.allow_direct_access,
+                            parent: entityData.parent,
+                            only_for_heritage: entityData.only_for_heritage
+                        });
+                        // Fetch entities with heritage
+                        const allEntities = await getEntityMulti([]);
+                        const entities = allEntities.filter(entity => entity !== null) as EntityDto[];
+                        const heritageEntities = entities.filter(entity => entity.only_for_heritage);
+                        setEntitiesWithHeritage(heritageEntities);
+                    }
+                } catch (err) {
+                    error(`Failed to fetch entity data: ${err}`);
+                }
             }
+
+            fetchEntityData().catch(err => error(err));
+
+            const unlisten_direct_access_entity_updated = listen('direct_access_entity_updated', async (event) => {
+                info(`Direct access entity updated event received in EntityDetails: ${event.payload}`);
+                // Refresh the entity data
+                await fetchEntityData();
+            });
+
+            const unlisten_direct_access_entity_removed = listen('direct_access_entity_removed', async (event) => {
+                const payload = event.payload as { id: number };
+                info(`Direct access entity removed event received in EntityDetails: ${payload.id}`);
+
+                // If the removed entity is the currently selected one, reset form data
+                if (selectedEntity === payload.id) {
+                    setFormData({
+                        name: '',
+                        directAccess: true,
+                        parent: null,
+                        only_for_heritage: false
+                    });
+                }
+
+                // Refresh the entity data
+                await fetchEntityData();
+            });
+
+            const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+                info(`Direct access all reset event received in EntityDetails`);
+                fetchEntityData().catch(err => error(err));
+            });
+
+            return () => {
+                unlisten_direct_access_entity_updated.then(f => f());
+                unlisten_direct_access_entity_removed.then(f => f());
+                unlisten_direct_access_all_reset.then(f => f());
+            };
+
+
         }
-    }, [selectedEntity, entities]);
+    }, [selectedEntity]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!selectedEntity) {
+            return;
+        }
         // Find the selected entity in the data
-        const selectedEntityData = entities.find(entity => entity.id === selectedEntity);
+        const selectedEntityData = await getEntity(selectedEntity);
 
         if (selectedEntityData) {
             try {
@@ -53,6 +110,8 @@ const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetail
                 // Check if the only_for_heritage field is being unchecked
                 if (formData.only_for_heritage && !tempFormData?.only_for_heritage) {
                     // update all entities that have this entity as a parent so that to remove the parent
+                    const allEntities = await getEntityMulti([]);
+                    const entities = allEntities.filter(entity => entity !== null) as EntityDto[];
                     const entitiesToUpdate = entities.filter(entity => entity.parent === selectedEntity);
                     const updatedEntities = entitiesToUpdate.map(entity => ({
                         ...entity,
@@ -74,7 +133,7 @@ const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetail
                 await updateEntity(updatedEntity);
 
                 // Notify parent component to refresh data
-                onEntityUpdated();
+                //onEntityUpdated();
 
                 info("Entity updated successfully");
             } catch (err) {
@@ -87,6 +146,7 @@ const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetail
         if (!selectedEntity) {
             return null;
         }
+
 
         return (
             <>
@@ -114,15 +174,12 @@ const EntityDetails = ({selectedEntity, entities, onEntityUpdated}: EntityDetail
                                 const parentValue = !value || value === '' ? null : parseInt(value, 10);
                                 setFormData({...formData, parent: parentValue});
                             }}
-                            data={[
-                                {value: '', label: 'None'},
-                                ...entities
-                                    .filter(entity => entity.only_for_heritage)
-                                    .map(entity => ({
-                                        value: entity.id.toString(),
-                                        label: entity.name
-                                    }))
-                            ]}
+                            data={
+                                entitiesWithHeritage.map(entity => ({
+                                    value: entity.id.toString(),
+                                    label: entity.name
+                                }))
+                            }
                         />
                         <Checkbox
                             id="heritage"

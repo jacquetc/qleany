@@ -1,8 +1,8 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {DtoRelationshipField, getDto, setDtoRelationship} from "../../controller/dto_controller.ts";
+import {DtoRelationshipField, getDto, setDtoRelationship} from "#controller/dto_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "../../controller/dto_field_controller.ts";
+import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "#controller/dto_field_controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
 import {listen} from '@tauri-apps/api/event';
 
@@ -91,9 +91,14 @@ const DtoFieldsList = ({
 
         });
 
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received in DtoFieldsList`);
+            fetchFieldData().catch((err => error(err)));
+        });
 
         return () => {
             unlisten_direct_access_dto_field_updated.then(f => f());
+            unlisten_direct_access_all_reset.then(f => f());
         };
 
     }, [fields]);

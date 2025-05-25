@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {FeatureDto, updateFeature} from "../../controller/feature_controller.ts";
+import {FeatureDto, updateFeature} from "#controller/feature_controller.ts";
 import {Button, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 

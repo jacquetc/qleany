@@ -5,12 +5,13 @@ import {
     updateUseCase,
     UseCaseDto,
     UseCaseRelationshipField
-} from "../../controller/use_case_controller.ts";
+} from "#controller/use_case_controller.ts";
 import {Button, Checkbox, Stack, Tabs, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "../../controller/entity_controller.ts";
+import {EntityDto, getEntityMulti} from "#controller/entity_controller.ts";
 import DtoSelector from './DtoSelector.tsx';
 import DtoDetails from './DtoDetails.tsx';
+import {listen} from '@tauri-apps/api/event';
 
 interface UseCaseDetailsProps {
     selectedUseCase: number | null;
@@ -79,7 +80,38 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
         };
 
         fetchEntities();
-    }, []);
+
+        // Listen for direct_access_all_reset event
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received in UseCaseDetails`);
+            if (selectedUseCase) {
+                const fetchUseCaseData = async () => {
+                    try {
+                        const data = await getUseCase(selectedUseCase);
+                        if (data) {
+                            setUseCaseData(data);
+                            setFormData({
+                                name: data.name,
+                                validator: data.validator,
+                                undoable: data.undoable,
+                                dto_in: data.dto_in,
+                                dto_out: data.dto_out,
+                            });
+                            setSelectedEntities(data.entities);
+                        }
+                    } catch (err) {
+                        error(`Failed to fetch use case data: ${err}`);
+                    }
+                };
+                fetchUseCaseData();
+            }
+            fetchEntities();
+        });
+
+        return () => {
+            unlisten_direct_access_all_reset.then(f => f());
+        };
+    }, [selectedUseCase]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

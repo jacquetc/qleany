@@ -1,9 +1,9 @@
 import {useState} from 'react';
 import {Divider, Flex, Stack} from '@mantine/core';
-import EntityList from '../components/entities/EntityList.tsx';
-import EntityDetails from '../components/entities/EntityDetails.tsx';
-import FieldsList from '../components/entities/FieldsList.tsx';
-import FieldDetails from '../components/entities/FieldDetails.tsx';
+import EntityList from '#components/entities/EntityList.tsx';
+import EntityDetails from '#components/entities/EntityDetails.tsx';
+import FieldsList from '#components/entities/FieldsList.tsx';
+import FieldDetails from '#components/entities/FieldDetails.tsx';
 
 const Entities = () => {
     const [selectedEntity, setSelectedEntity] = useState<number | null>(0);

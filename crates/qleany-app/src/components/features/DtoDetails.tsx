@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
 import {Button, Divider, Stack, TextInput, Title} from '@mantine/core';
-import {DtoDto, getDto, updateDto} from "../../controller/dto_controller.ts";
+import {DtoDto, getDto, updateDto} from "#controller/dto_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
 import DtoFieldsList from './DtoFieldsList.tsx';
 import DtoFieldDetails from './DtoFieldDetails.tsx';
+import {listen} from '@tauri-apps/api/event';
 
 interface DtoDetailsProps {
     selectedDto: number | null;
@@ -41,6 +42,16 @@ const DtoDetails = ({selectedDto}: DtoDetailsProps) => {
             };
 
             fetchDtoData();
+
+            // Listen for direct_access_all_reset event
+            const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+                info(`Direct access all reset event received in DtoDetails`);
+                fetchDtoData().catch((err => error(err)));
+            });
+
+            return () => {
+                unlisten_direct_access_all_reset.then(f => f());
+            };
         }
     }, [selectedDto]);
 

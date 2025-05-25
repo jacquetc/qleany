@@ -11,6 +11,9 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
+  "imports": {
+    "#*": "./src/*"
+  },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^8.0.1",

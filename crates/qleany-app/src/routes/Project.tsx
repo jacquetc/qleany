@@ -1,8 +1,9 @@
 import {useEffect, useState} from 'react';
 import {Button, Group, Paper, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '../controller/global_controller';
-import {getRootMulti, getRootRelationship, RootRelationshipField} from '../controller/root_controller';
+import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '#controller/global_controller';
+import {getRootMulti, getRootRelationship, RootRelationshipField} from '#controller/root_controller';
+import {listen} from "@tauri-apps/api/event";
 
 const Project = () => {
     const [globalId, setGlobalId] = useState<number | null>(null);
@@ -38,6 +39,23 @@ const Project = () => {
     // Fetch global data on component mount
     useEffect(() => {
         fetchGlobalData();
+
+
+        const unlisten_direct_access_global_update = listen('direct_access_global_updated', () => {
+
+            info(`Direct access global updated event received`);
+            fetchGlobalData().catch((err => error(err)));
+        });
+
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received`);
+            fetchGlobalData().catch((err => error(err)));
+        });
+
+        return () => {
+            unlisten_direct_access_global_update.then(f => f());
+            unlisten_direct_access_all_reset.then(f => f());
+        }
     }, []);
 
     const fetchGlobalData = async () => {
@@ -54,6 +72,7 @@ const Project = () => {
                 // Fetch the global data
                 const globalData = await getGlobal(id);
                 if (globalData) {
+                    info(`Global data fetched successfully : ${JSON.stringify(globalData)}`);
                     // Update form data with fetched data
                     setFormData({
                         language: globalData.language,

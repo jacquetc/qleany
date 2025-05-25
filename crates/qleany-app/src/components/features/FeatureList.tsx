@@ -1,8 +1,8 @@
 import {ReactNode} from 'react';
-import {FeatureDto} from "../../controller/feature_controller.ts";
+import {FeatureDto} from "#controller/feature_controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {RootRelationshipField, setRootRelationship} from "../../controller/root_controller.ts";
+import {RootRelationshipField, setRootRelationship} from "#controller/root_controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
 
 interface FeatureListProps {

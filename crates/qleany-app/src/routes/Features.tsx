@@ -1,14 +1,19 @@
-import "../components/DndListHandle.module.css"
+import "#components/DndListHandle.module.css"
 import {useEffect, useState} from 'react';
-import {createFeature, FeatureDto, getFeatureMulti} from "../controller/feature_controller";
+import {createFeature, FeatureDto, getFeatureMulti} from "#controller/feature_controller";
 import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
-import {getRootMulti, getRootRelationship, RootRelationshipField, setRootRelationship} from "../controller/root_controller.ts";
-import FeatureList from '../components/features/FeatureList.tsx';
-import FeatureDetails from '../components/features/FeatureDetails.tsx';
-import UseCaseList from '../components/features/UseCaseList.tsx';
-import UseCaseDetails from '../components/features/UseCaseDetails.tsx';
+import {
+    getRootMulti,
+    getRootRelationship,
+    RootRelationshipField,
+    setRootRelationship
+} from "#controller/root_controller.ts";
+import FeatureList from '#components/features/FeatureList.tsx';
+import FeatureDetails from '#components/features/FeatureDetails.tsx';
+import UseCaseList from '#components/features/UseCaseList.tsx';
+import UseCaseDetails from '#components/features/UseCaseDetails.tsx';
 
 const Features = () => {
     const [selectedFeature, setSelectedFeature] = useState<number | null>(0);
@@ -77,8 +82,14 @@ const Features = () => {
             fetchFeatureData().catch((err => error(err)));
         });
 
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received`);
+            fetchFeatureData().catch((err => error(err)));
+        });
+
         return () => {
             unlisten_feature_created.then(f => f());
+            unlisten_direct_access_all_reset.then(f => f());
         };
 
     }, []);

@@ -1,8 +1,8 @@
 import {memo, useEffect, useState} from 'react';
 import {Box, Paper, Stack, Text, Title} from '@mantine/core';
-import {getRootMulti, getRootRelationship, RootRelationshipField} from "../controller/root_controller";
-import {EntityDto, getEntityMulti} from "../controller/entity_controller";
-import {FieldDto, FieldType, getFieldMulti} from "../controller/field_controller";
+import {getRootMulti, getRootRelationship, RootRelationshipField} from "#controller/root_controller";
+import {EntityDto, getEntityMulti} from "#controller/entity_controller";
+import {FieldDto, FieldType, getFieldMulti} from "#controller/field_controller";
 import {error} from '@tauri-apps/plugin-log';
 import ReactFlow, {
     Background,

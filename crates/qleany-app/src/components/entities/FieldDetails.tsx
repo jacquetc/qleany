@@ -1,8 +1,9 @@
 import {useEffect, useState} from 'react';
-import {FieldDto, FieldType, getField, updateField} from "../../controller/field_controller.ts";
+import {FieldDto, FieldType, getField, updateField} from "#controller/field_controller.ts";
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "../../controller/entity_controller.ts";
+import {EntityDto, getEntityMulti} from "#controller/entity_controller.ts";
+import {listen} from '@tauri-apps/api/event';
 
 interface FieldDetailsProps {
     selectedField: number | null;
@@ -88,7 +89,43 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
         };
 
         fetchEntities();
-    }, []);
+
+        // Listen for direct_access_all_reset event
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received in FieldDetails`);
+            if (selectedField) {
+                const fetchFieldData = async () => {
+                    try {
+                        const data = await getField(selectedField);
+                        if (data) {
+                            setFieldData(data);
+                            setFormData({
+                                name: data.name,
+                                field_type: data.field_type,
+                                entity: data.entity,
+                                is_nullable: data.is_nullable,
+                                is_primary_key: data.is_primary_key,
+                                is_list: data.is_list,
+                                single: data.single,
+                                strong: data.strong,
+                                ordered: data.ordered,
+                                list_model: data.list_model,
+                                list_model_displayed_field: data.list_model_displayed_field,
+                            });
+                        }
+                    } catch (err) {
+                        error(`Failed to fetch field data: ${err}`);
+                    }
+                };
+                fetchFieldData();
+            }
+            fetchEntities();
+        });
+
+        return () => {
+            unlisten_direct_access_all_reset.then(f => f());
+        };
+    }, [selectedField]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

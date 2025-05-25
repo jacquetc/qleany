@@ -1,9 +1,9 @@
-import {loadManifest, LoadManifestDto} from "../controller/handling_manifest_controller.ts";
+import {loadManifest, LoadManifestDto} from "#controller/handling_manifest_controller.ts";
 import {Button, Group, Paper, Space, Stack, Text, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 import {open, save} from '@tauri-apps/plugin-dialog';
 import {exit} from '@tauri-apps/plugin-process';
-import {removeRoot} from "../controller/root_controller.ts";
+import {removeRoot} from "#controller/root_controller.ts";
 
 const Home = () => {
     async function handleNewManifest() {

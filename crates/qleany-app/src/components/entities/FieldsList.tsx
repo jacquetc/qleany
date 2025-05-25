@@ -5,11 +5,12 @@ import {
     getEntity,
     setEntityRelationship,
     updateEntity
-} from "../../controller/entity_controller.ts";
+} from "#controller/entity_controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createField, FieldDto, FieldType, getFieldMulti} from "../../controller/field_controller.ts";
+import {createField, FieldDto, FieldType, getFieldMulti} from "#controller/field_controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
 import {listen} from '@tauri-apps/api/event';
+import {beginComposite, endComposite} from "#controller/undo_redo_controller.ts";
 
 interface FieldsListProps {
     selectedEntity: number | null;
@@ -53,6 +54,8 @@ const FieldsList = ({
                 list_model_displayed_field: null,
             };
 
+            await beginComposite();
+
             const newField = await createField(dto);
 
             // Update entity with the new field
@@ -64,8 +67,7 @@ const FieldsList = ({
 
             await updateEntity(updatedEntity);
 
-            // Refresh data
-            await fetchFieldData();
+            await endComposite();
 
             // Select the newly created field
             setSelectedField(newField.id);
@@ -89,7 +91,6 @@ const FieldsList = ({
                     info(`Use case not found in the current state.`);
                     continue;
                 }
-
                 const index = fields.findIndex((field) => field.id === updatedField.id);
                 if (index !== -1) {
                     const updatedFieldsList = [...fields];
@@ -103,9 +104,36 @@ const FieldsList = ({
 
         });
 
+        const unlisten_direct_access_field_removed = listen('direct_access_field_removed', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Field removed event received: ${payload.ids}`);
+            const updatedFields = fields.filter((field) => !payload.ids.includes(field.id));
+            setFields(updatedFields);
+
+            // If the selected field was removed, clear the selection
+            if (selectedField && payload.ids.includes(selectedField)) {
+                setSelectedField(null);
+                onSelectField(null);
+            }
+        });
+
+        const unlisten_direct_access_field_created = listen('direct_access_field_created', async (event) => {
+            const payload = event.payload as { ids: number[] };
+            info(`Field created event received: ${payload.ids}`);
+            const newFields = await getFieldMulti(payload.ids);
+            setFields(prevFields => [...prevFields, ...newFields.filter((field): field is FieldDto => field !== null)]);
+        });
+
+        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
+            info(`Direct access all reset event received in FieldsList`);
+            fetchFieldData().catch((err => error(err)));
+        });
 
         return () => {
             unlisten_direct_access_field_updated.then(f => f());
+            unlisten_direct_access_field_removed.then(f => f());
+            unlisten_direct_access_field_created.then(f => f());
+            unlisten_direct_access_all_reset.then(f => f());
         };
 
     }, [fields]);
