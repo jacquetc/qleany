@@ -1,25 +1,25 @@
-import {ReactNode} from 'react';
+import {ReactNode, useState} from 'react';
 import {FeatureDto} from "#controller/feature-controller.ts";
 import {ActionIcon, Group, Title} from '@mantine/core';
-import {error, info} from '@tauri-apps/plugin-log';
-import {RootRelationshipField, setRootRelationship} from "#controller/root-controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
+import {useFeatureListModel} from "#models/RootFeaturesListModel.ts";
 
 interface FeatureListProps {
-    features: FeatureDto[];
-    selectedFeature: number | null;
     onSelectFeature: (featureId: number) => void;
-    onCreateFeature: () => void;
-    onFeaturesReordered: () => void;
 }
 
 const FeatureList = ({
-                         features,
-                         selectedFeature,
-                         onSelectFeature,
-                         onCreateFeature,
-                         onFeaturesReordered
+                         onSelectFeature
                      }: FeatureListProps) => {
+    const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
+
+    // Use the entity list model
+    const {features, createNewFeature, handleReorder} = useFeatureListModel({
+        onFeaturesChanged: (__newFeatures) => {
+            // If needed, you can perform additional actions when entities change
+        }
+
+    });
 
     // Create header component for ReorderableList
     const header = (
@@ -28,7 +28,7 @@ const FeatureList = ({
             <ActionIcon
                 variant="filled"
                 aria-label="Add new feature"
-                onClick={onCreateFeature}
+                onClick={createNewFeature}
             >
                 +
             </ActionIcon>
@@ -45,28 +45,17 @@ const FeatureList = ({
         </div>
     );
 
-    // Define onReorder function to handle reordering
-    const handleReorder = async (reorderedIds: number[]): Promise<void> => {
-        try {
-            // Update the root relationship with the new order
-            await setRootRelationship({
-                id: 1,
-                field: RootRelationshipField.Features,
-                right_ids: reorderedIds,
-            });
-
-            info("Feature order updated successfully");
-            onFeaturesReordered();
-        } catch (err) {
-            error(`Failed to update feature order: ${err}`);
-        }
+    // Handle entity selection
+    const handleSelectFeature = (featureId: number) => {
+        setSelectedFeature(featureId);
+        onSelectFeature(featureId);
     };
 
     return (
         <ReorderableList
             items={features}
             selectedItemId={selectedFeature}
-            onSelectItem={onSelectFeature}
+            onSelectItem={handleSelectFeature}
             onReorder={handleReorder}
             getItemId={(feature) => feature.id}
             renderItemContent={renderFeatureContent}
