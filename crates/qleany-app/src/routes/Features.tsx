@@ -1,6 +1,6 @@
 import "#components/DndListHandle.module.css"
 import {useEffect, useState} from 'react';
-import {createFeature, FeatureDto, getFeatureMulti} from "#controller/feature_controller.ts";
+import {createFeature, FeatureDto, getFeatureMulti} from "#controller/feature-controller.ts";
 import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';
@@ -9,7 +9,7 @@ import {
     getRootRelationship,
     RootRelationshipField,
     setRootRelationship
-} from "#controller/root_controller.ts";
+} from "#controller/root-controller.ts";
 import FeatureList from '#components/features/FeatureList.tsx';
 import FeatureDetails from '#components/features/FeatureDetails.tsx';
 import UseCaseList from '#components/features/UseCaseList.tsx';
@@ -19,7 +19,7 @@ const Features = () => {
     const [selectedFeature, setSelectedFeature] = useState<number | null>(0);
     const [featureData, setFeatureData] = useState<FeatureDto[]>([]);
     const [selectedUseCase, setSelectedUseCase] = useState<number | null>(0);
-    const [rootId, setRootId] = useState<number>(1);
+    const [__rootId, setRootId] = useState<number>(1);
 
     // Function to get the root ID
     async function getRootId() {

@@ -5,9 +5,9 @@ import {
     getFeature,
     setFeatureRelationship,
     updateFeature
-} from "#controller/feature_controller.ts";
+} from "#controller/feature-controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createUseCase, getUseCaseMulti, UseCaseDto} from "#controller/use_case_controller.ts";
+import {createUseCase, getUseCaseMulti, UseCaseDto} from "#controller/use-case-controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
 import {listen} from '@tauri-apps/api/event';
 

@@ -3,7 +3,7 @@ import NavBar from "#components/NavBar.tsx";
 import {ActionIcon, AppShell, Burger, Group, Title} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {IconArrowBackUp, IconArrowForwardUp} from '@tabler/icons-react';
-import {canRedo, canUndo, redo, undo} from '#controller/undo_redo_controller.ts';
+import {canRedo, canUndo, redo, undo} from '#controller/undo-redo-controller.ts';
 import {useEffect, useState} from 'react';
 
 

@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
 import {Button, Group, Paper, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '#controller/global_controller.ts';
-import {getRootMulti, getRootRelationship, RootRelationshipField} from '#controller/root_controller.ts';
+import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '#controller/global-controller.ts';
+import {getRootMulti, getRootRelationship, RootRelationshipField} from '#controller/root-controller.ts';
 import {listen} from "@tauri-apps/api/event";
 
 const Project = () => {
@@ -16,7 +16,7 @@ const Project = () => {
     });
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [rootId, setRootId] = useState<number>(1);
+    const [__rootId, setRootId] = useState<number>(1);
 
     // Function to get the root ID
     async function getRootId() {

@@ -1,8 +1,8 @@
 import {ReactNode, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {FieldDto} from "#controller/field_controller.ts";
+import {FieldDto} from "#controller/field-controller.ts";
 import ReorderableList from '../ReorderableList.tsx';
-import {useEntityFieldsListModel} from "#components/entities/EntityFieldsListModel.ts";
+import {useEntityFieldsListModel} from "#models/EntityFieldsListModel.ts";
 
 interface FieldsListProps {
     selectedEntity: number | null;

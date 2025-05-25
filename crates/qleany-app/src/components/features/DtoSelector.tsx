@@ -1,9 +1,9 @@
 import {useEffect, useState} from 'react';
 import {ActionIcon, Button, Group, Modal, Popover, Stack, Text, TextInput} from '@mantine/core';
 import {IconCheck, IconX} from '@tabler/icons-react';
-import {createDto, DtoDto, getDtoMulti} from "#controller/dto_controller.ts";
+import {createDto, DtoDto, getDtoMulti} from "#controller/dto-controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {getUseCaseRelationship, UseCaseRelationshipField} from "#controller/use_case_controller.ts";
+import {getUseCaseRelationship, UseCaseRelationshipField} from "#controller/use-case-controller.ts";
 import {listen} from '@tauri-apps/api/event';
 
 interface DtoSelectorProps {

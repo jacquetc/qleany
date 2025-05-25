@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
-import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "#controller/dto_field_controller.ts";
+import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "#controller/dto-field-controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
 import {listen} from '@tauri-apps/api/event';
 

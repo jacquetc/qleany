@@ -1,8 +1,8 @@
 import {memo, useEffect, useState} from 'react';
 import {Box, Paper, Stack, Text, Title} from '@mantine/core';
-import {getRootMulti, getRootRelationship, RootRelationshipField} from "#controller/root_controller";
-import {EntityDto, getEntityMulti} from "#controller/entity_controller";
-import {FieldDto, FieldType, getFieldMulti} from "#controller/field_controller";
+import {getRootMulti, getRootRelationship, RootRelationshipField} from "#controller/root-controller.ts";
+import {EntityDto, getEntityMulti} from "#controller/entity-controller.ts";
+import {FieldDto, FieldType, getFieldMulti} from "#controller/field-controller.ts";
 import {error} from '@tauri-apps/plugin-log';
 import ReactFlow, {
     Background,
@@ -97,7 +97,7 @@ const EntityMapFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [loading, setLoading] = useState(false);
-    const [rootId, setRootId] = useState<number>(1);
+    const [__rootId, setRootId] = useState<number>(1);
 
     // Function to get the root ID
     async function getRootId() {

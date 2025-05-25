@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
-import {FieldDto, FieldType, getField, updateField} from "#controller/field_controller.ts";
+import {FieldDto, FieldType, getField, updateField} from "#controller/field-controller.ts";
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "#controller/entity_controller.ts";
+import {EntityDto, getEntityMulti} from "#controller/entity-controller.ts";
 import {listen} from '@tauri-apps/api/event';
 
 interface FieldDetailsProps {
