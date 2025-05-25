@@ -58,6 +58,9 @@ impl CommandUnitOfWork for DtoUnitOfWork {
             data: None,
         });
 
+        // Recreate the transaction after restoring to savepoint
+        self.transaction = Some(transaction);
+
         Ok(())
     }
 }

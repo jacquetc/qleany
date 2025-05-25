@@ -35,7 +35,9 @@ impl CommandUnitOfWork for EntityUnitOfWork {
     }
 
     fn commit(&mut self) -> Result<()> {
-        self.transaction.take().unwrap().commit()?;
+        let transaction = self.transaction.take();
+        let mut transaction = transaction.unwrap();
+        transaction.commit()?;
         Ok(())
     }
 
@@ -57,6 +59,9 @@ impl CommandUnitOfWork for EntityUnitOfWork {
             ids: vec![],
             data: None,
         });
+
+        // Recreate the transaction after restoring to savepoint
+        self.transaction = Some(transaction);
 
         Ok(())
     }

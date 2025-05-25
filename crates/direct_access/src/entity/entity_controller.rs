@@ -377,4 +377,56 @@ mod tests {
         let result = set_relationship(&db_context, &event_hub, undo_redo_manager, &dto);
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_remove_entity_uc_with_undo_redo() {
+        // Setup: Create a new database context and event hub
+        let db_context = DbContext::new().unwrap();
+        let event_hub = Arc::new(EventHub::new());
+        let mut undo_redo_manager = UndoRedoManager::new();
+
+        // Step 1: Create an entity
+        let entity = CreateEntityDto {
+            name: "test entity".to_string(),
+            ..Default::default()
+        };
+        let create_result = create(&db_context, &event_hub, &mut undo_redo_manager, &entity);
+        assert!(create_result.is_ok());
+        let created_entity = create_result.unwrap();
+        let entity_id = created_entity.id;
+
+        // Verify entity exists
+        let get_result = get(&db_context, &entity_id);
+        assert!(get_result.is_ok());
+        assert!(get_result.unwrap().is_some());
+
+        // Step 2: Remove the entity
+        let remove_result = remove(&db_context, &event_hub, &mut undo_redo_manager, &entity_id);
+        assert!(remove_result.is_ok());
+
+        // Verify entity is removed
+        let get_result = get(&db_context, &entity_id);
+        assert!(get_result.is_ok() && get_result.unwrap().is_none());
+
+        // Step 3: Undo the removal
+        let undo_result = undo_redo_manager.undo();
+        assert!(undo_result.is_ok());
+
+        // Verify entity exists again after undo
+        let get_result = get(&db_context, &entity_id);
+        assert!(get_result.is_ok());
+        let entity_option = get_result.unwrap();
+        assert!(entity_option.is_some());
+        let entity = entity_option.unwrap();
+        assert_eq!(entity.id, entity_id);
+        assert_eq!(entity.name, "test entity");
+
+        // Step 4: Redo the removal
+        let redo_result = undo_redo_manager.redo();
+        assert!(redo_result.is_ok());
+
+        // Verify entity is removed again after redo
+        let get_result = get(&db_context, &entity_id);
+        assert!(get_result.is_ok() && get_result.unwrap().is_none());
+    }
 }

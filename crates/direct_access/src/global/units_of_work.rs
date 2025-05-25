@@ -58,6 +58,9 @@ impl CommandUnitOfWork for GlobalUnitOfWork {
             data: None,
         });
 
+        // Recreate the transaction after restoring to savepoint
+        self.transaction = Some(transaction);
+
         Ok(())
     }
 }

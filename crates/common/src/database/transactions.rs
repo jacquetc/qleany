@@ -84,17 +84,15 @@ impl Transaction {
         match &mut self.transaction {
             TransactionType::Read(_) => panic!("Transaction is not a write transaction"),
             TransactionType::Write(transaction_option) => {
-                let redb_savepoint = transaction_option
-                    .as_ref()
-                    .unwrap()
-                    .get_persistent_savepoint(savepoint)?;
-                transaction_option
-                    .as_mut()
-                    .take()
-                    .unwrap()
-                    .restore_savepoint(&redb_savepoint)
+                if let Some(mut transaction) = transaction_option.take() {
+                    let redb_savepoint = transaction.get_persistent_savepoint(savepoint)?;
+                    transaction.restore_savepoint(&redb_savepoint)?;
+                    *transaction_option = Some(transaction);
+                    Ok(())
+                } else {
+                    panic!("Transaction is not available")
+                }
             }
-        }?;
-        Ok(())
+        }
     }
 }

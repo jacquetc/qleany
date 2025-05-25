@@ -9,7 +9,7 @@ license.workspace = true
 [dependencies]
 thiserror = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
-redb = { workspace = true }
+redb = "2.6.0"
 bincode = { version = "1" }
 anyhow = { workspace = true }
 flume = { workspace = true }

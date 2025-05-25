@@ -32,12 +32,12 @@ impl UpdateEntityUseCase {
             return Err(anyhow::anyhow!("Entity with id {} does not exist", dto.id));
         }
 
+        // store in undo stack
+        let entity = uow.get_entity(&dto.id)?.unwrap();
+        self.undo_stack.push_back(entity.clone());
+
         let entity = uow.update_entity(&dto.into())?;
         uow.commit()?;
-
-        // store in undo stack
-        self.undo_stack.push_back(entity.clone());
-        self.redo_stack.clear();
 
         Ok(entity.into())
     }
