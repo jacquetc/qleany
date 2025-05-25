@@ -1,6 +1,6 @@
 import "#components/DndListHandle.module.css"
 import {useEffect, useState} from 'react';
-import {createFeature, FeatureDto, getFeatureMulti} from "#controller/feature_controller";
+import {createFeature, FeatureDto, getFeatureMulti} from "#controller/feature_controller.ts";
 import {Divider, Flex, Stack} from '@mantine/core';
 import {listen} from '@tauri-apps/api/event';
 import {error, info} from '@tauri-apps/plugin-log';

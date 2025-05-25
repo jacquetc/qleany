@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
 import {Button, Group, Paper, Select, Stack, TextInput, Title} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '#controller/global_controller';
-import {getRootMulti, getRootRelationship, RootRelationshipField} from '#controller/root_controller';
+import {createGlobal, CreateGlobalDTO, getGlobal, GlobalDto, updateGlobal} from '#controller/global_controller.ts';
+import {getRootMulti, getRootRelationship, RootRelationshipField} from '#controller/root_controller.ts';
 import {listen} from "@tauri-apps/api/event";
 
 const Project = () => {
