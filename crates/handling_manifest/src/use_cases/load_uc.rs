@@ -104,6 +104,7 @@ impl LoadUseCase {
             global: global_id,
             entities: vec![],
             features: vec![],
+            files: vec![],
         })?;
         let root_id = root.id;
 
@@ -317,6 +318,7 @@ impl LoadUseCase {
             global: global_id,
             entities: entity_ids,
             features: feature_ids,
+            files: vec![],
         };
         uow.update_root(&root)?;
 
