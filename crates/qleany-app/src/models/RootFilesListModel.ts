@@ -9,15 +9,18 @@ import {useDebouncedCallback} from "@mantine/hooks";
 export interface RootFilesListModelProps {
     rootId: number | null;
     onFilesChanged: (files: FileDto[]) => void;
+    groupFilter?: string;
 }
 
 export function useRootFilesListModel(
     {
         rootId,
-        onFilesChanged
+        onFilesChanged,
+        groupFilter
     }
     : RootFilesListModelProps) {
     const [files, setFiles] = useState<FileDto[]>([]);
+    const [currentGroupFilter, setCurrentGroupFilter] = useState<string | undefined>(groupFilter);
 
     // Function to fetch file data from the backend
     async function fetchFileData() {
@@ -27,7 +30,12 @@ export function useRootFilesListModel(
         }
         const fileIds = await getRootRelationship(rootId, RootRelationshipField.Files);
         const files = await getFileMulti(fileIds);
-        const filteredFiles = files.filter((file) => file !== null) as FileDto[];
+        let filteredFiles = files.filter((file) => file !== null) as FileDto[];
+
+        // Apply group filter if it exists
+        if (currentGroupFilter) {
+            filteredFiles = filteredFiles.filter(file => file.group === currentGroupFilter);
+        }
 
         setFiles(filteredFiles);
         onFilesChanged(filteredFiles);
@@ -192,12 +200,14 @@ export function useRootFilesListModel(
             unlisten_direct_access_root_updated.then(f => f());
             unlisten_direct_access_all_reset.then(f => f());
         };
-    }, [files, rootId]);
+    }, [files, rootId, currentGroupFilter]);
 
     return {
         files,
         createNewFile,
         handleReorder,
-        fetchFileData
+        fetchFileData,
+        currentGroupFilter,
+        setGroupFilter: setCurrentGroupFilter
     };
 }
