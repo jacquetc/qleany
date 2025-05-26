@@ -1,5 +1,7 @@
 pub mod write {
 
+    use crate::direct_access::file::file_repository::FileRepository;
+    use crate::direct_access::file::file_table::FileRedbTable;
     use crate::{
         database::transactions::Transaction,
         direct_access::{
@@ -64,9 +66,16 @@ pub mod write {
         let table = RelationshipRedbTable::new(transaction.get_write_transaction());
         RelationshipRepository::new(Box::new(table), transaction)
     }
+
+    pub fn create_file_repository(transaction: &Transaction) -> FileRepository {
+        let table = FileRedbTable::new(transaction.get_write_transaction());
+        FileRepository::new(Box::new(table), transaction)
+    }
 }
 
 pub mod read {
+    use crate::direct_access::file::file_repository::FileRepositoryRO;
+    use crate::direct_access::file::file_table::FileRedbTableRO;
     use crate::{
         database::transactions::Transaction,
         direct_access::{
@@ -132,5 +141,10 @@ pub mod read {
     pub fn create_relationship_repository(transaction: &Transaction) -> RelationshipRepositoryRO {
         let table = RelationshipRedbTableRO::new(transaction.get_read_transaction());
         RelationshipRepositoryRO::new(Box::new(table))
+    }
+
+    pub fn create_file_repository(transaction: &Transaction) -> FileRepositoryRO {
+        let table = FileRedbTableRO::new(transaction.get_read_transaction());
+        FileRepositoryRO::new(Box::new(table))
     }
 }

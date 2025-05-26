@@ -183,6 +183,15 @@ pub fn run() {
             direct_access_commands::dto_field_commands::update_dto_field_multi,
             direct_access_commands::dto_field_commands::remove_dto_field,
             direct_access_commands::dto_field_commands::remove_dto_field_multi,
+            // file
+            direct_access_commands::file_commands::get_file,
+            direct_access_commands::file_commands::get_file_multi,
+            direct_access_commands::file_commands::create_file,
+            direct_access_commands::file_commands::create_file_multi,
+            direct_access_commands::file_commands::update_file,
+            direct_access_commands::file_commands::update_file_multi,
+            direct_access_commands::file_commands::remove_file,
+            direct_access_commands::file_commands::remove_file_multi,
             // handling manifest
             handling_manifest_commands::load_manifest,
             //handling_manifest_commands::save_manifest,

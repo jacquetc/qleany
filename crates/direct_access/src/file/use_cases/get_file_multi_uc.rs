@@ -1,0 +1,25 @@
+use super::FileUnitOfWorkROFactoryTrait;
+use crate::file::dtos::FileDto;
+use anyhow::Result;
+use common::types::EntityId;
+
+pub struct GetFileMultiUseCase {
+    uow_factory: Box<dyn FileUnitOfWorkROFactoryTrait>,
+}
+
+impl GetFileMultiUseCase {
+    pub fn new(uow_factory: Box<dyn FileUnitOfWorkROFactoryTrait>) -> Self {
+        GetFileMultiUseCase { uow_factory }
+    }
+
+    pub fn execute(&self, ids: &[EntityId]) -> Result<Vec<Option<FileDto>>> {
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let files = uow.get_file_multi(ids)?;
+        uow.end_transaction()?;
+        Ok(files
+            .into_iter()
+            .map(|file| file.map(|r| r.into()))
+            .collect())
+    }
+}

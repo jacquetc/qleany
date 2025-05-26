@@ -9,6 +9,7 @@ pub struct RootDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub files: Vec<EntityId>,
 }
 
 impl From<RootDto> for Root {
@@ -18,6 +19,7 @@ impl From<RootDto> for Root {
             global: root_dto.global,
             entities: root_dto.entities,
             features: root_dto.features,
+            files: root_dto.files,
         }
     }
 }
@@ -29,6 +31,7 @@ impl From<&RootDto> for Root {
             global: root_dto.global,
             entities: root_dto.entities.clone(),
             features: root_dto.features.clone(),
+            files: root_dto.files.clone(),
         }
     }
 }
@@ -40,6 +43,7 @@ impl From<Root> for RootDto {
             global: root.global,
             entities: root.entities,
             features: root.features,
+            files: root.files,
         }
     }
 }
@@ -49,6 +53,7 @@ pub struct CreateRootDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub files: Vec<EntityId>,
 }
 
 impl From<CreateRootDto> for Root {
@@ -58,6 +63,7 @@ impl From<CreateRootDto> for Root {
             global: create_root_dto.global,
             entities: create_root_dto.entities,
             features: create_root_dto.features,
+            files: create_root_dto.files,
         }
     }
 }
@@ -69,6 +75,7 @@ impl From<&CreateRootDto> for Root {
             global: create_root_dto.global,
             entities: create_root_dto.entities.clone(),
             features: create_root_dto.features.clone(),
+            files: create_root_dto.files.clone(),
         }
     }
 }
@@ -79,6 +86,7 @@ impl From<Root> for CreateRootDto {
             global: root.global,
             entities: root.entities,
             features: root.features,
+            files: root.files,
         }
     }
 }

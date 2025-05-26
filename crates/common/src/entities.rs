@@ -8,6 +8,7 @@ pub struct Root {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub files: Vec<EntityId>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -26,6 +27,13 @@ pub struct Feature {
     pub id: EntityId,
     pub name: String,
     pub use_cases: Vec<EntityId>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct File {
+    pub id: EntityId,
+    pub name: String,
+    pub group: Group,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -189,5 +197,23 @@ pub enum Order {
 impl Default for Order {
     fn default() -> Self {
         Ordered
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum Group {
+    Base,
+    Common,
+    CommonBase,
+    Presenter,
+    Feature,
+    Entity,
+    Persistence,
+    Ui,
+}
+
+impl Default for Group {
+    fn default() -> Self {
+        Group::Base
     }
 }

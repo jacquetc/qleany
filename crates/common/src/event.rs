@@ -10,6 +10,14 @@ use std::{
 pub enum HandlingManifestEvent {
     Loaded,
 }
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum RustFileGenerationEvent {
+    ListFiles,
+    ListCommonFiles,
+    ListCommonBaseFiles,
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum EntityEvent {
     Created,
@@ -26,6 +34,7 @@ pub enum AllEvent {
 pub enum Origin {
     DirectAccess(DirectAccessEntity),
     HandlingManifest(HandlingManifestEvent),
+    RustFileGeneration(RustFileGenerationEvent),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -40,6 +49,7 @@ pub enum DirectAccessEntity {
     Relationship(EntityEvent),
     Dto(EntityEvent),
     Global(EntityEvent),
+    File(EntityEvent),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -73,8 +83,10 @@ impl Event {
                 }
                 DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
                 DirectAccessEntity::Global(event) => format!("direct_access_global_{:?}", event),
+                DirectAccessEntity::File(event) => format!("direct_access_file_{:?}", event),
             },
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
+            Origin::RustFileGeneration(event) => format!("rust_file_listing_{:?}", event),
         }
         .to_lowercase()
     }

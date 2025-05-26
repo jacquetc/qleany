@@ -99,6 +99,14 @@ entities:
         list_model_displayed_field: name
         ordered: true
 
+  - name: File
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: path
+        type: string
+
   - name: UseCase
     parent: EntityBase
     fields:
@@ -254,7 +262,7 @@ features:
           fields:
             - name: existing
               type: bool
-                      
+
         dto_out:
           name: ListEntityFilesDtoOut
           fields:

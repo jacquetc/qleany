@@ -3,13 +3,15 @@ import {invoke} from "@tauri-apps/api/core";
 export enum RootRelationshipField {
     Global = "Global",
     Entities = "Entities",
-    Features = "Features"
+    Features = "Features",
+    Files = "Files",
 }
 
 export type CreateRootDTO = {
     global: number;
     entities: number[];
     features: number[];
+    files: number[];
 }
 
 export type RootDto = {
@@ -17,6 +19,7 @@ export type RootDto = {
     global: number;
     entities: number[];
     features: number[];
+    files: number[];
 }
 
 export type RootRelationshipDto = {

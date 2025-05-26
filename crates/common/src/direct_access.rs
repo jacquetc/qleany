@@ -3,6 +3,7 @@ pub mod dto_field;
 pub mod entity;
 pub mod feature;
 pub mod field;
+pub mod file;
 pub mod global;
 pub mod relationship;
 pub mod repository_factory;
