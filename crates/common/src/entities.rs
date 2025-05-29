@@ -33,7 +33,7 @@ pub struct Feature {
 pub struct File {
     pub id: EntityId,
     pub name: String,
-    pub group: Group,
+    pub group: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -71,6 +71,8 @@ pub struct DtoField {
     pub field_type: DtoFieldType,
     pub is_nullable: bool,
     pub is_list: bool,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -87,6 +89,8 @@ pub struct Field {
     pub ordered: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -110,6 +114,7 @@ pub enum DtoFieldType {
     String,
     Uuid,
     DateTime,
+    Enum,
 }
 
 impl Default for DtoFieldType {
@@ -128,6 +133,7 @@ pub enum FieldType {
     Uuid,
     DateTime,
     Entity,
+    Enum,
 }
 
 impl Default for FieldType {
@@ -197,23 +203,5 @@ pub enum Order {
 impl Default for Order {
     fn default() -> Self {
         Ordered
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum Group {
-    Base,
-    Common,
-    CommonBase,
-    Presenter,
-    Feature,
-    Entity,
-    Persistence,
-    Ui,
-}
-
-impl Default for Group {
-    fn default() -> Self {
-        Group::Base
     }
 }

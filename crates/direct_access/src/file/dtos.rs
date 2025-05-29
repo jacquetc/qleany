@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 
-use common::entities::{File, Group};
+use common::entities::File;
 use common::types::EntityId;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct FileDto {
     pub id: EntityId,
     pub name: String,
-    pub group: Group,
+    pub group: String,
 }
 
 impl From<FileDto> for File {
@@ -44,7 +44,7 @@ impl From<File> for FileDto {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateFileDto {
     pub name: String,
-    pub group: Group,
+    pub group: String,
 }
 
 impl From<CreateFileDto> for File {

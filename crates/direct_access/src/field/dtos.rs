@@ -1,4 +1,4 @@
-use common::entities::{Field, FieldType};
+use common::entities::{Entity, Field, FieldType};
 use common::types::EntityId;
 use serde::{Deserialize, Serialize};
 use std::convert::From;
@@ -17,6 +17,8 @@ pub struct FieldDto {
     pub ordered: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 impl From<FieldDto> for Field {
@@ -34,6 +36,8 @@ impl From<FieldDto> for Field {
             ordered: field_dto.ordered,
             list_model: field_dto.list_model,
             list_model_displayed_field: field_dto.list_model_displayed_field,
+            enum_name: field_dto.enum_name,
+            enum_values: field_dto.enum_values,
         }
     }
 }
@@ -53,6 +57,8 @@ impl From<&FieldDto> for Field {
             ordered: field_dto.ordered,
             list_model: field_dto.list_model,
             list_model_displayed_field: field_dto.list_model_displayed_field.clone(),
+            enum_name: field_dto.enum_name.clone(),
+            enum_values: field_dto.enum_values.clone(),
         }
     }
 }
@@ -72,6 +78,8 @@ impl From<Field> for FieldDto {
             ordered: field.ordered,
             list_model: field.list_model,
             list_model_displayed_field: field.list_model_displayed_field,
+            enum_name: field.enum_name,
+            enum_values: field.enum_values,
         }
     }
 }
@@ -89,6 +97,8 @@ pub struct CreateFieldDto {
     pub ordered: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 impl From<CreateFieldDto> for Field {
@@ -106,6 +116,8 @@ impl From<CreateFieldDto> for Field {
             ordered: create_field_dto.ordered,
             list_model: create_field_dto.list_model,
             list_model_displayed_field: create_field_dto.list_model_displayed_field,
+            enum_name: create_field_dto.enum_name,
+            enum_values: create_field_dto.enum_values,
         }
     }
 }
@@ -125,6 +137,8 @@ impl From<&CreateFieldDto> for Field {
             ordered: create_field_dto.ordered,
             list_model: create_field_dto.list_model,
             list_model_displayed_field: create_field_dto.list_model_displayed_field.clone(),
+            enum_name: create_field_dto.enum_name.clone(),
+            enum_values: create_field_dto.enum_values.clone(),
         }
     }
 }
@@ -143,6 +157,8 @@ impl From<Field> for CreateFieldDto {
             ordered: field.ordered,
             list_model: field.list_model,
             list_model_displayed_field: field.list_model_displayed_field,
+            enum_name: field.enum_name,
+            enum_values: field.enum_values,
         }
     }
 }

@@ -1,4 +1,3 @@
-mod model_structs;
 mod tools;
 mod validation_schema;
 
@@ -11,6 +10,7 @@ use common::{
     },
 };
 
+use crate::use_cases::common::model_structs;
 use crate::LoadDto;
 
 pub trait LoadUnitOfWorkFactoryTrait {
@@ -139,22 +139,43 @@ impl LoadUseCase {
             let mut field_ids = vec![];
 
             for model_field in model_entity.fields.iter() {
-                // determine if model_field.type is another entity name
-                let field_entity_id = entities
-                    .iter()
-                    .find(|e| e.name == model_field.r#type)
-                    .map(|e| e.id);
-                let field_type = match field_entity_id {
-                    Some(_id) => FieldType::Entity,
-                    None => tools::str_to_field_type(&model_field.r#type),
-                };
+                let field_type = tools::str_to_field_type(&model_field.r#type);
+
+                // validate field type
+                if (field_type == FieldType::Entity) && model_field.entity.is_none() {
+                    return Err(anyhow::anyhow!(
+                        "Field {} is of type Entity but no entity name is provided",
+                        model_field.name
+                    ));
+                }
+                // validate field type against existing entities
+                if field_type == FieldType::Entity {
+                    let entity_name = model_field.entity.as_ref().unwrap();
+                    if !entities.iter().any(|e| e.name == *entity_name) {
+                        return Err(anyhow::anyhow!(
+                            "Entity {} not found for field {}",
+                            entity_name,
+                            model_field.name
+                        ));
+                    }
+                }
 
                 // create field
                 let field = uow.create_field(&Field {
                     id: 0,
                     name: model_field.name.clone(),
-                    field_type: field_type,
-                    entity: field_entity_id,
+                    field_type,
+                    entity: model_field
+                        .entity
+                        .clone()
+                        .map(|e| {
+                            entities
+                                .iter()
+                                .find(|entity| entity.name == e)
+                                .map(|entity| entity.id)
+                                .ok_or(anyhow::anyhow!("Entity not found"))
+                        })
+                        .transpose()?,
                     is_nullable: model_field.is_nullable.unwrap_or_default(),
                     is_primary_key: model_field.is_primary_key.unwrap_or_default(),
                     is_list: model_field.is_list.unwrap_or_default(),
@@ -163,6 +184,8 @@ impl LoadUseCase {
                     ordered: model_field.ordered.unwrap_or_default(),
                     list_model: model_field.list_model.unwrap_or_default(),
                     list_model_displayed_field: model_field.list_model_displayed_field.clone(),
+                    enum_name: model_field.enum_name.clone(),
+                    enum_values: model_field.enum_values.clone(),
                 })?;
                 field_ids.push(field.id);
                 all_field_ids.push(field.id);
@@ -247,9 +270,11 @@ impl LoadUseCase {
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,
                             name: model_dto_field.name.clone(),
-                            field_type: field_type,
+                            field_type,
                             is_nullable: model_dto_field.is_nullable.unwrap_or_default(),
                             is_list: model_dto_field.is_list.unwrap_or_default(),
+                            enum_name: model_dto_field.enum_name.clone(),
+                            enum_values: model_dto_field.enum_values.clone(),
                         })?;
                         dto_field_ids.push(dto_field.id);
                     }
@@ -273,9 +298,11 @@ impl LoadUseCase {
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,
                             name: model_dto_field.name.clone(),
-                            field_type: field_type,
+                            field_type,
                             is_nullable: model_dto_field.is_nullable.unwrap_or_default(),
                             is_list: model_dto_field.is_list.unwrap_or_default(),
+                            enum_name: model_dto_field.enum_name.clone(),
+                            enum_values: model_dto_field.enum_values.clone(),
                         })?;
                         dto_field_ids.push(dto_field.id);
                     }
@@ -291,9 +318,9 @@ impl LoadUseCase {
                 let use_case = uow.create_use_case(&UseCase {
                     id: 0,
                     name: model_use_case.name.clone(),
-                    validator: model_use_case.validator,
+                    validator: model_use_case.validator.unwrap_or_default(),
                     entities: use_case_entity_ids,
-                    undoable: model_use_case.undoable,
+                    undoable: model_use_case.undoable.unwrap_or_default(),
                     dto_in: dto_in_id,
                     dto_out: dto_out_id,
                 })?;

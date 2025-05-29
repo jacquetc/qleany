@@ -11,6 +11,8 @@ pub struct DtoFieldDto {
     pub field_type: DtoFieldType,
     pub is_nullable: bool,
     pub is_list: bool,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 impl From<DtoFieldDto> for DtoField {
@@ -21,6 +23,8 @@ impl From<DtoFieldDto> for DtoField {
             field_type: dto_field_dto.field_type,
             is_nullable: dto_field_dto.is_nullable,
             is_list: dto_field_dto.is_list,
+            enum_name: dto_field_dto.enum_name,
+            enum_values: dto_field_dto.enum_values,
         }
     }
 }
@@ -33,6 +37,8 @@ impl From<&DtoFieldDto> for DtoField {
             field_type: dto_field_dto.field_type.clone(),
             is_nullable: dto_field_dto.is_nullable,
             is_list: dto_field_dto.is_list,
+            enum_name: dto_field_dto.enum_name.clone(),
+            enum_values: dto_field_dto.enum_values.clone(),
         }
     }
 }
@@ -45,6 +51,8 @@ impl From<DtoField> for DtoFieldDto {
             field_type: dto_field.field_type,
             is_nullable: dto_field.is_nullable,
             is_list: dto_field.is_list,
+            enum_name: dto_field.enum_name,
+            enum_values: dto_field.enum_values,
         }
     }
 }
@@ -55,6 +63,8 @@ pub struct CreateDtoFieldDto {
     pub field_type: DtoFieldType,
     pub is_nullable: bool,
     pub is_list: bool,
+    pub enum_name: Option<String>,
+    pub enum_values: Option<Vec<String>>,
 }
 
 impl From<CreateDtoFieldDto> for DtoField {
@@ -65,6 +75,8 @@ impl From<CreateDtoFieldDto> for DtoField {
             field_type: create_dto_field_dto.field_type,
             is_nullable: create_dto_field_dto.is_nullable,
             is_list: create_dto_field_dto.is_list,
+            enum_name: create_dto_field_dto.enum_name,
+            enum_values: create_dto_field_dto.enum_values,
         }
     }
 }
@@ -77,6 +89,8 @@ impl From<&CreateDtoFieldDto> for DtoField {
             field_type: create_dto_field_dto.field_type.clone(),
             is_nullable: create_dto_field_dto.is_nullable,
             is_list: create_dto_field_dto.is_list,
+            enum_name: create_dto_field_dto.enum_name.clone(),
+            enum_values: create_dto_field_dto.enum_values.clone(),
         }
     }
 }
@@ -88,6 +102,8 @@ impl From<DtoField> for CreateDtoFieldDto {
             field_type: dto_field.field_type,
             is_nullable: dto_field.is_nullable,
             is_list: dto_field.is_list,
+            enum_name: dto_field.enum_name,
+            enum_values: dto_field.enum_values,
         }
     }
 }

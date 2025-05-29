@@ -20,7 +20,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                 "properties": {
                     "language": {
                         "type": "string",
-                        "enum": ["python"]
+                        "enum": ["python", "rust"]
                     },
                     "application_name": {
                         "type": "string"
@@ -68,6 +68,9 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "type": {
                                         "type": "string"
                                     },
+                                    "entity": {
+                                        "type": "string"
+                                    },
                                     "is_list": {
                                         "type": "boolean"
                                     },
@@ -89,9 +92,12 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "is_primary_key": {
                                         "type": "boolean"
                                     },
-                                    "single": {
-                                        "type": "boolean"
-                                    }
+                                    "enum_values": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
                                 },
                                 "required": ["name", "type"]
                             }
@@ -144,7 +150,13 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                         },
                                                         "type": {
                                                             "type": "string"
-                                                        }
+                                                        },
+                                                        "enum_values": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                     },
                                                     "required": ["name", "type"]
                                                 }
@@ -171,7 +183,13 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                         },
                                                         "is_list": {
                                                             "type": "boolean"
-                                                        }
+                                                        },
+                                                        "enum_values": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                     },
                                                     "required": ["name", "type"]
                                                 }

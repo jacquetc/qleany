@@ -194,8 +194,7 @@ pub fn run() {
             direct_access_commands::file_commands::remove_file_multi,
             // handling manifest
             handling_manifest_commands::load_manifest,
-            //handling_manifest_commands::save_manifest,
-
+            handling_manifest_commands::save_manifest,
             // undo redo
             undo_redo_commands::undo,
             undo_redo_commands::redo,

@@ -126,8 +126,8 @@ fn get_backward_relationships(
 pub fn str_to_field_type(s: &str) -> FieldType {
     match s {
         "boolean" | "bool" => FieldType::Boolean,
-        "int" => FieldType::Integer,
-        "uint" => FieldType::UInteger,
+        "int" | "integer" => FieldType::Integer,
+        "uint" | "uinteger" => FieldType::UInteger,
         "float" => FieldType::Float,
         "string" => FieldType::String,
         "uuid" => FieldType::Uuid,
@@ -139,8 +139,8 @@ pub fn str_to_field_type(s: &str) -> FieldType {
 pub fn str_to_dto_field_type(s: &str) -> DtoFieldType {
     match s {
         "boolean" | "bool" => DtoFieldType::Boolean,
-        "int" => DtoFieldType::Integer,
-        "uint" => DtoFieldType::UInteger,
+        "int" | "integer" => DtoFieldType::Integer,
+        "uint" | "uinteger" => DtoFieldType::UInteger,
         "float" => DtoFieldType::Float,
         "string" => DtoFieldType::String,
         "uuid" => DtoFieldType::Uuid,

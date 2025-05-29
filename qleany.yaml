@@ -3,7 +3,7 @@ schema:
   version: 2
 
 global:
-  language: python
+  language: rust
   application_name: Qleany
   organisation:
     name: qleany
@@ -21,23 +21,25 @@ entities:
     parent: EntityBase
     fields:
       - name: global
-        type: Global
-        is_list: false
-        ordered: false
+        type: entity
+        entity: Global
         strong: true
-        list_model: false
       - name: entities
-        type: Entity
-        is_list: false
-        ordered: false
+        type: entity
+        entity: Entity
+        is_list: true
+        ordered: true
         strong: true
-        list_model: false
+        list_model: true
+        list_model_displayed_field: name
       - name: features
-        type: Feature
-        is_list: false
-        ordered: false
+        type: entity
+        entity: Feature
+        is_list: true
+        ordered: true
         strong: true
-        list_model: false
+        list_model: true
+        list_model_displayed_field: name
 
   - name: Entity
     parent: EntityBase
@@ -45,18 +47,19 @@ entities:
       - name: name
         type: string
       - name: fields
-        type: Field
+        type: entity
+        entity: Field
         is_list: true
         ordered: true
         strong: true
         list_model: true
         list_model_displayed_field: name
       - name: relationships
-        type: Relationship
+        type: entity
+        entity: Relationship
         is_list: true
         ordered: false
         strong: true
-        list_model: false
 
   - name: Field
     parent: EntityBase
@@ -64,9 +67,21 @@ entities:
       - name: name
         type: string
       - name: type
-        type: string
+        type: enum
+        enum_name: FieldType
+        enum_values:
+          - bool
+          - int
+          - uint
+          - float
+          - string
+          - uuid
+          - datetime
+          - entity
+          - enum
       - name: entity
-        type: Entity
+        type: entity
+        entity: Entity
         strong: false
         is_nullable: true
       - name: is_nullable
@@ -92,7 +107,8 @@ entities:
       - name: name
         type: string
       - name: use_cases
-        type: UseCase
+        type: entity
+        entity: UseCase
         is_list: true
         strong: true
         list_model: true
@@ -106,6 +122,8 @@ entities:
         type: string
       - name: path
         type: string
+      - name: group
+        type: string
 
   - name: UseCase
     parent: EntityBase
@@ -115,7 +133,8 @@ entities:
       - name: validator
         type: bool
       - name: entities
-        type: Entity
+        type: entity
+        entity: Entity
         is_list: true
         list_model: true
         list_model_displayed_field: name
@@ -123,11 +142,13 @@ entities:
       - name: undoable
         type: bool
       - name: dto_in
-        type: Dto
+        type: entity
+        entity: Dto
         strong: true
         is_nullable: true
       - name: dto_out
-        type: Dto
+        type: entity
+        entity: Dto
         strong: true
         is_nullable: true
 
@@ -137,7 +158,8 @@ entities:
       - name: name
         type: string
       - name: fields
-        type: DtoField
+        type: entity
+        entity: DtoField
         is_list: true
         ordered: true
         strong: true
@@ -150,11 +172,28 @@ entities:
       - name: name
         type: string
       - name: type
-        type: string
+        type: enum
+        enum_name: DtoFieldType
+        enum_values:
+          - Boolean
+          - Integer
+          - UInteger
+          - Float
+          - String
+          - Uuid
+          - DateTime
+          - Enum
       - name: is_nullable
         type: bool
       - name: is_list
         type: bool
+      - name: enum_name
+        type: string
+        is_nullable: true
+      - name: enum_values
+        type: string
+        is_list: true
+        is_nullable: true
 
   - name: Global
     parent: EntityBase
@@ -180,13 +219,40 @@ entities:
       - name: field_name
         type: string
       - name: relationship_type
-        type: string
+        type: enum
+        enum_name: RelationshipType
+        enum_values:
+          - OneToOne
+          - OneToMany
+          - ManyToOne
+          - ManyToMany
       - name: strength
-        type: string
+        type: enum
+        enum_name: Strength
+        enum_values:
+          - Weak
+          - Strong
       - name: direction
-        type: string
+        type: enum
+        enum_name: Direction
+        enum_values:
+          - Forward
+          - Backward
       - name: cardinality
-        type: string
+        type: enum
+        enum_name: Cardinality
+        enum_values:
+          - ZeroOrOne
+          - One
+          - ZeroOrMore
+          - OneOrMore
+      - name: order
+        type: enum
+        enum_name: Order
+        enum_values:
+          - Ordered
+          - Unordered
+        is_nullable: true
 
 features:
   - name: manifest_handling_listing

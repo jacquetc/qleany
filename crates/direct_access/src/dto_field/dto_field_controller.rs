@@ -137,9 +137,7 @@ mod tests {
         // create
         let dto_field = CreateDtoFieldDto {
             name: "test".to_string(),
-            field_type: common::entities::DtoFieldType::String,
-            is_nullable: false,
-            is_list: false,
+            ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &dto_field);
@@ -170,9 +168,7 @@ mod tests {
         // create
         let dto_field = CreateDtoFieldDto {
             name: "initial".to_string(),
-            field_type: common::entities::DtoFieldType::String,
-            is_nullable: false,
-            is_list: false,
+            ..Default::default()
         };
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &dto_field);
         assert!(result.is_ok());
@@ -181,9 +177,7 @@ mod tests {
         let dto_field = DtoFieldDto {
             id: 1,
             name: "test".to_string(),
-            field_type: common::entities::DtoFieldType::String,
-            is_nullable: false,
-            is_list: false,
+            ..Default::default()
         };
         let result = update(&db_context, &event_hub, &mut undo_redo_manager, &dto_field);
         assert!(result.is_ok());

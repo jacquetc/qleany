@@ -1,5 +1,5 @@
 use crate::AppContext;
-use handling_manifest::{handling_manifest_controller, LoadDto};
+use handling_manifest::{handling_manifest_controller, LoadDto, SaveDto};
 use tauri::async_runtime::Mutex;
 use tauri::Manager;
 
@@ -9,6 +9,18 @@ pub async fn load_manifest(handle: tauri::AppHandle, dto: LoadDto) -> Result<(),
     let app_context = app_context.lock().await;
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &dto)
         .map_err(|e| format!("Error while loading manifest: {:?}", e))?;
+
+    // clear undo/redo stacks
+    app_context.undo_redo_manager.lock().await.clear();
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn save_manifest(handle: tauri::AppHandle, dto: SaveDto) -> Result<(), String> {
+    let app_context = handle.state::<Mutex<AppContext>>();
+    let app_context = app_context.lock().await;
+    handling_manifest_controller::save(&app_context.db_context, &app_context.event_hub, &dto)
+        .map_err(|e| format!("Error while saving manifest: {:?}", e))?;
 
     // clear undo/redo stacks
     app_context.undo_redo_manager.lock().await.clear();
