@@ -28,7 +28,7 @@ pub trait SaveUnitOfWorkTrait: QueryUnitOfWork {}
 pub struct SaveUseCase {
     uow_factory: Box<dyn SaveUnitOfWorkFactoryTrait>,
 }
-
+//TODO: add Ui
 impl SaveUseCase {
     pub fn new(uow_factory: Box<dyn SaveUnitOfWorkFactoryTrait>) -> Self {
         SaveUseCase { uow_factory }

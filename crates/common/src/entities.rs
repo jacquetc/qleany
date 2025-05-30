@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Root {
     pub id: EntityId,
+    pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,

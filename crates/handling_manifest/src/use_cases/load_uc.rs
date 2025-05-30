@@ -1,6 +1,5 @@
 mod tools;
 mod validation_schema;
-
 use anyhow::Result;
 use common::types::EntityId;
 use common::{
@@ -55,15 +54,26 @@ impl LoadUseCase {
             return Err(anyhow::anyhow!("File is not a file"));
         }
 
+        // ensure that the path is absolute
+        let path = if std::path::Path::new(path).is_absolute() {
+            path.to_string()
+        } else {
+            std::env::current_dir()
+                .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
+                .join(path)
+                .to_string_lossy()
+                .to_string()
+        };
+
         // if yaml file, convert to json
 
         let json_value: serde_json::Value = match path.split('.').last() {
             Some("yaml") => {
-                let yaml = std::fs::read_to_string(path)?;
+                let yaml = std::fs::read_to_string(&path)?;
                 serde_yml::from_str(&yaml)?
             }
             Some("json") => {
-                let json = std::fs::read_to_string(path)?;
+                let json = std::fs::read_to_string(&path)?;
                 serde_json::from_str(&json)?
             }
             _ => return Err(anyhow::anyhow!("File extension not supported")),
@@ -101,6 +111,7 @@ impl LoadUseCase {
         // create root
         let root = uow.create_root(&Root {
             id: 0,
+            manifest_absolute_path: path.to_string(),
             global: global_id,
             entities: vec![],
             features: vec![],
@@ -109,17 +120,17 @@ impl LoadUseCase {
         let root_id = root.id;
 
         // create entities
-        let mut entity_ids = vec![];
+        let mut entity_ids: Vec<EntityId> = vec![];
         let mut entities = vec![];
         for model_entity in manifest.entities.iter() {
             let entity = uow.create_entity(&Entity {
                 id: 0,
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
-                parent: None, // will be filled in later
-                allow_direct_access: model_entity.only_for_heritage.unwrap_or_else(|| true),
-                fields: vec![],        // will be filled in later
-                relationships: vec![], // will be filled in later
+                parent: None,               // will be filled in later
+                allow_direct_access: false, //TODO: determine if this should be implemented
+                fields: vec![],             // will be filled in later
+                relationships: vec![],      // will be filled in later
             })?;
             entity_ids.push(entity.id);
             entities.push(entity);
@@ -136,7 +147,7 @@ impl LoadUseCase {
                 .map(|e| e.id)
                 .ok_or(anyhow::anyhow!("Entity not found"))?;
 
-            let mut field_ids = vec![];
+            let mut field_ids: Vec<EntityId> = vec![];
 
             for model_field in model_entity.fields.iter() {
                 let field_type = tools::str_to_field_type(&model_field.r#type);
@@ -342,9 +353,10 @@ impl LoadUseCase {
             .ok_or(anyhow::anyhow!("Root not found"))?;
         let root = Root {
             id: root.id,
-            global: global_id,
+            manifest_absolute_path: root.manifest_absolute_path,
+            global: root.global,
             entities: entity_ids,
-            features: feature_ids,
+            features: feature_ids.clone(),
             files: vec![],
         };
         uow.update_root(&root)?;

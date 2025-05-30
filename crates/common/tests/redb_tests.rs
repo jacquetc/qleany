@@ -151,3 +151,60 @@ fn test_get_persistent_savepoint() -> Result<()> {
 
     Ok(())
 }
+
+// Helper function that will return an error after making changes to the database
+fn modify_db_and_return_error(db: &Database) -> Result<()> {
+    // Start a write transaction
+    let write_txn = db.begin_write()?;
+
+    // Make changes to the database
+    let mut table = write_txn.open_table(TEST_TABLE)?;
+    table.insert("key1", 100)?; // Update existing key
+    table.insert("key3", 3)?;   // Add new key
+
+    // Don't commit or rollback - return an error
+    // This will cause the transaction to go out of scope without commit/rollback
+    Err(anyhow::anyhow!("Simulated error to break transaction"))
+}
+
+#[test]
+fn test_transaction_out_of_scope_with_error() -> Result<()> {
+    // Create a DbContext with an in-memory database
+    let db_context = DbContext::new()?;
+    let db = db_context.get_database();
+
+    // Setup the database with initial data
+    setup_database(db)?;
+
+    // Verify initial state
+    assert_eq!(read_value(db, "key1")?, Some(1));
+    assert_eq!(read_value(db, "key2")?, Some(2));
+    assert_eq!(read_value(db, "key3")?, None);
+
+    // Call the function that will make changes and then return an error
+    // This will cause the transaction to go out of scope without commit/rollback
+    let result = modify_db_and_return_error(db);
+
+    // Verify that an error was returned
+    assert!(result.is_err(), "Expected an error but none occurred");
+    println!("Error occurred as expected: {:?}", result.err());
+    println!("Transaction went out of scope without commit/rollback due to error");
+
+    // Check the database state after the transaction went out of scope with an error
+    // This will tell us if there was an implicit rollback or commit
+    let key1_value = read_value(db, "key1")?;
+    let key2_value = read_value(db, "key2")?;
+    let key3_value = read_value(db, "key3")?;
+
+    // If key1 is still 1 and key3 doesn't exist, there was an implicit rollback
+    // If key1 is 100 and key3 exists with value 3, there was an implicit commit
+    println!("After transaction went out of scope with error: key1={:?}, key2={:?}, key3={:?}", 
+             key1_value, key2_value, key3_value);
+
+    // Assert based on the expected behavior (this will depend on redb's implementation)
+    // Here we're assuming an implicit rollback, but the test will show the actual behavior
+    assert_eq!(key1_value, Some(1), "Transaction was implicitly committed instead of rolled back");
+    assert_eq!(key3_value, None, "Transaction was implicitly committed instead of rolled back");
+
+    Ok(())
+}

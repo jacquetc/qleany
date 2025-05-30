@@ -6,6 +6,7 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RootDto {
     pub id: EntityId,
+    pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
@@ -16,6 +17,7 @@ impl From<RootDto> for Root {
     fn from(root_dto: RootDto) -> Self {
         Root {
             id: root_dto.id,
+            manifest_absolute_path: root_dto.manifest_absolute_path,
             global: root_dto.global,
             entities: root_dto.entities,
             features: root_dto.features,
@@ -28,6 +30,7 @@ impl From<&RootDto> for Root {
     fn from(root_dto: &RootDto) -> Self {
         Root {
             id: root_dto.id,
+            manifest_absolute_path: root_dto.manifest_absolute_path.clone(),
             global: root_dto.global,
             entities: root_dto.entities.clone(),
             features: root_dto.features.clone(),
@@ -40,6 +43,7 @@ impl From<Root> for RootDto {
     fn from(root: Root) -> Self {
         RootDto {
             id: root.id,
+            manifest_absolute_path: root.manifest_absolute_path,
             global: root.global,
             entities: root.entities,
             features: root.features,
@@ -50,6 +54,7 @@ impl From<Root> for RootDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateRootDto {
+    pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
@@ -60,6 +65,7 @@ impl From<CreateRootDto> for Root {
     fn from(create_root_dto: CreateRootDto) -> Self {
         Root {
             id: 0,
+            manifest_absolute_path: create_root_dto.manifest_absolute_path,
             global: create_root_dto.global,
             entities: create_root_dto.entities,
             features: create_root_dto.features,
@@ -72,7 +78,8 @@ impl From<&CreateRootDto> for Root {
     fn from(create_root_dto: &CreateRootDto) -> Self {
         Root {
             id: 0,
-            global: create_root_dto.global,
+            manifest_absolute_path: create_root_dto.manifest_absolute_path.clone(),
+            global: create_root_dto.global.clone(),
             entities: create_root_dto.entities.clone(),
             features: create_root_dto.features.clone(),
             files: create_root_dto.files.clone(),
@@ -83,6 +90,7 @@ impl From<&CreateRootDto> for Root {
 impl From<Root> for CreateRootDto {
     fn from(root: Root) -> Self {
         CreateRootDto {
+            manifest_absolute_path: root.manifest_absolute_path,
             global: root.global,
             entities: root.entities,
             features: root.features,
