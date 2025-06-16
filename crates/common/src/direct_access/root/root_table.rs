@@ -14,6 +14,9 @@ const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
 const FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("feature_from_root_features_junction");
 
+const FILE_FROM_ROOT_FILES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("file_from_root_files_junction");
+
 fn get_junction_table_definition(
     field: &RootRelationshipField,
 ) -> TableDefinition<EntityId, Vec<EntityId>> {
@@ -21,6 +24,7 @@ fn get_junction_table_definition(
         RootRelationshipField::Global => GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE,
         RootRelationshipField::Entities => ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE,
         RootRelationshipField::Features => FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE,
+        RootRelationshipField::Files => FILE_FROM_ROOT_FILES_JUNCTION_TABLE,
     }
 }
 

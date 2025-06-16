@@ -2,7 +2,9 @@
 mod direct_access_commands;
 mod event_hub_client;
 mod handling_manifest_commands;
+mod rust_file_generation_commands;
 mod undo_redo_commands;
+
 use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
@@ -195,6 +197,9 @@ pub fn run() {
             // handling manifest
             handling_manifest_commands::load_manifest,
             handling_manifest_commands::save_manifest,
+            // rust file generation
+            rust_file_generation_commands::list_rust_files,
+            rust_file_generation_commands::generate_rust_files,
             // undo redo
             undo_redo_commands::undo,
             undo_redo_commands::redo,

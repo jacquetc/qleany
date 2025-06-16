@@ -7,7 +7,7 @@ pub struct ListRustFilesDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GenerateRustBaseFilesDto {
+pub struct GenerateRustFilesDto {
     pub file_ids: Vec<EntityId>,
     pub root_path: String,
     pub prefix: String,

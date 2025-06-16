@@ -420,3 +420,4 @@ features:
 
 ui:
   cli: true
+  tauri_ts: true

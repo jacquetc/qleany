@@ -3318,6 +3318,7 @@ dependencies = [
  "handling_manifest",
  "log",
  "pkg-config",
+ "rust_file_generation",
  "serde",
  "serde_json",
  "tauri",
@@ -3700,6 +3701,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "common",
+ "heck 0.5.0",
  "macros",
  "serde",
  "serde_json",

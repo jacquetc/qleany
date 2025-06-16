@@ -14,9 +14,8 @@ pub enum HandlingManifestEvent {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum RustFileGenerationEvent {
-    ListFiles,
-    ListCommonFiles,
-    ListCommonBaseFiles,
+    ListRustFiles,
+    GenerateRustFiles,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]

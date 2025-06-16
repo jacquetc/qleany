@@ -15,6 +15,7 @@ pub enum RootRelationshipField {
     Global,
     Entities,
     Features,
+    Files,
 }
 
 impl Display for RootRelationshipField {

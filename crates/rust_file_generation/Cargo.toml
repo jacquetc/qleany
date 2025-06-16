@@ -12,6 +12,7 @@ serde_json = "1.0"
 anyhow = { workspace = true }
 common = { path = "../common" }
 macros = { path = "../macros" }
+heck = "0.5"
 
 [lints]
 workspace = true

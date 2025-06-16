@@ -1,9 +1,12 @@
+use crate::units_of_work::generate_rust_files_uow::GenerateRustFilesUnitOfWorkFactory;
+use crate::use_cases::generate_rust_files_uc::GenerateRustFilesUseCase;
 use crate::{
     units_of_work::list_files_uow::ListRustFilesUnitOfWorkFactory,
-    use_cases::list_rust_files_uc::ListRustFilesUseCase, ListRustFilesDto,
+    use_cases::list_rust_files_uc::ListRustFilesUseCase, GenerateRustFilesDto, ListRustFilesDto,
 };
 use anyhow::Result;
-use common::event::RustFileGenerationEvent::ListFiles;
+use common::event::RustFileGenerationEvent::GenerateRustFiles;
+use common::event::RustFileGenerationEvent::ListRustFiles;
 use common::event::{Event, Origin};
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
@@ -18,7 +21,24 @@ pub fn list_rust_files(
     uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::RustFileGeneration(ListFiles),
+        origin: Origin::RustFileGeneration(ListRustFiles),
+        ids: vec![],
+        data: None,
+    });
+    Ok(())
+}
+
+pub fn generate_rust_files(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    dto: &GenerateRustFilesDto,
+) -> Result<()> {
+    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(&db_context);
+    let mut uc = GenerateRustFilesUseCase::new(Box::new(uow_context));
+    uc.execute(dto)?;
+    // Notify that the handling manifest has been loaded
+    event_hub.send_event(Event {
+        origin: Origin::RustFileGeneration(GenerateRustFiles),
         ids: vec![],
         data: None,
     });

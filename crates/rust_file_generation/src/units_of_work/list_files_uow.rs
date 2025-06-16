@@ -6,7 +6,11 @@ use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::direct_access::repository_factory;
 use common::entities::Entity;
+use common::entities::Feature;
+use common::entities::File;
 use common::entities::Global;
+use common::entities::Root;
+use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -67,10 +71,16 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Root", action = "SetRelationship")]
-#[macros::uow_action(entity = "Global", action = "GetMulti")]
+#[macros::uow_action(entity = "Global", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Feature", action = "GetMulti")]
+#[macros::uow_action(entity = "Feature", action = "GetRelationship")]
+#[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "File", action = "Create")]
+#[macros::uow_action(entity = "File", action = "CreateMulti")]
 impl ListRustFilesUnitOfWorkTrait for ListRustFilesUnitOfWork {}
 
 pub struct ListRustFilesUnitOfWorkFactory {

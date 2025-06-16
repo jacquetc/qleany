@@ -34,7 +34,12 @@ pub struct Feature {
 pub struct File {
     pub id: EntityId,
     pub name: String,
+    pub relative_path: String,
     pub group: String,
+    pub template_name: String,
+    pub feature: Option<EntityId>,
+    pub entity: Option<EntityId>,
+    pub use_case: Option<EntityId>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

@@ -30,6 +30,7 @@ log = "0.4"
 common = { path = "../../common" }
 direct_access = { path = "../../direct_access" }
 handling_manifest = { path = "../../handling_manifest" }
+rust_file_generation = { path = "../../rust_file_generation" }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-process = "2"
