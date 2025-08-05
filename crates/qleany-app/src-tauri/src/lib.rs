@@ -204,6 +204,7 @@ pub fn run() {
             // rust file generation
             rust_file_generation_commands::list_rust_files,
             rust_file_generation_commands::generate_rust_files,
+            rust_file_generation_commands::get_generate_rust_files_result,
             // undo redo
             undo_redo_commands::undo,
             undo_redo_commands::redo,
@@ -219,6 +220,7 @@ pub fn run() {
             long_operation_commands::cleanup_finished_operations,
             long_operation_commands::list_operations,
             long_operation_commands::get_operations_summary,
+            long_operation_commands::get_operation_result,
         ])
         .on_window_event(|app, event| {
             let app_context = app.state::<Mutex<AppContext>>();

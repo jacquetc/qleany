@@ -140,3 +140,15 @@ pub async fn get_operations_summary(
     
     Ok(result)
 }
+
+/// Gets the result of a long operation.
+#[tauri::command]
+pub async fn get_operation_result(
+    app_context: State<'_, Mutex<AppContext>>,
+    operation_id: String,
+) -> Result<Option<String>, String> {
+    let app_context = app_context.lock().await;
+    let long_operation_manager = app_context.long_operation_manager.lock().await;
+    
+    Ok(long_operation_manager.get_operation_result(&operation_id))
+}

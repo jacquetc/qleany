@@ -1,6 +1,6 @@
 use crate::AppContext;
 use rust_file_generation::{
-    rust_file_generation_controller, GenerateRustFilesDto, ListRustFilesDto,
+    rust_file_generation_controller, GenerateRustFilesDto, GenerateRustFilesResultDto, ListRustFilesDto,
 };
 use tauri::async_runtime::Mutex;
 use tauri::Manager;
@@ -43,4 +43,20 @@ pub async fn generate_rust_files(
     // clear undo/redo stacks
     app_context.undo_redo_manager.lock().await.clear();
     Ok(operation_id)
+}
+
+#[tauri::command]
+pub async fn get_generate_rust_files_result(
+    handle: tauri::AppHandle,
+    operation_id: String,
+) -> Result<Option<GenerateRustFilesResultDto>, String> {
+    let app_context = handle.state::<Mutex<AppContext>>();
+    let app_context = app_context.lock().await;
+    let long_operation_manager = app_context.long_operation_manager.lock().await;
+    
+    rust_file_generation_controller::get_generate_rust_files_result(
+        &*long_operation_manager,
+        &operation_id,
+    )
+    .map_err(|e| format!("Error while retrieving Rust files generation result: {:?}", e))
 }
