@@ -12,3 +12,9 @@ pub struct GenerateRustFilesDto {
     pub root_path: String,
     pub prefix: String,
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GenerateRustFilesResultDto {
+    pub files: Vec<String>,
+    pub timestamp: String,
+}

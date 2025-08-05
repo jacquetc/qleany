@@ -142,11 +142,13 @@ impl OperationProgress {
 
 // Trait that long operations must implement
 pub trait LongOperation: Send + 'static {
+    type Output: Send + Sync + 'static + serde::Serialize;
+    
     fn execute(
         &self,
         progress_callback: Box<dyn Fn(OperationProgress) + Send>,
         cancel_flag: Arc<AtomicBool>,
-    ) -> Result<()>;
+    ) -> Result<Self::Output>;
 }
 
 // Trait for operation handles (type-erased)
@@ -194,6 +196,7 @@ impl OperationHandleTrait for OperationHandle {
 pub struct LongOperationManager {
     operations: Arc<Mutex<HashMap<String, Box<dyn OperationHandleTrait>>>>,
     next_id: Arc<Mutex<u64>>,
+    results: Arc<Mutex<HashMap<String, String>>>, // Store serialized results
 }
 
 impl LongOperationManager {
@@ -201,6 +204,7 @@ impl LongOperationManager {
         Self {
             operations: Arc::new(Mutex::new(HashMap::new())),
             next_id: Arc::new(Mutex::new(0)),
+            results: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -219,6 +223,8 @@ impl LongOperationManager {
         let status_clone = status.clone();
         let progress_clone = progress.clone();
         let cancel_flag_clone = cancel_flag.clone();
+        let results_clone = self.results.clone();
+        let id_clone = id.clone();
 
         let join_handle = thread::spawn(move || {
             let progress_callback = {
@@ -233,8 +239,15 @@ impl LongOperationManager {
             let final_status = if cancel_flag_clone.load(Ordering::Relaxed) {
                 OperationStatus::Cancelled
             } else {
-                match operation_result {
-                    Ok(_) => OperationStatus::Completed,
+                match &operation_result {
+                    Ok(result) => {
+                        // Store the result
+                        if let Ok(serialized) = serde_json::to_string(result) {
+                            let mut results = results_clone.lock().unwrap();
+                            results.insert(id_clone.clone(), serialized);
+                        }
+                        OperationStatus::Completed
+                    },
                     Err(e) => OperationStatus::Failed(e.to_string()),
                 }
             };
@@ -306,6 +319,20 @@ impl LongOperationManager {
             .map(|(id, handle)| (id.clone(), handle.get_status(), handle.get_progress()))
             .collect()
     }
+    
+    /// Store an operation result
+    pub fn store_operation_result<T: serde::Serialize>(&self, id: &str, result: T) -> Result<()> {
+        let serialized = serde_json::to_string(&result)?;
+        let mut results = self.results.lock().unwrap();
+        results.insert(id.to_string(), serialized);
+        Ok(())
+    }
+    
+    /// Get an operation result
+    pub fn get_operation_result(&self, id: &str) -> Option<String> {
+        let results = self.results.lock().unwrap();
+        results.get(id).cloned()
+    }
 }
 
 impl Default for LongOperationManager {
@@ -327,11 +354,13 @@ mod tests {
     }
 
     impl LongOperation for FileProcessingOperation {
+        type Output = ();
+        
         fn execute(
             &self,
             progress_callback: Box<dyn Fn(OperationProgress) + Send>,
             cancel_flag: Arc<AtomicBool>,
-        ) -> Result<()> {
+        ) -> Result<Self::Output> {
             for i in 0..self.total_files {
                 // Check if operation was cancelled
                 if cancel_flag.load(Ordering::Relaxed) {

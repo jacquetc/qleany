@@ -2,7 +2,7 @@ use crate::units_of_work::generate_rust_files_uow::GenerateRustFilesUnitOfWorkFa
 use crate::use_cases::generate_rust_files_uc::GenerateRustFilesUseCase;
 use crate::{
     units_of_work::list_files_uow::ListRustFilesUnitOfWorkFactory,
-    use_cases::list_rust_files_uc::ListRustFilesUseCase, GenerateRustFilesDto, ListRustFilesDto,
+    use_cases::list_rust_files_uc::ListRustFilesUseCase, GenerateRustFilesDto, GenerateRustFilesResultDto, ListRustFilesDto,
 };
 use anyhow::Result;
 use common::event::RustFileGenerationEvent::GenerateRustFiles;
@@ -39,6 +39,24 @@ pub fn generate_rust_files(
     let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)
+}
+
+pub fn get_generate_rust_files_result(
+    long_operation_manager: &LongOperationManager,
+    operation_id: &str,
+) -> Result<Option<GenerateRustFilesResultDto>> {
+    // Get the operation result as a JSON string
+    let result_json = long_operation_manager.get_operation_result(operation_id);
+    
+    // If there's no result, return None
+    if result_json.is_none() {
+        return Ok(None);
+    }
+    
+    // Parse the JSON string into a GenerateRustFilesResultDto
+    let result_dto: GenerateRustFilesResultDto = serde_json::from_str(&result_json.unwrap())?;
+    
+    Ok(Some(result_dto))
 }
 
 // test
