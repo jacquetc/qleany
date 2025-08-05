@@ -23,7 +23,7 @@ resolver = "2"
 homepage = "https://github.com/jacquetc/qleany"
 repository = "https://github.com/jacquetc/qleany"
 license = "MPL-2.0"
-edition = "2021"
+edition = "2024"
 version = "0.0.1"
 
 [workspace.dependencies]

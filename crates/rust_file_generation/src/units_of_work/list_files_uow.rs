@@ -4,7 +4,6 @@ use crate::use_cases::list_rust_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::direct_access::repository_factory;
 use common::entities::Entity;
 use common::entities::Feature;
 use common::entities::File;

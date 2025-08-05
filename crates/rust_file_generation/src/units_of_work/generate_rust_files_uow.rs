@@ -4,15 +4,11 @@ use crate::use_cases::generate_rust_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::direct_access::repository_factory;
 use common::entities::Global;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::sync::Arc;
-use std::sync::{Mutex, RwLock};
+use std::sync::Mutex;
 
 pub struct GenerateRustFilesUnitOfWork {
     context: DbContext,
