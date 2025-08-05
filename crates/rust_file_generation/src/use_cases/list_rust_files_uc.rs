@@ -394,7 +394,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: format!("{}_repository.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: format!("{}{}", relative_path, heck::AsSnakeCase(&entity.name)),
+                relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
                 group: "entities".to_string(),
                 template_name: "common_entity_repository".to_string(),
                 feature: None,
@@ -405,7 +405,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: format!("{}_table.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: format!("{}{}", relative_path, heck::AsSnakeCase(&entity.name)),
+                relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
                 group: "entities".to_string(),
                 template_name: "common_entity_table".to_string(),
                 feature: None,

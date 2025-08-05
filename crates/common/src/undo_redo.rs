@@ -128,6 +128,32 @@ impl UndoRedoCommand for CompositeCommand {
         self
     }
 }
+/// Trait for commands that can be executed asynchronously with progress tracking and cancellation.
+///
+/// This trait extends the basic UndoRedoCommand trait with asynchronous capabilities.
+/// Implementors must also implement the UndoRedoCommand trait to ensure compatibility
+/// with the existing undo/redo system.
+pub trait AsyncUndoRedoCommand: UndoRedoCommand {
+    /// Starts the undo operation asynchronously and returns immediately.
+    /// Returns Ok(()) if the operation was successfully started.
+    fn start_undo(&mut self) -> Result<()>;
+
+    /// Starts the redo operation asynchronously and returns immediately.
+    /// Returns Ok(()) if the operation was successfully started.
+    fn start_redo(&mut self) -> Result<()>;
+
+    /// Checks the progress of the current operation.
+    /// Returns a value between 0.0 (not started) and 1.0 (completed).
+    fn check_progress(&self) -> f32;
+
+    /// Attempts to cancel the in-progress operation.
+    /// Returns Ok(()) if cancellation was successful or if no operation is in progress.
+    fn cancel(&mut self) -> Result<()>;
+
+    /// Checks if the current operation is complete.
+    /// Returns true if the operation has finished successfully.
+    fn is_complete(&self) -> bool;
+}
 
 /// Manager for undo and redo operations.
 ///

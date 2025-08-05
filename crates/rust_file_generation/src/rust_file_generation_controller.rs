@@ -8,6 +8,7 @@ use anyhow::Result;
 use common::event::RustFileGenerationEvent::GenerateRustFiles;
 use common::event::RustFileGenerationEvent::ListRustFiles;
 use common::event::{Event, Origin};
+use common::long_operation::LongOperationManager;
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
@@ -31,18 +32,13 @@ pub fn list_rust_files(
 pub fn generate_rust_files(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
+    long_operation_manager: &mut LongOperationManager,
     dto: &GenerateRustFilesDto,
-) -> Result<()> {
+) -> Result<String> {
     let uow_context = GenerateRustFilesUnitOfWorkFactory::new(&db_context);
-    let mut uc = GenerateRustFilesUseCase::new(Box::new(uow_context));
-    uc.execute(dto)?;
-    // Notify that the handling manifest has been loaded
-    event_hub.send_event(Event {
-        origin: Origin::RustFileGeneration(GenerateRustFiles),
-        ids: vec![],
-        data: None,
-    });
-    Ok(())
+    let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
+    let operation_id = long_operation_manager.start_operation(uc);
+    Ok(operation_id)
 }
 
 // test

@@ -43,6 +43,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -53,17 +54,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident = repo.create(&self.event_hub, #entity_snake_ident)?;
-                        Ok(#entity_snake_ident)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.create(&self.event_hub, #entity_snake_ident)?;
+                            Ok(#entity_snake_ident)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.create(&self.event_hub, #entity_snake_ident)?;
+                            Ok(#entity_snake_ident)
+                        }
                     }
                 }
             }
@@ -75,6 +95,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let entity_snake_ident_str = entity_snake_ident.to_string();
@@ -87,17 +108,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident_plural = repo.create_multi(&self.event_hub, #entity_snake_ident_plural)?;
-                        Ok(#entity_snake_ident_plural)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident_plural = repo.create_multi(&self.event_hub, #entity_snake_ident_plural)?;
+                            Ok(#entity_snake_ident_plural)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident_plural = repo.create_multi(&self.event_hub, #entity_snake_ident_plural)?;
+                            Ok(#entity_snake_ident_plural)
+                        }
                     }
                 }
             }
@@ -109,6 +149,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -119,17 +160,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident = repo.get(id)?;
-                        Ok(#entity_snake_ident)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.get(id)?;
+                            Ok(#entity_snake_ident)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.get(id)?;
+                            Ok(#entity_snake_ident)
+                        }
                     }
                 }
             }
@@ -141,6 +201,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -151,17 +212,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident = repo.update(&self.event_hub, #entity_snake_ident)?;
-                        Ok(#entity_snake_ident)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.update(&self.event_hub, #entity_snake_ident)?;
+                            Ok(#entity_snake_ident)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident: &#entity_ident) -> Result<#entity_ident> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.update(&self.event_hub, #entity_snake_ident)?;
+                            Ok(#entity_snake_ident)
+                        }
                     }
                 }
             }
@@ -173,6 +253,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -183,16 +264,34 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, id: &EntityId) -> Result<()> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        repo.delete(&self.event_hub, id)?;
-                        Ok(())
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.delete(&self.event_hub, id)?;
+                            Ok(())
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.delete(&self.event_hub, id)?;
+                            Ok(())
+                        }
                     }
                 }
             }
@@ -204,6 +303,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -214,17 +314,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_multi(ids)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_multi(ids)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_multi(ids)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -236,6 +355,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let entity_snake_ident_str = entity_snake_ident.to_string();
@@ -248,17 +368,37 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use std::borrow::Borrow;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident_plural = repo.update_multi(&self.event_hub, #entity_snake_ident_plural)?;
-                        Ok(#entity_snake_ident_plural)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident_plural = repo.update_multi(&self.event_hub, #entity_snake_ident_plural)?;
+                            Ok(#entity_snake_ident_plural)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, #entity_snake_ident_plural: &[#entity_ident]) -> Result<Vec<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use std::borrow::Borrow;
+                            use common::direct_access::repository_factory;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident_plural = repo.update_multi(&self.event_hub, #entity_snake_ident_plural)?;
+                            Ok(#entity_snake_ident_plural)
+                        }
                     }
                 }
             }
@@ -270,6 +410,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -280,16 +421,34 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, ids: &[EntityId]) -> Result<()> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        repo.delete_multi(&self.event_hub, ids)?;
-                        Ok(())
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.delete_multi(&self.event_hub, ids)?;
+                            Ok(())
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.delete_multi(&self.event_hub, ids)?;
+                            Ok(())
+                        }
                     }
                 }
             }
@@ -301,6 +460,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -311,18 +471,37 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
 
-                        let borrowed_transaction = self.transaction.borrow();
-                        let repo = repository_factory::read::#create_entity_repo(
-                            &borrowed_transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let #entity_snake_ident = repo.get(id)?;
-                        Ok(#entity_snake_ident)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.get(id)?;
+                            Ok(#entity_snake_ident)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, id: &EntityId) -> Result<Option<#entity_ident>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let #entity_snake_ident = repo.get(id)?;
+                            Ok(#entity_snake_ident)
+                        }
                     }
                 }
             }
@@ -334,6 +513,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
 
@@ -344,18 +524,36 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
-                        use common::entities::#entity_ident;
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
 
-                        let borrowed_transaction = self.transaction.borrow();
-                        let repo = repository_factory::read::#create_entity_repo(
-                            &borrowed_transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_multi(ids)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_multi(ids)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<Vec<Option<#entity_ident>>> {
+                            use common::entities::#entity_ident;
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_multi(ids)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -367,6 +565,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -382,21 +581,44 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        id: &EntityId,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                    ) -> Result<Vec<EntityId>> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_relationship(id, field)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationship(id, field)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationship(id, field)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -408,6 +630,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -423,21 +646,44 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                        right_ids: &[EntityId],
-                    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_relationships_from_right_ids(field, right_ids)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationships_from_right_ids(field, right_ids)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationships_from_right_ids(field, right_ids)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -449,6 +695,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -464,22 +711,44 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        id: &EntityId,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                    ) -> Result<Vec<EntityId>> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let borrowed_transaction = self.transaction.borrow();
-                        let repo = repository_factory::read::#create_entity_repo(
-                            &borrowed_transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_relationship(id, field)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationship(id, field)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationship(id, field)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -491,6 +760,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -506,22 +776,44 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                        right_ids: &[EntityId],
-                    ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let borrowed_transaction = self.transaction.borrow();
-                        let repo = repository_factory::read::#create_entity_repo(
-                            &borrowed_transaction.as_ref().expect("Transaction not started"),
-                        );
-                        let value = repo.get_relationships_from_right_ids(field, right_ids)?;
-                        Ok(value)
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationships_from_right_ids(field, right_ids)?;
+                            Ok(value)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<Vec<(EntityId, Vec<EntityId>)>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::read::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let value = repo.get_relationships_from_right_ids(field, right_ids)?;
+                            Ok(value)
+                        }
                     }
                 }
             }
@@ -533,6 +825,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -549,22 +842,46 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        id: &EntityId,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                        right_ids: &[EntityId],
-                    ) -> Result<()> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        repo.set_relationship(&self.event_hub, id, field, right_ids)?;
-                        Ok(())
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.set_relationship(&self.event_hub, id, field, right_ids)?;
+                            Ok(())
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            right_ids: &[EntityId],
+                        ) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.set_relationship(&self.event_hub, id, field, right_ids)?;
+                            Ok(())
+                        }
                     }
                 }
             }
@@ -576,6 +893,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         entity_snake_ident: &syn::Ident,
         function_ident: &syn::Ident,
         item_type: &ItemType,
+        thread_safe: bool,
     ) -> proc_macro2::TokenStream {
         let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
         let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
@@ -591,21 +909,44 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
             ItemType::Impl(_) => {
-                quote! {
-                    fn #function_ident(
-                        &self,
-                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
-                        relationships: Vec<(EntityId, Vec<EntityId>)>,
-                    ) -> Result<()> {
-                        use common::types::EntityId;
-                        use common::direct_access::repository_factory;
-                        use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            relationships: Vec<(EntityId, Vec<EntityId>)>,
+                        ) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
 
-                        let mut repo = repository_factory::write::#create_entity_repo(
-                            &self.transaction.as_ref().expect("Transaction not started"),
-                        );
-                        repo.set_relationship_multi(&self.event_hub, field, relationships)?;
-                        Ok(())
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.set_relationship_multi(&self.event_hub, field, relationships)?;
+                            Ok(())
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            relationships: Vec<(EntityId, Vec<EntityId>)>,
+                        ) -> Result<()> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            repo.set_relationship_multi(&self.event_hub, field, relationships)?;
+                            Ok(())
+                        }
                     }
                 }
             }
@@ -617,6 +958,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let mut entity_name = None;
     let mut action = None;
+    let mut thread_safe = false;
 
     for arg in args.iter() {
         if let syn::Meta::NameValue(nv) = arg {
@@ -633,6 +975,17 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                         action = Some(litstr.value());
                     }
                 }
+            }
+            if nv.path.is_ident("thread_safe") {
+                if let syn::Expr::Lit(expr_lit) = &nv.value {
+                    if let syn::Lit::Bool(litbool) = &expr_lit.lit {
+                        thread_safe = litbool.value();
+                    }
+                }
+            }
+        } else if let syn::Meta::Path(path) = arg {
+            if path.is_ident("thread_safe") {
+                thread_safe = true;
             }
         }
     }
@@ -710,96 +1063,112 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "CreateMulti" => create_multi_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "Get" => get_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetMulti" => get_multi_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "Update" => update_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "UpdateMulti" => update_multi_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "Delete" => delete_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "DeleteMulti" => delete_multi_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetRO" => get_ro_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetMultiRO" => get_multi_ro_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetRelationship" => get_relationship_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetRelationshipRO" => get_relationship_ro_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetRelationshipsFromRightIds" => get_relationships_from_right_ids_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "GetRelationshipsFromRightIdsRO" => get_relationships_from_right_ids_ro_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "SetRelationship" => set_relationship_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         "SetRelationshipMulti" => set_relationship_multi_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
             &item_type,
+            thread_safe,
         ),
         _ => unreachable!(),
     };

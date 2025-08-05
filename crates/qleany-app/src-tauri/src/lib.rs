@@ -2,9 +2,11 @@
 mod direct_access_commands;
 mod event_hub_client;
 mod handling_manifest_commands;
+mod long_operation_commands;
 mod rust_file_generation_commands;
 mod undo_redo_commands;
 
+use common::long_operation::LongOperationManager;
 use common::{database::db_context::DbContext, event::EventHub, undo_redo::UndoRedoManager};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
@@ -55,6 +57,7 @@ struct AppContext {
     pub event_hub_client: event_hub_client::EventHubClient,
     pub quit_signal: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub undo_redo_manager: Arc<Mutex<UndoRedoManager>>,
+    pub long_operation_manager: Arc<Mutex<LongOperationManager>>,
 }
 
 impl AppContext {
@@ -74,6 +77,7 @@ impl AppContext {
             event_hub_client,
             quit_signal: atomic_bool,
             undo_redo_manager: Arc::new(Mutex::new(UndoRedoManager::new())),
+            long_operation_manager: Arc::new(Mutex::new(LongOperationManager::new())),
         }
     }
 }
@@ -207,6 +211,14 @@ pub fn run() {
             undo_redo_commands::can_redo,
             undo_redo_commands::begin_composite,
             undo_redo_commands::end_composite,
+            // long operations
+            long_operation_commands::get_operation_status,
+            long_operation_commands::get_operation_progress,
+            long_operation_commands::cancel_operation,
+            long_operation_commands::is_operation_finished,
+            long_operation_commands::cleanup_finished_operations,
+            long_operation_commands::list_operations,
+            long_operation_commands::get_operations_summary,
         ])
         .on_window_event(|app, event| {
             let app_context = app.state::<Mutex<AppContext>>();

@@ -9,38 +9,41 @@ use common::entities::Global;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::sync::Arc;
+use std::sync::{Mutex, RwLock};
 
 pub struct GenerateRustFilesUnitOfWork {
     context: DbContext,
-    transaction: RefCell<Option<Transaction>>,
+    transaction: Mutex<Option<Transaction>>,
 }
 
 impl GenerateRustFilesUnitOfWork {
     pub fn new(db_context: &DbContext) -> Self {
         GenerateRustFilesUnitOfWork {
             context: db_context.clone(),
-            transaction: RefCell::new(None),
+            transaction: Mutex::new(None),
         }
     }
 }
 
 impl QueryUnitOfWork for GenerateRustFilesUnitOfWork {
     fn begin_transaction(&self) -> Result<()> {
-        self.transaction
-            .replace(Some(Transaction::begin_read_transaction(&self.context)?));
+        let mut transaction = self.transaction.lock().unwrap();
+        *transaction = Some(Transaction::begin_read_transaction(&self.context)?);
         Ok(())
     }
 
     fn end_transaction(&self) -> Result<()> {
-        self.transaction.take().unwrap().end_read_transaction()?;
+        let mut transaction = self.transaction.lock().unwrap();
+        transaction.take().unwrap().end_read_transaction()?;
         Ok(())
     }
 }
 
-#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Global", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
+#[macros::uow_action(entity = "Global", action = "GetMultiRO", thread_safe = true)]
 impl GenerateRustFilesUnitOfWorkTrait for GenerateRustFilesUnitOfWork {}
 
 pub struct GenerateRustFilesUnitOfWorkFactory {
