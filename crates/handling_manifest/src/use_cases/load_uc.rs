@@ -9,8 +9,8 @@ use common::{
     },
 };
 
-use crate::use_cases::common::model_structs;
 use crate::LoadDto;
+use crate::use_cases::common::model_structs;
 
 pub trait LoadUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;
@@ -220,6 +220,13 @@ impl LoadUseCase {
                     .ok_or(anyhow::anyhow!("Parent not found"))?;
                 entity.parent = Some(parent_id);
             }
+
+            // update entity in entities
+            let entity_index = entities
+                .iter()
+                .position(|e| e.id == entity_id)
+                .ok_or(anyhow::anyhow!("Entity not found in entities"))?;
+            entities[entity_index] = entity.clone();
 
             // update entity in repo
             uow.update_entity(&entity)?;

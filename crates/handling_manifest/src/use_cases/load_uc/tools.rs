@@ -148,3 +148,96 @@ pub fn str_to_dto_field_type(s: &str) -> DtoFieldType {
         _ => DtoFieldType::String,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use common::entities::{Cardinality, Entity, Field, FieldType, RelationshipType};
+
+    #[test]
+    fn test_get_forward_relationships() {
+        // Arrange
+        // Create two entities: Parent and Child
+        let parent_entity = Entity {
+            id: 1,
+            name: "Parent".to_string(),
+            only_for_heritage: false,
+            parent: None,
+            allow_direct_access: true,
+            fields: vec![1, 2], // Field IDs
+            relationships: vec![],
+        };
+
+        // Create fields for the parent entity
+        let fields = vec![
+            // A non-list field (OneToOne relationship)
+            Field {
+                id: 1,
+                name: "single_child".to_string(),
+                field_type: FieldType::Entity,
+                entity: Some(2), // Points to Child entity
+                is_nullable: false,
+                is_primary_key: false,
+                is_list: false,
+                single: true,
+                strong: true,
+                ordered: false,
+                list_model: false,
+                list_model_displayed_field: None,
+                enum_name: None,
+                enum_values: None,
+            },
+            // A list field (should be OneToMany, not ManyToMany)
+            Field {
+                id: 2,
+                name: "multiple_children".to_string(),
+                field_type: FieldType::Entity,
+                entity: Some(2), // Points to Child entity
+                is_nullable: false,
+                is_primary_key: false,
+                is_list: true,
+                single: false,
+                strong: true,
+                ordered: true,
+                list_model: true,
+                list_model_displayed_field: None,
+                enum_name: None,
+                enum_values: None,
+            },
+        ];
+
+        // Act
+        let relationships = get_forward_relationships(&parent_entity, &fields);
+
+        // Assert
+        assert_eq!(relationships.len(), 2, "Should have 2 relationships");
+
+        // Check the first relationship (OneToOne)
+        let one_to_one = relationships
+            .iter()
+            .find(|r| r.field_name == "single_child")
+            .unwrap();
+        assert_eq!(
+            one_to_one.relationship_type,
+            RelationshipType::OneToOne,
+            "First relationship should be OneToOne"
+        );
+        assert_eq!(
+            one_to_one.cardinality,
+            Cardinality::One,
+            "First relationship cardinality should be One"
+        );
+
+        // Check the second relationship
+        let many_relationship = relationships
+            .iter()
+            .find(|r| r.field_name == "multiple_children")
+            .unwrap();
+
+        assert_eq!(
+            many_relationship.cardinality,
+            Cardinality::OneOrMore,
+            "List field cardinality should be OneOrMore"
+        );
+    }
+}
