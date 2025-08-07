@@ -1,30 +1,54 @@
-import {ReactNode, useState} from 'react';
-import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {UseCaseDto} from "#controller/use-case-controller.ts";
+import { ReactNode } from 'react';
+import { ActionIcon, Alert, Group, Title, Tooltip } from '@mantine/core';
+import { UseCaseDTO } from '@/services/use-case-service';
 import ReorderableList from '../ReorderableList.tsx';
-import {useFeatureUseCasesListModel} from "#models/FeatureUseCasesListModel.ts";
+import { useFeatureContext } from '@/contexts/FeatureContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-interface UseCaseListProps {
-    selectedFeature: number | null;
-    onSelectUseCase: (useCaseId: number | null) => void;
-}
+const UseCaseList = () => {
+    const {
+        selectedFeatureId,
+        selectedUseCaseId,
+        useCases,
+        isLoadingUseCases,
+        useCaseError,
+        selectUseCase,
+        createUseCase,
+        reorderUseCases
+    } = useFeatureContext();
 
-const UseCaseList = ({
-                         selectedFeature, onSelectUseCase
-                     }: UseCaseListProps) => {
-    const [selectedUseCase, setSelectedUseCase] = useState<number | null>(null);
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Use cases could not be loaded">
+            There was an issue loading the use case list. Please try again later.
+        </Alert>
+    );
 
-    // Use the use case list model
-    const {useCases, createNewUseCase, handleReorder} = useFeatureUseCasesListModel({
-        featureId: selectedFeature,
-        onUseCasesChanged: (__newUseCases) => {
+    // Loading state
+    if (isLoadingUseCases) {
+        return (
+            <Alert color="blue" title="Loading use cases">
+                Please wait...
+            </Alert>
+        );
+    }
 
-            // If needed, you can perform additional actions when entities change
-        }
-    });
+    // Error state
+    if (useCaseError) {
+        return (
+            <Alert color="red" title="Error loading use cases">
+                {useCaseError instanceof Error ? useCaseError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
 
-    if (!selectedFeature) {
-        return null;
+    // No feature selected state
+    if (!selectedFeatureId) {
+        return (
+            <Alert color="gray" title="No feature selected">
+                Please select a feature to view its use cases.
+            </Alert>
+        );
     }
 
     // Create header component for ReorderableList
@@ -35,7 +59,7 @@ const UseCaseList = ({
                 <ActionIcon
                     variant="filled"
                     aria-label="Add new use case"
-                    onClick={createNewUseCase}
+                    onClick={createUseCase}
                 >
                     +
                 </ActionIcon>
@@ -44,7 +68,7 @@ const UseCaseList = ({
     );
 
     // Define renderItemContent function for use case items
-    const renderUseCaseContent = (useCase: UseCaseDto): ReactNode => (
+    const renderUseCaseContent = (useCase: UseCaseDTO): ReactNode => (
         <div>
             <div>{useCase.name}</div>
             <div style={{color: 'dimmed', fontSize: 'small'}}>
@@ -54,25 +78,21 @@ const UseCaseList = ({
         </div>
     );
 
-    // Define onSelectItem function
-    const handleSelectItem = (useCaseId: number): void => {
-        setSelectedUseCase(useCaseId);
-        onSelectUseCase(useCaseId);
-    };
-
     return (
-        <ReorderableList
-            items={useCases}
-            selectedItemId={selectedUseCase}
-            onSelectItem={handleSelectItem}
-            onReorder={handleReorder}
-            getItemId={(useCase) => useCase.id}
-            renderItemContent={renderUseCaseContent}
-            droppableId="use-cases-list"
-            draggableIdPrefix="use-case"
-            itemType="use-case"
-            header={header}
-        />
+        <ErrorBoundary fallback={errorFallback}>
+            <ReorderableList
+                items={useCases}
+                selectedItemId={selectedUseCaseId}
+                onSelectItem={selectUseCase}
+                onReorder={reorderUseCases}
+                getItemId={(useCase) => useCase.id}
+                renderItemContent={renderUseCaseContent}
+                droppableId="use-cases-list"
+                draggableIdPrefix="use-case"
+                itemType="use-case"
+                header={header}
+            />
+        </ErrorBoundary>
     );
 };
 

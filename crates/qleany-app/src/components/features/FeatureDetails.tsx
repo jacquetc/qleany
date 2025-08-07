@@ -1,15 +1,21 @@
-import {useEffect, useState} from 'react';
-import {Button, Stack, TextInput, Title} from '@mantine/core';
-import {useSingleFeatureModel} from "#models/SingleFeature.ts";
+import { useEffect, useState } from 'react';
+import { Alert, Button, Stack, TextInput, Title } from '@mantine/core';
+import { useFeatureContext } from '@/contexts/FeatureContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-interface FeatureDetailsProps {
-    selectedFeature: number | null;
-}
+const FeatureDetails = () => {
+    const {
+        features,
+        selectedFeatureId,
+        isLoadingFeatures,
+        featureError,
+        updateFeature
+    } = useFeatureContext();
 
-const FeatureDetails = ({selectedFeature}: FeatureDetailsProps) => {
-    const {feature, updateFeatureData} = useSingleFeatureModel({
-        featureId: selectedFeature
-    });
+    // Find the selected feature from the features array
+    const feature = selectedFeatureId 
+        ? features.find(f => f.id === selectedFeatureId) || null 
+        : null;
 
     const [formData, setFormData] = useState<{
         name: string;
@@ -37,41 +43,63 @@ const FeatureDetails = ({selectedFeature}: FeatureDetailsProps) => {
                     name: formData.name,
                 };
 
-                // Call the model's update function
-                await updateFeatureData(updatedFeature);
+                // Call the context's update function
+                updateFeature(updatedFeature);
             } catch (err) {
-                // Error handling is done in the model
+                // Error handling is done in the hook
             }
         }
     };
 
-    const renderContent = () => {
-        if (!selectedFeature) {
-            return null;
-        }
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Feature details could not be loaded">
+            There was an issue loading the feature details. Please try again later.
+        </Alert>
+    );
 
+    // Loading state
+    if (isLoadingFeatures) {
         return (
-            <>
-                <Title order={2}>"{formData.name}" details</Title>
-                <form onSubmit={handleSubmit}>
-                    <Stack>
-                        <TextInput
-                            id="featureName"
-                            label="Name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        />
-                        <Button type="submit">Save Changes</Button>
-                    </Stack>
-                </form>
-            </>
+            <Alert color="blue" title="Loading feature details">
+                Please wait...
+            </Alert>
         );
-    };
+    }
+
+    // Error state
+    if (featureError) {
+        return (
+            <Alert color="red" title="Error loading feature details">
+                {featureError instanceof Error ? featureError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    // No feature selected state
+    if (!selectedFeatureId || !feature) {
+        return (
+            <Alert color="gray" title="No feature selected">
+                Please select a feature to view its details.
+            </Alert>
+        );
+    }
 
     return (
-        <>
-            {renderContent()}
-        </>
+        <ErrorBoundary fallback={errorFallback}>
+            <Title order={2}>"{formData.name}" details</Title>
+            <form onSubmit={handleSubmit}>
+                <Stack>
+                    <TextInput
+                        id="featureName"
+                        label="Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    />
+                    <Button type="submit">Save Changes</Button>
+                </Stack>
+            </form>
+        </ErrorBoundary>
     );
 };
 

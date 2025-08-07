@@ -1,15 +1,24 @@
 import {useEffect, useState} from 'react';
-import {FieldDto, FieldType, getField, updateField} from "#controller/field-controller.ts";
-import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
+import {Button, Checkbox, Select, Stack, TextInput, Title, Alert} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "#controller/entity-controller.ts";
-import {listen} from '@tauri-apps/api/event';
+import {useEntityContext} from '@/contexts/EntityContext';
+import {FieldDTO, FieldType} from '@/services/field-service';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import {useFields} from '@/hooks/useFields';
 
-interface FieldDetailsProps {
-    selectedField: number | null;
-}
-
-const FieldDetails = ({selectedField}: FieldDetailsProps) => {
+const FieldDetails = () => {
+    const {
+        entities,
+        selectedFieldId
+    } = useEntityContext();
+    
+    // Use the useFields hook to access field data and operations
+    const {
+        fields,
+        isLoading: isLoadingFields,
+        error: fieldError,
+        updateField
+    } = useFields(null); // Pass null to get all fields
     const [formData, setFormData] = useState<{
         name: string;
         field_type: FieldType;
@@ -36,105 +45,53 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
         list_model_displayed_field: null,
     });
 
-    const [fieldData, setFieldData] = useState<FieldDto | null>(null);
-    const [entities, setEntities] = useState<EntityDto[]>([]);
-    const [loading, setLoading] = useState(false);
+    // Find the selected field from the fields array
+    const selectedField = selectedFieldId 
+        ? fields.find(f => f.id === selectedFieldId) || null 
+        : null;
 
-    // Fetch field data when selected field changes
+    // Update form data when selected field changes
     useEffect(() => {
         if (selectedField) {
-            const fetchFieldData = async () => {
-                setLoading(true);
-                try {
-                    const data = await getField(selectedField);
-                    if (data) {
-                        setFieldData(data);
-                        setFormData({
-                            name: data.name,
-                            field_type: data.field_type,
-                            entity: data.entity,
-                            is_nullable: data.is_nullable,
-                            is_primary_key: data.is_primary_key,
-                            is_list: data.is_list,
-                            single: data.single,
-                            strong: data.strong,
-                            ordered: data.ordered,
-                            list_model: data.list_model,
-                            list_model_displayed_field: data.list_model_displayed_field,
-                        });
-                    }
-                } catch (err) {
-                    error(`Failed to fetch field data: ${err}`);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchFieldData();
+            setFormData({
+                name: selectedField.name,
+                field_type: selectedField.field_type as FieldType,
+                entity: selectedField.entity,
+                is_nullable: selectedField.is_nullable,
+                is_primary_key: selectedField.is_primary_key,
+                is_list: selectedField.is_list,
+                single: selectedField.single,
+                strong: selectedField.strong,
+                ordered: selectedField.ordered,
+                list_model: selectedField.list_model,
+                list_model_displayed_field: selectedField.list_model_displayed_field,
+            });
+        } else {
+            // Reset form data if no field is selected
+            setFormData({
+                name: '',
+                field_type: FieldType.String,
+                entity: null,
+                is_nullable: false,
+                is_primary_key: false,
+                is_list: false,
+                single: true,
+                strong: true,
+                ordered: false,
+                list_model: false,
+                list_model_displayed_field: null,
+            });
         }
-    }, [selectedField]);
-
-    // Fetch entities for the entity dropdown
-    useEffect(() => {
-        const fetchEntities = async () => {
-            try {
-                // This is a simplified approach - in a real app, you'd want to fetch only the entities
-                // that can be referenced, not all entities
-                const response = await getEntityMulti([]);
-                const validEntities = response.filter((entity): entity is EntityDto => entity !== null);
-                setEntities(validEntities);
-            } catch (err) {
-                error(`Failed to fetch entities: ${err}`);
-            }
-        };
-
-        fetchEntities();
-
-        // Listen for direct_access_all_reset event
-        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-            info(`Direct access all reset event received in FieldDetails`);
-            if (selectedField) {
-                const fetchFieldData = async () => {
-                    try {
-                        const data = await getField(selectedField);
-                        if (data) {
-                            setFieldData(data);
-                            setFormData({
-                                name: data.name,
-                                field_type: data.field_type,
-                                entity: data.entity,
-                                is_nullable: data.is_nullable,
-                                is_primary_key: data.is_primary_key,
-                                is_list: data.is_list,
-                                single: data.single,
-                                strong: data.strong,
-                                ordered: data.ordered,
-                                list_model: data.list_model,
-                                list_model_displayed_field: data.list_model_displayed_field,
-                            });
-                        }
-                    } catch (err) {
-                        error(`Failed to fetch field data: ${err}`);
-                    }
-                };
-                fetchFieldData();
-            }
-            fetchEntities();
-        });
-
-        return () => {
-            unlisten_direct_access_all_reset.then(f => f());
-        };
-    }, [selectedField]);
+    }, [selectedField, fields]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!fieldData) return;
+        if (!selectedField) return;
 
         try {
-            const updatedField: FieldDto = {
-                ...fieldData,
+            const updatedField: FieldDTO = {
+                ...selectedField,
                 name: formData.name,
                 field_type: formData.field_type,
                 entity: formData.field_type === FieldType.Entity ? formData.entity : null,
@@ -148,20 +105,50 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
                 list_model_displayed_field: formData.list_model_displayed_field,
             };
 
-            await updateField(updatedField);
-            setFieldData(updatedField);
+            // Use the updateField function from the useFields hook
+            updateField(updatedField);
             info("Field updated successfully");
         } catch (err) {
             error(`Failed to update field: ${err}`);
         }
     };
 
-    if (!selectedField || !fieldData) {
-        return null;
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Field details could not be loaded">
+            There was an issue loading the field details. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingFields) {
+        return (
+            <Alert color="blue" title="Loading field details">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (fieldError) {
+        return (
+            <Alert color="red" title="Error loading field details">
+                {fieldError instanceof Error ? fieldError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    // No field selected state
+    if (!selectedFieldId || !selectedField) {
+        return (
+            <Alert color="gray" title="No field selected">
+                Please select a field to view its details.
+            </Alert>
+        );
     }
 
     return (
-        <>
+        <ErrorBoundary fallback={errorFallback}>
             <Title order={2}>"{formData.name}" details</Title>
             <form onSubmit={handleSubmit}>
                 <Stack>
@@ -277,10 +264,10 @@ const FieldDetails = ({selectedField}: FieldDetailsProps) => {
                         />
                     )}
 
-                    <Button type="submit" loading={loading}>Save Changes</Button>
+                    <Button type="submit" loading={isLoadingFields}>Save Changes</Button>
                 </Stack>
             </form>
-        </>
+        </ErrorBoundary>
     );
 };
 

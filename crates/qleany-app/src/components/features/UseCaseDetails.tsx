@@ -1,23 +1,26 @@
-import {useEffect, useState} from 'react';
-import {
-    getUseCase,
-    setUseCaseRelationship,
-    updateUseCase,
-    UseCaseDto,
-    UseCaseRelationshipField
-} from "#controller/use-case-controller.ts";
-import {Button, Checkbox, Stack, Tabs, TextInput, Title} from '@mantine/core';
-import {error, info} from '@tauri-apps/plugin-log';
-import {EntityDto, getEntityMulti} from "#controller/entity-controller.ts";
+import { useEffect, useState } from 'react';
+import { Alert, Button, Checkbox, Stack, Tabs, TextInput, Title } from '@mantine/core';
+import { error, info } from '@tauri-apps/plugin-log';
+import { useFeatureContext } from '@/contexts/FeatureContext';
+import { UseCaseDTO, UseCaseRelationshipField } from '@/services/use-case-service';
 import DtoSelector from './DtoSelector.tsx';
 import DtoDetails from './DtoDetails.tsx';
-import {listen} from '@tauri-apps/api/event';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-interface UseCaseDetailsProps {
-    selectedUseCase: number | null;
-}
+const UseCaseDetails = () => {
+    const {
+        selectedUseCaseId,
+        useCases,
+        isLoadingUseCases,
+        useCaseError,
+        updateUseCase
+    } = useFeatureContext();
 
-const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
+    // Find the selected use case from the useCases array
+    const useCase = selectedUseCaseId 
+        ? useCases.find(u => u.id === selectedUseCaseId) || null 
+        : null;
+
     const [formData, setFormData] = useState<{
         name: string;
         validator: boolean;
@@ -32,122 +35,55 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
         dto_out: null,
     });
 
-    const [useCaseData, setUseCaseData] = useState<UseCaseDto | null>(null);
-    const [entities, setEntities] = useState<EntityDto[]>([]);
+    const [entities, setEntities] = useState<any[]>([]); // TODO: Replace with proper entity type
     const [selectedEntities, setSelectedEntities] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<string | null>("details");
 
-    // Fetch use case data when selected use case changes
+    // Update form data when use case changes
     useEffect(() => {
-        if (selectedUseCase) {
-            const fetchUseCaseData = async () => {
-                setLoading(true);
-                try {
-                    const data = await getUseCase(selectedUseCase);
-                    if (data) {
-                        setUseCaseData(data);
-                        setFormData({
-                            name: data.name,
-                            validator: data.validator,
-                            undoable: data.undoable,
-                            dto_in: data.dto_in,
-                            dto_out: data.dto_out,
-                        });
-                        setSelectedEntities(data.entities);
-                    }
-                } catch (err) {
-                    error(`Failed to fetch use case data: ${err}`);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchUseCaseData();
+        if (useCase) {
+            setFormData({
+                name: useCase.name,
+                validator: useCase.validator,
+                undoable: useCase.undoable,
+                dto_in: useCase.dto_in,
+                dto_out: useCase.dto_out,
+            });
+            setSelectedEntities(useCase.entities);
         }
-    }, [selectedUseCase]);
+    }, [useCase]);
 
-    // Fetch entities for the entity dropdown
-    useEffect(() => {
-        const fetchEntities = async () => {
-            try {
-                const response = await getEntityMulti([]);
-                const validEntities = response.filter((entity): entity is EntityDto => entity !== null);
-                setEntities(validEntities);
-            } catch (err) {
-                error(`Failed to fetch entities: ${err}`);
-            }
-        };
-
-        fetchEntities();
-
-        // Listen for direct_access_all_reset event
-        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-            info(`Direct access all reset event received in UseCaseDetails`);
-            if (selectedUseCase) {
-                const fetchUseCaseData = async () => {
-                    try {
-                        const data = await getUseCase(selectedUseCase);
-                        if (data) {
-                            setUseCaseData(data);
-                            setFormData({
-                                name: data.name,
-                                validator: data.validator,
-                                undoable: data.undoable,
-                                dto_in: data.dto_in,
-                                dto_out: data.dto_out,
-                            });
-                            setSelectedEntities(data.entities);
-                        }
-                    } catch (err) {
-                        error(`Failed to fetch use case data: ${err}`);
-                    }
-                };
-                fetchUseCaseData();
-            }
-            fetchEntities();
-        });
-
-        return () => {
-            unlisten_direct_access_all_reset.then(f => f());
-        };
-    }, [selectedUseCase]);
+    // TODO: Fetch entities for the entity dropdown
+    // This would need to be moved to a custom hook or context
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!useCaseData) return;
+        if (!useCase) return;
 
         try {
+            setLoading(true);
+            
             // Update the use case with the form data
-            const updatedUseCase: UseCaseDto = {
-                ...useCaseData,
+            const updatedUseCase: UseCaseDTO = {
+                ...useCase,
                 name: formData.name,
                 validator: formData.validator,
                 undoable: formData.undoable,
                 dto_in: formData.dto_in,
                 dto_out: formData.dto_out,
+                entities: selectedEntities, // Include the selected entities
             };
 
-            await updateUseCase(updatedUseCase);
-
-            // Update entities relationship
-            await setUseCaseRelationship({
-                id: useCaseData.id,
-                field: UseCaseRelationshipField.Entities,
-                right_ids: selectedEntities,
-            });
-
-            // Refresh data
-            const refreshedData = await getUseCase(useCaseData.id);
-            if (refreshedData) {
-                setUseCaseData(refreshedData);
-                setSelectedEntities(refreshedData.entities);
-            }
-
+            // Call the context's update function
+            updateUseCase(updatedUseCase);
+            
             info("Use Case updated successfully");
         } catch (err) {
             error(`Failed to update use case: ${err}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -159,12 +95,42 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
         }
     };
 
-    if (!selectedUseCase || !useCaseData) {
-        return null;
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Use case details could not be loaded">
+            There was an issue loading the use case details. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingUseCases) {
+        return (
+            <Alert color="blue" title="Loading use case details">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (useCaseError) {
+        return (
+            <Alert color="red" title="Error loading use case details">
+                {useCaseError instanceof Error ? useCaseError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    // No use case selected state
+    if (!selectedUseCaseId || !useCase) {
+        return (
+            <Alert color="gray" title="No use case selected">
+                Please select a use case to view its details.
+            </Alert>
+        );
     }
 
     return (
-        <>
+        <ErrorBoundary fallback={errorFallback}>
             <Tabs value={activeTab} onChange={setActiveTab}>
                 <Tabs.List>
                     <Tabs.Tab value="details">Use Case Details</Tabs.Tab>
@@ -213,7 +179,7 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
                             <DtoSelector
                                 label="DTO In"
                                 value={formData.dto_in}
-                                useCaseId={selectedUseCase}
+                                useCaseId={selectedUseCaseId}
                                 isDtoOut={false}
                                 onChange={(dtoId) => setFormData({...formData, dto_in: dtoId})}
                             />
@@ -221,7 +187,7 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
                             <DtoSelector
                                 label="DTO Out"
                                 value={formData.dto_out}
-                                useCaseId={selectedUseCase}
+                                useCaseId={selectedUseCaseId}
                                 isDtoOut={true}
                                 onChange={(dtoId) => setFormData({...formData, dto_out: dtoId})}
                             />
@@ -243,7 +209,7 @@ const UseCaseDetails = ({selectedUseCase}: UseCaseDetailsProps) => {
                     </Tabs.Panel>
                 )}
             </Tabs>
-        </>
+        </ErrorBoundary>
     );
 };
 

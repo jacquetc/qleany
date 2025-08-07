@@ -1,5 +1,5 @@
 use crate::ListRustFilesDto;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::root::RootRelationshipField;
 use common::entities::Entity;
@@ -23,6 +23,7 @@ pub trait ListRustFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
+#[macros::uow_action(entity = "File", action = "DeleteMulti")]
 pub trait ListRustFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct ListRustFilesUseCase {
@@ -35,6 +36,7 @@ impl ListRustFilesUseCase {
     }
 
     pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<()> {
+        // TODO: implement only_existing
         let only_existing = dto.only_existing;
         let mut files: Vec<File> = vec![];
 
@@ -56,6 +58,13 @@ impl ListRustFilesUseCase {
         let global = global.ok_or(anyhow!("Global not found"))?;
         if global.language != "rust" {
             return Err(anyhow!("Global language is not rust"));
+        }
+
+        // remove all files from root
+        let all_previous_files =
+            uow.get_root_relationship(&root.id, &RootRelationshipField::Files)?;
+        if !all_previous_files.is_empty() {
+            uow.delete_file_multi(&all_previous_files)?;
         }
 
         files.push(File {

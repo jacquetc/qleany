@@ -1,92 +1,108 @@
-import {useEffect, useState} from 'react';
-import {Button, Divider, Stack, TextInput, Title} from '@mantine/core';
-import {DtoDto, getDto, updateDto} from "#controller/dto-controller.ts";
-import {error, info} from '@tauri-apps/plugin-log';
+import { useEffect, useState } from 'react';
+import { Alert, Button, Divider, Stack, TextInput, Title } from '@mantine/core';
+import { error, info } from '@tauri-apps/plugin-log';
+import { useFeatureContext } from '@/contexts/FeatureContext';
+import { DtoDTO } from '@/services/dto-service';
 import DtoFieldsList from './DtoFieldsList.tsx';
 import DtoFieldDetails from './DtoFieldDetails.tsx';
-import {listen} from '@tauri-apps/api/event';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 interface DtoDetailsProps {
-    selectedDto: number | null;
+    selectedDto: number | null; // Keep this prop for now until we refactor all components
 }
 
-const DtoDetails = ({selectedDto}: DtoDetailsProps) => {
+const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
+    const {
+        dtos,
+        isLoadingDtos,
+        dtoError,
+        updateDto
+    } = useFeatureContext();
+
+    // Find the selected DTO from the dtos array
+    const dto = selectedDto 
+        ? dtos.find(d => d.id === selectedDto) || null 
+        : null;
+
     const [formData, setFormData] = useState<{
         name: string;
     }>({
         name: '',
     });
 
-    const [dtoData, setDtoData] = useState<DtoDto | null>(null);
     const [selectedDtoField, setSelectedDtoField] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // Fetch DTO data when selected DTO changes
+    // Update form data when DTO changes
     useEffect(() => {
-        if (selectedDto) {
-            const fetchDtoData = async () => {
-                setLoading(true);
-                try {
-                    const data = await getDto(selectedDto);
-                    if (data) {
-                        setDtoData(data);
-                        setFormData({
-                            name: data.name,
-                        });
-                    }
-                } catch (err) {
-                    error(`Failed to fetch DTO data: ${err}`);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchDtoData();
-
-            // Listen for direct_access_all_reset event
-            const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-                info(`Direct access all reset event received in DtoDetails`);
-                fetchDtoData().catch((err => error(err)));
+        if (dto) {
+            setFormData({
+                name: dto.name,
             });
-
-            return () => {
-                unlisten_direct_access_all_reset.then(f => f());
-            };
         }
-    }, [selectedDto]);
+    }, [dto]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!dtoData) return;
+        if (!dto) return;
 
         try {
+            setLoading(true);
+            
             // Update the DTO with the form data
-            const updatedDto: DtoDto = {
-                ...dtoData,
+            const updatedDto: DtoDTO = {
+                ...dto,
                 name: formData.name,
             };
 
-            await updateDto(updatedDto);
-
-            // Refresh data
-            const refreshedData = await getDto(dtoData.id);
-            if (refreshedData) {
-                setDtoData(refreshedData);
-            }
-
+            // Call the context's update function
+            updateDto(updatedDto);
+            
             info("DTO updated successfully");
         } catch (err) {
             error(`Failed to update DTO: ${err}`);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (!selectedDto || !dtoData) {
-        return null;
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="DTO details could not be loaded">
+            There was an issue loading the DTO details. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingDtos) {
+        return (
+            <Alert color="blue" title="Loading DTO details">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (dtoError) {
+        return (
+            <Alert color="red" title="Error loading DTO details">
+                {dtoError instanceof Error ? dtoError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    // No DTO selected state
+    if (!selectedDto || !dto) {
+        return (
+            <Alert color="gray" title="No DTO selected">
+                Please select a DTO to view its details.
+            </Alert>
+        );
     }
 
     return (
-        <>
+        <ErrorBoundary fallback={errorFallback}>
             <Title order={2}>"{formData.name}" details</Title>
             <form onSubmit={handleSubmit}>
                 <Stack>
@@ -114,11 +130,11 @@ const DtoDetails = ({selectedDto}: DtoDetailsProps) => {
                 <>
                     <Divider my="md"/>
                     <Stack>
-                        <DtoFieldDetails selectedDtoField={selectedDtoField}/>
+                        <DtoFieldDetails selectedDtoField={selectedDtoField} dtoId={selectedDto}/>
                     </Stack>
                 </>
             )}
-        </>
+        </ErrorBoundary>
     );
 };
 

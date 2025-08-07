@@ -1,96 +1,97 @@
-import { useState, useEffect } from 'react';
-import { Text, Box, Title } from '@mantine/core';
+import {useCallback} from 'react';
+import {Alert, Box, Text, Title} from '@mantine/core';
 import CheckableList from '../CheckableList';
-import { useRootFilesListModel } from '@/models/RootFilesListModel';
-import { FileDto } from '@/controller/file-controller';
+import ErrorBoundary from '../ErrorBoundary';
+import {useFileContext} from '@/contexts/FileContext';
 
 interface GroupListProps {
-  rootId: number | null;
-  selectedGroup: string | null;
-  checkedGroups: string[];
-  onSelectGroup: (group: string) => void;
-  onCheckGroup: (group: string, checked: boolean) => void;
-  onFilesChanged: (files: FileDto[]) => void;
+    rootId: number | null;
 }
 
-interface GroupItem {
-  id: number;
-  name: string;
-  fileCount: number;
-}
+const GroupList = ({rootId}: GroupListProps) => {
+    // Use the FileContext instead of directly using the RootFilesListModel
+    const {
+        groups,
+        selectedGroup,
+        checkedGroups,
+        selectGroup,
+        checkGroup,
+        isLoadingGroups,
+        groupError
+    } = useFileContext();
 
-const GroupList = ({
-  rootId,
-  selectedGroup,
-  checkedGroups,
-  onSelectGroup,
-  onCheckGroup,
-  onFilesChanged
-}: GroupListProps) => {
-  const [groups, setGroups] = useState<GroupItem[]>([]);
-  
-  // Use the RootFilesListModel to get all files
-  const { files } = useRootFilesListModel({
-    rootId,
-    onFilesChanged
-  });
+    // Header component for the list
+    const header = (
+        <Box mb={10}>
+            <Title order={4}>Groups</Title>
+        </Box>
+    );
 
-  // Extract unique groups from files and count files per group
-  useEffect(() => {
-    const groupMap = new Map<string, number>();
-    
-    files.forEach(file => {
-      if (file.group) {
-        const count = groupMap.get(file.group) || 0;
-        groupMap.set(file.group, count + 1);
-      }
-    });
-    
-    const groupItems: GroupItem[] = Array.from(groupMap.entries()).map(([name, fileCount], index) => ({
-      id: index,
-      name,
-      fileCount
-    }));
-    
-    setGroups(groupItems);
-  }, [files]);
+    // Custom filter function for groups
+    const filterGroup = useCallback((group: { name: string }, query: string) => {
+        const searchLower = query.toLowerCase();
+        const nameLower = group.name.toLowerCase();
 
-  // Header component for the list
-  const header = (
-    <Box mb={10}>
-      <Title order={4}>Groups</Title>
-    </Box>
-  );
+        return nameLower.includes(searchLower);
+    }, []);
 
-  return (
-    <CheckableList
-      items={groups}
-      selectedItemId={selectedGroup ? groups.findIndex(g => g.name === selectedGroup) : null}
-      checkedItemIds={groups
-        .filter(group => checkedGroups.includes(group.name))
-        .map(group => group.id)}
-      onSelectItem={(id) => {
-        const group = groups[id];
-        if (group) {
-          onSelectGroup(group.name);
-        }
-      }}
-      onCheckItem={(id, checked) => {
-        const group = groups[id];
-        if (group) {
-          onCheckGroup(group.name, checked);
-        }
-      }}
-      getItemId={(item) => item.id}
-      renderItemContent={(item) => (
-        <Text>
-          {item.name} ({item.fileCount})
-        </Text>
-      )}
-      itemType="group"
-      header={header}
-    />
-  );
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Groups could not be loaded">
+            There was an issue loading the group list. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingGroups) {
+        return (
+            <Alert color="blue" title="Loading groups">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (groupError) {
+        return (
+            <Alert color="red" title="Error loading groups">
+                {groupError instanceof Error ? groupError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    return (
+        <ErrorBoundary fallback={errorFallback}>
+            <CheckableList
+                items={groups}
+                selectedItemId={selectedGroup ? groups.findIndex(g => g.name === selectedGroup) : null}
+                checkedItemIds={groups
+                    .filter(group => checkedGroups.includes(group.name))
+                    .map(group => group.id)}
+                onSelectItem={(id) => {
+                    const group = groups[id];
+                    if (group) {
+                        selectGroup(group.name);
+                    }
+                }}
+                onCheckItem={(id, checked) => {
+                    const group = groups[id];
+                    if (group) {
+                        checkGroup(group.name, checked);
+                    }
+                }}
+                getItemId={(item) => item.id}
+                renderItemContent={(item) => (
+                    <Text>
+                        {item.name} ({item.fileCount})
+                    </Text>
+                )}
+                filterItem={filterGroup}
+                itemType="group"
+                header={header}
+            />
+        </ErrorBoundary>
+    );
 };
 
 export default GroupList;

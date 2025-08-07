@@ -1,68 +1,98 @@
-import { useState, useEffect } from 'react';
-import { Text, Box, Title } from '@mantine/core';
+import {useCallback} from 'react';
+import {Alert, Box, Text, Title} from '@mantine/core';
 import CheckableList from '../CheckableList';
-import { useRootFilesListModel } from '@/models/RootFilesListModel';
-import { FileDto } from '@/controller/file-controller';
+import {FileDTO} from '@/services/file-service';
+import ErrorBoundary from '../ErrorBoundary';
+import {useFileContext} from '@/contexts/FileContext';
 
 interface FileListProps {
-  rootId: number | null;
-  selectedGroup: string | null;
-  selectedFileId: number | null;
-  checkedFileIds: number[];
-  onSelectFile: (fileId: number) => void;
-  onCheckFile: (fileId: number, checked: boolean) => void;
-  onFilesChanged: (files: FileDto[]) => void;
+    rootId: number | null;
 }
 
-const FileList = ({
-  rootId,
-  selectedGroup,
-  selectedFileId,
-  checkedFileIds,
-  onSelectFile,
-  onCheckFile,
-  onFilesChanged
-}: FileListProps) => {
-  const [filteredFiles, setFilteredFiles] = useState<FileDto[]>([]);
-  
-  // Use the RootFilesListModel with the group filter
-  const { files } = useRootFilesListModel({
-    rootId,
-    onFilesChanged,
-    groupFilter: selectedGroup || undefined
-  });
+const FileList = ({rootId}: FileListProps) => {
+    // Use the FileContext instead of directly using the RootFilesListModel
+    const {
+        files,
+        selectedFileId,
+        checkedFileIds,
+        selectedGroup,
+        selectFile,
+        checkFile,
+        isLoadingFiles,
+        fileError
+    } = useFileContext();
 
-  // Update filtered files when files or selectedGroup changes
-  useEffect(() => {
-    setFilteredFiles(files);
-  }, [files, selectedGroup]);
+    // Header component for the list
+    const header = (
+        <Box mb={10}>
+            <Title order={4}>
+                {selectedGroup ? `Files in ${selectedGroup}` : 'Select a group to view files'}
+            </Title>
+        </Box>
+    );
 
-  // Header component for the list
-  const header = (
-    <Box mb={10}>
-      <Title order={4}>
-        {selectedGroup ? `Files in ${selectedGroup}` : 'Select a group to view files'}
-      </Title>
-    </Box>
-  );
+    // Custom filter function for files
+    const filterFile = useCallback((file: FileDTO, query: string) => {
+        const searchLower = query.toLowerCase();
+        const nameLower = file.name.toLowerCase();
+        const pathLower = file.relative_path.toLowerCase();
 
-  return (
-    <CheckableList
-      items={filteredFiles}
-      selectedItemId={selectedFileId}
-      checkedItemIds={checkedFileIds}
-      onSelectItem={(id) => onSelectFile(id)}
-      onCheckItem={(id, checked) => onCheckFile(id, checked)}
-      getItemId={(item) => item.id}
-      renderItemContent={(item) => (
-        <Text>
-          {item.name}
-        </Text>
-      )}
-      itemType="file"
-      header={header}
-    />
-  );
+        return nameLower.includes(searchLower) || pathLower.includes(searchLower);
+    }, []);
+
+    // Sort files by name
+    const sortFiles = useCallback((a: FileDTO, b: FileDTO) => {
+        const fileNameA = a.relative_path + a.name;
+        const fileNameB = b.relative_path + b.name;
+        return fileNameA.localeCompare(fileNameB);
+    }, []);
+
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Files could not be loaded">
+            There was an issue loading the file list. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingFiles) {
+        return (
+            <Alert color="blue" title="Loading files">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (fileError) {
+        return (
+            <Alert color="red" title="Error loading files">
+                {fileError instanceof Error ? fileError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
+
+    return (
+        <ErrorBoundary fallback={errorFallback}>
+            <CheckableList
+                items={files}
+                selectedItemId={selectedFileId}
+                checkedItemIds={checkedFileIds}
+                onSelectItem={selectFile}
+                onCheckItem={checkFile}
+                getItemId={(item) => item.id}
+                renderItemContent={(item) => (
+                    <Text>
+                        {item.relative_path}<strong>{item.name}</strong>
+                    </Text>
+                )}
+                sortItems={sortFiles}
+                filterItem={filterFile}
+                itemType="file"
+                header={header}
+            />
+        </ErrorBoundary>
+    );
 };
 
 export default FileList;

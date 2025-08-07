@@ -1,30 +1,53 @@
-import {ReactNode, useState} from 'react';
-import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {FieldDto} from "#controller/field-controller.ts";
+import { ReactNode } from 'react';
+import { ActionIcon, Alert, Group, Title, Tooltip } from '@mantine/core';
+import { FieldDTO } from '@/services/field-service';
 import ReorderableList from '../ReorderableList.tsx';
-import {useEntityFieldsListModel} from "#models/EntityFieldsListModel.ts";
+import { useEntityContext } from '@/contexts/EntityContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-interface FieldsListProps {
-    selectedEntity: number | null;
-    onSelectField: (fieldId: number | null) => void;
-}
+const FieldsList = () => {
+    const {
+        fields,
+        selectedEntityId,
+        selectedFieldId,
+        isLoadingFields,
+        fieldError,
+        selectField,
+        createField
+    } = useEntityContext();
 
-const FieldsList = ({
-                        selectedEntity, onSelectField
-                    }: FieldsListProps) => {
-    const [selectedField, setSelectedField] = useState<number | null>(null);
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Fields could not be loaded">
+            There was an issue loading the field list. Please try again later.
+        </Alert>
+    );
 
-    // Use the entity list model
-    const {fields, createNewField, handleReorder} = useEntityFieldsListModel({
-        entityId: selectedEntity,
-        onFieldsChanged: (__newFields) => {
+    // Loading state
+    if (isLoadingFields) {
+        return (
+            <Alert color="blue" title="Loading fields">
+                Please wait...
+            </Alert>
+        );
+    }
 
-            // If needed, you can perform additional actions when entities change
-        }
-    });
+    // Error state
+    if (fieldError) {
+        return (
+            <Alert color="red" title="Error loading fields">
+                {fieldError instanceof Error ? fieldError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
 
-    if (!selectedEntity) {
-        return null;
+    // No entity selected state
+    if (!selectedEntityId) {
+        return (
+            <Alert color="gray" title="No entity selected">
+                Please select an entity to view its fields.
+            </Alert>
+        );
     }
 
     // Create header component for ReorderableList
@@ -35,7 +58,7 @@ const FieldsList = ({
                 <ActionIcon
                     variant="filled"
                     aria-label="Add new field"
-                    onClick={createNewField}
+                    onClick={() => createField()}
                 >
                     +
                 </ActionIcon>
@@ -44,36 +67,35 @@ const FieldsList = ({
     );
 
     // Define renderItemContent function for field items
-    const renderFieldContent = (field: FieldDto): ReactNode => (
+    const renderFieldContent = (field: FieldDTO): ReactNode => (
         <div>
             <div>{field.name}</div>
             <div style={{color: 'dimmed', fontSize: 'small'}}>
                 {field.field_type}
-                {field.is_primary_key ? ' (PK)' : ''}
+                {field.is_id ? ' (PK)' : ''}
                 {field.is_nullable ? ' (nullable)' : ''}
             </div>
         </div>
     );
 
-    // Define onSelectItem function
-    const handleSelectItem = (fieldId: number): void => {
-        setSelectedField(fieldId);
-        onSelectField(fieldId);
-    };
-
     return (
-        <ReorderableList
-            items={fields}
-            selectedItemId={selectedField}
-            onSelectItem={handleSelectItem}
-            onReorder={handleReorder}
-            getItemId={(field) => field.id}
-            renderItemContent={renderFieldContent}
-            droppableId="fields-list"
-            draggableIdPrefix="field"
-            itemType="field"
-            header={header}
-        />
+        <ErrorBoundary fallback={errorFallback}>
+            <ReorderableList
+                items={fields}
+                selectedItemId={selectedFieldId}
+                onSelectItem={selectField}
+                onReorder={async (reorderedIds) => {
+                    // TODO: Implement reordering logic if needed
+                    console.log("Reordering fields:", reorderedIds);
+                }}
+                getItemId={(field) => field.id}
+                renderItemContent={renderFieldContent}
+                droppableId="fields-list"
+                draggableIdPrefix="field"
+                itemType="field"
+                header={header}
+            />
+        </ErrorBoundary>
     );
 };
 

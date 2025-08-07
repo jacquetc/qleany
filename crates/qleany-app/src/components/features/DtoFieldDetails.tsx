@@ -1,14 +1,15 @@
 import {useEffect, useState} from 'react';
 import {Button, Checkbox, Select, Stack, TextInput, Title} from '@mantine/core';
-import {DtoFieldDto, DtoFieldType, getDtoField, updateDtoField} from "#controller/dto-field-controller.ts";
 import {error, info} from '@tauri-apps/plugin-log';
-import {listen} from '@tauri-apps/api/event';
+import {useDtoFields} from '../../hooks/useDtoFields';
+import {DtoFieldDTO, DtoFieldType} from '../../services/dto-field-service';
 
 interface DtoFieldDetailsProps {
     selectedDtoField: number | null;
+    dtoId: number | null;
 }
 
-const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
+const DtoFieldDetails = ({selectedDtoField, dtoId}: DtoFieldDetailsProps) => {
     const [formData, setFormData] = useState<{
         name: string;
         field_type: DtoFieldType;
@@ -21,45 +22,26 @@ const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
         is_list: false,
     });
 
-    const [dtoFieldData, setDtoFieldData] = useState<DtoFieldDto | null>(null);
-    const [loading, setLoading] = useState(false);
-
-    // Fetch DTO field data when selected DTO field changes
+    const [dtoFieldData, setDtoFieldData] = useState<DtoFieldDTO | null>(null);
+    
+    // Use the hook to access DTO fields data and operations
+    const { dtoFields, updateDtoField, isLoading } = useDtoFields(dtoId);
+    
+    // Find the selected field in the dtoFields array
     useEffect(() => {
-        if (selectedDtoField) {
-            const fetchDtoFieldData = async () => {
-                setLoading(true);
-                try {
-                    const data = await getDtoField(selectedDtoField);
-                    if (data) {
-                        setDtoFieldData(data);
-                        setFormData({
-                            name: data.name,
-                            field_type: data.field_type,
-                            is_nullable: data.is_nullable,
-                            is_list: data.is_list,
-                        });
-                    }
-                } catch (err) {
-                    error(`Failed to fetch DTO field data: ${err}`);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchDtoFieldData();
-
-            // Listen for direct_access_all_reset event
-            const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-                info(`Direct access all reset event received in DtoFieldDetails`);
-                fetchDtoFieldData().catch((err => error(err)));
-            });
-
-            return () => {
-                unlisten_direct_access_all_reset.then(f => f());
-            };
+        if (selectedDtoField && dtoFields.length > 0) {
+            const field = dtoFields.find(field => field.id === selectedDtoField);
+            if (field) {
+                setDtoFieldData(field);
+                setFormData({
+                    name: field.name,
+                    field_type: field.field_type,
+                    is_nullable: field.is_nullable,
+                    is_list: field.is_list,
+                });
+            }
         }
-    }, [selectedDtoField]);
+    }, [selectedDtoField, dtoFields]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +50,7 @@ const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
 
         try {
             // Update the DTO field with the form data
-            const updatedDtoField: DtoFieldDto = {
+            const updatedDtoField: DtoFieldDTO = {
                 ...dtoFieldData,
                 name: formData.name,
                 field_type: formData.field_type,
@@ -76,14 +58,10 @@ const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
                 is_list: formData.is_list,
             };
 
-            await updateDtoField(updatedDtoField);
-
-            // Refresh data
-            const refreshedData = await getDtoField(dtoFieldData.id);
-            if (refreshedData) {
-                setDtoFieldData(refreshedData);
-            }
-
+            // Use the hook's updateDtoField method
+            updateDtoField(updatedDtoField);
+            
+            // The hook will automatically refresh the data through React Query
             info("DTO Field updated successfully");
         } catch (err) {
             error(`Failed to update DTO field: ${err}`);
@@ -135,7 +113,7 @@ const DtoFieldDetails = ({selectedDtoField}: DtoFieldDetailsProps) => {
                         onChange={(e) => setFormData({...formData, is_list: e.target.checked})}
                     />
 
-                    <Button type="submit" loading={loading}>Save Changes</Button>
+                    <Button type="submit" loading={isLoading}>Save Changes</Button>
                 </Stack>
             </form>
         </>

@@ -1,24 +1,20 @@
-import {ReactNode, useState} from 'react';
-import {EntityDto} from "#controller/entity-controller.ts";
-import {ActionIcon, Group, Title} from '@mantine/core';
+import { ReactNode } from 'react';
+import { ActionIcon, Alert, Group, Title } from '@mantine/core';
 import ReorderableList from '../ReorderableList.tsx';
-import {useEntityListModel} from '../../models/RootEntitiesListModel.ts';
+import { useEntityContext } from '@/contexts/EntityContext';
+import { EntityDTO } from '@/services/entity-service';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-interface EntityListProps {
-    onSelectEntity: (entityId: number) => void;
-}
-
-const EntityList = ({
-                        onSelectEntity,
-                    }: EntityListProps) => {
-    const [selectedEntity, setSelectedEntity] = useState<number | null>(null);
-
-    // Use the entity list model
-    const {entities, createNewEntity, handleReorder} = useEntityListModel({
-        onEntitiesChanged: (__newEntities) => {
-            // If needed, you can perform additional actions when entities change
-        }
-    });
+const EntityList = () => {
+    // Use the entity context instead of the model
+    const {
+        entities,
+        selectedEntityId,
+        isLoadingEntities,
+        entityError,
+        selectEntity,
+        createEntity
+    } = useEntityContext();
 
     // Create header component for ReorderableList
     const header = (
@@ -27,7 +23,7 @@ const EntityList = ({
             <ActionIcon
                 variant="filled"
                 aria-label="Add new entity"
-                onClick={createNewEntity}
+                onClick={createEntity}
             >
                 +
             </ActionIcon>
@@ -35,34 +31,58 @@ const EntityList = ({
     );
 
     // Define renderItemContent function for entity items
-    const renderEntityContent = (entity: EntityDto): ReactNode => (
+    const renderEntityContent = (entity: EntityDTO): ReactNode => (
         <div>
             <div>{entity.name}</div>
             <div style={{color: 'dimmed', fontSize: 'small'}}>
-                {entity.only_for_heritage ? 'heritage' : ''}
+                {entity.fields.length > 0 ? `${entity.fields.length} fields` : 'No fields'}
             </div>
         </div>
     );
 
-    // Handle entity selection
-    const handleSelectEntity = (entityId: number) => {
-        setSelectedEntity(entityId);
-        onSelectEntity(entityId);
-    };
+    // Custom fallback component for error state
+    const errorFallback = (
+        <Alert color="yellow" title="Entities could not be loaded">
+            There was an issue loading the entity list. Please try again later.
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingEntities) {
+        return (
+            <Alert color="blue" title="Loading entities">
+                Please wait...
+            </Alert>
+        );
+    }
+
+    // Error state
+    if (entityError) {
+        return (
+            <Alert color="red" title="Error loading entities">
+                {entityError instanceof Error ? entityError.message : 'An unknown error occurred'}
+            </Alert>
+        );
+    }
 
     return (
-        <ReorderableList
-            items={entities}
-            selectedItemId={selectedEntity}
-            onSelectItem={handleSelectEntity}
-            onReorder={handleReorder}
-            getItemId={(entity) => entity.id}
-            renderItemContent={renderEntityContent}
-            droppableId="dnd-list"
-            draggableIdPrefix="entity"
-            itemType="entity"
-            header={header}
-        />
+        <ErrorBoundary fallback={errorFallback}>
+            <ReorderableList
+                items={entities}
+                selectedItemId={selectedEntityId}
+                onSelectItem={selectEntity}
+                onReorder={async (reorderedIds) => {
+                    // TODO: Implement reordering logic if needed
+                    console.log("Reordering entities:", reorderedIds);
+                }}
+                getItemId={(entity) => entity.id}
+                renderItemContent={renderEntityContent}
+                droppableId="dnd-list"
+                draggableIdPrefix="entity"
+                itemType="entity"
+                header={header}
+            />
+        </ErrorBoundary>
     );
 };
 

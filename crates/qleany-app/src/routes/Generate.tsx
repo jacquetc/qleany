@@ -1,138 +1,168 @@
-import {useEffect, useState} from 'react';
-import {Grid, Title} from '@mantine/core';
-import {error, info} from '@tauri-apps/plugin-log';
-import {getRootMulti} from '#controller/root-controller.ts';
-import {listRustFiles, ListRustFilesDto} from '#controller/rust-file-generation-controller.ts';
-import {FileDto} from '@/controller/file-controller';
+import React, {useEffect, useState} from 'react';
+import {Alert, Button, Group, Title} from '@mantine/core';
+import {error} from '@tauri-apps/plugin-log';
+import {useRoot} from '@/hooks/useRoot';
+import {useRustFileGeneration} from '@/hooks/useRustFileGeneration';
 import GroupList from '@/components/generate/GroupList';
 import FileList from '@/components/generate/FileList';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import {FileProvider} from '@/contexts/FileContext';
 
 const Generate = () => {
-    const [rootId, setRootId] = useState<number | null>(null);
-    const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-    const [checkedGroups, setCheckedGroups] = useState<string[]>([]);
-    const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
-    const [checkedFileIds, setCheckedFileIds] = useState<number[]>([]);
-    const [allFiles, setAllFiles] = useState<FileDto[]>([]);
+    // Use the root hook to get the root entity
+    const {root, isLoading: isLoadingRoot, error: rootError} = useRoot();
 
-    // Function to get the root ID
-    async function getRootId() {
-        const roots = await getRootMulti([]);
-        info(`Root ID initialized: JSON.stringify(roots)`);
-        if (roots.length > 0 && roots[0] !== null) {
-            setRootId(roots[0]!.id);
-            return roots[0]!.id;
+    // Use the rust file generation hook
+    const {
+        isLoading: isLoadingFiles,
+        operationError,
+        listRustFiles
+    } = useRustFileGeneration();
+
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    // Initialize on component mount
+    useEffect(() => {
+        const initializeData = async () => {
+            try {
+                // Check if root exists
+                if (!root) {
+                    setLoadError("No root found. Please create a root first.");
+                    return;
+                }
+
+                // List rust files
+                await listRustFiles(false);
+            } catch (err) {
+                const errorMessage = `Failed to initialize data: ${err}`;
+                error(errorMessage);
+                setLoadError(errorMessage);
+            }
+        };
+
+        if (!isLoadingRoot && !rootError) {
+            initializeData();
         }
-        return null;
+    }, [root, isLoadingRoot, rootError, listRustFiles]);
+
+    // Main error fallback for the entire Generate component
+    const mainErrorFallback = (
+        <Alert
+            color="red"
+            title="Something went wrong"
+            className="p-10"
+        >
+            <p>There was an error loading the Generate page. Please try again later.</p>
+            <Group align="right" mt="md">
+                <Button onClick={() => window.location.reload()} color="red" variant="light">
+                    Reload Page
+                </Button>
+            </Group>
+        </Alert>
+    );
+
+    // Loading state
+    if (isLoadingRoot || isLoadingFiles) {
+        return (
+            <div className="p-10">
+                <Title order={1} mb="xl">Generate</Title>
+                <Alert color="blue" title="Loading">
+                    Loading file generation data...
+                </Alert>
+            </div>
+        );
     }
 
-    // Initialize root ID on component mount
-    useEffect(() => {
-        getRootId().catch((err) => error(err));
+    // Error state - check for root error first
+    if (rootError) {
+        return (
+            <div className="p-10">
+                <Title order={1} mb="xl">Generate</Title>
+                <Alert
+                    color="red"
+                    title="Error Loading Root Data"
+                >
+                    <p>{rootError instanceof Error ? rootError.message : 'Unknown error loading root data'}</p>
+                    <Group align="right" mt="md">
+                        <Button onClick={() => window.location.reload()} color="red" variant="light">
+                            Try Again
+                        </Button>
+                    </Group>
+                </Alert>
+            </div>
+        );
+    }
 
-        const dto: ListRustFilesDto = {
-            only_existing: false,
-        }
+    // Check for operation error
+    if (operationError) {
+        return (
+            <div className="p-10">
+                <Title order={1} mb="xl">Generate</Title>
+                <Alert
+                    color="red"
+                    title="Error Loading File Data"
+                >
+                    <p>{operationError.message}</p>
+                    <Group align="right" mt="md">
+                        <Button onClick={() => window.location.reload()} color="red" variant="light">
+                            Try Again
+                        </Button>
+                    </Group>
+                </Alert>
+            </div>
+        );
+    }
 
-        listRustFiles(dto).catch((err) => error(err));
-    }, []);
-
-    // Handle file changes
-    const handleFilesChanged = (files: FileDto[]) => {
-        setAllFiles(files);
-    };
-
-    // Handle group selection
-    const handleSelectGroup = (group: string) => {
-        setSelectedGroup(group);
-        setSelectedFileId(null);
-    };
-
-    // Handle group checking/unchecking
-    const handleCheckGroup = (group: string, checked: boolean) => {
-        if (checked) {
-            // Add group to checked groups
-            setCheckedGroups(prev => [...prev, group]);
-
-            // Check all files in this group
-            const filesInGroup = allFiles.filter(file => file.group === group);
-            const fileIdsInGroup = filesInGroup.map(file => file.id);
-            setCheckedFileIds(prev => [...prev, ...fileIdsInGroup.filter(id => !prev.includes(id))]);
-        } else {
-            // Remove group from checked groups
-            setCheckedGroups(prev => prev.filter(g => g !== group));
-
-            // Uncheck all files in this group
-            const filesInGroup = allFiles.filter(file => file.group === group);
-            const fileIdsInGroup = filesInGroup.map(file => file.id);
-            setCheckedFileIds(prev => prev.filter(id => !fileIdsInGroup.includes(id)));
-        }
-    };
-
-    // Handle file selection
-    const handleSelectFile = (fileId: number) => {
-        setSelectedFileId(fileId);
-    };
-
-    // Handle file checking/unchecking
-    const handleCheckFile = (fileId: number, checked: boolean) => {
-        if (checked) {
-            // Add file to checked files
-            setCheckedFileIds(prev => [...prev, fileId]);
-
-            // Check if all files in the group are now checked
-            const file = allFiles.find(f => f.id === fileId);
-            if (file && file.group) {
-                const filesInGroup = allFiles.filter(f => f.group === file.group);
-                const fileIdsInGroup = filesInGroup.map(f => f.id);
-                const allChecked = fileIdsInGroup.every(id =>
-                    checkedFileIds.includes(id) || id === fileId
-                );
-
-                if (allChecked && !checkedGroups.includes(file.group)) {
-                    setCheckedGroups(prev => [...prev, file.group]);
-                }
-            }
-        } else {
-            // Remove file from checked files
-            setCheckedFileIds(prev => prev.filter(id => id !== fileId));
-
-            // Uncheck the group if any file in the group is unchecked
-            const file = allFiles.find(f => f.id === fileId);
-            if (file && file.group && checkedGroups.includes(file.group)) {
-                setCheckedGroups(prev => prev.filter(g => g !== file.group));
-            }
-        }
-    };
+    // Check for custom load error
+    if (loadError) {
+        return (
+            <div className="p-10">
+                <Title order={1} mb="xl">Generate</Title>
+                <Alert
+                    color="red"
+                    title="Error Loading Data"
+                >
+                    <p>{loadError}</p>
+                    <Group align="right" mt="md">
+                        <Button onClick={() => window.location.reload()} color="red" variant="light">
+                            Try Again
+                        </Button>
+                    </Group>
+                </Alert>
+            </div>
+        );
+    }
 
     return (
-        <div className="p-10">
-            <Title order={1} mb="xl">Generate</Title>
+        <ErrorBoundary fallback={mainErrorFallback}>
+            <div className="p-10">
+                <Title order={1} mb="xl">Generate</Title>
 
-            <Grid>
-                <Grid.Col span={4}>
-                    <GroupList
-                        rootId={rootId}
-                        selectedGroup={selectedGroup}
-                        checkedGroups={checkedGroups}
-                        onSelectGroup={handleSelectGroup}
-                        onCheckGroup={handleCheckGroup}
-                        onFilesChanged={handleFilesChanged}
-                    />
-                </Grid.Col>
-                <Grid.Col span={8}>
-                    <FileList
-                        rootId={rootId}
-                        selectedGroup={selectedGroup}
-                        selectedFileId={selectedFileId}
-                        checkedFileIds={checkedFileIds}
-                        onSelectFile={handleSelectFile}
-                        onCheckFile={handleCheckFile}
-                        onFilesChanged={handleFilesChanged}
-                    />
-                </Grid.Col>
-            </Grid>
-        </div>
+                {/* Wrap the components with FileProvider to provide file and group data */}
+                <FileProvider rootId={root?.id || null}>
+                    <div style={{display: 'flex', height: 'calc(100vh - 200px)'}}>
+                        <div style={{
+                            width: '33%',
+                            height: '100%',
+                            overflow: 'auto',
+                            paddingRight: '10px',
+                            boxSizing: 'border-box'
+                        }}>
+                            <GroupList rootId={root?.id || null}/>
+                        </div>
+                        <div style={{
+                            width: '67%',
+                            height: '100%',
+                            overflow: 'auto',
+                            paddingLeft: '10px',
+                            boxSizing: 'border-box'
+                        }}>
+                            <FileList rootId={root?.id || null}/>
+                        </div>
+                    </div>
+                </FileProvider>
+            </div>
+        </ErrorBoundary>
     );
 }
 

@@ -1,10 +1,10 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ActionIcon, Group, Title, Tooltip} from '@mantine/core';
-import {DtoRelationshipField, getDto, setDtoRelationship} from "#controller/dto-controller.ts";
+import {DtoRelationshipField, dtoService} from "../../services/dto-service";
 import {error, info} from '@tauri-apps/plugin-log';
-import {createDtoField, DtoFieldDto, DtoFieldType, getDtoFieldMulti} from "#controller/dto-field-controller.ts";
+import {DtoFieldDTO, DtoFieldType} from "../../services/dto-field-service";
+import {useDtoFields} from "../../hooks/useDtoFields";
 import ReorderableList from '../ReorderableList.tsx';
-import {listen} from '@tauri-apps/api/event';
 
 interface DtoFieldsListProps {
     selectedDto: number | null;
@@ -15,134 +15,51 @@ interface DtoFieldsListProps {
 const DtoFieldsList = ({
                            selectedDto, onSelectDtoField
                        }: DtoFieldsListProps) => {
-    const [fields, setFields] = useState<DtoFieldDto[]>([]);
     const [selectedField, setSelectedField] = useState<number | null>(null);
+    
+    // Use the hook to access DTO fields data and operations
+    const { 
+        dtoFields, 
+        createDtoField, 
+        isLoading, 
+        error: hookError 
+    } = useDtoFields(selectedDto);
 
     async function createNewDtoField() {
         if (!selectedDto) {
-            await error("No DTO selected");
+            error("No DTO selected");
             return;
         }
 
         try {
-            const dto = await getDto(selectedDto);
-            // Find the selected DTO
-            if (!dto) {
-                await error("Selected DTO not found");
-                return;
-            }
-
-            // Create field
-            const fieldDto = {
+            // Create field using the hook
+            const fieldData = {
                 name: 'New Field',
-                field_type: DtoFieldType.String,
-                is_nullable: false,
-                is_list: false,
+                fieldType: DtoFieldType.String,
+                isNullable: false,
+                isList: false,
             };
 
-            const newField = await createDtoField(fieldDto);
-
-            // Update DTO with the new field
-            const updatedFields = [...dto.fields, newField.id];
-
-            // Update the relationship
-            await setDtoRelationship({
-                id: dto.id,
-                field: DtoRelationshipField.Fields,
-                right_ids: updatedFields,
-            });
-
-            // Refresh data
-            await fetchFieldData();
+            // The hook handles creating the field and updating the DTO relationship
+            const newField = await createDtoField(fieldData);
 
             // Select the newly created field
-            setSelectedField(newField.id);
-
-            await info("DTO field created successfully");
-        } catch (err) {
-            await error(`Failed to create DTO field: ${err}`);
-        }
-    }
-
-    useEffect(() => {
-
-        // mounting the event listeners
-        const unlisten_direct_access_dto_field_updated = listen('direct_access_dto_field_updated', async (event) => {
-            const payload = event.payload as { ids: number[] };
-            info(`Dto Field updated event received: ${payload.ids}`);
-            const updatedDtoFields = await getDtoFieldMulti(payload.ids);
-
-            for (const updatedDtoField of updatedDtoFields) {
-                if (!updatedDtoField) {
-                    info(`Use case not found in the current state.`);
-                    continue;
-                }
-
-                const index = fields.findIndex((dtoField) => dtoField.id === updatedDtoField.id);
-                if (index !== -1) {
-                    const updatedDtoFieldsList = [...fields];
-                    updatedDtoFieldsList[index] = updatedDtoField;
-                    setFields(updatedDtoFieldsList);
-                } else {
-                    info(`Use case not found in the current state.`);
-                }
-
+            if (newField) {
+                setSelectedField(newField.id);
+                onSelectDtoField(newField.id);
             }
 
-        });
-
-        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-            info(`Direct access all reset event received in DtoFieldsList`);
-            fetchFieldData().catch((err => error(err)));
-        });
-
-        return () => {
-            unlisten_direct_access_dto_field_updated.then(f => f());
-            unlisten_direct_access_all_reset.then(f => f());
-        };
-
-    }, [fields]);
-
-    // Function to fetch field data from the backend
-    async function fetchFieldData() {
-        if (!selectedDto) return;
-
-        const dto = await getDto(selectedDto);
-        if (!dto) return;
-
-        const fieldIds = dto.fields;
-        const fields = await getDtoFieldMulti(fieldIds);
-        setFields(fields.filter((field) => field !== null) as DtoFieldDto[]);
+            info("DTO field created successfully");
+        } catch (err) {
+            error(`Failed to create DTO field: ${err}`);
+        }
     }
 
-    // change fields when selected DTO changes
+    // Reset selection when selected DTO changes
     useEffect(() => {
-        if (selectedDto) {
-            // Fetch field data using the field IDs from the selected DTO
-            const fetchFields = async () => {
-                try {
-                    const dtoData = await getDto(selectedDto);
-                    if (!dtoData) {
-                        setFields([]);
-                        return;
-                    }
-                    const fieldData = await getDtoFieldMulti(dtoData.fields);
-                    const validFields = fieldData.filter((field): field is DtoFieldDto => field !== null);
-                    setFields(validFields);
-
-                    setSelectedField(null);
-                    onSelectDtoField(null);
-
-                } catch (err) {
-                    error(`Failed to fetch DTO fields: ${err}`);
-                }
-            };
-
-            fetchFields();
-        } else {
-            setFields([]);
-        }
-    }, [selectedDto]);
+        setSelectedField(null);
+        onSelectDtoField(null);
+    }, [selectedDto, onSelectDtoField]);
 
     if (!selectedDto) {
         return null;
@@ -165,7 +82,7 @@ const DtoFieldsList = ({
     );
 
     // Define renderItemContent function for field items
-    const renderFieldContent = (field: DtoFieldDto): ReactNode => (
+    const renderFieldContent = (field: DtoFieldDTO): ReactNode => (
         <div>
             <div>{field.name}</div>
             <div style={{color: 'dimmed', fontSize: 'small'}}>
@@ -182,14 +99,14 @@ const DtoFieldsList = ({
 
         try {
             // Update the DTO with the new field order
-            await setDtoRelationship({
+            await dtoService.setDtoRelationship({
                 id: selectedDto,
                 field: DtoRelationshipField.Fields,
                 right_ids: reorderedIds,
             });
 
             info("DTO field order updated successfully");
-            await fetchFieldData();
+            // The hook will automatically refresh the data
         } catch (err) {
             error(`Failed to update DTO field order: ${err}`);
         }
@@ -203,7 +120,7 @@ const DtoFieldsList = ({
 
     return (
         <ReorderableList
-            items={fields}
+            items={dtoFields}
             selectedItemId={selectedField}
             onSelectItem={handleSelectItem}
             onReorder={handleReorder}

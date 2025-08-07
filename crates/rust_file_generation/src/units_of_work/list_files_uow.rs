@@ -80,6 +80,7 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
+#[macros::uow_action(entity = "File", action = "DeleteMulti")]
 impl ListRustFilesUnitOfWorkTrait for ListRustFilesUnitOfWork {}
 
 pub struct ListRustFilesUnitOfWorkFactory {

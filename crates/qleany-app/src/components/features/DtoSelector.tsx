@@ -1,10 +1,10 @@
-import {useEffect, useState} from 'react';
-import {ActionIcon, Button, Group, Modal, Popover, Stack, Text, TextInput} from '@mantine/core';
-import {IconCheck, IconX} from '@tabler/icons-react';
-import {createDto, DtoDto, getDtoMulti} from "#controller/dto-controller.ts";
-import {error, info} from '@tauri-apps/plugin-log';
-import {getUseCaseRelationship, UseCaseRelationshipField} from "#controller/use-case-controller.ts";
-import {listen} from '@tauri-apps/api/event';
+import { useEffect, useState } from 'react';
+import { ActionIcon, Button, Group, Modal, Popover, Stack, Text, TextInput } from '@mantine/core';
+import { IconCheck, IconX } from '@tabler/icons-react';
+import { error, info } from '@tauri-apps/plugin-log';
+import { useFeatureContext } from '@/contexts/FeatureContext';
+import { DtoDTO } from '@/services/dto-service';
+import { UseCaseRelationshipField } from '@/services/use-case-service';
 
 interface DtoSelectorProps {
     value: number | null;
@@ -14,50 +14,29 @@ interface DtoSelectorProps {
     label: string;
 }
 
-const DtoSelector = ({value, useCaseId, isDtoOut, onChange, label}: DtoSelectorProps) => {
-    const [_, setDtos] = useState<DtoDto[]>([]);
+const DtoSelector = ({ value, useCaseId, isDtoOut, onChange, label }: DtoSelectorProps) => {
+    const {
+        dtos,
+        createDto
+    } = useFeatureContext();
+    
     const [modalOpened, setModalOpened] = useState(false);
     const [popoverOpened, setPopoverOpened] = useState(false);
     const [newDtoName, setNewDtoName] = useState('');
     const [loading, setLoading] = useState(false);
-    const [currentDto, setCurrentDto] = useState<DtoDto | null>(null);
+    const [currentDto, setCurrentDto] = useState<DtoDTO | null>(null);
 
-    // Fetch all DTOs
+    // Find the current DTO when value or dtos change
     useEffect(() => {
-        const fetchDtos = async () => {
-            try {
-
-                const field = isDtoOut ? UseCaseRelationshipField.DtoOut : UseCaseRelationshipField.DtoIn;
-
-                const dtoIdList = await getUseCaseRelationship(useCaseId, field);
-                const dtoList = await getDtoMulti(dtoIdList);
-                const validDtos = dtoList.filter((dto): dto is DtoDto => dto !== null);
-                setDtos(validDtos);
-                // If a value is selected, find the corresponding DTO
-                if (value !== null) {
-                    const selectedDto = validDtos.find(dto => dto.id === value);
-                    info(`dto.id: ${value}`);
-                    info(`Fetched DTOs: ${validDtos.map(dto => dto.id).join(', ')}`);
-                    info(`Selected DTO: ${selectedDto ? selectedDto.name : 'None'}`);
-                    setCurrentDto(selectedDto || null);
-                }
-            } catch (err) {
-                error(`Failed to fetch DTOs: ${err}`);
+        if (value !== null) {
+            const selectedDto = dtos.find(dto => dto.id === value);
+            if (selectedDto) {
+                setCurrentDto(selectedDto);
             }
-        };
-
-        fetchDtos();
-
-        // Listen for direct_access_all_reset event
-        const unlisten_direct_access_all_reset = listen('direct_access_all_reset', () => {
-            info(`Direct access all reset event received in DtoSelector`);
-            fetchDtos().catch((err => error(err)));
-        });
-
-        return () => {
-            unlisten_direct_access_all_reset.then(f => f());
-        };
-    }, [isDtoOut, useCaseId, value]);
+        } else {
+            setCurrentDto(null);
+        }
+    }, [value, dtos]);
 
     const handleCreateDto = async () => {
         if (!newDtoName.trim()) {
@@ -67,23 +46,17 @@ const DtoSelector = ({value, useCaseId, isDtoOut, onChange, label}: DtoSelectorP
 
         setLoading(true);
         try {
-            const newDto = await createDto({
-                name: newDtoName,
-                fields: [],
-            });
-
-            // Update the list of DTOs
-            setDtos(prev => [...prev, newDto]);
-
-            // Select the newly created DTO
-            onChange(newDto.id);
-
+            // Create the DTO using the context function
+            createDto(newDtoName);
+            
+            // The newly created DTO will be added to the dtos array by the context
+            // We'll select it in the next render cycle when it appears in the dtos array
+            
             // Close the modal and reset the form
             setModalOpened(false);
             setNewDtoName('');
-            setCurrentDto(newDto);
-
-            info("DTO created successfully");
+            
+            info("DTO creation initiated");
         } catch (err) {
             error(`Failed to create DTO: ${err}`);
         } finally {
@@ -91,6 +64,20 @@ const DtoSelector = ({value, useCaseId, isDtoOut, onChange, label}: DtoSelectorP
         }
     };
 
+
+    // Effect to select the newly created DTO when it appears in the dtos array
+    useEffect(() => {
+        // If we're in the process of creating a DTO (modal was just closed)
+        if (!modalOpened && newDtoName === '' && !currentDto && dtos.length > 0) {
+            // Find the most recently created DTO (assuming it has the highest ID)
+            const latestDto = [...dtos].sort((a, b) => b.id - a.id)[0];
+            if (latestDto) {
+                onChange(latestDto.id);
+                setCurrentDto(latestDto);
+                info(`Selected newly created DTO: ${latestDto.name}`);
+            }
+        }
+    }, [dtos, modalOpened, newDtoName, currentDto, onChange]);
 
     return (
         <>
