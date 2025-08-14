@@ -71,13 +71,20 @@ impl AppContext {
             event_hub_client::EventHubClient::new(&event_hub);
         event_hub_client.start(app_handle, atomic_bool.clone());
 
+        let undo_redo_manager = Arc::new(Mutex::new(UndoRedoManager::new()));
+        let long_operation_manager = Arc::new(Mutex::new(LongOperationManager::new()));
+        {
+            // inject event hub into long_operation_manager
+            let mut lom = long_operation_manager.blocking_lock();
+            lom.set_event_hub(&event_hub);
+        }
         Self {
             db_context,
             event_hub,
             event_hub_client,
             quit_signal: atomic_bool,
-            undo_redo_manager: Arc::new(Mutex::new(UndoRedoManager::new())),
-            long_operation_manager: Arc::new(Mutex::new(LongOperationManager::new())),
+            undo_redo_manager,
+            long_operation_manager,
         }
     }
 }
