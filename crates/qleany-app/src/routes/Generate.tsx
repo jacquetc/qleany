@@ -140,11 +140,11 @@ const Generate = () => {
 
                 {/* Wrap the components with FileProvider to provide file and group data */}
                 <FileProvider rootId={root?.id || null}>
-                    <div style={{display: 'flex', height: 'calc(100vh - 200px)'}}>
+                    <div style={{display: 'flex', height: 'calc(100vh - 170px)'}}>
                         <div style={{
                             width: '33%',
                             height: '100%',
-                            overflow: 'auto',
+                            overflow: 'hidden',
                             paddingRight: '10px',
                             boxSizing: 'border-box'
                         }}>
@@ -153,7 +153,7 @@ const Generate = () => {
                         <div style={{
                             width: '67%',
                             height: '100%',
-                            overflow: 'auto',
+                            overflow: 'hidden',
                             paddingLeft: '10px',
                             boxSizing: 'border-box'
                         }}>

@@ -15,7 +15,7 @@ export const FeatureEvents = {
 /**
  * Type for entity event payloads
  */
-export interface EntityEventPayload {
+export interface FeatureEventPayload {
     ids: number[];
     data?: string;
 }

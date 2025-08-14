@@ -132,6 +132,7 @@ pub fn str_to_field_type(s: &str) -> FieldType {
         "string" => FieldType::String,
         "uuid" => FieldType::Uuid,
         "datetime" => FieldType::DateTime,
+        "entity" | "Entity" => FieldType::Entity,
         _ => FieldType::String,
     }
 }
