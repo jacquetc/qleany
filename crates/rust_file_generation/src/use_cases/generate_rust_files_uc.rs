@@ -1,4 +1,4 @@
-use crate::{GenerateRustFilesDto, GenerateRustFilesResultDto};
+use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::Result;
 use common::long_operation::LongOperation;
 use common::types::EntityId;
@@ -35,8 +35,8 @@ impl GenerateRustFilesUseCase {
     }
 }
 impl LongOperation for GenerateRustFilesUseCase {
-    type Output = GenerateRustFilesResultDto;
-    
+    type Output = GenerateRustFilesReturnDto;
+
     fn execute(
         &self,
         progress_callback: Box<dyn Fn(common::long_operation::OperationProgress) + Send>,
@@ -47,7 +47,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             0.0,
             Some("Starting Rust file generation...".to_string()),
         ));
-        
+
         // Simulate work
         for i in 1..=10 {
             std::thread::sleep(std::time::Duration::from_millis(200));
@@ -56,9 +56,9 @@ impl LongOperation for GenerateRustFilesUseCase {
                 Some(format!("Processing step {} of 10...", i)),
             ));
         }
-        
+
         // Return dummy complex data
-        let result = GenerateRustFilesResultDto {
+        let result = GenerateRustFilesReturnDto {
             files: vec![
                 "src/models/user.rs".to_string(),
                 "src/repositories/user_repository.rs".to_string(),
@@ -68,7 +68,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             ],
             timestamp: chrono::Local::now().to_rfc3339(),
         };
-        
+
         Ok(result)
     }
 }

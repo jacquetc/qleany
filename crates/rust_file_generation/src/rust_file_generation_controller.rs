@@ -1,11 +1,14 @@
+use crate::units_of_work::generate_rust_code_uow::GenerateRustCodeUnitOfWorkFactory;
 use crate::units_of_work::generate_rust_files_uow::GenerateRustFilesUnitOfWorkFactory;
+use crate::use_cases::generate_rust_code_uc::GenerateRustCodeUseCase;
 use crate::use_cases::generate_rust_files_uc::GenerateRustFilesUseCase;
 use crate::{
+    GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
+    GenerateRustFilesReturnDto, ListRustFilesDto,
     units_of_work::list_files_uow::ListRustFilesUnitOfWorkFactory,
-    use_cases::list_rust_files_uc::ListRustFilesUseCase, GenerateRustFilesDto, GenerateRustFilesResultDto, ListRustFilesDto,
+    use_cases::list_rust_files_uc::ListRustFilesUseCase,
 };
 use anyhow::Result;
-use common::event::RustFileGenerationEvent::GenerateRustFiles;
 use common::event::RustFileGenerationEvent::ListRustFiles;
 use common::event::{Event, Origin};
 use common::long_operation::LongOperationManager;
@@ -29,6 +32,16 @@ pub fn list_rust_files(
     Ok(())
 }
 
+pub fn generate_rust_code(
+    db_context: &DbContext,
+    dto: &GenerateRustCodeDto,
+) -> Result<GenerateRustCodeReturnDto> {
+    let uow_context = GenerateRustCodeUnitOfWorkFactory::new(&db_context);
+    let uc = GenerateRustCodeUseCase::new(Box::new(uow_context));
+    let result = uc.execute(dto)?;
+    Ok(result)
+}
+
 pub fn generate_rust_files(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
@@ -44,18 +57,18 @@ pub fn generate_rust_files(
 pub fn get_generate_rust_files_result(
     long_operation_manager: &LongOperationManager,
     operation_id: &str,
-) -> Result<Option<GenerateRustFilesResultDto>> {
+) -> Result<Option<GenerateRustFilesReturnDto>> {
     // Get the operation result as a JSON string
     let result_json = long_operation_manager.get_operation_result(operation_id);
-    
+
     // If there's no result, return None
     if result_json.is_none() {
         return Ok(None);
     }
-    
+
     // Parse the JSON string into a GenerateRustFilesResultDto
-    let result_dto: GenerateRustFilesResultDto = serde_json::from_str(&result_json.unwrap())?;
-    
+    let result_dto: GenerateRustFilesReturnDto = serde_json::from_str(&result_json.unwrap())?;
+
     Ok(Some(result_dto))
 }
 

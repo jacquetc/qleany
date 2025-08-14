@@ -40,6 +40,14 @@ entities:
         strong: true
         list_model: true
         list_model_displayed_field: name
+      - name: files
+        type: entity
+        entity: File
+        is_list: true
+        ordered: false
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
 
   - name: Entity
     parent: EntityBase

@@ -14,7 +14,18 @@ pub struct GenerateRustFilesDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GenerateRustFilesResultDto {
+pub struct GenerateRustFilesReturnDto {
     pub files: Vec<String>,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GenerateRustCodeDto {
+    pub file_id: EntityId,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GenerateRustCodeReturnDto {
+    pub generated_code: String,
     pub timestamp: String,
 }

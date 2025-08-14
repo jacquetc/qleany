@@ -210,6 +210,7 @@ pub fn run() {
             handling_manifest_commands::save_manifest,
             // rust file generation
             rust_file_generation_commands::list_rust_files,
+            rust_file_generation_commands::generate_rust_code,
             rust_file_generation_commands::generate_rust_files,
             rust_file_generation_commands::get_generate_rust_files_result,
             // undo redo
