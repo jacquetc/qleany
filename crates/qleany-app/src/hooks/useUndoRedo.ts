@@ -6,48 +6,53 @@ import { error } from '@tauri-apps/plugin-log';
  * Custom hook for undo/redo functionality
  * 
  * This hook provides state and functions for undo/redo operations
- * and automatically checks for undo/redo availability.
+ * and automatically stays in sync with backend events.
  */
 export function useUndoRedo() {
   const [canUndoState, setCanUndoState] = useState(false);
   const [canRedoState, setCanRedoState] = useState(false);
 
-  // Check undo/redo availability
+  // Keep canUndo/canRedo in sync using events
   useEffect(() => {
-    // Function to check if undo is available
-    const checkUndoAvailability = async () => {
-      try {
-        const undoAvailable = await undoRedoService.canUndo();
-        setCanUndoState(undoAvailable);
-      } catch (err) {
-        error(`Error checking undo availability: ${err}`);
-        console.error("Error checking undo availability:", err);
-      }
-    };
+    let unsubAll: (() => Promise<void>) | undefined;
 
-    // Function to check if redo is available
-    const checkRedoAvailability = async () => {
+    const refreshStates = async () => {
       try {
-        const redoAvailable = await undoRedoService.canRedo();
+        const [undoAvailable, redoAvailable] = await Promise.all([
+          undoRedoService.canUndo(),
+          undoRedoService.canRedo(),
+        ]);
+        setCanUndoState(undoAvailable);
         setCanRedoState(redoAvailable);
       } catch (err) {
-        error(`Error checking redo availability: ${err}`);
-        console.error("Error checking redo availability:", err);
+        error(`Error refreshing undo/redo availability: ${err}`);
+        console.error('Error refreshing undo/redo availability:', err);
       }
     };
 
-    // Check initially
-    checkUndoAvailability();
-    checkRedoAvailability();
+    // Initial fetch
+    refreshStates();
 
-    // Set up interval to check periodically
-    const undoIntervalId = setInterval(checkUndoAvailability, 100);
-    const redoIntervalId = setInterval(checkRedoAvailability, 100);
+    // Subscribe to undo/redo related events and refresh on each
+    try {
+      unsubAll = undoRedoService.subscribeToUndoRedoEvents({
+        onUndone: () => void refreshStates(),
+        onRedone: () => void refreshStates(),
+        onBeginComposite: () => void refreshStates(),
+        onEndComposite: () => void refreshStates(),
+      });
+    } catch (err) {
+      error(`Error subscribing to undo/redo events: ${err}`);
+      console.error('Error subscribing to undo/redo events:', err);
+    }
 
-    // Clean up intervals on unmount
     return () => {
-      clearInterval(undoIntervalId);
-      clearInterval(redoIntervalId);
+      if (unsubAll) {
+        unsubAll().catch((e) => {
+          error(`Error unsubscribing from undo/redo events: ${e}`);
+          console.error('Error unsubscribing from undo/redo events:', e);
+        });
+      }
     };
   }, []);
 
@@ -55,16 +60,16 @@ export function useUndoRedo() {
   const handleUndo = useCallback(async () => {
     try {
       await undoRedoService.undo();
-      
-      // Update undo/redo availability after performing undo
-      const undoAvailable = await undoRedoService.canUndo();
+      // State will be updated by the emitted event, but refresh defensively
+      const [undoAvailable, redoAvailable] = await Promise.all([
+        undoRedoService.canUndo(),
+        undoRedoService.canRedo(),
+      ]);
       setCanUndoState(undoAvailable);
-      
-      const redoAvailable = await undoRedoService.canRedo();
       setCanRedoState(redoAvailable);
     } catch (err) {
       error(`Error performing undo: ${err}`);
-      console.error("Error performing undo:", err);
+      console.error('Error performing undo:', err);
     }
   }, []);
 
@@ -72,16 +77,16 @@ export function useUndoRedo() {
   const handleRedo = useCallback(async () => {
     try {
       await undoRedoService.redo();
-      
-      // Update undo/redo availability after performing redo
-      const undoAvailable = await undoRedoService.canUndo();
+      // State will be updated by the emitted event, but refresh defensively
+      const [undoAvailable, redoAvailable] = await Promise.all([
+        undoRedoService.canUndo(),
+        undoRedoService.canRedo(),
+      ]);
       setCanUndoState(undoAvailable);
-      
-      const redoAvailable = await undoRedoService.canRedo();
       setCanRedoState(redoAvailable);
     } catch (err) {
       error(`Error performing redo: ${err}`);
-      console.error("Error performing redo:", err);
+      console.error('Error performing redo:', err);
     }
   }, []);
 
@@ -90,6 +95,6 @@ export function useUndoRedo() {
     canUndo: canUndoState,
     canRedo: canRedoState,
     undo: handleUndo,
-    redo: handleRedo
+    redo: handleRedo,
   };
 }

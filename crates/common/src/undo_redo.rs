@@ -1,5 +1,8 @@
 use anyhow::Result;
 use std::any::Any;
+use std::sync::Arc;
+use crate::event::{EventHub, Event, Origin, UndoRedoEvent};
+use crate::types::EntityId;
 
 /// Trait for commands that can be undone and redone.
 ///
@@ -169,6 +172,7 @@ pub struct UndoRedoManager {
     redo_stack: Vec<Box<dyn UndoRedoCommand>>,
     in_progress_composite: Option<CompositeCommand>,
     composite_nesting_level: usize,
+    event_hub: Option<Arc<EventHub>>,
 }
 
 impl UndoRedoManager {
@@ -179,7 +183,13 @@ impl UndoRedoManager {
             redo_stack: Vec::new(),
             in_progress_composite: None,
             composite_nesting_level: 0,
+            event_hub: None,
         }
+    }
+
+    /// Inject the event hub to allow sending undo/redo related events
+    pub fn set_event_hub(&mut self, event_hub: &Arc<EventHub>) {
+        self.event_hub = Some(Arc::clone(event_hub));
     }
 
     /// Undoes the most recent command.
@@ -190,6 +200,13 @@ impl UndoRedoManager {
         if let Some(mut command) = self.undo_stack.pop() {
             command.undo()?;
             self.redo_stack.push(command);
+            if let Some(event_hub) = &self.event_hub {
+                event_hub.send_event(Event {
+                    origin: Origin::UndoRedo(UndoRedoEvent::Undone),
+                    ids: Vec::<EntityId>::new(),
+                    data: None,
+                });
+            }
         }
         Ok(())
     }
@@ -202,6 +219,13 @@ impl UndoRedoManager {
         if let Some(mut command) = self.redo_stack.pop() {
             command.redo()?;
             self.undo_stack.push(command);
+            if let Some(event_hub) = &self.event_hub {
+                event_hub.send_event(Event {
+                    origin: Origin::UndoRedo(UndoRedoEvent::Redone),
+                    ids: Vec::<EntityId>::new(),
+                    data: None,
+                });
+            }
         }
         Ok(())
     }
@@ -229,6 +253,14 @@ impl UndoRedoManager {
         if self.in_progress_composite.is_none() {
             self.in_progress_composite = Some(CompositeCommand::new());
         }
+
+        if let Some(event_hub) = &self.event_hub {
+            event_hub.send_event(Event {
+                origin: Origin::UndoRedo(UndoRedoEvent::BeginComposite),
+                ids: Vec::<EntityId>::new(),
+                data: None,
+            });
+        }
     }
 
     /// Ends the current composite command group and adds it to the undo stack.
@@ -248,6 +280,13 @@ impl UndoRedoManager {
                     self.undo_stack.push(Box::new(composite));
                     self.redo_stack.clear();
                 }
+            }
+            if let Some(event_hub) = &self.event_hub {
+                event_hub.send_event(Event {
+                    origin: Origin::UndoRedo(UndoRedoEvent::EndComposite),
+                    ids: Vec::<EntityId>::new(),
+                    data: None,
+                });
             }
         }
     }

@@ -31,10 +31,29 @@ pub enum AllEvent {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum UndoRedoEvent {
+    Undone,
+    Redone,
+    BeginComposite,
+    EndComposite,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum LongOperationEvent {
+    Started,
+    Progress,
+    Cancelled,
+    Completed,
+    Failed,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Origin {
     DirectAccess(DirectAccessEntity),
     HandlingManifest(HandlingManifestEvent),
     RustFileGeneration(RustFileGenerationEvent),
+    UndoRedo(UndoRedoEvent),
+    LongOperation(LongOperationEvent),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -90,6 +109,8 @@ impl Event {
             },
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
             Origin::RustFileGeneration(event) => format!("rust_file_generation_{:?}", event),
+            Origin::UndoRedo(event) => format!("undo_redo_{:?}", event),
+            Origin::LongOperation(event) => format!("long_operation_{:?}", event),
         }
         .to_lowercase()
     }

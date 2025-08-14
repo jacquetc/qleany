@@ -114,6 +114,7 @@ use std::sync::{
 };
 use std::thread;
 use std::time::Duration;
+use crate::event::{EventHub, Event, Origin, LongOperationEvent};
 
 // Status of a long operation
 #[derive(Debug, Clone, PartialEq)]
@@ -197,6 +198,7 @@ pub struct LongOperationManager {
     operations: Arc<Mutex<HashMap<String, Box<dyn OperationHandleTrait>>>>,
     next_id: Arc<Mutex<u64>>,
     results: Arc<Mutex<HashMap<String, String>>>, // Store serialized results
+    event_hub: Option<Arc<EventHub>>,
 }
 
 impl LongOperationManager {
@@ -205,7 +207,13 @@ impl LongOperationManager {
             operations: Arc::new(Mutex::new(HashMap::new())),
             next_id: Arc::new(Mutex::new(0)),
             results: Arc::new(Mutex::new(HashMap::new())),
+            event_hub: None,
         }
+    }
+
+    /// Inject the event hub to allow sending long operation related events
+    pub fn set_event_hub(&mut self, event_hub: &Arc<EventHub>) {
+        self.event_hub = Some(Arc::clone(event_hub));
     }
 
     /// Start a new long operation and return its ID
@@ -216,6 +224,15 @@ impl LongOperationManager {
             format!("op_{}", *next_id)
         };
 
+        // Emit started event
+        if let Some(event_hub) = &self.event_hub {
+            event_hub.send_event(Event {
+                origin: Origin::LongOperation(LongOperationEvent::Started),
+                ids: vec![],
+                data: Some(id.clone()),
+            });
+        }
+
         let status = Arc::new(Mutex::new(OperationStatus::Running));
         let progress = Arc::new(Mutex::new(OperationProgress::new(0.0, None)));
         let cancel_flag = Arc::new(AtomicBool::new(false));
@@ -225,12 +242,27 @@ impl LongOperationManager {
         let cancel_flag_clone = cancel_flag.clone();
         let results_clone = self.results.clone();
         let id_clone = id.clone();
+        let event_hub_opt = self.event_hub.clone();
 
         let join_handle = thread::spawn(move || {
             let progress_callback = {
                 let progress = progress_clone.clone();
+                let event_hub_opt = event_hub_opt.clone();
+                let id_for_cb = id_clone.clone();
                 Box::new(move |prog: OperationProgress| {
-                    *progress.lock().unwrap() = prog;
+                    *progress.lock().unwrap() = prog.clone();
+                    if let Some(event_hub) = &event_hub_opt {
+                        let payload = serde_json::json!({
+                            "id": id_for_cb,
+                            "percentage": prog.percentage,
+                            "message": prog.message,
+                        }).to_string();
+                        event_hub.send_event(Event {
+                            origin: Origin::LongOperation(LongOperationEvent::Progress),
+                            ids: vec![],
+                            data: Some(payload),
+                        });
+                    }
                 }) as Box<dyn Fn(OperationProgress) + Send>
             };
 
@@ -251,6 +283,29 @@ impl LongOperationManager {
                     Err(e) => OperationStatus::Failed(e.to_string()),
                 }
             };
+
+            // Emit final status event
+            if let Some(event_hub) = &event_hub_opt {
+                let (event, data) = match &final_status {
+                    OperationStatus::Completed => (
+                        LongOperationEvent::Completed,
+                        serde_json::json!({"id": id_clone}).to_string(),
+                    ),
+                    OperationStatus::Cancelled => (
+                        LongOperationEvent::Cancelled,
+                        serde_json::json!({"id": id_clone}).to_string(),
+                    ),
+                    OperationStatus::Failed(err) => (
+                        LongOperationEvent::Failed,
+                        serde_json::json!({"id": id_clone, "error": err}).to_string(),
+                    ),
+                    OperationStatus::Running => (
+                        LongOperationEvent::Progress,
+                        serde_json::json!({"id": id_clone}).to_string(),
+                    ),
+                };
+                event_hub.send_event(Event { origin: Origin::LongOperation(event), ids: vec![], data: Some(data) });
+            }
 
             *status_clone.lock().unwrap() = final_status;
         });
@@ -287,6 +342,15 @@ impl LongOperationManager {
         let operations = self.operations.lock().unwrap();
         if let Some(handle) = operations.get(id) {
             handle.cancel();
+            // Emit cancelled event immediately
+            if let Some(event_hub) = &self.event_hub {
+                let payload = serde_json::json!({"id": id}).to_string();
+                event_hub.send_event(Event {
+                    origin: Origin::LongOperation(LongOperationEvent::Cancelled),
+                    ids: vec![],
+                    data: Some(payload),
+                });
+            }
             true
         } else {
             false
