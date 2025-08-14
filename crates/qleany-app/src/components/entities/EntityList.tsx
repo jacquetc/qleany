@@ -13,7 +13,8 @@ const EntityList = () => {
         isLoadingEntities,
         entityError,
         selectEntity,
-        createEntity
+        createEntity,
+        reorderEntities
     } = useEntityContext();
 
     // Create header component for ReorderableList
@@ -72,8 +73,7 @@ const EntityList = () => {
                 selectedItemId={selectedEntityId}
                 onSelectItem={selectEntity}
                 onReorder={async (reorderedIds) => {
-                    // TODO: Implement reordering logic if needed
-                    console.log("Reordering entities:", reorderedIds);
+                    await reorderEntities(reorderedIds);
                 }}
                 getItemId={(entity) => entity.id}
                 renderItemContent={renderEntityContent}

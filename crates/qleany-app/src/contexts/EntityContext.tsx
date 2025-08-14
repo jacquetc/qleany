@@ -1,11 +1,12 @@
 import React, {createContext, useContext, useState} from 'react';
 import {Alert} from '@mantine/core';
-import {error as logError} from '@tauri-apps/plugin-log';
+import {error as logError, info as logInfo} from '@tauri-apps/plugin-log';
 import {useEntities} from '../hooks/useEntities';
 import {useFields} from '../hooks/useFields';
 import {useRelationships} from '../hooks/useRelationships';
 import {EntityDTO} from '../services/entity-service';
 import {FieldDTO, FieldType} from '../services/field-service';
+import {RootRelationshipField, rootService} from '../services/root-service';
 import {
     Cardinality,
     Direction,
@@ -45,6 +46,7 @@ interface EntityContextValue {
     createEntity: () => void;
     updateEntity: (entity: EntityDTO) => void;
     removeEntity: (entityId: number) => void;
+    reorderEntities: (orderedIds: number[]) => Promise<void>;
 
     selectField: (fieldId: number | null) => void;
     createField: (fieldData?: {
@@ -229,13 +231,31 @@ export function EntityProvider({rootId, children}: EntityProviderProps) {
         ]);
     };
 
+    // Persist reordered entity IDs to the root relationship
+    const reorderEntities = async (orderedIds: number[]) => {
+        try {
+            if (!rootId) return;
+            logInfo(`Reordering entities (persist): ${JSON.stringify(orderedIds)}`);
+            await rootService.setRootRelationship({
+                id: rootId,
+                field: RootRelationshipField.Entities,
+                right_ids: orderedIds,
+            });
+            // Ensure UI reflects new order
+            await refetchEntities();
+        } catch (err) {
+            logError(`Error persisting reordered entities: ${err}`);
+            throw err;
+        }
+    };
+
     // Log data availability for debugging
     console.log(`EntityContext - Entities: ${entities.length}, Fields: ${fields.length}, Relationships: ${relationships.length}`);
     console.log(`EntityContext - Loading states - Entities: ${isLoadingEntities}, Fields: ${isLoadingFields}, Relationships: ${isLoadingRelationships}`);
 
     if (entities.length > 0 && fields.length > 0) {
         // Log a sample of field data to verify it's being loaded correctly
-        console.log(`EntityContext - Sample field data:`, fields.slice(0, 3));
+        // console.log(`EntityContext - Sample field data:`, fields.slice(0, 3));
     }
 
     if (entities.length > 0 && relationships.length > 0) {
@@ -271,6 +291,7 @@ export function EntityProvider({rootId, children}: EntityProviderProps) {
         createEntity,
         updateEntity,
         removeEntity,
+        reorderEntities,
 
         selectField,
         createField,

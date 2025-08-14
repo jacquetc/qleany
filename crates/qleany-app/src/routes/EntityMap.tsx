@@ -4,7 +4,7 @@ import {error, error as logError, info} from '@tauri-apps/plugin-log';
 import {EntityProvider, useEntityContext} from '@/contexts/EntityContext';
 import {EntityDTO} from '@/services/entity-service';
 import {FieldDTO, FieldType} from '@/services/field-service';
-import {RelationshipDTO, Strength} from '@/services/relationship-service';
+import {Direction, RelationshipDTO, Strength} from '@/services/relationship-service';
 import ReactFlow, {
     Background,
     Controls,
@@ -79,7 +79,9 @@ const EntityNode = memo(({data}: { data: { entity: EntityWithFields, allEntities
                           color: field.field_type === FieldType.Entity ? '#0066cc' : 'inherit'
                       }}>
                         {field.name || 'Unnamed Field'}
-                      </span>: {field.field_type || 'Unknown Type'}
+                      </span>: {field.field_type === FieldType.Entity && field.entity ?
+                                            allEntities.find(e => e && e.id === field.entity)?.name || 'Unknown Entity'
+                                            : field.field_type || 'Unknown Type'}
                                             {field.is_primary_key ? ' (PK)' : ''}
                                             {field.is_nullable ? ' (nullable)' : ''}
                                             {field.is_list ? ' (list)' : ''}
@@ -91,34 +93,25 @@ const EntityNode = memo(({data}: { data: { entity: EntityWithFields, allEntities
                     )}
 
                     {/* Relationships section */}
-                    {Array.isArray(entity.relationships) && entity.relationships.length > 0 && (
+                    {Array.isArray(entity.relationshipObjects) && entity.relationshipObjects.length > 0 && (
                         <Stack gap="xs">
-                            {entity.relationships.map(relationshipId => {
-                                if (!relationshipId) return null;
+                            {entity.relationshipObjects.map(relationship => {
+                                if (!relationship) return null;
 
-                                // Find the field that represents this relationship
-                                const relationshipField = Array.isArray(allEntities) ?
-                                    allEntities
-                                        .filter(e => e && Array.isArray(e.fieldObjects))
-                                        .flatMap(e => e.fieldObjects)
-                                        .find(f => f && f.id === relationshipId)
-                                    : null;
-
-                                if (!relationshipField) return null;
+                                if (relationship.direction === Direction.Backward) return null;
 
                                 // Find the target entity
-                                const targetEntity = relationshipField.entity && Array.isArray(allEntities) ?
-                                    allEntities.find(e => e && e.id === relationshipField.entity) : null;
+                                const targetEntity = relationship.right_entity && Array.isArray(allEntities) ?
+                                    allEntities.find(e => e && e.id === relationship.right_entity) : null;
 
                                 return (
-                                    <Text key={relationshipId} size="sm" px="sm" style={{
-                                        color: relationshipField.strong === true ? '#cc0000' : '#666666'
+                                    <Text key={relationship.id} size="sm" px="sm" style={{
+                                        color: relationship.strength === Strength.Strong ? '#cc0000' : '#666666'
                                     }}>
-                                        {relationshipField.name || 'Unnamed Relationship'} → {
+                                        {relationship.field_name || 'Unnamed Relationship'} → {
                                         targetEntity ? targetEntity.name : 'Unknown'
                                     }
-                                        {relationshipField.strong === true ? ' (strong)' : ''}
-                                        {relationshipField.is_list ? ' (list)' : ''}
+                                        {relationship.strength === Strength.Strong ? ' (strong)' : ''}
                                     </Text>
                                 );
                             })}
@@ -180,20 +173,23 @@ const EntityMapFlow = () => {
         relationshipError
     } = useEntityContext();
 
-    const [entitiesWithFields, setEntitiesWithFields] = useState<EntityWithFields[]>([]);
     // Initialize with empty arrays but with explicit types
     const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
     const [loading, setLoading] = useState(false);
     const [componentError, setComponentError] = useState<Error | null>(null);
 
+    // Memoize all objects passed to ReactFlow to prevent recreation on each render
+    const memoizedNodeTypes = useMemo(() => nodeTypes, []);
+    const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
+    const memoizedDefaultEdgeOptions = useMemo(() => defaultEdgeOptions, []);
+    const memoizedMiniMapProps = useMemo(() => miniMapProps, []);
+    const memoizedBackgroundProps = useMemo(() => backgroundProps, []);
+
     // Monitor edges state changes
     useEffect(() => {
         console.log("Edges state changed:", edges.length, "edges now in state");
     }, [edges]);
-
-    // Memoize the edges array to prevent recreation on each render
-    const memoizedEdges = useMemo(() => edges, [edges]);
 
     /**
      * Prepare entity data with fields and relationships from context
@@ -230,8 +226,6 @@ const EntityMapFlow = () => {
                 };
             });
             console.log("Prepared entities:", preparedEntities);
-
-            setEntitiesWithFields(preparedEntities);
 
             // Debug log before creating nodes and edges
             console.log("Calling createNodesAndEdges with prepared entities:", preparedEntities);
@@ -281,7 +275,7 @@ const EntityMapFlow = () => {
         setLoading(true);
 
         // Debug log to check entities and their relationships
-        console.log("Creating nodes and edges for entities:", entities);
+        //console.log("Creating nodes and edges for entities:", entities);
 
         // Debug log to check the relationships array in each entity
         entities.forEach(entity => {
@@ -317,6 +311,7 @@ const EntityMapFlow = () => {
                             id: `edge-parent-${entity.parent}-${entity.id}`,
                             source: `entity-${entity.parent}`,
                             target: `entity-${entity.id}`,
+                            // Keep parent-child relationships as smoothstep (now used for strong relationships)
                             type: 'smoothstep'
                         });
                     }
@@ -376,7 +371,8 @@ const EntityMapFlow = () => {
                                 id: `edge-rel-${sourceEntityId}-${relationship.id}-${targetEntityId}`,
                                 source: `entity-${sourceEntityId}`,
                                 target: `entity-${targetEntityId}`,
-                                type: 'smoothstep',
+                                // Use smoothstep for strong relationships to visually differentiate them
+                                type: relationship.strength === Strength.Strong ? 'smoothstep' : 'default',
                                 label: relationship.field_name,
                                 // Add visual distinction for strong relationships
                                 animated: relationship.strength === Strength.Strong,
@@ -413,6 +409,7 @@ const EntityMapFlow = () => {
                                         id: `edge-field-${entity.id}-${field.id}-${targetEntityId}`,
                                         source: `entity-${entity.id}`,
                                         target: `entity-${targetEntityId}`,
+                                        // Use smoothstep for field-based edges as they represent strong relationships
                                         type: 'smoothstep',
                                         label: field.name
                                     });
@@ -523,6 +520,7 @@ const EntityMapFlow = () => {
                             id: `edge-parent-${entity.parent}-${entity.id}`,
                             source: `entity-${entity.parent}`,
                             target: `entity-${entity.id}`,
+                            // Keep parent-child relationships as smoothstep (now used for strong relationships)
                             type: 'smoothstep',
                             animated: false,
                             style: {stroke: '#555', strokeWidth: 2}
@@ -585,7 +583,8 @@ const EntityMapFlow = () => {
                                 id: `edge-rel-${sourceEntityId}-${relationship.id}-${targetEntityId}`,
                                 source: `entity-${sourceEntityId}`,
                                 target: `entity-${targetEntityId}`,
-                                type: 'smoothstep',
+                                // Use smoothstep for strong relationships to visually differentiate them
+                                type: relationship.strength === Strength.Strong ? 'smoothstep' : 'default',
                                 animated: relationship.strength === Strength.Strong,
                                 style: {
                                     stroke: relationship.strength === Strength.Strong ? '#cc0000' : '#666666',
@@ -643,6 +642,7 @@ const EntityMapFlow = () => {
                                             id: `edge-field-${entity.id}-${field.id}-${targetEntityId}`,
                                             source: `entity-${entity.id}`,
                                             target: `entity-${targetEntityId}`,
+                                            // Use smoothstep for field-based edges as they represent strong relationships
                                             type: 'smoothstep',
                                             animated: true,
                                             style: {
@@ -718,11 +718,12 @@ const EntityMapFlow = () => {
     }
 
     // Error state
-    if (entityError || fieldError) {
+    if (entityError || fieldError || relationshipError) {
         return (
             <Alert color="red" title="Error loading entity data">
                 {entityError instanceof Error ? entityError.message :
-                    fieldError instanceof Error ? fieldError.message : 'An unknown error occurred'}
+                    fieldError instanceof Error ? fieldError.message :
+                        relationshipError instanceof Error ? relationshipError.message : 'An unknown error occurred'}
             </Alert>
         );
     }
@@ -785,26 +786,25 @@ const EntityMapFlow = () => {
                 )}
                 {/* Debug log to check the edges being passed to ReactFlow */}
                 {/* console.log("Rendering ReactFlow with edges:", edges) */}
-                {/* console.log("Rendering ReactFlow with memoizedEdges:", memoizedEdges) */}
 
                 <ReactFlow
                     nodes={nodes}
-                    edges={edges} // Use edges directly instead of memoizedEdges
+                    edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
-                    nodeTypes={nodeTypes}
-                    edgeTypes={edgeTypes}
+                    nodeTypes={memoizedNodeTypes}
+                    edgeTypes={memoizedEdgeTypes}
                     fitView
                     attributionPosition="bottom-left"
                     minZoom={0.2}
                     maxZoom={1.5}
-                    defaultEdgeOptions={defaultEdgeOptions}
+                    defaultEdgeOptions={memoizedDefaultEdgeOptions}
                 >
                     <Controls/>
                     <MiniMap
-                        {...miniMapProps}
+                        {...memoizedMiniMapProps}
                     />
-                    <Background {...backgroundProps}/>
+                    <Background {...memoizedBackgroundProps}/>
                 </ReactFlow>
             </div>
         </ErrorBoundary>
