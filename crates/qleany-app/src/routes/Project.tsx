@@ -2,14 +2,6 @@ import {Alert, LoadingOverlay, Paper, Select, Stack, TextInput, Title} from '@ma
 import ErrorBoundary from '@/components/ErrorBoundary';
 import {ProjectProvider, useProjectContext} from '../contexts/ProjectContext';
 
-
-// Custom fallback component for error state
-const errorFallback = (
-    <Alert color="yellow" title="Project settings could not be loaded">
-        There was an issue loading the project settings. Please try again later.
-    </Alert>
-);
-
 const ProjectContent = () => {
     // Use the project context for all data and actions
     const {
@@ -94,7 +86,15 @@ const ProjectContent = () => {
             </Paper>
         </div>
     );
-}
+};
+
+
+// Custom fallback component for error state
+const errorFallback = (
+    <Alert color="yellow" title="Project settings could not be loaded">
+        There was an issue loading the project settings. Please try again later.
+    </Alert>
+);
 
 const Project = () => {
     return (
@@ -104,6 +104,5 @@ const Project = () => {
             </ProjectProvider>
         </ErrorBoundary>
     );
-}
-
+};
 export default Project;

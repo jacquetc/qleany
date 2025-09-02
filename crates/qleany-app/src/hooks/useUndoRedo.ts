@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { undoRedoService } from '../services/undo-redo-service';
+import { directAccessEventService } from '../services/direct-access-event-service.ts';
 import { error } from '@tauri-apps/plugin-log';
 
 /**
@@ -14,7 +15,8 @@ export function useUndoRedo() {
 
   // Keep canUndo/canRedo in sync using events
   useEffect(() => {
-    let unsubAll: (() => Promise<void>) | undefined;
+    let unsubUndoRedo: (() => Promise<void>) | undefined;
+    let unsubGlobal: (() => Promise<void>) | undefined;
 
     const refreshStates = async () => {
       try {
@@ -35,7 +37,7 @@ export function useUndoRedo() {
 
     // Subscribe to undo/redo related events and refresh on each
     try {
-      unsubAll = undoRedoService.subscribeToUndoRedoEvents({
+      unsubUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
         onUndone: () => void refreshStates(),
         onRedone: () => void refreshStates(),
         onBeginComposite: () => void refreshStates(),
@@ -46,11 +48,30 @@ export function useUndoRedo() {
       console.error('Error subscribing to undo/redo events:', err);
     }
 
+    // Also subscribe to Direct Access Global events to detect when a new undoable command is pushed via updates
+    try {
+      unsubGlobal = directAccessEventService.subscribeToGlobalEvents({
+        onCreated: () => void refreshStates(),
+        onUpdated: () => void refreshStates(),
+        onRemoved: () => void refreshStates(),
+        onReset: () => void refreshStates(),
+      });
+    } catch (err) {
+      error(`Error subscribing to global events for undo/redo refresh: ${err}`);
+      console.error('Error subscribing to global events for undo/redo refresh:', err);
+    }
+
     return () => {
-      if (unsubAll) {
-        unsubAll().catch((e) => {
+      if (unsubUndoRedo) {
+        unsubUndoRedo().catch((e) => {
           error(`Error unsubscribing from undo/redo events: ${e}`);
           console.error('Error unsubscribing from undo/redo events:', e);
+        });
+      }
+      if (unsubGlobal) {
+        unsubGlobal().catch((e) => {
+          error(`Error unsubscribing from global events: ${e}`);
+          console.error('Error unsubscribing from global events:', e);
         });
       }
     };

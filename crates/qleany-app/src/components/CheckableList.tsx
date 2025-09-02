@@ -1,5 +1,6 @@
 import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ActionIcon, Box, Checkbox, Group, Text, TextInput } from '@mantine/core';
+import { error } from '@tauri-apps/plugin-log';
 import cx from 'clsx';
 import classes from './DndListHandle.module.css';
 import { IconCheck, IconSearch, IconSquare, IconX } from '@tabler/icons-react';
@@ -121,7 +122,9 @@ function ListItem<T>({
         onClick={handleCheckboxClick}
         className="ml-2"
       />
-      {content}
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        {content}
+      </Box>
     </Group>
   );
 }
@@ -280,7 +283,10 @@ function CheckableList<T>({
           style={style}
           isSelected={isSelected}
           isChecked={isChecked}
-          onSelect={() => onSelectItem(itemId)}
+          onSelect={() => {
+            error(`CheckableList.onSelect: Item ${itemId} clicked`);
+            onSelectItem(itemId);
+          }}
           onCheck={(checked) => onCheckItem(itemId, checked)}
           renderContent={renderItemContent}
         />

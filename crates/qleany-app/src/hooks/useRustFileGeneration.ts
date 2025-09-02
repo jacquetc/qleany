@@ -14,7 +14,8 @@ import {error, info} from '@tauri-apps/plugin-log';
  * This hook provides functions for listing and generating Rust files
  */
 export function useRustFileGeneration() {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isListing, setIsListing] = useState(false);
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false);
     const [operationError, setOperationError] = useState<Error | null>(null);
     const [operationId, setOperationId] = useState<string | null>(null);
     const [generationResult, setGenerationResult] = useState<GenerateRustFilesResultDTO | null>(null);
@@ -24,7 +25,7 @@ export function useRustFileGeneration() {
      * @param onlyExisting Whether to only list existing files
      */
     const listRustFiles = useCallback(async (onlyExisting: boolean = false) => {
-        setIsLoading(true);
+        setIsListing(true);
         setOperationError(null);
 
         try {
@@ -40,13 +41,13 @@ export function useRustFileGeneration() {
             setOperationError(err instanceof Error ? err : new Error(errorMessage));
             throw err;
         } finally {
-            setIsLoading(false);
+            setIsListing(false);
         }
     }, []);
 
 
     const generateRustCode = useCallback(async (fileId: number) => {
-        setIsLoading(true);
+        setIsGeneratingCode(true);
         setOperationError(null);
 
         try {
@@ -63,7 +64,7 @@ export function useRustFileGeneration() {
             setOperationError(err instanceof Error ? err : new Error(errorMessage));
             throw err;
         } finally {
-            setIsLoading(false);
+            setIsGeneratingCode(false);
         }
     }, []);
 
@@ -74,7 +75,7 @@ export function useRustFileGeneration() {
      * @param prefix Prefix for generated files
      */
     const generateRustFiles = useCallback(async (fileIds: number[], rootPath: string, prefix: string) => {
-        setIsLoading(true);
+        setIsGeneratingCode(true);
         setOperationError(null);
         setOperationId(null);
         setGenerationResult(null);
@@ -96,7 +97,7 @@ export function useRustFileGeneration() {
             setOperationError(err instanceof Error ? err : new Error(errorMessage));
             throw err;
         } finally {
-            setIsLoading(false);
+            setIsGeneratingCode(false);
         }
     }, []);
 
@@ -105,7 +106,7 @@ export function useRustFileGeneration() {
      * @param id Operation ID to check
      */
     const checkGenerationResult = useCallback(async (id: string) => {
-        setIsLoading(true);
+        setIsGeneratingCode(true);
         setOperationError(null);
 
         try {
@@ -118,16 +119,18 @@ export function useRustFileGeneration() {
             setOperationError(err instanceof Error ? err : new Error(errorMessage));
             throw err;
         } finally {
-            setIsLoading(false);
+            setIsGeneratingCode(false);
         }
     }, []);
 
     return {
-        isLoading,
+        isListing,
+        isGeneratingCode,
         operationError,
         operationId,
         generationResult,
         listRustFiles,
+        generateRustCode,
         generateRustFiles,
         checkGenerationResult
     };

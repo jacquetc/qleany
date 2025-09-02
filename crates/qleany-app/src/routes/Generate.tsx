@@ -1,12 +1,129 @@
-import React, {useEffect, useState} from 'react';
-import {Alert, Button, Group, Title} from '@mantine/core';
+import React, {useEffect, useMemo, useState} from 'react';
+import {Alert, Box, Button, Code, Group, ScrollArea, Text, Title} from '@mantine/core';
 import {error} from '@tauri-apps/plugin-log';
 import {useRoot} from '@/hooks/useRoot';
 import {useRustFileGeneration} from '@/hooks/useRustFileGeneration';
 import GroupList from '@/components/generate/GroupList';
 import FileList from '@/components/generate/FileList';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import {FileProvider} from '@/contexts/FileContext';
+import {FileProvider, useFileContext} from '@/contexts/FileContext';
+import {GenerateRustCodeReturnDTO} from '@/services/rust-file-generation-service';
+
+// CodeDisplay component that monitors file selection and generates code
+const CodeDisplay = ({
+                         generateRustCode
+                     }: {
+    generateRustCode: (fileId: number) => Promise<GenerateRustCodeReturnDTO>;
+}) => {
+    const {selectedFileId, files} = useFileContext();
+    
+    // Internal state for code generation
+    const [generatedCode, setGeneratedCode] = useState<GenerateRustCodeReturnDTO | null>(null);
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+    const [codeGenerationError, setCodeGenerationError] = useState<string | null>(null);
+
+    // Effect to generate code when a file is selected
+    useEffect(() => {
+        if (selectedFileId) {
+            const generateCode = async () => {
+                setIsGeneratingCode(true);
+                setCodeGenerationError(null);
+                setGeneratedCode(null);
+
+                try {
+                    const result = await generateRustCode(selectedFileId);
+                    setGeneratedCode(result);
+                } catch (err) {
+                    const errorMessage = `Failed to generate code: ${err}`;
+                    error(errorMessage);
+                    setCodeGenerationError(errorMessage);
+                } finally {
+                    setIsGeneratingCode(false);
+                }
+            };
+
+            generateCode();
+        } else {
+            setGeneratedCode(null);
+            setCodeGenerationError(null);
+        }
+    }, [selectedFileId]);
+
+    // Get the selected file info
+    const selectedFile = selectedFileId ? files.find(f => f.id === selectedFileId) : null;
+
+    // Loading state
+    if (isGeneratingCode) {
+        return (
+            <Box h="100%">
+                <Title order={4} mb="md">Generated Code</Title>
+                <Alert color="blue" title="Generating code">
+                    Generating code for the selected file...
+                </Alert>
+            </Box>
+        );
+    }
+
+    // Error state
+    if (codeGenerationError) {
+        return (
+            <Box h="100%">
+                <Title order={4} mb="md">Generated Code</Title>
+                <Alert color="red" title="Code Generation Error">
+                    {codeGenerationError}
+                </Alert>
+            </Box>
+        );
+    }
+
+    // No file selected
+    if (!selectedFileId || !selectedFile) {
+        return (
+            <Box h="100%">
+                <Title order={4} mb="md">Generated Code</Title>
+                <Alert color="gray" title="No file selected">
+                    Click on a file to generate and view its content.
+                </Alert>
+            </Box>
+        );
+    }
+
+    // Display generated code
+    return (
+        <Box h="100%">
+            <Title 
+                order={4} 
+                mb="md"
+                style={{
+                    direction: 'rtl',
+                    textAlign: 'left',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis'
+                }}
+                title={`Generated Code - ${selectedFile.relative_path}${selectedFile.name}`}
+            >
+                <span style={{ direction: 'ltr' }}>
+                    Generated Code - {selectedFile.relative_path}{selectedFile.name}
+                </span>
+            </Title>
+            {generatedCode ? (
+                <ScrollArea h="calc(100% - 60px)">
+                    <Code block>
+                        {generatedCode.generated_code}
+                    </Code>
+                    <Text size="xs" c="dimmed" mt="xs">
+                        Generated on: {new Date(generatedCode.timestamp).toLocaleString()}
+                    </Text>
+                </ScrollArea>
+            ) : (
+                <Alert color="gray" title="No code generated">
+                    No code has been generated yet.
+                </Alert>
+            )}
+        </Box>
+    );
+};
 
 const Generate = () => {
     // Use the root hook to get the root entity
@@ -14,12 +131,18 @@ const Generate = () => {
 
     // Use the rust file generation hook
     const {
-        isLoading: isLoadingFiles,
+        isListing,
         operationError,
-        listRustFiles
+        listRustFiles,
+        generateRustCode
     } = useRustFileGeneration();
 
     const [loadError, setLoadError] = useState<string | null>(null);
+
+    // Memoize rootId to prevent FileProvider from unmounting/remounting during state changes
+    const stableRootId = useMemo(() => {
+        return root?.id || null;
+    }, [root?.id]);
 
     // Initialize on component mount
     useEffect(() => {
@@ -62,7 +185,7 @@ const Generate = () => {
     );
 
     // Loading state
-    if (isLoadingRoot || isLoadingFiles) {
+    if (isLoadingRoot || isListing) {
         return (
             <div className="p-10">
                 <Title order={1} mb="xl">Generate</Title>
@@ -139,25 +262,36 @@ const Generate = () => {
                 <Title order={1} mb="xl">Generate</Title>
 
                 {/* Wrap the components with FileProvider to provide file and group data */}
-                <FileProvider rootId={root?.id || null}>
+                <FileProvider rootId={stableRootId}>
                     <div style={{display: 'flex', height: 'calc(100vh - 170px)'}}>
                         <div style={{
-                            width: '33%',
+                            width: '25%',
                             height: '100%',
                             overflow: 'hidden',
                             paddingRight: '10px',
                             boxSizing: 'border-box'
                         }}>
-                            <GroupList rootId={root?.id || null}/>
+                            <GroupList rootId={stableRootId}/>
                         </div>
                         <div style={{
-                            width: '67%',
+                            width: '35%',
+                            height: '100%',
+                            overflow: 'hidden',
+                            padding: '0 10px',
+                            boxSizing: 'border-box'
+                        }}>
+                            <FileList rootId={stableRootId}/>
+                        </div>
+                        <div style={{
+                            width: '40%',
                             height: '100%',
                             overflow: 'hidden',
                             paddingLeft: '10px',
                             boxSizing: 'border-box'
                         }}>
-                            <FileList rootId={root?.id || null}/>
+                            <CodeDisplay
+                                generateRustCode={generateRustCode}
+                            />
                         </div>
                     </div>
                 </FileProvider>

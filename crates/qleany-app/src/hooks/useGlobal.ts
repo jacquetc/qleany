@@ -1,10 +1,10 @@
 import {useCallback, useEffect} from 'react';
-import {GlobalDTO, CreateGlobalDTO, globalService} from '../services/global-service';
+import {CreateGlobalDTO, GlobalDTO, globalService} from '../services/global-service';
 import {RootRelationshipField, rootService} from '../services/root-service';
-import {EntityEventPayload, directAccessEventService} from '../services/direct-access-event-service.ts';
+import {directAccessEventService, EntityEventPayload} from '../services/direct-access-event-service.ts';
 import {error, info} from '@tauri-apps/plugin-log';
-
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing global configuration data
@@ -148,17 +148,26 @@ export function useGlobal(rootId: number | null) {
         };
 
         // Subscribe to global events
-        const unsubscribe = directAccessEventService.subscribeToGlobalEvents({
+        const unsubscribeGlobal = directAccessEventService.subscribeToGlobalEvents({
             onCreated: handleGlobalCreated,
             onUpdated: handleGlobalUpdated,
             onRemoved: handleGlobalRemoved,
             onReset: handleReset
         });
 
+        const unsubscribeUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
+            onUndone: () => queryClient.invalidateQueries({queryKey: ['global', rootId]}),
+            onRedone: () => queryClient.invalidateQueries({queryKey: ['global', rootId]}),
+        });
+
+
         // Cleanup function
         return () => {
-            unsubscribe().catch(err => {
+            unsubscribeGlobal().catch(err => {
                 error(`Error unsubscribing from global events: ${err}`);
+            });
+            unsubscribeUndoRedo().catch(err => {
+                error(`Error unsubscribing from undo redo events: ${err}`);
             });
         };
     }, [rootId, queryClient]);

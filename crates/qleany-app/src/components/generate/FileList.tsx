@@ -1,5 +1,6 @@
 import {useCallback} from 'react';
 import {Alert, Box, Text, Title} from '@mantine/core';
+import {error} from '@tauri-apps/plugin-log';
 import CheckableList from '../CheckableList';
 import {FileDTO} from '@/services/file-service';
 import ErrorBoundary from '../ErrorBoundary';
@@ -21,6 +22,12 @@ const FileList = ({rootId}: FileListProps) => {
         isLoadingFiles,
         fileError
     } = useFileContext();
+
+    // Wrapped selectFile with logging
+    const selectFileWithLogging = useCallback((fileId: number | null) => {
+        error(`FileList.selectFile: User clicked file with ID ${fileId}`);
+        selectFile(fileId);
+    }, [selectFile]);
 
     // Header component for the list
     const header = (
@@ -78,12 +85,23 @@ const FileList = ({rootId}: FileListProps) => {
                 items={files}
                 selectedItemId={selectedFileId}
                 checkedItemIds={checkedFileIds}
-                onSelectItem={selectFile}
+                onSelectItem={selectFileWithLogging}
                 onCheckItem={checkFile}
                 getItemId={(item) => item.id}
                 renderItemContent={(item) => (
-                    <Text>
-                        {item.relative_path}<strong>{item.name}</strong>
+                    <Text 
+                        style={{ 
+                            direction: 'rtl',
+                            textAlign: 'left',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'ellipsis'
+                        }}
+                        title={`${item.relative_path}${item.name}`}
+                    >
+                        <span style={{ direction: 'ltr' }}>
+                            {item.relative_path}<strong>{item.name}</strong>
+                        </span>
                     </Text>
                 )}
                 sortItems={sortFiles}

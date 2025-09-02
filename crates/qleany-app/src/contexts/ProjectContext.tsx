@@ -4,7 +4,6 @@ import {error as logError, info as logInfo} from '@tauri-apps/plugin-log';
 import {CreateGlobalDTO, GlobalDTO} from '../services/global-service';
 import {useGlobal} from '../hooks/useGlobal';
 import {useRoot} from '../hooks/useRoot';
-import { useUndoRedo } from '../hooks/useUndoRedo';
 
 /**
  * Interface for the ProjectContext value
@@ -25,12 +24,6 @@ interface ProjectContextValue {
     // Actions
     updateFormData: (data: Partial<CreateGlobalDTO>) => void;
     resetForm: () => void;
-
-    // Undo/Redo state and actions
-    canUndo: boolean;
-    canRedo: boolean;
-    undo: () => Promise<void> | void;
-    redo: () => Promise<void> | void;
     
     // Refetch capability
     refetch: () => Promise<void>;
@@ -114,8 +107,6 @@ export function ProjectProvider({children}: ProjectProviderProps) {
         refetch
     } = globalData;
 
-    // Undo/Redo hook (event-driven)
-    const { canUndo, canRedo, undo, redo } = useUndoRedo();
 
     // Update form when global data changes
     useEffect(() => {
@@ -217,12 +208,6 @@ export function ProjectProvider({children}: ProjectProviderProps) {
         // Actions
         updateFormData,
         resetForm,
-
-        // Undo/Redo state and actions
-        canUndo,
-        canRedo,
-        undo,
-        redo,
         
         // Refetch capability
         refetch

@@ -1,7 +1,7 @@
-import {useCallback, useEffect} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import {FileDTO, fileService} from '../services/file-service';
 import {RootRelationshipField, rootService} from '../services/root-service';
-import {EntityEventPayload, directAccessEventService} from '../services/direct-access-event-service.ts';
+import {directAccessEventService, EntityEventPayload} from '../services/direct-access-event-service.ts';
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
@@ -34,9 +34,12 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
 
                 // Filter out null files and apply group filter
                 let filteredFiles = files.filter((file): file is FileDTO => file !== null);
+                info(`useFiles: Retrieved ${filteredFiles.length} files for rootId=${rootId}`);
 
                 if (groupFilter) {
+                    const beforeFilter = filteredFiles.length;
                     filteredFiles = filteredFiles.filter(file => file.group === groupFilter);
+                    info(`useFiles: Filtered by group '${groupFilter}': ${beforeFilter} -> ${filteredFiles.length} files`);
                 }
 
                 return filteredFiles;
@@ -91,6 +94,21 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
         }
     });
 
+    // Debounce ref for query invalidation
+    const invalidationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Debounced invalidation function
+    const debouncedInvalidateQueries = useCallback(() => {
+        if (invalidationTimeoutRef.current) {
+            clearTimeout(invalidationTimeoutRef.current);
+        }
+        
+        invalidationTimeoutRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({queryKey: ['files', rootId]});
+            invalidationTimeoutRef.current = null;
+        }, 100); // 100ms debounce
+    }, [queryClient, rootId]);
+
     // Set up event listeners for Tauri events
     useEffect(() => {
         if (!rootId) return;
@@ -98,19 +116,19 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
         // Handler for file created events
         const handleFileCreated = (payload: EntityEventPayload) => {
             info(`File created event received: ${payload.ids}`);
-            queryClient.invalidateQueries({queryKey: ['files', rootId]});
+            debouncedInvalidateQueries();
         };
 
         // Handler for file updated events
         const handleFileUpdated = (payload: EntityEventPayload) => {
             info(`File updated event received: ${payload.ids}`);
-            queryClient.invalidateQueries({queryKey: ['files', rootId]});
+            debouncedInvalidateQueries();
         };
 
         // Handler for file removed events
         const handleFileRemoved = (payload: EntityEventPayload) => {
             info(`File removed event received: ${payload.ids}`);
-            queryClient.invalidateQueries({queryKey: ['files', rootId]});
+            debouncedInvalidateQueries();
         };
 
         // Handler for reset events
@@ -129,6 +147,12 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
 
         // Cleanup function
         return () => {
+            // Clear any pending timeout
+            if (invalidationTimeoutRef.current) {
+                clearTimeout(invalidationTimeoutRef.current);
+                invalidationTimeoutRef.current = null;
+            }
+            
             unsubscribe().catch(err => {
                 error(`Error unsubscribing from events: ${err}`);
             });

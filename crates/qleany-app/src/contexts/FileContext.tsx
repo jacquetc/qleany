@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useState} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import {Alert} from '@mantine/core';
 import {error as logError} from '@tauri-apps/plugin-log';
 import {useFiles} from '../hooks/useFiles';
@@ -52,11 +52,56 @@ interface FileProviderProps {
  * FileProvider component that provides file and group data to its children
  */
 export function FileProvider({rootId, children}: FileProviderProps) {
-    // State for selected and checked items
-    const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
+    // Log component mount/unmount and rootId changes
+    useEffect(() => {
+        logError(`FileProvider: Component mounted with rootId=${rootId}`);
+        return () => {
+            logError(`FileProvider: Component unmounting`);
+        };
+    }, []);
+
+    useEffect(() => {
+        logError(`FileProvider: rootId changed to ${rootId}`);
+    }, [rootId]);
+
+    // State for selected and checked items - use a ref to persist across remounts
+    const [selectedFileIdState, setSelectedFileIdState] = useState<number | null>(() => {
+        // Try to restore from sessionStorage on mount
+        try {
+            const stored = sessionStorage.getItem(`selectedFileId_${rootId}`);
+            return stored ? parseInt(stored, 10) : null;
+        } catch {
+            return null;
+        }
+    });
     const [checkedFileIds, setCheckedFileIds] = useState<number[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
     const [checkedGroups, setCheckedGroups] = useState<string[]>([]);
+
+    // Wrapped setSelectedFileId with logging
+    const setSelectedFileId = (fileId: number | null) => {
+        logError(`FileContext.setSelectedFileId: Changing selectedFileId from ${selectedFileIdState} to ${fileId}`);
+        const stack = new Error().stack;
+        logError(`FileContext.setSelectedFileId: Call stack: ${stack}`);
+        setSelectedFileIdState(fileId);
+    };
+
+    const selectedFileId = selectedFileIdState;
+
+    // Effect to persist selectedFileId to sessionStorage
+    useEffect(() => {
+        try {
+            if (selectedFileIdState !== null) {
+                sessionStorage.setItem(`selectedFileId_${rootId}`, selectedFileIdState.toString());
+                logError(`FileContext: Saved selectedFileId ${selectedFileIdState} to sessionStorage`);
+            } else {
+                sessionStorage.removeItem(`selectedFileId_${rootId}`);
+                logError(`FileContext: Removed selectedFileId from sessionStorage`);
+            }
+        } catch (err) {
+            logError(`FileContext: Failed to save selectedFileId to sessionStorage: ${err}`);
+        }
+    }, [selectedFileIdState, rootId]);
 
     // Add state for handling hook errors
     const [hookError, setHookError] = useState<Error | null>(null);
@@ -109,8 +154,32 @@ export function FileProvider({rootId, children}: FileProviderProps) {
         getFilesInGroup
     } = groupsData;
 
+    // Effect to validate selectedFileId when files change
+    useEffect(() => {
+        logError(`FileContext validation effect: selectedFileId=${selectedFileId}, selectedGroup=${selectedGroup}, files.length=${files.length}`);
+
+        // Only validate and clear selection when:
+        // 1. No group is selected (showing all files), AND
+        // 2. Files have been loaded (not empty), AND
+        // 3. The selected file doesn't exist in the complete files list
+        if (selectedFileId !== null && !selectedGroup && files.length > 0) {
+            const selectedFileExists = files.some(file => file.id === selectedFileId);
+            logError(`FileContext validation: selectedFileExists=${selectedFileExists} for fileId=${selectedFileId}`);
+
+            if (!selectedFileExists) {
+                // Clear the selection if the file no longer exists in the complete list
+                logError(`FileContext validation: Clearing selectedFileId ${selectedFileId} because file not found in files list`);
+                setSelectedFileId(null);
+            }
+        }
+        // When a group is selected, don't validate against the filtered list
+        // Let the user keep their selected file even if it's not in the current group
+    }, [files, selectedFileId, selectedGroup]);
+
     // Function to select a file
     const selectFile = (fileId: number | null) => {
+        logError(`FileContext.selectFile: Setting selectedFileId to ${fileId}`);
+        logError(`FileContext.selectFile: Current selectedFileId before change: ${selectedFileId}`);
         setSelectedFileId(fileId);
     };
 
@@ -148,7 +217,7 @@ export function FileProvider({rootId, children}: FileProviderProps) {
     // Function to select a group
     const selectGroup = (groupName: string | null) => {
         setSelectedGroup(groupName);
-        setSelectedFileId(null);
+        // Don't clear selected file when selecting a group - let users keep their code displayed
     };
 
     // Function to check/uncheck a group
