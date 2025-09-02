@@ -30,6 +30,7 @@ pub struct EntityVM {
     pub fields: IndexMap<EntityId, Field>,
     pub referenced_entities: IndexMap<EntityId, Entity>,
     pub snake_name: String,
+    pub fields_vm: Vec<FieldVM>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -49,6 +50,12 @@ pub struct UseCaseVM {
 pub struct DtoVM {
     pub inner: Dto,
     pub fields: IndexMap<EntityId, DtoField>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct FieldVM {
+    pub inner: Field,
+    pub rust_type: String,
 }
 
 static RUST_TEMPLATES_DIR: Dir<'_> =
@@ -106,6 +113,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "direct_access_cargo" => tera.render("direct_access_cargo", &context)?,
         "direct_access_lib" => tera.render("direct_access_lib", &context)?,
         "entity_mod" => tera.render("entity_mod", &context)?, 
+        "entity_dtos" => tera.render("entity_dtos", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown template name: {}",
@@ -144,6 +152,7 @@ pub(crate) fn generate_code(
                 fields: e_fields,
                 referenced_entities: IndexMap::new(),
                 snake_name: heck::AsSnakeCase(&e.name).to_string(),
+                fields_vm: Vec::new(),
             },
         );
     }
@@ -365,6 +374,7 @@ impl SnapshotBuilder {
                     fields: e_fields,
                     referenced_entities: IndexMap::new(),
                     snake_name: heck::AsSnakeCase(&e.name).to_string(),
+                    fields_vm: Vec::new(),
                 },
             );
         }
