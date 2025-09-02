@@ -55,6 +55,10 @@ pub struct DtoVM {
 #[derive(Debug, Serialize, Clone)]
 pub struct FieldVM {
     pub inner: Field,
+    pub name: String,
+    pub is_list: bool,
+    pub is_nullable: bool,
+    pub rust_base_type: String,
     pub rust_type: String,
 }
 
@@ -145,6 +149,34 @@ pub(crate) fn generate_code(
                 e_fields.insert(*fid, f.clone());
             }
         }
+        // build fields_vm for convenience in templates
+        let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
+        for (_fid, f) in &e_fields {
+            let rust_base_type = match f.field_type {
+                common::entities::FieldType::Boolean => "bool".to_string(),
+                common::entities::FieldType::Integer => "i64".to_string(),
+                common::entities::FieldType::UInteger => "u64".to_string(),
+                common::entities::FieldType::Float => "f64".to_string(),
+                common::entities::FieldType::String => "String".to_string(),
+                common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
+                common::entities::FieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                common::entities::FieldType::Entity => "EntityId".to_string(),
+                common::entities::FieldType::Enum => "String".to_string(),
+            };
+            let rust_type = if f.is_list {
+                format!("Vec<{}>", rust_base_type)
+            } else {
+                rust_base_type.clone()
+            };
+            fields_vm_vec.push(FieldVM {
+                inner: f.clone(),
+                name: f.name.clone(),
+                is_list: f.is_list,
+                is_nullable: f.is_nullable,
+                rust_base_type,
+                rust_type,
+            });
+        }
         entities_vm.insert(
             eid,
             EntityVM {
@@ -152,7 +184,7 @@ pub(crate) fn generate_code(
                 fields: e_fields,
                 referenced_entities: IndexMap::new(),
                 snake_name: heck::AsSnakeCase(&e.name).to_string(),
-                fields_vm: Vec::new(),
+                fields_vm: fields_vm_vec,
             },
         );
     }
@@ -367,6 +399,34 @@ impl SnapshotBuilder {
                     e_fields.insert(*fid, f.clone());
                 }
             }
+            // build fields_vm for convenience in templates
+            let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
+            for (_fid, f) in &e_fields {
+                let rust_base_type = match f.field_type {
+                    common::entities::FieldType::Boolean => "bool".to_string(),
+                    common::entities::FieldType::Integer => "i64".to_string(),
+                    common::entities::FieldType::UInteger => "u64".to_string(),
+                    common::entities::FieldType::Float => "f64".to_string(),
+                    common::entities::FieldType::String => "String".to_string(),
+                    common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
+                    common::entities::FieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                    common::entities::FieldType::Entity => "EntityId".to_string(),
+                    common::entities::FieldType::Enum => "String".to_string(),
+                };
+                let rust_type = if f.is_list {
+                    format!("Vec<{}>", rust_base_type)
+                } else {
+                    rust_base_type.clone()
+                };
+                fields_vm_vec.push(FieldVM {
+                    inner: f.clone(),
+                    name: f.name.clone(),
+                    is_list: f.is_list,
+                    is_nullable: f.is_nullable,
+                    rust_base_type,
+                    rust_type,
+                });
+            }
             entities_vm.insert(
                 *eid,
                 EntityVM {
@@ -374,7 +434,7 @@ impl SnapshotBuilder {
                     fields: e_fields,
                     referenced_entities: IndexMap::new(),
                     snake_name: heck::AsSnakeCase(&e.name).to_string(),
-                    fields_vm: Vec::new(),
+                    fields_vm: fields_vm_vec,
                 },
             );
         }

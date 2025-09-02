@@ -12,20 +12,18 @@ use common::types::EntityId;
 pub struct {{ s.entities[e].inner.name }}Dto {
     pub id: EntityId,
     {% for fid, f in s.entities[e].fields %}
-    pub {{ f.name }}: {{
-        match f.field_type | as_str() {
-            "Boolean" => "bool",
-            "Integer" => "i64",
-            "UInteger" => "u64",
-            "Float" => "f64",
-            "String" => "String",
-            "Uuid" => "uuid::Uuid",
-            "DateTime" => "chrono::DateTime<chrono::Utc>",
-            "Entity" => "EntityId",
-            "Enum" => "String",
-            _ => "String",
-        }
-    }}{{ if f.is_list }}Vec<{{ _self }}>{{ endif }},
+    {% set base_type = "String" %}
+    {% if f.field_type == "Boolean" %}{% set base_type = "bool" %}
+    {% elif f.field_type == "Integer" %}{% set base_type = "i64" %}
+    {% elif f.field_type == "UInteger" %}{% set base_type = "u64" %}
+    {% elif f.field_type == "Float" %}{% set base_type = "f64" %}
+    {% elif f.field_type == "String" %}{% set base_type = "String" %}
+    {% elif f.field_type == "Uuid" %}{% set base_type = "uuid::Uuid" %}
+    {% elif f.field_type == "DateTime" %}{% set base_type = "chrono::DateTime<chrono::Utc>" %}
+    {% elif f.field_type == "Entity" %}{% set base_type = "EntityId" %}
+    {% elif f.field_type == "Enum" %}{% set base_type = "String" %}
+    {% endif %}
+    pub {{ f.name }}: {% if f.is_list %}Vec<{{ base_type }}>{% else %}{{ base_type }}{% endif %},
     {% endfor %}
 }
 
@@ -65,20 +63,18 @@ impl From<{{ s.entities[e].inner.name }}> for {{ s.entities[e].inner.name }}Dto 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Create{{ s.entities[e].inner.name }}Dto {
     {% for fid, f in s.entities[e].fields %}
-    pub {{ f.name }}: {{
-        match f.field_type | as_str() {
-            "Boolean" => "bool",
-            "Integer" => "i64",
-            "UInteger" => "u64",
-            "Float" => "f64",
-            "String" => "String",
-            "Uuid" => "uuid::Uuid",
-            "DateTime" => "chrono::DateTime<chrono::Utc>",
-            "Entity" => "EntityId",
-            "Enum" => "String",
-            _ => "String",
-        }
-    }}{{ if f.is_list }}Vec<{{ _self }}>{{ endif }},
+    {% set base_type = "String" %}
+    {% if f.field_type == "Boolean" %}{% set base_type = "bool" %}
+    {% elif f.field_type == "Integer" %}{% set base_type = "i64" %}
+    {% elif f.field_type == "UInteger" %}{% set base_type = "u64" %}
+    {% elif f.field_type == "Float" %}{% set base_type = "f64" %}
+    {% elif f.field_type == "String" %}{% set base_type = "String" %}
+    {% elif f.field_type == "Uuid" %}{% set base_type = "uuid::Uuid" %}
+    {% elif f.field_type == "DateTime" %}{% set base_type = "chrono::DateTime<chrono::Utc>" %}
+    {% elif f.field_type == "Entity" %}{% set base_type = "EntityId" %}
+    {% elif f.field_type == "Enum" %}{% set base_type = "String" %}
+    {% endif %}
+    pub {{ f.name }}: {% if f.is_list %}Vec<{{ base_type }}>{% else %}{{ base_type }}{% endif %},
     {% endfor %}
 }
 
