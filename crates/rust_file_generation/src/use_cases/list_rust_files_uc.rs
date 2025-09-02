@@ -546,7 +546,7 @@ impl ListRustFilesUseCase {
             }
         }
 
-        // mocros in crates/macros/
+        // macros in crates/macros/
 
         files.push(File {
             id: 0,

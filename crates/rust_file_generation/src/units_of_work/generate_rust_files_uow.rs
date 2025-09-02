@@ -1,10 +1,11 @@
+use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::generate_rust_files_uc::{
     GenerateRustFilesUnitOfWorkFactoryTrait, GenerateRustFilesUnitOfWorkTrait,
 };
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::Global;
+use common::entities::{Dto, DtoField, Entity, Feature, Field, File, Global, Root, UseCase};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -37,6 +38,20 @@ impl QueryUnitOfWork for GenerateRustFilesUnitOfWork {
         Ok(())
     }
 }
+
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
+#[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Feature", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "UseCase", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Dto", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "DtoField", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Entity", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Field", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Field", action = "GetMultiRO", thread_safe = true)]
+impl GenerationReadOps for GenerateRustFilesUnitOfWork {}
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "Global", action = "GetMultiRO", thread_safe = true)]

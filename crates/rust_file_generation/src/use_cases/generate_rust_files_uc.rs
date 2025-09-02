@@ -1,3 +1,4 @@
+use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::Result;
 use common::long_operation::LongOperation;
@@ -16,7 +17,7 @@ pub trait GenerateRustFilesUnitOfWorkFactoryTrait: Send + Sync {
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Global", action = "GetMultiRO")]
-pub trait GenerateRustFilesUnitOfWorkTrait: QueryUnitOfWork + Send + Sync {}
+pub trait GenerateRustFilesUnitOfWorkTrait: GenerationReadOps + Send + Sync {}
 
 pub struct GenerateRustFilesUseCase {
     uow_factory: Box<dyn GenerateRustFilesUnitOfWorkFactoryTrait>,

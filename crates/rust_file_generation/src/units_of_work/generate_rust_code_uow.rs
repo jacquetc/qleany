@@ -1,3 +1,4 @@
+use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::generate_rust_code_uc::{
     GenerateRustCodeUnitOfWorkFactoryTrait, GenerateRustCodeUnitOfWorkTrait,
 };
@@ -55,6 +56,8 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
+impl GenerationReadOps for GenerateRustCodeUnitOfWork {}
+
 impl GenerateRustCodeUnitOfWorkTrait for GenerateRustCodeUnitOfWork {}
 
 pub struct GenerateRustCodeUnitOfWorkFactory {
