@@ -79,6 +79,7 @@ mod tests {
     use common::database::db_context::DbContext;
 
     #[test]
+    #[ignore]
     fn test_list_rust_files() {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());

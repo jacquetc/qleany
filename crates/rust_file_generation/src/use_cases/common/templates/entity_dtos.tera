@@ -3,27 +3,16 @@
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 
-{% set e = s.file.inner.entity | default(value=null) %}
-{% if e is not null %}
+{% set e = s.file.inner.entity %}
+{% if e %}
 use common::entities::{{ s.entities[e].inner.name }};
 use common::types::EntityId;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct {{ s.entities[e].inner.name }}Dto {
     pub id: EntityId,
-    {% for fid, f in s.entities[e].fields %}
-    {% set base_type = "String" %}
-    {% if f.field_type == "Boolean" %}{% set base_type = "bool" %}
-    {% elif f.field_type == "Integer" %}{% set base_type = "i64" %}
-    {% elif f.field_type == "UInteger" %}{% set base_type = "u64" %}
-    {% elif f.field_type == "Float" %}{% set base_type = "f64" %}
-    {% elif f.field_type == "String" %}{% set base_type = "String" %}
-    {% elif f.field_type == "Uuid" %}{% set base_type = "uuid::Uuid" %}
-    {% elif f.field_type == "DateTime" %}{% set base_type = "chrono::DateTime<chrono::Utc>" %}
-    {% elif f.field_type == "Entity" %}{% set base_type = "EntityId" %}
-    {% elif f.field_type == "Enum" %}{% set base_type = "String" %}
-    {% endif %}
-    pub {{ f.name }}: {% if f.is_list %}Vec<{{ base_type }}>{% else %}{{ base_type }}{% endif %},
+    {% for f in s.entities[e].fields %}
+    pub {{ f.snake_name }}: {{ f.rust_type }},
     {% endfor %}
 }
 
@@ -31,8 +20,8 @@ impl From<{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} 
     fn from(dto: {{ s.entities[e].inner.name }}Dto) -> Self {
         {{ s.entities[e].inner.name }} {
             id: dto.id,
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: dto.{{ f.name }},
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }},
             {% endfor %}
         }
     }
@@ -42,8 +31,8 @@ impl From<&{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }}
     fn from(dto: &{{ s.entities[e].inner.name }}Dto) -> Self {
         {{ s.entities[e].inner.name }} {
             id: dto.id,
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: dto.{{ f.name }}.clone(),
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }}.clone(),
             {% endfor %}
         }
     }
@@ -53,8 +42,8 @@ impl From<{{ s.entities[e].inner.name }}> for {{ s.entities[e].inner.name }}Dto 
     fn from(entity: {{ s.entities[e].inner.name }}) -> Self {
         {{ s.entities[e].inner.name }}Dto {
             id: entity.id,
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: entity.{{ f.name }},
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: entity.{{ f.snake_name }},
             {% endfor %}
         }
     }
@@ -62,19 +51,8 @@ impl From<{{ s.entities[e].inner.name }}> for {{ s.entities[e].inner.name }}Dto 
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Create{{ s.entities[e].inner.name }}Dto {
-    {% for fid, f in s.entities[e].fields %}
-    {% set base_type = "String" %}
-    {% if f.field_type == "Boolean" %}{% set base_type = "bool" %}
-    {% elif f.field_type == "Integer" %}{% set base_type = "i64" %}
-    {% elif f.field_type == "UInteger" %}{% set base_type = "u64" %}
-    {% elif f.field_type == "Float" %}{% set base_type = "f64" %}
-    {% elif f.field_type == "String" %}{% set base_type = "String" %}
-    {% elif f.field_type == "Uuid" %}{% set base_type = "uuid::Uuid" %}
-    {% elif f.field_type == "DateTime" %}{% set base_type = "chrono::DateTime<chrono::Utc>" %}
-    {% elif f.field_type == "Entity" %}{% set base_type = "EntityId" %}
-    {% elif f.field_type == "Enum" %}{% set base_type = "String" %}
-    {% endif %}
-    pub {{ f.name }}: {% if f.is_list %}Vec<{{ base_type }}>{% else %}{{ base_type }}{% endif %},
+    {% for f in s.entities[e].fields %}
+    pub {{ f.snake_name }}: {{ f.rust_type }},
     {% endfor %}
 }
 
@@ -82,8 +60,8 @@ impl From<Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.na
     fn from(dto: Create{{ s.entities[e].inner.name }}Dto) -> Self {
         {{ s.entities[e].inner.name }} {
             id: 0,
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: dto.{{ f.name }},
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }},
             {% endfor %}
         }
     }
@@ -93,8 +71,8 @@ impl From<&Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.n
     fn from(dto: &Create{{ s.entities[e].inner.name }}Dto) -> Self {
         {{ s.entities[e].inner.name }} {
             id: 0,
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: dto.{{ f.name }}.clone(),
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }}.clone(),
             {% endfor %}
         }
     }
@@ -103,8 +81,8 @@ impl From<&Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.n
 impl From<{{ s.entities[e].inner.name }}> for Create{{ s.entities[e].inner.name }}Dto {
     fn from(entity: {{ s.entities[e].inner.name }}) -> Self {
         Create{{ s.entities[e].inner.name }}Dto {
-            {% for fid, f in s.entities[e].fields %}
-            {{ f.name }}: entity.{{ f.name }},
+            {% for f in s.entities[e].fields %}
+            {{ f.snake_name }}: entity.{{ f.snake_name }},
             {% endfor %}
         }
     }

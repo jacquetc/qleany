@@ -2,13 +2,13 @@ use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{Dto, DtoField, Entity, Feature, Field, File, UseCase};
 use common::types::EntityId;
+use heck::AsSnakeCase;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
-use heck::AsSnakeCase;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct GenerationSnapshot {
@@ -27,10 +27,9 @@ pub struct FileVM {
 #[derive(Debug, Serialize, Clone)]
 pub struct EntityVM {
     pub inner: Entity,
-    pub fields: IndexMap<EntityId, Field>,
     pub referenced_entities: IndexMap<EntityId, Entity>,
     pub snake_name: String,
-    pub fields_vm: Vec<FieldVM>,
+    pub fields: Vec<FieldVM>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -56,6 +55,7 @@ pub struct DtoVM {
 pub struct FieldVM {
     pub inner: Field,
     pub name: String,
+    pub snake_name: String,
     pub is_list: bool,
     pub is_nullable: bool,
     pub rust_base_type: String,
@@ -116,7 +116,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "common_direct_access_mod" => tera.render("common_direct_access_mod", &context)?,
         "direct_access_cargo" => tera.render("direct_access_cargo", &context)?,
         "direct_access_lib" => tera.render("direct_access_lib", &context)?,
-        "entity_mod" => tera.render("entity_mod", &context)?, 
+        "entity_mod" => tera.render("entity_mod", &context)?,
         "entity_dtos" => tera.render("entity_dtos", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
@@ -159,7 +159,9 @@ pub(crate) fn generate_code(
                 common::entities::FieldType::Float => "f64".to_string(),
                 common::entities::FieldType::String => "String".to_string(),
                 common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
-                common::entities::FieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                common::entities::FieldType::DateTime => {
+                    "chrono::DateTime<chrono::Utc>".to_string()
+                }
                 common::entities::FieldType::Entity => "EntityId".to_string(),
                 common::entities::FieldType::Enum => "String".to_string(),
             };
@@ -171,6 +173,7 @@ pub(crate) fn generate_code(
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
                 name: f.name.clone(),
+                snake_name: heck::AsSnakeCase(&f.name).to_string(),
                 is_list: f.is_list,
                 is_nullable: f.is_nullable,
                 rust_base_type,
@@ -181,10 +184,9 @@ pub(crate) fn generate_code(
             eid,
             EntityVM {
                 inner: e.clone(),
-                fields: e_fields,
+                fields: fields_vm_vec,
                 referenced_entities: IndexMap::new(),
                 snake_name: heck::AsSnakeCase(&e.name).to_string(),
-                fields_vm: fields_vm_vec,
             },
         );
     }
@@ -237,6 +239,21 @@ pub(crate) fn generate_code(
 
     generate_code_with_snapshot(&snapshot)
 }
+
+// Shared read-API for snapshot building across code and files generation
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "File", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Dto", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRO")]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Field", action = "GetRO")]
+#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
+pub trait GenerationReadOps: QueryUnitOfWork {}
 
 // Snapshot builder to compose consistent data for templates
 pub struct SnapshotBuilder;
@@ -409,7 +426,9 @@ impl SnapshotBuilder {
                     common::entities::FieldType::Float => "f64".to_string(),
                     common::entities::FieldType::String => "String".to_string(),
                     common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
-                    common::entities::FieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                    common::entities::FieldType::DateTime => {
+                        "chrono::DateTime<chrono::Utc>".to_string()
+                    }
                     common::entities::FieldType::Entity => "EntityId".to_string(),
                     common::entities::FieldType::Enum => "String".to_string(),
                 };
@@ -421,6 +440,7 @@ impl SnapshotBuilder {
                 fields_vm_vec.push(FieldVM {
                     inner: f.clone(),
                     name: f.name.clone(),
+                    snake_name: heck::AsSnakeCase(&f.name).to_string(),
                     is_list: f.is_list,
                     is_nullable: f.is_nullable,
                     rust_base_type,
@@ -431,10 +451,9 @@ impl SnapshotBuilder {
                 *eid,
                 EntityVM {
                     inner: e.clone(),
-                    fields: e_fields,
+                    fields: fields_vm_vec,
                     referenced_entities: IndexMap::new(),
                     snake_name: heck::AsSnakeCase(&e.name).to_string(),
-                    fields_vm: fields_vm_vec,
                 },
             );
         }
@@ -522,19 +541,117 @@ mod tests {
         let code = tera.render("root_cargo", &context).unwrap();
         println!("{}", code);
     }
-}
 
-// Shared read-API for snapshot building across code and files generation
-#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "File", action = "GetRO")]
-#[macros::uow_action(entity = "Feature", action = "GetRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Dto", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Entity", action = "GetRO")]
-#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Field", action = "GetRO")]
-#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-pub trait GenerationReadOps: QueryUnitOfWork {}
+    #[test]
+    fn test_entity_dtos_template_generation() {
+        // Build a minimal snapshot with an entity bound to the file and a couple of fields
+        use common::entities::FieldType;
+        let entity_id: EntityId = 1;
+        let file = File {
+            id: 10,
+            name: "User DTOs".to_string(),
+            relative_path: "src/user_dtos.rs".to_string(),
+            group: "entities".to_string(),
+            template_name: "entity_dtos".to_string(),
+            feature: None,
+            entity: Some(entity_id),
+            use_case: None,
+        };
+        let entity = Entity {
+            id: entity_id,
+            name: "User".to_string(),
+            only_for_heritage: false,
+            parent: None,
+            allow_direct_access: true,
+            fields: vec![100, 101],
+            relationships: vec![],
+        };
+        let field_relationship = Field {
+            id: 100,
+            name: "name".to_string(),
+            field_type: FieldType::Entity,
+            entity: Some(entity_id),
+            is_nullable: true,
+            is_primary_key: false,
+            is_list: false,
+            single: true,
+            strong: true,
+            ordered: false,
+            list_model: false,
+            list_model_displayed_field: None,
+            enum_name: None,
+            enum_values: None,
+        };
+        let field_tags = Field {
+            id: 101,
+            name: "tags".to_string(),
+            field_type: FieldType::String,
+            entity: None,
+            is_nullable: false,
+            is_primary_key: false,
+            is_list: true,
+            single: true,
+            strong: true,
+            ordered: false,
+            list_model: false,
+            list_model_displayed_field: None,
+            enum_name: None,
+            enum_values: None,
+        };
+
+        let snapshot = GenerationSnapshot {
+            file: FileVM { inner: file },
+            entities: {
+                let mut m = IndexMap::new();
+                // Build fields VM
+                let fields_vm = vec![
+                    FieldVM {
+                        inner: field_relationship.clone(),
+                        name: field_relationship.name.clone(),
+                        snake_name: heck::AsSnakeCase(&field_relationship.name).to_string(),
+                        is_list: field_relationship.is_list,
+                        is_nullable: field_relationship.is_nullable,
+                        rust_base_type: "String".to_string(),
+                        rust_type: "String".to_string(),
+                    },
+                    FieldVM {
+                        inner: field_tags.clone(),
+                        name: field_tags.name.clone(),
+                        snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
+                        is_list: field_tags.is_list,
+                        is_nullable: field_tags.is_nullable,
+                        rust_base_type: "String".to_string(),
+                        rust_type: "Vec<String>".to_string(),
+                    },
+                ];
+                m.insert(
+                    entity_id,
+                    EntityVM {
+                        inner: entity,
+                        referenced_entities: IndexMap::new(),
+                        snake_name: "user".to_string(),
+                        fields: fields_vm,
+                    },
+                );
+                m
+            },
+            features: IndexMap::new(),
+            use_cases: IndexMap::new(),
+            dtos: IndexMap::new(),
+        };
+
+        // Render directly with Tera to allow adding a workaround for `null` literal in template
+        let tera = get_rust_tera();
+        let mut context = Context::new();
+        context.insert("s", &snapshot);
+        // Workaround: the template compares against `null`, which Tera treats as an identifier; provide it explicitly
+        context.insert("null", &serde_json::Value::Null);
+        let code = tera
+            .render("entity_dtos", &context)
+            .expect("rendering entity_dtos");
+        println!("{}", code);
+
+        // Basic assertion: when file has no bound entity, template emits a clear comment
+        assert!(!code.contains("No entity bound to this file"));
+    }
+}
