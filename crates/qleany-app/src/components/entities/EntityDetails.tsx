@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Alert, Button, Checkbox, Modal, Select, Stack, Text, TextInput, Title } from '@mantine/core';
 import { error, info } from '@tauri-apps/plugin-log';
 import { useEntityContext } from '@/contexts/EntityContext';
@@ -37,10 +37,17 @@ const EntityDetails = () => {
     const [tempFormData, setTempFormData] = useState<typeof formData | null>(null);
     const [entitiesWithHeritage, setEntitiesWithHeritage] = useState<EntityDTO[]>([]);
     const [loading, setLoading] = useState(false);
+    
+    // Refs to prevent focus loss similar to ProjectContext
+    const saveTimeoutRef = useRef<number | null>(null);
+    const isLoadingDataRef = useRef(false);
 
     // Update form data when selected entity changes
     useEffect(() => {
         if (selectedEntity) {
+            // Flag that we're loading data from external source
+            isLoadingDataRef.current = true;
+            
             // Update form data from the selected entity
             setFormData({
                 name: selectedEntity.name,
@@ -52,6 +59,11 @@ const EntityDetails = () => {
             // Find entities with heritage
             const heritageEntities = entities.filter(entity => entity.only_for_heritage);
             setEntitiesWithHeritage(heritageEntities);
+            
+            // Reset flag after a brief timeout to allow state update to complete
+            setTimeout(() => {
+                isLoadingDataRef.current = false;
+            }, 0);
         } else {
             // Reset form data if no entity is selected
             setFormData({
@@ -63,50 +75,74 @@ const EntityDetails = () => {
         }
     }, [selectedEntity, entities]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Add auto-save effect with debouncing similar to ProjectContext
+    useEffect(() => {
+        if (isLoadingEntities) return;
+        if (!selectedEntity) return; // Skip if entity data hasn't loaded yet
+        if (isLoadingDataRef.current) return; // Skip if formData change is from external data loading
 
-        if (!selectedEntity) {
-            return;
+        // Check if formData actually differs from the current entity
+        const hasChanges = (
+            formData.name !== selectedEntity.name ||
+            formData.directAccess !== selectedEntity.allow_direct_access ||
+            formData.parent !== selectedEntity.parent ||
+            formData.only_for_heritage !== selectedEntity.only_for_heritage
+        );
+
+        if (!hasChanges) return; // Skip if no actual changes
+
+        if (saveTimeoutRef.current) {
+            window.clearTimeout(saveTimeoutRef.current);
         }
 
-        setLoading(true);
-        try {
-            // Check if the only_for_heritage field is being unchecked
-            if (selectedEntity.only_for_heritage && !formData.only_for_heritage) {
-                // Find entities that have this entity as a parent
-                const entitiesToUpdate = entities.filter(entity => entity.parent === selectedEntityId);
-                
-                // Update each entity to remove the parent
-                for (const entity of entitiesToUpdate) {
-                    const updatedEntity = {
-                        ...entity,
-                        parent: null
-                    };
-                    await updateEntity(updatedEntity);
+        saveTimeoutRef.current = window.setTimeout(async () => {
+            setLoading(true);
+            try {
+                // Check if the only_for_heritage field is being unchecked
+                if (selectedEntity.only_for_heritage && !formData.only_for_heritage) {
+                    // Find entities that have this entity as a parent
+                    const entitiesToUpdate = entities.filter(entity => entity.parent === selectedEntityId);
+                    
+                    // Update each entity to remove the parent
+                    for (const entity of entitiesToUpdate) {
+                        const updatedEntity = {
+                            ...entity,
+                            parent: null
+                        };
+                        await updateEntity(updatedEntity);
+                    }
                 }
+
+                // Update the entity with the form data
+                const updatedEntity = {
+                    ...selectedEntity,
+                    name: formData.name,
+                    allow_direct_access: formData.directAccess,
+                    parent: formData.parent,
+                    only_for_heritage: formData.only_for_heritage
+                };
+
+                // Call the context's update function (without refetchAll)
+                await updateEntity(updatedEntity);
+                
+                info("Entity updated successfully");
+            } catch (err) {
+                error(`Failed to update entity: ${err}`);
+            } finally {
+                setLoading(false);
             }
+        }, 500);
 
-            // Update the entity with the form data
-            const updatedEntity = {
-                ...selectedEntity,
-                name: formData.name,
-                parent: formData.parent,
-                only_for_heritage: formData.only_for_heritage
-            };
+        return () => {
+            if (saveTimeoutRef.current) {
+                window.clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [formData, selectedEntity, isLoadingEntities, updateEntity, entities, selectedEntityId]);
 
-            // Call the context's update function
-            await updateEntity(updatedEntity);
-            
-            // Refetch all data to ensure everything is up to date
-            await refetchAll();
-
-            info("Entity updated successfully");
-        } catch (err) {
-            error(`Failed to update entity: ${err}`);
-        } finally {
-            setLoading(false);
-        }
+    const handleEntityUpdate = (updates: Partial<typeof formData>) => {
+        if (!selectedEntity) return;
+        setFormData(prev => ({...prev, ...updates}));
     };
 
     // Custom fallback component for error state
@@ -161,7 +197,7 @@ const EntityDetails = () => {
                     color="red"
                     onClick={() => {
                         if (tempFormData) {
-                            setFormData(tempFormData);
+                            handleEntityUpdate({only_for_heritage: false});
                             setTempFormData(null);
                         }
                         setShowConfirmModal(false);
@@ -186,54 +222,62 @@ const EntityDetails = () => {
         <ErrorBoundary fallback={errorFallback}>
             {confirmationModal}
             <Title order={2}>"{formData.name}" details</Title>
-            <form onSubmit={handleSubmit}>
-                <Stack>
-                    <TextInput
-                        id="entityName"
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
-                    <Checkbox
-                        id="directAccess"
-                        label="Direct access"
-                        checked={formData.directAccess}
-                        onChange={(e) => setFormData({...formData, directAccess: e.target.checked})}
-                    />
-                    <Select
-                        id="entityParent"
-                        label="Parent"
-                        placeholder="Select a parent entity"
-                        value={formData.parent !== null ? formData.parent.toString() : ''}
-                        onChange={(value) => {
-                            const parentValue = !value || value === '' ? null : parseInt(value, 10);
-                            setFormData({...formData, parent: parentValue});
-                        }}
-                        data={
-                            entitiesWithHeritage.map(entity => ({
-                                value: entity.id.toString(),
-                                label: entity.name
-                            }))
+            <Stack>
+                <TextInput
+                    id="entityName"
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => {
+                        const newName = e.target.value;
+                        handleEntityUpdate({name: newName});
+                    }}
+                    disabled={loading}
+                />
+                <Checkbox
+                    id="directAccess"
+                    label="Direct access"
+                    checked={formData.directAccess}
+                    onChange={(e) => {
+                        const newDirectAccess = e.target.checked;
+                        handleEntityUpdate({directAccess: newDirectAccess});
+                    }}
+                    disabled={loading}
+                />
+                <Select
+                    id="entityParent"
+                    label="Parent"
+                    placeholder="Select a parent entity"
+                    value={formData.parent !== null ? formData.parent.toString() : ''}
+                    onChange={(value) => {
+                        const parentValue = !value || value === '' ? null : parseInt(value, 10);
+                        handleEntityUpdate({parent: parentValue});
+                    }}
+                    data={
+                        entitiesWithHeritage.map(entity => ({
+                            value: entity.id.toString(),
+                            label: entity.name
+                        }))
+                    }
+                    disabled={loading}
+                />
+                <Checkbox
+                    id="heritage"
+                    label="Heritage"
+                    checked={formData.only_for_heritage}
+                    onChange={(e) => {
+                        // If changing from checked to unchecked, show confirmation
+                        if (formData.only_for_heritage && !e.target.checked) {
+                            setTempFormData({...formData, only_for_heritage: false});
+                            setShowConfirmModal(true);
+                        } else {
+                            // Otherwise, update directly
+                            const newHeritageValue = e.target.checked;
+                            handleEntityUpdate({only_for_heritage: newHeritageValue});
                         }
-                    />
-                    <Checkbox
-                        id="heritage"
-                        label="Heritage"
-                        checked={formData.only_for_heritage}
-                        onChange={(e) => {
-                            // If changing from checked to unchecked, show confirmation
-                            if (formData.only_for_heritage && !e.target.checked) {
-                                setTempFormData({...formData, only_for_heritage: false});
-                                setShowConfirmModal(true);
-                            } else {
-                                // Otherwise, update directly
-                                setFormData({...formData, only_for_heritage: e.target.checked});
-                            }
-                        }}
-                    />
-                    <Button type="submit" loading={loading}>Save Changes</Button>
-                </Stack>
-            </form>
+                    }}
+                    disabled={loading}
+                />
+            </Stack>
         </ErrorBoundary>
     );
 };

@@ -5,6 +5,7 @@ import {EntityEventPayload, directAccessEventService} from '../services/direct-a
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing features data
@@ -173,6 +174,11 @@ export function useFeatures(rootId: number | null) {
             onUpdated: handleRootUpdated
         });
 
+        const unsubscribeUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
+            onUndone: () => queryClient.invalidateQueries({queryKey: ['features', rootId]}),
+            onRedone: () => queryClient.invalidateQueries({queryKey: ['features', rootId]}),
+        });
+
         // Cleanup function
         return () => {
             unsubscribe().catch(err => {
@@ -180,6 +186,9 @@ export function useFeatures(rootId: number | null) {
             });
             unsubscribeRoot().catch(err => {
                 error(`Error unsubscribing from root events: ${err}`);
+            });
+            unsubscribeUndoRedo().catch(err => {
+                error(`Error unsubscribing from undo redo events: ${err}`);
             });
         };
     }, [rootId, queryClient]);

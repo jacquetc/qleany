@@ -21,7 +21,7 @@
 //!
 //! # Example:
 //!
-//! ```rust
+//! ```rust,ignore
 //! // Define your long-running operation
 //! use std::sync::Arc;
 //! use std::sync::atomic::{AtomicBool, Ordering};

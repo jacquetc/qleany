@@ -1,5 +1,5 @@
-use crate::use_cases::common::model_structs;
 use crate::SaveDto;
+use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase};
@@ -157,8 +157,9 @@ impl SaveUseCase {
 
                 model_structs::Entity {
                     name: entity.name.clone(),
-                    parent,
                     only_for_heritage: Some(entity.only_for_heritage),
+                    parent,
+                    allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
                 }
             })

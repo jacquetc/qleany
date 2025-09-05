@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+fn serde_true() -> bool {
+    true
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Schema {
     pub version: i32,
@@ -63,10 +67,12 @@ pub struct Entity {
     pub name: String,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub parent: Option<String>,
+    pub only_for_heritage: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub only_for_heritage: Option<bool>,
+    pub parent: Option<String>,
+    #[serde(default = "serde_true")]
+    pub allow_direct_access: bool,
     pub fields: Vec<Field>,
 }
 

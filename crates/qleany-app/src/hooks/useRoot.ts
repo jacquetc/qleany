@@ -3,6 +3,7 @@ import { RootDTO, CreateRootDTO, RootRelationshipDTO, RootRelationshipField, roo
 import { error, info } from '@tauri-apps/plugin-log';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing root entity data

@@ -92,7 +92,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "lib.rs".to_string(),
-            relative_path: "crates/common/src".to_string(),
+            relative_path: "crates/common/src/".to_string(),
             group: "base".to_string(),
             template_name: "common_lib".to_string(),
             feature: None,
@@ -103,7 +103,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "undo_redo.rs".to_string(),
-            relative_path: "crates/common/src".to_string(),
+            relative_path: "crates/common/src/".to_string(),
             group: "base".to_string(),
             template_name: "undo_redo".to_string(),
             feature: None,
@@ -114,7 +114,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "types.rs".to_string(),
-            relative_path: "crates/common/src".to_string(),
+            relative_path: "crates/common/src/".to_string(),
             group: "base".to_string(),
             template_name: "types".to_string(),
             feature: None,
@@ -125,7 +125,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "database.rs".to_string(),
-            relative_path: "crates/common/src".to_string(),
+            relative_path: "crates/common/src/".to_string(),
             group: "base".to_string(),
             template_name: "database".to_string(),
             feature: None,
@@ -197,7 +197,7 @@ impl ListRustFilesUseCase {
             group: "entities".to_string(),
             template_name: "common_entities".to_string(),
             feature: None,
-            entity: None,
+            entity: Some(0), // 0 means all
             use_case: None,
         });
         files.push(File {
@@ -207,7 +207,7 @@ impl ListRustFilesUseCase {
             group: "entities".to_string(),
             template_name: "common_direct_access_mod".to_string(),
             feature: None,
-            entity: None,
+            entity: Some(0), // 0 means all
             use_case: None,
         });
 
@@ -229,7 +229,7 @@ impl ListRustFilesUseCase {
             group: "entities".to_string(),
             template_name: "direct_access_lib".to_string(),
             feature: None,
-            entity: None,
+            entity: Some(0), // 0 means all
             use_case: None,
         });
 
@@ -239,6 +239,11 @@ impl ListRustFilesUseCase {
 
         for entity in entities {
             let entity = entity.ok_or(anyhow!("Entity not found"))?;
+
+            // continue if entity is "heritage"
+            if entity.only_for_heritage {
+                continue;
+            }
 
             // for crates/direct_access/src/
 
@@ -344,6 +349,17 @@ impl ListRustFilesUseCase {
 
             files.push(File {
                 id: 0,
+                name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path: relative_path.clone(),
+                group: "entities".to_string(),
+                template_name: "entity_create_multi_use_case".to_string(),
+                feature: None,
+                entity: Some(entity.id),
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
                 name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
@@ -381,6 +397,28 @@ impl ListRustFilesUseCase {
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_remove_use_case".to_string(),
+                feature: None,
+                entity: Some(entity.id),
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path: relative_path.clone(),
+                group: "entities".to_string(),
+                template_name: "entity_get_relationship_use_case".to_string(),
+                feature: None,
+                entity: Some(entity.id),
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path: relative_path.clone(),
+                group: "entities".to_string(),
+                template_name: "entity_set_relationship_use_case".to_string(),
                 feature: None,
                 entity: Some(entity.id),
                 use_case: None,

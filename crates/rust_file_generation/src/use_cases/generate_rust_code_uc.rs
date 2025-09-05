@@ -1,6 +1,7 @@
 use crate::use_cases::common::rust_code_generator::{
     GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot,
 };
+use crate::use_cases::common::rust_formatter::rustfmt_string;
 use crate::{GenerateRustCodeDto, GenerateRustCodeReturnDto};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
@@ -33,8 +34,10 @@ impl GenerateRustCodeUseCase {
 
         let generated_code = generate_code_with_snapshot(&snapshot)?;
 
+        let formatted_code = rustfmt_string(generated_code.as_str(), None);
+
         Ok(GenerateRustCodeReturnDto {
-            generated_code,
+            generated_code: formatted_code.to_string(),
             timestamp: timestamp.to_string(),
         })
     }

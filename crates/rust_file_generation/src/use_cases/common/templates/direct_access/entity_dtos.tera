@@ -5,20 +5,20 @@ use std::convert::From;
 
 {% set e = s.file.inner.entity %}
 {% if e %}
-use common::entities::{{ s.entities[e].inner.name }};
+use common::entities::{{ s.entities[e].pascal_name }};
 use common::types::EntityId;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-pub struct {{ s.entities[e].inner.name }}Dto {
+pub struct {{ s.entities[e].pascal_name }}Dto {
     pub id: EntityId,
     {% for f in s.entities[e].fields %}
     pub {{ f.snake_name }}: {{ f.rust_type }},
     {% endfor %}
 }
 
-impl From<{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} {
-    fn from(dto: {{ s.entities[e].inner.name }}Dto) -> Self {
-        {{ s.entities[e].inner.name }} {
+impl From<{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: {{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
             id: dto.id,
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: dto.{{ f.snake_name }},
@@ -27,9 +27,9 @@ impl From<{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} 
     }
 }
 
-impl From<&{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} {
-    fn from(dto: &{{ s.entities[e].inner.name }}Dto) -> Self {
-        {{ s.entities[e].inner.name }} {
+impl From<&{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: &{{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
             id: dto.id,
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: dto.{{ f.snake_name }}.clone(),
@@ -38,9 +38,9 @@ impl From<&{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }}
     }
 }
 
-impl From<{{ s.entities[e].inner.name }}> for {{ s.entities[e].inner.name }}Dto {
-    fn from(entity: {{ s.entities[e].inner.name }}) -> Self {
-        {{ s.entities[e].inner.name }}Dto {
+impl From<{{ s.entities[e].pascal_name }}> for {{ s.entities[e].pascal_name }}Dto {
+    fn from(entity: {{ s.entities[e].pascal_name }}) -> Self {
+        {{ s.entities[e].pascal_name }}Dto {
             id: entity.id,
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: entity.{{ f.snake_name }},
@@ -50,15 +50,15 @@ impl From<{{ s.entities[e].inner.name }}> for {{ s.entities[e].inner.name }}Dto 
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-pub struct Create{{ s.entities[e].inner.name }}Dto {
+pub struct Create{{ s.entities[e].pascal_name }}Dto {
     {% for f in s.entities[e].fields %}
     pub {{ f.snake_name }}: {{ f.rust_type }},
     {% endfor %}
 }
 
-impl From<Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} {
-    fn from(dto: Create{{ s.entities[e].inner.name }}Dto) -> Self {
-        {{ s.entities[e].inner.name }} {
+impl From<Create{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: Create{{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
             id: 0,
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: dto.{{ f.snake_name }},
@@ -67,9 +67,9 @@ impl From<Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.na
     }
 }
 
-impl From<&Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.name }} {
-    fn from(dto: &Create{{ s.entities[e].inner.name }}Dto) -> Self {
-        {{ s.entities[e].inner.name }} {
+impl From<&Create{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: &Create{{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
             id: 0,
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: dto.{{ f.snake_name }}.clone(),
@@ -78,24 +78,25 @@ impl From<&Create{{ s.entities[e].inner.name }}Dto> for {{ s.entities[e].inner.n
     }
 }
 
-impl From<{{ s.entities[e].inner.name }}> for Create{{ s.entities[e].inner.name }}Dto {
-    fn from(entity: {{ s.entities[e].inner.name }}) -> Self {
-        Create{{ s.entities[e].inner.name }}Dto {
+impl From<{{ s.entities[e].pascal_name }}> for Create{{ s.entities[e].pascal_name }}Dto {
+    fn from(entity: {{ s.entities[e].pascal_name }}) -> Self {
+        Create{{ s.entities[e].pascal_name }}Dto {
             {% for f in s.entities[e].fields %}
             {{ f.snake_name }}: entity.{{ f.snake_name }},
             {% endfor %}
         }
     }
 }
-
-pub use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].inner.name }}RelationshipField;
+{% if s.entities[e].forward_relationships %}
+pub use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct {{ s.entities[e].inner.name }}RelationshipDto {
+pub struct {{ s.entities[e].pascal_name }}RelationshipDto {
     pub id: EntityId,
-    pub field: {{ s.entities[e].inner.name }}RelationshipField,
+    pub field: {{ s.entities[e].pascal_name }}RelationshipField,
     pub right_ids: Vec<EntityId>,
 }
+{% endif %}
 
 {% else %}
 // No entity bound to this file

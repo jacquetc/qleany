@@ -12,6 +12,7 @@ use common::entities::Feature;
 use common::entities::Field;
 use common::entities::File;
 use common::entities::UseCase;
+use common::entities::Relationship;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -56,6 +57,8 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
 impl GenerationReadOps for GenerateRustCodeUnitOfWork {}
 
 impl GenerateRustCodeUnitOfWorkTrait for GenerateRustCodeUnitOfWork {}

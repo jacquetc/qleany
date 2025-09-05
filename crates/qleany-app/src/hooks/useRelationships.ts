@@ -15,6 +15,7 @@ import {RootRelationshipField, rootService} from '../services/root-service';
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing relationships data for a specific entity
@@ -251,6 +252,11 @@ export function useRelationships(entityId: number | null) {
             onUpdated: handleEntityUpdated
         });
 
+        const unsubscribeUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
+            onUndone: () => queryClient.invalidateQueries({queryKey: ['relationships', entityId]}),
+            onRedone: () => queryClient.invalidateQueries({queryKey: ['relationships', entityId]}),
+        });
+
         // Cleanup function
         return () => {
             unsubscribe().catch(err => {
@@ -258,6 +264,9 @@ export function useRelationships(entityId: number | null) {
             });
             unsubscribeEntity().catch(err => {
                 error(`Error unsubscribing from entity events: ${err}`);
+            });
+            unsubscribeUndoRedo().catch(err => {
+                error(`Error unsubscribing from undo redo events: ${err}`);
             });
         };
     }, [entityId, queryClient]);

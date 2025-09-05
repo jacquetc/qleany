@@ -4,6 +4,7 @@ import {EntityEventPayload, directAccessEventService} from '../services/direct-a
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing DTOs data
@@ -126,10 +127,18 @@ export function useDtos() {
             onReset: handleReset
         });
 
+        const unsubscribeUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
+            onUndone: () => queryClient.invalidateQueries({queryKey: ['dtos']}),
+            onRedone: () => queryClient.invalidateQueries({queryKey: ['dtos']}),
+        });
+
         // Cleanup function
         return () => {
             unsubscribe().catch(err => {
                 error(`Error unsubscribing from events: ${err}`);
+            });
+            unsubscribeUndoRedo().catch(err => {
+                error(`Error unsubscribing from undo redo events: ${err}`);
             });
         };
     }, [queryClient]);

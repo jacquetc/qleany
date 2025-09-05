@@ -1,8 +1,10 @@
+mod direct_access_lib_tests;
+mod rust_code_generator_tests;
+
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, Entity, Feature, Field, File, UseCase};
+use common::entities::{Dto, DtoField, Entity, Feature, Field, File, Relationship, UseCase};
 use common::types::EntityId;
-use heck::AsSnakeCase;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
 use serde::Serialize;
@@ -11,34 +13,37 @@ use std::sync::OnceLock;
 use tera::{Context, Tera};
 
 #[derive(Debug, Serialize, Clone)]
-pub struct GenerationSnapshot {
-    pub file: FileVM,
-    pub entities: IndexMap<EntityId, EntityVM>,
-    pub features: IndexMap<EntityId, FeatureVM>,
-    pub use_cases: IndexMap<EntityId, UseCaseVM>,
-    pub dtos: IndexMap<EntityId, DtoVM>,
+pub(crate) struct GenerationSnapshot {
+    file: FileVM,
+    entities: IndexMap<EntityId, EntityVM>,
+    features: IndexMap<EntityId, FeatureVM>,
+    use_cases: IndexMap<EntityId, UseCaseVM>,
+    dtos: IndexMap<EntityId, DtoVM>,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct FileVM {
+struct FileVM {
     pub inner: File,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct EntityVM {
+struct EntityVM {
     pub inner: Entity,
-    pub referenced_entities: IndexMap<EntityId, Entity>,
+    pub relationships: IndexMap<EntityId, Relationship>,
+    pub forward_relationships: IndexMap<EntityId, Relationship>,
+    pub backward_relationships: IndexMap<EntityId, Relationship>,
     pub snake_name: String,
+    pub pascal_name: String,
     pub fields: Vec<FieldVM>,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct FeatureVM {
+struct FeatureVM {
     pub inner: Feature,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct UseCaseVM {
+struct UseCaseVM {
     pub inner: UseCase,
     pub entities: IndexMap<EntityId, Entity>,
     pub dto_in: Option<DtoVM>,
@@ -46,13 +51,13 @@ pub struct UseCaseVM {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct DtoVM {
+struct DtoVM {
     pub inner: Dto,
     pub fields: IndexMap<EntityId, DtoField>,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct FieldVM {
+struct FieldVM {
     pub inner: Field,
     pub name: String,
     pub snake_name: String,
@@ -67,7 +72,7 @@ static RUST_TEMPLATES_DIR: Dir<'_> =
 
 static RUST_TERA: OnceLock<Tera> = OnceLock::new();
 
-pub(crate) fn get_rust_tera() -> &'static Tera {
+fn get_rust_tera() -> &'static Tera {
     RUST_TERA.get_or_init(|| {
         let mut tera = Tera::default();
         load_templates_from_dir(&mut tera, &RUST_TEMPLATES_DIR);
@@ -76,22 +81,29 @@ pub(crate) fn get_rust_tera() -> &'static Tera {
 }
 
 fn load_templates_from_dir(tera: &mut Tera, dir: &Dir) {
-    for file in dir.files() {
-        if let Some(Some(file_stem)) = file.path().file_stem().map(|s| s.to_str()) {
-            // remove last ".*" from the file stem
-            let file_stem = file_stem
-                .rsplit_once('.')
-                .map_or(file_stem, |(stem, _)| stem);
+    fn add_raw_template_in_dir(tera: &mut Tera, dir: &Dir) {
+        for file in dir.files() {
+            if let Some(Some(file_stem)) = file.path().file_stem().map(|s| s.to_str()) {
+                // remove last ".*" from the file stem
+                let file_stem = file_stem
+                    .rsplit_once('.')
+                    .map_or(file_stem, |(stem, _)| stem);
 
-            // Add the template to Tera
-            // The file contents are expected to be UTF-8 encoded
-            let content = file.contents_utf8().expect("Invalid UTF-8 in template");
-            tera.add_raw_template(file_stem, content)
-                .expect("Failed to add template");
+                // Add the template to Tera
+                // The file contents are expected to be UTF-8 encoded
+                let content = file.contents_utf8().expect("Invalid UTF-8 in template");
+                tera.add_raw_template(file_stem, content)
+                    .expect("Failed to add template");
+            }
         }
+        tera.build_inheritance_chains()
+            .expect("Failed to build inheritance");
     }
-    tera.build_inheritance_chains()
-        .expect("Failed to build inheritance");
+
+    add_raw_template_in_dir(tera, dir);
+    for subdir in dir.dirs() {
+        add_raw_template_in_dir(tera, subdir);
+    }
 }
 
 pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Result<String> {
@@ -100,24 +112,64 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
     context.insert("s", snapshot);
 
     let code = match snapshot.file.inner.template_name.as_str() {
+        // root and common
         "root_cargo" => tera.render("root_cargo", &context)?,
         "common_cargo" => tera.render("common_cargo", &context)?,
         "common_lib" => tera.render("common_lib", &context)?,
+        // common modules
         "undo_redo" => tera.render("undo_redo", &context)?,
         "types" => tera.render("types", &context)?,
         "event" => tera.render("event", &context)?,
         "long_operation" => tera.render("long_operation", &context)?,
         "database" => tera.render("database", &context)?,
         "db_context" => tera.render("db_context", &context)?,
+        "db_helpers" => tera.render("db_helpers", &context)?,
         "transactions" => tera.render("transactions", &context)?,
         "redb_tests" => tera.render("redb_tests", &context)?,
         "undo_redo_tests" => tera.render("undo_redo_tests", &context)?,
+        // common direct access entities registry
         "common_entities" => tera.render("common_entities", &context)?,
         "common_direct_access_mod" => tera.render("common_direct_access_mod", &context)?,
+        // direct_access crate
         "direct_access_cargo" => tera.render("direct_access_cargo", &context)?,
         "direct_access_lib" => tera.render("direct_access_lib", &context)?,
+        // per-entity files inside direct_access
         "entity_mod" => tera.render("entity_mod", &context)?,
         "entity_dtos" => tera.render("entity_dtos", &context)?,
+        "entity_use_cases_mod" => tera.render("entity_use_cases_mod", &context)?,
+        "entity_units_of_work" => tera.render("entity_units_of_work", &context)?,
+        "entity_controller" => tera.render("entity_controller", &context)?,
+        "entity_get_use_case" => tera.render("entity_get_use_case", &context)?,
+        "entity_get_multi_use_case" => tera.render("entity_get_multi_use_case", &context)?,
+        "entity_create_use_case" => tera.render("entity_create_use_case", &context)?,
+        "entity_create_multi_use_case" => tera.render("entity_create_multi_use_case", &context)?,
+        "entity_update_multi_use_case" => tera.render("entity_update_multi_use_case", &context)?,
+        "entity_update_use_case" => tera.render("entity_update_use_case", &context)?,
+        "entity_remove_multi_use_case" => tera.render("entity_remove_multi_use_case", &context)?,
+        "entity_remove_use_case" => tera.render("entity_remove_use_case", &context)?,
+        "entity_get_relationship_use_case" => {
+            tera.render("entity_get_relationship_use_case", &context)?
+        }
+        "entity_set_relationship_use_case" => {
+            tera.render("entity_set_relationship_use_case", &context)?
+        }
+        // common direct_access per-entity
+        "common_entity_mod" => tera.render("common_entity_mod", &context)?,
+        "common_entity_repository" => tera.render("common_entity_repository", &context)?,
+        "common_entity_table" => tera.render("common_entity_table", &context)?,
+        // feature crates
+        "feature_cargo" => tera.render("feature_cargo", &context)?,
+        "feature_lib" => tera.render("feature_lib", &context)?,
+        "feature_use_cases_mod" => tera.render("feature_use_cases_mod", &context)?,
+        "feature_dtos" => tera.render("feature_dtos", &context)?,
+        "feature_units_of_work_mod" => tera.render("feature_units_of_work_mod", &context)?,
+        "feature_controller" => tera.render("feature_controller", &context)?,
+        "feature_use_case" => tera.render("feature_use_case", &context)?,
+        "feature_use_case_uow" => tera.render("feature_use_case_uow", &context)?,
+        // macros crate
+        "macros_cargo" => tera.render("macros_cargo", &context)?,
+        "macros_lib" => tera.render("macros_lib", &context)?,
+        "macros_direct_access" => tera.render("macros_direct_access", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown template name: {}",
@@ -127,117 +179,6 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
     };
 
     Ok(code)
-}
-
-// Transitional adapter to keep existing callers working
-pub(crate) fn generate_code(
-    file: File,
-    entities: HashMap<EntityId, Entity>,
-    fields: HashMap<EntityId, Field>,
-    features: HashMap<EntityId, Feature>,
-    use_cases: HashMap<EntityId, UseCase>,
-    dtos: HashMap<EntityId, Dto>,
-    dto_fields: HashMap<EntityId, DtoField>,
-) -> Result<String> {
-    // Wrap into a minimal snapshot
-    let mut entities_vm: IndexMap<EntityId, EntityVM> = IndexMap::new();
-    for (eid, e) in entities.into_iter() {
-        // gather fields for this entity
-        let mut e_fields: IndexMap<EntityId, Field> = IndexMap::new();
-        for (fid, f) in &fields {
-            if f.entity == Some(e.id) {
-                e_fields.insert(*fid, f.clone());
-            }
-        }
-        // build fields_vm for convenience in templates
-        let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
-        for (_fid, f) in &e_fields {
-            let rust_base_type = match f.field_type {
-                common::entities::FieldType::Boolean => "bool".to_string(),
-                common::entities::FieldType::Integer => "i64".to_string(),
-                common::entities::FieldType::UInteger => "u64".to_string(),
-                common::entities::FieldType::Float => "f64".to_string(),
-                common::entities::FieldType::String => "String".to_string(),
-                common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
-                common::entities::FieldType::DateTime => {
-                    "chrono::DateTime<chrono::Utc>".to_string()
-                }
-                common::entities::FieldType::Entity => "EntityId".to_string(),
-                common::entities::FieldType::Enum => "String".to_string(),
-            };
-            let rust_type = if f.is_list {
-                format!("Vec<{}>", rust_base_type)
-            } else {
-                rust_base_type.clone()
-            };
-            fields_vm_vec.push(FieldVM {
-                inner: f.clone(),
-                name: f.name.clone(),
-                snake_name: heck::AsSnakeCase(&f.name).to_string(),
-                is_list: f.is_list,
-                is_nullable: f.is_nullable,
-                rust_base_type,
-                rust_type,
-            });
-        }
-        entities_vm.insert(
-            eid,
-            EntityVM {
-                inner: e.clone(),
-                fields: fields_vm_vec,
-                referenced_entities: IndexMap::new(),
-                snake_name: heck::AsSnakeCase(&e.name).to_string(),
-            },
-        );
-    }
-
-    let mut dtos_vm: IndexMap<EntityId, DtoVM> = IndexMap::new();
-    for (did, d) in dtos.into_iter() {
-        let mut df_map: IndexMap<EntityId, DtoField> = IndexMap::new();
-        // Dto has field ids, match from dto_fields map
-        for (dfid, df) in &dto_fields {
-            if d.fields.contains(dfid) {
-                df_map.insert(*dfid, df.clone());
-            }
-        }
-        dtos_vm.insert(
-            did,
-            DtoVM {
-                inner: d,
-                fields: df_map,
-            },
-        );
-    }
-
-    let features_vm: IndexMap<EntityId, FeatureVM> = features
-        .into_iter()
-        .map(|(k, v)| (k, FeatureVM { inner: v }))
-        .collect();
-
-    let use_cases_vm: IndexMap<EntityId, UseCaseVM> = use_cases
-        .into_iter()
-        .map(|(k, uc)| {
-            (
-                k,
-                UseCaseVM {
-                    inner: uc,
-                    entities: IndexMap::new(),
-                    dto_in: None,
-                    dto_out: None,
-                },
-            )
-        })
-        .collect();
-
-    let snapshot = GenerationSnapshot {
-        file: FileVM { inner: file },
-        entities: entities_vm,
-        features: features_vm,
-        use_cases: use_cases_vm,
-        dtos: dtos_vm,
-    };
-
-    generate_code_with_snapshot(&snapshot)
 }
 
 // Shared read-API for snapshot building across code and files generation
@@ -253,13 +194,15 @@ pub(crate) fn generate_code(
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-pub trait GenerationReadOps: QueryUnitOfWork {}
+#[macros::uow_action(entity = "Relationship", action = "GetRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
+pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
 
 // Snapshot builder to compose consistent data for templates
-pub struct SnapshotBuilder;
+pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
-    pub fn for_file(
+    pub(crate) fn for_file(
         uow: &dyn GenerationReadOps,
         file_id: EntityId,
     ) -> anyhow::Result<GenerationSnapshot> {
@@ -383,28 +326,97 @@ impl SnapshotBuilder {
             use_cases.insert(use_case.id, use_case);
         }
 
-        // Entity scope
+        // Entity scope (including special case Some(0) meaning all entities)
         if let Some(entity_id) = file.entity {
-            let entity = uow
-                .get_entity(&entity_id)?
-                .ok_or_else(|| anyhow!("Entity not found"))?;
-            let entity_fields: Vec<Field> = uow
-                .get_field_multi(&entity.fields)?
-                .into_iter()
-                .filter_map(|f| f)
-                .collect();
-            for field in &entity_fields {
-                if let Some(eid) = field.entity {
-                    if field.field_type == common::entities::FieldType::Entity {
-                        let ent = uow
-                            .get_entity(&eid)?
-                            .ok_or_else(|| anyhow!("Entity not found"))?;
-                        entities.insert(ent.id, ent);
+            if entity_id == 0 {
+                // Load all entities via Root -> Entities
+                let root_id: EntityId = 1;
+                let entity_ids = uow.get_root_relationship(
+                    &root_id,
+                    &common::direct_access::root::RootRelationshipField::Entities,
+                )?;
+                let ents = uow.get_entity_multi(&entity_ids)?;
+                for ent_opt in ents.into_iter().filter_map(|e| e) {
+                    // skip heritage entities; include only those allowed for direct access when generating direct access code
+                    if ent_opt.only_for_heritage {
+                        continue;
                     }
+                    if file.template_name.starts_with("direct_access_")
+                        || file.template_name.contains("entity_")
+                        || file.template_name.contains("common_entity_")
+                    {
+                        if !ent_opt.allow_direct_access {
+                            continue;
+                        }
+                    }
+                    // load fields
+                    let entity_fields: Vec<Field> = uow
+                        .get_field_multi(&ent_opt.fields)?
+                        .into_iter()
+                        .filter_map(|f| f)
+                        .collect();
+                    for field in &entity_fields {
+                        if let Some(eid) = field.entity {
+                            if field.field_type == common::entities::FieldType::Entity {
+                                if let Some(ent_dep) = uow.get_entity(&eid)? {
+                                    entities.insert(ent_dep.id, ent_dep);
+                                }
+                            }
+                        }
+                        fields.insert(field.id, field.clone());
+                    }
+                    entities.insert(ent_opt.id, ent_opt);
                 }
-                fields.insert(field.id, field.clone());
+            } else {
+                let entity = uow
+                    .get_entity(&entity_id)?
+                    .ok_or_else(|| anyhow!("Entity not found"))?;
+                let entity_fields: Vec<Field> = uow
+                    .get_field_multi(&entity.fields)?
+                    .into_iter()
+                    .filter_map(|f| f)
+                    .collect();
+                for field in &entity_fields {
+                    if let Some(eid) = field.entity {
+                        if field.field_type == common::entities::FieldType::Entity {
+                            let ent = uow
+                                .get_entity(&eid)?
+                                .ok_or_else(|| anyhow!("Entity not found"))?;
+                            entities.insert(ent.id, ent);
+                        }
+                    }
+                    fields.insert(field.id, field.clone());
+                }
+                entities.insert(entity.id, entity);
             }
-            entities.insert(entity.id, entity);
+        }
+
+        // Load relationships for all collected entities
+        let mut relationships_map: IndexMap<EntityId, Relationship> = IndexMap::new();
+        {
+            let mut rel_ids: Vec<EntityId> = entities
+                .values()
+                .flat_map(|e| e.relationships.clone())
+                .collect();
+            rel_ids.sort();
+            rel_ids.dedup();
+            if !rel_ids.is_empty() {
+                let rels = uow.get_relationship_multi(&rel_ids)?;
+                for rel_opt in rels.into_iter().filter_map(|r| r) {
+                    // Ensure both sides entities are available for templates if referenced
+                    if !entities.contains_key(&rel_opt.left_entity) {
+                        if let Some(le) = uow.get_entity(&rel_opt.left_entity)? {
+                            entities.insert(le.id, le);
+                        }
+                    }
+                    if !entities.contains_key(&rel_opt.right_entity) {
+                        if let Some(re) = uow.get_entity(&rel_opt.right_entity)? {
+                            entities.insert(re.id, re);
+                        }
+                    }
+                    relationships_map.insert(rel_opt.id, rel_opt);
+                }
+            }
         }
 
         // Now wrap into snapshot similarly to adapter
@@ -447,13 +459,44 @@ impl SnapshotBuilder {
                     rust_type,
                 });
             }
+            // Build relationships maps for this entity
+            let mut rel_all: IndexMap<EntityId, Relationship> = IndexMap::new();
+            let mut rel_fwd: IndexMap<EntityId, Relationship> = IndexMap::new();
+            let mut rel_bwd: IndexMap<EntityId, Relationship> = IndexMap::new();
+            // Deduplicate by semantic field keys to avoid duplicates in templates
+            use std::collections::HashSet;
+            let mut fwd_seen: HashSet<String> = HashSet::new();
+            let mut bwd_seen: HashSet<(EntityId, String)> = HashSet::new();
+            for (rid, rel) in &relationships_map {
+                if rel.left_entity == *eid || rel.right_entity == *eid {
+                    // Keep all relationships in the aggregate map (by id)
+                    rel_all.entry(*rid).or_insert_with(|| rel.clone());
+                    if rel.left_entity == *eid {
+                        // Dedup forward by field_name (one relationship per field on the left entity)
+                        if fwd_seen.insert(rel.field_name.clone()) {
+                            rel_fwd.entry(*rid).or_insert_with(|| rel.clone());
+                        }
+                    }
+                    if rel.right_entity == *eid {
+                        // Dedup backward by (left_entity, field_name)
+                        let key = (rel.left_entity, rel.field_name.clone());
+                        if bwd_seen.insert(key) {
+                            rel_bwd.entry(*rid).or_insert_with(|| rel.clone());
+                        }
+                    }
+                }
+            }
+
             entities_vm.insert(
                 *eid,
                 EntityVM {
                     inner: e.clone(),
                     fields: fields_vm_vec,
-                    referenced_entities: IndexMap::new(),
+                    relationships: rel_all,
+                    forward_relationships: rel_fwd,
+                    backward_relationships: rel_bwd,
                     snake_name: heck::AsSnakeCase(&e.name).to_string(),
+                    pascal_name: heck::AsPascalCase(&e.name).to_string(),
                 },
             );
         }
@@ -628,8 +671,11 @@ mod tests {
                     entity_id,
                     EntityVM {
                         inner: entity,
-                        referenced_entities: IndexMap::new(),
+                        relationships: IndexMap::new(),
+                        forward_relationships: IndexMap::new(),
+                        backward_relationships: IndexMap::new(),
                         snake_name: "user".to_string(),
+                        pascal_name: "User".to_string(),
                         fields: fields_vm,
                     },
                 );

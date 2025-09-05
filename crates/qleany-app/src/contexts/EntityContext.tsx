@@ -155,10 +155,9 @@ export function EntityProvider({rootId, children}: EntityProviderProps) {
         setHookError(err instanceof Error ? err : new Error('Unknown error in useEntities hook'));
     }
 
-    // For fields and relationships, we need to fetch data for all entities, not just the selected one
-    // We'll use null to fetch all fields and relationships
+    // Fetch fields for the selected entity only
     try {
-        fieldsData = useFields(null);
+        fieldsData = useFields(selectedEntityId);
     } catch (err) {
         const errorMessage = `Error in useFields hook: ${err}`;
         logError(errorMessage);
@@ -249,19 +248,6 @@ export function EntityProvider({rootId, children}: EntityProviderProps) {
         }
     };
 
-    // Log data availability for debugging
-    console.log(`EntityContext - Entities: ${entities.length}, Fields: ${fields.length}, Relationships: ${relationships.length}`);
-    console.log(`EntityContext - Loading states - Entities: ${isLoadingEntities}, Fields: ${isLoadingFields}, Relationships: ${isLoadingRelationships}`);
-
-    if (entities.length > 0 && fields.length > 0) {
-        // Log a sample of field data to verify it's being loaded correctly
-        // console.log(`EntityContext - Sample field data:`, fields.slice(0, 3));
-    }
-
-    if (entities.length > 0 && relationships.length > 0) {
-        // Log a sample of relationship data to verify it's being loaded correctly
-        console.log(`EntityContext - Sample relationship data:`, relationships.slice(0, 3));
-    }
 
     // Create the context value
     const contextValue: EntityContextValue = {

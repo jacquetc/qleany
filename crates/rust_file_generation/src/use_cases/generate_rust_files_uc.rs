@@ -43,6 +43,7 @@ impl LongOperation for GenerateRustFilesUseCase {
         progress_callback: Box<dyn Fn(common::long_operation::OperationProgress) + Send>,
         _cancel_flag: Arc<std::sync::atomic::AtomicBool>,
     ) -> Result<Self::Output> {
+        unimplemented!("Implement the Rust file generation logic here");
         // Report initial progress
         progress_callback(common::long_operation::OperationProgress::new(
             0.0,

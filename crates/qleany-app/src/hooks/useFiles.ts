@@ -5,6 +5,7 @@ import {directAccessEventService, EntityEventPayload} from '../services/direct-a
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {undoRedoService} from "#services/undo-redo-service.ts";
 
 /**
  * Custom hook for fetching and managing files data
@@ -145,6 +146,11 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
             onReset: handleReset
         });
 
+        const unsubscribeUndoRedo = undoRedoService.subscribeToUndoRedoEvents({
+            onUndone: () => queryClient.invalidateQueries({queryKey: ['files', rootId]}),
+            onRedone: () => queryClient.invalidateQueries({queryKey: ['files', rootId]}),
+        });
+
         // Cleanup function
         return () => {
             // Clear any pending timeout
@@ -155,6 +161,9 @@ export function useFiles(rootId: number | null, groupFilter?: string) {
             
             unsubscribe().catch(err => {
                 error(`Error unsubscribing from events: ${err}`);
+            });
+            unsubscribeUndoRedo().catch(err => {
+                error(`Error unsubscribing from undo redo events: ${err}`);
             });
         };
     }, [rootId, queryClient]);

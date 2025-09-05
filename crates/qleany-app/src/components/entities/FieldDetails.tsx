@@ -84,25 +84,25 @@ const FieldDetails = () => {
         }
     }, [selectedField, fields]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const handleFieldUpdate = async (updates: Partial<typeof formData>) => {
         if (!selectedField) return;
 
         try {
             const updatedField: FieldDTO = {
                 ...selectedField,
-                name: formData.name,
-                field_type: formData.field_type,
-                entity: formData.field_type === FieldType.Entity ? formData.entity : null,
-                is_nullable: formData.is_nullable,
-                is_primary_key: formData.is_primary_key,
-                is_list: formData.is_list,
-                single: formData.single,
-                strong: formData.strong,
-                ordered: formData.ordered,
-                list_model: formData.list_model,
-                list_model_displayed_field: formData.list_model_displayed_field,
+                name: updates.name !== undefined ? updates.name : formData.name,
+                field_type: updates.field_type !== undefined ? updates.field_type : formData.field_type,
+                entity: (updates.field_type !== undefined ? updates.field_type : formData.field_type) === FieldType.Entity 
+                    ? (updates.entity !== undefined ? updates.entity : formData.entity) 
+                    : null,
+                is_nullable: updates.is_nullable !== undefined ? updates.is_nullable : formData.is_nullable,
+                is_primary_key: updates.is_primary_key !== undefined ? updates.is_primary_key : formData.is_primary_key,
+                is_list: updates.is_list !== undefined ? updates.is_list : formData.is_list,
+                single: updates.single !== undefined ? updates.single : formData.single,
+                strong: updates.strong !== undefined ? updates.strong : formData.strong,
+                ordered: updates.ordered !== undefined ? updates.ordered : formData.ordered,
+                list_model: updates.list_model !== undefined ? updates.list_model : formData.list_model,
+                list_model_displayed_field: updates.list_model_displayed_field !== undefined ? updates.list_model_displayed_field : formData.list_model_displayed_field,
             };
 
             // Use the updateField function from the useFields hook
@@ -150,123 +150,169 @@ const FieldDetails = () => {
     return (
         <ErrorBoundary fallback={errorFallback}>
             <Title order={2}>"{formData.name}" details</Title>
-            <form onSubmit={handleSubmit}>
-                <Stack>
-                    <TextInput
-                        id="fieldName"
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
+            <Stack>
+                <TextInput
+                    id="fieldName"
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => {
+                        const newName = e.target.value;
+                        setFormData({...formData, name: newName});
+                        handleFieldUpdate({name: newName});
+                    }}
+                    disabled={isLoadingFields}
+                />
 
-                    <Select
-                        id="fieldType"
-                        label="Type"
-                        value={formData.field_type}
-                        onChange={(value) => {
-                            if (value) {
-                                setFormData({
-                                    ...formData,
-                                    field_type: value as FieldType,
-                                    // Reset entity if type is not Entity
-                                    entity: value === FieldType.Entity ? formData.entity : null
-                                });
-                            }
-                        }}
-                        data={Object.values(FieldType).map(type => ({
-                            value: type,
-                            label: type
-                        }))}
-                    />
-
-                    {formData.field_type === FieldType.Entity && (
-                        <Select
-                            id="fieldEntity"
-                            label="Referenced Entity"
-                            placeholder="Select an entity"
-                            value={formData.entity !== null ? formData.entity.toString() : ''}
-                            onChange={(value) => {
-                                const entityValue = !value || value === '' ? null : parseInt(value, 10);
-                                setFormData({...formData, entity: entityValue});
-                            }}
-                            data={[
-                                {value: '', label: 'None'},
-                                ...entities.map(entity => ({
-                                    value: entity.id.toString(),
-                                    label: entity.name
-                                }))
-                            ]}
-                        />
-                    )}
-
-                    <Checkbox
-                        id="fieldNullable"
-                        label="Nullable"
-                        checked={formData.is_nullable}
-                        onChange={(e) => setFormData({...formData, is_nullable: e.target.checked})}
-                    />
-
-                    <Checkbox
-                        id="fieldPrimaryKey"
-                        label="Primary Key"
-                        checked={formData.is_primary_key}
-                        onChange={(e) => setFormData({...formData, is_primary_key: e.target.checked})}
-                    />
-
-                    <Checkbox
-                        id="fieldIsList"
-                        label="Is List"
-                        checked={formData.is_list}
-                        onChange={(e) => setFormData({...formData, is_list: e.target.checked})}
-                    />
-
-                    {formData.field_type === FieldType.Entity && (
-                        <>
-                            <Checkbox
-                                id="fieldSingle"
-                                label="Single"
-                                checked={formData.single}
-                                onChange={(e) => setFormData({...formData, single: e.target.checked})}
-                            />
-
-                            <Checkbox
-                                id="fieldStrong"
-                                label="Strong"
-                                checked={formData.strong}
-                                onChange={(e) => setFormData({...formData, strong: e.target.checked})}
-                            />
-
-                            <Checkbox
-                                id="fieldOrdered"
-                                label="Ordered"
-                                checked={formData.ordered}
-                                onChange={(e) => setFormData({...formData, ordered: e.target.checked})}
-                            />
-                        </>
-                    )}
-
-                    <Checkbox
-                        id="fieldListModel"
-                        label="List Model"
-                        checked={formData.list_model}
-                        onChange={(e) => setFormData({...formData, list_model: e.target.checked})}
-                    />
-
-                    {formData.list_model && (
-                        <TextInput
-                            id="fieldListModelDisplayedField"
-                            label="List Model Displayed Field"
-                            value={formData.list_model_displayed_field || ''}
-                            onChange={(e) => setFormData({
+                <Select
+                    id="fieldType"
+                    label="Type"
+                    value={formData.field_type}
+                    onChange={(value) => {
+                        if (value) {
+                            const newFieldType = value as FieldType;
+                            const newEntity = newFieldType === FieldType.Entity ? formData.entity : null;
+                            setFormData({
                                 ...formData,
-                                list_model_displayed_field: e.target.value || null
-                            })}
-                        />
-                    )}
+                                field_type: newFieldType,
+                                entity: newEntity
+                            });
+                            handleFieldUpdate({field_type: newFieldType, entity: newEntity});
+                        }
+                    }}
+                    data={Object.values(FieldType).map(type => ({
+                        value: type,
+                        label: type
+                    }))}
+                    disabled={isLoadingFields}
+                />
 
-                    <Button type="submit" loading={isLoadingFields}>Save Changes</Button>
-                </Stack>
-            </form>
+                {formData.field_type === FieldType.Entity && (
+                    <Select
+                        id="fieldEntity"
+                        label="Referenced Entity"
+                        placeholder="Select an entity"
+                        value={formData.entity !== null ? formData.entity.toString() : ''}
+                        onChange={(value) => {
+                            const entityValue = !value || value === '' ? null : parseInt(value, 10);
+                            setFormData({...formData, entity: entityValue});
+                            handleFieldUpdate({entity: entityValue});
+                        }}
+                        data={[
+                            {value: '', label: 'None'},
+                            ...entities.map(entity => ({
+                                value: entity.id.toString(),
+                                label: entity.name
+                            }))
+                        ]}
+                        disabled={isLoadingFields}
+                    />
+                )}
+
+                <Checkbox
+                    id="fieldNullable"
+                    label="Nullable"
+                    checked={formData.is_nullable}
+                    onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setFormData({...formData, is_nullable: newValue});
+                        handleFieldUpdate({is_nullable: newValue});
+                    }}
+                    disabled={isLoadingFields}
+                />
+
+                <Checkbox
+                    id="fieldPrimaryKey"
+                    label="Primary Key"
+                    checked={formData.is_primary_key}
+                    onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setFormData({...formData, is_primary_key: newValue});
+                        handleFieldUpdate({is_primary_key: newValue});
+                    }}
+                    disabled={isLoadingFields}
+                />
+
+                <Checkbox
+                    id="fieldIsList"
+                    label="Is List"
+                    checked={formData.is_list}
+                    onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setFormData({...formData, is_list: newValue});
+                        handleFieldUpdate({is_list: newValue});
+                    }}
+                    disabled={isLoadingFields}
+                />
+
+                {formData.field_type === FieldType.Entity && (
+                    <>
+                        <Checkbox
+                            id="fieldSingle"
+                            label="Single"
+                            checked={formData.single}
+                            onChange={(e) => {
+                                const newValue = e.target.checked;
+                                setFormData({...formData, single: newValue});
+                                handleFieldUpdate({single: newValue});
+                            }}
+                            disabled={isLoadingFields}
+                        />
+
+                        <Checkbox
+                            id="fieldStrong"
+                            label="Strong"
+                            checked={formData.strong}
+                            onChange={(e) => {
+                                const newValue = e.target.checked;
+                                setFormData({...formData, strong: newValue});
+                                handleFieldUpdate({strong: newValue});
+                            }}
+                            disabled={isLoadingFields}
+                        />
+
+                        <Checkbox
+                            id="fieldOrdered"
+                            label="Ordered"
+                            checked={formData.ordered}
+                            onChange={(e) => {
+                                const newValue = e.target.checked;
+                                setFormData({...formData, ordered: newValue});
+                                handleFieldUpdate({ordered: newValue});
+                            }}
+                            disabled={isLoadingFields}
+                        />
+                    </>
+                )}
+
+                <Checkbox
+                    id="fieldListModel"
+                    label="List Model"
+                    checked={formData.list_model}
+                    onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setFormData({...formData, list_model: newValue});
+                        handleFieldUpdate({list_model: newValue});
+                    }}
+                    disabled={isLoadingFields}
+                />
+
+                {formData.list_model && (
+                    <TextInput
+                        id="fieldListModelDisplayedField"
+                        label="List Model Displayed Field"
+                        value={formData.list_model_displayed_field || ''}
+                        onChange={(e) => {
+                            const newValue = e.target.value || null;
+                            setFormData({
+                                ...formData,
+                                list_model_displayed_field: newValue
+                            });
+                            handleFieldUpdate({list_model_displayed_field: newValue});
+                        }}
+                        disabled={isLoadingFields}
+                    />
+                )}
+            </Stack>
         </ErrorBoundary>
     );
 };
