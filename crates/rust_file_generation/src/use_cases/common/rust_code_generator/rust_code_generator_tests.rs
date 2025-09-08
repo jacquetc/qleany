@@ -66,6 +66,9 @@ impl GenerationReadOps for DummyGenerationReadOps {
     fn get_feature(&self, id: &EntityId) -> Result<Option<Feature>> {
         Ok(self.features.get(id).cloned())
     }
+    fn get_feature_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
+        Ok(ids.iter().map(|i| self.features.get(i).cloned()).collect())
+    }
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
         Ok(self.use_cases.get(id).cloned())
     }
@@ -239,36 +242,80 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     assert!(snap.dtos.contains_key(&200) && snap.dtos.contains_key(&201));
 }
 
-
 #[test]
 fn for_file_various_combinations_generate_expected_items() {
     // Prepare uow with feature, use_case, entities, dtos
     let mut uow = DummyGenerationReadOps::new();
 
     // Common entities
-    let ent_a = Entity { id: 1, name: "A".into(), only_for_heritage: false, parent: None, allow_direct_access: true, fields: vec![], relationships: vec![] };
-    let ent_b = Entity { id: 2, name: "B".into(), only_for_heritage: false, parent: None, allow_direct_access: true, fields: vec![], relationships: vec![] };
+    let ent_a = Entity {
+        id: 1,
+        name: "A".into(),
+        only_for_heritage: false,
+        parent: None,
+        allow_direct_access: true,
+        fields: vec![],
+        relationships: vec![],
+    };
+    let ent_b = Entity {
+        id: 2,
+        name: "B".into(),
+        only_for_heritage: false,
+        parent: None,
+        allow_direct_access: true,
+        fields: vec![],
+        relationships: vec![],
+    };
     uow.entities.insert(1, ent_a.clone());
     uow.entities.insert(2, ent_b.clone());
     // Root contains both entities (for entity: Some(0))
     uow.root_entities = vec![1, 2];
 
     // DTOs for UC
-    let dto_in = Dto { id: 10, name: "In".into(), fields: vec![] };
-    let dto_out = Dto { id: 11, name: "Out".into(), fields: vec![] };
+    let dto_in = Dto {
+        id: 10,
+        name: "In".into(),
+        fields: vec![],
+    };
+    let dto_out = Dto {
+        id: 11,
+        name: "Out".into(),
+        fields: vec![],
+    };
     uow.dtos.insert(10, dto_in);
     uow.dtos.insert(11, dto_out);
 
     // Use case referencing ent_a and ent_b
-    let uc = UseCase { id: 100, name: "UC".into(), validator: false, entities: vec![1, 2], undoable: false, dto_in: Some(10), dto_out: Some(11) };
+    let uc = UseCase {
+        id: 100,
+        name: "UC".into(),
+        validator: false,
+        entities: vec![1, 2],
+        undoable: false,
+        dto_in: Some(10),
+        dto_out: Some(11),
+    };
     uow.use_cases.insert(100, uc.clone());
 
     // Feature with the UC
-    let feat = Feature { id: 200, name: "Feat".into(), use_cases: vec![100] };
+    let feat = Feature {
+        id: 200,
+        name: "Feat".into(),
+        use_cases: vec![100],
+    };
     uow.features.insert(200, feat.clone());
 
     // 1) File with only feature
-    let file_feature_only = File { id: 1000, name: "f1".into(), relative_path: "p".into(), group: "g".into(), template_name: "feature_lib".into(), feature: Some(200), entity: None, use_case: None };
+    let file_feature_only = File {
+        id: 1000,
+        name: "f1".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "feature_lib".into(),
+        feature: Some(200),
+        entity: None,
+        use_case: None,
+    };
     uow.files.insert(1000, file_feature_only);
     let snap = SnapshotBuilder::for_file(&uow, 1000).expect("snapshot");
     assert!(snap.features.contains_key(&200));
@@ -277,7 +324,16 @@ fn for_file_various_combinations_generate_expected_items() {
     assert!(snap.dtos.contains_key(&10) && snap.dtos.contains_key(&11));
 
     // 2) File with only use_case
-    let file_uc_only = File { id: 1001, name: "f2".into(), relative_path: "p".into(), group: "g".into(), template_name: "feature_use_case".into(), feature: None, entity: None, use_case: Some(100) };
+    let file_uc_only = File {
+        id: 1001,
+        name: "f2".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "feature_use_case".into(),
+        feature: None,
+        entity: None,
+        use_case: Some(100),
+    };
     uow.files.insert(1001, file_uc_only);
     let snap = SnapshotBuilder::for_file(&uow, 1001).expect("snapshot");
     assert!(snap.features.is_empty());
@@ -286,7 +342,16 @@ fn for_file_various_combinations_generate_expected_items() {
     assert!(snap.dtos.contains_key(&10) && snap.dtos.contains_key(&11));
 
     // 3) File with only entity
-    let file_ent_only = File { id: 1002, name: "f3".into(), relative_path: "p".into(), group: "g".into(), template_name: "entity_mod".into(), feature: None, entity: Some(1), use_case: None };
+    let file_ent_only = File {
+        id: 1002,
+        name: "f3".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "entity_mod".into(),
+        feature: None,
+        entity: Some(1),
+        use_case: None,
+    };
     uow.files.insert(1002, file_ent_only);
     let snap = SnapshotBuilder::for_file(&uow, 1002).expect("snapshot");
     assert!(snap.features.is_empty());
@@ -294,13 +359,31 @@ fn for_file_various_combinations_generate_expected_items() {
     assert!(snap.entities.contains_key(&1));
 
     // 4) File with entity Some(0) -> loads all entities from root
-    let file_all_ent = File { id: 1003, name: "f4".into(), relative_path: "p".into(), group: "g".into(), template_name: "entity_mod".into(), feature: None, entity: Some(0), use_case: None };
+    let file_all_ent = File {
+        id: 1003,
+        name: "f4".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "entity_mod".into(),
+        feature: None,
+        entity: Some(0),
+        use_case: None,
+    };
     uow.files.insert(1003, file_all_ent);
     let snap = SnapshotBuilder::for_file(&uow, 1003).expect("snapshot");
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
 
     // 5) File with feature + entity: ensure both feature scope (UCs, dtos, uc entities) and explicit entity are included
-    let file_feat_ent = File { id: 1004, name: "f5".into(), relative_path: "p".into(), group: "g".into(), template_name: "feature_lib".into(), feature: Some(200), entity: Some(1), use_case: None };
+    let file_feat_ent = File {
+        id: 1004,
+        name: "f5".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "feature_lib".into(),
+        feature: Some(200),
+        entity: Some(1),
+        use_case: None,
+    };
     uow.files.insert(1004, file_feat_ent);
     let snap = SnapshotBuilder::for_file(&uow, 1004).expect("snapshot");
     assert!(snap.features.contains_key(&200));
@@ -309,7 +392,16 @@ fn for_file_various_combinations_generate_expected_items() {
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
 
     // 6) File with use_case + entity
-    let file_uc_ent = File { id: 1005, name: "f6".into(), relative_path: "p".into(), group: "g".into(), template_name: "entity_use_cases_mod".into(), feature: None, entity: Some(2), use_case: Some(100) };
+    let file_uc_ent = File {
+        id: 1005,
+        name: "f6".into(),
+        relative_path: "p".into(),
+        group: "g".into(),
+        template_name: "entity_use_cases_mod".into(),
+        feature: None,
+        entity: Some(2),
+        use_case: Some(100),
+    };
     uow.files.insert(1005, file_uc_ent);
     let snap = SnapshotBuilder::for_file(&uow, 1005).expect("snapshot");
     assert!(snap.use_cases.contains_key(&100));

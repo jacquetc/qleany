@@ -200,6 +200,18 @@ impl ListRustFilesUseCase {
             entity: Some(0), // 0 means all
             use_case: None,
         });
+
+        files.push(File {
+            id: 0,
+            name: "event.rs".to_string(),
+            relative_path: "crates/common/src/".to_string(),
+            group: "base".to_string(),
+            template_name: "common_event".to_string(),
+            feature: Some(0), // 0 means all
+            entity: Some(0),  // 0 means all
+            use_case: None,
+        });
+
         files.push(File {
             id: 0,
             name: "direct_access.rs".to_string(),

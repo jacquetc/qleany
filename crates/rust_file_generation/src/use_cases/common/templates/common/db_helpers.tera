@@ -1,0 +1,36 @@
+use crate::types::EntityId;
+use redb::{Error, ReadableTable};
+
+pub(crate) fn delete_from_backward_junction_table(
+    junction_table: &mut redb::Table<'_, u64, Vec<u64>>,
+    id: &EntityId,
+) -> Result<(), Error> {
+    // First, collect all the keys and values that need to be modified
+    let mut junctions_to_modify = Vec::new();
+
+    {
+        let iter = junction_table.iter()?;
+        for result in iter {
+            if let Ok((left_id, right_entities)) = result {
+                let left_id = left_id.value();
+                let right_entities = right_entities.value();
+                let entities_left: Vec<EntityId> = right_entities
+                    .clone()
+                    .into_iter()
+                    .filter(|entity_id| *entity_id != *id)
+                    .collect();
+
+                if entities_left.len() != right_entities.len() {
+                    junctions_to_modify.push((left_id, entities_left));
+                }
+            }
+        }
+    }
+
+    // Now, modify the table with the collected changes
+    for (left_id, entities_left) in junctions_to_modify {
+        junction_table.insert(left_id, entities_left)?;
+    }
+
+    Ok(())
+}

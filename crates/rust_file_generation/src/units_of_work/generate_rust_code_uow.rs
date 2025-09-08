@@ -11,8 +11,8 @@ use common::entities::Entity;
 use common::entities::Feature;
 use common::entities::Field;
 use common::entities::File;
-use common::entities::UseCase;
 use common::entities::Relationship;
+use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -48,6 +48,7 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRO")]

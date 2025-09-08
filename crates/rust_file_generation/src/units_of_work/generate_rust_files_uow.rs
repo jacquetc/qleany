@@ -5,7 +5,9 @@ use crate::use_cases::generate_rust_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{Dto, DtoField, Entity, Feature, Field, File, Global, Root, UseCase, Relationship};
+use common::entities::{
+    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase,
+};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -42,6 +44,7 @@ impl QueryUnitOfWork for GenerateRustFilesUnitOfWork {
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Feature", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "UseCase", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "Dto", action = "GetRO", thread_safe = true)]

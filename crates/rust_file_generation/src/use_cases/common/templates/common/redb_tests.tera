@@ -1,0 +1,210 @@
+use anyhow::Result;
+use common::database::{db_context::DbContext, transactions::Transaction};
+use common::types::Savepoint;
+use redb::{Database, ReadableTable, TableDefinition};
+use std::sync::Arc;
+
+// Define a test table
+const TEST_TABLE: TableDefinition<&str, u64> = TableDefinition::new("test_table");
+
+// Helper function to create a table and insert initial data
+fn setup_database(db: &Database) -> Result<()> {
+    let write_txn = db.begin_write()?;
+    {
+        let mut table = write_txn.open_table(TEST_TABLE)?;
+        table.insert("key1", 1)?;
+        table.insert("key2", 2)?;
+    }
+    write_txn.commit()?;
+    Ok(())
+}
+
+// Helper function to read data from the database
+fn read_value(db: &Database, key: &str) -> Result<Option<u64>> {
+    let read_txn = db.begin_read()?;
+    let table = read_txn.open_table(TEST_TABLE)?;
+    let value = table.get(key)?.map(|v| v.value());
+    Ok(value)
+}
+
+#[test]
+fn test_restore_savepoint() -> Result<()> {
+    // Create a DbContext with an in-memory database
+    let db_context = DbContext::new()?;
+    let db = db_context.get_database();
+
+    // Setup the database with initial data
+    setup_database(db)?;
+
+    // Verify initial state
+    assert_eq!(read_value(db, "key1")?, Some(1));
+    assert_eq!(read_value(db, "key2")?, Some(2));
+    assert_eq!(read_value(db, "key3")?, None);
+
+    let mut savepoint: Option<Savepoint> = None;
+    // Create a transaction and modify the database
+
+    let mut write_txn = db.begin_write()?;
+
+    // Create a savepoint before modifications
+    savepoint = Some(write_txn.persistent_savepoint()?);
+
+    // Commit the transaction
+    write_txn.commit()?;
+
+    // Modify the database
+
+    let mut write_txn = db.begin_write()?;
+    let mut table = write_txn.open_table(TEST_TABLE)?;
+    table.insert("key1", 100)?; // Update existing key
+    table.insert("key3", 3)?; // Add new key
+    drop(table); // Release the table before starting a new transaction
+
+    write_txn.commit()?;
+    // Verify changes are present (using a separate read transaction)
+
+    let read_txn = db.begin_read()?;
+    let table = read_txn.open_table(TEST_TABLE)?;
+    assert_eq!(table.get("key1")?.map(|v| v.value()), Some(100));
+    assert_eq!(table.get("key3")?.map(|v| v.value()), Some(3));
+    drop(read_txn);
+
+    let mut write_txn = db.begin_write()?;
+    // Restore to the savepoint
+    let redb_savepoint = write_txn.get_persistent_savepoint(savepoint.unwrap())?;
+    write_txn.restore_savepoint(&redb_savepoint)?;
+
+    // Commit the transaction
+    write_txn.commit()?;
+
+    // Verify that changes were rolled back
+    assert_eq!(read_value(db, "key1")?, Some(1)); // Should be back to original value
+    assert_eq!(read_value(db, "key2")?, Some(2)); // Should remain unchanged
+    assert_eq!(read_value(db, "key3")?, None); // Should not exist
+
+    Ok(())
+}
+
+#[test]
+fn test_get_persistent_savepoint() -> Result<()> {
+    // Create a DbContext with an in-memory database
+    let db_context = DbContext::new()?;
+    let db = db_context.get_database();
+
+    // Setup the database with initial data
+    {
+        let write_txn = db.begin_write()?;
+        {
+            let mut table = write_txn.open_table(TEST_TABLE)?;
+            table.insert("key1", 1)?;
+        }
+        write_txn.commit()?;
+    }
+
+    // Create a savepoint
+    let savepoint1: Savepoint;
+    {
+        let mut write_txn = db.begin_write()?;
+        // Create the first savepoint
+        savepoint1 = write_txn.persistent_savepoint()?;
+        write_txn.commit()?;
+    }
+
+    // Modify the database - add key2 and key3
+    {
+        let mut write_txn = db.begin_write()?;
+        // Modify the database - add key2
+        let mut table = write_txn.open_table(TEST_TABLE)?;
+        table.insert("key2", 2)?;
+        drop(table);
+
+        // Modify the database again - add key3
+        let mut table = write_txn.open_table(TEST_TABLE)?;
+        table.insert("key3", 3)?;
+        drop(table);
+
+        write_txn.commit()?;
+    }
+
+    // Verify all changes are present
+    {
+        let read_txn = db.begin_read()?;
+        let table = read_txn.open_table(TEST_TABLE)?;
+        assert_eq!(table.get("key1")?.map(|v| v.value()), Some(1));
+        assert_eq!(table.get("key2")?.map(|v| v.value()), Some(2));
+        assert_eq!(table.get("key3")?.map(|v| v.value()), Some(3));
+        drop(read_txn);
+    }
+
+    // Restore to the first savepoint
+    {
+        let mut write_txn = db.begin_write()?;
+        let redb_savepoint = write_txn.get_persistent_savepoint(savepoint1)?;
+        write_txn.restore_savepoint(&redb_savepoint)?;
+        write_txn.commit()?;
+    }
+
+    // Verify that changes after savepoint1 were rolled back
+    assert_eq!(read_value(db, "key1")?, Some(1)); // Should remain unchanged
+    assert_eq!(read_value(db, "key2")?, None); // Should not exist
+    assert_eq!(read_value(db, "key3")?, None); // Should not exist
+
+    Ok(())
+}
+
+// Helper function that will return an error after making changes to the database
+fn modify_db_and_return_error(db: &Database) -> Result<()> {
+    // Start a write transaction
+    let write_txn = db.begin_write()?;
+
+    // Make changes to the database
+    let mut table = write_txn.open_table(TEST_TABLE)?;
+    table.insert("key1", 100)?; // Update existing key
+    table.insert("key3", 3)?;   // Add new key
+
+    // Don't commit or rollback - return an error
+    // This will cause the transaction to go out of scope without commit/rollback
+    Err(anyhow::anyhow!("Simulated error to break transaction"))
+}
+
+#[test]
+fn test_transaction_out_of_scope_with_error() -> Result<()> {
+    // Create a DbContext with an in-memory database
+    let db_context = DbContext::new()?;
+    let db = db_context.get_database();
+
+    // Setup the database with initial data
+    setup_database(db)?;
+
+    // Verify initial state
+    assert_eq!(read_value(db, "key1")?, Some(1));
+    assert_eq!(read_value(db, "key2")?, Some(2));
+    assert_eq!(read_value(db, "key3")?, None);
+
+    // Call the function that will make changes and then return an error
+    // This will cause the transaction to go out of scope without commit/rollback
+    let result = modify_db_and_return_error(db);
+
+    // Verify that an error was returned
+    assert!(result.is_err(), "Expected an error but none occurred");
+    println!("Error occurred as expected: {:?}", result.err());
+    println!("Transaction went out of scope without commit/rollback due to error");
+
+    // Check the database state after the transaction went out of scope with an error
+    // This will tell us if there was an implicit rollback or commit
+    let key1_value = read_value(db, "key1")?;
+    let key2_value = read_value(db, "key2")?;
+    let key3_value = read_value(db, "key3")?;
+
+    // If key1 is still 1 and key3 doesn't exist, there was an implicit rollback
+    // If key1 is 100 and key3 exists with value 3, there was an implicit commit
+    println!("After transaction went out of scope with error: key1={:?}, key2={:?}, key3={:?}", 
+             key1_value, key2_value, key3_value);
+
+    // Assert based on the expected behavior (this will depend on redb's implementation)
+    // Here we're assuming an implicit rollback, but the test will show the actual behavior
+    assert_eq!(key1_value, Some(1), "Transaction was implicitly committed instead of rolled back");
+    assert_eq!(key3_value, None, "Transaction was implicitly committed instead of rolled back");
+
+    Ok(())
+}

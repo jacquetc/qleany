@@ -40,14 +40,19 @@ struct EntityVM {
 #[derive(Debug, Serialize, Clone)]
 struct FeatureVM {
     pub inner: Feature,
+    pub use_cases: IndexMap<EntityId, UseCaseVM>,
+    pub snake_name: String,
+    pub pascal_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
 struct UseCaseVM {
     pub inner: UseCase,
-    pub entities: IndexMap<EntityId, Entity>,
+    pub entities: IndexMap<EntityId, EntityVM>,
     pub dto_in: Option<DtoVM>,
     pub dto_out: Option<DtoVM>,
+    pub snake_name: String,
+    pub pascal_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -119,7 +124,6 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         // common modules
         "undo_redo" => tera.render("undo_redo", &context)?,
         "types" => tera.render("types", &context)?,
-        "event" => tera.render("event", &context)?,
         "long_operation" => tera.render("long_operation", &context)?,
         "database" => tera.render("database", &context)?,
         "db_context" => tera.render("db_context", &context)?,
@@ -129,6 +133,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "undo_redo_tests" => tera.render("undo_redo_tests", &context)?,
         // common direct access entities registry
         "common_entities" => tera.render("common_entities", &context)?,
+        "common_event" => tera.render("common_event", &context)?,
         "common_direct_access_mod" => tera.render("common_direct_access_mod", &context)?,
         // direct_access crate
         "direct_access_cargo" => tera.render("direct_access_cargo", &context)?,
@@ -185,6 +190,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRO")]
@@ -202,6 +208,132 @@ pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
+    fn get_entity_vm(
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
+    ) -> anyhow::Result<EntityVM> {
+        use anyhow::anyhow;
+        // Load the entity
+        let entity = uow
+            .get_entity(entity_id)?
+            .ok_or_else(|| anyhow!("Entity not found"))?;
+
+        // Load fields belonging to the entity
+        let fields_vec: Vec<Field> = uow
+            .get_field_multi(&entity.fields)?
+            .into_iter()
+            .filter_map(|f| f)
+            .collect();
+
+        // Build FieldVMs with the same Rust type mapping as used elsewhere
+        let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
+        for f in &fields_vec {
+            let rust_base_type = match f.field_type {
+                common::entities::FieldType::Boolean => "bool".to_string(),
+                common::entities::FieldType::Integer => "i64".to_string(),
+                common::entities::FieldType::UInteger => "u64".to_string(),
+                common::entities::FieldType::Float => "f64".to_string(),
+                common::entities::FieldType::String => "String".to_string(),
+                common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
+                common::entities::FieldType::DateTime => {
+                    "chrono::DateTime<chrono::Utc>".to_string()
+                }
+                common::entities::FieldType::Entity => "EntityId".to_string(),
+                common::entities::FieldType::Enum => "String".to_string(),
+            };
+            let rust_type = if f.is_list {
+                format!("Vec<{}>", rust_base_type)
+            } else {
+                rust_base_type.clone()
+            };
+            fields_vm_vec.push(FieldVM {
+                inner: f.clone(),
+                name: f.name.clone(),
+                snake_name: heck::AsSnakeCase(&f.name).to_string(),
+                is_list: f.is_list,
+                is_nullable: f.is_nullable,
+                rust_base_type,
+                rust_type,
+            });
+        }
+
+        // Build relationships maps.
+        // We want to include both forward and backward relationships where this entity is involved.
+        use std::collections::HashSet;
+        let mut relationships_map: IndexMap<EntityId, Relationship> = IndexMap::new();
+
+        // Start with relationships explicitly listed on this entity
+        let rel_ids_direct = entity.relationships.clone();
+        for rel in uow
+            .get_relationship_multi(&rel_ids_direct)?
+            .into_iter()
+            .filter_map(|r| r)
+        {
+            relationships_map.insert(rel.id, rel);
+        }
+
+        // Additionally, scan all entities from root to discover relationships that reference this
+        // entity as the right side (backward relationships) but may not be listed on this entity.
+        // This mirrors broader snapshot building behavior where backward rels are gathered from peers.
+        let root_id: EntityId = 1;
+        let all_entity_ids = uow.get_root_relationship(
+            &root_id,
+            &common::direct_access::root::RootRelationshipField::Entities,
+        )?;
+        if !all_entity_ids.is_empty() {
+            let all_entities = uow.get_entity_multi(&all_entity_ids)?;
+            let mut extra_rel_ids: HashSet<EntityId> = HashSet::new();
+            for e_opt in all_entities.into_iter().filter_map(|e| e) {
+                for rid in e_opt.relationships {
+                    extra_rel_ids.insert(rid);
+                }
+            }
+            if !extra_rel_ids.is_empty() {
+                let extra_rels =
+                    uow.get_relationship_multi(&extra_rel_ids.iter().copied().collect::<Vec<_>>())?;
+                for rel_opt in extra_rels.into_iter().filter_map(|r| r) {
+                    if rel_opt.left_entity == entity.id || rel_opt.right_entity == entity.id {
+                        relationships_map.entry(rel_opt.id).or_insert(rel_opt);
+                    }
+                }
+            }
+        }
+
+        // Now split into all/forward/backward with deduplication strategy used in for_file
+        let mut rel_all: IndexMap<EntityId, Relationship> = IndexMap::new();
+        let mut rel_fwd: IndexMap<EntityId, Relationship> = IndexMap::new();
+        let mut rel_bwd: IndexMap<EntityId, Relationship> = IndexMap::new();
+        let mut fwd_seen: HashSet<String> = HashSet::new();
+        let mut bwd_seen: HashSet<(EntityId, String)> = HashSet::new();
+
+        for (rid, rel) in &relationships_map {
+            if rel.left_entity == entity.id || rel.right_entity == entity.id {
+                rel_all.entry(*rid).or_insert_with(|| rel.clone());
+                if rel.left_entity == entity.id {
+                    if fwd_seen.insert(rel.field_name.clone()) {
+                        rel_fwd.entry(*rid).or_insert_with(|| rel.clone());
+                    }
+                }
+                if rel.right_entity == entity.id {
+                    let key = (rel.left_entity, rel.field_name.clone());
+                    if bwd_seen.insert(key) {
+                        rel_bwd.entry(*rid).or_insert_with(|| rel.clone());
+                    }
+                }
+            }
+        }
+
+        Ok(EntityVM {
+            inner: entity.clone(),
+            fields: fields_vm_vec,
+            relationships: rel_all,
+            forward_relationships: rel_fwd,
+            backward_relationships: rel_bwd,
+            snake_name: heck::AsSnakeCase(&entity.name).to_string(),
+            pascal_name: heck::AsPascalCase(&entity.name).to_string(),
+        })
+    }
+
     pub(crate) fn for_file(
         uow: &dyn GenerationReadOps,
         file_id: EntityId,
@@ -222,62 +354,128 @@ impl SnapshotBuilder {
 
         // Feature scope
         if let Some(feature_id) = file.feature {
-            let feature = uow
-                .get_feature(&feature_id)?
-                .ok_or_else(|| anyhow!("Feature not found"))?;
-            if feature.use_cases.is_empty() {
-                return Err(anyhow!("Feature does not have an associated use case"));
-            }
-            let feature_use_cases: Vec<UseCase> = uow
-                .get_use_case_multi(&feature.use_cases)?
-                .into_iter()
-                .filter_map(|uc| uc)
-                .collect();
+            if feature_id == 0 {
+                // Load all features via Root -> Features
+                let root_id: EntityId = 1;
+                let feature_ids = uow.get_root_relationship(
+                    &root_id,
+                    &common::direct_access::root::RootRelationshipField::Features,
+                )?;
+                let feats = uow.get_feature_multi(&feature_ids)?;
+                for feat_opt in feats.into_iter().filter_map(|f| f) {
+                    if feat_opt.use_cases.is_empty() {
+                        continue;
+                    }
+                    let feature_use_cases: Vec<UseCase> = uow
+                        .get_use_case_multi(&feat_opt.use_cases)?
+                        .into_iter()
+                        .filter_map(|uc| uc)
+                        .collect();
 
-            features.insert(feature.id, feature);
+                    features.insert(feat_opt.id, feat_opt);
 
-            for use_case in feature_use_cases {
-                // Entities for use case
-                let use_case_entities: Vec<Entity> = uow
-                    .get_entity_multi(&use_case.entities)?
+                    for use_case in feature_use_cases {
+                        // Entities for use case
+                        let use_case_entities: Vec<Entity> = uow
+                            .get_entity_multi(&use_case.entities)?
+                            .into_iter()
+                            .filter_map(|e| e)
+                            .collect();
+                        for e in use_case_entities {
+                            entities.insert(e.id, e);
+                        }
+
+                        // DTOs
+                        if let Some(dto_in) = use_case.dto_in {
+                            let dto = uow
+                                .get_dto(&dto_in)?
+                                .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                            let fields_vec: Vec<DtoField> = uow
+                                .get_dto_field_multi(&dto.fields)?
+                                .into_iter()
+                                .filter_map(|f| f)
+                                .collect();
+                            for f in fields_vec {
+                                dto_fields.insert(f.id, f);
+                            }
+                            dtos.insert(dto.id, dto);
+                        }
+                        if let Some(dto_out) = use_case.dto_out {
+                            let dto = uow
+                                .get_dto(&dto_out)?
+                                .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                            let fields_vec: Vec<DtoField> = uow
+                                .get_dto_field_multi(&dto.fields)?
+                                .into_iter()
+                                .filter_map(|f| f)
+                                .collect();
+                            for f in fields_vec {
+                                dto_fields.insert(f.id, f);
+                            }
+                            dtos.insert(dto.id, dto);
+                        }
+
+                        use_cases.insert(use_case.id, use_case);
+                    }
+                }
+            } else {
+                let feature = uow
+                    .get_feature(&feature_id)?
+                    .ok_or_else(|| anyhow!("Feature not found"))?;
+                if feature.use_cases.is_empty() {
+                    return Err(anyhow!("Feature does not have an associated use case"));
+                }
+                let feature_use_cases: Vec<UseCase> = uow
+                    .get_use_case_multi(&feature.use_cases)?
                     .into_iter()
-                    .filter_map(|e| e)
+                    .filter_map(|uc| uc)
                     .collect();
-                for e in use_case_entities {
-                    entities.insert(e.id, e);
-                }
 
-                // DTOs
-                if let Some(dto_in) = use_case.dto_in {
-                    let dto = uow
-                        .get_dto(&dto_in)?
-                        .ok_or_else(|| anyhow!("DTO missing for use case"))?;
-                    let fields_vec: Vec<DtoField> = uow
-                        .get_dto_field_multi(&dto.fields)?
-                        .into_iter()
-                        .filter_map(|f| f)
-                        .collect();
-                    for f in fields_vec {
-                        dto_fields.insert(f.id, f);
-                    }
-                    dtos.insert(dto.id, dto);
-                }
-                if let Some(dto_out) = use_case.dto_out {
-                    let dto = uow
-                        .get_dto(&dto_out)?
-                        .ok_or_else(|| anyhow!("DTO missing for use case"))?;
-                    let fields_vec: Vec<DtoField> = uow
-                        .get_dto_field_multi(&dto.fields)?
-                        .into_iter()
-                        .filter_map(|f| f)
-                        .collect();
-                    for f in fields_vec {
-                        dto_fields.insert(f.id, f);
-                    }
-                    dtos.insert(dto.id, dto);
-                }
+                features.insert(feature.id, feature);
 
-                use_cases.insert(use_case.id, use_case);
+                for use_case in feature_use_cases {
+                    // Entities for use case
+                    let use_case_entities: Vec<Entity> = uow
+                        .get_entity_multi(&use_case.entities)?
+                        .into_iter()
+                        .filter_map(|e| e)
+                        .collect();
+                    for e in use_case_entities {
+                        entities.insert(e.id, e);
+                    }
+
+                    // DTOs
+                    if let Some(dto_in) = use_case.dto_in {
+                        let dto = uow
+                            .get_dto(&dto_in)?
+                            .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                        let fields_vec: Vec<DtoField> = uow
+                            .get_dto_field_multi(&dto.fields)?
+                            .into_iter()
+                            .filter_map(|f| f)
+                            .collect();
+                        for f in fields_vec {
+                            dto_fields.insert(f.id, f);
+                        }
+                        dtos.insert(dto.id, dto);
+                    }
+                    if let Some(dto_out) = use_case.dto_out {
+                        let dto = uow
+                            .get_dto(&dto_out)?
+                            .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                        let fields_vec: Vec<DtoField> = uow
+                            .get_dto_field_multi(&dto.fields)?
+                            .into_iter()
+                            .filter_map(|f| f)
+                            .collect();
+                        for f in fields_vec {
+                            dto_fields.insert(f.id, f);
+                        }
+                        dtos.insert(dto.id, dto);
+                    }
+
+                    use_cases.insert(use_case.id, use_case);
+                }
             }
         }
 
@@ -422,83 +620,9 @@ impl SnapshotBuilder {
         // Now wrap into snapshot similarly to adapter
         let mut entities_vm: IndexMap<EntityId, EntityVM> = IndexMap::new();
         for (eid, e) in &entities {
-            let mut e_fields: IndexMap<EntityId, Field> = IndexMap::new();
-            for (fid, f) in &fields {
-                if f.entity == Some(*eid) {
-                    e_fields.insert(*fid, f.clone());
-                }
-            }
-            // build fields_vm for convenience in templates
-            let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
-            for (_fid, f) in &e_fields {
-                let rust_base_type = match f.field_type {
-                    common::entities::FieldType::Boolean => "bool".to_string(),
-                    common::entities::FieldType::Integer => "i64".to_string(),
-                    common::entities::FieldType::UInteger => "u64".to_string(),
-                    common::entities::FieldType::Float => "f64".to_string(),
-                    common::entities::FieldType::String => "String".to_string(),
-                    common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
-                    common::entities::FieldType::DateTime => {
-                        "chrono::DateTime<chrono::Utc>".to_string()
-                    }
-                    common::entities::FieldType::Entity => "EntityId".to_string(),
-                    common::entities::FieldType::Enum => "String".to_string(),
-                };
-                let rust_type = if f.is_list {
-                    format!("Vec<{}>", rust_base_type)
-                } else {
-                    rust_base_type.clone()
-                };
-                fields_vm_vec.push(FieldVM {
-                    inner: f.clone(),
-                    name: f.name.clone(),
-                    snake_name: heck::AsSnakeCase(&f.name).to_string(),
-                    is_list: f.is_list,
-                    is_nullable: f.is_nullable,
-                    rust_base_type,
-                    rust_type,
-                });
-            }
-            // Build relationships maps for this entity
-            let mut rel_all: IndexMap<EntityId, Relationship> = IndexMap::new();
-            let mut rel_fwd: IndexMap<EntityId, Relationship> = IndexMap::new();
-            let mut rel_bwd: IndexMap<EntityId, Relationship> = IndexMap::new();
-            // Deduplicate by semantic field keys to avoid duplicates in templates
-            use std::collections::HashSet;
-            let mut fwd_seen: HashSet<String> = HashSet::new();
-            let mut bwd_seen: HashSet<(EntityId, String)> = HashSet::new();
-            for (rid, rel) in &relationships_map {
-                if rel.left_entity == *eid || rel.right_entity == *eid {
-                    // Keep all relationships in the aggregate map (by id)
-                    rel_all.entry(*rid).or_insert_with(|| rel.clone());
-                    if rel.left_entity == *eid {
-                        // Dedup forward by field_name (one relationship per field on the left entity)
-                        if fwd_seen.insert(rel.field_name.clone()) {
-                            rel_fwd.entry(*rid).or_insert_with(|| rel.clone());
-                        }
-                    }
-                    if rel.right_entity == *eid {
-                        // Dedup backward by (left_entity, field_name)
-                        let key = (rel.left_entity, rel.field_name.clone());
-                        if bwd_seen.insert(key) {
-                            rel_bwd.entry(*rid).or_insert_with(|| rel.clone());
-                        }
-                    }
-                }
-            }
-
-            entities_vm.insert(
-                *eid,
-                EntityVM {
-                    inner: e.clone(),
-                    fields: fields_vm_vec,
-                    relationships: rel_all,
-                    forward_relationships: rel_fwd,
-                    backward_relationships: rel_bwd,
-                    snake_name: heck::AsSnakeCase(&e.name).to_string(),
-                    pascal_name: heck::AsPascalCase(&e.name).to_string(),
-                },
-            );
+            // Use the unified entity view model builder
+            let evm = SnapshotBuilder::get_entity_vm(uow, eid)?;
+            entities_vm.insert(*eid, evm);
         }
 
         let mut dtos_vm: IndexMap<EntityId, DtoVM> = IndexMap::new();
@@ -520,7 +644,98 @@ impl SnapshotBuilder {
 
         let features_vm: IndexMap<EntityId, FeatureVM> = features
             .into_iter()
-            .map(|(k, v)| (k, FeatureVM { inner: v }))
+            .map(|(k, v)| {
+                (
+                    k,
+                    FeatureVM {
+                        inner: v.clone(),
+                        use_cases: {
+                            let use_cases_ids = v.use_cases;
+                            let use_cases: IndexMap<EntityId, UseCase> = uow
+                                .get_use_case_multi(&use_cases_ids)
+                                .unwrap_or_default()
+                                .into_iter()
+                                .filter_map(|uc| uc)
+                                .map(|uc| (uc.id, uc))
+                                .collect();
+
+                            let use_case_vms: IndexMap<EntityId, UseCaseVM> = use_cases
+                                .into_iter()
+                                .map(|(k, uc)| {
+                                    (
+                                        k,
+                                        UseCaseVM {
+                                            inner: uc.clone(),
+                                            entities: {
+                                                let entities_id = uc.entities;
+                                                let entity_vm: IndexMap<EntityId, EntityVM> = uow
+                                                    .get_entity_multi(&entities_id)
+                                                    .unwrap_or_default()
+                                                    .into_iter()
+                                                    .filter_map(|e| e)
+                                                    .map(|e| {
+                                                        (
+                                                            e.id,
+                                                            SnapshotBuilder::get_entity_vm(
+                                                                uow, &e.id,
+                                                            )
+                                                            .unwrap_or(EntityVM {
+                                                                inner: e,
+                                                                relationships: Default::default(),
+                                                                forward_relationships:
+                                                                    Default::default(),
+                                                                backward_relationships:
+                                                                    Default::default(),
+                                                                snake_name: "".to_string(),
+                                                                pascal_name: "".to_string(),
+                                                                fields: vec![],
+                                                            }),
+                                                        )
+                                                    })
+                                                    .collect();
+                                                entity_vm
+                                            },
+                                            dto_in: uc.dto_in.and_then(|dto_id| {
+                                                dtos.get(&dto_id).map(|d| DtoVM {
+                                                    inner: d.clone(),
+                                                    fields: {
+                                                        let mut df_map = IndexMap::new();
+                                                        for (dfid, df) in &dto_fields {
+                                                            if d.fields.contains(dfid) {
+                                                                df_map.insert(*dfid, df.clone());
+                                                            }
+                                                        }
+                                                        df_map
+                                                    },
+                                                })
+                                            }),
+                                            dto_out: uc.dto_out.and_then(|dto_id| {
+                                                dtos.get(&dto_id).map(|d| DtoVM {
+                                                    inner: d.clone(),
+                                                    fields: {
+                                                        let mut df_map = IndexMap::new();
+                                                        for (dfid, df) in &dto_fields {
+                                                            if d.fields.contains(dfid) {
+                                                                df_map.insert(*dfid, df.clone());
+                                                            }
+                                                        }
+                                                        df_map
+                                                    },
+                                                })
+                                            }),
+                                            pascal_name: heck::AsPascalCase(&uc.name).to_string(),
+                                            snake_name: heck::AsSnakeCase(&uc.name).to_string(),
+                                        },
+                                    )
+                                })
+                                .collect();
+                            use_case_vms
+                        },
+                        snake_name: heck::AsSnakeCase(&v.name).to_string(),
+                        pascal_name: heck::AsPascalCase(&v.name).to_string(),
+                    },
+                )
+            })
             .collect();
         let use_cases_vm: IndexMap<EntityId, UseCaseVM> = use_cases
             .into_iter()
@@ -529,7 +744,30 @@ impl SnapshotBuilder {
                     k,
                     UseCaseVM {
                         inner: uc.clone(),
-                        entities: IndexMap::new(),
+                        entities: {
+                            let entities_id = uc.entities;
+                            uow.get_entity_multi(&entities_id)
+                                .unwrap_or_default()
+                                .into_iter()
+                                .filter_map(|e| e)
+                                .map(|e| {
+                                    (
+                                        e.id,
+                                        SnapshotBuilder::get_entity_vm(uow, &e.id).unwrap_or(
+                                            EntityVM {
+                                                inner: e,
+                                                relationships: Default::default(),
+                                                forward_relationships: Default::default(),
+                                                backward_relationships: Default::default(),
+                                                snake_name: "".to_string(),
+                                                pascal_name: "".to_string(),
+                                                fields: vec![],
+                                            },
+                                        ),
+                                    )
+                                })
+                                .collect()
+                        },
                         dto_in: uc.dto_in.and_then(|dto_id| {
                             dtos.get(&dto_id).map(|d| DtoVM {
                                 inner: d.clone(),
@@ -558,6 +796,8 @@ impl SnapshotBuilder {
                                 },
                             })
                         }),
+                        pascal_name: heck::AsPascalCase(&uc.name).to_string(),
+                        snake_name: heck::AsSnakeCase(&uc.name).to_string(),
                     },
                 )
             })
