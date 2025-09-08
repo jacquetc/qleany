@@ -66,6 +66,11 @@ impl LongOperation for GenerateRustFilesUseCase {
 
         let mut written_files: Vec<String> = Vec::new();
 
+        println!(
+            "Generating Rust files to root path: {}, with prefix: {}",
+            root_path.display(),
+            prefix_path.display()
+        );
         for (idx, file_id) in self.dto.file_ids.iter().enumerate() {
             if cancel_flag.load(Ordering::Relaxed) {
                 uow.end_transaction()?;
@@ -76,6 +81,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             let file_meta: File = uow_read
                 .get_file(file_id)?
                 .ok_or_else(|| anyhow!("File not found"))?;
+            println!("Processing file ID {}: {}", file_id, file_meta.name);
 
             // Build snapshot and generate code for the file
             let snapshot = SnapshotBuilder::for_file(uow_read, *file_id)?;
@@ -86,6 +92,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             if file_name.ends_with(".rs") {
                 code = rustfmt_string(&code, None).to_string();
             }
+            println!("Generated code for file {}:\n{}", file_name, code);
 
             // Compute destination path: root_path/prefix/relative_path/name
             let mut out_dir = root_path.clone();
@@ -95,11 +102,24 @@ impl LongOperation for GenerateRustFilesUseCase {
             if !file_meta.relative_path.is_empty() {
                 out_dir = out_dir.join(&file_meta.relative_path);
             }
+
+            progress_callback(common::long_operation::OperationProgress::new(
+                0.0,
+                Some(format!("out_dir {}", out_dir.to_str().unwrap())),
+            ));
             fs::create_dir_all(&out_dir)?;
             let out_path = out_dir.join(file_name);
 
+            progress_callback(common::long_operation::OperationProgress::new(
+                0.0,
+                Some(format!("path {}", out_path.to_str().unwrap())),
+            ));
             // Write file content
             fs::write(&out_path, code.as_bytes())?;
+            // ensure that the file was written
+            if !out_path.exists() {
+                return Err(anyhow!("Failed to write file: {}", out_path.display()));
+            }
 
             // Record written file path as string
             if let Some(s) = out_path.to_str() {

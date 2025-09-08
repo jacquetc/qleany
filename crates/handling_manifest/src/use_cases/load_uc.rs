@@ -44,6 +44,7 @@ impl LoadUseCase {
     pub fn execute(&mut self, dto: &LoadDto) -> Result<()> {
         // load file
         let path = &dto.manifest_path;
+        let filename = path.clone();
 
         // validate that the file exists
         if !std::path::Path::new(path).exists() {
@@ -56,24 +57,40 @@ impl LoadUseCase {
 
         // ensure that the path is absolute
         let path = if std::path::Path::new(path).is_absolute() {
-            path.to_string()
+            std::path::Path::new(path)
+                .parent()
+                .map_or(
+                    Err(anyhow::anyhow!(
+                        "Failed to get parent directory of the manifest path"
+                    )),
+                    |p| Ok(p),
+                )?
+                .to_string_lossy()
+                .to_string()
         } else {
             std::env::current_dir()
                 .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
                 .join(path)
+                .parent()
+                .map_or(
+                    Err(anyhow::anyhow!(
+                        "Failed to get parent directory of the manifest path"
+                    )),
+                    |p| Ok(p.to_path_buf()),
+                )?
                 .to_string_lossy()
                 .to_string()
         };
 
         // if yaml file, convert to json
 
-        let json_value: serde_json::Value = match path.split('.').last() {
+        let json_value: serde_json::Value = match filename.split('.').last() {
             Some("yaml") => {
-                let yaml = std::fs::read_to_string(&path)?;
+                let yaml = std::fs::read_to_string(&filename)?;
                 serde_yml::from_str(&yaml)?
             }
             Some("json") => {
-                let json = std::fs::read_to_string(&path)?;
+                let json = std::fs::read_to_string(&filename)?;
                 serde_json::from_str(&json)?
             }
             _ => return Err(anyhow::anyhow!("File extension not supported")),

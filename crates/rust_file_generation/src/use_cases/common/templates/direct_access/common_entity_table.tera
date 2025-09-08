@@ -19,7 +19,7 @@ const {{ r.field_name | upper }}_FROM_{{ s.entities[e].pascal_name | upper }}_{{
 {% endfor %}
 // backward relationships
 {% for rid, r in s.entities[e].backward_relationships %}
-const {{ s.entities[r.left_entity].pascal_name | upper }}_FROM_{{ s.entities[e].pascal_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[r.left_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_name }}_junction");
+const {{ s.entities[e].pascal_name | upper }}_FROM_{{ s.entities[r.left_entity].pascal_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[r.left_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_name }}_junction");
 {% endfor %}
 
 fn get_junction_table_definition(

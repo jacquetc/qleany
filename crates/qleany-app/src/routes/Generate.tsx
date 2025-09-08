@@ -23,6 +23,122 @@ import {FileProvider, useFileContext} from '@/contexts/FileContext';
 import {GenerateRustCodeReturnDTO, rustFileGenerationService} from '@/services/rust-file-generation-service';
 import {longOperationService} from '@/services/long-operation-service';
 
+// GenerateButton component that has access to FileContext
+const GenerateButton = ({
+                             root,
+                             inTempDir,
+                             isGenerating,
+                             setIsGenerating,
+                             setModalOpened,
+                             setProgress,
+                             setOperationId
+                         }: {
+    root: any;
+    inTempDir: boolean;
+    isGenerating: boolean;
+    setIsGenerating: (value: boolean) => void;
+    setModalOpened: (value: boolean) => void;
+    setProgress: (value: {percentage: number; message: string | null}) => void;
+    setOperationId: (value: string | null) => void;
+}) => {
+    const {checkedFileIds} = useFileContext();
+
+    // Handle generate files
+    const handleGenerate = async () => {
+        if (!root) return;
+
+        setIsGenerating(true);
+        setModalOpened(true);
+        setProgress({percentage: 0, message: 'Starting generation...'});
+
+        try {
+            // Call generateRustFiles with appropriate parameters
+            const opId = await rustFileGenerationService.generateRustFiles({
+                file_ids: checkedFileIds,
+                root_path: root.manifest_absolute_path,
+                prefix: inTempDir ? 'temp/' : ''
+            });
+
+            setOperationId(opId);
+
+            // Subscribe to progress events
+            let active = true;
+            const unsubscribe = longOperationService.subscribeToLongOperationEvents({
+                onProgress: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            longOperationService.getOperationProgress(opId).then((prog) => {
+                                if (!active || prog == null) return;
+                                const {percentage: rawPct, message: rawMsg} = prog as {
+                                    percentage: number;
+                                    message: unknown
+                                };
+                                const percentage = Number.isFinite(rawPct) ? Math.min(100, Math.max(0, rawPct)) : 0;
+                                const message = typeof rawMsg === 'string' || rawMsg === null ? rawMsg : String(rawMsg);
+                                setProgress((prev) => ({...prev, percentage, message}));
+                            });
+                        }
+                    }
+                },
+                onCompleted: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 100, message: 'Generation completed!'});
+                            setIsGenerating(false);
+                            setTimeout(() => {
+                                setModalOpened(false);
+                                setOperationId(null);
+                            }, 2000);
+                        }
+                    }
+                },
+                onFailed: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 0, message: 'Generation failed!'});
+                            setIsGenerating(false);
+                        }
+                    }
+                },
+                onCancelled: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 0, message: 'Generation cancelled!'});
+                            setIsGenerating(false);
+                            setModalOpened(false);
+                            setOperationId(null);
+                        }
+                    }
+                }
+            });
+
+            // Cleanup subscription when component unmounts or operation finishes
+            return unsubscribe;
+        } catch (err) {
+            const errorMessage = `Failed to start generation: ${err}`;
+            error(errorMessage);
+            setProgress({percentage: 0, message: errorMessage});
+            setIsGenerating(false);
+        }
+    };
+
+    return (
+        <Button onClick={handleGenerate} color="blue" disabled={isGenerating}>
+            Generate
+        </Button>
+    );
+};
+
 // CodeDisplay component that monitors file selection and generates code
 const CodeDisplay = ({
                          generateRustCode
@@ -189,94 +305,6 @@ const Generate = () => {
         }
     }, [root, isLoadingRoot, rootError, listRustFiles]);
 
-    // Handle generate files
-    const handleGenerate = async () => {
-        if (!root) return;
-
-        setIsGenerating(true);
-        setModalOpened(true);
-        setProgress({percentage: 0, message: 'Starting generation...'});
-
-        try {
-            // Call generateRustFiles with appropriate parameters
-            const opId = await rustFileGenerationService.generateRustFiles({
-                file_ids: [], // Use empty array to generate all files
-                root_path: inTempDir ? './temp' : './',
-                prefix: ''
-            });
-
-            setOperationId(opId);
-
-            // Subscribe to progress events
-            let active = true;
-            const unsubscribe = longOperationService.subscribeToLongOperationEvents({
-                onProgress: (event) => {
-                    if (event.data) {
-                        const data = JSON.parse(event.data);
-                        if (data.id === opId) {
-                            longOperationService.getOperationProgress(opId).then((prog) => {
-                                if (!active || prog == null) return;
-                                const {percentage: rawPct, message: rawMsg} = prog as {
-                                    percentage: number;
-                                    message: unknown
-                                };
-                                const percentage = Number.isFinite(rawPct) ? Math.min(100, Math.max(0, rawPct)) : 0;
-                                const message = typeof rawMsg === 'string' || rawMsg === null ? rawMsg : String(rawMsg);
-                                setProgress((prev) => ({...prev, percentage, message}));
-                            });
-                        }
-                    }
-                },
-                onCompleted: (event) => {
-                    if (event.data) {
-                        const data = JSON.parse(event.data);
-                        if (data.id === opId) {
-                            active = false;
-                            unsubscribe();
-                            setProgress({percentage: 100, message: 'Generation completed!'});
-                            setIsGenerating(false);
-                            setTimeout(() => {
-                                setModalOpened(false);
-                                setOperationId(null);
-                            }, 2000);
-                        }
-                    }
-                },
-                onFailed: (event) => {
-                    if (event.data) {
-                        const data = JSON.parse(event.data);
-                        if (data.id === opId) {
-                            active = false;
-                            unsubscribe();
-                            setProgress({percentage: 0, message: 'Generation failed!'});
-                            setIsGenerating(false);
-                        }
-                    }
-                },
-                onCancelled: (event) => {
-                    if (event.data) {
-                        const data = JSON.parse(event.data);
-                        if (data.id === opId) {
-                            active = false;
-                            unsubscribe();
-                            setProgress({percentage: 0, message: 'Generation cancelled!'});
-                            setIsGenerating(false);
-                            setModalOpened(false);
-                            setOperationId(null);
-                        }
-                    }
-                }
-            });
-
-            // Cleanup subscription when component unmounts or operation finishes
-            return unsubscribe;
-        } catch (err) {
-            const errorMessage = `Failed to start generation: ${err}`;
-            error(errorMessage);
-            setProgress({percentage: 0, message: errorMessage});
-            setIsGenerating(false);
-        }
-    };
 
     // Handle cancel operation
     const handleCancel = async () => {
@@ -382,18 +410,6 @@ const Generate = () => {
             <div className="p-10">
                 <Title order={1} mb="xl">Generate</Title>
 
-                {/* Generate Controls */}
-                <Group mb="md">
-                    <Checkbox
-                        checked={inTempDir}
-                        onChange={(event) => setInTempDir(event.currentTarget.checked)}
-                        label="in temp/"
-                    />
-                    <Button onClick={handleGenerate} color="blue" disabled={isGenerating}>
-                        Generate
-                    </Button>
-                </Group>
-
                 {/* Progress Modal */}
                 <Modal
                     opened={modalOpened}
@@ -425,6 +441,23 @@ const Generate = () => {
 
                 {/* Wrap the components with FileProvider to provide file and group data */}
                 <FileProvider rootId={stableRootId}>
+                    {/* Generate Controls */}
+                    <Group mb="md">
+                        <Checkbox
+                            checked={inTempDir}
+                            onChange={(event) => setInTempDir(event.currentTarget.checked)}
+                            label="in temp/"
+                        />
+                        <GenerateButton
+                            root={root}
+                            inTempDir={inTempDir}
+                            isGenerating={isGenerating}
+                            setIsGenerating={setIsGenerating}
+                            setModalOpened={setModalOpened}
+                            setProgress={setProgress}
+                            setOperationId={setOperationId}
+                        />
+                    </Group>
                     <div style={{display: 'flex', height: 'calc(100vh - 170px)'}}>
                         <div style={{
                             width: '25%',
