@@ -1,14 +1,13 @@
-use crate::use_cases::common::rust_code_generator::GenerationReadOps;
+use crate::use_cases::common::rust_code_generator::{
+    GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot,
+};
+use crate::use_cases::common::rust_formatter::rustfmt_string;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
+use common::entities::{File, Global, Root};
 use common::long_operation::LongOperation;
 use common::types::EntityId;
-use common::{
-    database::QueryUnitOfWork,
-    entities::{
-        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, Root, UseCase,
-    },
-};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 pub trait GenerateRustFilesUnitOfWorkFactoryTrait: Send + Sync {
@@ -41,36 +40,112 @@ impl LongOperation for GenerateRustFilesUseCase {
     fn execute(
         &self,
         progress_callback: Box<dyn Fn(common::long_operation::OperationProgress) + Send>,
-        _cancel_flag: Arc<std::sync::atomic::AtomicBool>,
+        cancel_flag: Arc<std::sync::atomic::AtomicBool>,
     ) -> Result<Self::Output> {
-        unimplemented!("Implement the Rust file generation logic here");
-        // Report initial progress
+        use std::fs;
+        use std::sync::atomic::Ordering;
+
+        let timestamp = chrono::Utc::now();
+        let total = self.dto.file_ids.len().max(1); // avoid div by zero
+        let root_path = PathBuf::from(&self.dto.root_path);
+        let prefix_path = if self.dto.prefix.is_empty() {
+            PathBuf::new()
+        } else {
+            PathBuf::from(&self.dto.prefix)
+        };
+
         progress_callback(common::long_operation::OperationProgress::new(
             0.0,
             Some("Starting Rust file generation...".to_string()),
         ));
 
-        // Simulate work
-        for i in 1..=10 {
-            std::thread::sleep(std::time::Duration::from_millis(200));
+        // Create UoW and open a read transaction for snapshot building
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let uow_read: &dyn GenerationReadOps = &*uow;
+
+        let mut written_files: Vec<String> = Vec::new();
+
+        for (idx, file_id) in self.dto.file_ids.iter().enumerate() {
+            if cancel_flag.load(Ordering::Relaxed) {
+                uow.end_transaction()?;
+                return Err(anyhow!("Operation was cancelled"));
+            }
+
+            // Load file metadata (name, relative path)
+            let file_meta: File = uow_read
+                .get_file(file_id)?
+                .ok_or_else(|| anyhow!("File not found"))?;
+
+            // Build snapshot and generate code for the file
+            let snapshot = SnapshotBuilder::for_file(uow_read, *file_id)?;
+            let mut code = generate_code_with_snapshot(&snapshot)?;
+
+            // Format only Rust source files
+            let file_name = &file_meta.name;
+            if file_name.ends_with(".rs") {
+                code = rustfmt_string(&code, None).to_string();
+            }
+
+            // Compute destination path: root_path/prefix/relative_path/name
+            let mut out_dir = root_path.clone();
+            if !prefix_path.as_os_str().is_empty() {
+                out_dir = out_dir.join(&prefix_path);
+            }
+            if !file_meta.relative_path.is_empty() {
+                out_dir = out_dir.join(&file_meta.relative_path);
+            }
+            fs::create_dir_all(&out_dir)?;
+            let out_path = out_dir.join(file_name);
+
+            // Write file content
+            fs::write(&out_path, code.as_bytes())?;
+
+            // Record written file path as string
+            if let Some(s) = out_path.to_str() {
+                written_files.push(s.to_string());
+            } else {
+                written_files.push(out_path.display().to_string());
+            }
+
+            // Progress update
+            let percentage = ((idx + 1) as f32 / total as f32) * 100.0;
+            let rel_display = format!(
+                "{}{}{}",
+                self.dto.prefix,
+                if self.dto.prefix.is_empty() || file_meta.relative_path.is_empty() {
+                    ""
+                } else {
+                    "/"
+                },
+                format!(
+                    "{}{}{}",
+                    file_meta.relative_path,
+                    if file_meta.relative_path.is_empty() {
+                        ""
+                    } else {
+                        "/"
+                    },
+                    file_name
+                )
+            );
             progress_callback(common::long_operation::OperationProgress::new(
-                i as f32 * 10.0,
-                Some(format!("Processing step {} of 10...", i)),
+                percentage,
+                Some(format!("Generated {}/{}: {}", idx + 1, total, rel_display)),
             ));
         }
 
-        // Return dummy complex data
-        let result = GenerateRustFilesReturnDto {
-            files: vec![
-                "src/models/user.rs".to_string(),
-                "src/repositories/user_repository.rs".to_string(),
-                "src/services/user_service.rs".to_string(),
-                "src/controllers/user_controller.rs".to_string(),
-                "src/dto/user_dto.rs".to_string(),
-            ],
-            timestamp: chrono::Local::now().to_rfc3339(),
-        };
+        uow.end_transaction()?;
 
-        Ok(result)
+        // Final progress
+        progress_callback(common::long_operation::OperationProgress::new(
+            100.0,
+            Some("Rust file generation completed".to_string()),
+        ));
+
+        Ok(GenerateRustFilesReturnDto {
+            files: written_files,
+            timestamp: timestamp.to_string(),
+        })
     }
 }

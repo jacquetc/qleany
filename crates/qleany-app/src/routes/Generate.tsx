@@ -1,5 +1,18 @@
-import React, {useEffect, useMemo, useState} from 'react';
-import {Alert, Box, Button, Code, Group, ScrollArea, Text, Title} from '@mantine/core';
+import {useEffect, useMemo, useState} from 'react';
+import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Code,
+    Group,
+    Modal,
+    Progress,
+    ScrollArea,
+    Stack,
+    Text,
+    Title
+} from '@mantine/core';
 import {error} from '@tauri-apps/plugin-log';
 import {useRoot} from '@/hooks/useRoot';
 import {useRustFileGeneration} from '@/hooks/useRustFileGeneration';
@@ -7,7 +20,8 @@ import GroupList from '@/components/generate/GroupList';
 import FileList from '@/components/generate/FileList';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import {FileProvider, useFileContext} from '@/contexts/FileContext';
-import {GenerateRustCodeReturnDTO} from '@/services/rust-file-generation-service';
+import {GenerateRustCodeReturnDTO, rustFileGenerationService} from '@/services/rust-file-generation-service';
+import {longOperationService} from '@/services/long-operation-service';
 
 // CodeDisplay component that monitors file selection and generates code
 const CodeDisplay = ({
@@ -16,7 +30,7 @@ const CodeDisplay = ({
     generateRustCode: (fileId: number) => Promise<GenerateRustCodeReturnDTO>;
 }) => {
     const {selectedFileId, files} = useFileContext();
-    
+
     // Internal state for code generation
     const [generatedCode, setGeneratedCode] = useState<GenerateRustCodeReturnDTO | null>(null);
     const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -91,8 +105,8 @@ const CodeDisplay = ({
     // Display generated code
     return (
         <Box h="100%">
-            <Title 
-                order={4} 
+            <Title
+                order={4}
                 mb="md"
                 style={{
                     direction: 'rtl',
@@ -103,7 +117,7 @@ const CodeDisplay = ({
                 }}
                 title={`Generated Code - ${selectedFile.relative_path}${selectedFile.name}`}
             >
-                <span style={{ direction: 'ltr' }}>
+                <span style={{direction: 'ltr'}}>
                     Generated Code - {selectedFile.relative_path}{selectedFile.name}
                 </span>
             </Title>
@@ -139,6 +153,13 @@ const Generate = () => {
 
     const [loadError, setLoadError] = useState<string | null>(null);
 
+    // Generate files state
+    const [inTempDir, setInTempDir] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [operationId, setOperationId] = useState<string | null>(null);
+    const [progress, setProgress] = useState({percentage: 0, message: null as string | null});
+    const [modalOpened, setModalOpened] = useState(false);
+
     // Memoize rootId to prevent FileProvider from unmounting/remounting during state changes
     const stableRootId = useMemo(() => {
         return root?.id || null;
@@ -167,6 +188,106 @@ const Generate = () => {
             initializeData();
         }
     }, [root, isLoadingRoot, rootError, listRustFiles]);
+
+    // Handle generate files
+    const handleGenerate = async () => {
+        if (!root) return;
+
+        setIsGenerating(true);
+        setModalOpened(true);
+        setProgress({percentage: 0, message: 'Starting generation...'});
+
+        try {
+            // Call generateRustFiles with appropriate parameters
+            const opId = await rustFileGenerationService.generateRustFiles({
+                file_ids: [], // Use empty array to generate all files
+                root_path: inTempDir ? './temp' : './',
+                prefix: ''
+            });
+
+            setOperationId(opId);
+
+            // Subscribe to progress events
+            let active = true;
+            const unsubscribe = longOperationService.subscribeToLongOperationEvents({
+                onProgress: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            longOperationService.getOperationProgress(opId).then((prog) => {
+                                if (!active || prog == null) return;
+                                const {percentage: rawPct, message: rawMsg} = prog as {
+                                    percentage: number;
+                                    message: unknown
+                                };
+                                const percentage = Number.isFinite(rawPct) ? Math.min(100, Math.max(0, rawPct)) : 0;
+                                const message = typeof rawMsg === 'string' || rawMsg === null ? rawMsg : String(rawMsg);
+                                setProgress((prev) => ({...prev, percentage, message}));
+                            });
+                        }
+                    }
+                },
+                onCompleted: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 100, message: 'Generation completed!'});
+                            setIsGenerating(false);
+                            setTimeout(() => {
+                                setModalOpened(false);
+                                setOperationId(null);
+                            }, 2000);
+                        }
+                    }
+                },
+                onFailed: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 0, message: 'Generation failed!'});
+                            setIsGenerating(false);
+                        }
+                    }
+                },
+                onCancelled: (event) => {
+                    if (event.data) {
+                        const data = JSON.parse(event.data);
+                        if (data.id === opId) {
+                            active = false;
+                            unsubscribe();
+                            setProgress({percentage: 0, message: 'Generation cancelled!'});
+                            setIsGenerating(false);
+                            setModalOpened(false);
+                            setOperationId(null);
+                        }
+                    }
+                }
+            });
+
+            // Cleanup subscription when component unmounts or operation finishes
+            return unsubscribe;
+        } catch (err) {
+            const errorMessage = `Failed to start generation: ${err}`;
+            error(errorMessage);
+            setProgress({percentage: 0, message: errorMessage});
+            setIsGenerating(false);
+        }
+    };
+
+    // Handle cancel operation
+    const handleCancel = async () => {
+        if (operationId) {
+            try {
+                await longOperationService.cancelOperation(operationId);
+            } catch (err) {
+                error(`Failed to cancel operation: ${err}`);
+            }
+        }
+    };
 
     // Main error fallback for the entire Generate component
     const mainErrorFallback = (
@@ -260,6 +381,47 @@ const Generate = () => {
         <ErrorBoundary fallback={mainErrorFallback}>
             <div className="p-10">
                 <Title order={1} mb="xl">Generate</Title>
+
+                {/* Generate Controls */}
+                <Group mb="md">
+                    <Checkbox
+                        checked={inTempDir}
+                        onChange={(event) => setInTempDir(event.currentTarget.checked)}
+                        label="in temp/"
+                    />
+                    <Button onClick={handleGenerate} color="blue" disabled={isGenerating}>
+                        Generate
+                    </Button>
+                </Group>
+
+                {/* Progress Modal */}
+                <Modal
+                    opened={modalOpened}
+                    onClose={() => {
+                    }}
+                    title="Generating Rust Files"
+                    closeOnClickOutside={false}
+                    closeOnEscape={false}
+                    withCloseButton={false}
+                    centered
+                >
+                    <Stack>
+                        <Progress value={progress.percentage} size="lg"/>
+                        <Text size="sm" c="dimmed">
+                            {progress.message || 'Processing...'}
+                        </Text>
+                        <Group justify="center" mt="md">
+                            <Button
+                                onClick={handleCancel}
+                                color="red"
+                                variant="outline"
+                                disabled={!isGenerating}
+                            >
+                                Cancel
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
 
                 {/* Wrap the components with FileProvider to provide file and group data */}
                 <FileProvider rootId={stableRootId}>
