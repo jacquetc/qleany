@@ -1,5 +1,5 @@
 [package]
-name = "qleany-cli"
+name = "{{ s.global.application_kebab_name }}-cli"
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true

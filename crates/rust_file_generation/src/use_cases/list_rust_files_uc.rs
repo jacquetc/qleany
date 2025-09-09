@@ -671,6 +671,28 @@ impl ListRustFilesUseCase {
             use_case: None,
         });
 
+        files.push(File {
+            id: 0,
+            name: "Cargo.toml".to_string(),
+            relative_path: "crates/cli/".to_string(),
+            group: "cli".to_string(),
+            template_name: "cli_cargo".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "main.rs".to_string(),
+            relative_path: "crates/cli/src/".to_string(),
+            group: "cli".to_string(),
+            template_name: "cli_main".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+        });
+
         //TODO: add files for UIs
 
         let created_files = uow.create_file_multi(&files)?;

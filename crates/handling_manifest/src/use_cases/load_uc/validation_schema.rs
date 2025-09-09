@@ -134,6 +134,12 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "undoable": {
                                         "type": "boolean"
                                     },
+                                    "read_only": {
+                                        "type": "boolean"
+                                    },
+                                    "long_operation": {
+                                        "type": "boolean"
+                                    },
                                     "dto_in": {
                                         "type": "object",
                                         "properties": {

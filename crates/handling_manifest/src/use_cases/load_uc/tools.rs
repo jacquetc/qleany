@@ -133,6 +133,7 @@ pub fn str_to_field_type(s: &str) -> FieldType {
         "uuid" => FieldType::Uuid,
         "datetime" => FieldType::DateTime,
         "entity" | "Entity" => FieldType::Entity,
+        "enum" => FieldType::Enum,
         _ => FieldType::String,
     }
 }
@@ -146,6 +147,7 @@ pub fn str_to_dto_field_type(s: &str) -> DtoFieldType {
         "string" => DtoFieldType::String,
         "uuid" => DtoFieldType::Uuid,
         "datetime" => DtoFieldType::DateTime,
+        "enum" => DtoFieldType::Enum,
         _ => DtoFieldType::String,
     }
 }

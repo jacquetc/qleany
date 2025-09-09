@@ -1,7 +1,8 @@
 use super::{
-    DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, UseCaseVM, get_rust_tera,
+    DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, UseCaseVM,
+    get_rust_tera,
 };
-use common::entities::{Entity, Field, FieldType, File, Relationship};
+use common::entities::{Entity, Field, FieldType, File, Global, Relationship};
 use common::types::EntityId;
 use indexmap::IndexMap;
 use tera::Context;
@@ -18,6 +19,15 @@ fn render_direct_access_lib_lists_entities() {
         feature: None,
         entity: Some(0),
         use_case: None,
+    };
+
+    let global = Global {
+        id: 50,
+        language: "".to_string(),
+        application_name: "".to_string(),
+        organisation_name: "".to_string(),
+        organisation_domain: "".to_string(),
+        prefix_path: "".to_string(),
     };
 
     let e1 = Entity {
@@ -67,6 +77,10 @@ fn render_direct_access_lib_lists_entities() {
 
     let snapshot = GenerationSnapshot {
         file: FileVM { inner: file },
+        global: GlobalVM {
+            inner: global,
+            application_kebab_name: "".to_string(),
+        },
         entities,
         features: IndexMap::new(),
         use_cases: IndexMap::new(),

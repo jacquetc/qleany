@@ -43,6 +43,7 @@ impl QueryUnitOfWork for GenerateRustFilesUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Global", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Feature", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "UseCase", action = "GetRO", thread_safe = true)]

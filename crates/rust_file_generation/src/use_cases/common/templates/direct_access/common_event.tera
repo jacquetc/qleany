@@ -42,7 +42,7 @@ pub enum DirectAccessEntity {
     All(AllEvent),
     {% for eid, ent in s.entities %}
     {{ ent.pascal_name }}(EntityEvent),
-    {% endfor %}
+    {%- endfor %}
 }
 
 
@@ -51,7 +51,7 @@ pub enum DirectAccessEntity {
 pub enum {{ feat.pascal_name }}Event {
     {% for uid, use_case in feat.use_cases %}
     {{ use_case.pascal_name }},
-    {% endfor %}
+    {%- endfor %}
 }
 {% endfor %}
 
@@ -62,7 +62,7 @@ pub enum Origin {
     LongOperation(LongOperationEvent),
     {% for fid, feat in s.features %}
     {{ feat.pascal_name }}({{ feat.pascal_name }}Event),
-    {% endfor %}
+    {%- endfor %}
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -80,14 +80,14 @@ impl Event {
                 // entities
                 {% for eid, ent in s.entities %}
                 DirectAccessEntity::{{ ent.pascal_name }}(event) => format!("direct_access_{{ ent.snake_name }}_{:?}", event),
-                {% endfor %}
+                {%- endfor %}
             },
             Origin::UndoRedo(event) => format!("undo_redo_{:?}", event),
             Origin::LongOperation(event) => format!("long_operation_{:?}", event),
             // features
             {% for fid, feat in s.features %}
             Origin::{{ feat.pascal_name }}(event) => format!("{{ feat.snake_name }}_{:?}", event),
-            {% endfor %}
+            {%- endfor %}
         }
         .to_lowercase()
     }
@@ -144,43 +144,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_origin_string_direct_access_all() {
-        let event = Event {
-            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
-            ids: vec![EntityId::default()],
-            data: None,
-        };
-        assert_eq!(event.origin_string(), "direct_access_all_reset");
-    }
-
-    #[test]
-    fn test_origin_string_direct_access_root() {
-        let event = Event {
-            origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
-            ids: vec![EntityId::default()],
-            data: None,
-        };
-        assert_eq!(event.origin_string(), "direct_access_root_created");
-    }
-
-    #[test]
-    fn test_origin_string_handling_manifest() {
-        let event = Event {
-            origin: Origin::HandlingManifest(HandlingManifestEvent::Loaded),
-            ids: vec![EntityId::default()],
-            data: None,
-        };
-        assert_eq!(event.origin_string(), "handling_manifest_loaded");
-    }
-
-    #[test]
     fn test_event_hub_send_and_receive() {
         let event_hub = EventHub::new();
         let stop_signal = Arc::new(AtomicBool::new(false));
         event_hub.start_event_loop(stop_signal.clone());
 
         let event = Event {
-            origin: Origin::HandlingManifest(HandlingManifestEvent::Loaded),
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
             ids: vec![EntityId::default()],
             data: Some("test_data".to_string()),
         };

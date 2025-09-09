@@ -4,7 +4,8 @@ mod rust_code_generator_tests;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, DtoFieldType, Entity, Feature, Field, File, Relationship, UseCase,
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
+    UseCase,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -14,9 +15,29 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
 
+// Shared read-API for snapshot building across code and files generation
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "File", action = "GetRO")]
+#[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Dto", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRO")]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Field", action = "GetRO")]
+#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
+pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
+
 #[derive(Debug, Serialize, Clone)]
 pub(crate) struct GenerationSnapshot {
     file: FileVM,
+    global: GlobalVM,
     entities: IndexMap<EntityId, EntityVM>,
     features: IndexMap<EntityId, FeatureVM>,
     use_cases: IndexMap<EntityId, UseCaseVM>,
@@ -26,6 +47,12 @@ pub(crate) struct GenerationSnapshot {
 #[derive(Debug, Serialize, Clone)]
 struct FileVM {
     pub inner: File,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct GlobalVM {
+    pub inner: Global,
+    pub application_kebab_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -188,6 +215,9 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "macros_cargo" => tera.render("macros_cargo", &context)?,
         "macros_lib" => tera.render("macros_lib", &context)?,
         "macros_direct_access" => tera.render("macros_direct_access", &context)?,
+        // cli
+        "cli_cargo" => tera.render("cli_cargo", &context)?,
+        "cli_main" => tera.render("cli_main", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown template name: {}",
@@ -198,24 +228,6 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 
     Ok(code)
 }
-
-// Shared read-API for snapshot building across code and files generation
-#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "File", action = "GetRO")]
-#[macros::uow_action(entity = "Feature", action = "GetRO")]
-#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Dto", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Entity", action = "GetRO")]
-#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Field", action = "GetRO")]
-#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Relationship", action = "GetRO")]
-#[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
-pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
 
 // Snapshot builder to compose consistent data for templates
 pub(crate) struct SnapshotBuilder;
@@ -242,17 +254,19 @@ impl SnapshotBuilder {
         let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
         for f in &fields_vec {
             let rust_base_type = match f.field_type {
-                common::entities::FieldType::Boolean => "bool".to_string(),
-                common::entities::FieldType::Integer => "i64".to_string(),
-                common::entities::FieldType::UInteger => "u64".to_string(),
-                common::entities::FieldType::Float => "f64".to_string(),
-                common::entities::FieldType::String => "String".to_string(),
-                common::entities::FieldType::Uuid => "uuid::Uuid".to_string(),
-                common::entities::FieldType::DateTime => {
-                    "chrono::DateTime<chrono::Utc>".to_string()
-                }
-                common::entities::FieldType::Entity => "EntityId".to_string(),
-                common::entities::FieldType::Enum => "String".to_string(),
+                FieldType::Boolean => "bool".to_string(),
+                FieldType::Integer => "i64".to_string(),
+                FieldType::UInteger => "u64".to_string(),
+                FieldType::Float => "f64".to_string(),
+                FieldType::String => "String".to_string(),
+                FieldType::Uuid => "uuid::Uuid".to_string(),
+                FieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                FieldType::Entity => "EntityId".to_string(),
+                FieldType::Enum => f
+                    .enum_name
+                    .clone()
+                    .or(Some("enum_name not set".to_string()))
+                    .unwrap(),
             };
             let rust_type = if f.is_list {
                 format!("Vec<{}>", rust_base_type)
@@ -356,6 +370,21 @@ impl SnapshotBuilder {
         let file = uow
             .get_file(&file_id)?
             .ok_or_else(|| anyhow!("File not found"))?;
+
+        let root_id: EntityId = 1;
+        let global_ids = uow.get_root_relationship(
+            &root_id,
+            &common::direct_access::root::RootRelationshipField::Global,
+        )?;
+
+        let global = uow
+            .get_global(&global_ids.first().expect("Root must have a global entity"))?
+            .expect("Root must have a global entity");
+
+        let global_vm = GlobalVM {
+            inner: global.clone(),
+            application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
+        };
 
         // Working flat maps, then wrap into VMs
         let mut dto_fields: HashMap<EntityId, DtoField> = HashMap::new();
@@ -568,7 +597,7 @@ impl SnapshotBuilder {
                         .collect();
                     for field in &entity_fields {
                         if let Some(eid) = field.entity {
-                            if field.field_type == common::entities::FieldType::Entity {
+                            if field.field_type == FieldType::Entity {
                                 if let Some(ent_dep) = uow.get_entity(&eid)? {
                                     entities.insert(ent_dep.id, ent_dep);
                                 }
@@ -589,7 +618,7 @@ impl SnapshotBuilder {
                     .collect();
                 for field in &entity_fields {
                     if let Some(eid) = field.entity {
-                        if field.field_type == common::entities::FieldType::Entity {
+                        if field.field_type == FieldType::Entity {
                             let ent = uow
                                 .get_entity(&eid)?
                                 .ok_or_else(|| anyhow!("Entity not found"))?;
@@ -651,7 +680,11 @@ impl SnapshotBuilder {
                         DtoFieldType::String => "String".to_string(),
                         DtoFieldType::Uuid => "uuid::Uuid".to_string(),
                         DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                        DtoFieldType::Enum => "String".to_string(),
+                        DtoFieldType::Enum => df
+                            .enum_name
+                            .clone()
+                            .or(Some("enum_name not set".to_string()))
+                            .unwrap(),
                     };
                     let rust_type = if df.is_list {
                         format!("Vec<{}>", &rust_base_type)
@@ -744,7 +777,7 @@ impl SnapshotBuilder {
                                                                 DtoFieldType::String => "String".to_string(),
                                                                 DtoFieldType::Uuid => "uuid::Uuid".to_string(),
                                                                 DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => "String".to_string(),
+                                                                DtoFieldType::Enum => df.enum_name.clone().or(Some("enum_name not set".to_string())).unwrap(),
                                                             };
                                                                 let rust_type = if df.is_list {
                                                                     format!("Vec<{}>", &rust_base_type)
@@ -780,7 +813,7 @@ impl SnapshotBuilder {
                                                                 DtoFieldType::String => "String".to_string(),
                                                                 DtoFieldType::Uuid => "uuid::Uuid".to_string(),
                                                                 DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => "String".to_string(),
+                                                                DtoFieldType::Enum => df.enum_name.clone().or(Some("enum_name not set".to_string())).unwrap(),
                                                             };
                                                                 let rust_type = if df.is_list {
                                                                     format!("Vec<{}>", &rust_base_type)
@@ -864,7 +897,11 @@ impl SnapshotBuilder {
                                                 DtoFieldType::DateTime => {
                                                     "chrono::DateTime<chrono::Utc>".to_string()
                                                 }
-                                                DtoFieldType::Enum => "String".to_string(),
+                                                DtoFieldType::Enum => df
+                                                    .enum_name
+                                                    .clone()
+                                                    .or(Some("enum_name not set".to_string()))
+                                                    .unwrap(),
                                             };
                                             let rust_type = if df.is_list {
                                                 format!("Vec<{}>", &rust_base_type)
@@ -903,7 +940,11 @@ impl SnapshotBuilder {
                                                 DtoFieldType::DateTime => {
                                                     "chrono::DateTime<chrono::Utc>".to_string()
                                                 }
-                                                DtoFieldType::Enum => "String".to_string(),
+                                                DtoFieldType::Enum => df
+                                                    .enum_name
+                                                    .clone()
+                                                    .or(Some("enum_name not set".to_string()))
+                                                    .unwrap(),
                                             };
                                             let rust_type = if df.is_list {
                                                 format!("Vec<{}>", &rust_base_type)
@@ -935,6 +976,7 @@ impl SnapshotBuilder {
         // compute entity_snake if entity scope
         Ok(GenerationSnapshot {
             file: FileVM { inner: file },
+            global: global_vm,
             entities: entities_vm,
             features: features_vm,
             use_cases: use_cases_vm,
@@ -968,6 +1010,14 @@ mod tests {
             feature: None,
             entity: Some(entity_id),
             use_case: None,
+        };
+        let global = Global {
+            id: 50,
+            language: "".to_string(),
+            application_name: "".to_string(),
+            organisation_name: "".to_string(),
+            organisation_domain: "".to_string(),
+            prefix_path: "".to_string(),
         };
         let entity = Entity {
             id: entity_id,
@@ -1013,6 +1063,10 @@ mod tests {
 
         let snapshot = GenerationSnapshot {
             file: FileVM { inner: file },
+            global: GlobalVM {
+                inner: global,
+                application_kebab_name: "".to_string(),
+            },
             entities: {
                 let mut m = IndexMap::new();
                 // Build fields VM

@@ -78,15 +78,15 @@ entities:
         type: enum
         enum_name: FieldType
         enum_values:
-          - bool
-          - int
-          - uint
-          - float
-          - string
-          - uuid
-          - datetime
-          - entity
-          - enum
+          - Bool
+          - Int
+          - Uint
+          - Float
+          - String
+          - Uuid
+          - Datetime
+          - Entity
+          - Enum
       - name: entity
         type: entity
         entity: Entity

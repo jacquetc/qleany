@@ -12,5 +12,25 @@ pub struct {{ ent.pascal_name }} {
     pub {{ f.snake_name }}: {{ f.rust_type }},
     {%- endfor %}
 }
+
+{%- for f in ent.fields %}
+{%- if f.inner.field_type == "Enum" %}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum {{ f.inner.enum_name }} {
+    {%- for ev in f.inner.enum_values %}
+    {{ ev }},
+    {%- endfor %}
+}
+
+impl Default for {{ f.inner.enum_name }} {
+    fn default() -> Self {
+    {%- for ev in f.inner.enum_values %}
+    {{ f.inner.enum_name }}::{{ ev }}
+    {% break %}
+    {%- endfor %}
+    }
+}
+{%- endif %}
+{%- endfor %}
 {% endfor %}
 
