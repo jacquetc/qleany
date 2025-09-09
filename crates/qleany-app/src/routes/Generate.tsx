@@ -25,20 +25,20 @@ import {longOperationService} from '@/services/long-operation-service';
 
 // GenerateButton component that has access to FileContext
 const GenerateButton = ({
-                             root,
-                             inTempDir,
-                             isGenerating,
-                             setIsGenerating,
-                             setModalOpened,
-                             setProgress,
-                             setOperationId
-                         }: {
+                            root,
+                            inTempDir,
+                            isGenerating,
+                            setIsGenerating,
+                            setModalOpened,
+                            setProgress,
+                            setOperationId
+                        }: {
     root: any;
     inTempDir: boolean;
     isGenerating: boolean;
     setIsGenerating: (value: boolean) => void;
     setModalOpened: (value: boolean) => void;
-    setProgress: (value: {percentage: number; message: string | null}) => void;
+    setProgress: (value: { percentage: number; message: string | null }) => void;
     setOperationId: (value: string | null) => void;
 }) => {
     const {checkedFileIds} = useFileContext();
@@ -270,7 +270,7 @@ const Generate = () => {
     const [loadError, setLoadError] = useState<string | null>(null);
 
     // Generate files state
-    const [inTempDir, setInTempDir] = useState(false);
+    const [inTempDir, setInTempDir] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [operationId, setOperationId] = useState<string | null>(null);
     const [progress, setProgress] = useState({percentage: 0, message: null as string | null});

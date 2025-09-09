@@ -1,4 +1,4 @@
-use crate::ListRustFilesDto;
+use crate::{ListRustFilesDto, ListRustFilesReturnDto};
 use anyhow::{Result, anyhow};
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::root::RootRelationshipField;
@@ -6,7 +6,7 @@ use common::entities::Entity;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork, entities::Feature, entities::File, entities::Global,
-    entities::Root, entities::UseCase,
+    entities::Relationship, entities::Root, entities::UseCase,
 };
 
 pub trait ListRustFilesUnitOfWorkFactoryTrait {
@@ -18,6 +18,8 @@ pub trait ListRustFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Root", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationship")]
+#[macros::uow_action(entity = "Relationship", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
@@ -35,9 +37,9 @@ impl ListRustFilesUseCase {
         ListRustFilesUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<()> {
+    pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<ListRustFilesReturnDto> {
         // TODO: implement only_existing
-        let only_existing = dto.only_existing;
+        let only_existing = dto.only_list_already_existing;
         let mut files: Vec<File> = vec![];
 
         let mut uow = self.uow_factory.create();
@@ -73,7 +75,7 @@ impl ListRustFilesUseCase {
             relative_path: "".to_string(),
             group: "base".to_string(),
             template_name: "root_cargo".to_string(),
-            feature: None,
+            feature: Some(0),
             entity: None,
             use_case: None,
         });
@@ -108,6 +110,28 @@ impl ListRustFilesUseCase {
             template_name: "undo_redo".to_string(),
             feature: None,
             entity: None,
+            use_case: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "long_operation.rs".to_string(),
+            relative_path: "crates/common/src/".to_string(),
+            group: "base".to_string(),
+            template_name: "long_operation".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "repository_factory.rs".to_string(),
+            relative_path: "crates/common/src/".to_string(),
+            group: "base".to_string(),
+            template_name: "repository_factory".to_string(),
+            feature: None,
+            entity: Some(0),
             use_case: None,
         });
 
@@ -414,27 +438,43 @@ impl ListRustFilesUseCase {
                 use_case: None,
             });
 
-            files.push(File {
-                id: 0,
-                name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_relationship_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
+            // only if there is a forward relationship
+            let relationships = uow.get_entity_relationship(
+                &entity.id,
+                &common::direct_access::entity::EntityRelationshipField::Relationships,
+            )?;
+            let relationships = uow.get_relationship_multi(&relationships)?;
+            let has_forward_relationship = relationships.iter().any(|r| {
+                if let Some(r) = r {
+                    r.direction == common::entities::Direction::Forward
+                } else {
+                    false
+                }
             });
 
-            files.push(File {
-                id: 0,
-                name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_set_relationship_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+            if has_forward_relationship {
+                files.push(File {
+                    id: 0,
+                    name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_get_relationship_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
+
+                files.push(File {
+                    id: 0,
+                    name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_set_relationship_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
+            }
 
             // for crates/common/src/direct_access/
             let relative_path = "crates/common/src/direct_access/";
@@ -645,6 +685,17 @@ impl ListRustFilesUseCase {
 
         uow.commit()?;
 
-        Ok(())
+        let mut file_ids = vec![];
+        let mut file_names = vec![];
+
+        for file in created_files {
+            file_ids.push(file.id);
+            file_names.push(format!("{}{}", file.relative_path, file.name));
+        }
+
+        Ok(ListRustFilesReturnDto {
+            file_ids,
+            file_names,
+        })
     }
 }

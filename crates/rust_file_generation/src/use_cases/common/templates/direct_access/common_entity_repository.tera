@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 pub enum {{ s.entities[e].pascal_name }}RelationshipField {
     {% for rid, r in s.entities[e].forward_relationships %}
     {{ r.field_name | capitalize }},
-    {% endfor %}
+    {%- endfor %}
 }
 
 impl Display for {{ s.entities[e].pascal_name }}RelationshipField {
@@ -52,7 +52,7 @@ pub trait {{ s.entities[e].pascal_name }}TableRO {
 {% if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-{% endif %}
+{%- endif %}
 }
 
 pub struct {{ s.entities[e].pascal_name }}Repository<'a> {
@@ -97,7 +97,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         // cascade deletes for strong forward relationships
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong and f.inner.single == false %}{% endif %}
-        {% endfor %}
+        {%- endfor %}
         // delete entity
         self.redb_table.delete(id)?;
         event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![id.clone()], data: None });

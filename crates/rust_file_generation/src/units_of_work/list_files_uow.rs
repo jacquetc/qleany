@@ -8,6 +8,7 @@ use common::entities::Entity;
 use common::entities::Feature;
 use common::entities::File;
 use common::entities::Global;
+use common::entities::Relationship;
 use common::entities::Root;
 use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
@@ -75,6 +76,8 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
 #[macros::uow_action(entity = "Root", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationship")]
+#[macros::uow_action(entity = "Relationship", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]

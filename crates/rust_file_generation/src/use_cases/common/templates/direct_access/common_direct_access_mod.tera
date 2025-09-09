@@ -1,3 +1,4 @@
 {% for eid, ent in s.entities %}
 pub mod {{ ent.snake_name }};
-{% endfor %}
+{%- endfor %}
+pub mod repository_factory;

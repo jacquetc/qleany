@@ -2,11 +2,71 @@
 
 {% set e = s.file.inner.entity %}
 {% if e %}
-use common::database::{CommandUnitOfWork, QueryUnitOfWork};
+use super::use_cases::{
+    {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROTrait,
+    {{ s.entities[e].pascal_name }}UnitOfWorkTrait,
+};
 use common::entities::{{ s.entities[e].pascal_name }};
+use anyhow::{Ok, Result};
+use common::database::{db_context::DbContext, transactions::Transaction};
+use common::database::{CommandUnitOfWork, QueryUnitOfWork};
+use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
+use common::types;
+use common::types::EntityId;
+use std::cell::RefCell;
+use std::sync::Arc;
 
-pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
-    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkTrait>;
+pub struct {{ s.entities[e].pascal_name }}UnitOfWork {
+    context: DbContext,
+    transaction: Option<Transaction>,
+    event_hub: Arc<EventHub>,
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWork {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
+        {{ s.entities[e].pascal_name }}UnitOfWork {
+            context: db_context.clone(),
+            transaction: None,
+            event_hub: event_hub.clone(),
+        }
+    }
+}
+
+impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
+    fn begin_transaction(&mut self) -> Result<()> {
+        self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
+        Ok(())
+    }
+
+    fn commit(&mut self) -> Result<()> {
+        self.transaction.take().unwrap().commit()?;
+        Ok(())
+    }
+
+    fn rollback(&mut self) -> Result<()> {
+        self.transaction.take().unwrap().rollback()?;
+        Ok(())
+    }
+
+    fn create_savepoint(&self) -> Result<types::Savepoint> {
+        self.transaction.as_ref().unwrap().create_savepoint()
+    }
+
+    fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
+        let mut transaction = self.transaction.take().unwrap();
+        transaction.restore_to_savepoint(savepoint)?;
+
+        self.event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![],
+            data: None,
+        });
+
+        // Recreate the transaction after restoring to savepoint
+        self.transaction = Some(transaction);
+
+        Ok(())
+    }
 }
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Create")]
@@ -17,21 +77,86 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
+{% if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationshipMulti")]
-pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
+{%- endif %}
+impl {{ s.entities[e].pascal_name }}UnitOfWorkTrait for {{ s.entities[e].pascal_name }}UnitOfWork {}
 
-pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait {
-    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkROTrait>;
+pub struct {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+    context: DbContext,
+    event_hub: Arc<EventHub>,
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
+        {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+            context: db_context.clone(),
+            event_hub: event_hub.clone(),
+        }
+    }
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait for {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkTrait> {
+        Box::new({{ s.entities[e].pascal_name }}UnitOfWork::new(&self.context, &self.event_hub))
+    }
+}
+
+pub struct {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+    context: DbContext,
+    transaction: RefCell<Option<Transaction>>,
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+    pub fn new(db_context: &DbContext) -> Self {
+        {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+            context: db_context.clone(),
+            transaction: RefCell::new(None),
+        }
+    }
+}
+
+impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+    fn begin_transaction(&self) -> Result<()> {
+        self.transaction
+            .replace(Some(Transaction::begin_read_transaction(&self.context)?));
+        Ok(())
+    }
+
+    fn end_transaction(&self) -> Result<()> {
+        self.transaction.take().unwrap().end_read_transaction()?;
+        Ok(())
+    }
 }
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
+{% if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]
-pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkROTrait: QueryUnitOfWork {}
+{%- endif %}
+impl {{ s.entities[e].pascal_name }}UnitOfWorkROTrait for {{ s.entities[e].pascal_name }}UnitOfWorkRO {}
+
+pub struct {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+    context: DbContext,
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+    pub fn new(db_context: &DbContext) -> Self {
+        {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+            context: db_context.clone(),
+        }
+    }
+}
+
+impl {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait for {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkROTrait> {
+        Box::new({{ s.entities[e].pascal_name }}UnitOfWorkRO::new(&self.context))
+    }
+}
 
 {% else %}
 // No entity bound to this file

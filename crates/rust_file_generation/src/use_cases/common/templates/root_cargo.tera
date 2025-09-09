@@ -4,12 +4,11 @@ members = [
     "crates/common",
     "crates/cli",
     "crates/direct_access",
-    "crates/handling_manifest",
-    "crates/cpp_qt_file_listing",
-    "crates/python_file_listing",
-    "crates/rust_file_generation",
-    "crates/qleany-app/src-tauri",
-    "crates/macros"]
+    "crates/macros",
+{%- for fid, feature in s.features %}
+    "crates/{{ feature.snake_name }}",
+{%- endfor %}
+    ]
 
 resolver = "2"
 

@@ -5,13 +5,16 @@
 // Sub-modules for {{ s.entities[e].pascal_name }} use cases
 pub(super) mod get_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod get_{{ s.entities[e].snake_name }}_multi_uc;
+pub(super) mod create_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod update_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod update_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod remove_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod remove_{{ s.entities[e].snake_name }}_uc;
+{% if s.entities[e].forward_relationships %}
 pub(super) mod get_{{ s.entities[e].snake_name }}_relationship_uc;
 pub(super) mod set_{{ s.entities[e].snake_name }}_relationship_uc;
+{% endif %}
 
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -30,10 +33,12 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
+{% if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationshipMulti")]
+{% endif %}
 pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
 
 pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait {
@@ -42,8 +47,10 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
+{% if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]
+{% endif %}
 pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkROTrait: QueryUnitOfWork {}
 
 {% else %}

@@ -4,7 +4,7 @@ use crate::use_cases::generate_rust_code_uc::GenerateRustCodeUseCase;
 use crate::use_cases::generate_rust_files_uc::GenerateRustFilesUseCase;
 use crate::{
     GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
-    GenerateRustFilesReturnDto, ListRustFilesDto,
+    GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
     units_of_work::list_files_uow::ListRustFilesUnitOfWorkFactory,
     use_cases::list_rust_files_uc::ListRustFilesUseCase,
 };
@@ -19,17 +19,17 @@ pub fn list_rust_files(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     dto: &ListRustFilesDto,
-) -> Result<()> {
+) -> Result<ListRustFilesReturnDto> {
     let uow_context = ListRustFilesUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = ListRustFilesUseCase::new(Box::new(uow_context));
-    uc.execute(dto)?;
+    let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::RustFileGeneration(ListRustFiles),
         ids: vec![],
         data: None,
     });
-    Ok(())
+    Ok(return_dto)
 }
 
 pub fn generate_rust_code(
@@ -84,7 +84,7 @@ mod tests {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());
         let load_dto = ListRustFilesDto {
-            only_existing: false,
+            only_list_already_existing: false,
         };
         list_rust_files(&db_context, &event_hub, &load_dto).unwrap();
     }

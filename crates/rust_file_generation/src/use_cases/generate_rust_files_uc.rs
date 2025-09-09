@@ -103,17 +103,9 @@ impl LongOperation for GenerateRustFilesUseCase {
                 out_dir = out_dir.join(&file_meta.relative_path);
             }
 
-            progress_callback(common::long_operation::OperationProgress::new(
-                0.0,
-                Some(format!("out_dir {}", out_dir.to_str().unwrap())),
-            ));
             fs::create_dir_all(&out_dir)?;
             let out_path = out_dir.join(file_name);
 
-            progress_callback(common::long_operation::OperationProgress::new(
-                0.0,
-                Some(format!("path {}", out_path.to_str().unwrap())),
-            ));
             // Write file content
             fs::write(&out_path, code.as_bytes())?;
             // ensure that the file was written

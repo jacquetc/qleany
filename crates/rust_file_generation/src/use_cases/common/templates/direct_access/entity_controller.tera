@@ -17,11 +17,13 @@ use super::{
     },
 };
 use super::units_of_work::{{ s.entities[e].pascal_name }}UnitOfWorkFactory;
+use anyhow::{Ok, Result};
+{% if s.entities[e].forward_relationships %}
 use crate::{{ s.entities[e].snake_name }}::use_cases::get_{{ s.entities[e].snake_name }}_relationship_uc::Get{{ s.entities[e].pascal_name }}RelationshipUseCase;
 use crate::{{ s.entities[e].snake_name }}::use_cases::set_{{ s.entities[e].snake_name }}_relationship_uc::Set{{ s.entities[e].pascal_name }}RelationshipUseCase;
 use crate::{{ s.entities[e].pascal_name }}RelationshipDto;
-use anyhow::{Ok, Result};
 use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
+{% endif %}
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;

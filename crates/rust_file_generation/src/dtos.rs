@@ -3,7 +3,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ListRustFilesDto {
-    pub only_existing: bool,
+    pub only_list_already_existing: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ListRustFilesReturnDto {
+    pub file_ids: Vec<EntityId>,
+    pub file_names: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
