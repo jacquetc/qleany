@@ -4,7 +4,7 @@ import {invokeCommand} from './tauri-api';
  * Types for rust file generation DTOs
  */
 export interface ListRustFilesDTO {
-    only_existing: boolean;
+    only_list_already_existing: boolean;
 }
 
 export interface GenerateRustFilesDTO {

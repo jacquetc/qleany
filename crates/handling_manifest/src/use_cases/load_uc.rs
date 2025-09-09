@@ -356,6 +356,8 @@ impl LoadUseCase {
                     validator: model_use_case.validator.unwrap_or_default(),
                     entities: use_case_entity_ids,
                     undoable: model_use_case.undoable.unwrap_or_default(),
+                    read_only: model_use_case.read_only.unwrap_or_default(),
+                    long_operation: model_use_case.long_operation.unwrap_or_default(),
                     dto_in: dto_in_id,
                     dto_out: dto_out_id,
                 })?;

@@ -1,0 +1,11 @@
+{%- set f_id = s.file.inner.feature %}
+{%- if f_id %}
+{%- set f = s.features[f_id] %}
+{% for uc_id, uc in f.use_cases %}
+pub(crate) mod {{ uc.snake_name }}_uc;
+{%- endfor %}
+
+{% else %}
+// No feature bound to this file
+{% endif %}
+

@@ -263,6 +263,16 @@ impl SaveUseCase {
                             } else {
                                 None
                             },
+                            read_only: if (use_case.read_only) {
+                                Some(true)
+                            } else {
+                                None
+                            },
+                            long_operation: if (use_case.long_operation) {
+                                Some(true)
+                            } else {
+                                None
+                            },
                             dto_in,
                             dto_out,
                         }

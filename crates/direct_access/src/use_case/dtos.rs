@@ -10,6 +10,8 @@ pub struct UseCaseDto {
     pub validator: bool,
     pub entities: Vec<EntityId>,
     pub undoable: bool,
+    pub read_only: bool,
+    pub long_operation: bool,
     pub dto_in: Option<EntityId>,
     pub dto_out: Option<EntityId>,
 }
@@ -22,6 +24,8 @@ impl From<UseCaseDto> for UseCase {
             validator: use_case_dto.validator,
             entities: use_case_dto.entities,
             undoable: use_case_dto.undoable,
+            read_only: use_case_dto.read_only,
+            long_operation: use_case_dto.long_operation,
             dto_in: use_case_dto.dto_in,
             dto_out: use_case_dto.dto_out,
         }
@@ -36,6 +40,8 @@ impl From<&UseCaseDto> for UseCase {
             validator: use_case_dto.validator,
             entities: use_case_dto.entities.clone(),
             undoable: use_case_dto.undoable,
+            read_only: use_case_dto.read_only,
+            long_operation: use_case_dto.long_operation,
             dto_in: use_case_dto.dto_in,
             dto_out: use_case_dto.dto_out,
         }
@@ -50,6 +56,8 @@ impl From<UseCase> for UseCaseDto {
             validator: use_case.validator,
             entities: use_case.entities,
             undoable: use_case.undoable,
+            read_only: use_case.read_only,
+            long_operation: use_case.long_operation,
             dto_in: use_case.dto_in,
             dto_out: use_case.dto_out,
         }
@@ -62,6 +70,8 @@ pub struct CreateUseCaseDto {
     pub validator: bool,
     pub entities: Vec<EntityId>,
     pub undoable: bool,
+    pub read_only: bool,
+    pub long_operation: bool,
     pub dto_in: Option<EntityId>,
     pub dto_out: Option<EntityId>,
 }
@@ -74,6 +84,8 @@ impl From<CreateUseCaseDto> for UseCase {
             validator: create_use_case_dto.validator,
             entities: create_use_case_dto.entities,
             undoable: create_use_case_dto.undoable,
+            read_only: create_use_case_dto.read_only,
+            long_operation: create_use_case_dto.long_operation,
             dto_in: create_use_case_dto.dto_in,
             dto_out: create_use_case_dto.dto_out,
         }
@@ -88,6 +100,8 @@ impl From<&CreateUseCaseDto> for UseCase {
             validator: create_use_case_dto.validator,
             entities: create_use_case_dto.entities.clone(),
             undoable: create_use_case_dto.undoable,
+            read_only: create_use_case_dto.read_only,
+            long_operation: create_use_case_dto.long_operation,
             dto_in: create_use_case_dto.dto_in,
             dto_out: create_use_case_dto.dto_out,
         }
@@ -101,6 +115,8 @@ impl From<UseCase> for CreateUseCaseDto {
             validator: use_case.validator,
             entities: use_case.entities,
             undoable: use_case.undoable,
+            read_only: use_case.read_only,
+            long_operation: use_case.long_operation,
             dto_in: use_case.dto_in,
             dto_out: use_case.dto_out,
         }

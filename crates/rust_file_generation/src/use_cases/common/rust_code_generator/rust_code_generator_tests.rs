@@ -163,6 +163,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         validator: false,
         entities: vec![300],
         undoable: false,
+        read_only: false,
+        long_operation: false,
         dto_in: Some(200),
         dto_out: Some(201),
     };
@@ -292,6 +294,8 @@ fn for_file_various_combinations_generate_expected_items() {
         validator: false,
         entities: vec![1, 2],
         undoable: false,
+        read_only: false,
+        long_operation: false,
         dto_in: Some(10),
         dto_out: Some(11),
     };

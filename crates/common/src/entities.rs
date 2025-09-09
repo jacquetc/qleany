@@ -49,6 +49,8 @@ pub struct UseCase {
     pub validator: bool,
     pub entities: Vec<EntityId>,
     pub undoable: bool,
+    pub read_only: bool,
+    pub long_operation: bool,
     pub dto_in: Option<EntityId>,
     pub dto_out: Option<EntityId>,
 }

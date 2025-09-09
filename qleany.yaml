@@ -149,6 +149,10 @@ entities:
         ordered: true
       - name: undoable
         type: bool
+      - name: read_only
+        type: bool
+      - name: long_operation
+        type: bool
       - name: dto_in
         type: entity
         entity: Dto
@@ -339,20 +343,53 @@ features:
           - Entity
           - File
         undoable: false
+        read_only: true
         dto_in:
-          name: ListRustFilesDto
+          name: GenerateRustCodeDto
           fields:
-            - name: only_list_already_existing
-              type: bool
+            - name: file_id
+              type: int
         dto_out:
-          name: ListRustFilesReturnDto
+          name: GenerateRustCodeReturnDto
+          fields:
+            - name: generated_code
+              type: string
+            - name: timestamp
+              type: string
+      - name: generate_rust_files
+        validator: true
+        entities:
+          - Root
+          - Global
+          - Relationship
+          - Feature
+          - UseCase
+          - Entity
+          - File
+          - Field
+          - Dto
+          - DtoField
+        undoable: false
+        read_only: true
+        long_operation: true
+        dto_in:
+          name: GenerateRustFilesDto
           fields:
             - name: file_ids
               type: int
               is_list: true
-            - name: file_names
+            - name: root_path
+              type: string
+            - name: prefix
+              type: string
+        dto_out:
+          name: GenerateRustFilesReturnDto
+          fields:
+            - name: files
               type: string
               is_list: true
+            - name: timestamp
+              type: string
 
 
 ui:

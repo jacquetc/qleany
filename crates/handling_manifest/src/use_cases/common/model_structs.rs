@@ -114,6 +114,12 @@ pub struct UseCase {
     pub undoable: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub read_only: Option<bool>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub long_operation: Option<bool>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dto_in: Option<Dto>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]

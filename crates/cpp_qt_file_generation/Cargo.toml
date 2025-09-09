@@ -1,5 +1,5 @@
 [package]
-name = "cpp_qt_file_listing"
+name = "cpp_qt_file_generation"
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true

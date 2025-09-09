@@ -1,5 +1,5 @@
 [package]
-name = "python_file_listing"
+name = "python_file_generation"
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true

@@ -3,7 +3,9 @@ mod rust_code_generator_tests;
 
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, Entity, Feature, Field, File, Relationship, UseCase};
+use common::entities::{
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, File, Relationship, UseCase,
+};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -58,16 +60,26 @@ struct UseCaseVM {
 #[derive(Debug, Serialize, Clone)]
 struct DtoVM {
     pub inner: Dto,
-    pub fields: IndexMap<EntityId, DtoField>,
+    pub fields: Vec<DtoFieldVM>,
+    pub pascal_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
 struct FieldVM {
     pub inner: Field,
-    pub name: String,
+    pub pascal_name: String,
     pub snake_name: String,
     pub is_list: bool,
     pub is_nullable: bool,
+    pub rust_base_type: String,
+    pub rust_type: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct DtoFieldVM {
+    pub inner: DtoField,
+    pub pascal_name: String,
+    pub snake_name: String,
     pub rust_base_type: String,
     pub rust_type: String,
 }
@@ -249,7 +261,7 @@ impl SnapshotBuilder {
             };
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
-                name: f.name.clone(),
+                pascal_name: heck::AsPascalCase(&f.name).to_string(),
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
                 is_list: f.is_list,
                 is_nullable: f.is_nullable,
@@ -628,17 +640,39 @@ impl SnapshotBuilder {
 
         let mut dtos_vm: IndexMap<EntityId, DtoVM> = IndexMap::new();
         for (did, d) in &dtos {
-            let mut df_map: IndexMap<EntityId, DtoField> = IndexMap::new();
+            let mut df_vec: Vec<DtoFieldVM> = Vec::new();
             for (dfid, df) in &dto_fields {
                 if d.fields.contains(dfid) {
-                    df_map.insert(*dfid, df.clone());
+                    let rust_base_type = match df.field_type {
+                        DtoFieldType::Boolean => "bool".to_string(),
+                        DtoFieldType::Integer => "i64".to_string(),
+                        DtoFieldType::UInteger => "u64".to_string(),
+                        DtoFieldType::Float => "f64".to_string(),
+                        DtoFieldType::String => "String".to_string(),
+                        DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+                        DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                        DtoFieldType::Enum => "String".to_string(),
+                    };
+                    let rust_type = if df.is_list {
+                        format!("Vec<{}>", &rust_base_type)
+                    } else {
+                        rust_base_type.clone()
+                    };
+                    df_vec.push(DtoFieldVM {
+                        inner: df.clone(),
+                        pascal_name: heck::AsPascalCase(&df.name).to_string(),
+                        snake_name: heck::AsSnakeCase(&df.name).to_string(),
+                        rust_base_type,
+                        rust_type,
+                    });
                 }
             }
             dtos_vm.insert(
                 *did,
                 DtoVM {
                     inner: d.clone(),
-                    fields: df_map,
+                    fields: df_vec,
+                    pascal_name: heck::AsPascalCase(&d.name).to_string(),
                 },
             );
         }
@@ -700,28 +734,72 @@ impl SnapshotBuilder {
                                                 dtos.get(&dto_id).map(|d| DtoVM {
                                                     inner: d.clone(),
                                                     fields: {
-                                                        let mut df_map = IndexMap::new();
+                                                        let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {
-                                                                df_map.insert(*dfid, df.clone());
+                                                            if d.fields.contains(dfid) {                    let rust_base_type = match df.field_type {
+                                                                DtoFieldType::Boolean => "bool".to_string(),
+                                                                DtoFieldType::Integer => "i64".to_string(),
+                                                                DtoFieldType::UInteger => "u64".to_string(),
+                                                                DtoFieldType::Float => "f64".to_string(),
+                                                                DtoFieldType::String => "String".to_string(),
+                                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+                                                                DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                                                                DtoFieldType::Enum => "String".to_string(),
+                                                            };
+                                                                let rust_type = if df.is_list {
+                                                                    format!("Vec<{}>", &rust_base_type)
+                                                                } else {
+                                                                    rust_base_type.clone()
+                                                                };
+                                                                df_vec.push(DtoFieldVM {
+                                                                    inner: df.clone(),
+                                                                    pascal_name: heck::AsPascalCase(&df.name).to_string(),
+                                                                    snake_name: heck::AsSnakeCase(&df.name).to_string(),
+                                                                    rust_base_type,
+                                                                    rust_type,
+                                                                });
                                                             }
                                                         }
-                                                        df_map
+                                                        df_vec
                                                     },
+                                                    pascal_name: heck::AsPascalCase(&d.name)
+                                                        .to_string(),
                                                 })
                                             }),
                                             dto_out: uc.dto_out.and_then(|dto_id| {
                                                 dtos.get(&dto_id).map(|d| DtoVM {
                                                     inner: d.clone(),
                                                     fields: {
-                                                        let mut df_map = IndexMap::new();
+                                                        let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {
-                                                                df_map.insert(*dfid, df.clone());
+                                                            if d.fields.contains(dfid) {                    let rust_base_type = match df.field_type {
+                                                                DtoFieldType::Boolean => "bool".to_string(),
+                                                                DtoFieldType::Integer => "i64".to_string(),
+                                                                DtoFieldType::UInteger => "u64".to_string(),
+                                                                DtoFieldType::Float => "f64".to_string(),
+                                                                DtoFieldType::String => "String".to_string(),
+                                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+                                                                DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+                                                                DtoFieldType::Enum => "String".to_string(),
+                                                            };
+                                                                let rust_type = if df.is_list {
+                                                                    format!("Vec<{}>", &rust_base_type)
+                                                                } else {
+                                                                    rust_base_type.clone()
+                                                                };
+                                                                df_vec.push(DtoFieldVM {
+                                                                    inner: df.clone(),
+                                                                    pascal_name: heck::AsPascalCase(&df.name).to_string(),
+                                                                    snake_name: heck::AsSnakeCase(&df.name).to_string(),
+                                                                    rust_base_type,
+                                                                    rust_type,
+                                                                });
                                                             }
                                                         }
-                                                        df_map
+                                                        df_vec
                                                     },
+                                                    pascal_name: heck::AsPascalCase(&d.name)
+                                                        .to_string(),
                                                 })
                                             }),
                                             pascal_name: heck::AsPascalCase(&uc.name).to_string(),
@@ -773,28 +851,78 @@ impl SnapshotBuilder {
                             dtos.get(&dto_id).map(|d| DtoVM {
                                 inner: d.clone(),
                                 fields: {
-                                    let mut df_map = IndexMap::new();
+                                    let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            df_map.insert(*dfid, df.clone());
+                                            let rust_base_type = match df.field_type {
+                                                DtoFieldType::Boolean => "bool".to_string(),
+                                                DtoFieldType::Integer => "i64".to_string(),
+                                                DtoFieldType::UInteger => "u64".to_string(),
+                                                DtoFieldType::Float => "f64".to_string(),
+                                                DtoFieldType::String => "String".to_string(),
+                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+                                                DtoFieldType::DateTime => {
+                                                    "chrono::DateTime<chrono::Utc>".to_string()
+                                                }
+                                                DtoFieldType::Enum => "String".to_string(),
+                                            };
+                                            let rust_type = if df.is_list {
+                                                format!("Vec<{}>", &rust_base_type)
+                                            } else {
+                                                rust_base_type.clone()
+                                            };
+                                            df_vec.push(DtoFieldVM {
+                                                inner: df.clone(),
+                                                pascal_name: heck::AsPascalCase(&df.name)
+                                                    .to_string(),
+                                                snake_name: heck::AsSnakeCase(&df.name).to_string(),
+                                                rust_base_type,
+                                                rust_type,
+                                            });
                                         }
                                     }
-                                    df_map
+                                    df_vec
                                 },
+                                pascal_name: heck::AsPascalCase(&d.name).to_string(),
                             })
                         }),
                         dto_out: uc.dto_out.and_then(|dto_id| {
                             dtos.get(&dto_id).map(|d| DtoVM {
                                 inner: d.clone(),
                                 fields: {
-                                    let mut df_map = IndexMap::new();
+                                    let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            df_map.insert(*dfid, df.clone());
+                                            let rust_base_type = match df.field_type {
+                                                DtoFieldType::Boolean => "bool".to_string(),
+                                                DtoFieldType::Integer => "i64".to_string(),
+                                                DtoFieldType::UInteger => "u64".to_string(),
+                                                DtoFieldType::Float => "f64".to_string(),
+                                                DtoFieldType::String => "String".to_string(),
+                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+                                                DtoFieldType::DateTime => {
+                                                    "chrono::DateTime<chrono::Utc>".to_string()
+                                                }
+                                                DtoFieldType::Enum => "String".to_string(),
+                                            };
+                                            let rust_type = if df.is_list {
+                                                format!("Vec<{}>", &rust_base_type)
+                                            } else {
+                                                rust_base_type.clone()
+                                            };
+                                            df_vec.push(DtoFieldVM {
+                                                inner: df.clone(),
+                                                pascal_name: heck::AsPascalCase(&df.name)
+                                                    .to_string(),
+                                                snake_name: heck::AsSnakeCase(&df.name).to_string(),
+                                                rust_base_type,
+                                                rust_type,
+                                            });
                                         }
                                     }
-                                    df_map
+                                    df_vec
                                 },
+                                pascal_name: heck::AsPascalCase(&d.name).to_string(),
                             })
                         }),
                         pascal_name: heck::AsPascalCase(&uc.name).to_string(),
@@ -891,7 +1019,7 @@ mod tests {
                 let fields_vm = vec![
                     FieldVM {
                         inner: field_relationship.clone(),
-                        name: field_relationship.name.clone(),
+                        pascal_name: heck::AsPascalCase(&field_relationship.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_relationship.name).to_string(),
                         is_list: field_relationship.is_list,
                         is_nullable: field_relationship.is_nullable,
@@ -900,7 +1028,7 @@ mod tests {
                     },
                     FieldVM {
                         inner: field_tags.clone(),
-                        name: field_tags.name.clone(),
+                        pascal_name: heck::AsPascalCase(&field_tags.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         is_list: field_tags.is_list,
                         is_nullable: field_tags.is_nullable,

@@ -24,13 +24,13 @@ export function useRustFileGeneration() {
      * List available rust files
      * @param onlyExisting Whether to only list existing files
      */
-    const listRustFiles = useCallback(async (onlyExisting: boolean = false) => {
+    const listRustFiles = useCallback(async (onlyListAlreadyExisting: boolean = false) => {
         setIsListing(true);
         setOperationError(null);
 
         try {
             const dto: ListRustFilesDTO = {
-                only_existing: onlyExisting
+                only_list_already_existing: onlyListAlreadyExisting
             };
 
             await rustFileGenerationService.listRustFiles(dto);
