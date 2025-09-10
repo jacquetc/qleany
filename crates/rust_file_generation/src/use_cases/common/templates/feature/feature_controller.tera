@@ -67,10 +67,14 @@ pub fn {{ uc.snake_name }} (
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
 {%- if uc.dto_in %}
-    dto: &ListRustFilesDto,
+    dto: &{{ uc.dto_in.pascal_name }},
 {%- endif %}
 ) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
+{%- if uc.inner.read_only %}
+    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context);
+{%- else %}{# read_only #}
     let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+{%- endif %}{# read_only #}
     let mut uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded

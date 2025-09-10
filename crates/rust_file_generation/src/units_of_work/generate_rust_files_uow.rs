@@ -8,8 +8,6 @@ use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
     Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase,
 };
-use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
-use common::types;
 use common::types::EntityId;
 use std::sync::Mutex;
 

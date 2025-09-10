@@ -1,0 +1,231 @@
+{%- set f_id = s.file.inner.feature %}
+{%- if f_id %}
+{%- set f = s.features[f_id] %}
+
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+
+{%- if uc.inner.long_operation %}
+
+{%- if uc.dto_in %}
+use crate::{{ uc.dto_in.pascal_name }};
+{%- endif %}
+{%- if uc.dto_out %}
+use crate::{{ uc.dto_out.pascal_name }};
+{%- endif %}
+use anyhow::{Result, anyhow};
+use common::entities:: {
+{%- for e_id, entity in uc.entities  %}
+{{ entity.pascal_name }},
+{%- endfor %}
+};
+use common::long_operation::LongOperation;
+use common::types::EntityId;
+use std::path::PathBuf;
+use std::sync::Arc;
+{%- if uc.inner.read_only %}
+use common::database::QueryUnitOfWork;
+{%- else %}
+use common::database::CommandUnitOfWork;
+{%- endif %}
+
+
+pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
+    fn create(&self) -> Box<dyn {{ uc.pascal_name }}UnitOfWorkTrait>;
+}
+
+{%- if uc.inner.read_only %}
+{%- for e_id, entity in uc.entities  %}
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO")]
+{%- endfor %}
+{%- else %}}{# read_only #}
+{%- for e_id, entity in uc.entities  %}
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
+{%- endfor %}
+{%- endif %}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %}QueryUnitOfWork{% else %}CommandUnitOfWork{% endif %} + Send + Sync {}
+
+pub struct {{ uc.pascal_name }}UseCase {
+    uow_factory: Box<dyn {{ uc.pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if uc.dto_in %}
+    dto: {{ uc.dto_in.pascal_name }},
+{%- endif %}
+}
+
+impl {{ uc.pascal_name }}UseCase {
+    pub fn new(
+        uow_factory: Box<dyn {{ uc.pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if uc.dto_in %}
+        dto: &{{ uc.dto_in.pascal_name }},
+{%- endif %}
+    ) -> Self {
+        {{ uc.pascal_name }}UseCase {
+            uow_factory,
+{%- if uc.dto_in %}
+            dto: dto.clone(),
+{%- endif %}
+        }
+    }
+}
+impl LongOperation for {{ uc.pascal_name }}UseCase {
+{%- if uc.dto_out %}
+    type Output = GenerateRustFilesReturnDto;
+{%- endif %}
+
+    fn execute(
+        &self,
+        progress_callback: Box<dyn Fn(common::long_operation::OperationProgress) + Send>,
+        cancel_flag: Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<{% if uc.dto_out %}Self::Output{% else %}(){% endif %}> {
+        use std::fs;
+        use std::sync::atomic::Ordering;
+
+
+        progress_callback(common::long_operation::OperationProgress::new(
+            0.0,
+            Some("Starting...".to_string()),
+        ));
+
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+
+        //TODO: {{ uc.pascal_name }}UseCase to be implemented
+        unimplemented!("{{ uc.pascal_name }}UseCase unimplemented");
+
+        if cancel_flag.load(Ordering::Relaxed) {
+            uow.end_transaction()?;
+            return Err(anyhow!("Operation was cancelled"));
+        }
+
+        {%- if uc.inner.read_only %}
+        uow.end_transaction()?;
+        {%- else %}{# read_only #}
+        uow.commit()?;
+        {%- endif %}{# read_only #}
+
+        // Final progress
+        progress_callback(common::long_operation::OperationProgress::new(
+            100.0,
+            Some("completed".to_string()),
+        ));
+
+        {%- if uc.dto_out %}
+        //Ok({{ uc.dto_out.pascal_name }} {
+        //
+        //})
+        // placeholder to allow compilation
+        Err(anyhow!("Not implemented"))
+        {%- else %}
+        Ok(())
+        {% endif %}
+    }
+}
+
+{%- else %}{# long_operation #}
+
+{%- if uc.dto_in %}
+use crate::{{ uc.dto_in.pascal_name }};
+{%- endif %}
+{%- if uc.dto_out %}
+use crate::{{ uc.dto_out.pascal_name }};
+{%- endif %}
+use anyhow::{Result, anyhow};
+use common::types::EntityId;
+{%- if uc.inner.read_only %}
+use common::database::QueryUnitOfWork;
+{%- else %}
+use common::database::CommandUnitOfWork;
+{%- endif %}
+use common::entities:: {
+{%- for e_id, entity in uc.entities  %}
+{{ entity.pascal_name }},
+{%- endfor %}
+};
+
+pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait : {
+    fn create(&self) -> Box<dyn {{ uc.pascal_name }}UnitOfWorkTrait>;
+}
+
+
+{%- if uc.inner.read_only %}
+{%- for e_id, entity in uc.entities  %}
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO")]
+{%- endfor %}
+{%- else %}{# read_only #}
+{%- for e_id, entity in uc.entities  %}
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
+{%- endfor %}
+{%- endif %}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %} QueryUnitOfWork {% else %} CommandUnitOfWork {% endif %} {}
+
+
+pub struct {{ uc.pascal_name }}UseCase {
+    uow_factory: Box<dyn {{ uc.pascal_name }}UnitOfWorkFactoryTrait>,
+}
+
+impl {{ uc.pascal_name }}UseCase {
+    pub fn new(uow_factory: Box<dyn {{ uc.pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
+        {{ uc.pascal_name }}UseCase { uow_factory }
+    }
+
+    pub fn execute(&mut self {% if uc.dto_in %}, dto: &{{ uc.dto_in.pascal_name }} {% endif %}) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
+
+
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+
+        //TODO: {{ uc.pascal_name }}UseCase to be implemented
+        unimplemented!("{{ uc.pascal_name }}UseCase unimplemented");
+
+        {%- if uc.inner.read_only %}
+        uow.end_transaction()?;
+        {%- else %}{# read_only #}
+        uow.commit()?;
+        {%- endif %}{# read_only #}
+
+        {%- if uc.dto_out %}
+        //Ok({{ uc.dto_out.pascal_name }} {
+        //
+        //})
+        // placeholder to allow compilation
+        Err(anyhow!("Not implemented"))
+        {%- else %}
+        Ok(())
+        {% endif %}
+    }
+
+}
+
+{%- if uc.inner.undoable and not uc.inner.read_only %}
+use std::any::Any;
+use common::undo_redo::UndoRedoCommand;
+impl UndoRedoCommand for CreateGlobalUseCase {
+    fn undo(&mut self) -> Result<()> {
+        //TODO: {{ uc.pascal_name }}UseCase  undo to be implemented
+        unimplemented!("{{ uc.pascal_name }}UseCase undo unimplemented");
+
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        //TODO: {{ uc.pascal_name }}UseCase  redo to be implemented
+        unimplemented!("{{ uc.pascal_name }}UseCase redo unimplemented");
+
+        Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+{%- endif %}
+
+{%- endif %}{# long_operation #}
+
+
+{% else %}
+// No feature bound to this file
+{% endif %}
