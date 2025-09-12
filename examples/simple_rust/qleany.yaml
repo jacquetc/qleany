@@ -4,11 +4,11 @@ schema:
 
 global:
   language: rust
-  application_name: Qleany
+  application_name: SimpleRust
   organisation:
     name: qleany
     domain: qleany.eu
-  prefix_path: qleany
+  prefix_path:
 
 entities:
   - name: EntityBase
@@ -287,11 +287,6 @@ features:
           fields:
             - name: manifest_path
               type: string
-        dto_out:
-          name: LoadReturnDto
-          fields:
-            - name: root_id
-              type: int
       - name: save
         validator: true
         entities:
