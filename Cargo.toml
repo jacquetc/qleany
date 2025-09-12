@@ -8,13 +8,15 @@ members = [
     "crates/cpp_qt_file_generation",
     "crates/python_file_generation",
     "crates/rust_file_generation",
-    "crates/qleany-app/src-tauri",
+    #
+    "crates/svelte_ui/src-tauri",
     "crates/macros"]
 default-members = [
-    "crates/qleany-app/src-tauri"
+    "crates/svelte_ui/src-tauri"
 ]
 exclude = [
-    "crates/tauri-app-svelte/src-tauri"
+    "crates/tauri-app-svelte/src-tauri",
+    "crates/qleany-app/src-tauri",
 ]
 
 resolver = "2"
