@@ -1,7 +1,7 @@
 import {useCallback, useEffect} from 'react';
-import {FieldDTO, FieldType, CreateFieldDTO, fieldService} from '../services/field-service';
+import {CreateFieldDTO, FieldDTO, fieldService, FieldType} from '../services/field-service';
 import {EntityDTO, EntityRelationshipField, entityService} from '../services/entity-service';
-import {EntityEventPayload, directAccessEventService} from '../services/direct-access-event-service.ts';
+import {directAccessEventService, EntityEventPayload} from '../services/direct-access-event-service.ts';
 import {RootRelationshipField, rootService} from '../services/root-service';
 import {error, info} from '@tauri-apps/plugin-log';
 
@@ -30,7 +30,7 @@ export function useFields(entityId: number | null) {
 
                     // Get fields using the IDs
                     const fields = await fieldService.getFieldMulti(fieldIds);
-
+                    info(`Fields fetched for entity ${entityId}: ${fields.length}`);
                     // Filter out null fields
                     return fields.filter((field): field is FieldDTO => field !== null);
                 } else {
@@ -153,7 +153,7 @@ export function useFields(entityId: number | null) {
         },
         onSuccess: () => {
             // Invalidate queries to refetch data
-            queryClient.invalidateQueries({queryKey: ['fields']});
+            queryClient.invalidateQueries({queryKey: ['fields', entityId]});
             info("Field created successfully");
         }
     });
@@ -169,7 +169,7 @@ export function useFields(entityId: number | null) {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['fields']});
+            queryClient.invalidateQueries({queryKey: ['fields', entityId]});
             info("Field updated successfully");
         }
     });
@@ -200,7 +200,7 @@ export function useFields(entityId: number | null) {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['fields']});
+            queryClient.invalidateQueries({queryKey: ['fields', entityId]});
             info("Field removed successfully");
         }
     });
@@ -238,7 +238,7 @@ export function useFields(entityId: number | null) {
         // Handler for reset events
         const handleReset = () => {
             info(`All reset event received`);
-            queryClient.invalidateQueries({queryKey: ['fields']});
+            queryClient.invalidateQueries({queryKey: ['fields', entityId]});
         };
 
         // Subscribe to field events

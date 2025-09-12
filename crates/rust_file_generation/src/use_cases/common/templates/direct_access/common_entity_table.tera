@@ -53,13 +53,26 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         {%- endfor %}
 
         for entity in entities {
-            let new_entity = if entity.id == EntityId::default() { {{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() } } else { if {{ s.entities[e].snake_name }}_table.get(&entity.id)?.is_some() { panic!("{{ s.entities[e].pascal_name }} id already in use while creating it: {:?}", entity.id); } entity.clone() };
+            let new_entity = if entity.id == EntityId::default() {
+            {{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() }
+            }
+            else {
+                if {{ s.entities[e].snake_name }}_table.get(&entity.id)?.is_some() {
+                return Err(Error::TableDoesNotExist(format!("UseCase id {} already in use", &entity.id).to_string(), ));
+                }
+            entity.clone()
+            };
             {% if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{% endif %}
             {{ s.entities[e].snake_name }}_table.insert(new_entity.id, new_entity.clone())?;
             {% for rid, r in s.entities[e].forward_relationships %}
             {{ r.field_name }}_junction_table.insert(new_entity.id, {
-                // if list store list, else store single or empty vec
-                {% if r.cardinality == "ZeroOrMore" or r.cardinality == "OneOrMore" %} new_entity.{{ r.field_name }}.clone(){% else %} vec![new_entity.{{ r.field_name }}]as Vec<EntityId> {% endif %}
+                {% if r.cardinality == "ZeroOrMore" or r.cardinality == "OneOrMore" %}
+                new_entity.{{ r.field_name }}.clone()
+                {%- elif r.cardinality == "One" %}
+                vec![new_entity.{{ r.field_name }}] as Vec<EntityId>
+                {%- elif r.cardinality == "ZeroOrOne" %}
+                new_entity.{{ r.field_name }}.clone().into_iter().collect::<Vec<EntityId>>()
+                {%- endif %}
             })?;
             {%- endfor %}
             created.push(new_entity);
@@ -77,34 +90,26 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         {%- endfor %}
 
         if ids.is_empty() {
-            let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
-            let mut count = 0;
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 { break; }
-                let id = id.value();
-                let mut entity = data.value().clone();
+        return Ok(list);
+        }
+        for id in ids {
+            let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
-                let vals = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-                {% if f.is_list %} entity.{{ f.snake_name }} = vals; {% else %} entity.{{ f.snake_name }} = vals.first().expect("{{ s.entities[e].snake_name }} has no {{ f.snake_name }}").clone(); {% endif %}
+                {% if f.is_list %}
+                let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                 {% elif f.is_nullable %}
+                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                 {% else %}
+                 let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
+                 {% endif %}
+                 entity.{{ f.snake_name }} = {{ f.snake_name }};
                 {% endif %}
                 {% endfor %}
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
-                    {% for f in s.entities[e].fields %}
-                    {% if f.inner.field_type == "Entity" %}
-                    let vals = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% if f.is_list %} entity.{{ f.snake_name }} = vals; {% else %} entity.{{ f.snake_name }} = vals.first().expect("{{ s.entities[e].snake_name }} has no {{ f.snake_name }}").clone(); {% endif %}
-                    {% endif %}
-                    {% endfor %}
-                    Some(entity) } else { None };
-                list.push(item);
-            }
+                Some(entity) } else { None };
+            list.push(item);
         }
+
         Ok(list)
     }
 
@@ -118,10 +123,17 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         for entity in entities {
             {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
             {% for f in s.entities[e].fields %}
-            {% if f.inner.field_type == "Entity" %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { {% if f.is_list %} entity.{{ f.snake_name }}.clone() {% else %} vec![entity.{{ f.snake_name }}] as Vec<EntityId> {% endif %} })?;
-            {% endif %}
-            {% endfor %}
+            {%- if f.inner.field_type == "Entity" %}
+            {%- if f.is_list %}
+            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone() 
+            {% elif f.is_nullable %}
+            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()
+            {% else %}
+            {{ f.snake_name }}_junction_table.insert(entity.id, { vec![entity.{{ f.snake_name }}] as Vec<EntityId>
+             })?;
+            {%- endif %}
+            {%- endif %}
+            {%- endfor %}
             updated.push(entity.clone());
         }
         Ok(updated)
@@ -197,34 +209,26 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         {%- endfor %}
 
         if ids.is_empty() {
-            let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
-            let mut count = 0;
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 { break; }
-                let id = id.value();
-                let mut entity = data.value().clone();
+        return Ok(list);
+        }
+        for id in ids {
+            let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
-                let vals = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-                {% if f.is_list %} entity.{{ f.snake_name }} = vals; {% else %} entity.{{ f.snake_name }} = vals.first().expect("{{ s.entities[e].snake_name }} has no {{ f.snake_name }}").clone(); {% endif %}
+                {% if f.is_list %}
+                let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                 {% elif f.is_nullable %}
+                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                 {% else %}
+                 let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
+                 {% endif %}
+                 entity.{{ f.snake_name }} = {{ f.snake_name }};
                 {% endif %}
                 {% endfor %}
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
-                    {% for f in s.entities[e].fields %}
-                    {% if f.inner.field_type == "Entity" %}
-                    let vals = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% if f.is_list %} entity.{{ f.snake_name }} = vals; {% else %} entity.{{ f.snake_name }} = vals.first().expect("{{ s.entities[e].snake_name }} has no {{ f.snake_name }}").clone(); {% endif %}
-                    {% endif %}
-                    {% endfor %}
-                    Some(entity) } else { None };
-                list.push(item);
-            }
+                Some(entity) } else { None };
+            list.push(item);
         }
+
         Ok(list)
     }
 

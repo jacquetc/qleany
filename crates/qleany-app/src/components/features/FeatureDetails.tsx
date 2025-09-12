@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Stack, TextInput, Title } from '@mantine/core';
+import { useEffect, useState, useRef } from 'react';
+import { Alert, Stack, TextInput, Title } from '@mantine/core';
+import { error, info } from '@tauri-apps/plugin-log';
 import { useFeatureContext } from '@/contexts/FeatureContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
@@ -23,19 +24,45 @@ const FeatureDetails = () => {
         name: '',
     });
 
+    // Refs for debouncing
+    const saveTimeoutRef = useRef<number | null>(null);
+    const isLoadingDataRef = useRef(false);
+
     // Update form data when feature changes
     useEffect(() => {
         if (feature) {
+            // Flag that we're loading data from external source
+            isLoadingDataRef.current = true;
+            
             setFormData({
                 name: feature.name,
             });
+            
+            // Reset flag after a brief timeout to allow state update to complete
+            setTimeout(() => {
+                isLoadingDataRef.current = false;
+            }, 0);
         }
     }, [feature]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Add auto-save effect with debouncing
+    useEffect(() => {
+        if (isLoadingFeatures) return;
+        if (!feature) return; // Skip if feature data hasn't loaded yet
+        if (isLoadingDataRef.current) return; // Skip if formData change is from external data loading
 
-        if (feature) {
+        // Check if formData actually differs from the current feature
+        const hasChanges = (
+            formData.name !== feature.name
+        );
+
+        if (!hasChanges) return; // Skip if no actual changes
+
+        if (saveTimeoutRef.current) {
+            window.clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = window.setTimeout(async () => {
             try {
                 // Update the feature with the form data
                 const updatedFeature = {
@@ -45,11 +72,19 @@ const FeatureDetails = () => {
 
                 // Call the context's update function
                 updateFeature(updatedFeature);
+                info("Feature updated successfully");
             } catch (err) {
-                // Error handling is done in the hook
+                error(`Failed to update feature: ${err}`);
             }
-        }
-    };
+        }, 500);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                window.clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [formData, feature, isLoadingFeatures, updateFeature]);
+
 
     // Custom fallback component for error state
     const errorFallback = (
@@ -88,17 +123,18 @@ const FeatureDetails = () => {
     return (
         <ErrorBoundary fallback={errorFallback}>
             <Title order={2}>"{formData.name}" details</Title>
-            <form onSubmit={handleSubmit}>
-                <Stack>
-                    <TextInput
-                        id="featureName"
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
-                    <Button type="submit">Save Changes</Button>
-                </Stack>
-            </form>
+            <Stack>
+                <TextInput
+                    id="featureName"
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => {
+                        const newName = e.target.value;
+                        setFormData({...formData, name: newName});
+                    }}
+                    disabled={isLoadingFeatures}
+                />
+            </Stack>
         </ErrorBoundary>
     );
 };

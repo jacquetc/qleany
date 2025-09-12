@@ -30,6 +30,8 @@ export interface CreateFieldDTO {
     ordered: boolean;
     list_model: boolean;
     list_model_displayed_field: string | null;
+    enum_name: string | null;
+    enum_values: string[] | null;
 }
 
 export interface FieldDTO {
@@ -45,6 +47,8 @@ export interface FieldDTO {
     ordered: boolean;
     list_model: boolean;
     list_model_displayed_field: string | null;
+    enum_name: string | null;
+    enum_values: string[] | null;
 }
 
 /**

@@ -99,7 +99,7 @@ export function useHandlingManifest() {
                     manifest_path: filePath
                 };
 
-                await handlingManifestService.loadManifest(dto);
+                const returnDTO = await handlingManifestService.loadManifest(dto);
                 info(`Manifest loaded: ${filePath}`);
 
                 // Note: The actual status update will come from the event subscription
@@ -108,13 +108,17 @@ export function useHandlingManifest() {
                     ...prev,
                     path: filePath
                 }));
+                sessionStorage.setItem("rootId", returnDTO.root_id.toString());
+                return returnDTO;
             }
+            return null
         } catch (err) {
             const errorMsg = `Failed to open manifest: ${err}`;
             error(errorMsg);
             setErrorMessage(errorMsg);
         } finally {
             setIsLoading(false);
+            return null
         }
     }, []);
 

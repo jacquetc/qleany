@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useState} from 'react';
+import React, {createContext, useContext, useState, useEffect} from 'react';
 import {Alert} from '@mantine/core';
 import {error as logError} from '@tauri-apps/plugin-log';
 import {useFeatures} from '../hooks/useFeatures';
@@ -223,6 +223,22 @@ export function FeatureProvider({rootId, children}: FeatureProviderProps) {
         removeDtoField,
         refetch: refetchDtoFields
     } = dtoFieldsData;
+
+    // Keep track of the previous features count to detect new feature creation
+    const [previousFeaturesCount, setPreviousFeaturesCount] = useState(0);
+
+    // Effect to automatically select newly created features
+    useEffect(() => {
+        if (features.length > previousFeaturesCount && previousFeaturesCount > 0) {
+            // A new feature was created, select the latest one (assuming it has the highest ID)
+            const latestFeature = [...features].sort((a, b) => b.id - a.id)[0];
+            if (latestFeature) {
+                setSelectedFeatureId(latestFeature.id);
+                setSelectedUseCaseId(null); // Reset selected use case when feature changes
+            }
+        }
+        setPreviousFeaturesCount(features.length);
+    }, [features, previousFeaturesCount]);
 
     // Function to select a feature
     const selectFeature = (featureId: number | null) => {

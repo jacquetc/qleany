@@ -9,8 +9,8 @@ use common::{
     },
 };
 
-use crate::LoadDto;
 use crate::use_cases::common::model_structs;
+use crate::{LoadDto, LoadReturnDto};
 
 pub trait LoadUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;
@@ -41,7 +41,7 @@ impl LoadUseCase {
         LoadUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: &LoadDto) -> Result<()> {
+    pub fn execute(&mut self, dto: &LoadDto) -> Result<LoadReturnDto> {
         // load file
         let path = &dto.manifest_path;
         let filename = path.clone();
@@ -389,6 +389,6 @@ impl LoadUseCase {
 
         uow.commit()?;
 
-        Ok(())
+        Ok(LoadReturnDto { root_id })
     }
 }

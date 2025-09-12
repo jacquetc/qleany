@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Checkbox, Stack, Tabs, TextInput, Title } from '@mantine/core';
+import { useEffect, useState, useRef } from 'react';
+import { Alert, Checkbox, Stack, Tabs, TextInput, Title } from '@mantine/core';
 import { error, info } from '@tauri-apps/plugin-log';
 import { useFeatureContext } from '@/contexts/FeatureContext';
 import { UseCaseDTO, UseCaseRelationshipField } from '@/services/use-case-service';
@@ -40,9 +40,16 @@ const UseCaseDetails = () => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<string | null>("details");
 
+    // Refs for debouncing
+    const saveTimeoutRef = useRef<number | null>(null);
+    const isLoadingDataRef = useRef(false);
+
     // Update form data when use case changes
     useEffect(() => {
         if (useCase) {
+            // Flag that we're loading data from external source
+            isLoadingDataRef.current = true;
+            
             setFormData({
                 name: useCase.name,
                 validator: useCase.validator,
@@ -51,48 +58,77 @@ const UseCaseDetails = () => {
                 dto_out: useCase.dto_out,
             });
             setSelectedEntities(useCase.entities);
+            
+            // Reset flag after a brief timeout to allow state update to complete
+            setTimeout(() => {
+                isLoadingDataRef.current = false;
+            }, 0);
         }
     }, [useCase]);
+
+    // Add auto-save effect with debouncing
+    useEffect(() => {
+        if (isLoadingUseCases) return;
+        if (!useCase) return; // Skip if use case data hasn't loaded yet
+        if (isLoadingDataRef.current) return; // Skip if formData change is from external data loading
+
+        // Check if formData actually differs from the current use case
+        const hasChanges = (
+            formData.name !== useCase.name ||
+            formData.validator !== useCase.validator ||
+            formData.undoable !== useCase.undoable ||
+            formData.dto_in !== useCase.dto_in ||
+            formData.dto_out !== useCase.dto_out ||
+            JSON.stringify(selectedEntities) !== JSON.stringify(useCase.entities)
+        );
+
+        if (!hasChanges) return; // Skip if no actual changes
+
+        if (saveTimeoutRef.current) {
+            window.clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = window.setTimeout(async () => {
+            setLoading(true);
+            try {
+                // Update the use case with the form data
+                const updatedUseCase: UseCaseDTO = {
+                    ...useCase,
+                    name: formData.name,
+                    validator: formData.validator,
+                    undoable: formData.undoable,
+                    dto_in: formData.dto_in,
+                    dto_out: formData.dto_out,
+                    entities: selectedEntities,
+                };
+
+                // Call the context's update function
+                updateUseCase(updatedUseCase);
+                
+                info("Use Case updated successfully");
+            } catch (err) {
+                error(`Failed to update use case: ${err}`);
+            } finally {
+                setLoading(false);
+            }
+        }, 500);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                window.clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [formData, selectedEntities, useCase, isLoadingUseCases, updateUseCase]);
 
     // TODO: Fetch entities for the entity dropdown
     // This would need to be moved to a custom hook or context
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!useCase) return;
-
-        try {
-            setLoading(true);
-            
-            // Update the use case with the form data
-            const updatedUseCase: UseCaseDTO = {
-                ...useCase,
-                name: formData.name,
-                validator: formData.validator,
-                undoable: formData.undoable,
-                dto_in: formData.dto_in,
-                dto_out: formData.dto_out,
-                entities: selectedEntities, // Include the selected entities
-            };
-
-            // Call the context's update function
-            updateUseCase(updatedUseCase);
-            
-            info("Use Case updated successfully");
-        } catch (err) {
-            error(`Failed to update use case: ${err}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleEntityChange = (entityId: number, checked: boolean) => {
-        if (checked) {
-            setSelectedEntities(prev => [...prev, entityId]);
-        } else {
-            setSelectedEntities(prev => prev.filter(id => id !== entityId));
-        }
+        const newSelectedEntities = checked 
+            ? [...selectedEntities, entityId]
+            : selectedEntities.filter(id => id !== entityId);
+        
+        setSelectedEntities(newSelectedEntities);
     };
 
     // Custom fallback component for error state
@@ -140,61 +176,74 @@ const UseCaseDetails = () => {
 
                 <Tabs.Panel value="details">
                     <Title order={2}>"{formData.name}" details</Title>
-                    <form onSubmit={handleSubmit}>
+                    <Stack>
+                        <TextInput
+                            id="useCaseName"
+                            label="Name"
+                            value={formData.name}
+                            onChange={(e) => {
+                                const newName = e.target.value;
+                                setFormData({...formData, name: newName});
+                            }}
+                            disabled={loading}
+                        />
+
+                        <Checkbox
+                            id="useCaseValidator"
+                            label="Validator"
+                            checked={formData.validator}
+                            onChange={(e) => {
+                                const newValidator = e.target.checked;
+                                setFormData({...formData, validator: newValidator});
+                            }}
+                            disabled={loading}
+                        />
+
+                        <Checkbox
+                            id="useCaseUndoable"
+                            label="Undoable"
+                            checked={formData.undoable}
+                            onChange={(e) => {
+                                const newUndoable = e.target.checked;
+                                setFormData({...formData, undoable: newUndoable});
+                            }}
+                            disabled={loading}
+                        />
+
+                        <Title order={4}>Entities</Title>
                         <Stack>
-                            <TextInput
-                                id="useCaseName"
-                                label="Name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            />
-
-                            <Checkbox
-                                id="useCaseValidator"
-                                label="Validator"
-                                checked={formData.validator}
-                                onChange={(e) => setFormData({...formData, validator: e.target.checked})}
-                            />
-
-                            <Checkbox
-                                id="useCaseUndoable"
-                                label="Undoable"
-                                checked={formData.undoable}
-                                onChange={(e) => setFormData({...formData, undoable: e.target.checked})}
-                            />
-
-                            <Title order={4}>Entities</Title>
-                            <Stack>
-                                {entities.map(entity => (
-                                    <Checkbox
-                                        key={entity.id}
-                                        id={`entity-${entity.id}`}
-                                        label={entity.name}
-                                        checked={selectedEntities.includes(entity.id)}
-                                        onChange={(e) => handleEntityChange(entity.id, e.target.checked)}
-                                    />
-                                ))}
-                            </Stack>
-
-                            <DtoSelector
-                                label="DTO In"
-                                value={formData.dto_in}
-                                useCaseId={selectedUseCaseId}
-                                isDtoOut={false}
-                                onChange={(dtoId) => setFormData({...formData, dto_in: dtoId})}
-                            />
-
-                            <DtoSelector
-                                label="DTO Out"
-                                value={formData.dto_out}
-                                useCaseId={selectedUseCaseId}
-                                isDtoOut={true}
-                                onChange={(dtoId) => setFormData({...formData, dto_out: dtoId})}
-                            />
-
-                            <Button type="submit" loading={loading}>Save Changes</Button>
+                            {entities.map(entity => (
+                                <Checkbox
+                                    key={entity.id}
+                                    id={`entity-${entity.id}`}
+                                    label={entity.name}
+                                    checked={selectedEntities.includes(entity.id)}
+                                    onChange={(e) => handleEntityChange(entity.id, e.target.checked)}
+                                    disabled={loading}
+                                />
+                            ))}
                         </Stack>
-                    </form>
+
+                        <DtoSelector
+                            label="DTO In"
+                            value={formData.dto_in}
+                            useCaseId={selectedUseCaseId}
+                            isDtoOut={false}
+                            onChange={(dtoId) => {
+                                setFormData({...formData, dto_in: dtoId});
+                            }}
+                        />
+
+                        <DtoSelector
+                            label="DTO Out"
+                            value={formData.dto_out}
+                            useCaseId={selectedUseCaseId}
+                            isDtoOut={true}
+                            onChange={(dtoId) => {
+                                setFormData({...formData, dto_out: dtoId});
+                            }}
+                        />
+                    </Stack>
                 </Tabs.Panel>
 
                 {formData.dto_in !== null && (

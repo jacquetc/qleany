@@ -1,7 +1,7 @@
 import {useCallback, useEffect} from 'react';
 import {UseCaseDTO, useCaseService} from '../services/use-case-service';
 import {FeatureRelationshipField, featureService} from '../services/feature-service';
-import {EntityEventPayload, directAccessEventService} from '../services/direct-access-event-service.ts';
+import {directAccessEventService, EntityEventPayload} from '../services/direct-access-event-service.ts';
 import {error, info} from '@tauri-apps/plugin-log';
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
@@ -56,6 +56,8 @@ export function useUseCases(featureId: number | null) {
             const dto = {
                 name: 'New Use Case',
                 validator: false,
+                read_only: false,
+                long_operation: false,
                 entities: [],
                 undoable: false,
                 dto_in: null,
@@ -84,7 +86,7 @@ export function useUseCases(featureId: number | null) {
         },
         onSuccess: () => {
             // Invalidate queries to refetch data
-            queryClient.invalidateQueries({queryKey: ['useCases']});
+            queryClient.invalidateQueries({queryKey: ['useCases', featureId]});
             info("Use case created successfully");
         }
     });
@@ -100,7 +102,7 @@ export function useUseCases(featureId: number | null) {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['useCases']});
+            queryClient.invalidateQueries({queryKey: ['useCases', featureId]});
             info("Use case updated successfully");
         }
     });
@@ -124,7 +126,7 @@ export function useUseCases(featureId: number | null) {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['useCases']});
+            queryClient.invalidateQueries({queryKey: ['useCases', featureId]});
             info("Use cases reordered successfully");
         }
     });
@@ -162,7 +164,7 @@ export function useUseCases(featureId: number | null) {
         // Handler for reset events
         const handleReset = () => {
             info(`All reset event received`);
-            queryClient.invalidateQueries({queryKey: ['useCases']});
+            queryClient.invalidateQueries({queryKey: ['useCases', featureId]});
         };
 
         // Subscribe to use case events

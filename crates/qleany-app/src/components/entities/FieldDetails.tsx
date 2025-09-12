@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Button, Checkbox, Select, Stack, TextInput, Title, Alert} from '@mantine/core';
+import {Button, Checkbox, Select, Stack, TextInput, Title, Alert, Textarea} from '@mantine/core';
 import {error, info} from '@tauri-apps/plugin-log';
 import {useEntityContext} from '@/contexts/EntityContext';
 import {FieldDTO, FieldType} from '@/services/field-service';
@@ -31,6 +31,8 @@ const FieldDetails = () => {
         ordered: boolean;
         list_model: boolean;
         list_model_displayed_field: string | null;
+        enum_name: string | null;
+        enum_values: string[] | null;
     }>({
         name: '',
         field_type: FieldType.String,
@@ -43,6 +45,8 @@ const FieldDetails = () => {
         ordered: false,
         list_model: false,
         list_model_displayed_field: null,
+        enum_name: null,
+        enum_values: null,
     });
 
     // Find the selected field from the fields array
@@ -65,6 +69,8 @@ const FieldDetails = () => {
                 ordered: selectedField.ordered,
                 list_model: selectedField.list_model,
                 list_model_displayed_field: selectedField.list_model_displayed_field,
+                enum_name: selectedField.enum_name,
+                enum_values: selectedField.enum_values,
             });
         } else {
             // Reset form data if no field is selected
@@ -80,6 +86,8 @@ const FieldDetails = () => {
                 ordered: false,
                 list_model: false,
                 list_model_displayed_field: null,
+                enum_name: null,
+                enum_values: null,
             });
         }
     }, [selectedField, fields]);
@@ -103,6 +111,8 @@ const FieldDetails = () => {
                 ordered: updates.ordered !== undefined ? updates.ordered : formData.ordered,
                 list_model: updates.list_model !== undefined ? updates.list_model : formData.list_model,
                 list_model_displayed_field: updates.list_model_displayed_field !== undefined ? updates.list_model_displayed_field : formData.list_model_displayed_field,
+                enum_name: updates.enum_name !== undefined ? updates.enum_name : formData.enum_name,
+                enum_values: updates.enum_values !== undefined ? updates.enum_values : formData.enum_values,
             };
 
             // Use the updateField function from the useFields hook
@@ -206,6 +216,38 @@ const FieldDetails = () => {
                         ]}
                         disabled={isLoadingFields}
                     />
+                )}
+
+                {formData.field_type === FieldType.Enum && (
+                    <>
+                        <TextInput
+                            id="fieldEnumName"
+                            label="Enum Name"
+                            placeholder="Enter enum name"
+                            value={formData.enum_name || ''}
+                            onChange={(e) => {
+                                const newValue = e.target.value || null;
+                                setFormData({...formData, enum_name: newValue});
+                                handleFieldUpdate({enum_name: newValue});
+                            }}
+                            disabled={isLoadingFields}
+                        />
+
+                        <Textarea
+                            id="fieldEnumValues"
+                            label="Enum Values"
+                            placeholder="Enter enum values, one per line"
+                            value={formData.enum_values ? formData.enum_values.join('\n') : ''}
+                            onChange={(e) => {
+                                const values = e.target.value.split('\n').filter(v => v.trim() !== '');
+                                const newValue = values.length > 0 ? values : null;
+                                setFormData({...formData, enum_values: newValue});
+                                handleFieldUpdate({enum_values: newValue});
+                            }}
+                            disabled={isLoadingFields}
+                            rows={4}
+                        />
+                    </>
                 )}
 
                 <Checkbox
