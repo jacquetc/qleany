@@ -211,7 +211,7 @@ export function useHandlingManifest() {
         });
 
         try {
-            const manifestPath = "C:\\Users\\cyril\\Devel\\qleany\\qleany.yaml";
+            const manifestPath = "../../../qleany.yaml";
             const dto: LoadManifestDTO = {
                 manifest_path: manifestPath
             };
