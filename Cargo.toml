@@ -9,14 +9,16 @@ members = [
     "crates/python_file_generation",
     "crates/rust_file_generation",
     #
-    "crates/svelte_ui/src-tauri",
+    #"crates/svelte_ui/src-tauri",
+    "crates/qleany-app/src-tauri",
     "crates/macros"]
 default-members = [
-    "crates/svelte_ui/src-tauri"
+    #"crates/svelte_ui/src-tauri",
+    "crates/qleany-app/src-tauri",
 ]
 exclude = [
+    "crates/svelte_ui/src-tauri",
     "crates/tauri-app-svelte/src-tauri",
-    "crates/qleany-app/src-tauri",
 ]
 
 resolver = "2"
