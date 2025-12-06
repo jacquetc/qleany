@@ -55,22 +55,6 @@ const Features = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [loadError, setLoadError] = useState<string | null>(null);
 
-    // Function to get the root ID
-    async function getRootId() {
-        try {
-            const roots = await rootService.getRootMulti([]);
-            info(`Root ID initialized: ${JSON.stringify(roots)}`);
-            if (roots.length > 0 && roots[0] !== null) {
-                setRootId(roots[0]!.id);
-                return roots[0]!.id;
-            }
-            return null;
-        } catch (err) {
-            error(`Error getting root ID: ${err}`);
-            throw err;
-        }
-    }
-
     // Initialize root ID on component mount
     useEffect(() => {
         setIsLoading(true);
@@ -78,12 +62,14 @@ const Features = () => {
 
         const fetchData = async () => {
             try {
-                const rootId = await getRootId(); // Initialize rootId
+                const rootIdFromStorage = sessionStorage.getItem("rootId");
+                const rootId = rootIdFromStorage ? parseInt(rootIdFromStorage, 10) : null;
                 if (!rootId) {
                     setLoadError("No root found. Please create a root first.");
                     setIsLoading(false);
                     return;
                 }
+                setRootId(rootId);
                 setIsLoading(false);
             } catch (err) {
                 const errorMessage = `Failed to fetch data: ${err}`;

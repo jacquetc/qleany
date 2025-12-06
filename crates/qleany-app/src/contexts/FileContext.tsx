@@ -2,6 +2,7 @@ import React, {createContext, useContext, useEffect, useState} from 'react';
 import {Alert} from '@mantine/core';
 import {error as logError} from '@tauri-apps/plugin-log';
 import {useFiles} from '../hooks/useFiles';
+import {useRoot} from '../hooks/useRoot';
 import {GroupItem, useGroups} from '../hooks/useGroups';
 import {FileDTO} from '../services/file-service';
 import {QueryObserverResult, RefetchOptions} from '@tanstack/react-query';
@@ -23,6 +24,9 @@ interface FileContextValue {
     checkedGroups: string[];
     isLoadingGroups: boolean;
     groupError: unknown;
+
+    // common data
+    rootPath: string | null;
 
     // Hook error
     hookError: Error | null;
@@ -138,7 +142,6 @@ export function FileProvider({rootId, children}: FileProviderProps) {
         logError(errorMessage);
         setHookError(err instanceof Error ? err : new Error('Unknown error in useGroups hook'));
     }
-
     const {
         files,
         isLoading: isLoadingFiles,
@@ -153,6 +156,11 @@ export function FileProvider({rootId, children}: FileProviderProps) {
         error: groupError,
         getFilesInGroup
     } = groupsData;
+
+    // Resolve rootPath from the current root entity
+    const { root } = useRoot(rootId);
+    const rootPath = root?.manifest_absolute_path ?? null;
+
 
     // Effect to validate selectedFileId when files change
     useEffect(() => {
@@ -261,6 +269,9 @@ export function FileProvider({rootId, children}: FileProviderProps) {
         checkedGroups,
         isLoadingGroups,
         groupError,
+
+        // Common data
+        rootPath,
 
         // Hook error
         hookError,

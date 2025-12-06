@@ -15,7 +15,6 @@ const ProjectContent = () => {
     // Language options
     const languageOptions = [
         {value: 'Rust', label: 'Rust'},
-        {value: 'C++', label: 'C++'},
         {value: 'C++ / Qt', label: 'C++ / Qt'},
         {value: 'Python', label: 'Python'},
     ];

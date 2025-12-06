@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Divider, Stack, TextInput, Title } from '@mantine/core';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Divider, Stack, TextInput, Title } from '@mantine/core';
 import { error, info } from '@tauri-apps/plugin-log';
 import { useFeatureContext } from '@/contexts/FeatureContext';
 import { DtoDTO } from '@/services/dto-service';
@@ -31,41 +31,68 @@ const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
     });
 
     const [selectedDtoField, setSelectedDtoField] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
+
+    // Refs for debouncing
+    const saveTimeoutRef = useRef<number | null>(null);
+    const isLoadingDataRef = useRef(false);
 
     // Update form data when DTO changes
     useEffect(() => {
         if (dto) {
+            // Flag that we're loading data from external source
+            isLoadingDataRef.current = true;
+
             setFormData({
                 name: dto.name,
             });
+
+            // Reset flag after a brief timeout to allow state update to complete
+            setTimeout(() => {
+                isLoadingDataRef.current = false;
+            }, 0);
         }
     }, [dto]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Add auto-save effect with debouncing
+    useEffect(() => {
+        if (isLoadingDtos) return;
+        if (!dto) return; // Skip if dto data hasn't loaded yet
+        if (isLoadingDataRef.current) return; // Skip if formData change is from external data loading
 
-        if (!dto) return;
+        // Check if formData actually differs from the current dto
+        const hasChanges = (
+            formData.name !== dto.name
+        );
 
-        try {
-            setLoading(true);
-            
-            // Update the DTO with the form data
-            const updatedDto: DtoDTO = {
-                ...dto,
-                name: formData.name,
-            };
+        if (!hasChanges) return; // Skip if no actual changes
 
-            // Call the context's update function
-            updateDto(updatedDto);
-            
-            info("DTO updated successfully");
-        } catch (err) {
-            error(`Failed to update DTO: ${err}`);
-        } finally {
-            setLoading(false);
+        if (saveTimeoutRef.current) {
+            window.clearTimeout(saveTimeoutRef.current);
         }
-    };
+
+        saveTimeoutRef.current = window.setTimeout(async () => {
+            try {
+                // Update the DTO with the form data
+                const updatedDto: DtoDTO = {
+                    ...dto,
+                    name: formData.name,
+                };
+
+                // Call the context's update function
+                updateDto(updatedDto);
+
+                info("DTO updated successfully");
+            } catch (err) {
+                error(`Failed to update DTO: ${err}`);
+            }
+        }, 500);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                window.clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [formData, dto, isLoadingDtos, updateDto]);
 
     // Custom fallback component for error state
     const errorFallback = (
@@ -104,18 +131,15 @@ const DtoDetails = ({ selectedDto }: DtoDetailsProps) => {
     return (
         <ErrorBoundary fallback={errorFallback}>
             <Title order={2}>"{formData.name}" details</Title>
-            <form onSubmit={handleSubmit}>
-                <Stack>
-                    <TextInput
-                        id="dtoName"
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
-
-                    <Button type="submit" loading={loading}>Save Changes</Button>
-                </Stack>
-            </form>
+            <Stack>
+                <TextInput
+                    id="dtoName"
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    disabled={isLoadingDtos}
+                />
+            </Stack>
 
             <Divider my="md"/>
 

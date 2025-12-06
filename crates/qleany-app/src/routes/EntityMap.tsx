@@ -817,28 +817,12 @@ const EntityMapFlow = () => {
 const EntityMap = () => {
     const [rootId, setRootId] = useState<number | null>(null);
 
-
-    // Function to get the root ID
-    async function getRootId() {
-        try {
-            const roots = await rootService.getRootMulti([]);
-            info(`Root ID initialized: ${JSON.stringify(roots)}`);
-            if (roots.length > 0 && roots[0] !== null) {
-                setRootId(roots[0]!.id);
-                return roots[0]!.id;
-            }
-            return null;
-        } catch (err) {
-            error(`Error getting root ID: ${err}`);
-            throw err;
-        }
-    }
-
     // Initialize root ID on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const rootId = await getRootId(); // Initialize rootId
+                const rootIdFromStorage = sessionStorage.getItem("rootId");
+                const rootId = rootIdFromStorage ? parseInt(rootIdFromStorage, 10) : null;
                 if (!rootId) {
                     error("No root found. Please create a root first.");
                     return;

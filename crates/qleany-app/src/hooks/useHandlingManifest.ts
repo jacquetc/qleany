@@ -216,7 +216,7 @@ export function useHandlingManifest() {
                 manifest_path: manifestPath
             };
 
-            await handlingManifestService.loadManifest(dto);
+            const returnDTO = await handlingManifestService.loadManifest(dto);
             info("Qleany manifest loaded successfully");
 
             // Note: The actual status update will come from the event subscription
@@ -225,6 +225,7 @@ export function useHandlingManifest() {
                 ...prev,
                 path: manifestPath
             }));
+            sessionStorage.setItem("rootId", returnDTO.root_id.toString());
         } catch (err) {
             const errorMsg = `Failed to open Qleany manifest: ${err}`;
             error(errorMsg);

@@ -13,14 +13,16 @@ import {undoRedoService} from "#services/undo-redo-service.ts";
  *
  * @param rootId The ID of the root entity to fetch (defaults to 1)
  */
-export function useRoot(rootId: number = 1) {
+export function useRoot(rootId: number | null) {
   const queryClient = useQueryClient();
 
   // Query for fetching root entity
   const rootQuery = useQuery({
     queryKey: ['root', rootId],
     queryFn: async () => {
-      try {
+        if (!rootId) return null;
+
+        try {
         // Get root entity
         const rootData = await rootService.getRoot(rootId);
         return rootData;

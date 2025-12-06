@@ -14,7 +14,6 @@ import {
     Title
 } from '@mantine/core';
 import {error} from '@tauri-apps/plugin-log';
-import {useRoot} from '@/hooks/useRoot';
 import {useRustFileGeneration} from '@/hooks/useRustFileGeneration';
 import GroupList from '@/components/generate/GroupList';
 import FileList from '@/components/generate/FileList';
@@ -25,7 +24,6 @@ import {longOperationService} from '@/services/long-operation-service';
 
 // GenerateButton component that has access to FileContext
 const GenerateButton = ({
-                            root,
                             inTempDir,
                             isGenerating,
                             setIsGenerating,
@@ -33,7 +31,6 @@ const GenerateButton = ({
                             setProgress,
                             setOperationId
                         }: {
-    root: any;
     inTempDir: boolean;
     isGenerating: boolean;
     setIsGenerating: (value: boolean) => void;
@@ -41,11 +38,11 @@ const GenerateButton = ({
     setProgress: (value: { percentage: number; message: string | null }) => void;
     setOperationId: (value: string | null) => void;
 }) => {
-    const {checkedFileIds} = useFileContext();
+    const {checkedFileIds, rootPath} = useFileContext();
 
     // Handle generate files
     const handleGenerate = async () => {
-        if (!root) return;
+        if (!rootPath) return;
 
         setIsGenerating(true);
         setModalOpened(true);
@@ -55,7 +52,7 @@ const GenerateButton = ({
             // Call generateRustFiles with appropriate parameters
             const opId = await rustFileGenerationService.generateRustFiles({
                 file_ids: checkedFileIds,
-                root_path: root.manifest_absolute_path,
+                root_path: rootPath,
                 prefix: inTempDir ? 'temp/' : ''
             });
 
@@ -256,8 +253,6 @@ const CodeDisplay = ({
 };
 
 const Generate = () => {
-    // Use the root hook to get the root entity
-    const {root, isLoading: isLoadingRoot, error: rootError} = useRoot();
 
     // Use the rust file generation hook
     const {
@@ -275,18 +270,18 @@ const Generate = () => {
     const [operationId, setOperationId] = useState<string | null>(null);
     const [progress, setProgress] = useState({percentage: 0, message: null as string | null});
     const [modalOpened, setModalOpened] = useState(false);
-
-    // Memoize rootId to prevent FileProvider from unmounting/remounting during state changes
-    const stableRootId = useMemo(() => {
-        return root?.id || null;
-    }, [root?.id]);
+    const [rootId, setRootId] = useState<number | null>(null);
 
     // Initialize on component mount
     useEffect(() => {
         const initializeData = async () => {
             try {
+
+                const rootIdFromStorage = sessionStorage.getItem("rootId");
+                const rootId = rootIdFromStorage ? parseInt(rootIdFromStorage, 10) : null;
+                setRootId(rootId);
                 // Check if root exists
-                if (!root) {
+                if (!rootId) {
                     setLoadError("No root found. Please create a root first.");
                     return;
                 }
@@ -300,10 +295,9 @@ const Generate = () => {
             }
         };
 
-        if (!isLoadingRoot && !rootError) {
             initializeData();
-        }
-    }, [root, isLoadingRoot, rootError, listRustFiles]);
+
+    }, [listRustFiles]);
 
 
     // Handle cancel operation
@@ -334,32 +328,12 @@ const Generate = () => {
     );
 
     // Loading state
-    if (isLoadingRoot || isListing) {
+    if (isListing) {
         return (
             <div className="p-10">
                 <Title order={1} mb="xl">Generate</Title>
                 <Alert color="blue" title="Loading">
                     Loading file generation data...
-                </Alert>
-            </div>
-        );
-    }
-
-    // Error state - check for root error first
-    if (rootError) {
-        return (
-            <div className="p-10">
-                <Title order={1} mb="xl">Generate</Title>
-                <Alert
-                    color="red"
-                    title="Error Loading Root Data"
-                >
-                    <p>{rootError instanceof Error ? rootError.message : 'Unknown error loading root data'}</p>
-                    <Group align="right" mt="md">
-                        <Button onClick={() => window.location.reload()} color="red" variant="light">
-                            Try Again
-                        </Button>
-                    </Group>
                 </Alert>
             </div>
         );
@@ -440,7 +414,7 @@ const Generate = () => {
                 </Modal>
 
                 {/* Wrap the components with FileProvider to provide file and group data */}
-                <FileProvider rootId={stableRootId}>
+                <FileProvider rootId={rootId}>
                     {/* Generate Controls */}
                     <Group mb="md">
                         <Checkbox
@@ -449,7 +423,6 @@ const Generate = () => {
                             label="in temp/"
                         />
                         <GenerateButton
-                            root={root}
                             inTempDir={inTempDir}
                             isGenerating={isGenerating}
                             setIsGenerating={setIsGenerating}
@@ -466,7 +439,7 @@ const Generate = () => {
                             paddingRight: '10px',
                             boxSizing: 'border-box'
                         }}>
-                            <GroupList rootId={stableRootId}/>
+                            <GroupList rootId={rootId}/>
                         </div>
                         <div style={{
                             width: '35%',
@@ -475,7 +448,7 @@ const Generate = () => {
                             padding: '0 10px',
                             boxSizing: 'border-box'
                         }}>
-                            <FileList rootId={stableRootId}/>
+                            <FileList rootId={rootId}/>
                         </div>
                         <div style={{
                             width: '40%',
