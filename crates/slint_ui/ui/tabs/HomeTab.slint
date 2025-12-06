@@ -1,0 +1,55 @@
+import { Button, GroupBox, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component HomeTab inherits Rectangle {
+    in property <bool> is_loading;
+    in-out property <string> error_message;
+
+    callback new_manifest();
+    callback open_manifest();
+    callback save_manifest();
+    callback close_manifest();
+    callback open_qleany_manifest();
+    callback exit_app();
+
+    background: #ffffff;
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 12px;
+
+        Text { text: "Qleany"; font-size: 28px; font-weight: 700; }
+        Text { text: "Welcome to Qleany! Use the buttons below to manage your manifests."; font-size: 16px; }
+
+        if (root.error_message != "") : Rectangle {
+            background: #ffe5e5;
+            border-width: 1px;
+            border-color: #ffaaaa;
+            min-height: 40px;
+            padding: 8px;
+            Text { text: root.error_message; color: #a40000; wrap: word-wrap; }
+        }
+
+        GroupBox {
+            title: "Actions";
+            VerticalBox {
+                spacing: 12px;
+                HorizontalBox {
+                    spacing: 8px;
+                    Button { text: "New Manifest"; enabled: !root.is_loading; clicked => { root.new_manifest(); } }
+                    Button { text: "Open Manifest"; enabled: !root.is_loading; clicked => { root.open_manifest(); } }
+                    Button { text: "Save Manifest"; enabled: !root.is_loading; clicked => { root.save_manifest(); } }
+                    Button { text: "Close Current Manifest"; enabled: !root.is_loading; clicked => { root.close_manifest(); } }
+                    Button { text: "Exit"; enabled: !root.is_loading; clicked => { root.exit_app(); } }
+                }
+
+                GroupBox {
+                    title: "For Testing";
+                    HorizontalBox {
+                        spacing: 8px;
+                        Button { text: "Open Qleany Manifest"; enabled: !root.is_loading; clicked => { root.open_qleany_manifest(); } }
+                    }
+                }
+            }
+        }
+    }
+}

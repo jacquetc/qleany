@@ -1,0 +1,159 @@
+import { Button, GroupBox, VerticalBox, HorizontalBox, ProgressIndicator, TabWidget, LineEdit, ComboBox, ScrollView } from "std-widgets.slint";
+import { HomeTab } from "tabs/HomeTab.slint";
+import { ProjectTab } from "tabs/ProjectTab.slint";
+import { EntitiesTab } from "tabs/EntitiesTab.slint";
+import { FeaturesTab } from "tabs/FeaturesTab.slint";
+import { GenerateTab } from "tabs/GenerateTab.slint";
+
+export component App inherits Window {
+    title: "Qleany";
+    width: 1000px;
+    height: 700px;
+
+    // Global state
+    in-out property <bool> is_loading;
+    in-out property <string> error_message;
+    in-out property <int> current_tab; // 0: Home, 1: Project, 2: Entities, 3: Features, 4: Generate
+
+    // Home callbacks
+    callback new_manifest();
+    callback open_manifest();
+    callback save_manifest();
+    callback close_manifest();
+    callback open_qleany_manifest();
+    callback exit_app();
+
+    // Project properties and callbacks
+    in-out property <string> project_language;
+    in-out property <string> project_application_name;
+    in-out property <string> project_organisation_name;
+    in-out property <string> project_organisation_domain;
+    in-out property <string> project_prefix_path;
+    in-out property <bool> project_is_saving;
+    callback save_project_settings();
+
+    // Generate tab properties and callbacks (placeholders)
+    in-out property <bool> generate_in_temp;
+    in-out property <bool> generate_is_running;
+    in-out property <float> generate_progress;
+    in-out property <string> generate_message;
+    callback list_rust_files();
+    callback start_generate_rust_files();
+    callback cancel_generate_rust_files();
+
+    // Entities lists and selection
+    in-out property <[string]> entity_list;
+    in-out property <[string]> field_list;
+    in-out property <int> selected_entity_index;
+    in-out property <int> selected_field_index;
+    callback select_entity(int);
+    callback select_field(int);
+
+    // Features lists and selection
+    in-out property <[string]> feature_list;
+    in-out property <[string]> use_case_list;
+    in-out property <int> selected_feature_index;
+    in-out property <int> selected_use_case_index;
+    callback select_feature(int);
+    callback select_use_case(int);
+
+    // Generate lists
+    in-out property <[string]> group_list;
+    in-out property <[string]> file_list;
+    in-out property <int> selected_group_index;
+    in-out property <int> selected_file_index;
+
+    Rectangle {
+        background: #ffffff;
+        TabWidget {
+            current-index: root.current_tab;
+
+            // HOME TAB
+            Tab {
+                title: "Home";
+                HomeTab {
+                    is_loading: root.is_loading;
+                    error_message <=> root.error_message;
+                    new_manifest => { root.new_manifest(); }
+                    open_manifest => { root.open_manifest(); }
+                    save_manifest => { root.save_manifest(); }
+                    close_manifest => { root.close_manifest(); }
+                    open_qleany_manifest => { root.open_qleany_manifest(); }
+                    exit_app => { root.exit_app(); }
+                }
+            }
+
+            // PROJECT TAB
+            Tab {
+                title: "Project";
+                ProjectTab {
+                    is_saving: root.project_is_saving;
+                    language <=> root.project_language;
+                    application_name <=> root.project_application_name;
+                    organisation_name <=> root.project_organisation_name;
+                    organisation_domain <=> root.project_organisation_domain;
+                    prefix_path <=> root.project_prefix_path;
+                    save => { root.save_project_settings(); }
+                }
+            }
+
+            // ENTITIES TAB
+            Tab {
+                title: "Entities";
+                EntitiesTab {
+                    entity_list <=> root.entity_list;
+                    field_list <=> root.field_list;
+                    selected_entity_index <=> root.selected_entity_index;
+                    selected_field_index <=> root.selected_field_index;
+                    select_entity(i) => { root.select_entity(i); }
+                    select_field(j) => { root.select_field(j); }
+                }
+            }
+
+            // FEATURES TAB
+            Tab {
+                title: "Features";
+                FeaturesTab {
+                    feature_list <=> root.feature_list;
+                    use_case_list <=> root.use_case_list;
+                    selected_feature_index <=> root.selected_feature_index;
+                    selected_use_case_index <=> root.selected_use_case_index;
+                    select_feature(i) => { root.select_feature(i); }
+                    select_use_case(j) => { root.select_use_case(j); }
+                }
+            }
+
+            // GENERATE TAB
+            Tab {
+                title: "Generate";
+                GenerateTab {
+                    is_running <=> root.generate_is_running;
+                    progress <=> root.generate_progress;
+                    message <=> root.generate_message;
+                    group_list <=> root.group_list;
+                    file_list <=> root.file_list;
+                    selected_group_index <=> root.selected_group_index;
+                    selected_file_index <=> root.selected_file_index;
+                    list_files => { root.list_rust_files(); }
+                    start_generate => { root.start_generate_rust_files(); }
+                    cancel_generate => { root.cancel_generate_rust_files(); }
+                }
+            }
+        }
+
+        // Global loading overlay
+        if (root.is_loading) : Rectangle {
+            background: #00000040;
+            x: 0px; y: 0px;
+            width: parent.width;
+            height: parent.height;
+
+            ProgressIndicator {
+                width: 48px; height: 48px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                indeterminate: true;
+            }
+        }
+    }
+}

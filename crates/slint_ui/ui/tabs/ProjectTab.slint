@@ -1,0 +1,47 @@
+import { GroupBox, VerticalBox, HorizontalBox, LineEdit, ComboBox, Button } from "std-widgets.slint";
+
+export component ProjectTab inherits Rectangle {
+    in property <bool> is_saving;
+    in-out property <string> language;
+    in-out property <string> application_name;
+    in-out property <string> organisation_name;
+    in-out property <string> organisation_domain;
+    in-out property <string> prefix_path;
+
+    callback save();
+
+    background: #ffffff;
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 12px;
+        Text { text: "Project Settings"; font-size: 24px; font-weight: 700; }
+        GroupBox { title: "General";
+            VerticalBox { spacing: 8px;
+                HorizontalBox { spacing: 8px;
+                    Text { text: "Language"; width: 140px; vertical-alignment: center; }
+                    ComboBox { current-value: root.language; enabled: !root.is_saving; model: ["Rust", "C++", "C++ / Qt", "Python"]; }
+                }
+                HorizontalBox { spacing: 8px;
+                    Text { text: "Application Name"; width: 140px; vertical-alignment: center; }
+                    LineEdit { text <=> root.application_name; enabled: !root.is_saving; }
+                }
+                HorizontalBox { spacing: 8px;
+                    Text { text: "Organisation Name"; width: 140px; vertical-alignment: center; }
+                    LineEdit { text <=> root.organisation_name; enabled: !root.is_saving; }
+                }
+                HorizontalBox { spacing: 8px;
+                    Text { text: "Organisation Domain"; width: 140px; vertical-alignment: center; }
+                    LineEdit { text <=> root.organisation_domain; enabled: !root.is_saving; }
+                }
+                HorizontalBox { spacing: 8px;
+                    Text { text: "Prefix Path"; width: 140px; vertical-alignment: center; }
+                    LineEdit { text <=> root.prefix_path; enabled: !root.is_saving; }
+                }
+                HorizontalBox { spacing: 8px;
+                    Button { text: root.is_saving ? "Saving..." : "Save"; enabled: !root.is_saving; clicked => { root.save(); } }
+                }
+            }
+        }
+    }
+}

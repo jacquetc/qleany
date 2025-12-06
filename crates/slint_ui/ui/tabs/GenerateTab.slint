@@ -1,0 +1,63 @@
+import { VerticalBox, HorizontalBox, GroupBox, Button, ScrollView } from "std-widgets.slint";
+
+export component GenerateTab inherits Rectangle {
+    // Operation state
+    in-out property <bool> is_running;
+    in-out property <float> progress;
+    in-out property <string> message;
+
+    // Lists
+    in-out property <[string]> group_list;
+    in-out property <[string]> file_list;
+    in-out property <int> selected_group_index;
+    in-out property <int> selected_file_index;
+
+    // Callbacks
+    callback list_files();
+    callback start_generate();
+    callback cancel_generate();
+
+    background: #ffffff;
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 12px;
+        Text { text: "Generate"; font-size: 24px; font-weight: 700; }
+        HorizontalBox { spacing: 8px;
+            Button { text: "List Rust Files"; clicked => { root.list_files(); } }
+            Button { text: root.is_running ? "Generating..." : "Generate"; enabled: !root.is_running; clicked => { root.start_generate(); } }
+            Button { text: "Cancel"; enabled: root.is_running; clicked => { root.cancel_generate(); } }
+        }
+        GroupBox { title: "Progress";
+            VerticalBox { spacing: 8px; padding: 8px;
+                Text { text: "Progress: " + (root.progress * 100) + "%"; }
+                if (root.message != "") : Text { text: root.message; color: #555555; }
+            }
+        }
+        // Two-column lists and preview
+        HorizontalBox { spacing: 8px;
+            // Groups
+            GroupBox { title: "Groups";
+                VerticalBox { spacing: 6px; padding: 8px;
+                    for g[i] in root.group_list: Button { text: g; clicked => { root.selected_group_index = i; } }
+                }
+            }
+            // Files
+            GroupBox { title: "Files";
+                VerticalBox { spacing: 6px; padding: 8px;
+                    for f[j] in root.file_list: Button { text: f; clicked => { root.selected_file_index = j; } }
+                }
+            }
+            // Preview placeholder
+            GroupBox { title: "Preview";
+                ScrollView {
+                    Rectangle {
+                        height: 300px;
+                        width: parent.width;
+                        Text { text: root.selected_file_index >= 0 ? ("Preview of: " + root.file_list[root.selected_file_index]) : "Select a file to preview"; }
+                    }
+                }
+            }
+        }
+    }
+}

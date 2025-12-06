@@ -1,0 +1,57 @@
+import { VerticalBox, HorizontalBox, GroupBox, Button } from "std-widgets.slint";
+
+export component EntitiesTab inherits Rectangle {
+    // Models
+    in-out property <[string]> entity_list;
+    in-out property <[string]> field_list;
+
+    // Selection indices (optional, -1 = none)
+    in-out property <int> selected_entity_index;
+    in-out property <int> selected_field_index;
+
+    // Callbacks
+    callback select_entity(int);
+    callback select_field(int);
+
+    background: #ffffff;
+
+    HorizontalBox {
+        padding: 8px;
+        spacing: 8px;
+
+        // Entities list
+        Rectangle { width: 260px; height: parent.height; background: #f6f6f6;
+            VerticalBox { padding: 8px; spacing: 8px;
+                Text { text: "Entities"; font-size: 18px; font-weight: 600; }
+                for name[i] in root.entity_list: Button {
+                    text: name;
+                    clicked => { root.select_entity(i); root.selected_entity_index = i; }
+                }
+            }
+        }
+
+        // Separator
+        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+
+        // Entity details + Fields
+        VerticalBox { spacing: 8px; padding: 8px;
+            Text { text: root.selected_entity_index >= 0 ? ("Details for: " + root.entity_list[root.selected_entity_index]) : "Select an entity"; }
+            GroupBox { title: "Fields";
+                VerticalBox { spacing: 6px;
+                    for fname[j] in root.field_list: Button {
+                        text: fname;
+                        clicked => { root.select_field(j); root.selected_field_index = j; }
+                    }
+                }
+            }
+        }
+
+        // Separator
+        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+
+        // Field details
+        VerticalBox { spacing: 8px; padding: 8px;
+            Text { text: root.selected_field_index >= 0 ? ("Field details for: " + root.field_list[root.selected_field_index]) : "Select a field"; }
+        }
+    }
+}
