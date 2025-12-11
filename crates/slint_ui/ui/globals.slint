@@ -25,12 +25,6 @@ export global ProjectCommands {
     callback save_project_settings();
 }
 
-// Entity selection commands
-export global EntityCommands {
-    callback select_entity(int);
-    callback select_field(int);
-}
-
 // Feature selection commands  
 export global FeatureCommands {
     callback select_feature(int);
@@ -51,12 +45,14 @@ export global EntitiesTabState {
     in-out property <int> selected_entity_id: -1;
     callback entity_selected(int);
     in-out property <string> selected_entity_name: "";
+    callback entity_name_changed(string);
     // fields
     in-out property <[CRListItem]> field_cr_list: [];
     callback request_fields_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_field_id: -1;
     callback field_selected(int);
     in-out property <string> selected_field_name: "";
+    callback field_name_changed(string);
 
 }
 

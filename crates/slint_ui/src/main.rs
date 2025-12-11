@@ -12,13 +12,8 @@ mod event_hub_client;
 mod tabs;
 
 use std::sync::Arc;
-
-use slint::Model;
 use app_context::AppContext;
 use event_hub_client::EventHubClient;
-use handling_manifest::LoadDto;
-use common::direct_access::root::RootRelationshipField;
-use crate::commands::{root_commands, entity_commands};
 
 slint::include_modules!();
 
@@ -108,25 +103,6 @@ fn main() {
         move || {
             log::info!("Cancel Generate Rust Files clicked");
             // TODO: Implement cancellation using long_operation_manager
-            let _ = ctx;
-        }
-    });
-
-    // Wire up EntityCommands callbacks
-    app.global::<EntityCommands>().on_select_entity({
-        let ctx = Arc::clone(&app_context);
-        move |id| {
-            log::info!("Select Entity: {}", id);
-            // TODO: Use entity_commands::get_entity to fetch entity details
-            let _ = ctx;
-        }
-    });
-
-    app.global::<EntityCommands>().on_select_field({
-        let ctx = Arc::clone(&app_context);
-        move |id| {
-            log::info!("Select Field: {}", id);
-            // TODO: Use field_commands::get_field to fetch field details
             let _ = ctx;
         }
     });

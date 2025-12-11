@@ -1,6 +1,6 @@
-import { ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
-import { EntityCommands, AppState, EntitiesTabState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
+import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 export component EntitiesTab inherits Rectangle {
@@ -52,7 +52,6 @@ export component EntitiesTab inherits Rectangle {
                             enable-checkbox: false;
                             selected-id: EntitiesTabState.selected_entity_id;
                             selection-changed(id) => {
-                                EntityCommands.select_entity(id);
                                 EntitiesTabState.entity-selected(id);
                             }
                             request-reorder(from_index, to_index) => {
@@ -97,6 +96,19 @@ export component EntitiesTab inherits Rectangle {
                                 font-size: 14px;
                                 color: #868e96;
                             }
+                        FormField {
+                            label: "Name";
+                            required: true;
+
+                            StyledLineEdit {
+                                text <=> EntitiesTabState.selected_entity_name;
+                                placeholder: "Enter the entity name (e.g., Person)";
+                                enabled: !AppState.project_is_saving;
+                                edited(text) => {
+                                    EntitiesTabState.entity_name_changed(text);
+                                }
+                            }
+                        }
                         }
                     }
 
@@ -124,7 +136,10 @@ export component EntitiesTab inherits Rectangle {
                             enable-checkbox: false;
                             selected-id: EntitiesTabState.selected_field_id;
                             selection-changed(id) => {
-                                EntityCommands.select_field(id);
+                                EntitiesTabState.field_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                EntitiesTabState.request_fields_reorder(from_index, to_index)
                             }
                         }
                     }

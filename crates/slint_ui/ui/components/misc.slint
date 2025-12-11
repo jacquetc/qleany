@@ -1,3 +1,4 @@
+import { LineEdit } from "std-widgets.slint";
 
 // List item component
 export component ListItem inherits Rectangle {
@@ -67,4 +68,55 @@ export component Paper inherits Rectangle {
     drop-shadow-blur: 4px;
     drop-shadow-color: #00000010;
     drop-shadow-offset-y: 1px;
+}
+
+
+
+// Form field with label
+export component FormField inherits VerticalLayout {
+    in property <string> label;
+    in property <bool> required: false;
+
+    spacing: 4px;
+
+    HorizontalLayout {
+        spacing: 4px;
+        Text {
+            text: label;
+            font-size: 14px;
+            font-weight: 500;
+            color: #212529;
+        }
+        if required : Text {
+            text: "*";
+            font-size: 14px;
+            color: #fa5252;
+        }
+    }
+
+    @children
+}
+
+
+// Styled text input
+export component StyledLineEdit inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder;
+    in property <bool> enabled: true;
+    callback edited(string);
+
+    height: 36px;
+    background: enabled ? #ffffff : #f8f9fa;
+    border-width: 1px;
+    border-color: input.has-focus ? #228be6 : #ced4da;
+    border-radius: 4px;
+
+    input := LineEdit {
+        text <=> root.text;
+        placeholder-text: placeholder;
+        enabled: root.enabled;
+        edited(text) => {
+            root.edited(text);
+        }
+    }
 }

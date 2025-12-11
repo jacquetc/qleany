@@ -1,63 +1,6 @@
 import { LineEdit, ComboBox, ProgressIndicator } from "std-widgets.slint";
 import { ProjectCommands, AppState } from "../globals.slint";
-
-// Paper-like card component
-component Paper inherits Rectangle {
-    in property <bool> with-border: true;
-    in property <color> bg: #ffffff;
-    
-    background: bg;
-    border-width: with-border ? 1px : 0px;
-    border-color: #dee2e6;
-    border-radius: 8px;
-    drop-shadow-blur: 4px;
-    drop-shadow-color: #00000010;
-    drop-shadow-offset-y: 1px;
-}
-
-// Form field with label
-component FormField inherits VerticalLayout {
-    in property <string> label;
-    in property <bool> required: false;
-    
-    spacing: 4px;
-    
-    HorizontalLayout {
-        spacing: 4px;
-        Text {
-            text: label;
-            font-size: 14px;
-            font-weight: 500;
-            color: #212529;
-        }
-        if required : Text {
-            text: "*";
-            font-size: 14px;
-            color: #fa5252;
-        }
-    }
-    
-    @children
-}
-
-// Styled text input
-component StyledLineEdit inherits Rectangle {
-    in-out property <string> text;
-    in property <string> placeholder;
-    in property <bool> enabled: true;
-    
-    height: 36px;
-    background: enabled ? #ffffff : #f8f9fa;
-    border-width: 1px;
-    border-color: input.has-focus ? #228be6 : #ced4da;
-    border-radius: 4px;
-    
-    input := LineEdit {
-        text <=> root.text;
-        placeholder-text: placeholder;
-        enabled: root.enabled;
-    }
-}
+import { Paper, FormField, StyledLineEdit } from "../components/misc.slint";
 
 // Styled select/combo box
 component StyledComboBox inherits Rectangle {
