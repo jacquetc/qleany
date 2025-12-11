@@ -15,6 +15,7 @@ component NavItem inherits Rectangle {
     in property <bool> active: false;
     in property <string> label;
     in property <image> icon;
+    in property <bool> enable: true;
     callback clicked();
 
     height: 48px;
@@ -29,12 +30,12 @@ component NavItem inherits Rectangle {
             source: icon;
             width: 24px;
             height: 24px;
-            colorize: active ? #ffffff : #495057;
+            colorize: active ? #ffffff : enable? #495057 : #adb5bd;
         }
 
         Text {
             text: label;
-            color: active ? #ffffff : #495057;
+            color: active ? #ffffff :  enable? #495057 : #adb5bd;
             font-size: 14px;
             vertical-alignment: center;
         }
@@ -42,6 +43,7 @@ component NavItem inherits Rectangle {
 
     TouchArea {
         clicked => { root.clicked(); }
+        enabled: enable;
     }
 }
 
@@ -167,35 +169,40 @@ export component App inherits Window {
                         NavItem {
                             label: "Project";
                             icon: @image-url("icons/tag.svg");
-                            active: AppState.current_tab == 1;
+                            active: AppState.current_tab == 1 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { AppState.current_tab = 1; }
                         }
 
                         NavItem {
                             label: "Entities";
                             icon: @image-url("icons/entities.svg");
-                            active: AppState.current_tab == 2;
+                            active: AppState.current_tab == 2 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { AppState.current_tab = 2; }
                         }
 
                         NavItem {
                             label: "Entity Map";
                             icon: @image-url("icons/sitemap.svg");
-                            active: AppState.current_tab == 3;
+                            active: AppState.current_tab == 3 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { AppState.current_tab = 3; }
                         }
 
                         NavItem {
                             label: "Features";
                             icon: @image-url("icons/features.svg");
-                            active: AppState.current_tab == 4;
+                            active: AppState.current_tab == 4 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { AppState.current_tab = 4; }
                         }
 
                         NavItem {
                             label: "Generate";
                             icon: @image-url("icons/factory.svg");
-                            active: AppState.current_tab == 5;
+                            active: AppState.current_tab == 5 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { AppState.current_tab = 5; }
                         }
 
@@ -212,12 +219,12 @@ export component App inherits Window {
                     // Tab components now use globals directly for state and callbacks
                     if AppState.current_tab == 0 : HomeTab { }
 
-                    if AppState.current_tab == 1 : ProjectTab { }
+                    if AppState.current_tab == 1 && AppState.manifest_is_open : ProjectTab { }
 
-                    if AppState.current_tab == 2 : EntitiesTab { }
+                    if AppState.current_tab == 2 && AppState.manifest_is_open  : EntitiesTab { }
 
                     // Entity Map tab placeholder
-                    if AppState.current_tab == 3 : Rectangle {
+                    if AppState.current_tab == 3 && AppState.manifest_is_open  : Rectangle {
                         VerticalBox {
                             padding: 16px;
                             Text {
@@ -234,9 +241,9 @@ export component App inherits Window {
                         }
                     }
 
-                    if AppState.current_tab == 4 : FeaturesTab { }
+                    if AppState.current_tab == 4 && AppState.manifest_is_open : FeaturesTab { }
 
-                    if AppState.current_tab == 5 : GenerateTab { }
+                    if AppState.current_tab == 5 && AppState.manifest_is_open : GenerateTab { }
                 }
             }
 

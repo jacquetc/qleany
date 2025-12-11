@@ -13,9 +13,11 @@ mod tabs;
 
 use std::sync::Arc;
 use app_context::AppContext;
+use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use event_hub_client::EventHubClient;
 
 slint::include_modules!();
+
 
 fn main() {
     // Initialize logging
@@ -103,6 +105,28 @@ fn main() {
             let _ = ctx;
         }
     });
+
+
+    event_hub_client.subscribe(
+        Origin::HandlingManifest(HandlingManifestEvent::Loaded),
+        {
+            let ctx = Arc::clone(&app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Manifest loaded event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                // Use invoke_from_event_loop to safely update UI from background thread
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        app.global::<AppState>().set_manifest_is_open(true);
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                    }
+                });
+            }
+        },
+    );
 
     // Run the application
     log::info!("Running Slint UI");
