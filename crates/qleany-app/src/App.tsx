@@ -1,5 +1,6 @@
 import {createTheme, MantineProvider} from '@mantine/core';
-import {BrowserRouter, Route, Routes} from "react-router";
+import {Route, Routes} from "react-router";
+import { HashRouter as Router } from 'react-router';
 import Root from "./routes/Root";
 import Home from "./routes/Home";
 import Entities from "./routes/Entities";
@@ -12,18 +13,14 @@ import {useState} from 'react';
 
 const App = () => {
 
+    const [theme, setTheme] = useState(() => createTheme({ primaryColor: 'teal' }));
 
-    // @ts-ignore
-    const [theme, setTheme] = useState(createTheme({
-        primaryColor: 'teal'
-
-    }));
 
     return (
 
         <MantineProvider theme={theme}>
 
-            <BrowserRouter>
+            <Router>
                 <Routes>
                     <Route path="/" element={<Root/>}>
                         <Route index element={<Home/>}/>
@@ -35,7 +32,7 @@ const App = () => {
                         <Route path="generate" element={<Generate/>}/>
                     </Route>
                 </Routes>
-            </BrowserRouter>
+            </Router>
 
         </MantineProvider>
 

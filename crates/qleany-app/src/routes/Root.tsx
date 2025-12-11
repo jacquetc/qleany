@@ -1,11 +1,18 @@
 import {Outlet} from "react-router";
 import NavBar from "#components/NavBar.tsx";
-import {ActionIcon, AppShell, Burger, Group, Title} from '@mantine/core';
+import {ActionIcon, Alert, AppShell, Burger, Button, Group, Title} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {IconArrowBackUp, IconArrowForwardUp} from '@tabler/icons-react';
 import {useUndoRedo} from '../hooks/useUndoRedo';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import {HomeProvider, useHomeContext} from "../contexts/HomeContext";
 
+const SaveButton = () => {
+    const {handleSaveManifest} = useHomeContext();
+    return (
+        <Button onClick={handleSaveManifest}>Save</Button>
+    );
+};
 
 const Root = () => {
     const [opened, {toggle}] = useDisclosure();
@@ -49,7 +56,9 @@ const Root = () => {
                         >
                             <IconArrowForwardUp size={18}/>
                         </ActionIcon>
-
+                        <HomeProvider>
+                            <SaveButton/>
+                        </HomeProvider>
                     </Group>
                 </AppShell.Header>
                 <AppShell.Navbar p="md" maw={200}>
