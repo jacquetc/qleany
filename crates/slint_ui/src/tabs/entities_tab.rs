@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use slint::ComponentHandle;
+use slint::{ComponentHandle, Model};
 use common::direct_access::root::RootRelationshipField;
 use common::direct_access::entity::EntityRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
@@ -331,6 +331,131 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
+/// Helper function to convert FieldType to string
+fn field_type_to_string(field_type: &common::entities::FieldType) -> &'static str {
+    match field_type {
+        common::entities::FieldType::Boolean => "Boolean",
+        common::entities::FieldType::Integer => "Integer",
+        common::entities::FieldType::UInteger => "UInteger",
+        common::entities::FieldType::Float => "Float",
+        common::entities::FieldType::String => "String",
+        common::entities::FieldType::Uuid => "Uuid",
+        common::entities::FieldType::DateTime => "DateTime",
+        common::entities::FieldType::Entity => "Entity",
+        common::entities::FieldType::Enum => "Enum",
+    }
+}
+
+/// Helper function to convert string to FieldType
+fn string_to_field_type(s: &str) -> common::entities::FieldType {
+    match s {
+        "Boolean" => common::entities::FieldType::Boolean,
+        "Integer" => common::entities::FieldType::Integer,
+        "UInteger" => common::entities::FieldType::UInteger,
+        "Float" => common::entities::FieldType::Float,
+        "Uuid" => common::entities::FieldType::Uuid,
+        "DateTime" => common::entities::FieldType::DateTime,
+        "Entity" => common::entities::FieldType::Entity,
+        "Enum" => common::entities::FieldType::Enum,
+        _ => common::entities::FieldType::String,
+    }
+}
+
+/// Helper function to fill all field form properties from a FieldDto
+fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
+    let state = app.global::<EntitiesTabState>();
+    state.set_selected_field_id(field.id as i32);
+    state.set_selected_field_name(field.name.clone().into());
+    state.set_selected_field_type(field_type_to_string(&field.field_type).into());
+    state.set_selected_field_entity(field.entity.map(|e| e as i32).unwrap_or(-1));
+    state.set_selected_field_is_nullable(field.is_nullable);
+    state.set_selected_field_is_primary_key(field.is_primary_key);
+    state.set_selected_field_is_list(field.is_list);
+    state.set_selected_field_single(field.single);
+    state.set_selected_field_strong(field.strong);
+    state.set_selected_field_ordered(field.ordered);
+    state.set_selected_field_list_model(field.list_model);
+    state.set_selected_field_list_model_displayed_field(
+        field.list_model_displayed_field.clone().unwrap_or_default().into()
+    );
+    state.set_selected_field_enum_name(field.enum_name.clone().unwrap_or_default().into());
+    state.set_selected_field_enum_values(
+        field.enum_values.clone().map(|v| v.join("\n")).unwrap_or_default().into()
+    );
+}
+
+/// Helper function to clear field form
+fn clear_field_form(app: &App) {
+    let state = app.global::<EntitiesTabState>();
+    state.set_selected_field_id(-1);
+    state.set_selected_field_name("".into());
+    state.set_selected_field_type("String".into());
+    state.set_selected_field_entity(-1);
+    state.set_selected_field_is_nullable(false);
+    state.set_selected_field_is_primary_key(false);
+    state.set_selected_field_is_list(false);
+    state.set_selected_field_single(true);
+    state.set_selected_field_strong(true);
+    state.set_selected_field_ordered(false);
+    state.set_selected_field_list_model(false);
+    state.set_selected_field_list_model_displayed_field("".into());
+    state.set_selected_field_enum_name("".into());
+    state.set_selected_field_enum_values("".into());
+}
+
+/// Helper function to populate entity options for the Referenced Entity ComboBox
+fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
+    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+    if root_id > 0 {
+        let entity_ids_res = root_commands::get_root_relationship(
+            app_context,
+            &root_id,
+            &RootRelationshipField::Entities,
+        );
+
+        if let Ok(entity_ids) = entity_ids_res {
+            if let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
+                let mut names: Vec<slint::SharedString> = Vec::new();
+                let mut ids: Vec<i32> = Vec::new();
+                for maybe_entity in entities_opt.into_iter() {
+                    if let Some(e) = maybe_entity {
+                        names.push(e.name.into());
+                        ids.push(e.id as i32);
+                    }
+                }
+                let names_model = std::rc::Rc::new(slint::VecModel::from(names));
+                let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
+                app.global::<EntitiesTabState>().set_entity_options(names_model.into());
+                app.global::<EntitiesTabState>().set_entity_option_ids(ids_model.into());
+            }
+        }
+    }
+}
+
+/// Helper function to update a field with new values
+fn update_field_helper<F>(app_context: &Arc<AppContext>, field_id: i32, update_fn: F)
+where
+    F: FnOnce(&mut direct_access::FieldDto),
+{
+    if field_id < 0 {
+        return;
+    }
+
+    let field_res = field_commands::get_field(app_context, &(field_id as common::types::EntityId));
+
+    if let Ok(Some(mut field)) = field_res {
+        update_fn(&mut field);
+        match field_commands::update_field(app_context, &field) {
+            Ok(_) => {
+                log::info!("Field updated successfully");
+            }
+            Err(e) => {
+                log::error!("Failed to update field: {}", e);
+            }
+        }
+    }
+}
+
 fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_selected({
         let ctx = Arc::clone(app_context);
@@ -344,15 +469,241 @@ fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
                     );
 
                     if let Ok(Some(field)) = field_res {
-                        app.global::<EntitiesTabState>().set_selected_field_id(field.id as i32);
-                        app.global::<EntitiesTabState>().set_selected_field_name(field.name.into());
+                        fill_field_form(&app, &field);
+                        fill_entity_options(&app, &ctx);
+                    } else {
+                        clear_field_form(&app);
                     }
+                } else {
+                    clear_field_form(&app);
                 }
             }
         }
     })
 }
 
+fn setup_field_name_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_name_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_name| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                let name_str = new_name.to_string();
+                if !name_str.is_empty() {
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.name = name_str;
+                    });
+                }
+            }
+        }
+    });
+}
+
+fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_type_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_type| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                let type_str = new_type.to_string();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.field_type = string_to_field_type(&type_str);
+                    // Clear entity reference if not Entity type
+                    if field.field_type != common::entities::FieldType::Entity {
+                        field.entity = None;
+                    }
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_entity_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |entity_index| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                // Get the entity id from the index
+                let entity_option_ids = app.global::<EntitiesTabState>().get_entity_option_ids();
+                let entity_id = if entity_index >= 0 && (entity_index as usize) < entity_option_ids.row_count() {
+                    Some(entity_option_ids.row_data(entity_index as usize).unwrap_or(-1) as common::types::EntityId)
+                } else {
+                    None
+                };
+                update_field_helper(&ctx, field_id, |field| {
+                    field.entity = entity_id;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_is_nullable_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_is_nullable_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.is_nullable = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_is_primary_key_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_is_primary_key_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.is_primary_key = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_is_list_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_is_list_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.is_list = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_single_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_single_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.single = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_strong_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.strong = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_ordered_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_ordered_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.ordered = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_list_model_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.list_model = value;
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_list_model_displayed_field_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_list_model_displayed_field_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                let value_str = new_value.to_string();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.list_model_displayed_field = if value_str.is_empty() { None } else { Some(value_str) };
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_enum_name_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_enum_name_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                let value_str = new_value.to_string();
+                update_field_helper(&ctx, field_id, |field| {
+                    field.enum_name = if value_str.is_empty() { None } else { Some(value_str) };
+                });
+            }
+        }
+    });
+}
+
+fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_enum_values_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_value| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                let value_str = new_value.to_string();
+                update_field_helper(&ctx, field_id, |field| {
+                    if value_str.is_empty() {
+                        field.enum_values = None;
+                    } else {
+                        // Split by newlines or commas
+                        let values: Vec<String> = value_str
+                            .split(|c| c == '\n' || c == ',')
+                            .map(|s| s.trim().to_string())
+                            .filter(|s| !s.is_empty())
+                            .collect();
+                        field.enum_values = if values.is_empty() { None } else { Some(values) };
+                    }
+                });
+            }
+        }
+    });
+}
 
 fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_entity_name_changed({
@@ -399,12 +750,32 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
 
 /// Initialize all entities tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    // Event subscriptions
     subscribe_root_updated_event(event_hub_client, app, app_context);
     subscribe_entity_updated_event(event_hub_client, app, app_context);
     subscribe_field_updated_event(event_hub_client, app, app_context);
+
+    // Entity callbacks
     setup_entities_reorder_callback(app, app_context);
     setup_select_entity_callbacks(app, app_context);
     setup_entity_name_callbacks(app, app_context);
+
+    // Field list callbacks
     setup_fields_reorder_callback(app, app_context);
     setup_select_field_callbacks(app, app_context);
+
+    // Field detail callbacks
+    setup_field_name_callback(app, app_context);
+    setup_field_type_callback(app, app_context);
+    setup_field_entity_callback(app, app_context);
+    setup_field_is_nullable_callback(app, app_context);
+    setup_field_is_primary_key_callback(app, app_context);
+    setup_field_is_list_callback(app, app_context);
+    setup_field_single_callback(app, app_context);
+    setup_field_strong_callback(app, app_context);
+    setup_field_ordered_callback(app, app_context);
+    setup_field_list_model_callback(app, app_context);
+    setup_field_list_model_displayed_field_callback(app, app_context);
+    setup_field_enum_name_callback(app, app_context);
+    setup_field_enum_values_callback(app, app_context);
 }

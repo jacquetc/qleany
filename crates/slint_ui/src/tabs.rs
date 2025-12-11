@@ -5,3 +5,4 @@
 
 pub mod entities_tab;
 pub mod home_tab;
+mod features_tab;

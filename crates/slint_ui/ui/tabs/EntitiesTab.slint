@@ -1,4 +1,4 @@
-import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
+import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox } from "std-widgets.slint";
 import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
 import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
@@ -96,7 +96,7 @@ export component EntitiesTab inherits Rectangle {
                                 font-size: 14px;
                                 color: #868e96;
                             }
-                        FormField {
+                        entityNameFormField := FormField {
                             label: "Name";
                             required: true;
 
@@ -172,10 +172,171 @@ export component EntitiesTab inherits Rectangle {
                             spacing: 12px;
                             alignment: start;
 
-                            Text {
-                                text: "Field details will be displayed here";
-                                font-size: 14px;
-                                color: #868e96;
+                            // Field Name
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_name;
+                                    placeholder: "Enter field name";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        EntitiesTabState.field_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Field Type
+                            FormField {
+                                label: "Type";
+                                required: true;
+
+                                ComboBox {
+                                    model: EntitiesTabState.field_type_options;
+                                    current-value <=> EntitiesTabState.selected_field_type;
+                                    enabled: !AppState.project_is_saving;
+                                    selected(value) => {
+                                        EntitiesTabState.field_type_changed(value);
+                                    }
+                                }
+                            }
+
+                            // Referenced Entity (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Referenced Entity";
+
+                                entity-combo := ComboBox {
+                                    model: EntitiesTabState.entity_options;
+                                    enabled: !AppState.project_is_saving;
+                                    selected(value) => {
+                                        // Pass the selected index to the callback
+                                        EntitiesTabState.field_entity_changed(entity-combo.current-index);
+                                    }
+                                }
+                            }
+
+                            // Enum Name (only visible when type is Enum)
+                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                                label: "Enum Name";
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_enum_name;
+                                    placeholder: "Enter enum name";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        EntitiesTabState.field_enum_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Enum Values (only visible when type is Enum)
+                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                                label: "Enum Values (one per line)";
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_enum_values;
+                                    placeholder: "Enter enum values, separated by commas";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        EntitiesTabState.field_enum_values_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Boolean checkboxes
+                            FormField {
+                                label: "Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    CheckBox {
+                                        text: "Nullable";
+                                        checked <=> EntitiesTabState.selected_field_is_nullable;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_is_nullable_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Primary Key";
+                                        checked <=> EntitiesTabState.selected_field_is_primary_key;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_is_primary_key_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Is List";
+                                        checked <=> EntitiesTabState.selected_field_is_list;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_is_list_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "List Model";
+                                        checked <=> EntitiesTabState.selected_field_list_model;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_list_model_changed(self.checked);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // List Model Displayed Field (only visible when list_model is true)
+                            if EntitiesTabState.selected_field_list_model : FormField {
+                                label: "List Model Displayed Field";
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_list_model_displayed_field;
+                                    placeholder: "Enter displayed field name";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        EntitiesTabState.field_list_model_displayed_field_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Entity-specific options (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Relationship Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    CheckBox {
+                                        text: "Single";
+                                        checked <=> EntitiesTabState.selected_field_single;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_single_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Strong";
+                                        checked <=> EntitiesTabState.selected_field_strong;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_strong_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Ordered";
+                                        checked <=> EntitiesTabState.selected_field_ordered;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            EntitiesTabState.field_ordered_changed(self.checked);
+                                        }
+                                    }
+                                }
                             }
 
                             // Spacer
