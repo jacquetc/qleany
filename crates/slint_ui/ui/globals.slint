@@ -37,6 +37,21 @@ export global GenerateCommands {
     callback start_generate();
     callback cancel_generate();
 }
+export global ProjectTabState {
+    // Project settings properties
+    in-out property <string> language: "Rust";
+    in-out property <string> application_name: "";
+    in-out property <string> organisation_name: "";
+    in-out property <string> organisation_domain: "";
+    in-out property <string> prefix_path: "";
+
+    // Callbacks for project settings changes
+    callback language_changed(string);
+    callback application_name_changed(string);
+    callback organisation_name_changed(string);
+    callback organisation_domain_changed(string);
+    callback prefix_path_changed(string);
+}
 
 export global EntitiesTabState {
     // Entity lists and selection
@@ -216,15 +231,6 @@ export global AppState {
     // Undo/Redo state
     in-out property <bool> can_undo: false;
     in-out property <bool> can_redo: false;
-    
-    // Project settings
-    in-out property <bool> project_is_saving: false;
-    in-out property <string> project_language: "Rust";
-    in-out property <string> project_application_name: "";
-    in-out property <string> project_organisation_name: "";
-    in-out property <string> project_organisation_domain: "";
-    in-out property <string> project_prefix_path: "";
-    in-out property <string> project_error_message: "";
     
     // Generate state
     in-out property <bool> generate_is_running: false;

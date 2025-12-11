@@ -44,6 +44,9 @@ fn main() {
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&app, &app_context);
 
+    // Initialize project tab callbacks (project settings)
+    tabs::project_tab::init(&app, &app_context);
+
     app.global::<ManifestCommands>().on_exit_app({
         let ctx = Arc::clone(&app_context);
         move || {
@@ -72,15 +75,6 @@ fn main() {
         }
     });
 
-    // Wire up ProjectCommands callbacks
-    app.global::<ProjectCommands>().on_save_project_settings({
-        let ctx = Arc::clone(&app_context);
-        move || {
-            log::info!("Save Project Settings clicked");
-            // TODO: Implement project settings save using root_commands
-            let _ = ctx;
-        }
-    });
 
     // Wire up GenerateCommands callbacks
     app.global::<GenerateCommands>().on_list_files({

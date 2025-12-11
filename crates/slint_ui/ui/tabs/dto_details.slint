@@ -32,7 +32,7 @@ export component DtoDetails inherits Rectangle {
                         CheckBox {
                             text: "Enable DTO In";
                             checked <=> FeaturesTabState.dto_in_enabled;
-                            enabled: !AppState.project_is_saving;
+
                             toggled => {
                                 FeaturesTabState.dto_in_enabled_changed(self.checked);
                             }
@@ -68,7 +68,7 @@ export component DtoDetails inherits Rectangle {
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_in_name;
                                         placeholder: "Enter the DTO In name";
-                                        enabled: !AppState.project_is_saving;
+
                                         edited(text) => {
                                             FeaturesTabState.dto_in_name_changed(text);
                                         }
@@ -145,7 +145,7 @@ export component DtoDetails inherits Rectangle {
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_in_field_name;
                                             placeholder: "Enter the field name";
-                                            enabled: !AppState.project_is_saving;
+
                                             edited(text) => {
                                                 FeaturesTabState.dto_in_field_name_changed(text);
                                             }
@@ -158,7 +158,7 @@ export component DtoDetails inherits Rectangle {
                                         ComboBox {
                                             model: FeaturesTabState.dto_field_type_options;
                                             current-index <=> FeaturesTabState.selected_dto_in_field_type_index;
-                                            enabled: !AppState.project_is_saving;
+
                                             selected(value) => {
                                                 FeaturesTabState.dto_in_field_type_changed(value);
                                             }
@@ -171,7 +171,7 @@ export component DtoDetails inherits Rectangle {
                                         CheckBox {
                                             text: "Nullable";
                                             checked <=> FeaturesTabState.selected_dto_in_field_is_nullable;
-                                            enabled: !AppState.project_is_saving;
+
                                             toggled => {
                                                 FeaturesTabState.dto_in_field_is_nullable_changed(self.checked);
                                             }
@@ -180,7 +180,7 @@ export component DtoDetails inherits Rectangle {
                                         CheckBox {
                                             text: "List";
                                             checked <=> FeaturesTabState.selected_dto_in_field_is_list;
-                                            enabled: !AppState.project_is_saving;
+
                                             toggled => {
                                                 FeaturesTabState.dto_in_field_is_list_changed(self.checked);
                                             }
@@ -227,7 +227,7 @@ export component DtoDetails inherits Rectangle {
                         CheckBox {
                             text: "Enable DTO Out";
                             checked <=> FeaturesTabState.dto_out_enabled;
-                            enabled: !AppState.project_is_saving;
+
                             toggled => {
                                 FeaturesTabState.dto_out_enabled_changed(self.checked);
                             }
@@ -263,7 +263,7 @@ export component DtoDetails inherits Rectangle {
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_out_name;
                                         placeholder: "Enter the DTO Out name";
-                                        enabled: !AppState.project_is_saving;
+
                                         edited(text) => {
                                             FeaturesTabState.dto_out_name_changed(text);
                                         }
@@ -340,7 +340,7 @@ export component DtoDetails inherits Rectangle {
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_out_field_name;
                                             placeholder: "Enter the field name";
-                                            enabled: !AppState.project_is_saving;
+
                                             edited(text) => {
                                                 FeaturesTabState.dto_out_field_name_changed(text);
                                             }
@@ -353,7 +353,7 @@ export component DtoDetails inherits Rectangle {
                                         ComboBox {
                                             model: FeaturesTabState.dto_field_type_options;
                                             current-index <=> FeaturesTabState.selected_dto_out_field_type_index;
-                                            enabled: !AppState.project_is_saving;
+
                                             selected(value) => {
                                                 FeaturesTabState.dto_out_field_type_changed(value);
                                             }
@@ -366,7 +366,7 @@ export component DtoDetails inherits Rectangle {
                                         CheckBox {
                                             text: "Nullable";
                                             checked <=> FeaturesTabState.selected_dto_out_field_is_nullable;
-                                            enabled: !AppState.project_is_saving;
+
                                             toggled => {
                                                 FeaturesTabState.dto_out_field_is_nullable_changed(self.checked);
                                             }
@@ -375,7 +375,7 @@ export component DtoDetails inherits Rectangle {
                                         CheckBox {
                                             text: "List";
                                             checked <=> FeaturesTabState.selected_dto_out_field_is_list;
-                                            enabled: !AppState.project_is_saving;
+
                                             toggled => {
                                                 FeaturesTabState.dto_out_field_is_list_changed(self.checked);
                                             }

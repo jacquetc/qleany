@@ -1,4 +1,4 @@
-import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox } from "std-widgets.slint";
+import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox, TextEdit } from "std-widgets.slint";
 import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
 import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
@@ -107,7 +107,6 @@ export component EntitiesTab inherits Rectangle {
                             StyledLineEdit {
                                 text <=> EntitiesTabState.selected_entity_name;
                                 placeholder: "Enter the entity name (e.g., Person)";
-                                enabled: !AppState.project_is_saving;
                                 edited(text) => {
                                     EntitiesTabState.entity_name_changed(text);
                                 }
@@ -188,7 +187,6 @@ export component EntitiesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_name;
                                     placeholder: "Enter field name";
-                                    enabled: !AppState.project_is_saving;
                                     edited(text) => {
                                         EntitiesTabState.field_name_changed(text);
                                     }
@@ -203,7 +201,6 @@ export component EntitiesTab inherits Rectangle {
                                 ComboBox {
                                     model: EntitiesTabState.field_type_options;
                                     current-value <=> EntitiesTabState.selected_field_type;
-                                    enabled: !AppState.project_is_saving;
                                     selected(value) => {
                                         EntitiesTabState.field_type_changed(value);
                                     }
@@ -216,7 +213,6 @@ export component EntitiesTab inherits Rectangle {
 
                                 entity-combo := ComboBox {
                                     model: EntitiesTabState.entity_options;
-                                    enabled: !AppState.project_is_saving;
                                     selected(value) => {
                                         // Pass the selected index to the callback
                                         EntitiesTabState.field_entity_changed(entity-combo.current-index);
@@ -231,7 +227,6 @@ export component EntitiesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_enum_name;
                                     placeholder: "Enter enum name";
-                                    enabled: !AppState.project_is_saving;
                                     edited(text) => {
                                         EntitiesTabState.field_enum_name_changed(text);
                                     }
@@ -242,10 +237,9 @@ export component EntitiesTab inherits Rectangle {
                             if EntitiesTabState.selected_field_type == "Enum" : FormField {
                                 label: "Enum Values (one per line)";
 
-                                StyledLineEdit {
+                                TextEdit {
+                                    height: 100px;
                                     text <=> EntitiesTabState.selected_field_enum_values;
-                                    placeholder: "Enter enum values, separated by commas";
-                                    enabled: !AppState.project_is_saving;
                                     edited(text) => {
                                         EntitiesTabState.field_enum_values_changed(text);
                                     }
@@ -262,7 +256,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Nullable";
                                         checked <=> EntitiesTabState.selected_field_is_nullable;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_is_nullable_changed(self.checked);
                                         }
@@ -271,7 +264,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Primary Key";
                                         checked <=> EntitiesTabState.selected_field_is_primary_key;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_is_primary_key_changed(self.checked);
                                         }
@@ -280,7 +272,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Is List";
                                         checked <=> EntitiesTabState.selected_field_is_list;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_is_list_changed(self.checked);
                                         }
@@ -289,7 +280,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "List Model";
                                         checked <=> EntitiesTabState.selected_field_list_model;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_list_model_changed(self.checked);
                                         }
@@ -304,7 +294,6 @@ export component EntitiesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_list_model_displayed_field;
                                     placeholder: "Enter displayed field name";
-                                    enabled: !AppState.project_is_saving;
                                     edited(text) => {
                                         EntitiesTabState.field_list_model_displayed_field_changed(text);
                                     }
@@ -321,7 +310,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Single";
                                         checked <=> EntitiesTabState.selected_field_single;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_single_changed(self.checked);
                                         }
@@ -330,7 +318,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Strong";
                                         checked <=> EntitiesTabState.selected_field_strong;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_strong_changed(self.checked);
                                         }
@@ -339,7 +326,6 @@ export component EntitiesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Ordered";
                                         checked <=> EntitiesTabState.selected_field_ordered;
-                                        enabled: !AppState.project_is_saving;
                                         toggled => {
                                             EntitiesTabState.field_ordered_changed(self.checked);
                                         }

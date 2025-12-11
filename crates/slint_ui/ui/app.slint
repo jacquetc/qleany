@@ -7,8 +7,8 @@ import { GenerateTab } from "tabs/GenerateTab.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, ProjectCommands, GenerateCommands, EntitiesTabState, FeaturesTabState, AppState } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, ProjectCommands, GenerateCommands, EntitiesTabState, FeaturesTabState, AppState }
+import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, AppState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, AppState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -283,10 +283,28 @@ export component App inherits Window {
             height: parent.height;
             message: AppState.confirm_dialog_message;
             accepted => {
-                AppState.confirm_dialog_accepted();
+                // Execute the pending action based on confirm_dialog_pending_action value
+                if (AppState.confirm_dialog_pending_action == "new") {
+                    ManifestCommands.new_manifest();
+                } else if (AppState.confirm_dialog_pending_action == "open") {
+                    ManifestCommands.open_manifest();
+                } else if (AppState.confirm_dialog_pending_action == "close") {
+                    ManifestCommands.close_manifest();
+                } else if (AppState.confirm_dialog_pending_action == "exit") {
+                    ManifestCommands.exit_app();
+                } else if (AppState.confirm_dialog_pending_action == "open_qleany") {
+                    ManifestCommands.open_qleany_manifest();
+                }
+                // Reset and close the dialog
+                AppState.confirm_dialog_pending_action = "none";
+                AppState.confirm_dialog_message = "";
+                AppState.confirm_dialog_visible = false;
             }
             rejected => {
-                AppState.confirm_dialog_rejected();
+                // Just close the dialog without executing the action
+                AppState.confirm_dialog_pending_action = "none";
+                AppState.confirm_dialog_message = "";
+                AppState.confirm_dialog_visible = false;
             }
         }
     }

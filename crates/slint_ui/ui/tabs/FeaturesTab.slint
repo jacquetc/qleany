@@ -159,7 +159,7 @@ export component FeaturesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_feature_name;
                                     placeholder: "Enter the feature name";
-                                    enabled: !AppState.project_is_saving;
+
                                     edited(text) => {
                                         FeaturesTabState.feature_name_changed(text);
                                     }
@@ -242,7 +242,7 @@ export component FeaturesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_use_case_name;
                                     placeholder: "Enter the use case name";
-                                    enabled: !AppState.project_is_saving;
+
                                     edited(text) => {
                                         FeaturesTabState.use_case_name_changed(text);
                                     }
@@ -259,7 +259,7 @@ export component FeaturesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Validator";
                                         checked <=> FeaturesTabState.selected_use_case_validator;
-                                        enabled: !AppState.project_is_saving;
+
                                         toggled => {
                                             FeaturesTabState.use_case_validator_changed(self.checked);
                                         }
@@ -268,7 +268,7 @@ export component FeaturesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Undoable";
                                         checked <=> FeaturesTabState.selected_use_case_undoable;
-                                        enabled: !AppState.project_is_saving;
+
                                         toggled => {
                                             FeaturesTabState.use_case_undoable_changed(self.checked);
                                         }
@@ -277,7 +277,7 @@ export component FeaturesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Read Only";
                                         checked <=> FeaturesTabState.selected_use_case_read_only;
-                                        enabled: !AppState.project_is_saving;
+
                                         toggled => {
                                             FeaturesTabState.use_case_read_only_changed(self.checked);
                                         }
@@ -286,7 +286,7 @@ export component FeaturesTab inherits Rectangle {
                                     CheckBox {
                                         text: "Long Operation";
                                         checked <=> FeaturesTabState.selected_use_case_long_operation;
-                                        enabled: !AppState.project_is_saving;
+
                                         toggled => {
                                             FeaturesTabState.use_case_long_operation_changed(self.checked);
                                         }

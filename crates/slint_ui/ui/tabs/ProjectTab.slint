@@ -1,5 +1,5 @@
 import { LineEdit, ComboBox, ProgressIndicator } from "std-widgets.slint";
-import { ProjectCommands, AppState } from "../globals.slint";
+import { ProjectTabState } from "../globals.slint";
 import { Paper, FormField, StyledLineEdit } from "../components/misc.slint";
 
 // Styled select/combo box
@@ -79,12 +79,6 @@ export component ProjectTab inherits Rectangle {
             color: #212529;
         }
 
-        // Error message
-        if (AppState.project_error_message != "") : Alert {
-            message: AppState.project_error_message;
-            title: "Error loading project settings";
-        }
-
         // Form in Paper
         Paper {
             with-border: true;
@@ -97,10 +91,12 @@ export component ProjectTab inherits Rectangle {
                     label: "Language";
                     required: true;
                     
-                    StyledComboBox {
-                        current-value <=> AppState.project_language;
-                        model: ["Rust", "C++ / Qt", "Python"];
-                        enabled: !AppState.project_is_saving;
+                    language-combo := StyledComboBox {
+                        current-value <=> ProjectTabState.language;
+                        model: ["Rust", "C++ / Qt"];
+                        changed current-value => {
+                            ProjectTabState.language_changed(self.current-value);
+                        }
                     }
                 }
 
@@ -109,9 +105,11 @@ export component ProjectTab inherits Rectangle {
                     required: true;
                     
                     StyledLineEdit {
-                        text <=> AppState.project_application_name;
+                        text <=> ProjectTabState.application_name;
                         placeholder: "Enter application name";
-                        enabled: !AppState.project_is_saving;
+                        edited(text) => {
+                            ProjectTabState.application_name_changed(text);
+                        }
                     }
                 }
 
@@ -120,9 +118,11 @@ export component ProjectTab inherits Rectangle {
                     required: true;
                     
                     StyledLineEdit {
-                        text <=> AppState.project_organisation_name;
+                        text <=> ProjectTabState.organisation_name;
                         placeholder: "Enter organisation name";
-                        enabled: !AppState.project_is_saving;
+                        edited(text) => {
+                            ProjectTabState.organisation_name_changed(text);
+                        }
                     }
                 }
 
@@ -131,9 +131,11 @@ export component ProjectTab inherits Rectangle {
                     required: true;
                     
                     StyledLineEdit {
-                        text <=> AppState.project_organisation_domain;
+                        text <=> ProjectTabState.organisation_domain;
                         placeholder: "Enter organisation domain (e.g., com.example)";
-                        enabled: !AppState.project_is_saving;
+                        edited(text) => {
+                            ProjectTabState.organisation_domain_changed(text);
+                        }
                     }
                 }
 
@@ -141,9 +143,11 @@ export component ProjectTab inherits Rectangle {
                     label: "Prefix Path";
                     
                     StyledLineEdit {
-                        text <=> AppState.project_prefix_path;
+                        text <=> ProjectTabState.prefix_path;
                         placeholder: "Enter prefix path";
-                        enabled: !AppState.project_is_saving;
+                        edited(text) => {
+                            ProjectTabState.prefix_path_changed(text);
+                        }
                     }
                 }
             }
@@ -151,22 +155,5 @@ export component ProjectTab inherits Rectangle {
 
         // Spacer
         Rectangle { vertical-stretch: 1; }
-    }
-
-    // Loading overlay
-    if AppState.project_is_saving : Rectangle {
-        background: #ffffff80;
-        x: 0px;
-        y: 0px;
-        width: parent.width;
-        height: parent.height;
-
-        ProgressIndicator {
-            width: 48px;
-            height: 48px;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-            indeterminate: true;
-        }
     }
 }
