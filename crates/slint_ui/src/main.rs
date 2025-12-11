@@ -34,6 +34,7 @@ fn main() {
     // Create the Slint UI
     let app = App::new().unwrap();
 
+
     // Initialize global AppState (defaults are set in globals.slint, but we can override here if needed)
     // The globals are already initialized with defaults in globals.slint
 
@@ -48,6 +49,31 @@ fn main() {
 
     // Initialize project tab callbacks (project settings)
     tabs::project_tab::init(&event_hub_client, &app, &app_context);
+
+    app.window().on_close_requested({
+        let app_weak = app.as_weak();
+        let ctx = Arc::clone(&app_context);
+
+        move || {
+            log::info!("Window close requested");
+
+            let app = match app_weak.upgrade() {
+                Some(app) => app,
+                None => return slint::CloseRequestResponse::KeepWindowShown,
+            };
+
+            if app.global::<AppState>().get_manifest_is_saved() {
+                log::info!("Manifest is saved, allowing window to close");
+                ctx.shutdown();
+                return slint::CloseRequestResponse::HideWindow;
+            }
+            app.global::<AppState>().set_confirm_dialog_pending_action(slint::SharedString::from("exit"));
+            app.global::<AppState>().set_confirm_dialog_message(slint::SharedString::from("You have unsaved changes. Do you want to close the manifest without saving?"));
+            app.global::<AppState>().set_confirm_dialog_visible(true);
+
+            slint::CloseRequestResponse::KeepWindowShown
+        }
+    });
 
     app.global::<ManifestCommands>().on_exit_app({
         let ctx = Arc::clone(&app_context);
