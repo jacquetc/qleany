@@ -44,6 +44,7 @@ export global EntitiesTabState {
     callback request_entities_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_entity_id: -1;
     callback entity_selected(int);
+    callback request_entity_deletion(int /* entity_id */);
     // name input :
     in-out property <string> selected_entity_name: "";
     callback entity_name_changed(string);
@@ -54,6 +55,7 @@ export global EntitiesTabState {
     callback request_fields_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_field_id: -1;
     callback field_selected(int);
+    callback request_field_deletion(int /* field_id */);
 
     // Field details properties
     in-out property <string> selected_field_name: "";
@@ -102,6 +104,7 @@ export global FeaturesTabState {
     callback request_features_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_feature_id: -1;
     callback feature_selected(int);
+    callback request_feature_deletion(int /* feature_id */);
 
     // Feature details
     in-out property <string> selected_feature_name: "";
@@ -112,6 +115,7 @@ export global FeaturesTabState {
     callback request_use_cases_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_use_case_id: -1;
     callback use_case_selected(int);
+    callback request_use_case_deletion(int /* use_case_id */);
 
     // Use case details properties
     in-out property <string> selected_use_case_name: "";
@@ -148,6 +152,7 @@ export global FeaturesTabState {
     callback request_dto_in_fields_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_dto_in_field_id: -1;
     callback dto_in_field_selected(int);
+    callback request_dto_in_field_deletion(int /* dto_in_field_id */);
 
     // DTO In field details properties
     in-out property <string> selected_dto_in_field_name: "";
@@ -171,6 +176,7 @@ export global FeaturesTabState {
     callback request_dto_out_fields_reorder(int /* from_index */, int /* to_index */);
     in-out property <int> selected_dto_out_field_id: -1;
     callback dto_out_field_selected(int);
+    callback request_dto_out_field_deletion(int /* dto_out_field_id */);
 
     // DTO Out field details properties
     in-out property <string> selected_dto_out_field_name: "";

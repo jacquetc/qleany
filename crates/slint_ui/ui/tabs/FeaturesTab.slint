@@ -108,12 +108,16 @@ export component FeaturesTab inherits Rectangle {
                             items: FeaturesTabState.feature_cr_list;
                             reorderable: true;
                             enable-checkbox: false;
+                            enable-delete: true;
                             selected-id: FeaturesTabState.selected_feature_id;
                             selection-changed(id) => {
                                 FeaturesTabState.feature_selected(id);
                             }
                             request-reorder(from_index, to_index) => {
                                 FeaturesTabState.request_features_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                FeaturesTabState.request_feature_deletion(id);
                             }
                         }
                     }
@@ -186,12 +190,16 @@ export component FeaturesTab inherits Rectangle {
                             items: FeaturesTabState.use_case_cr_list;
                             reorderable: true;
                             enable-checkbox: false;
+                            enable-delete: true;
                             selected-id: FeaturesTabState.selected_use_case_id;
                             selection-changed(id) => {
                                 FeaturesTabState.use_case_selected(id);
                             }
                             request-reorder(from_index, to_index) => {
                                 FeaturesTabState.request_use_cases_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                FeaturesTabState.request_use_case_deletion(id);
                             }
                         }
 

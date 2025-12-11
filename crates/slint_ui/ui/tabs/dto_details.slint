@@ -101,12 +101,16 @@ export component DtoDetails inherits Rectangle {
                                 items: FeaturesTabState.dto_in_field_cr_list;
                                 reorderable: true;
                                 enable-checkbox: false;
+                                enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_in_field_id;
                                 selection-changed(id) => {
                                     FeaturesTabState.dto_in_field_selected(id);
                                 }
                                 request-reorder(from_index, to_index) => {
                                     FeaturesTabState.request_dto_in_fields_reorder(from_index, to_index)
+                                }
+                                request-delete(id) => {
+                                    FeaturesTabState.request_dto_in_field_deletion(id);
                                 }
                             }
                         }
@@ -292,12 +296,16 @@ export component DtoDetails inherits Rectangle {
                                 items: FeaturesTabState.dto_out_field_cr_list;
                                 reorderable: true;
                                 enable-checkbox: false;
+                                enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_out_field_id;
                                 selection-changed(id) => {
                                     FeaturesTabState.dto_out_field_selected(id);
                                 }
                                 request-reorder(from_index, to_index) => {
                                     FeaturesTabState.request_dto_out_fields_reorder(from_index, to_index)
+                                }
+                                request-delete(id) => {
+                                    FeaturesTabState.request_dto_out_field_deletion(id);
                                 }
                             }
                         }

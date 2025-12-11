@@ -107,6 +107,14 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
 
             match entity_ids_res {
                 Ok(entity_ids) => {
+                    // empty entity list if no entities
+                    if entity_ids.is_empty() {
+                        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+                        app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+                        log::info!("Entity list cleared (no entities)");
+                        return;
+                    }
+
                     // Fetch entities details to obtain names
                     match entity_commands::get_entity_multi(&ctx, &entity_ids) {
                         Ok(entities_opt) => {
@@ -141,6 +149,19 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
     }
 }
 
+fn clear_entity_list(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        // Clear entity list
+        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+        app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+        log::info!("Entity list cleared");
+    }
+}
+
+
 fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
 
     let ctx = Arc::clone(app_context);
@@ -160,6 +181,14 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
 
             match field_ids_res {
                 Ok(field_ids) => {
+                    // empty field list if no fields
+                    if field_ids.is_empty() {
+                        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+                        app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+                        log::info!("Field list cleared (no fields)");
+                        return;
+                    }
+
                     // Fetch entities details to obtain names
                     match field_commands::get_field_multi(&ctx, &field_ids) {
                         Ok(fields_opt) => {
@@ -191,6 +220,18 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                 }
             }
         }
+    }
+}
+
+fn clear_field_list(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        // Clear field list
+        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+        app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+        log::info!("Field list cleared");
     }
 }
 
@@ -297,6 +338,61 @@ fn setup_fields_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                 }
                 }
             }
+    });
+}
+
+fn setup_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_request_field_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |field_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = field_commands::remove_field(
+                    &ctx,
+                    &(field_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("Field deleted successfully");
+                        // Refresh field list
+                        fill_field_list(&app, &ctx);
+                        // Clear field form
+                        clear_field_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete field: {}", e);
+                    }
+                }
+            }
+        }
+    });
+}
+
+fn setup_entity_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_request_entity_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |entity_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = entity_commands::remove_entity(
+                    &ctx,
+                    &(entity_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("Entity deleted successfully");
+                        // Refresh entity list
+                        fill_entity_list(&app, &ctx);
+                        // Clear field list and form
+                        clear_field_list(&app, &ctx);
+                        clear_field_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete entity: {}", e);
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -759,10 +855,12 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_entities_reorder_callback(app, app_context);
     setup_select_entity_callbacks(app, app_context);
     setup_entity_name_callbacks(app, app_context);
+    setup_entity_deletion_callback(app, app_context);
 
     // Field list callbacks
     setup_fields_reorder_callback(app, app_context);
     setup_select_field_callbacks(app, app_context);
+    setup_field_deletion_callback(app, app_context);
 
     // Field detail callbacks
     setup_field_name_callback(app, app_context);

@@ -50,12 +50,16 @@ export component EntitiesTab inherits Rectangle {
                             items: EntitiesTabState.entity_cr_list;
                             reorderable: true;
                             enable-checkbox: false;
+                            enable-delete: true;
                             selected-id: EntitiesTabState.selected_entity_id;
                             selection-changed(id) => {
                                 EntitiesTabState.entity-selected(id);
                             }
                             request-reorder(from_index, to_index) => {
                                 EntitiesTabState.request_entities_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                EntitiesTabState.request_entity_deletion(id);
                             }
                         }
 
@@ -134,12 +138,16 @@ export component EntitiesTab inherits Rectangle {
                             items: EntitiesTabState.field_cr_list;
                             reorderable: true;
                             enable-checkbox: false;
+                            enable-delete: true;
                             selected-id: EntitiesTabState.selected_field_id;
                             selection-changed(id) => {
                                 EntitiesTabState.field_selected(id);
                             }
                             request-reorder(from_index, to_index) => {
                                 EntitiesTabState.request_fields_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                EntitiesTabState.request_field_deletion(id);
                             }
                         }
                     }

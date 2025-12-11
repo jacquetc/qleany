@@ -102,6 +102,14 @@ fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
 
             match feature_ids_res {
                 Ok(feature_ids) => {
+                    // empty field list if no features
+                    if feature_ids.is_empty() {
+                        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+                        app.global::<FeaturesTabState>().set_feature_cr_list(model.into());
+                        log::info!("Feature list cleared (no features)");
+                        return;
+                    }
+                    
                     match feature_commands::get_feature_multi(&ctx, &feature_ids) {
                         Ok(features_opt) => {
                             let mut list: Vec<ListItem> = Vec::new();
@@ -133,6 +141,19 @@ fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
     }
 }
 
+fn clear_feature_list(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        // Clear feature list
+        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+        app.global::<FeaturesTabState>().set_feature_cr_list(model.into());
+        log::info!("Feature list cleared");
+    }
+}
+
+
 fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
     let ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
@@ -149,6 +170,14 @@ fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
 
             match use_case_ids_res {
                 Ok(use_case_ids) => {
+                    // empty field list if no use cases
+                    if use_case_ids.is_empty() {
+                        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+                        app.global::<FeaturesTabState>().set_use_case_cr_list(model.into());
+                        log::info!("Use case list cleared (no use cases)");
+                        return;
+                    }
+                    
                     match use_case_commands::get_use_case_multi(&ctx, &use_case_ids) {
                         Ok(use_cases_opt) => {
                             let mut list: Vec<ListItem> = Vec::new();
@@ -177,6 +206,18 @@ fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
                 }
             }
         }
+    }
+}
+
+fn clear_use_case_list(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        // Clear use case list
+        let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
+        app.global::<FeaturesTabState>().set_use_case_cr_list(model.into());
+        log::info!("Use case list cleared");
     }
 }
 
@@ -351,6 +392,15 @@ fn fill_dto_in_field_list(app: &App, app_context: &Arc<AppContext>) {
 
     match field_ids_res {
         Ok(field_ids) => {
+            // empty field list if no fields
+            if field_ids.is_empty() {
+                let model = std::rc::Rc::new(slint::VecModel::from(vec![]));
+                state.set_dto_in_field_cr_list(model.into());
+                log::info!("DTO In field list cleared (no fields)");
+                return;
+            }
+            
+            // Fetch field details
             match dto_field_commands::get_dto_field_multi(app_context, &field_ids) {
                 Ok(fields_opt) => {
                     let mut list: Vec<ListItem> = Vec::new();
@@ -398,6 +448,15 @@ fn fill_dto_out_field_list(app: &App, app_context: &Arc<AppContext>) {
 
     match field_ids_res {
         Ok(field_ids) => {
+            // empty field list if no fields
+            if field_ids.is_empty() {
+                let model = std::rc::Rc::new(slint::VecModel::from(vec![]));
+                state.set_dto_out_field_cr_list(model.into());
+                log::info!("DTO Out field list cleared (no fields)");
+                return;
+            }
+            
+            // Fetch field details
             match dto_field_commands::get_dto_field_multi(app_context, &field_ids) {
                 Ok(fields_opt) => {
                     let mut list: Vec<ListItem> = Vec::new();
@@ -648,6 +707,61 @@ fn setup_use_cases_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                     }
                     Err(e) => {
                         log::error!("Failed to reorder use cases: {}", e);
+                    }
+                }
+            }
+        }
+    });
+}
+
+fn setup_feature_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>().on_request_feature_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |feature_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = feature_commands::remove_feature(
+                    &ctx,
+                    &(feature_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("Feature deleted successfully");
+                        // Refresh feature list
+                        fill_feature_list(&app, &ctx);
+                        // Clear use case list and form
+                        clear_use_case_list(&app, &ctx);
+                        clear_use_case_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete feature: {}", e);
+                    }
+                }
+            }
+        }
+    });
+}
+
+fn setup_use_case_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>().on_request_use_case_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |use_case_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = use_case_commands::remove_use_case(
+                    &ctx,
+                    &(use_case_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("Use case deleted successfully");
+                        // Refresh use case list
+                        fill_use_case_list(&app, &ctx);
+                        // Clear use case form
+                        clear_use_case_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete use case: {}", e);
                     }
                 }
             }
@@ -1307,6 +1421,60 @@ fn setup_dto_out_fields_reorder_callback(app: &App, app_context: &Arc<AppContext
     });
 }
 
+fn setup_dto_in_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>().on_request_dto_in_field_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |field_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = dto_field_commands::remove_dto_field(
+                    &ctx,
+                    &(field_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("DTO In field deleted successfully");
+                        // Refresh DTO In field list
+                        fill_dto_in_field_list(&app, &ctx);
+                        // Clear DTO In field form
+                        clear_dto_in_field_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete DTO In field: {}", e);
+                    }
+                }
+            }
+        }
+    });
+}
+
+fn setup_dto_out_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>().on_request_dto_out_field_deletion({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |field_id| {
+            if let Some(app) = app_weak.upgrade() {
+                let result = dto_field_commands::remove_dto_field(
+                    &ctx,
+                    &(field_id as common::types::EntityId)
+                );
+                match result {
+                    Ok(()) => {
+                        log::info!("DTO Out field deleted successfully");
+                        // Refresh DTO Out field list
+                        fill_dto_out_field_list(&app, &ctx);
+                        // Clear DTO Out field form
+                        clear_dto_out_field_form(&app);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to delete DTO Out field: {}", e);
+                    }
+                }
+            }
+        }
+    });
+}
+
 /// Initialize all features tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
@@ -1318,10 +1486,12 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_features_reorder_callback(app, app_context);
     setup_select_feature_callbacks(app, app_context);
     setup_feature_name_callback(app, app_context);
+    setup_feature_deletion_callback(app, app_context);
 
     // Use case list callbacks
     setup_use_cases_reorder_callback(app, app_context);
     setup_select_use_case_callbacks(app, app_context);
+    setup_use_case_deletion_callback(app, app_context);
 
     // Use case detail callbacks
     setup_use_case_name_callback(app, app_context);
@@ -1339,6 +1509,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_dto_in_field_is_nullable_callback(app, app_context);
     setup_dto_in_field_is_list_callback(app, app_context);
     setup_dto_in_fields_reorder_callback(app, app_context);
+    setup_dto_in_field_deletion_callback(app, app_context);
 
     // DTO Out callbacks
     setup_dto_out_enabled_callback(app, app_context);
@@ -1349,4 +1520,5 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_dto_out_field_is_nullable_callback(app, app_context);
     setup_dto_out_field_is_list_callback(app, app_context);
     setup_dto_out_fields_reorder_callback(app, app_context);
+    setup_dto_out_field_deletion_callback(app, app_context);
 }

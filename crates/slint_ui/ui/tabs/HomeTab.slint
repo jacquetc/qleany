@@ -122,6 +122,12 @@ export component HomeTab inherits Rectangle {
                         primary: true;
                     }
                     Button {
+                        text: "Save Manifest As...";
+                        enabled: !AppState.is_loading;
+                        clicked => { ManifestCommands.save_manifest(); }
+                        primary: true;
+                    }
+                    Button {
                         text: "Close Current Manifest";
                         enabled: !AppState.is_loading;
                         clicked => {
