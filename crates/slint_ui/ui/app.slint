@@ -6,8 +6,8 @@ import { FeaturesTab } from "tabs/FeaturesTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, ProjectCommands, EntityCommands, FeatureCommands, GenerateCommands, AppState } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, ProjectCommands, EntityCommands, FeatureCommands, GenerateCommands, AppState }
+import { ManifestCommands, UndoRedoCommands, ProjectCommands, EntityCommands, FeatureCommands, GenerateCommands, EntitiesTabState, AppState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, ProjectCommands, EntityCommands, FeatureCommands, GenerateCommands, EntitiesTabState, AppState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -46,8 +46,9 @@ component NavItem inherits Rectangle {
 
 export component App inherits Window {
     title: "Qleany";
-    width: 1000px;
-    height: 600px;
+    min-width: 1000px;
+    min-height: 900px;
+
 
     // All state and callbacks are now in globals (AppState, ManifestCommands, etc.)
     // See globals.slint for the complete list

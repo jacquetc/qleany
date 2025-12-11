@@ -11,7 +11,7 @@ use handling_manifest::LoadDto;
 
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, handling_manifest_commands, root_commands};
-use crate::{App, AppState, ListItem, ManifestCommands};
+use crate::{App, EntitiesTabState, AppState, ListItem, ManifestCommands};
 
 /// Wire up the on_new_manifest callback
 pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
@@ -144,16 +144,15 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
 
                                         // 3) Apply to AppState
                                         let model = std::rc::Rc::new(slint::VecModel::from(list));
-                                        app.global::<AppState>().set_entity_cr_list(model.into());
+                                        app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
 
                                         // Reset selections related to entities/fields
-                                        app.global::<AppState>().set_selected_entity_index(-1);
-                                        app.global::<AppState>().set_selected_entity_id(-1);
-                                        app.global::<AppState>().set_selected_entity_name(slint::SharedString::from(""));
-                                        app.global::<AppState>().set_field_list(
-                                            std::rc::Rc::new(slint::VecModel::from(Vec::<slint::SharedString>::new())).into(),
-                                        );
-                                        app.global::<AppState>().set_selected_field_index(-1);
+                                        app.global::<EntitiesTabState>().set_selected_entity_id(-1);
+                                        app.global::<EntitiesTabState>().set_selected_entity_name(slint::SharedString::from(""));
+                                        let list: Vec<ListItem> = Vec::new();
+                                        let model = std::rc::Rc::new(slint::VecModel::from(list));
+                                        app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+                                        app.global::<EntitiesTabState>().set_selected_field_id(-1);
                                     }
                                     Err(e) => {
                                         log::error!("Failed to fetch entities: {}", e);

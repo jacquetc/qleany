@@ -7,13 +7,14 @@ use std::sync::Arc;
 
 use slint::ComponentHandle;
 use common::direct_access::root::RootRelationshipField;
+use common::direct_access::entity::EntityRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::RootRelationshipDto;
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, root_commands};
+use crate::commands::{entity_commands, root_commands, field_commands};
 use crate::event_hub_client::EventHubClient;
-use crate::{App, AppState, ListItem};
+use crate::{App, EntitiesTabState, AppState, ListItem};
 
 /// Subscribe to Root update events to refresh entity_cr_list
 pub fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
@@ -30,50 +31,7 @@ pub fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App
                 // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-
-                        // Only refresh if we have a valid root_id
-                        if root_id > 0 {
-                            // Get entities attached to the root
-                            let entity_ids_res = root_commands::get_root_relationship(
-                                &ctx,
-                                &root_id,
-                                &RootRelationshipField::Entities,
-                            );
-
-                            match entity_ids_res {
-                                Ok(entity_ids) => {
-                                    // Fetch entities details to obtain names
-                                    match entity_commands::get_entity_multi(&ctx, &entity_ids) {
-                                        Ok(entities_opt) => {
-                                            // Map to ListItem (id + text)
-                                            let mut list: Vec<ListItem> = Vec::new();
-                                            for maybe_entity in entities_opt.into_iter() {
-                                                if let Some(e) = maybe_entity {
-                                                    list.push(ListItem {
-                                                        id: e.id as i32,
-                                                        text: slint::SharedString::from(e.name),
-                                                        subtitle: slint::SharedString::from(""),
-                                                        checked: false,
-                                                    });
-                                                }
-                                            }
-
-                                            // Apply to AppState
-                                            let model = std::rc::Rc::new(slint::VecModel::from(list));
-                                            app.global::<AppState>().set_entity_cr_list(model.into());
-                                            log::info!("Entity list refreshed after root update");
-                                        }
-                                        Err(e) => {
-                                            log::error!("Failed to fetch entities after root update: {}", e);
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    log::error!("Failed to get root entities after root update: {}", e);
-                                }
-                            }
-                        }
+                        fill_entity_list(&app, &ctx);
                     }
                 });
             }
@@ -81,9 +39,117 @@ pub fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App
     );
 }
 
+
+fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
+
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+
+        // Only refresh if we have a valid root_id
+        if root_id > 0 {
+            // Get entities attached to the root
+            let entity_ids_res = root_commands::get_root_relationship(
+                &ctx,
+                &root_id,
+                &RootRelationshipField::Entities,
+            );
+
+            match entity_ids_res {
+                Ok(entity_ids) => {
+                    // Fetch entities details to obtain names
+                    match entity_commands::get_entity_multi(&ctx, &entity_ids) {
+                        Ok(entities_opt) => {
+                            // Map to ListItem (id + text)
+                            let mut list: Vec<ListItem> = Vec::new();
+                            for maybe_entity in entities_opt.into_iter() {
+                                if let Some(e) = maybe_entity {
+                                    list.push(ListItem {
+                                        id: e.id as i32,
+                                        text: slint::SharedString::from(e.name),
+                                        subtitle: slint::SharedString::from(""),
+                                        checked: false,
+                                    });
+                                }
+                            }
+
+                            // Apply to AppState
+                            let model = std::rc::Rc::new(slint::VecModel::from(list));
+                            app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+                            log::info!("Entity list refreshed");
+                        }
+                        Err(e) => {
+                            log::error!("Failed to fetch entities: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to get root entities: {}", e);
+                }
+            }
+        }
+    }
+}
+
+fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
+
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id() as common::types::EntityId;
+
+        // Only refresh if we have a valid root_id
+        if entity_id > 0 {
+            // Get entities attached to the root
+            let field_ids_res = entity_commands::get_entity_relationship(
+                &ctx,
+                &entity_id,
+                &EntityRelationshipField::Fields,
+            );
+
+            match field_ids_res {
+                Ok(field_ids) => {
+                    // Fetch entities details to obtain names
+                    match field_commands::get_field_multi(&ctx, &field_ids) {
+                        Ok(fields_opt) => {
+                            // Map to ListItem (id + text)
+                            let mut list: Vec<ListItem> = Vec::new();
+                            for maybe_field in fields_opt.into_iter() {
+                                if let Some(e) = maybe_field {
+                                    list.push(ListItem {
+                                        id: e.id as i32,
+                                        text: slint::SharedString::from(e.name),
+                                        subtitle: slint::SharedString::from(""),
+                                        checked: false,
+                                    });
+                                }
+                            }
+
+                            // Apply to AppState
+                            let model = std::rc::Rc::new(slint::VecModel::from(list));
+                            app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+                            log::info!("Field list refreshed");
+                        }
+                        Err(e) => {
+                            log::error!("Failed to fetch fields: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to get root fields: {}", e);
+                }
+            }
+        }
+    }
+}
+
+
 /// Wire up the on_request_entities_reorder callback on AppState
 pub fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<AppState>().on_request_entities_reorder({
+    app.global::<EntitiesTabState>().on_request_entities_reorder({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |from_index, to_index| {
@@ -136,8 +202,39 @@ pub fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>)
     });
 }
 
+fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_entity_selected({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |selected_entity_id| {
+            if let Some(app) = app_weak.upgrade() {
+                if selected_entity_id >= 0 {
+                    let entity_res = entity_commands::get_entity(
+                        &ctx,
+                        &(selected_entity_id as common::types::EntityId)
+                    );
+                    // Update ALL dependent properties here
+                    match entity_res {
+                        Ok(Some(entity)) => {
+                            app.global::<EntitiesTabState>().set_selected_entity_id(selected_entity_id);
+                            app.global::<EntitiesTabState>().set_selected_entity_name(entity.name.into());
+                            fill_field_list(&app, &ctx);
+
+                        }
+                        _ => {
+                            app.global::<EntitiesTabState>().set_selected_entity_id(-1);
+                            app.global::<EntitiesTabState>().set_selected_entity_name("".into());
+                        }
+                    };
+                }
+            };
+        }
+    });
+}
+
 /// Initialize all entities tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     subscribe_root_updated_event(event_hub_client, app, app_context);
     setup_entities_reorder_callback(app, app_context);
+    setup_select_entity_callbacks(app, app_context);
 }

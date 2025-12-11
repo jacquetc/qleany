@@ -1,5 +1,5 @@
 import { ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
-import { EntityCommands, AppState, CRListItem } from "../globals.slint";
+import { EntityCommands, AppState, EntitiesTabState, CRListItem } from "../globals.slint";
 import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
@@ -33,6 +33,7 @@ export component EntitiesTab inherits Rectangle {
                 border-color: #dee2e6;
 
                 VerticalLayout {
+
                     SectionHeader {
                         title: "Entities";
                     }
@@ -41,18 +42,24 @@ export component EntitiesTab inherits Rectangle {
                         height: 1px;
                         background: #dee2e6;
                     }
+                    Rectangle {
+                        vertical-stretch: 1;
 
-                    CheckableReorderableList {
-                        items: AppState.entity_cr_list;
-                        reorderable: true;
-                        enable-checkbox: false;
-                        selected-id: AppState.selected_entity_id;
-                        selection-changed(id) => {
-                            EntityCommands.select_entity(id);
+                        entity_list := CheckableReorderableList {
+
+                            items: EntitiesTabState.entity_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            selected-id: EntitiesTabState.selected_entity_id;
+                            selection-changed(id) => {
+                                EntityCommands.select_entity(id);
+                                EntitiesTabState.entity-selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                EntitiesTabState.request_entities_reorder(from_index, to_index)
+                            }
                         }
-                        request-reorder(from_index, to_index) => {
-                            AppState.request_entities_reorder(from_index, to_index)
-                        }
+
                     }
                 }
             }
@@ -70,7 +77,7 @@ export component EntitiesTab inherits Rectangle {
                 VerticalLayout {
                     // Entity Details Section
                     SectionHeader {
-                        title: AppState.selected_entity_index >= 0 ? AppState.selected_entity_name : "Select an entity";
+                        title: EntitiesTabState.selected_entity_id >= 0 ? EntitiesTabState.selected_entity_name : "Select an entity";
                     }
 
                     Rectangle {
@@ -78,7 +85,7 @@ export component EntitiesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    if AppState.selected_entity_index >= 0 : Rectangle {
+                    if EntitiesTabState.selected_entity_id >= 0 : Rectangle {
                         height: 100px;
                         
                         VerticalLayout {
@@ -108,22 +115,26 @@ export component EntitiesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    CheckableReorderableList {
-                        items: AppState.field_cr_list;
-                        reorderable: true;
-                        enable-checkbox: false;
-                        selected-id: AppState.selected_field_index;
-                        selection-changed(id) => {
-                            EntityCommands.select_field(id);
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        field_list := CheckableReorderableList {
+                            items: EntitiesTabState.field_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            selected-id: EntitiesTabState.selected_field_id;
+                            selection-changed(id) => {
+                                EntityCommands.select_field(id);
+                            }
                         }
                     }
                 }
             }
 
             // Conditional: Field Details Column (only show when field is selected)
-            if AppState.selected_field_index >= 0 : Divider {}
+            if EntitiesTabState.selected_field_id >= 0 : Divider {}
 
-            if AppState.selected_field_index >= 0 : Rectangle {
+            if EntitiesTabState.selected_field_id >= 0 : Rectangle {
                 horizontal-stretch: 1;
                 background: #ffffff;
                 border-width: 1px;

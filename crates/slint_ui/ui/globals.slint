@@ -44,6 +44,22 @@ export global GenerateCommands {
     callback cancel_generate();
 }
 
+export global EntitiesTabState {
+    // Entity lists and selection
+    in-out property <[CRListItem]> entity_cr_list: [];
+    callback request_entities_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_entity_id: -1;
+    callback entity_selected(int);
+    in-out property <string> selected_entity_name: "";
+    // fields
+    in-out property <[CRListItem]> field_cr_list: [];
+    callback request_fields_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_field_id: -1;
+    callback field_selected(int);
+    in-out property <string> selected_field_name: "";
+
+}
+
 // Application-wide state
 export global AppState {
     in-out property <int> root_id: 0;
@@ -68,16 +84,7 @@ export global AppState {
     in-out property <string> project_organisation_domain: "";
     in-out property <string> project_prefix_path: "";
     in-out property <string> project_error_message: "";
-    
-    // Entity lists and selection
-    in-out property <[string]> field_list: [];
-    in-out property <[CRListItem]> entity_cr_list: [];
-    callback request_entities_reorder(int /* from_index */, int /* to_index */);
-    in-out property <[CRListItem]> field_cr_list: [];
-    in-out property <int> selected_entity_index: -1;
-    in-out property <int> selected_entity_id: -1;
-    in-out property <string> selected_entity_name: "";
-    in-out property <int> selected_field_index: -1;
+
     
     // Feature lists and selection
     in-out property <[string]> feature_list: [];
