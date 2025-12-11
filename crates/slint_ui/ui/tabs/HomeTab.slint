@@ -88,7 +88,15 @@ export component HomeTab inherits Rectangle {
                     Button {
                         text: "New Manifest";
                         enabled: !AppState.is_loading;
-                        clicked => { ManifestCommands.new_manifest(); }
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.new_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "new";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to create a new manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
                         primary: true;
                     }
 
@@ -96,7 +104,15 @@ export component HomeTab inherits Rectangle {
                     Button {
                         text: "Open Manifest";
                         enabled: !AppState.is_loading;
-                            clicked => { ManifestCommands.open_manifest(); }
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.open_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "open";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to open another manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
                         primary: true;
                     }
                     Button {
@@ -108,14 +124,29 @@ export component HomeTab inherits Rectangle {
                     Button {
                         text: "Close Current Manifest";
                         enabled: !AppState.is_loading;
-                        clicked => { ManifestCommands.close_manifest(); }
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.close_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "close";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to close the manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
                         primary: true;
                     }
                     Button {
                         text: "Exit";
-
                         enabled: !AppState.is_loading;
-                        clicked => { ManifestCommands.close_manifest(); }
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.exit_app();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "exit";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to exit the application without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
                     }
                 }
 
@@ -139,7 +170,15 @@ export component HomeTab inherits Rectangle {
                             width: 180px;
                             height: 36px;
                             enabled: !AppState.is_loading;
-                            clicked => { ManifestCommands.open_qleany_manifest(); }
+                            clicked => {
+                                if (AppState.manifest_is_saved) {
+                                    ManifestCommands.open_qleany_manifest();
+                                } else {
+                                    AppState.confirm_dialog_pending_action = "open_qleany";
+                                    AppState.confirm_dialog_message = "You have unsaved changes. Do you want to open the Qleany manifest without saving?";
+                                    AppState.confirm_dialog_visible = true;
+                                }
+                            }
                             text: "Open Qleany Manifest";
                             primary: true;
                         }

@@ -1,0 +1,398 @@
+import { ScrollView, CheckBox, ComboBox, TabWidget } from "std-widgets.slint";
+import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+
+// DTO Details component - shows DTOs (In/Out) for a use case with separate tabs
+export component DtoDetails inherits Rectangle {
+    background: #ffffff;
+    border-width: 1px;
+    border-color: #dee2e6;
+    border-radius: 8px;
+    horizontal-stretch: 1;
+    min-width: 500px;
+
+    TabWidget {
+        // ====== DTO In Tab ======
+        Tab {
+            title: "DTO In";
+
+            VerticalLayout {
+                spacing: 0px;
+
+                // Enable/Disable DTO In
+                Rectangle {
+                    height: 48px;
+                    background: #f8f9fa;
+
+                    HorizontalLayout {
+                        padding: 12px;
+                        alignment: start;
+
+                        CheckBox {
+                            text: "Enable DTO In";
+                            checked <=> FeaturesTabState.dto_in_enabled;
+                            enabled: !AppState.project_is_saving;
+                            toggled => {
+                                FeaturesTabState.dto_in_enabled_changed(self.checked);
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    height: 1px;
+                    background: #dee2e6;
+                }
+
+                // DTO In Content (only show when enabled)
+                if FeaturesTabState.dto_in_enabled : Rectangle {
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                        spacing: 0px;
+
+                        // DTO In Name
+                        Rectangle {
+                            height: 80px;
+                            background: #ffffff;
+
+                            VerticalLayout {
+                                padding: 16px;
+                                spacing: 8px;
+
+                                FormField {
+                                    label: "Name";
+                                    required: true;
+
+                                    StyledLineEdit {
+                                        text <=> FeaturesTabState.selected_dto_in_name;
+                                        placeholder: "Enter the DTO In name";
+                                        enabled: !AppState.project_is_saving;
+                                        edited(text) => {
+                                            FeaturesTabState.dto_in_name_changed(text);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        // Fields Section Header
+                        SectionHeader {
+                            title: "Fields";
+                        }
+
+                        Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        // Fields list
+                        Rectangle {
+                            vertical-stretch: 1;
+                            min-height: 120px;
+
+                            dto_in_field_list := CheckableReorderableList {
+                                items: FeaturesTabState.dto_in_field_cr_list;
+                                reorderable: true;
+                                enable-checkbox: false;
+                                selected-id: FeaturesTabState.selected_dto_in_field_id;
+                                selection-changed(id) => {
+                                    FeaturesTabState.dto_in_field_selected(id);
+                                }
+                                request-reorder(from_index, to_index) => {
+                                    FeaturesTabState.request_dto_in_fields_reorder(from_index, to_index)
+                                }
+                            }
+                        }
+
+                        // Field details (when a field is selected)
+                        if FeaturesTabState.selected_dto_in_field_id >= 0 : Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        if FeaturesTabState.selected_dto_in_field_id >= 0 : Rectangle {
+                            min-height: 180px;
+                            background: #f8f9fa;
+
+                            ScrollView {
+                                VerticalLayout {
+                                    padding: 16px;
+                                    spacing: 12px;
+                                    alignment: start;
+
+                                    Text {
+                                        text: "Field Details";
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        color: #495057;
+                                    }
+
+                                    FormField {
+                                        label: "Name";
+                                        required: true;
+
+                                        StyledLineEdit {
+                                            text <=> FeaturesTabState.selected_dto_in_field_name;
+                                            placeholder: "Enter the field name";
+                                            enabled: !AppState.project_is_saving;
+                                            edited(text) => {
+                                                FeaturesTabState.dto_in_field_name_changed(text);
+                                            }
+                                        }
+                                    }
+
+                                    FormField {
+                                        label: "Field Type";
+
+                                        ComboBox {
+                                            model: FeaturesTabState.dto_field_type_options;
+                                            current-index <=> FeaturesTabState.selected_dto_in_field_type_index;
+                                            enabled: !AppState.project_is_saving;
+                                            selected(value) => {
+                                                FeaturesTabState.dto_in_field_type_changed(value);
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 16px;
+
+                                        CheckBox {
+                                            text: "Nullable";
+                                            checked <=> FeaturesTabState.selected_dto_in_field_is_nullable;
+                                            enabled: !AppState.project_is_saving;
+                                            toggled => {
+                                                FeaturesTabState.dto_in_field_is_nullable_changed(self.checked);
+                                            }
+                                        }
+
+                                        CheckBox {
+                                            text: "List";
+                                            checked <=> FeaturesTabState.selected_dto_in_field_is_list;
+                                            enabled: !AppState.project_is_saving;
+                                            toggled => {
+                                                FeaturesTabState.dto_in_field_is_list_changed(self.checked);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Placeholder when DTO In is disabled
+                if !FeaturesTabState.dto_in_enabled : Rectangle {
+                    vertical-stretch: 1;
+                    background: #f8f9fa;
+
+                    Text {
+                        text: "Enable DTO In to configure it";
+                        color: #868e96;
+                        font-size: 14px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // ====== DTO Out Tab ======
+        Tab {
+            title: "DTO Out";
+
+            VerticalLayout {
+                spacing: 0px;
+
+                // Enable/Disable DTO Out
+                Rectangle {
+                    height: 48px;
+                    background: #f8f9fa;
+
+                    HorizontalLayout {
+                        padding: 12px;
+                        alignment: start;
+
+                        CheckBox {
+                            text: "Enable DTO Out";
+                            checked <=> FeaturesTabState.dto_out_enabled;
+                            enabled: !AppState.project_is_saving;
+                            toggled => {
+                                FeaturesTabState.dto_out_enabled_changed(self.checked);
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    height: 1px;
+                    background: #dee2e6;
+                }
+
+                // DTO Out Content (only show when enabled)
+                if FeaturesTabState.dto_out_enabled : Rectangle {
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                        spacing: 0px;
+
+                        // DTO Out Name
+                        Rectangle {
+                            height: 80px;
+                            background: #ffffff;
+
+                            VerticalLayout {
+                                padding: 16px;
+                                spacing: 8px;
+
+                                FormField {
+                                    label: "Name";
+                                    required: true;
+
+                                    StyledLineEdit {
+                                        text <=> FeaturesTabState.selected_dto_out_name;
+                                        placeholder: "Enter the DTO Out name";
+                                        enabled: !AppState.project_is_saving;
+                                        edited(text) => {
+                                            FeaturesTabState.dto_out_name_changed(text);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        // Fields Section Header
+                        SectionHeader {
+                            title: "Fields";
+                        }
+
+                        Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        // Fields list
+                        Rectangle {
+                            vertical-stretch: 1;
+                            min-height: 120px;
+
+                            dto_out_field_list := CheckableReorderableList {
+                                items: FeaturesTabState.dto_out_field_cr_list;
+                                reorderable: true;
+                                enable-checkbox: false;
+                                selected-id: FeaturesTabState.selected_dto_out_field_id;
+                                selection-changed(id) => {
+                                    FeaturesTabState.dto_out_field_selected(id);
+                                }
+                                request-reorder(from_index, to_index) => {
+                                    FeaturesTabState.request_dto_out_fields_reorder(from_index, to_index)
+                                }
+                            }
+                        }
+
+                        // Field details (when a field is selected)
+                        if FeaturesTabState.selected_dto_out_field_id >= 0 : Rectangle {
+                            height: 1px;
+                            background: #dee2e6;
+                        }
+
+                        if FeaturesTabState.selected_dto_out_field_id >= 0 : Rectangle {
+                            min-height: 180px;
+                            background: #f8f9fa;
+
+                            ScrollView {
+                                VerticalLayout {
+                                    padding: 16px;
+                                    spacing: 12px;
+                                    alignment: start;
+
+                                    Text {
+                                        text: "Field Details";
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        color: #495057;
+                                    }
+
+                                    FormField {
+                                        label: "Name";
+                                        required: true;
+
+                                        StyledLineEdit {
+                                            text <=> FeaturesTabState.selected_dto_out_field_name;
+                                            placeholder: "Enter the field name";
+                                            enabled: !AppState.project_is_saving;
+                                            edited(text) => {
+                                                FeaturesTabState.dto_out_field_name_changed(text);
+                                            }
+                                        }
+                                    }
+
+                                    FormField {
+                                        label: "Field Type";
+
+                                        ComboBox {
+                                            model: FeaturesTabState.dto_field_type_options;
+                                            current-index <=> FeaturesTabState.selected_dto_out_field_type_index;
+                                            enabled: !AppState.project_is_saving;
+                                            selected(value) => {
+                                                FeaturesTabState.dto_out_field_type_changed(value);
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 16px;
+
+                                        CheckBox {
+                                            text: "Nullable";
+                                            checked <=> FeaturesTabState.selected_dto_out_field_is_nullable;
+                                            enabled: !AppState.project_is_saving;
+                                            toggled => {
+                                                FeaturesTabState.dto_out_field_is_nullable_changed(self.checked);
+                                            }
+                                        }
+
+                                        CheckBox {
+                                            text: "List";
+                                            checked <=> FeaturesTabState.selected_dto_out_field_is_list;
+                                            enabled: !AppState.project_is_saving;
+                                            toggled => {
+                                                FeaturesTabState.dto_out_field_is_list_changed(self.checked);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Placeholder when DTO Out is disabled
+                if !FeaturesTabState.dto_out_enabled : Rectangle {
+                    vertical-stretch: 1;
+                    background: #f8f9fa;
+
+                    Text {
+                        text: "Enable DTO Out to configure it";
+                        color: #868e96;
+                        font-size: 14px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+}

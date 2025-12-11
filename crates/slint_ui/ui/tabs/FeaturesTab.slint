@@ -1,7 +1,8 @@
-import { ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
-import { FeatureCommands, AppState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
+import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+import { DtoDetails } from "dto_details.slint";
 
 
 // Alert component
@@ -65,21 +66,21 @@ export component FeaturesTab inherits Rectangle {
         Rectangle { height: 24px; }
 
         // Loading state
-        if AppState.features_is_loading : Alert {
+        if FeaturesTabState.features_is_loading : Alert {
             title: "Loading";
             message: "Loading features data...";
             alert-color: #228be6;
         }
 
         // Error state
-        if AppState.features_error_message != "" : Alert {
+        if FeaturesTabState.features_error_message != "" : Alert {
             title: "Error Loading Data";
-            message: AppState.features_error_message;
+            message: FeaturesTabState.features_error_message;
             alert-color: #fa5252;
         }
 
         // Main content area - 3 columns
-        if !AppState.features_is_loading && AppState.features_error_message == "" : HorizontalLayout {
+        if !FeaturesTabState.features_is_loading && FeaturesTabState.features_error_message == "" : HorizontalLayout {
             spacing: 0px;
 
             // Column 1: Feature List
@@ -100,13 +101,20 @@ export component FeaturesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    CheckableReorderableList {
-                        items: AppState.feature_cr_list;
-                        reorderable: true;
-                        enable-checkbox: false;
-                        selected-id: AppState.selected_feature_index;
-                        selection-changed(id) => {
-                            FeatureCommands.select_feature(id);
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        feature_list := CheckableReorderableList {
+                            items: FeaturesTabState.feature_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            selected-id: FeaturesTabState.selected_feature_id;
+                            selection-changed(id) => {
+                                FeaturesTabState.feature_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                FeaturesTabState.request_features_reorder(from_index, to_index)
+                            }
                         }
                     }
                 }
@@ -125,7 +133,7 @@ export component FeaturesTab inherits Rectangle {
                 VerticalLayout {
                     // Feature Details Section
                     SectionHeader {
-                        title: AppState.selected_feature_index >= 0 ? "Feature Details" : "Select a feature";
+                        title: FeaturesTabState.selected_feature_id >= 0 ? "Feature Details" : "Select a feature";
                     }
 
                     Rectangle {
@@ -133,17 +141,25 @@ export component FeaturesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    if AppState.selected_feature_index >= 0 : Rectangle {
+                    if FeaturesTabState.selected_feature_id >= 0 : Rectangle {
                         height: 100px;
                         
                         VerticalLayout {
                             padding: 16px;
                             spacing: 8px;
                             
-                            Text {
-                                text: "Feature details will be displayed here";
-                                font-size: 14px;
-                                color: #868e96;
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> FeaturesTabState.selected_feature_name;
+                                    placeholder: "Enter the feature name";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        FeaturesTabState.feature_name_changed(text);
+                                    }
+                                }
                             }
                         }
                     }
@@ -163,22 +179,30 @@ export component FeaturesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    CheckableReorderableList {
-                        items: AppState.use_case_cr_list;
-                        reorderable: true;
-                        enable-checkbox: false;
-                        selected-id: AppState.selected_use_case_index;
-                        selection-changed(id) => {
-                            FeatureCommands.select_use_case(id);
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        use_case_list :=  CheckableReorderableList {
+                            items: FeaturesTabState.use_case_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            selected-id: FeaturesTabState.selected_use_case_id;
+                            selection-changed(id) => {
+                                FeaturesTabState.use_case_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                FeaturesTabState.request_use_cases_reorder(from_index, to_index)
+                            }
                         }
+
                     }
                 }
             }
 
             // Conditional: Use Case Details Column (only show when use case is selected)
-            if AppState.selected_use_case_index >= 0 : Divider {}
+            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
 
-            if AppState.selected_use_case_index >= 0 : Rectangle {
+            if FeaturesTabState.selected_use_case_id >= 0 : Rectangle {
                 horizontal-stretch: 1;
                 min-width: 400px;
                 background: #ffffff;
@@ -202,10 +226,64 @@ export component FeaturesTab inherits Rectangle {
                             spacing: 12px;
                             alignment: start;
 
-                            Text {
-                                text: "Use case details will be displayed here";
-                                font-size: 14px;
-                                color: #868e96;
+                            // Use Case Name
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> FeaturesTabState.selected_use_case_name;
+                                    placeholder: "Enter the use case name";
+                                    enabled: !AppState.project_is_saving;
+                                    edited(text) => {
+                                        FeaturesTabState.use_case_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Boolean options
+                            FormField {
+                                label: "Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    CheckBox {
+                                        text: "Validator";
+                                        checked <=> FeaturesTabState.selected_use_case_validator;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            FeaturesTabState.use_case_validator_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Undoable";
+                                        checked <=> FeaturesTabState.selected_use_case_undoable;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            FeaturesTabState.use_case_undoable_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Read Only";
+                                        checked <=> FeaturesTabState.selected_use_case_read_only;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            FeaturesTabState.use_case_read_only_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Long Operation";
+                                        checked <=> FeaturesTabState.selected_use_case_long_operation;
+                                        enabled: !AppState.project_is_saving;
+                                        toggled => {
+                                            FeaturesTabState.use_case_long_operation_changed(self.checked);
+                                        }
+                                    }
+                                }
                             }
 
                             // Spacer
@@ -214,11 +292,21 @@ export component FeaturesTab inherits Rectangle {
                     }
                 }
             }
+
+            // Conditional: DTO Details Column (only show when use case is selected)
+            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
+
+            if FeaturesTabState.selected_use_case_id >= 0 : ScrollView {
+                horizontal-stretch: 1;
+                min-width: 500px;
+
+                DtoDetails {}
+            }
         }
     }
 
     // Loading overlay
-    if AppState.features_is_loading : Rectangle {
+    if FeaturesTabState.features_is_loading : Rectangle {
         background: #ffffff80;
         x: 0px;
         y: 0px;

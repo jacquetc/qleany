@@ -38,6 +38,9 @@ fn main() {
     // Initialize entities tab subscriptions and callbacks
     tabs::entities_tab::init(&event_hub_client, &app, &app_context);
 
+    // Initialize features tab subscriptions and callbacks
+    tabs::features_tab::init(&event_hub_client, &app, &app_context);
+
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&app, &app_context);
 
@@ -103,25 +106,6 @@ fn main() {
         move || {
             log::info!("Cancel Generate Rust Files clicked");
             // TODO: Implement cancellation using long_operation_manager
-            let _ = ctx;
-        }
-    });
-
-    // Wire up FeatureCommands callbacks
-    app.global::<FeatureCommands>().on_select_feature({
-        let ctx = Arc::clone(&app_context);
-        move |id| {
-            log::info!("Select Feature: {}", id);
-            // TODO: Use feature_commands::get_feature to fetch feature details
-            let _ = ctx;
-        }
-    });
-
-    app.global::<FeatureCommands>().on_select_use_case({
-        let ctx = Arc::clone(&app_context);
-        move |id| {
-            log::info!("Select Use Case: {}", id);
-            // TODO: Use use_case_commands::get_use_case to fetch use case details
             let _ = ctx;
         }
     });

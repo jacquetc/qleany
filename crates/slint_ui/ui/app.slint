@@ -4,10 +4,11 @@ import { ProjectTab } from "tabs/ProjectTab.slint";
 import { EntitiesTab } from "tabs/EntitiesTab.slint";
 import { FeaturesTab } from "tabs/FeaturesTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
+import { ConfirmationDialog } from "components/confirmation_dialog.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, ProjectCommands, FeatureCommands, GenerateCommands, EntitiesTabState, AppState } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, ProjectCommands, FeatureCommands, GenerateCommands, EntitiesTabState, AppState }
+import { ManifestCommands, UndoRedoCommands, ProjectCommands, GenerateCommands, EntitiesTabState, FeaturesTabState, AppState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, ProjectCommands, GenerateCommands, EntitiesTabState, FeaturesTabState, AppState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -46,7 +47,7 @@ component NavItem inherits Rectangle {
 
 export component App inherits Window {
     title: "Qleany";
-    min-width: 1000px;
+    min-width: 1300px;
     min-height: 900px;
 
 
@@ -273,6 +274,19 @@ export component App inherits Window {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 indeterminate: true;
+            }
+        }
+
+        // Confirmation dialog for unsaved changes
+        if AppState.confirm_dialog_visible : ConfirmationDialog {
+            width: parent.width;
+            height: parent.height;
+            message: AppState.confirm_dialog_message;
+            accepted => {
+                AppState.confirm_dialog_accepted();
+            }
+            rejected => {
+                AppState.confirm_dialog_rejected();
             }
         }
     }

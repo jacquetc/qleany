@@ -92,10 +92,113 @@ export global EntitiesTabState {
     callback field_enum_values_changed(string);
 }
 
+export global FeaturesTabState {
+    // Loading and error states
+    in-out property <bool> features_is_loading: false;
+    in-out property <string> features_error_message: "";
+
+    // Feature lists and selection
+    in-out property <[CRListItem]> feature_cr_list: [];
+    callback request_features_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_feature_id: -1;
+    callback feature_selected(int);
+
+    // Feature details
+    in-out property <string> selected_feature_name: "";
+    callback feature_name_changed(string);
+
+    // Use case lists and selection
+    in-out property <[CRListItem]> use_case_cr_list: [];
+    callback request_use_cases_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_use_case_id: -1;
+    callback use_case_selected(int);
+
+    // Use case details properties
+    in-out property <string> selected_use_case_name: "";
+    in-out property <bool> selected_use_case_validator: false;
+    in-out property <bool> selected_use_case_undoable: false;
+    in-out property <bool> selected_use_case_read_only: false;
+    in-out property <bool> selected_use_case_long_operation: false;
+
+    // Use case details callbacks
+    callback use_case_name_changed(string);
+    callback use_case_validator_changed(bool);
+    callback use_case_undoable_changed(bool);
+    callback use_case_read_only_changed(bool);
+    callback use_case_long_operation_changed(bool);
+
+    // DTO field type options for ComboBox
+    in-out property <[string]> dto_field_type_options: ["Boolean", "Integer", "UInteger", "Float", "String", "Uuid", "DateTime", "Enum"];
+
+    // DTO In enabled state (DTOs are optional)
+    in-out property <bool> dto_in_enabled: false;
+    callback dto_in_enabled_changed(bool);
+
+    // DTO Out enabled state (DTOs are optional)
+    in-out property <bool> dto_out_enabled: false;
+    callback dto_out_enabled_changed(bool);
+
+    // DTO In properties
+    in-out property <int> selected_dto_in_id: -1;
+    in-out property <string> selected_dto_in_name: "";
+    callback dto_in_name_changed(string);
+
+    // DTO In fields list and selection
+    in-out property <[CRListItem]> dto_in_field_cr_list: [];
+    callback request_dto_in_fields_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_dto_in_field_id: -1;
+    callback dto_in_field_selected(int);
+
+    // DTO In field details properties
+    in-out property <string> selected_dto_in_field_name: "";
+    in-out property <int> selected_dto_in_field_type_index: 4; // Default to String
+    in-out property <bool> selected_dto_in_field_is_nullable: false;
+    in-out property <bool> selected_dto_in_field_is_list: false;
+
+    // DTO In field details callbacks
+    callback dto_in_field_name_changed(string);
+    callback dto_in_field_type_changed(string);
+    callback dto_in_field_is_nullable_changed(bool);
+    callback dto_in_field_is_list_changed(bool);
+
+    // DTO Out properties
+    in-out property <int> selected_dto_out_id: -1;
+    in-out property <string> selected_dto_out_name: "";
+    callback dto_out_name_changed(string);
+
+    // DTO Out fields list and selection
+    in-out property <[CRListItem]> dto_out_field_cr_list: [];
+    callback request_dto_out_fields_reorder(int /* from_index */, int /* to_index */);
+    in-out property <int> selected_dto_out_field_id: -1;
+    callback dto_out_field_selected(int);
+
+    // DTO Out field details properties
+    in-out property <string> selected_dto_out_field_name: "";
+    in-out property <int> selected_dto_out_field_type_index: 4; // Default to String
+    in-out property <bool> selected_dto_out_field_is_nullable: false;
+    in-out property <bool> selected_dto_out_field_is_list: false;
+
+    // DTO Out field details callbacks
+    callback dto_out_field_name_changed(string);
+    callback dto_out_field_type_changed(string);
+    callback dto_out_field_is_nullable_changed(bool);
+    callback dto_out_field_is_list_changed(bool);
+}
+
 // Application-wide state
 export global AppState {
     in-out property <int> root_id: 0;
 
+    // Manifest save state
+    in-out property <bool> manifest_is_saved: true;
+
+    // Confirmation dialog state
+    // pending_action values: "none", "new", "open", "close", "exit", "open_qleany"
+    in-out property <bool> confirm_dialog_visible: false;
+    in-out property <string> confirm_dialog_message: "";
+    in-out property <string> confirm_dialog_pending_action: "none";
+    callback confirm_dialog_accepted();
+    callback confirm_dialog_rejected();
 
     // Loading and error states
     in-out property <bool> is_loading: false;
@@ -116,17 +219,6 @@ export global AppState {
     in-out property <string> project_organisation_domain: "";
     in-out property <string> project_prefix_path: "";
     in-out property <string> project_error_message: "";
-
-    
-    // Feature lists and selection
-    in-out property <[string]> feature_list: [];
-    in-out property <[string]> use_case_list: [];
-    in-out property <[CRListItem]> feature_cr_list: [];
-    in-out property <[CRListItem]> use_case_cr_list: [];
-    in-out property <int> selected_feature_index: -1;
-    in-out property <int> selected_use_case_index: -1;
-    in-out property <bool> features_is_loading: false;
-    in-out property <string> features_error_message: "";
     
     // Generate state
     in-out property <bool> generate_is_running: false;

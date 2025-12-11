@@ -13,4 +13,5 @@ pub mod field_commands;
 pub mod relationship_commands;
 pub mod use_case_commands;
 pub mod dto_commands;
+pub mod dto_field_commands;
 pub mod file_commands;
