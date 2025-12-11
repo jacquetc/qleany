@@ -32,8 +32,10 @@ fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, ap
                 // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        fill_entity_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(false);
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            fill_entity_list(&app, &ctx);
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
 
                     }
                 });
@@ -57,8 +59,11 @@ fn subscribe_entity_updated_event(event_hub_client: &EventHubClient, app: &App, 
                 // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        fill_entity_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(false);
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            fill_entity_list(&app, &ctx);
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+
                     }
                 });
 
@@ -83,8 +88,11 @@ fn subscribe_field_updated_event(event_hub_client: &EventHubClient, app: &App, a
                 // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        fill_field_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(false);
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            fill_field_list(&app, &ctx);
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+
                     }
                 });
             }

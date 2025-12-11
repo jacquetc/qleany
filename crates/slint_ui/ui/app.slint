@@ -81,65 +81,27 @@ export component App inherits Window {
                     }
 
                     // Undo button
-                    Rectangle {
-                        width: 36px;
-                        height: 36px;
-                        background: AppState.can_undo ? #228be6 : #dee2e6;
-                        border-radius: 4px;
-
-                        Text {
-                            text: "↩";
-                            font-size: 18px;
-                            color: AppState.can_undo ? #ffffff : #868e96;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                        }
-
-                        TouchArea {
-                            enabled: AppState.can_undo;
-                            clicked => { UndoRedoCommands.undo(); }
-                        }
+                    Button {
+                        text: "↩";
+                        enabled: AppState.manifest_is_open;
+                        clicked => { UndoRedoCommands.undo(); }
+                        visible: false;
                     }
 
                     // Redo button
-                    Rectangle {
-                        width: 36px;
-                        height: 36px;
-                        background: AppState.can_redo ? #228be6 : #dee2e6;
-                        border-radius: 4px;
-
-                        Text {
-                            text: "↪";
-                            font-size: 18px;
-                            color: AppState.can_redo ? #ffffff : #868e96;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                        }
-
-                        TouchArea {
-                            enabled: AppState.can_redo;
-                            clicked => { UndoRedoCommands.redo(); }
-                        }
+                    Button {
+                        text: "↪";
+                        enabled: AppState.manifest_is_open;
+                        clicked => { UndoRedoCommands.redo(); }
+                        visible: false;
                     }
 
                     // Save button
-                    Rectangle {
-                        width: 70px;
-                        height: 36px;
-                        background: #228be6;
-                        border-radius: 4px;
-
-                        Text {
-                            text: "Save";
-                            font-size: 14px;
-                            color: #ffffff;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                        }
-
-                        TouchArea {
-                            clicked => { ManifestCommands.save_manifest(); }
-                        }
+                    Button {
+                        text: "Save Manifest";
+                        enabled: AppState.manifest_is_open && !AppState.manifest_is_saved && !AppState.is_loading;
+                        clicked => { ManifestCommands.save_manifest(); }
+                        primary: true;
                     }
 
                     // Spacer

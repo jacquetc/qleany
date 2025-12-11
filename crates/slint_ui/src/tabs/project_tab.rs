@@ -26,7 +26,10 @@ fn subscribe_global_updated_event(event_hub_client: &EventHubClient, app: &App, 
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_manifest_is_saved(false);
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+
                     }
                 });
             }
