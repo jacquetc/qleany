@@ -1,55 +1,175 @@
-import { Button, GroupBox, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
+import { ManifestCommands, AppState } from "../globals.slint";
+import { Paper } from "../components/misc.slint";
+
+
+// Alert component for error messages
+component Alert inherits Rectangle {
+    in property <string> message;
+    in property <color> alert-color: #fa5252;
+    
+    background: #fff5f5;
+    border-width: 1px;
+    border-color: alert-color;
+    border-radius: 8px;
+    min-height: 48px;
+    
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        
+        Rectangle {
+            width: 4px;
+            background: alert-color;
+            border-radius: 2px;
+        }
+        
+        VerticalLayout {
+            spacing: 4px;
+            alignment: center;
+            
+            Text {
+                text: "Error";
+                font-size: 14px;
+                font-weight: 600;
+                color: alert-color;
+            }
+            
+            Text {
+                text: message;
+                font-size: 14px;
+                color: #495057;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
 
 export component HomeTab inherits Rectangle {
-    in property <bool> is_loading;
-    in-out property <string> error_message;
-
-    callback new_manifest();
-    callback open_manifest();
-    callback save_manifest();
-    callback close_manifest();
-    callback open_qleany_manifest();
-    callback exit_app();
-
     background: #ffffff;
 
-    VerticalBox {
-        padding: 16px;
-        spacing: 12px;
+    VerticalLayout {
+        padding: 40px;
+        spacing: 24px;
 
-        Text { text: "Qleany"; font-size: 28px; font-weight: 700; }
-        Text { text: "Welcome to Qleany! Use the buttons below to manage your manifests."; font-size: 16px; }
-
-        if (root.error_message != "") : Rectangle {
-            background: #ffe5e5;
-            border-width: 1px;
-            border-color: #ffaaaa;
-            min-height: 40px;
-            padding: 8px;
-            Text { text: root.error_message; color: #a40000; wrap: word-wrap; }
+        // Title
+        Text {
+            text: "Qleany";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
         }
 
-        GroupBox {
-            title: "Actions";
-            VerticalBox {
-                spacing: 12px;
-                HorizontalBox {
-                    spacing: 8px;
-                    Button { text: "New Manifest"; enabled: !root.is_loading; clicked => { root.new_manifest(); } }
-                    Button { text: "Open Manifest"; enabled: !root.is_loading; clicked => { root.open_manifest(); } }
-                    Button { text: "Save Manifest"; enabled: !root.is_loading; clicked => { root.save_manifest(); } }
-                    Button { text: "Close Current Manifest"; enabled: !root.is_loading; clicked => { root.close_manifest(); } }
-                    Button { text: "Exit"; enabled: !root.is_loading; clicked => { root.exit_app(); } }
+        // Subtitle
+        Text {
+            text: "Welcome to Qleany! Use the buttons below to manage your manifests.";
+            font-size: 16px;
+            color: #495057;
+        }
+
+        // Error message
+
+        if (AppState.error_message != "") : Alert {
+            message: AppState.error_message;
+        }
+
+        // Main action buttons in Paper
+        Paper {
+            with-border: true;
+            
+            VerticalLayout {
+                padding: 16px;
+                spacing: 16px;
+
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: start;
+
+                    Button {
+                        text: "New Manifest";
+                        enabled: !AppState.is_loading;
+                        clicked => { ManifestCommands.new_manifest(); }
+                        primary: true;
+                    }
+
+
+                    Button {
+                        text: "Open Manifest";
+                        enabled: !AppState.is_loading;
+                            clicked => { ManifestCommands.open_manifest(); }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Save Manifest";
+                        enabled: !AppState.is_loading;
+                        clicked => { ManifestCommands.save_manifest(); }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Close Current Manifest";
+                        enabled: !AppState.is_loading;
+                        clicked => { ManifestCommands.close_manifest(); }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Exit";
+
+                        enabled: !AppState.is_loading;
+                        clicked => { ManifestCommands.close_manifest(); }
+                    }
                 }
 
-                GroupBox {
-                    title: "For Testing";
-                    HorizontalBox {
+                // For Testing section
+                Paper {
+                    bg: #f8f9fa;
+                    with-border: true;
+
+                    VerticalLayout {
+                        padding: 16px;
                         spacing: 8px;
-                        Button { text: "Open Qleany Manifest"; enabled: !root.is_loading; clicked => { root.open_qleany_manifest(); } }
+
+                        Text {
+                            text: "For Testing";
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #212529;
+                        }
+
+                        Button {
+                            width: 180px;
+                            height: 36px;
+                            enabled: !AppState.is_loading;
+                            clicked => { ManifestCommands.open_qleany_manifest(); }
+                            text: "Open Qleany Manifest";
+                            primary: true;
+                        }
                     }
                 }
             }
+        }
+
+        // Spacer
+        Rectangle { vertical-stretch: 1; }
+            AboutSlint {
+            width: 200px;
+            }
+
+    }
+
+    // Loading overlay
+    if AppState.is_loading : Rectangle {
+        background: #ffffff80;
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+
+        ProgressIndicator {
+            width: 48px;
+            height: 48px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            indeterminate: true;
         }
     }
 }

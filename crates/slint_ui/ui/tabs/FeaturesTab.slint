@@ -1,57 +1,236 @@
-import { VerticalBox, HorizontalBox, GroupBox, Button } from "std-widgets.slint";
+import { ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
+import { FeatureCommands, AppState, CRListItem } from "../globals.slint";
+import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
-export component FeaturesTab inherits Rectangle {
-    // Models
-    in-out property <[string]> feature_list;
-    in-out property <[string]> use_case_list;
 
-    // Selection indices (optional, -1 = none)
-    in-out property <int> selected_feature_index;
-    in-out property <int> selected_use_case_index;
-
-    // Callbacks
-    callback select_feature(int);
-    callback select_use_case(int);
-
-    background: #ffffff;
-
-    HorizontalBox {
-        padding: 8px;
-        spacing: 8px;
-
-        // Features list
-        Rectangle { width: 260px; height: parent.height; background: #f6f6f6;
-            VerticalBox { padding: 8px; spacing: 8px;
-                Text { text: "Features"; font-size: 18px; font-weight: 600; }
-                for name[i] in root.feature_list: Button {
-                    text: name;
-                    clicked => { root.select_feature(i); root.selected_feature_index = i; }
-                }
+// Alert component
+component Alert inherits Rectangle {
+    in property <string> message;
+    in property <string> title: "Loading";
+    in property <color> alert-color: #228be6;
+    
+    background: #e7f5ff;
+    border-width: 1px;
+    border-color: alert-color;
+    border-radius: 8px;
+    min-height: 48px;
+    
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        
+        Rectangle {
+            width: 4px;
+            background: alert-color;
+            border-radius: 2px;
+        }
+        
+        VerticalLayout {
+            spacing: 4px;
+            alignment: center;
+            
+            Text {
+                text: title;
+                font-size: 14px;
+                font-weight: 600;
+                color: alert-color;
+            }
+            
+            Text {
+                text: message;
+                font-size: 14px;
+                color: #495057;
+                wrap: word-wrap;
             }
         }
+    }
+}
 
-        // Separator
-        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+export component FeaturesTab inherits Rectangle {
+    background: #ffffff;
 
-        // Feature details + Use cases
-        VerticalBox { spacing: 8px; padding: 8px;
-            Text { text: root.selected_feature_index >= 0 ? ("Details for: " + root.feature_list[root.selected_feature_index]) : "Select a feature"; }
-            GroupBox { title: "Use Cases";
-                VerticalBox { spacing: 6px;
-                    for uname[j] in root.use_case_list: Button {
-                        text: uname;
-                        clicked => { root.select_use_case(j); root.selected_use_case_index = j; }
+    VerticalLayout {
+        padding: 40px;
+        spacing: 0px;
+
+        // Title
+        Text {
+            text: "Features";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        Rectangle { height: 24px; }
+
+        // Loading state
+        if AppState.features_is_loading : Alert {
+            title: "Loading";
+            message: "Loading features data...";
+            alert-color: #228be6;
+        }
+
+        // Error state
+        if AppState.features_error_message != "" : Alert {
+            title: "Error Loading Data";
+            message: AppState.features_error_message;
+            alert-color: #fa5252;
+        }
+
+        // Main content area - 3 columns
+        if !AppState.features_is_loading && AppState.features_error_message == "" : HorizontalLayout {
+            spacing: 0px;
+
+            // Column 1: Feature List
+            Rectangle {
+                width: 300px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Features";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.feature_cr_list;
+                        reorderable: true;
+                        enable-checkbox: false;
+                        selected-id: AppState.selected_feature_index;
+                        selection-changed(id) => {
+                            FeatureCommands.select_feature(id);
+                        }
+                    }
+                }
+            }
+
+            // Divider
+            Divider {}
+
+            // Column 2: Feature Details + Use Cases
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    // Feature Details Section
+                    SectionHeader {
+                        title: AppState.selected_feature_index >= 0 ? "Feature Details" : "Select a feature";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    if AppState.selected_feature_index >= 0 : Rectangle {
+                        height: 100px;
+                        
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 8px;
+                            
+                            Text {
+                                text: "Feature details will be displayed here";
+                                font-size: 14px;
+                                color: #868e96;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    // Use Cases Section
+                    SectionHeader {
+                        title: "Use Cases";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.use_case_cr_list;
+                        reorderable: true;
+                        enable-checkbox: false;
+                        selected-id: AppState.selected_use_case_index;
+                        selection-changed(id) => {
+                            FeatureCommands.select_use_case(id);
+                        }
+                    }
+                }
+            }
+
+            // Conditional: Use Case Details Column (only show when use case is selected)
+            if AppState.selected_use_case_index >= 0 : Divider {}
+
+            if AppState.selected_use_case_index >= 0 : Rectangle {
+                horizontal-stretch: 1;
+                min-width: 400px;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-radius: 8px;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Use Case Details";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    ScrollView {
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 12px;
+                            alignment: start;
+
+                            Text {
+                                text: "Use case details will be displayed here";
+                                font-size: 14px;
+                                color: #868e96;
+                            }
+
+                            // Spacer
+                            Rectangle { vertical-stretch: 1; }
+                        }
                     }
                 }
             }
         }
+    }
 
-        // Separator
-        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+    // Loading overlay
+    if AppState.features_is_loading : Rectangle {
+        background: #ffffff80;
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
 
-        // Use case details
-        VerticalBox { spacing: 8px; padding: 8px;
-            Text { text: root.selected_use_case_index >= 0 ? ("Use Case details for: " + root.use_case_list[root.selected_use_case_index]) : "Select a use case"; }
+        ProgressIndicator {
+            width: 48px;
+            height: 48px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            indeterminate: true;
         }
     }
 }

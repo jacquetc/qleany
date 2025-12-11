@@ -1,0 +1,70 @@
+
+// List item component
+export component ListItem inherits Rectangle {
+    in property <string> label;
+    in property <bool> active: false;
+    callback clicked();
+
+    height: 40px;
+    background: active ? #e7f5ff : transparent;
+    border-radius: 4px;
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        alignment: start;
+
+        Text {
+            text: label;
+            font-size: 14px;
+            color: active ? #1971c2 : #495057;
+            font-weight: active ? 500 : 400;
+            vertical-alignment: center;
+        }
+    }
+
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// Vertical divider
+export component Divider inherits Rectangle {
+    width: 1px;
+    background: #dee2e6;
+}
+
+// Section header
+export component SectionHeader inherits Rectangle {
+    in property <string> title;
+
+    height: 48px;
+
+    HorizontalLayout {
+        padding: 12px;
+        alignment: start;
+
+        Text {
+            text: title;
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+            vertical-alignment: center;
+        }
+    }
+}
+
+
+// Paper-like card component
+export component Paper inherits Rectangle {
+    in property <bool> with-border: true;
+    in property <color> bg: #ffffff;
+
+    background: bg;
+    border-width: with-border ? 1px : 0px;
+    border-color: #dee2e6;
+    border-radius: 8px;
+    drop-shadow-blur: 4px;
+    drop-shadow-color: #00000010;
+    drop-shadow-offset-y: 1px;
+}

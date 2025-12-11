@@ -1,0 +1,37 @@
+export component StyledButton inherits Rectangle {
+    in property <string> label: "";
+    in property <bool> outline: false;
+    in property <color> bg-color: #228be6;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    min-width: 80px;
+    min-height: 36px;
+    border-radius: 6px;
+    background: outline ? transparent : (touch.pressed ? bg-color.darker(0.2) : (touch.has-hover ? bg-color.darker(0.1) : bg-color));
+    border-width: outline ? 1px : 0px;
+    border-color: bg-color;
+    opacity: enabled ? 1.0 : 0.5;
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: enabled ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+
+    HorizontalLayout {
+        padding: 8px;
+        padding-left: 16px;
+        padding-right: 16px;
+        alignment: center;
+
+        Text {
+            text: label;
+            font-size: 14px;
+            font-weight: 500;
+            color: outline ? bg-color : white;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+}

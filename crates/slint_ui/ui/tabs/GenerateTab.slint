@@ -1,62 +1,227 @@
-import { VerticalBox, HorizontalBox, GroupBox, Button, ScrollView } from "std-widgets.slint";
+import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView } from "std-widgets.slint";
+import { GenerateCommands, AppState, CRListItem } from "../globals.slint";
+import { StyledButton } from "../components/buttons.slint";
+import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+
+
+// Modal overlay
+component Modal inherits Rectangle {
+    in property <string> title;
+    in property <bool> show-modal: false;
+    
+    visible: show-modal;
+    background: #00000060;
+    
+    Rectangle {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: 400px;
+        height: 200px;
+        background: #ffffff;
+        border-radius: 8px;
+        drop-shadow-blur: 16px;
+        drop-shadow-color: #00000040;
+        
+        VerticalLayout {
+            padding: 24px;
+            spacing: 16px;
+            
+            Text {
+                text: title;
+                font-size: 18px;
+                font-weight: 600;
+                color: #212529;
+            }
+            
+            @children
+        }
+    }
+}
 
 export component GenerateTab inherits Rectangle {
-    // Operation state
-    in-out property <bool> is_running;
-    in-out property <float> progress;
-    in-out property <string> message;
-
-    // Lists
-    in-out property <[string]> group_list;
-    in-out property <[string]> file_list;
-    in-out property <int> selected_group_index;
-    in-out property <int> selected_file_index;
-
-    // Callbacks
-    callback list_files();
-    callback start_generate();
-    callback cancel_generate();
-
     background: #ffffff;
 
-    VerticalBox {
-        padding: 16px;
-        spacing: 12px;
-        Text { text: "Generate"; font-size: 24px; font-weight: 700; }
-        HorizontalBox { spacing: 8px;
-            Button { text: "List Rust Files"; clicked => { root.list_files(); } }
-            Button { text: root.is_running ? "Generating..." : "Generate"; enabled: !root.is_running; clicked => { root.start_generate(); } }
-            Button { text: "Cancel"; enabled: root.is_running; clicked => { root.cancel_generate(); } }
+    VerticalLayout {
+        padding: 40px;
+        spacing: 0px;
+
+        // Title
+        Text {
+            text: "Generate";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
         }
-        GroupBox { title: "Progress";
-            VerticalBox { spacing: 8px; padding: 8px;
-                Text { text: "Progress: " + (root.progress * 100) + "%"; }
-                if (root.message != "") : Text { text: root.message; color: #555555; }
+
+        Rectangle { height: 24px; }
+
+        // Controls row
+        HorizontalLayout {
+            spacing: 12px;
+            alignment: start;
+            
+            CheckBox {
+                text: "in temp/";
+                checked <=> AppState.generate_in_temp;
+            }
+            
+            Button {
+                text: "List Rust Files";
+                clicked => { GenerateCommands.list_files(); }
+                primary: true;
+            }
+            
+            Button {
+                text: AppState.generate_is_running ? "Generating..." : "Generate";
+                enabled: !AppState.generate_is_running;
+                clicked => { GenerateCommands.start_generate(); }
+                primary: true;
+            }
+            
+            Button {
+                text: "Cancel";
+                enabled: AppState.generate_is_running;
+                clicked => { GenerateCommands.cancel_generate(); }
             }
         }
-        // Two-column lists and preview
-        HorizontalBox { spacing: 8px;
-            // Groups
-            GroupBox { title: "Groups";
-                VerticalBox { spacing: 6px; padding: 8px;
-                    for g[i] in root.group_list: Button { text: g; clicked => { root.selected_group_index = i; } }
-                }
-            }
-            // Files
-            GroupBox { title: "Files";
-                VerticalBox { spacing: 6px; padding: 8px;
-                    for f[j] in root.file_list: Button { text: f; clicked => { root.selected_file_index = j; } }
-                }
-            }
-            // Preview placeholder
-            GroupBox { title: "Preview";
-                ScrollView {
+
+        Rectangle { height: 24px; }
+
+        // Main 3-column layout
+        HorizontalLayout {
+            spacing: 0px;
+
+            // Column 1: Groups (25%)
+            Rectangle {
+                width: 25%;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Groups";
+                    }
+
                     Rectangle {
-                        height: 300px;
-                        width: parent.width;
-                        Text { text: root.selected_file_index >= 0 ? ("Preview of: " + root.file_list[root.selected_file_index]) : "Select a file to preview"; }
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.group_cr_list;
+                        reorderable: false;
+                        enable-checkbox: true;
+                        selected-id: AppState.selected_group_index;
+                        selection-changed(id) => {
+                            AppState.selected_group_index = id;
+                        }
                     }
                 }
+            }
+
+            // Divider
+            Divider {}
+
+            // Column 2: Files (35%)
+            Rectangle {
+                width: 35%;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Files";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.file_cr_list;
+                        reorderable: false;
+                        enable-checkbox: true;
+                        selected-id: AppState.selected_file_index;
+                        selection-changed(id) => {
+                            AppState.selected_file_index = id;
+                        }
+                    }
+                }
+            }
+
+            // Divider
+            Divider {}
+
+            // Column 3: Code Preview (40%)
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-radius: 8px;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Code Preview";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    ScrollView {
+                        Rectangle {
+                            background: #f8f9fa;
+                            
+                            VerticalLayout {
+                                padding: 16px;
+                                alignment: start;
+
+                                Text {
+                                    text: AppState.selected_file_index >= 0 ? "File preview" : "Select a file to preview";
+                                    font-size: 14px;
+                                    font-family: "monospace";
+                                    color: AppState.selected_file_index >= 0 ? #212529 : #868e96;
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Progress Modal
+    if AppState.generate_is_running : Modal {
+        title: "Generating Rust Files";
+        show-modal: AppState.generate_is_running;
+
+        ProgressIndicator {
+            progress: AppState.generate_progress;
+        }
+
+        Text {
+            text: AppState.generate_message != "" ? AppState.generate_message : "Processing...";
+            font-size: 14px;
+            color: #868e96;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            
+            StyledButton {
+                label: "Cancel";
+                outline: true;
+                bg-color: #fa5252;
+                enabled: AppState.generate_is_running;
+                clicked => { GenerateCommands.cancel_generate(); }
             }
         }
     }

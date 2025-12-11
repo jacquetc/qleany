@@ -1,0 +1,103 @@
+// Global singletons for the Qleany Slint UI
+// These allow direct access to callbacks and state from any component and from Rust code
+
+import { ListItem as CRListItem } from "components/checkable_reorderable_list.slint";
+export { CRListItem }
+
+// Manifest-related commands (Home tab actions)
+export global ManifestCommands {
+    callback new_manifest();
+    callback open_manifest();
+    callback save_manifest();
+    callback close_manifest();
+    callback open_qleany_manifest();
+    callback exit_app();
+}
+
+// Undo/Redo commands
+export global UndoRedoCommands {
+    callback undo();
+    callback redo();
+}
+
+// Project settings commands
+export global ProjectCommands {
+    callback save_project_settings();
+}
+
+// Entity selection commands
+export global EntityCommands {
+    callback select_entity(int);
+    callback select_field(int);
+}
+
+// Feature selection commands  
+export global FeatureCommands {
+    callback select_feature(int);
+    callback select_use_case(int);
+}
+
+// Code generation commands
+export global GenerateCommands {
+    callback list_files();
+    callback start_generate();
+    callback cancel_generate();
+}
+
+// Application-wide state
+export global AppState {
+    in-out property <int> root_id: 0;
+
+
+    // Loading and error states
+    in-out property <bool> is_loading: false;
+    in-out property <string> error_message: "";
+    
+    // Navigation
+    in-out property <int> current_tab: 0;
+    
+    // Undo/Redo state
+    in-out property <bool> can_undo: false;
+    in-out property <bool> can_redo: false;
+    
+    // Project settings
+    in-out property <bool> project_is_saving: false;
+    in-out property <string> project_language: "Rust";
+    in-out property <string> project_application_name: "";
+    in-out property <string> project_organisation_name: "";
+    in-out property <string> project_organisation_domain: "";
+    in-out property <string> project_prefix_path: "";
+    in-out property <string> project_error_message: "";
+    
+    // Entity lists and selection
+    in-out property <[string]> field_list: [];
+    in-out property <[CRListItem]> entity_cr_list: [];
+    callback request_entities_reorder(int /* from_index */, int /* to_index */);
+    in-out property <[CRListItem]> field_cr_list: [];
+    in-out property <int> selected_entity_index: -1;
+    in-out property <int> selected_entity_id: -1;
+    in-out property <string> selected_entity_name: "";
+    in-out property <int> selected_field_index: -1;
+    
+    // Feature lists and selection
+    in-out property <[string]> feature_list: [];
+    in-out property <[string]> use_case_list: [];
+    in-out property <[CRListItem]> feature_cr_list: [];
+    in-out property <[CRListItem]> use_case_cr_list: [];
+    in-out property <int> selected_feature_index: -1;
+    in-out property <int> selected_use_case_index: -1;
+    in-out property <bool> features_is_loading: false;
+    in-out property <string> features_error_message: "";
+    
+    // Generate state
+    in-out property <bool> generate_is_running: false;
+    in-out property <float> generate_progress: 0;
+    in-out property <string> generate_message: "";
+    in-out property <bool> generate_in_temp: false;
+    in-out property <[string]> group_list: [];
+    in-out property <[string]> file_list: [];
+    in-out property <[CRListItem]> group_cr_list: [];
+    in-out property <[CRListItem]> file_cr_list: [];
+    in-out property <int> selected_group_index: -1;
+    in-out property <int> selected_file_index: -1;
+}

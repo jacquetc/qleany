@@ -1,57 +1,163 @@
-import { VerticalBox, HorizontalBox, GroupBox, Button } from "std-widgets.slint";
+import { ScrollView, ProgressIndicator, VerticalBox, ListView } from "std-widgets.slint";
+import { EntityCommands, AppState, CRListItem } from "../globals.slint";
+import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 export component EntitiesTab inherits Rectangle {
-    // Models
-    in-out property <[string]> entity_list;
-    in-out property <[string]> field_list;
-
-    // Selection indices (optional, -1 = none)
-    in-out property <int> selected_entity_index;
-    in-out property <int> selected_field_index;
-
-    // Callbacks
-    callback select_entity(int);
-    callback select_field(int);
-
     background: #ffffff;
 
-    HorizontalBox {
-        padding: 8px;
-        spacing: 8px;
+    VerticalLayout {
+        padding: 40px;
+        spacing: 0px;
 
-        // Entities list
-        Rectangle { width: 260px; height: parent.height; background: #f6f6f6;
-            VerticalBox { padding: 8px; spacing: 8px;
-                Text { text: "Entities"; font-size: 18px; font-weight: 600; }
-                for name[i] in root.entity_list: Button {
-                    text: name;
-                    clicked => { root.select_entity(i); root.selected_entity_index = i; }
-                }
-            }
+        // Title
+        Text {
+            text: "Entities";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
         }
 
-        // Separator
-        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+        Rectangle { height: 24px; }
 
-        // Entity details + Fields
-        VerticalBox { spacing: 8px; padding: 8px;
-            Text { text: root.selected_entity_index >= 0 ? ("Details for: " + root.entity_list[root.selected_entity_index]) : "Select an entity"; }
-            GroupBox { title: "Fields";
-                VerticalBox { spacing: 6px;
-                    for fname[j] in root.field_list: Button {
-                        text: fname;
-                        clicked => { root.select_field(j); root.selected_field_index = j; }
+        // Main content area - 3 columns
+        HorizontalLayout {
+            spacing: 0px;
+
+            // Column 1: Entity List
+            Rectangle {
+                width: 300px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Entities";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.entity_cr_list;
+                        reorderable: true;
+                        enable-checkbox: false;
+                        selected-id: AppState.selected_entity_id;
+                        selection-changed(id) => {
+                            EntityCommands.select_entity(id);
+                        }
+                        request-reorder(from_index, to_index) => {
+                            AppState.request_entities_reorder(from_index, to_index)
+                        }
                     }
                 }
             }
-        }
 
-        // Separator
-        Rectangle { width: 1px; height: parent.height; background: #e0e0e0; }
+            // Divider
+            Divider {}
 
-        // Field details
-        VerticalBox { spacing: 8px; padding: 8px;
-            Text { text: root.selected_field_index >= 0 ? ("Field details for: " + root.field_list[root.selected_field_index]) : "Select a field"; }
+            // Column 2: Entity Details + Fields
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    // Entity Details Section
+                    SectionHeader {
+                        title: AppState.selected_entity_index >= 0 ? AppState.selected_entity_name : "Select an entity";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    if AppState.selected_entity_index >= 0 : Rectangle {
+                        height: 100px;
+                        
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 8px;
+                            
+                            Text {
+                                text: "Entity details will be displayed here";
+                                font-size: 14px;
+                                color: #868e96;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    // Fields Section
+                    SectionHeader {
+                        title: "Fields";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    CheckableReorderableList {
+                        items: AppState.field_cr_list;
+                        reorderable: true;
+                        enable-checkbox: false;
+                        selected-id: AppState.selected_field_index;
+                        selection-changed(id) => {
+                            EntityCommands.select_field(id);
+                        }
+                    }
+                }
+            }
+
+            // Conditional: Field Details Column (only show when field is selected)
+            if AppState.selected_field_index >= 0 : Divider {}
+
+            if AppState.selected_field_index >= 0 : Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-radius: 8px;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Field Details";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    ScrollView {
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 12px;
+                            alignment: start;
+
+                            Text {
+                                text: "Field details will be displayed here";
+                                font-size: 14px;
+                                color: #868e96;
+                            }
+
+                            // Spacer
+                            Rectangle { vertical-stretch: 1; }
+                        }
+                    }
+                }
+            }
         }
     }
 }

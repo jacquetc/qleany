@@ -1,47 +1,229 @@
-import { GroupBox, VerticalBox, HorizontalBox, LineEdit, ComboBox, Button } from "std-widgets.slint";
+import { LineEdit, ComboBox, ProgressIndicator } from "std-widgets.slint";
+import { ProjectCommands, AppState } from "../globals.slint";
+
+// Paper-like card component
+component Paper inherits Rectangle {
+    in property <bool> with-border: true;
+    in property <color> bg: #ffffff;
+    
+    background: bg;
+    border-width: with-border ? 1px : 0px;
+    border-color: #dee2e6;
+    border-radius: 8px;
+    drop-shadow-blur: 4px;
+    drop-shadow-color: #00000010;
+    drop-shadow-offset-y: 1px;
+}
+
+// Form field with label
+component FormField inherits VerticalLayout {
+    in property <string> label;
+    in property <bool> required: false;
+    
+    spacing: 4px;
+    
+    HorizontalLayout {
+        spacing: 4px;
+        Text {
+            text: label;
+            font-size: 14px;
+            font-weight: 500;
+            color: #212529;
+        }
+        if required : Text {
+            text: "*";
+            font-size: 14px;
+            color: #fa5252;
+        }
+    }
+    
+    @children
+}
+
+// Styled text input
+component StyledLineEdit inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder;
+    in property <bool> enabled: true;
+    
+    height: 36px;
+    background: enabled ? #ffffff : #f8f9fa;
+    border-width: 1px;
+    border-color: input.has-focus ? #228be6 : #ced4da;
+    border-radius: 4px;
+    
+    input := LineEdit {
+        text <=> root.text;
+        placeholder-text: placeholder;
+        enabled: root.enabled;
+    }
+}
+
+// Styled select/combo box
+component StyledComboBox inherits Rectangle {
+    in-out property <string> current-value;
+    in property <[string]> model;
+    in property <bool> enabled: true;
+    
+    height: 36px;
+    background: enabled ? #ffffff : #f8f9fa;
+    border-width: 1px;
+    border-color: #ced4da;
+    border-radius: 4px;
+    
+    combo := ComboBox {
+        current-value <=> root.current-value;
+        model: root.model;
+        enabled: root.enabled;
+    }
+}
+
+// Alert component for error messages
+component Alert inherits Rectangle {
+    in property <string> message;
+    in property <string> title: "Error";
+    in property <color> alert-color: #fa5252;
+    
+    background: #fff5f5;
+    border-width: 1px;
+    border-color: alert-color;
+    border-radius: 8px;
+    min-height: 48px;
+    
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        
+        Rectangle {
+            width: 4px;
+            background: alert-color;
+            border-radius: 2px;
+        }
+        
+        VerticalLayout {
+            spacing: 4px;
+            alignment: center;
+            
+            Text {
+                text: title;
+                font-size: 14px;
+                font-weight: 600;
+                color: alert-color;
+            }
+            
+            Text {
+                text: message;
+                font-size: 14px;
+                color: #495057;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
 
 export component ProjectTab inherits Rectangle {
-    in property <bool> is_saving;
-    in-out property <string> language;
-    in-out property <string> application_name;
-    in-out property <string> organisation_name;
-    in-out property <string> organisation_domain;
-    in-out property <string> prefix_path;
-
-    callback save();
-
     background: #ffffff;
 
-    VerticalBox {
-        padding: 16px;
-        spacing: 12px;
-        Text { text: "Project Settings"; font-size: 24px; font-weight: 700; }
-        GroupBox { title: "General";
-            VerticalBox { spacing: 8px;
-                HorizontalBox { spacing: 8px;
-                    Text { text: "Language"; width: 140px; vertical-alignment: center; }
-                    ComboBox { current-value: root.language; enabled: !root.is_saving; model: ["Rust", "C++", "C++ / Qt", "Python"]; }
+    VerticalLayout {
+        padding: 40px;
+        spacing: 24px;
+
+        // Title
+        Text {
+            text: "Project Settings";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        // Error message
+        if (AppState.project_error_message != "") : Alert {
+            message: AppState.project_error_message;
+            title: "Error loading project settings";
+        }
+
+        // Form in Paper
+        Paper {
+            with-border: true;
+            
+            VerticalLayout {
+                padding: 16px;
+                spacing: 16px;
+
+                FormField {
+                    label: "Language";
+                    required: true;
+                    
+                    StyledComboBox {
+                        current-value <=> AppState.project_language;
+                        model: ["Rust", "C++ / Qt", "Python"];
+                        enabled: !AppState.project_is_saving;
+                    }
                 }
-                HorizontalBox { spacing: 8px;
-                    Text { text: "Application Name"; width: 140px; vertical-alignment: center; }
-                    LineEdit { text <=> root.application_name; enabled: !root.is_saving; }
+
+                FormField {
+                    label: "Application Name";
+                    required: true;
+                    
+                    StyledLineEdit {
+                        text <=> AppState.project_application_name;
+                        placeholder: "Enter application name";
+                        enabled: !AppState.project_is_saving;
+                    }
                 }
-                HorizontalBox { spacing: 8px;
-                    Text { text: "Organisation Name"; width: 140px; vertical-alignment: center; }
-                    LineEdit { text <=> root.organisation_name; enabled: !root.is_saving; }
+
+                FormField {
+                    label: "Organisation Name";
+                    required: true;
+                    
+                    StyledLineEdit {
+                        text <=> AppState.project_organisation_name;
+                        placeholder: "Enter organisation name";
+                        enabled: !AppState.project_is_saving;
+                    }
                 }
-                HorizontalBox { spacing: 8px;
-                    Text { text: "Organisation Domain"; width: 140px; vertical-alignment: center; }
-                    LineEdit { text <=> root.organisation_domain; enabled: !root.is_saving; }
+
+                FormField {
+                    label: "Organisation Domain";
+                    required: true;
+                    
+                    StyledLineEdit {
+                        text <=> AppState.project_organisation_domain;
+                        placeholder: "Enter organisation domain (e.g., com.example)";
+                        enabled: !AppState.project_is_saving;
+                    }
                 }
-                HorizontalBox { spacing: 8px;
-                    Text { text: "Prefix Path"; width: 140px; vertical-alignment: center; }
-                    LineEdit { text <=> root.prefix_path; enabled: !root.is_saving; }
-                }
-                HorizontalBox { spacing: 8px;
-                    Button { text: root.is_saving ? "Saving..." : "Save"; enabled: !root.is_saving; clicked => { root.save(); } }
+
+                FormField {
+                    label: "Prefix Path";
+                    
+                    StyledLineEdit {
+                        text <=> AppState.project_prefix_path;
+                        placeholder: "Enter prefix path";
+                        enabled: !AppState.project_is_saving;
+                    }
                 }
             }
+        }
+
+        // Spacer
+        Rectangle { vertical-stretch: 1; }
+    }
+
+    // Loading overlay
+    if AppState.project_is_saving : Rectangle {
+        background: #ffffff80;
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+
+        ProgressIndicator {
+            width: 48px;
+            height: 48px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            indeterminate: true;
         }
     }
 }

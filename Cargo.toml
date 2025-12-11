@@ -10,14 +10,14 @@ members = [
     "crates/rust_file_generation",
     #
     #"crates/svelte_ui/src-tauri",
-    "crates/qleany-app/src-tauri",
-    #"crates/slint_ui",
+    #"crates/qleany-app/src-tauri",
+    "crates/slint_ui",
     "crates/macros",
 ]
 default-members = [
     #"crates/svelte_ui/src-tauri",
-    "crates/qleany-app/src-tauri",
-    #"crates/slint_ui",
+    #"crates/qleany-app/src-tauri",
+    "crates/slint_ui",
 ]
 exclude = [
     "crates/svelte_ui/src-tauri",

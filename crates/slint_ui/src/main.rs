@@ -1,121 +1,160 @@
+//! Qleany Slint UI Application
+//! 
+//! This application adapts the Tauri+React architecture to Slint:
+//! - Clean separation of commands in dedicated modules
+//! - Event passing from backend to UI via EventHubClient
+//! - AppContext for shared state management
+//! - Global singletons for UI state and commands
 
+mod app_context;
+mod commands;
+mod event_hub_client;
+mod tabs;
 
-use std::rc::Rc;
+use std::sync::Arc;
+
+use slint::Model;
+use app_context::AppContext;
+use event_hub_client::EventHubClient;
+use handling_manifest::LoadDto;
+use common::direct_access::root::RootRelationshipField;
+use crate::commands::{root_commands, entity_commands};
+
 slint::include_modules!();
 
 fn main() {
+    // Initialize logging
+    env_logger::init();
+    log::info!("Starting Qleany Slint UI");
+
+    // Create the application context (backend state)
+    let app_context = Arc::new(AppContext::new());
+    
+    // Create the event hub client for backend-to-UI event passing
+    let event_hub_client = EventHubClient::new(&app_context.event_hub);
+    event_hub_client.start(app_context.quit_signal.clone());
+
+    // Create the Slint UI
     let app = App::new().unwrap();
 
-    // Initialize global state
-    app.set_is_loading(false);
-    app.set_error_message(slint::SharedString::from(""));
-    app.set_current_tab(0); // Home
+    // Initialize global AppState (defaults are set in globals.slint, but we can override here if needed)
+    // The globals are already initialized with defaults in globals.slint
 
-    // Project defaults
-    app.set_project_language(slint::SharedString::from("Rust"));
-    app.set_project_application_name(slint::SharedString::from(""));
-    app.set_project_organisation_name(slint::SharedString::from(""));
-    app.set_project_organisation_domain(slint::SharedString::from(""));
-    app.set_project_prefix_path(slint::SharedString::from(""));
-    app.set_project_is_saving(false);
+    // Initialize entities tab subscriptions and callbacks
+    tabs::entities_tab::init(&event_hub_client, &app, &app_context);
 
-    // Entities/Features demo lists
-    let entities = vec!["User", "Order", "Product"]; 
-    let fields = vec!["id", "name", "created_at"]; 
-    let features = vec!["Auth", "Catalog", "Checkout"]; 
-    let use_cases = vec!["Login", "Search", "Purchase"]; 
+    // Initialize home tab callbacks (manifest operations)
+    tabs::home_tab::init(&app, &app_context);
 
-    let entity_model = Rc::new(slint::VecModel::from(
-        entities.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-    let field_model = Rc::new(slint::VecModel::from(
-        fields.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-    let feature_model = Rc::new(slint::VecModel::from(
-        features.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-    let use_case_model = Rc::new(slint::VecModel::from(
-        use_cases.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-
-    app.set_entity_list(slint::ModelRc::from(entity_model));
-    app.set_field_list(slint::ModelRc::from(field_model));
-    app.set_feature_list(slint::ModelRc::from(feature_model));
-    app.set_use_case_list(slint::ModelRc::from(use_case_model));
-    app.set_selected_entity_index(-1);
-    app.set_selected_field_index(-1);
-    app.set_selected_feature_index(-1);
-    app.set_selected_use_case_index(-1);
-
-    // Generate defaults
-    app.set_generate_in_temp(true);
-    app.set_generate_is_running(false);
-    app.set_generate_progress(0.0);
-    app.set_generate_message(slint::SharedString::from(""));
-
-    let groups = vec!["Core", "Domain", "Infrastructure"]; 
-    let files = vec!["mod.rs", "user.rs", "order.rs"]; 
-    let group_model = Rc::new(slint::VecModel::from(
-        groups.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-    let file_model = Rc::new(slint::VecModel::from(
-        files.into_iter().map(slint::SharedString::from).collect::<Vec<_>>()
-    ));
-    app.set_group_list(slint::ModelRc::from(group_model));
-    app.set_file_list(slint::ModelRc::from(file_model));
-    app.set_selected_group_index(-1);
-    app.set_selected_file_index(-1);
-
-    // Wire up Home callbacks (placeholders for now)
-    app.on_new_manifest(|| {
-        println!("New Manifest clicked");
-    });
-    app.on_open_manifest(|| {
-        println!("Open Manifest clicked");
-    });
-    app.on_save_manifest(|| {
-        println!("Save Manifest clicked");
-    });
-    app.on_close_manifest(|| {
-        println!("Close Manifest clicked");
-    });
-    app.on_open_qleany_manifest(|| {
-        println!("Open Qleany Manifest clicked");
-    });
-    app.on_exit_app(|| {
-        println!("Exit clicked");
-        // In a real app, trigger proper shutdown
+    app.global::<ManifestCommands>().on_exit_app({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Exit clicked");
+            ctx.shutdown();
+            std::process::exit(0);
+        }
     });
 
-    // Project callbacks
-    app.on_save_project_settings(|| {
-        println!("Save Project Settings clicked");
+    // Wire up UndoRedoCommands callbacks
+    app.global::<UndoRedoCommands>().on_undo({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Undo clicked");
+            // TODO: Implement undo using undo_redo_commands
+            let _ = ctx;
+        }
     });
 
-    // Generate callbacks
-    app.on_list_rust_files(|| {
-        println!("List Rust Files clicked");
-    });
-    app.on_start_generate_rust_files(|| {
-        println!("Start Generate Rust Files clicked");
-    });
-    app.on_cancel_generate_rust_files(|| {
-        println!("Cancel Generate Rust Files clicked");
+    app.global::<UndoRedoCommands>().on_redo({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Redo clicked");
+            // TODO: Implement redo using undo_redo_commands
+            let _ = ctx;
+        }
     });
 
-    // Entities/Features selection callbacks
-    app.on_select_entity(|id| {
-        println!("Select Entity: {}", id);
-    });
-    app.on_select_field(|id| {
-        println!("Select Field: {}", id);
-    });
-    app.on_select_feature(|id| {
-        println!("Select Feature: {}", id);
-    });
-    app.on_select_use_case(|id| {
-        println!("Select Use Case: {}", id);
+    // Wire up ProjectCommands callbacks
+    app.global::<ProjectCommands>().on_save_project_settings({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Save Project Settings clicked");
+            // TODO: Implement project settings save using root_commands
+            let _ = ctx;
+        }
     });
 
+    // Wire up GenerateCommands callbacks
+    app.global::<GenerateCommands>().on_list_files({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("List Rust Files clicked");
+            // TODO: Implement using rust_file_generation crate
+            let _ = ctx;
+        }
+    });
+
+    app.global::<GenerateCommands>().on_start_generate({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Start Generate Rust Files clicked");
+            // TODO: Implement using rust_file_generation crate and long_operation_manager
+            let _ = ctx;
+        }
+    });
+
+    app.global::<GenerateCommands>().on_cancel_generate({
+        let ctx = Arc::clone(&app_context);
+        move || {
+            log::info!("Cancel Generate Rust Files clicked");
+            // TODO: Implement cancellation using long_operation_manager
+            let _ = ctx;
+        }
+    });
+
+    // Wire up EntityCommands callbacks
+    app.global::<EntityCommands>().on_select_entity({
+        let ctx = Arc::clone(&app_context);
+        move |id| {
+            log::info!("Select Entity: {}", id);
+            // TODO: Use entity_commands::get_entity to fetch entity details
+            let _ = ctx;
+        }
+    });
+
+    app.global::<EntityCommands>().on_select_field({
+        let ctx = Arc::clone(&app_context);
+        move |id| {
+            log::info!("Select Field: {}", id);
+            // TODO: Use field_commands::get_field to fetch field details
+            let _ = ctx;
+        }
+    });
+
+    // Wire up FeatureCommands callbacks
+    app.global::<FeatureCommands>().on_select_feature({
+        let ctx = Arc::clone(&app_context);
+        move |id| {
+            log::info!("Select Feature: {}", id);
+            // TODO: Use feature_commands::get_feature to fetch feature details
+            let _ = ctx;
+        }
+    });
+
+    app.global::<FeatureCommands>().on_select_use_case({
+        let ctx = Arc::clone(&app_context);
+        move |id| {
+            log::info!("Select Use Case: {}", id);
+            // TODO: Use use_case_commands::get_use_case to fetch use case details
+            let _ = ctx;
+        }
+    });
+
+    // Run the application
+    log::info!("Running Slint UI");
     app.run().unwrap();
+
+    // Cleanup on exit
+    log::info!("Shutting down");
+    app_context.shutdown();
 }
