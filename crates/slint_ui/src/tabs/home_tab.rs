@@ -7,11 +7,59 @@ use std::sync::Arc;
 
 use slint::ComponentHandle;
 use common::direct_access::root::RootRelationshipField;
+use common::event::{HandlingManifestEvent, Origin};
 use handling_manifest::LoadDto;
 
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, handling_manifest_commands, root_commands};
 use crate::{App, EntitiesTabState, AppState, ListItem, ManifestCommands};
+use crate::event_hub_client::EventHubClient;
+
+fn subscribe_loaded_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    event_hub_client.subscribe(
+        Origin::HandlingManifest(HandlingManifestEvent::Loaded),
+        {
+            let ctx = Arc::clone(&app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Manifest loaded event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                // Use invoke_from_event_loop to safely update UI from background thread
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        app.global::<AppState>().set_manifest_is_open(true);
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                    }
+                });
+            }
+        },
+    );
+}
+
+fn subscribe_closed_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    event_hub_client.subscribe(
+        Origin::HandlingManifest(HandlingManifestEvent::Closed),
+        {
+            let ctx = Arc::clone(&app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Manifest closed event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                // Use invoke_from_event_loop to safely update UI from background thread
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        app.global::<AppState>().set_manifest_is_open(false);
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                    }
+                });
+            }
+        },
+    );
+}
 
 /// Wire up the on_new_manifest callback
 pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
@@ -89,8 +137,14 @@ pub fn setup_close_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         move || {
             log::info!("Close Manifest clicked");
-            // TODO: Clear the current manifest from context
-            let _ = ctx;
+            match handling_manifest_commands::close_manifest(&ctx) {
+                Ok(()) => {
+                    log::info!("Manifest closed successfully");
+                }
+                Err(e) => {
+                    log::error!("Failed to close manifest: {}", e);
+                }
+            }
         }
     });
 }
@@ -179,7 +233,9 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
 }
 
 /// Initialize all home tab related callbacks
-pub fn init(app: &App, app_context: &Arc<AppContext>) {
+pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    subscribe_loaded_event(event_hub_client, app, app_context);
+    subscribe_closed_event(event_hub_client, app, app_context);
     setup_new_manifest_callback(app, app_context);
     setup_open_manifest_callback(app, app_context);
     setup_save_manifest_callback(app, app_context);

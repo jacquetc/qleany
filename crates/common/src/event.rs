@@ -10,6 +10,7 @@ use std::{
 pub enum HandlingManifestEvent {
     Loaded,
     Saved,
+    Closed,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]

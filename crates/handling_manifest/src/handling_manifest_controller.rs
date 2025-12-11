@@ -6,13 +6,14 @@ use crate::units_of_work::save_uow::SaveUnitOfWorkFactory;
 use crate::use_cases::load_uc::LoadUseCase;
 use crate::use_cases::save_uc::SaveUseCase;
 use anyhow::Result;
-use common::event::{Event, Origin};
+use common::event::{Event, HandlingManifestEvent, Origin};
 
 use common::event::HandlingManifestEvent::Loaded;
 use common::event::HandlingManifestEvent::Saved;
 
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
+use crate::units_of_work::close_uow::CloseUnitOfWorkFactory;
 
 pub fn load(
     db_context: &DbContext,
@@ -42,4 +43,17 @@ pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) ->
         data: None,
     });
     Ok(return_dto)
+}
+
+pub fn close(_db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
+    let uow_context = CloseUnitOfWorkFactory::new(&_db_context, &event_hub);
+    let mut uc = crate::use_cases::close_uc::CloseUseCase::new(Box::new(uow_context));
+    uc.execute()?;
+    event_hub.send_event(Event {
+        origin: Origin::HandlingManifest(HandlingManifestEvent::Closed),
+        ids: vec![],
+        data: None,
+    });
+    Ok(())
+
 }
