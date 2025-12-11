@@ -47,7 +47,7 @@ fn main() {
     tabs::home_tab::init(&event_hub_client, &app, &app_context);
 
     // Initialize project tab callbacks (project settings)
-    tabs::project_tab::init(&app, &app_context);
+    tabs::project_tab::init(&event_hub_client, &app, &app_context);
 
     app.global::<ManifestCommands>().on_exit_app({
         let ctx = Arc::clone(&app_context);

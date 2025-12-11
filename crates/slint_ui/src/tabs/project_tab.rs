@@ -6,10 +6,33 @@
 use std::sync::Arc;
 
 use slint::ComponentHandle;
-
+use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use crate::app_context::AppContext;
 use crate::commands::{global_commands, root_commands};
 use crate::{App, ProjectTabState, AppState};
+use crate::event_hub_client::EventHubClient;
+
+/// Subscribe to Root update events to refresh feature_cr_list
+fn subscribe_global_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Global updated event received {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
+                });
+            }
+        },
+    );
+}
 
 /// Helper function to get the global_id from root
 fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::types::EntityId> {
@@ -122,7 +145,8 @@ fn setup_prefix_path_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 /// Initialize all project tab related callbacks
-pub fn init(app: &App, app_context: &Arc<AppContext>) {
+pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    subscribe_global_updated_event(event_hub_client, app, app_context);
     setup_language_callback(app, app_context);
     setup_application_name_callback(app, app_context);
     setup_organisation_name_callback(app, app_context);

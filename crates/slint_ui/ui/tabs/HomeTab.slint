@@ -141,19 +141,6 @@ export component HomeTab inherits Rectangle {
                         }
                         primary: true;
                     }
-                    Button {
-                        text: "Exit";
-                        enabled: !AppState.is_loading;
-                        clicked => {
-                            if (AppState.manifest_is_saved) {
-                                ManifestCommands.exit_app();
-                            } else {
-                                AppState.confirm_dialog_pending_action = "exit";
-                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to exit the application without saving?";
-                                AppState.confirm_dialog_visible = true;
-                            }
-                        }
-                    }
                 }
 
                 // For Testing section

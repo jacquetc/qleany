@@ -34,7 +34,7 @@ fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, ap
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         fill_feature_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(true);
+                        app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
             }
@@ -58,7 +58,7 @@ fn subscribe_feature_updated_event(event_hub_client: &EventHubClient, app: &App,
                     if let Some(app) = app_weak.upgrade() {
                         fill_feature_list(&app, &ctx);
                         fill_use_case_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(true);
+                        app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
             }
@@ -81,7 +81,7 @@ fn subscribe_use_case_updated_event(event_hub_client: &EventHubClient, app: &App
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         fill_use_case_list(&app, &ctx);
-                        app.global::<AppState>().set_manifest_is_saved(true);
+                        app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
             }
