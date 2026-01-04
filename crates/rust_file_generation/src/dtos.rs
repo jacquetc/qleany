@@ -10,6 +10,7 @@ pub struct ListRustFilesDto {
 pub struct ListRustFilesReturnDto {
     pub file_ids: Vec<EntityId>,
     pub file_names: Vec<String>,
+    pub file_groups: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -127,7 +127,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "repository_factory.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: "crates/common/src/direct_access/".to_string(),
             group: "base".to_string(),
             template_name: "repository_factory".to_string(),
             feature: None,
@@ -709,15 +709,18 @@ impl ListRustFilesUseCase {
 
         let mut file_ids = vec![];
         let mut file_names = vec![];
+        let mut file_groups = vec![];
 
         for file in created_files {
             file_ids.push(file.id);
             file_names.push(format!("{}{}", file.relative_path, file.name));
+            file_groups.push(file.group.clone());
         }
 
         Ok(ListRustFilesReturnDto {
             file_ids,
             file_names,
+            file_groups,
         })
     }
 }

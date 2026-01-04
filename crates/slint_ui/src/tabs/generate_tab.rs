@@ -246,16 +246,17 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
                 
                 // Get generate_in_temp setting
                 let in_temp = app.global::<AppState>().get_generate_in_temp();
-                let root_path = if in_temp {
-                    std::env::temp_dir().to_string_lossy().to_string()
+                let root_path = ".".to_string();
+                let prefix = if in_temp {
+                    "temp_generated".to_string()
                 } else {
-                    ".".to_string()
+                    String::new()
                 };
                 
                 let dto = GenerateRustFilesDto {
                     file_ids,
                     root_path,
-                    prefix: String::new(),
+                    prefix,
                 };
                 
                 // Set running state
