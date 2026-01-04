@@ -239,11 +239,17 @@ export global AppState {
     in-out property <bool> generate_is_running: false;
     in-out property <float> generate_progress: 0;
     in-out property <string> generate_message: "";
-    in-out property <bool> generate_in_temp: false;
+    in-out property <bool> generate_in_temp: true;
     in-out property <[string]> group_list: [];
     in-out property <[string]> file_list: [];
     in-out property <[CRListItem]> group_cr_list: [];
     in-out property <[CRListItem]> file_cr_list: [];
     in-out property <int> selected_group_index: -1;
     in-out property <int> selected_file_index: -1;
+    in-out property <string> code_preview: "";
+    
+    // Generate tab callbacks
+    callback group_selected(int);
+    callback file_selected(int);
+    callback refresh_generate_tab();
 }

@@ -104,33 +104,8 @@ fn main() {
     });
 
 
-    // Wire up GenerateCommands callbacks
-    app.global::<GenerateCommands>().on_list_files({
-        let ctx = Arc::clone(&app_context);
-        move || {
-            log::info!("List Rust Files clicked");
-            // TODO: Implement using rust_file_generation crate
-            let _ = ctx;
-        }
-    });
-
-    app.global::<GenerateCommands>().on_start_generate({
-        let ctx = Arc::clone(&app_context);
-        move || {
-            log::info!("Start Generate Rust Files clicked");
-            // TODO: Implement using rust_file_generation crate and long_operation_manager
-            let _ = ctx;
-        }
-    });
-
-    app.global::<GenerateCommands>().on_cancel_generate({
-        let ctx = Arc::clone(&app_context);
-        move || {
-            log::info!("Cancel Generate Rust Files clicked");
-            // TODO: Implement cancellation using long_operation_manager
-            let _ = ctx;
-        }
-    });
+    // Initialize generate tab callbacks (rust file generation)
+    tabs::generate_tab::init(&event_hub_client, &app, &app_context);
 
     // Run the application
     log::info!("Running Slint UI");

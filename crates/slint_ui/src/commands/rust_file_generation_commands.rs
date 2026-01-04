@@ -1,0 +1,48 @@
+//! Rust file generation commands for Slint UI
+
+use crate::app_context::AppContext;
+use rust_file_generation::{
+    rust_file_generation_controller, GenerateRustCodeDto, GenerateRustCodeReturnDto,
+    GenerateRustFilesDto, GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
+};
+
+/// List rust files to be generated
+pub fn list_rust_files(
+    ctx: &AppContext,
+    dto: &ListRustFilesDto,
+) -> Result<ListRustFilesReturnDto, String> {
+    rust_file_generation_controller::list_rust_files(&ctx.db_context, &ctx.event_hub, dto)
+        .map_err(|e| format!("Error while listing rust files: {:?}", e))
+}
+
+/// Generate rust code (in memory)
+pub fn generate_rust_code(
+    ctx: &AppContext,
+    dto: &GenerateRustCodeDto,
+) -> Result<GenerateRustCodeReturnDto, String> {
+    rust_file_generation_controller::generate_rust_code(&ctx.db_context, dto)
+        .map_err(|e| format!("Error while generating rust code: {:?}", e))
+}
+
+/// Start generating rust files (long operation)
+pub fn generate_rust_files(ctx: &AppContext, dto: &GenerateRustFilesDto) -> Result<String, String> {
+    rust_file_generation_controller::generate_rust_files(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut ctx.long_operation_manager.lock().unwrap(),
+        dto,
+    )
+    .map_err(|e| format!("Error while generating rust files: {:?}", e))
+}
+
+/// Get the result of a generate rust files operation
+pub fn get_generate_rust_files_result(
+    ctx: &AppContext,
+    operation_id: &str,
+) -> Result<Option<GenerateRustFilesReturnDto>, String> {
+    rust_file_generation_controller::get_generate_rust_files_result(
+        &ctx.long_operation_manager.lock().unwrap(),
+        operation_id,
+    )
+    .map_err(|e| format!("Error while getting rust files generation result: {:?}", e))
+}

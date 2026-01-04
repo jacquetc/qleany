@@ -120,6 +120,7 @@ export component GenerateTab inherits Rectangle {
                             selected-id: AppState.selected_group_index;
                             selection-changed(id) => {
                                 AppState.selected_group_index = id;
+                                AppState.group_selected(id);
                             }
                         }
                     }
@@ -156,6 +157,7 @@ export component GenerateTab inherits Rectangle {
                             selected-id: AppState.selected_file_index;
                             selection-changed(id) => {
                                 AppState.selected_file_index = id;
+                                AppState.file_selected(id);
                             }
                         }
                     }
@@ -192,7 +194,7 @@ export component GenerateTab inherits Rectangle {
                                 alignment: start;
 
                                 Text {
-                                    text: AppState.selected_file_index >= 0 ? "File preview" : "Select a file to preview";
+                                    text: AppState.selected_file_index >= 0 ? AppState.code_preview : "Select a file to preview";
                                     font-size: 14px;
                                     font-family: "monospace";
                                     color: AppState.selected_file_index >= 0 ? #212529 : #868e96;

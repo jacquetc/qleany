@@ -7,3 +7,4 @@ pub mod entities_tab;
 pub mod home_tab;
 pub mod features_tab;
 pub mod project_tab;
+pub mod generate_tab;

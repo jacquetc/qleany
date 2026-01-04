@@ -15,3 +15,4 @@ pub mod use_case_commands;
 pub mod dto_commands;
 pub mod dto_field_commands;
 pub mod file_commands;
+pub mod rust_file_generation_commands;
