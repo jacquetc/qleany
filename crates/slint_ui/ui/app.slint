@@ -49,7 +49,7 @@ component NavItem inherits Rectangle {
 
 export component App inherits Window {
     title: "Qleany";
-    min-width: 1300px;
+    min-width: 1500px;
     min-height: 900px;
 
 
@@ -263,6 +263,7 @@ export component App inherits Window {
                 } else if (AppState.confirm_dialog_pending_action == "close") {
                     ManifestCommands.close_manifest();
                 } else if (AppState.confirm_dialog_pending_action == "exit") {
+                    AppState.force_exit = true;
                     ManifestCommands.exit_app();
                 } else if (AppState.confirm_dialog_pending_action == "open_qleany") {
                     ManifestCommands.open_qleany_manifest();

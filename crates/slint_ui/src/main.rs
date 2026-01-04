@@ -15,6 +15,7 @@ use std::sync::Arc;
 use app_context::AppContext;
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use event_hub_client::EventHubClient;
+use crate::commands::handling_manifest_commands;
 
 slint::include_modules!();
 
@@ -62,8 +63,16 @@ fn main() {
                 None => return slint::CloseRequestResponse::KeepWindowShown,
             };
 
-            if app.global::<AppState>().get_manifest_is_saved() {
-                log::info!("Manifest is saved, allowing window to close");
+            if app.global::<AppState>().get_manifest_is_saved() || app.global::<AppState>().get_force_exit() {
+                log::info!("Closing Manifest before exit");
+                match handling_manifest_commands::close_manifest(&ctx) {
+                    Ok(()) => {
+                        log::info!("Manifest closed successfully");
+                    }
+                    Err(e) => {
+                        log::error!("Failed to close manifest: {}", e);
+                    }
+                }
                 ctx.shutdown();
                 return slint::CloseRequestResponse::HideWindow;
             }
@@ -77,10 +86,13 @@ fn main() {
 
     app.global::<ManifestCommands>().on_exit_app({
         let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
         move || {
-            log::info!("Exit clicked");
-            ctx.shutdown();
-            std::process::exit(0);
+            let app = match app_weak.upgrade() {
+                Some(app) => app,
+                None => return,
+            };
+            slint::Window::try_dispatch_event(app.window(), slint::platform::WindowEvent::CloseRequested);
         }
     });
 
