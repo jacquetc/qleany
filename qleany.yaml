@@ -23,27 +23,27 @@ entities:
   - name: global
     type: entity
     entity: Global
+    relationship: one_to_one
+    required: true
     strong: true
   - name: entities
     type: entity
     entity: Entity
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name
   - name: features
     type: entity
     entity: Feature
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name
   - name: files
     type: entity
     entity: File
-    is_list: true
+    relationship: one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -57,15 +57,14 @@ entities:
   - name: fields
     type: entity
     entity: Field
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name
   - name: relationships
     type: entity
     entity: Relationship
-    is_list: true
+    relationship: one_to_many
     strong: true
 - name: Field
   only_for_heritage: false
@@ -90,18 +89,23 @@ entities:
   - name: entity
     type: entity
     entity: Entity
-    is_nullable: true
-  - name: is_nullable
+    relationship: one_to_one
+  - name: relationship
+    type: enum
+    enum_name: RelationshipType
+    enum_values:
+      - OneToOne
+      - OrderedOneToMany
+      - OneToMany
+      - ManyToOne
+      - ManyToMany
+  - name: is_required
     type: boolean
   - name: is_primary_key
     type: boolean
-  - name: is_list
-    type: boolean
-  - name: single
+  - name: single_model
     type: boolean
   - name: strong
-    type: boolean
-  - name: ordered
     type: boolean
   - name: list_model
     type: boolean
@@ -117,8 +121,7 @@ entities:
   - name: use_cases
     type: entity
     entity: UseCase
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -145,8 +148,7 @@ entities:
   - name: entities
     type: entity
     entity: Entity
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     list_model: true
     list_model_displayed_field: name
   - name: undoable
@@ -158,13 +160,13 @@ entities:
   - name: dto_in
     type: entity
     entity: Dto
+    relationship: one_to_one
     strong: true
-    is_nullable: true
   - name: dto_out
     type: entity
     entity: Dto
+    relationship: one_to_one
     strong: true
-    is_nullable: true
 - name: Dto
   only_for_heritage: false
   parent: EntityBase
@@ -175,8 +177,7 @@ entities:
   - name: fields
     type: entity
     entity: DtoField
-    is_list: true
-    ordered: true
+    relationship: ordered_one_to_many
     strong: true
     list_model: true
     list_model_displayed_field: name

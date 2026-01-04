@@ -2,7 +2,7 @@ use crate::SaveDto;
 use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase};
+use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, RelationshipType, Root, UseCase};
 use common::types::EntityId;
 
 pub trait SaveUnitOfWorkFactoryTrait {
@@ -133,22 +133,30 @@ impl SaveUseCase {
                             .and_then(|entity_id| entities.iter().find(|e| e.id == entity_id))
                             .map(|e| e.name.clone());
 
+                        // Convert RelationshipType enum to string
+                        let relationship_str = match field.relationship {
+                            RelationshipType::OneToOne => "one_to_one",
+                            RelationshipType::OneToMany => "one_to_many",
+                            RelationshipType::OrderedOneToMany => "ordered_one_to_many",
+                            RelationshipType::ManyToOne => "many_to_one",
+                            RelationshipType::ManyToMany => "many_to_many",
+                        };
+
                         model_structs::Field {
                             name: field.name.clone(),
                             r#type: field_type,
                             entity,
-                            is_list: if field.is_list { Some(true) } else { None },
-                            ordered: if field.ordered { Some(true) } else { None },
+                            relationship: Some(relationship_str.to_string()),
+                            required: if field.required { Some(true) } else { None },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),
-                            is_nullable: if field.is_nullable { Some(true) } else { None },
                             is_primary_key: if field.is_primary_key {
                                 Some(true)
                             } else {
                                 None
                             },
-                            single: if field.single { Some(true) } else { None },
+                            single_model: if field.single_model { Some(true) } else { None },
                             enum_name: field.enum_name.clone(),
                             enum_values: field.enum_values.clone(),
                         }

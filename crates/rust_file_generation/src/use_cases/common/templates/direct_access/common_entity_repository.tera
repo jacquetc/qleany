@@ -94,10 +94,26 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
     pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
         let entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
-        // cascade deletes for strong forward relationships
+        // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
-        {% if f.inner.field_type == "Entity" and f.inner.strong and f.inner.single == false %}{% endif %}
+        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        let {{ f.snake_name }} = entity.{{ f.snake_name }}.clone();
+        {%- endif %}
         {%- endfor %}
+
+        // delete all strong relationships, initiating a cascade delete
+        {% for f in s.entities[e].fields %}
+        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+            .delete(event_hub, &{{ f.snake_name }})?;
+        {% else %}
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+            .delete_multi(event_hub, &{{ f.snake_name }})?;
+        {%- endif %}
+        {%- endif %}
+        {%- endfor %}
+
         // delete entity
         self.redb_table.delete(id)?;
         event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![id.clone()], data: None });
@@ -107,6 +123,36 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     pub fn delete_multi(&mut self, event_hub: &Arc<EventHub>, ids: &[EntityId]) -> Result<(), Error> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) { return Ok(()); }
+
+        // get all strong forward relationship fields
+        {% for f in s.entities[e].fields %}
+        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+        let {{ f.snake_name }}_ids: Vec<EntityId> = entities
+            .iter()
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}.clone()))
+            .collect();
+        {% else %}
+        let mut {{ f.snake_name }}_ids: Vec<EntityId> = entities
+            .iter()
+            .flat_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}.clone()))
+            .flatten()
+            .collect();
+        // remove duplicates
+        {{ f.snake_name }}_ids.sort();
+        {{ f.snake_name }}_ids.dedup();
+        {%- endif %}
+        {%- endif %}
+        {%- endfor %}
+
+        // delete all strong relationships, initiating a cascade delete
+        {% for f in s.entities[e].fields %}
+        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+            .delete_multi(event_hub, &{{ f.snake_name }}_ids)?;
+        {%- endif %}
+        {%- endfor %}
+
         self.redb_table.delete_multi(ids)?;
         event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: ids.into(), data: None });
         Ok(())

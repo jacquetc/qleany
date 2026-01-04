@@ -2,7 +2,7 @@ use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, UseCase,
+    Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType, UseCase,
 };
 use common::types::EntityId;
 use std::collections::HashMap;
@@ -195,12 +195,11 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         name: "name".into(),
         field_type: FieldType::String,
         entity: Some(300),
-        is_nullable: false,
         is_primary_key: false,
-        is_list: false,
-        single: true,
+        relationship: RelationshipType::OneToOne,
+        required: false,
+        single_model: true,
         strong: true,
-        ordered: false,
         list_model: false,
         list_model_displayed_field: None,
         enum_name: None,

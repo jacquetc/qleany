@@ -32,10 +32,10 @@ pub struct Field {
     pub entity: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_list: Option<bool>,
+    pub relationship: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ordered: Option<bool>,
+    pub required: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub strong: Option<bool>,
@@ -47,13 +47,10 @@ pub struct Field {
     pub list_model_displayed_field: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_nullable: Option<bool>,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_primary_key: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub single: Option<bool>,
+    pub single_model: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enum_name: Option<String>,

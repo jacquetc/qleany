@@ -89,12 +89,11 @@ pub struct Field {
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
-    pub is_nullable: bool,
     pub is_primary_key: bool,
-    pub is_list: bool,
-    pub single: bool,
+    pub relationship: RelationshipType,
+    pub required: bool,
+    pub single_model: bool,
     pub strong: bool,
-    pub ordered: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
     pub enum_name: Option<String>,
@@ -154,13 +153,14 @@ impl Default for FieldType {
 pub enum RelationshipType {
     OneToOne,
     OneToMany,
+    OrderedOneToMany,
     ManyToOne,
     ManyToMany,
 }
 
 impl Default for RelationshipType {
     fn default() -> Self {
-        RelationshipType::ManyToMany
+        RelationshipType::OneToOne
     }
 }
 

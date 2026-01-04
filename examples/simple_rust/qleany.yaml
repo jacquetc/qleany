@@ -98,7 +98,7 @@ entities:
         type: bool
       - name: is_list
         type: bool
-      - name: single
+      - name: single_model
         type: bool
       - name: strong
         type: bool

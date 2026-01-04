@@ -3,10 +3,7 @@ mod rust_code_generator_tests;
 
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{
-    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
-    UseCase,
-};
+use common::entities::{Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType, UseCase};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -96,8 +93,8 @@ struct FieldVM {
     pub inner: Field,
     pub pascal_name: String,
     pub snake_name: String,
-    pub is_list: bool,
-    pub is_nullable: bool,
+    pub relationship: String,
+    pub required: bool,
     pub rust_base_type: String,
     pub rust_type: String,
 }
@@ -268,17 +265,26 @@ impl SnapshotBuilder {
                     .or(Some("enum_name not set".to_string()))
                     .unwrap(),
             };
-            let rust_type = if f.is_list {
-                format!("Vec<{}>", rust_base_type)
-            } else {
-                rust_base_type.clone()
+            //
+            let relationship = match f.relationship {
+                RelationshipType::OneToOne => "OneToOne".to_string(),
+                RelationshipType::OrderedOneToMany => "OrderedOneToMany".to_string(),
+                RelationshipType::OneToMany => "OneToMany".to_string(),
+                RelationshipType::ManyToOne => "ManyToOne".to_string(),
+                RelationshipType::ManyToMany => "ManyToMany".to_string(),
+            };
+
+            let rust_type = match f.relationship  {
+                RelationshipType::OneToOne | RelationshipType::ManyToOne => rust_base_type.clone(),
+                RelationshipType::OrderedOneToMany | RelationshipType::OneToMany | RelationshipType::ManyToMany =>
+                format!("Vec<{}>", rust_base_type),
             };
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
                 pascal_name: heck::AsPascalCase(&f.name).to_string(),
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
-                is_list: f.is_list,
-                is_nullable: f.is_nullable,
+                relationship,
+                required: f.required,
                 rust_base_type,
                 rust_type,
             });
@@ -1033,12 +1039,11 @@ mod tests {
             name: "name".to_string(),
             field_type: FieldType::Entity,
             entity: Some(entity_id),
-            is_nullable: true,
             is_primary_key: false,
-            is_list: false,
-            single: true,
+            relationship: RelationshipType::OneToOne,
+            required: false, // nullable
+            single_model: true,
             strong: true,
-            ordered: false,
             list_model: false,
             list_model_displayed_field: None,
             enum_name: None,
@@ -1049,12 +1054,11 @@ mod tests {
             name: "tags".to_string(),
             field_type: FieldType::String,
             entity: None,
-            is_nullable: false,
             is_primary_key: false,
-            is_list: true,
-            single: true,
+            relationship: RelationshipType::OneToMany,
+            required: false,
+            single_model: true,
             strong: true,
-            ordered: false,
             list_model: false,
             list_model_displayed_field: None,
             enum_name: None,
@@ -1075,8 +1079,8 @@ mod tests {
                         inner: field_relationship.clone(),
                         pascal_name: heck::AsPascalCase(&field_relationship.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_relationship.name).to_string(),
-                        is_list: field_relationship.is_list,
-                        is_nullable: field_relationship.is_nullable,
+                        relationship: "OneToOne".to_string(),
+                        required: false,
                         rust_base_type: "String".to_string(),
                         rust_type: "String".to_string(),
                     },
@@ -1084,8 +1088,8 @@ mod tests {
                         inner: field_tags.clone(),
                         pascal_name: heck::AsPascalCase(&field_tags.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
-                        is_list: field_tags.is_list,
-                        is_nullable: field_tags.is_nullable,
+                        relationship: "OneToMany".to_string(),
+                        required: false,
                         rust_base_type: "String".to_string(),
                         rust_type: "Vec<String>".to_string(),
                     },

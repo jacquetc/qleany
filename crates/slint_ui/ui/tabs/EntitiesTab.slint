@@ -246,20 +246,12 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-                            // Boolean checkboxes
+                            // General field options
                             FormField {
                                 label: "Options";
 
                                 VerticalLayout {
                                     spacing: 8px;
-
-                                    CheckBox {
-                                        text: "Nullable";
-                                        checked <=> EntitiesTabState.selected_field_is_nullable;
-                                        toggled => {
-                                            EntitiesTabState.field_is_nullable_changed(self.checked);
-                                        }
-                                    }
 
                                     CheckBox {
                                         text: "Primary Key";
@@ -270,18 +262,18 @@ export component EntitiesTab inherits Rectangle {
                                     }
 
                                     CheckBox {
-                                        text: "Is List";
-                                        checked <=> EntitiesTabState.selected_field_is_list;
-                                        toggled => {
-                                            EntitiesTabState.field_is_list_changed(self.checked);
-                                        }
-                                    }
-
-                                    CheckBox {
                                         text: "List Model";
                                         checked <=> EntitiesTabState.selected_field_list_model;
                                         toggled => {
                                             EntitiesTabState.field_list_model_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Single Model";
+                                        checked <=> EntitiesTabState.selected_field_single_model;
+                                        toggled => {
+                                            EntitiesTabState.field_single_model_changed(self.checked);
                                         }
                                     }
                                 }
@@ -302,33 +294,39 @@ export component EntitiesTab inherits Rectangle {
 
                             // Entity-specific options (only visible when type is Entity)
                             if EntitiesTabState.selected_field_type == "Entity" : FormField {
-                                label: "Relationship Options";
+                                label: "Relationship Type";
 
-                                VerticalLayout {
-                                    spacing: 8px;
-
-                                    CheckBox {
-                                        text: "Single";
-                                        checked <=> EntitiesTabState.selected_field_single;
-                                        toggled => {
-                                            EntitiesTabState.field_single_changed(self.checked);
-                                        }
+                                relationship-combo := ComboBox {
+                                    model: EntitiesTabState.relationship_type_options;
+                                    current-value <=> EntitiesTabState.selected_field_relationship;
+                                    selected(value) => {
+                                        EntitiesTabState.field_relationship_changed(value);
                                     }
+                                }
+                            }
 
-                                    CheckBox {
-                                        text: "Strong";
-                                        checked <=> EntitiesTabState.selected_field_strong;
-                                        toggled => {
-                                            EntitiesTabState.field_strong_changed(self.checked);
-                                        }
+                            // Required checkbox (only visible when type is Entity and relationship is one_to_one)
+                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship == "one_to_one" : FormField {
+                                label: "Required";
+
+                                CheckBox {
+                                    text: "Required (not nullable)";
+                                    checked <=> EntitiesTabState.selected_field_required;
+                                    toggled => {
+                                        EntitiesTabState.field_required_changed(self.checked);
                                     }
+                                }
+                            }
 
-                                    CheckBox {
-                                        text: "Ordered";
-                                        checked <=> EntitiesTabState.selected_field_ordered;
-                                        toggled => {
-                                            EntitiesTabState.field_ordered_changed(self.checked);
-                                        }
+                            // Strong checkbox (only visible when type is Entity and relationship is NOT many_to_many)
+                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship != "many_to_many" : FormField {
+                                label: "Cascade";
+
+                                CheckBox {
+                                    text: "Strong (cascade delete)";
+                                    checked <=> EntitiesTabState.selected_field_strong;
+                                    toggled => {
+                                        EntitiesTabState.field_strong_changed(self.checked);
                                     }
                                 }
                             }

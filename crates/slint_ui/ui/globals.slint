@@ -77,12 +77,11 @@ export global EntitiesTabState {
     in-out property <string> selected_field_name: "";
     in-out property <string> selected_field_type: "String";
     in-out property <int> selected_field_entity: -1;
-    in-out property <bool> selected_field_is_nullable: false;
     in-out property <bool> selected_field_is_primary_key: false;
-    in-out property <bool> selected_field_is_list: false;
-    in-out property <bool> selected_field_single: true;
+    in-out property <string> selected_field_relationship: "one_to_one";
+    in-out property <bool> selected_field_required: false;
+    in-out property <bool> selected_field_single_model: true;
     in-out property <bool> selected_field_strong: true;
-    in-out property <bool> selected_field_ordered: false;
     in-out property <bool> selected_field_list_model: false;
     in-out property <string> selected_field_list_model_displayed_field: "";
     in-out property <string> selected_field_enum_name: "";
@@ -90,6 +89,8 @@ export global EntitiesTabState {
 
     // Field type options for ComboBox
     in-out property <[string]> field_type_options: ["Boolean", "Integer", "UInteger", "Float", "String", "Uuid", "DateTime", "Entity", "Enum"];
+    // Relationship type options for ComboBox (only for Entity type fields)
+    in-out property <[string]> relationship_type_options: ["one_to_one", "one_to_many", "ordered_one_to_many", "many_to_many"];
     // Entity options for referenced entity ComboBox (populated dynamically)
     in-out property <[string]> entity_options: [];
     in-out property <[int]> entity_option_ids: [];
@@ -98,12 +99,11 @@ export global EntitiesTabState {
     callback field_name_changed(string);
     callback field_type_changed(string);
     callback field_entity_changed(int);
-    callback field_is_nullable_changed(bool);
     callback field_is_primary_key_changed(bool);
-    callback field_is_list_changed(bool);
-    callback field_single_changed(bool);
+    callback field_relationship_changed(string);
+    callback field_required_changed(bool);
+    callback field_single_model_changed(bool);
     callback field_strong_changed(bool);
-    callback field_ordered_changed(bool);
     callback field_list_model_changed(bool);
     callback field_list_model_displayed_field_changed(string);
     callback field_enum_name_changed(string);

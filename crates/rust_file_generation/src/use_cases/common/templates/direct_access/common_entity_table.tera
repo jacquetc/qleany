@@ -96,13 +96,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
-                {% if f.is_list %}
+                    {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                 {% elif f.is_nullable %}
-                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                 {% else %}
+                    {% elif f.is_required %}
                  let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                 {% endif %}
+                    {% else %}
+                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                    {% endif %}
                  entity.{{ f.snake_name }} = {{ f.snake_name }};
                 {% endif %}
                 {% endfor %}
@@ -124,12 +124,12 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
-            {%- if f.is_list %}
+                {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
             {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone() 
-            {% elif f.is_nullable %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()
-            {% else %}
+                {% elif f.is_required %}
             {{ f.snake_name }}_junction_table.insert(entity.id, { vec![entity.{{ f.snake_name }}] as Vec<EntityId>
+                {% else %}
+            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()
              })?;
             {%- endif %}
             {%- endif %}
@@ -215,13 +215,13 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? { let mut entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
-                {% if f.is_list %}
+                    {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                 {% elif f.is_nullable %}
-                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                 {% else %}
+                    {% elif f.is_required %}
                  let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                 {% endif %}
+                    {% else %}
+                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                    {% endif %}
                  entity.{{ f.snake_name }} = {{ f.snake_name }};
                 {% endif %}
                 {% endfor %}

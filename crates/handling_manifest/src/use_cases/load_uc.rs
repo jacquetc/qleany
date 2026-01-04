@@ -5,7 +5,7 @@ use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork,
     entities::{
-        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, Root, UseCase,
+        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, RelationshipType, Root, UseCase,
     },
 };
 
@@ -188,6 +188,17 @@ impl LoadUseCase {
                     }
                 }
 
+                // parse relationship type from string
+                let relationship = match model_field.relationship.as_deref() {
+                    Some("one_to_one") => RelationshipType::OneToOne,
+                    Some("many_to_one") => RelationshipType::ManyToOne,
+                    Some("one_to_many") => RelationshipType::OneToMany,
+                    Some("ordered_one_to_many") => RelationshipType::OrderedOneToMany,
+                    Some("many_to_many") => RelationshipType::ManyToMany,
+                    Some(other) => return Err(anyhow::anyhow!("Unknown relationship type: {}", other)),
+                    None => RelationshipType::OneToOne, // default for entity fields
+                };
+
                 // create field
                 let field = uow.create_field(&Field {
                     id: 0,
@@ -204,12 +215,11 @@ impl LoadUseCase {
                                 .ok_or(anyhow::anyhow!("Entity not found"))
                         })
                         .transpose()?,
-                    is_nullable: model_field.is_nullable.unwrap_or_default(),
                     is_primary_key: model_field.is_primary_key.unwrap_or_default(),
-                    is_list: model_field.is_list.unwrap_or_default(),
-                    single: model_field.single.unwrap_or_default(),
+                    relationship,
+                    required: model_field.required.unwrap_or_default(),
+                    single_model: model_field.single_model.unwrap_or_default(),
                     strong: model_field.strong.unwrap_or_default(),
-                    ordered: model_field.ordered.unwrap_or_default(),
                     list_model: model_field.list_model.unwrap_or_default(),
                     list_model_displayed_field: model_field.list_model_displayed_field.clone(),
                     enum_name: model_field.enum_name.clone(),
