@@ -20,7 +20,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                 "properties": {
                     "language": {
                         "type": "string",
-                        "enum": ["python", "rust"]
+                        "enum": ["cpp-qt", "rust"]
                     },
                     "application_name": {
                         "type": "string"

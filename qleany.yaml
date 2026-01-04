@@ -7,7 +7,7 @@ global:
   organisation:
     name: qleany
     domain: qleany.eu
-  prefix_path: qleany
+  prefix_path: crates
 entities:
 - name: EntityBase
   only_for_heritage: true

@@ -12,7 +12,48 @@ use crate::commands::{global_commands, root_commands};
 use crate::{App, ProjectTabState, AppState};
 use crate::event_hub_client::EventHubClient;
 
-/// Subscribe to Root update events to refresh feature_cr_list
+/// Fill the ProjectTabState with data from the Global entity
+fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
+    if let Some(global_id) = get_global_id(app, app_context) {
+        if let Ok(Some(global)) = global_commands::get_global(app_context, &global_id) {
+            log::info!("Filling ProjectTabState with global data: {:?}", global);
+            let language = match global.language.to_lowercase().as_str() {
+                "rust" => "Rust",
+                "cpp-qt" => "C++ / Qt",
+                _ => "Rust",
+            };
+            app.global::<ProjectTabState>().set_language(slint::SharedString::from(language));
+            app.global::<ProjectTabState>().set_application_name(slint::SharedString::from(&global.application_name));
+            app.global::<ProjectTabState>().set_organisation_name(slint::SharedString::from(&global.organisation_name));
+            app.global::<ProjectTabState>().set_organisation_domain(slint::SharedString::from(&global.organisation_domain));
+            app.global::<ProjectTabState>().set_prefix_path(slint::SharedString::from(&global.prefix_path));
+        }
+    }
+}
+
+/// Subscribe to Global created events to populate ProjectTabState when manifest is loaded
+fn subscribe_global_created_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Created)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Global created event received {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        fill_project_tab(&app, &ctx);
+                    }
+                });
+            }
+        },
+    );
+}
+
+/// Subscribe to Global update events to refresh ProjectTabState
 fn subscribe_global_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
@@ -80,7 +121,12 @@ fn setup_language_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let value_str = new_value.to_string();
                 update_global_helper(&app, &ctx, |global| {
-                    global.language = value_str;
+
+                    global.language = match value_str.to_lowercase().as_str() {
+                        "rust" => "Rust".to_string(),
+                        "cpp-qt" => "C++ / Qt".to_string(),
+                        _ => "rust".to_string(),
+                    };
                 });
             }
         }
@@ -149,6 +195,7 @@ fn setup_prefix_path_callback(app: &App, app_context: &Arc<AppContext>) {
 
 /// Initialize all project tab related callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+    subscribe_global_created_event(event_hub_client, app, app_context);
     subscribe_global_updated_event(event_hub_client, app, app_context);
     setup_language_callback(app, app_context);
     setup_application_name_callback(app, app_context);
