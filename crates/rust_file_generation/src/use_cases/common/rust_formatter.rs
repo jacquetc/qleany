@@ -4,6 +4,35 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+/// Run rustfmt on multiple files in a single invocation (much faster than per-file).
+/// This formats files in-place. If rustfmt is not available, this is a no-op.
+pub fn rustfmt_files_batch(files: &[PathBuf]) {
+    if files.is_empty() {
+        return;
+    }
+
+    let rustfmt_path = match find_rustfmt() {
+        Ok(p) => p,
+        Err(_) => return, // rustfmt not found, skip formatting
+    };
+
+    // rustfmt can handle many files at once, but there may be OS limits on command line length.
+    // Process files in batches to avoid hitting argument limits.
+    const BATCH_SIZE: usize = 100;
+
+    for chunk in files.chunks(BATCH_SIZE) {
+        let mut cmd = Command::new(&rustfmt_path);
+        
+        // Add all file paths as arguments
+        for file in chunk {
+            cmd.arg(file);
+        }
+
+        // Run rustfmt and ignore errors (best-effort formatting)
+        let _ = cmd.status();
+    }
+}
+
 /// Find the rustfmt executable path.
 pub(crate) fn find_rustfmt() -> io::Result<PathBuf> {
     // 1) Respect RUSTFMT env var if set

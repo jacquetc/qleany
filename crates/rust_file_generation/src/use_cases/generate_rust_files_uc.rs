@@ -1,5 +1,5 @@
 use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot, GenerationSnapshot};
-use crate::use_cases::common::rust_formatter::rustfmt_string;
+use crate::use_cases::common::rust_formatter::rustfmt_files_batch;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
 use common::entities::{File, Global};
@@ -64,6 +64,7 @@ impl LongOperation for GenerateRustFilesUseCase {
         let uow_read: &dyn GenerationReadOps = &*uow;
 
         let mut written_files: Vec<String> = Vec::new();
+        let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
 
         println!(
             "Generating Rust files to root path: {}, with prefix: {}",
@@ -94,11 +95,7 @@ impl LongOperation for GenerateRustFilesUseCase {
                 generation_snapshot_cache.push(snapshot);
             }
 
-            // Format only Rust source files
             let file_name = &file_meta.name;
-            if file_name.ends_with(".rs") {
-                code = rustfmt_string(&code, None).to_string();
-            }
             println!("Generated code for file {}:\n{}", file_name, "code omitted");
 
             // Compute destination path: root_path/prefix/relative_path/name
@@ -112,6 +109,11 @@ impl LongOperation for GenerateRustFilesUseCase {
 
             fs::create_dir_all(&out_dir)?;
             let out_path = out_dir.join(file_name);
+
+            // Collect Rust source files for batch formatting later
+            if file_name.ends_with(".rs") {
+                rust_files_to_format.push(out_path.clone());
+            }
 
             // Write file content
             fs::write(&out_path, code.as_bytes())?;
@@ -155,6 +157,15 @@ impl LongOperation for GenerateRustFilesUseCase {
         }
 
         uow.end_transaction()?;
+
+        // Batch format all Rust files at once (much faster than per-file formatting)
+        if !rust_files_to_format.is_empty() {
+            progress_callback(common::long_operation::OperationProgress::new(
+                99.0,
+                Some(format!("Formatting {} Rust files...", rust_files_to_format.len())),
+            ));
+            rustfmt_files_batch(&rust_files_to_format);
+        }
 
         // Final progress
         progress_callback(common::long_operation::OperationProgress::new(
