@@ -167,7 +167,7 @@ fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn clear_feature_list(app: &App, app_context: &Arc<AppContext>) {
-    let ctx = Arc::clone(app_context);
+    let _ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {
@@ -238,7 +238,7 @@ fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn clear_use_case_list(app: &App, app_context: &Arc<AppContext>) {
-    let ctx = Arc::clone(app_context);
+    let _ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {

@@ -170,7 +170,7 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn clear_entity_list(app: &App, app_context: &Arc<AppContext>) {
-    let ctx = Arc::clone(app_context);
+    let _ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {
@@ -246,7 +246,7 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn clear_field_list(app: &App, app_context: &Arc<AppContext>) {
-    let ctx = Arc::clone(app_context);
+    let _ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {

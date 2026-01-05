@@ -13,7 +13,6 @@ mod tabs;
 
 use crate::commands::handling_manifest_commands;
 use app_context::AppContext;
-use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use event_hub_client::EventHubClient;
 use std::sync::Arc;
 

@@ -27,7 +27,7 @@ pub fn save_manifest(ctx: &AppContext, dto: &SaveDto) -> Result<(), String> {
 
 /// Close the current manifest
 pub fn close_manifest(ctx: &AppContext) -> Result<(), String> {
-    let result = handling_manifest_controller::close(&ctx.db_context, &ctx.event_hub)
+    let _result = handling_manifest_controller::close(&ctx.db_context, &ctx.event_hub)
         .map_err(|e| format!("Error while closing manifest: {:?}", e))?;
 
     ctx.undo_redo_manager.lock().unwrap().clear();

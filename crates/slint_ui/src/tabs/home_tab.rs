@@ -5,13 +5,12 @@
 
 use std::sync::Arc;
 
-use common::direct_access::root::RootRelationshipField;
 use common::event::{HandlingManifestEvent, Origin};
 use handling_manifest::LoadDto;
 use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, handling_manifest_commands, root_commands};
+use crate::commands::{handling_manifest_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ManifestCommands};
 use slint::Timer;
@@ -26,7 +25,7 @@ fn subscribe_loaded_event(
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest loaded event received: {:?}", event);
-            let ctx = Arc::clone(&ctx);
+            let _ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
 
             // Use invoke_from_event_loop to safely update UI from background thread
@@ -50,7 +49,7 @@ fn subscribe_closed_event(
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
-            let ctx = Arc::clone(&ctx);
+            let _ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
 
             // Use invoke_from_event_loop to safely update UI from background thread
