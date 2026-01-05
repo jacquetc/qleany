@@ -1,145 +1,491 @@
-# Qleany v2 - Architecture Generator (Rust Branch)
+# Qleany
 
-> ⚠️ **This branch is under active development.** This README documents the current state and goals. The main branch contains the stable v1 (Python-based) generator.
+**Architecture scaffolding generator for desktop applications and CLI tools.**
 
-## What's Happening Here
+Qleany generates Package by Feature (Vertical Slice Architecture) code from a YAML manifest. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt.
 
-Qleany is being rewritten from the ground up:
+## Why Qleany
 
-| Aspect | v1 (main branch) | v2 (this branch) |
-|--------|------------------|------------------|
-| Generator | Python + Jinja2 | Rust + Tera |
-| UI | PySide | Slint |
-| Architecture | Pure Clean Architecture | Package by Feature / Vertical Slice |
-| Output | 1700+ files for 17 entities | Pragmatic, maintainable structure |
+Writing CRUD operations, DTOs, repositories, undo/redo infrastructure, and reactive UI models is tedious. The patterns are well-understood, but implementing them consistently across a codebase takes time.
 
-## Why the Rewrite
+Qleany generates this scaffolding so you can focus on business logic. It targets a specific architectural style — Package by Feature with Clean Architecture principles — that works well for desktop applications and CLI tools.
 
-Pure Clean Architecture generated too many files. A simple project with 17 entities produced 1700 C++ files across 500 folders. Technically correct, practically unmaintainable for solo developers or small teams.
+**What Qleany is not:**
+- A framework (no runtime dependencies)
+- A solution for web services or high-throughput systems
 
-**Package by Feature** (also known as Vertical Slice Architecture) keeps the benefits of Clean Architecture—separation of concerns, testability, clear boundaries—while organizing code by feature rather than by layer. The result: fewer files, better discoverability, easier maintenance.
+## Key Features
 
-## Current Status
-
-### Done
-
-- [x] Rust generator core
-- [x] Rust code generation (self-hosting: the generator generates its own structure)
-- [x] Slint UI data binding proof-of-concept
-- [x] C++/Qt proof-of-concept ([Skribisto develop branch](https://github.com/jacquetc/skribisto/tree/develop))
-
-### In Progress
-
-- [ ] Slint UI for manifest editing
-- [ ] C++/Qt template extraction from Skribisto PoC
-
-### Planned
-
-- [ ] QML frontend generation (with mocks)
-- [ ] Kirigami frontend generation
-- [ ] Python code generation
-- [ ] Rust → C API generation (for FFI)
-- [ ] Rust → Python bindings (PyO3)
+- **Complete CRUD scaffolding** — Controllers, DTOs, use cases, repositories per entity
+- **Undo/redo system** — Command-based with grouping, scopes, and failure strategies
+- **Reactive QML models** — Auto-updating list models and single-entity wrappers
+- **QML mocks** — JavaScript stubs for UI development without backend
+- **Relationship management** — Junction tables with ordering, caching, cascade deletion
+- **Event system** — Decoupled communication between features
 
 ## Target Languages
 
-| Language | Backend | Frontend | Status |
-|----------|---------|----------|--------|
-| C++/Qt | ✓ | QML | Primary target |
-| Rust | ✓ | — | Done |
-| Python | Planned | — | Future |
+| Language | Status | Database | Frontend |
+|----------|--------|----------|----------|
+| C++/Qt6 | ✓ Done | SQLite | QML with reactive models |
+| Rust | ✓ Done | redb | Slint |
 
-## Design Decisions
+## Architecture Background
 
-### No Compilation-Ready Output
+### What is Clean Architecture?
 
-v2 does not aim to generate immediately compilable code. Instead, it generates:
+Clean Architecture, introduced by Robert C. Martin, organizes code into concentric layers with strict dependency rules:
 
-- Correct file structure
-- Correct architecture (vertical slices)
-- Boilerplate and scaffolding
-- Placeholders for business logic
+```
+┌─────────────────────────────────────────┐
+│            Frameworks & UI              │  ← Outer: Qt, QML, SQLite
+├─────────────────────────────────────────┤
+│          Controllers & Gateways         │  ← Interface adapters
+├─────────────────────────────────────────┤
+│              Use Cases                  │  ← Application business rules
+├─────────────────────────────────────────┤
+│              Entities                   │  ← Core: Enterprise business rules
+└─────────────────────────────────────────┘
+```
 
-The developer fixes includes and types in minutes instead of writing boilerplate for hours. This tradeoff avoids the complexity of predicting every project's include paths, namespace conventions, and error handling preferences.
+**The Dependency Rule**: Source code dependencies point inward. Inner layers know nothing about outer layers. Entities don't know about use cases. Use cases don't know about controllers. This makes the core testable without frameworks.
+
+**Key concepts Qleany retains:**
+- **Entities** — Domain objects with identity and business rules
+- **Use Cases** — Single-purpose operations encapsulating business logic
+- **DTOs** — Data transfer objects crossing layer boundaries
+- **Repositories** — Abstractions over data access
+- **Dependency Inversion** — High-level modules don't depend on low-level modules
+
+### The Problem with Pure Clean Architecture
+
+Strict Clean Architecture organizes code by *layer*:
+
+```
+src/
+├── domain/
+│   └── entities/
+│       ├── work.h
+│       ├── binder.h
+│       └── binder_item.h
+├── application/
+│   └── use_cases/
+│       ├── work/
+│       ├── binder/
+│       └── binder_item/
+├── infrastructure/
+│   └── repositories/
+│       ├── work_repository.h
+│       └── binder_repository.h
+└── presentation/
+    └── controllers/
+        ├── work_controller.h
+        └── binder_controller.h
+```
+
+To modify "Binder," you touch four directories. For a 17-entity project, Qleany v1 generated **1700+ files across 500 folders**. Technically correct, practically unmaintainable.
+
+### Package by Feature (Vertical Slice Architecture)
+
+Package by Feature groups code by *what it does*, not *what layer it belongs to*:
+
+```
+src/
+├── common/                      # Truly shared infrastructure
+│   ├── entities/
+│   ├── database/
+│   └── undo_redo/
+└── direct_access/
+    └── binder/                  # Everything about Binder in one place
+        ├── binder_controller.h
+        ├── binder_repository.h
+        ├── dtos.h
+        ├── unit_of_work.h
+        └── use_cases/
+            ├── create_uc.h
+            ├── get_uc.h
+            ├── update_uc.h
+            └── remove_uc.h
+```
+
+**Benefits:**
+- **Discoverability** — Find all Binder code in one folder
+- **Cohesion** — Related code changes together
+- **Fewer files** — Same 17-entity project produces ~200 files
+- **Easier onboarding** — New developers understand features, not layers
+
+**What we keep from Clean Architecture:**
+- Dependency direction (UI → Controllers → Use Cases → Repositories → Database)
+- Use cases as the unit of business logic
+- DTOs at boundaries
+- Repository pattern for data access
+- Testability through clear interfaces
+
+**What we drop:**
+- Strict layer-per-folder organization
+- Separate "domain" module (entities live in `common`)
+- Interface-for-everything (only where it aids testing)
+
+### Why This Matters for Desktop Apps
+
+Web frameworks often provide architectural scaffolding (Rails, Django, Spring). Desktop frameworks like Qt provide widgets and signals, but no guidance on organizing a 50,000-line application.
+
+Qleany fills that gap with an architecture that:
+- Scales from small tools to large applications
+- Integrates naturally with Qt's object model
+- Supports undo/redo, a desktop-specific requirement
+- Keeps related code together for solo developers and small teams
+
+## Design Philosophy
 
 ### Generate and Disappear
 
-Qleany is not a framework. It generates code, then gets out of your way. No runtime dependencies on Qleany itself. You're free to modify, extend, or ignore the generated code.
+Qleany generates code, then gets out of your way. The output has no dependency on Qleany itself. Modify, extend, or delete the generated code freely. Run the generator again when you add entities or features — it will regenerate the scaffolding without touching your business logic.
 
-### Manifest-Driven
+### Package by Feature
 
-Everything is defined in `qleany.yaml`. The Slint UI provides form-based editing of this manifest and selective file generation.
-
-## Architecture Overview
-
-Qleany generates this structure for **C++/Qt6**, **Rust**, and **Python** projects.
-
-Generated projects follow this structure (Rust example):
+Code is organized by feature (vertical slices) rather than by layer (horizontal slices). A feature contains its controller, DTOs, use cases, and units of work in one place. Cross-cutting concerns live in a shared `common` module.
 
 ```
-crates/
-├── common/                         # Shared across all features
-│   └── src/
-│       ├── database/               # DB context, transactions
-│       ├── direct_access/          # Per-entity repository + table
-│       │   ├── {entity}/
-│       │   │   ├── {entity}_repository.rs
-│       │   │   └── {entity}_table.rs
-│       │   └── repository_factory.rs
-│       ├── entities.rs
-│       ├── event.rs
-│       └── undo_redo.rs
-├── direct_access/                  # CRUD feature (auto-generated)
-│   └── src/
-│       └── {entity}/               # Vertical slice per entity
-│           ├── {entity}_controller.rs
-│           ├── dtos.rs
-│           ├── units_of_work.rs
-│           └── use_cases/
-│               ├── create_{entity}_uc.rs
-│               ├── get_{entity}_uc.rs
-│               ├── update_{entity}_uc.rs
-│               └── remove_{entity}_uc.rs
-├── {custom_feature}/               # Your features (manual use cases)
-│   └── src/
-│       ├── {feature}_controller.rs
-│       ├── dtos.rs
-│       ├── units_of_work/
+src/
+├── common/                      # Shared infrastructure
+│   ├── database/                # DbContext, transactions, caching
+│   ├── direct_access/           # Per-entity repository + table + events
+│   ├── entities/                # Domain entities
+│   └── undo_redo/               # Command infrastructure
+├── direct_access/               # CRUD feature (auto-generated)
+│   └── {entity}/                # Vertical slice per entity
+│       ├── {entity}_controller
+│       ├── {entity}_list_model_from_{parent}_{relationship}
+│       ├── single_{entity}
+│       ├── dtos
+│       ├── unit_of_work
 │       └── use_cases/
-├── macros/                         # Proc macros
-├── slint_ui/                       # GUI (or other frontend)
-└── cli/                            # CLI entry point
+│           ├── create_uc
+│           ├── get_uc
+│           ├── update_uc
+│           └── remove_uc
+└── {custom_feature}/            # Your features
+    ├── {feature}_controller
+    ├── dtos
+    ├── units_of_work/
+    └── use_cases/
 ```
 
-### Key Patterns (All Languages)
+## QML Integration (C++/Qt)
 
-- **Threaded Undo/Redo System**: All tasks run through a central undo/redo system managing execution and history
-- **Units of Work**: Own database transactions and repository lifecycle
-- **Repository Factory**: Returns owned instances, no cross-thread sharing
-- **Feature Events**: Decoupled communication between features
-- **Command Merging**: Consecutive similar commands can merge (e.g., typing)
-- **Composite Commands**: Group multiple commands as a single undoable unit
+Qleany generates reactive models ready for QML binding — no manual `QAbstractListModel` boilerplate.
 
-### Key Patterns (Rust)
+### List Models
 
-- **Synchronous Commands**: Undo/redo commands execute synchronously
-- **Long Operation Manager**: Threaded execution with progress tracking and cancellation for heavy tasks
-- **redb**: Embedded key-value database
+`{Entity}ListModelFrom{Parent}{Relationship}` provides a standard `QAbstractListModel` that:
+- Auto-updates when entities change (via EventRegistry subscription)
+- Refreshes only affected rows, not the entire model
+- Supports inline editing through `setData` with async persistence
+- Exposes all entity fields as roles
 
-### Key Patterns (C++/Qt)
+```qml
+ListView {
+    model: RecentWorkListModelFromRootRecentWorks {
+        rootId: 1
+    }
+    delegate: ItemDelegate {
+        text: model.title
+        subtitle: model.absolutePath
+        onClicked: openWork(model.itemId)
+    }
+}
+```
 
-- **Async Undo/Redo with QCoro**: Commands execute asynchronously using C++20 coroutines
-- **Scoped Stacks**: Separate undo/redo stacks per scope (Work, Content, Settings, Custom)
-- **Query Handler**: Async queries separate from commands
-- **Group Commands with Failure Strategies**: `StopOnFailure`, `ContinueOnFailure`, `RollbackAll`, `RollbackPartial`
-- **Result<T> with Error Categories**: Typed errors (`ValidationError`, `DatabaseError`, `TimeoutError`, etc.) and severity levels
-- **Service Locator**: Composition root wires dependencies (required for QML integration)
-- **QML with JavaScript Mocks**: Generated `mock_imports/` folder with JS stubs for UI prototyping without backend (`SKR_BUILD_WITH_MOCKS`)
-- **SQLite**: Database backend
+The model subscribes to two event sources:
+- **Entity events** (`RecentWorkEvents.updated`) — refreshes only affected rows
+- **Parent events** (`RootEvents.updated`) — full refresh if the relationship changed
 
-## Building the Generator
+This means if another part of the application updates a RecentWork's title, the ListView updates automatically. If the Root's recentWorks list changes (item added/removed), the model detects the difference and refreshes.
+
+### Single Entity Models
+
+`Single{Entity}` wraps one entity with:
+- `itemId` property to select which entity
+- Auto-fetch on ID change
+- Reactive updates when the entity changes elsewhere in the application
+- All fields exposed as Q_PROPERTYs with change signals
+- Relationship IDs available for further queries
+
+```qml
+SingleBinderItem {
+    id: currentItem
+    itemId: selectedItemId
+}
+
+Column {
+    Text { text: currentItem.title }
+    Text { text: currentItem.subTitle }
+    Text { text: "Children: " + currentItem.binderItems.length }
+    Text { text: "Parent: " + currentItem.parentItem }
+}
+```
+
+The model subscribes to `BinderItemEvents.updated` — if any part of the application modifies this entity, the properties update automatically and QML bindings refresh.
+
+### QML Mocks
+
+Generated JavaScript stubs in `mock_imports/` mirror the real C++ API:
+
+```
+mock_imports/
+└── Skr/
+    ├── Controllers/
+    │   ├── RootController.qml
+    │   ├── BinderItemController.qml
+    │   ├── RecentWorkController.qml
+    │   └── EventRegistry.qml
+    ├── Models/
+    │   └── RecentWorkListModelFromRootRecentWorks.qml
+    └── Singles/
+        └── SingleBinderItem.qml
+```
+
+Build with `SKR_BUILD_WITH_MOCKS` to develop UI without backend compilation:
+
+```cmake
+option(SKR_BUILD_WITH_MOCKS "Build with QML mocks instead of real backend" OFF)
+```
+
+UI developers can iterate on screens with mock data. When ready, disable the flag and the real controllers take over with no QML changes required.
+
+## The Manifest
+
+Everything is defined in `qleany.yaml`:
+
+```yaml
+schema:
+  version: 2
+
+global:
+  language: cpp          # rust, cpp
+  application_name: MyApp
+  organisation:
+    name: myorg
+    domain: myorg.com
+  prefix_path: src
+
+entities:
+  - name: Root
+    parent: EntityBase
+    fields:
+      - name: works
+        type: entity
+        entity: Work
+        relationship: ordered_one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: title
+
+  - name: Work
+    parent: EntityBase
+    fields:
+      - name: title
+        type: string
+      - name: binders
+        type: entity
+        entity: Binder
+        relationship: ordered_one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: tags
+        type: entity
+        entity: BinderTag
+        relationship: one_to_many
+        strong: true
+
+  - name: Binder
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: items
+        type: entity
+        entity: BinderItem
+        relationship: ordered_one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: title
+
+  - name: BinderItem
+    parent: EntityBase
+    fields:
+      - name: title
+        type: string
+      - name: parentItem
+        type: entity
+        entity: BinderItem
+        relationship: one_to_one
+      - name: tags
+        type: entity
+        entity: BinderTag
+        relationship: many_to_many
+
+features:
+  - name: work_management
+    use_cases:
+      - name: load_work
+        validator: true
+        undoable: false
+        entities: [Root, Work, Binder, BinderItem]
+        dto_in:
+          name: LoadWorkDto
+          fields:
+            - name: file_path
+              type: string
+        dto_out:
+          name: LoadWorkResultDto
+          fields:
+            - name: work_id
+              type: integer
+```
+
+### Entity Field Options
+
+**Relationship type** (required for `type: entity`):
+
+| Relationship | Junction Type | Return Type |
+|--------------|---------------|-------------|
+| `one_to_one` | OneToOne | `std::optional<int>` |
+| `one_to_many` | UnorderedOneToMany | `QList<int>` |
+| `ordered_one_to_many` | OrderedOneToMany | `QList<int>` |
+| `many_to_many` | UnorderedManyToMany | `QList<int>` |
+
+**Relationship flags:**
+
+| Flag | Valid for | Effect |
+|------|-----------|--------|
+| `required` | `one_to_one` | Validated on create/update (1..1 instead of 0..1) |
+| `strong` | `one_to_one`, `one_to_many`, `ordered_one_to_many` | Cascade deletion — removing parent removes children |
+
+**QML generation flags:**
+
+| Flag | Effect |
+|------|--------|
+| `list_model` | Generate `{Entity}ListModelFrom{Parent}{Relationship}` |
+| `list_model_displayed_field` | Default display role for the list model |
+| `single` | Generate `Single{Entity}` wrapper |
+
+### Relationship Types
+
+Four relationship types mapping directly to four junction table implementations:
+
+```yaml
+# Optional single reference (0..1)
+- name: parentItem
+  type: entity
+  entity: BinderItem
+  relationship: one_to_one
+
+# Required single reference (1..1)
+- name: owner
+  type: entity
+  entity: User
+  relationship: one_to_one
+  required: true
+
+# Unordered children with cascade delete
+- name: tags
+  type: entity
+  entity: BinderTag
+  relationship: one_to_many
+  strong: true
+
+# Ordered children (chapters, items)
+- name: chapters
+  type: entity
+  entity: BinderItem
+  relationship: ordered_one_to_many
+  strong: true
+
+# Shared references (tags on items)
+- name: tags
+  type: entity
+  entity: BinderTag
+  relationship: many_to_many
+```
+
+**Validation rules:**
+
+| Flag | `one_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
+|------|--------------|---------------|----------------------|----------------|
+| `required` | ✓ | ✗ | ✗ | ✗ |
+| `strong` | ✓ | ✓ | ✓ | ✗ |
+
+Invalid combinations are rejected at manifest parsing.
+
+**Ownership pattern for many-to-many:**
+
+Many-to-many relationships are always weak — the entities must be owned elsewhere. For tags:
+
+```yaml
+entities:
+  - name: Work
+    fields:
+      - name: tags                        # Owns the tags
+        type: entity
+        entity: BinderTag
+        relationship: one_to_many
+        strong: true
+
+  - name: BinderItem
+    fields:
+      - name: tags                        # References tags owned by Work
+        type: entity
+        entity: BinderTag
+        relationship: many_to_many
+```
+
+`Work` owns `BinderTag` entities. `BinderItem` references them. Deleting a `Work` deletes its tags. Deleting a `BinderItem` only removes the references.
+
+## Generated Infrastructure
+
+### Database Layer
+
+**DbContext / DbSubContext**: Connection pool with scoped transactions. Each unit of work owns a `DbSubContext` providing `beginTransaction`, `commit`, `rollback`, and savepoint support.
+
+**Repository Factory**: Creates repositories bound to a specific `DbSubContext`. Returns owned instances (`std::unique_ptr` in C++) — no cross-thread sharing.
+
+**Table Cache / Junction Cache**: Thread-safe, time-expiring (30 minutes), invalidated at write time. Improves performance for repeated queries within a session.
+
+### C++/Qt Specific
+
+**SQLite with WAL mode**: Optimized for desktop writing applications:
+```sql
+PRAGMA journal_mode=WAL;
+PRAGMA synchronous=NORMAL;
+PRAGMA cache_size=20000;        -- 20MB
+PRAGMA mmap_size=268435456;     -- 256MB
+```
+
+**Ephemeral Database Pattern**: The internal database lives in `/tmp/`, decoupled from user files:
+- **Load**: Transform file → internal database
+- **Work**: All operations against ephemeral database
+- **Save**: Transform internal database → file
+- **Crash Recovery**: Detect orphaned database, offer recovery
+
+**Async Undo/Redo with QCoro**: Commands execute asynchronously using C++20 coroutines. Supports scoped stacks, command grouping, and multiple failure strategies.
+
+**Event Registry**: QObject-based event dispatch. Repositories emit `created`, `updated`, `removed` signals. Models subscribe for reactive updates.
+
+### Rust Specific
+
+**redb Backend**: Embedded key-value storage with the same patterns as SQLite.
+
+**Long Operation Manager**: Threaded execution for heavy tasks with progress callbacks and cancellation.
+
+**Synchronous Commands**: Simpler execution model without async complexity.
+
+## Building Qleany
 
 ```bash
+git clone https://github.com/jacquetc/qleany
 cd qleany
 cargo build --release
 ```
@@ -150,18 +496,60 @@ cargo build --release
 cargo run --release
 ```
 
-## Real-World Usage
+The Slint-based UI provides:
+- Form-based manifest editing
+- Entity and relationship management
+- Selective file generation
+- Code preview before writing
 
-Qleany v2 architecture is being developed alongside [Skribisto](https://github.com/jacquetc/skribisto), a writing application. The `develop` branch of Skribisto serves as the proof-of-concept and template source for C++/Qt generation.
+## CLI Usage
 
-## Relationship to v1
+```bash
+# Generate all files
+qleany generate --manifest qleany.yaml --output ./src
 
-The v1 generator (Python/PySide) on the main branch remains functional for existing users. v2 is a parallel effort that will eventually replace it. Migration path TBD.
+# Generate specific feature
+qleany generate --manifest qleany.yaml --output ./src --feature work_management
+
+# List files that would be generated
+qleany list --manifest qleany.yaml
+```
+
+## Reference Implementation
+
+[Skribisto](https://github.com/jacquetc/skribisto) (develop branch) is a novel-writing application built with Qleany-generated C++/Qt code. It demonstrates:
+
+- Full entity hierarchy (Root → Work → Binder → BinderItem → Content)
+- Complex relationships (ordered children, many-to-many tags)
+- Feature orchestration (LoadWork, SaveWork with file format transformation)
+- Reactive QML UI with auto-updating models
+- Undo/redo across structural and content operations
+- Crash recovery with ephemeral database
+
+Skribisto serves as both proof-of-concept and template source for C++/Qt generation.
+
+## Migration from v1
+
+Qleany v1 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders.
+
+v2 generates Package by Feature with pragmatic organization. The same project produces ~200 files with better discoverability.
+
+**Breaking changes:**
+- Manifest format changed (schema version 2)
+- Output structure reorganized by feature
+- Reactive models are new (list models, singles)
+
+v1 remains on the main branch for existing users.
 
 ## Contributing
 
-This branch is in flux. If you're interested in contributing, open an issue first to discuss.
+Qleany is developed alongside Skribisto. The architecture is stable, but templates are being extracted and refined.
+
+To contribute:
+1. Open an issue to discuss changes
+2. Reference Skribisto patterns where applicable
+3. Ensure changes work for both Rust and C++/Qt
 
 ## License
 
-MPL-2.0 (unchanged from v1)
+MPL-2.0
