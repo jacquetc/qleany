@@ -97,13 +97,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
                     {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-                let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% elif f.is_required %}
-                 let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
+                let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                    {% elif f.required %}
+                 let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
                     {% else %}
-                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
                     {% endif %}
-                 entity.{{ f.snake_name }} = {{ f.snake_name }};
+                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                 {% endif %}
                 {% endfor %}
                 Some(entity) } else { None };
@@ -125,12 +125,11 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
                 {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone() 
-                {% elif f.is_required %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { vec![entity.{{ f.snake_name }}] as Vec<EntityId>
+            {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.clone())?;
+                {% elif f.required %}
+            {{ f.snake_name }}_junction_table.insert(entity.id, vec![entity.{{ f.snake_name }}] as Vec<EntityId>)?;
                 {% else %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()
-             })?;
+            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()})?;
             {%- endif %}
             {%- endif %}
             {%- endfor %}
@@ -216,13 +215,13 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
                 {% for f in s.entities[e].fields %}
                 {% if f.inner.field_type == "Entity" %}
                     {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-                let {{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% elif f.is_required %}
-                 let {{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
+                let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                    {% elif f.required %}
+                 let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
                     {% else %}
-                 let {{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
+                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
                     {% endif %}
-                 entity.{{ f.snake_name }} = {{ f.snake_name }};
+                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                 {% endif %}
                 {% endfor %}
                 Some(entity) } else { None };

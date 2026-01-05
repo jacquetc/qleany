@@ -105,8 +105,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong %}
         {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+            {% if f.required %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete(event_hub, &{{ f.snake_name }})?;
+            {%- else %}
+        if let Some({{ f.snake_name }}_id) = {{ f.snake_name }} {
+            repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+                .delete(event_hub, &{{ f.snake_name }}_id)?;
+            }
+            {%- endif %}
         {% else %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete_multi(event_hub, &{{ f.snake_name }})?;
@@ -128,10 +135,17 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong %}
         {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+            {% if f.required %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
             .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}.clone()))
             .collect();
+            {% else %}
+        let {{ f.snake_name }}_ids: Vec<EntityId> = entities
+            .iter()
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.{{ f.snake_name }}.clone()))
+            .collect();
+            {%- endif %}
         {% else %}
         let mut {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()

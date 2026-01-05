@@ -277,10 +277,20 @@ impl SnapshotBuilder {
                 RelationshipType::ManyToMany => "ManyToMany".to_string(),
             };
 
-            let rust_type = match f.relationship  {
-                RelationshipType::OneToOne | RelationshipType::ManyToOne => rust_base_type.clone(),
-                RelationshipType::OrderedOneToMany | RelationshipType::OneToMany | RelationshipType::ManyToMany =>
-                format!("Vec<{}>", rust_base_type),
+            let rust_type = match f.relationship {
+                RelationshipType::OneToOne | RelationshipType::ManyToOne => {
+                    if f.required {
+                        rust_base_type.clone()
+                    } else if f.field_type == FieldType::Entity {
+                        format!("Option<{}>", &rust_base_type)
+                    }
+                    else {
+                        rust_base_type.clone()
+                    }
+                }
+                RelationshipType::OrderedOneToMany
+                | RelationshipType::OneToMany
+                | RelationshipType::ManyToMany => format!("Vec<{}>", rust_base_type),
             };
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),

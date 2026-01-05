@@ -90,9 +90,10 @@ entities:
     type: entity
     entity: Entity
     relationship: one_to_one
+    required: false
   - name: relationship
     type: enum
-    enum_name: RelationshipType
+    enum_name: FieldRelationshipType
     enum_values:
       - OneToOne
       - OrderedOneToMany
