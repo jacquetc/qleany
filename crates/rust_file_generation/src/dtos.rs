@@ -24,6 +24,7 @@ pub struct GenerateRustFilesDto {
 pub struct GenerateRustFilesReturnDto {
     pub files: Vec<String>,
     pub timestamp: String,
+    pub duration: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

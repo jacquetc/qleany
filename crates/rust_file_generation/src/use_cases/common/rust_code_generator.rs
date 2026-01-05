@@ -403,12 +403,42 @@ impl SnapshotBuilder {
     pub(crate) fn for_file(
         uow: &dyn GenerationReadOps,
         file_id: EntityId,
-    ) -> anyhow::Result<GenerationSnapshot> {
+        generation_snapshot_cache: &Vec<GenerationSnapshot>,
+    ) -> anyhow::Result<(GenerationSnapshot, bool)> {
         use anyhow::anyhow;
         // Load file
         let file = uow
             .get_file(&file_id)?
             .ok_or_else(|| anyhow!("File not found"))?;
+
+        // compare with cache
+        for cached_snapshot in generation_snapshot_cache {
+            let cached_file_vm = &cached_snapshot.file;
+            if file.entity == cached_file_vm.inner.entity
+                && file.feature == cached_file_vm.inner.feature
+                && file.use_case == cached_file_vm.inner.use_case
+            {
+                // cache hit
+
+                let new_file_vm = FileVM {
+                    inner: file.clone(),
+                };
+
+                let new_snapshot = GenerationSnapshot {
+                    file: new_file_vm,
+                    global: cached_snapshot.global.clone(),
+                    entities: cached_snapshot.entities.clone(),
+                    features: cached_snapshot.features.clone(),
+                    use_cases: cached_snapshot.use_cases.clone(),
+                    dtos: cached_snapshot.dtos.clone(),
+                };
+
+                println!("Snapshot cache hit for file id {}", file_id);
+
+                return Ok((new_snapshot, true));
+            }
+        }
+
 
         let root_id: EntityId = 1;
         let global_ids = uow.get_root_relationship(
@@ -1013,14 +1043,14 @@ impl SnapshotBuilder {
             .collect();
 
         // compute entity_snake if entity scope
-        Ok(GenerationSnapshot {
+        Ok((GenerationSnapshot {
             file: FileVM { inner: file },
             global: global_vm,
             entities: entities_vm,
             features: features_vm,
             use_cases: use_cases_vm,
             dtos: dtos_vm,
-        })
+        }, false))
     }
 }
 

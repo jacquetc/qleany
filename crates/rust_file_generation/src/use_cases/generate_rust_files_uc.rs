@@ -1,6 +1,4 @@
-use crate::use_cases::common::rust_code_generator::{
-    GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot,
-};
+use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot, GenerationSnapshot};
 use crate::use_cases::common::rust_formatter::rustfmt_string;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
@@ -45,6 +43,7 @@ impl LongOperation for GenerateRustFilesUseCase {
         use std::fs;
         use std::sync::atomic::Ordering;
 
+        let start_time = std::time::Instant::now();
         let timestamp = chrono::Utc::now();
         let total = self.dto.file_ids.len().max(1); // avoid div by zero
         let root_path = PathBuf::from(&self.dto.root_path);
@@ -71,6 +70,11 @@ impl LongOperation for GenerateRustFilesUseCase {
             root_path.display(),
             prefix_path.display()
         );
+
+        // create a cache for GenerationSnapshot if needed in the future
+        let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
+        generation_snapshot_cache.reserve(self.dto.file_ids.len());
+
         for (idx, file_id) in self.dto.file_ids.iter().enumerate() {
             if cancel_flag.load(Ordering::Relaxed) {
                 uow.end_transaction()?;
@@ -84,8 +88,11 @@ impl LongOperation for GenerateRustFilesUseCase {
             println!("Processing file ID {}: {}", file_id, file_meta.name);
 
             // Build snapshot and generate code for the file
-            let snapshot = SnapshotBuilder::for_file(uow_read, *file_id)?;
+            let (snapshot, from_cache) = SnapshotBuilder::for_file(uow_read, *file_id, &generation_snapshot_cache)?;
             let mut code = generate_code_with_snapshot(&snapshot)?;
+            if !from_cache {
+                generation_snapshot_cache.push(snapshot);
+            }
 
             // Format only Rust source files
             let file_name = &file_meta.name;
@@ -155,9 +162,16 @@ impl LongOperation for GenerateRustFilesUseCase {
             Some("Rust file generation completed".to_string()),
         ));
 
+        let duration = start_time.elapsed();
+        println!(
+            "Rust file generation completed in {:?}, total files written: {}",
+            duration,
+            written_files.len()
+        );
         Ok(GenerateRustFilesReturnDto {
             files: written_files,
             timestamp: timestamp.to_string(),
+            duration: format!("{:?}", duration),
         })
     }
 }

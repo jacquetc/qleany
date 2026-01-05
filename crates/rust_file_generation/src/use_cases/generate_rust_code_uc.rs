@@ -29,7 +29,7 @@ impl GenerateRustCodeUseCase {
         uow.begin_transaction()?;
         // Build a snapshot for the file
         let uow_ref: &dyn GenerationReadOps = &*uow;
-        let snapshot = SnapshotBuilder::for_file(uow_ref, dto.file_id)?;
+        let (snapshot, _from_cache) = SnapshotBuilder::for_file(uow_ref, dto.file_id, &Vec::new())?;
         uow.end_transaction()?;
 
         let generated_code = generate_code_with_snapshot(&snapshot)?;
