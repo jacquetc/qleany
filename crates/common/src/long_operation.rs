@@ -106,15 +106,15 @@
 //!
 //!
 
+use crate::event::{Event, EventHub, LongOperationEvent, Origin};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
 };
 use std::thread;
 use std::time::Duration;
-use crate::event::{EventHub, Event, Origin, LongOperationEvent};
 
 // Status of a long operation
 #[derive(Debug, Clone, PartialEq)]
@@ -144,7 +144,7 @@ impl OperationProgress {
 // Trait that long operations must implement
 pub trait LongOperation: Send + 'static {
     type Output: Send + Sync + 'static + serde::Serialize;
-    
+
     fn execute(
         &self,
         progress_callback: Box<dyn Fn(OperationProgress) + Send>,
@@ -256,7 +256,8 @@ impl LongOperationManager {
                             "id": id_for_cb,
                             "percentage": prog.percentage,
                             "message": prog.message,
-                        }).to_string();
+                        })
+                        .to_string();
                         event_hub.send_event(Event {
                             origin: Origin::LongOperation(LongOperationEvent::Progress),
                             ids: vec![],
@@ -279,7 +280,7 @@ impl LongOperationManager {
                             results.insert(id_clone.clone(), serialized);
                         }
                         OperationStatus::Completed
-                    },
+                    }
                     Err(e) => OperationStatus::Failed(e.to_string()),
                 }
             };
@@ -304,7 +305,11 @@ impl LongOperationManager {
                         serde_json::json!({"id": id_clone}).to_string(),
                     ),
                 };
-                event_hub.send_event(Event { origin: Origin::LongOperation(event), ids: vec![], data: Some(data) });
+                event_hub.send_event(Event {
+                    origin: Origin::LongOperation(event),
+                    ids: vec![],
+                    data: Some(data),
+                });
             }
 
             *status_clone.lock().unwrap() = final_status;
@@ -383,7 +388,7 @@ impl LongOperationManager {
             .map(|(id, handle)| (id.clone(), handle.get_status(), handle.get_progress()))
             .collect()
     }
-    
+
     /// Store an operation result
     pub fn store_operation_result<T: serde::Serialize>(&self, id: &str, result: T) -> Result<()> {
         let serialized = serde_json::to_string(&result)?;
@@ -391,7 +396,7 @@ impl LongOperationManager {
         results.insert(id.to_string(), serialized);
         Ok(())
     }
-    
+
     /// Get an operation result
     pub fn get_operation_result(&self, id: &str) -> Option<String> {
         let results = self.results.lock().unwrap();
@@ -419,7 +424,7 @@ mod tests {
 
     impl LongOperation for FileProcessingOperation {
         type Output = ();
-        
+
         fn execute(
             &self,
             progress_callback: Box<dyn Fn(OperationProgress) + Send>,

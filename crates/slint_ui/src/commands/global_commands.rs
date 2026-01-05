@@ -2,7 +2,7 @@
 
 use crate::app_context::AppContext;
 use common::types::EntityId;
-use direct_access::{global_controller, CreateGlobalDto, GlobalDto};
+use direct_access::{CreateGlobalDto, GlobalDto, global_controller};
 
 /// Create a new global
 pub fn create_global(ctx: &AppContext, dto: &CreateGlobalDto) -> Result<GlobalDto, String> {
@@ -17,7 +17,10 @@ pub fn create_global(ctx: &AppContext, dto: &CreateGlobalDto) -> Result<GlobalDt
 }
 
 /// Create multiple globals
-pub fn create_global_multi(ctx: &AppContext, dtos: &[CreateGlobalDto]) -> Result<Vec<GlobalDto>, String> {
+pub fn create_global_multi(
+    ctx: &AppContext,
+    dtos: &[CreateGlobalDto],
+) -> Result<Vec<GlobalDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     global_controller::create_multi(
         &ctx.db_context,
@@ -35,7 +38,10 @@ pub fn get_global(ctx: &AppContext, id: &EntityId) -> Result<Option<GlobalDto>, 
 }
 
 /// Get multiple globals by IDs
-pub fn get_global_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<GlobalDto>>, String> {
+pub fn get_global_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<GlobalDto>>, String> {
     global_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting globals: {:?}", e))
 }
@@ -67,13 +73,8 @@ pub fn update_global_multi(ctx: &AppContext, dtos: &[GlobalDto]) -> Result<Vec<G
 /// Remove a global by ID
 pub fn remove_global(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting global: {:?}", e))
+    global_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting global: {:?}", e))
 }
 
 /// Remove multiple globals by IDs

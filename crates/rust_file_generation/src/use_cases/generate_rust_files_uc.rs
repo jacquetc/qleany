@@ -4,7 +4,7 @@ use crate::use_cases::common::rust_code_generator::{
 use crate::use_cases::common::rust_formatter::rustfmt_string;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
-use common::entities::{File, Global, Root};
+use common::entities::{File, Global};
 use common::long_operation::LongOperation;
 use common::types::EntityId;
 use std::path::PathBuf;

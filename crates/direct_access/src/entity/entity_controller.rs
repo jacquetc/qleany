@@ -8,9 +8,9 @@ use super::{
         update_entity_multi_uc::UpdateEntityMultiUseCase, update_entity_uc::UpdateEntityUseCase,
     },
 };
+use crate::EntityRelationshipDto;
 use crate::entity::use_cases::get_entity_relationship_uc::GetEntityRelationshipUseCase;
 use crate::entity::use_cases::set_entity_relationship_uc::SetEntityRelationshipUseCase;
-use crate::EntityRelationshipDto;
 use anyhow::{Ok, Result};
 use common::direct_access::entity::EntityRelationshipField;
 use common::undo_redo::UndoRedoManager;

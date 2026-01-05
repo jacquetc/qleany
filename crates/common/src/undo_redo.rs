@@ -1,8 +1,8 @@
+use crate::event::{Event, EventHub, Origin, UndoRedoEvent};
+use crate::types::EntityId;
 use anyhow::Result;
 use std::any::Any;
 use std::sync::Arc;
-use crate::event::{EventHub, Event, Origin, UndoRedoEvent};
-use crate::types::EntityId;
 
 /// Trait for commands that can be undone and redone.
 ///

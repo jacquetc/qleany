@@ -3,7 +3,7 @@
 use crate::app_context::AppContext;
 use common::direct_access::dto::DtoRelationshipField;
 use common::types::EntityId;
-use direct_access::{dto_controller, CreateDtoDto, DtoDto, DtoRelationshipDto};
+use direct_access::{CreateDtoDto, DtoDto, DtoRelationshipDto, dto_controller};
 
 /// Create a new DTO
 pub fn create_dto(ctx: &AppContext, dto: &CreateDtoDto) -> Result<DtoDto, String> {
@@ -31,8 +31,7 @@ pub fn create_dto_multi(ctx: &AppContext, dtos: &[CreateDtoDto]) -> Result<Vec<D
 
 /// Get a DTO by ID
 pub fn get_dto(ctx: &AppContext, id: &EntityId) -> Result<Option<DtoDto>, String> {
-    dto_controller::get(&ctx.db_context, id)
-        .map_err(|e| format!("Error getting DTO: {:?}", e))
+    dto_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting DTO: {:?}", e))
 }
 
 /// Get multiple DTOs by IDs
@@ -68,13 +67,8 @@ pub fn update_dto_multi(ctx: &AppContext, dtos: &[DtoDto]) -> Result<Vec<DtoDto>
 /// Remove a DTO by ID
 pub fn remove_dto(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting DTO: {:?}", e))
+    dto_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting DTO: {:?}", e))
 }
 
 /// Remove multiple DTOs by IDs

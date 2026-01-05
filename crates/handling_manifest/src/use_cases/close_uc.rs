@@ -1,11 +1,6 @@
 use anyhow::Result;
 use common::types::EntityId;
-use common::{
-    database::CommandUnitOfWork,
-    entities::{
-        Root,
-    },
-};
+use common::{database::CommandUnitOfWork, entities::Root};
 
 use crate::use_cases::common::model_structs;
 
@@ -27,7 +22,6 @@ impl CloseUseCase {
     }
 
     pub fn execute(&mut self) -> Result<()> {
-
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 

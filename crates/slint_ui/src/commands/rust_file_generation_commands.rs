@@ -2,8 +2,9 @@
 
 use crate::app_context::AppContext;
 use rust_file_generation::{
-    rust_file_generation_controller, GenerateRustCodeDto, GenerateRustCodeReturnDto,
-    GenerateRustFilesDto, GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
+    GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
+    GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
+    rust_file_generation_controller,
 };
 
 /// List rust files to be generated

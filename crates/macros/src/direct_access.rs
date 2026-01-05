@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Error, ItemImpl, ItemTrait};
+use syn::{Error, ItemImpl, ItemTrait, parse_macro_input};
 
 /// Transforms an English word to its plural form following English language rules.
 fn to_plural(word: &str) -> String {
@@ -995,7 +995,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         None => {
             return Error::new_spanned(args.first().unwrap(), "Missing 'entity' argument")
                 .to_compile_error()
-                .into()
+                .into();
         }
     };
     let action = match action {
@@ -1003,7 +1003,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         None => {
             return Error::new_spanned(args.first().unwrap(), "Missing 'action' argument")
                 .to_compile_error()
-                .into()
+                .into();
         }
     };
 
@@ -1048,7 +1048,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => {
             return Error::new_spanned(args.first().unwrap(), "Unknown action")
                 .to_compile_error()
-                .into()
+                .into();
         }
     };
     let function_ident = syn::Ident::new(&function_name, proc_macro2::Span::call_site());

@@ -2,7 +2,7 @@
 
 use crate::app_context::AppContext;
 use common::types::EntityId;
-use direct_access::{file_controller, CreateFileDto, FileDto};
+use direct_access::{CreateFileDto, FileDto, file_controller};
 
 /// Create a new file
 pub fn create_file(ctx: &AppContext, dto: &CreateFileDto) -> Result<FileDto, String> {
@@ -30,8 +30,7 @@ pub fn create_file_multi(ctx: &AppContext, dtos: &[CreateFileDto]) -> Result<Vec
 
 /// Get a file by ID
 pub fn get_file(ctx: &AppContext, id: &EntityId) -> Result<Option<FileDto>, String> {
-    file_controller::get(&ctx.db_context, id)
-        .map_err(|e| format!("Error getting file: {:?}", e))
+    file_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting file: {:?}", e))
 }
 
 /// Get multiple files by IDs
@@ -67,13 +66,8 @@ pub fn update_file_multi(ctx: &AppContext, dtos: &[FileDto]) -> Result<Vec<FileD
 /// Remove a file by ID
 pub fn remove_file(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    file_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting file: {:?}", e))
+    file_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting file: {:?}", e))
 }
 
 /// Remove multiple files by IDs

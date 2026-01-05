@@ -11,7 +11,7 @@ impl DbContext {
     pub fn new() -> Result<Self, Error> {
         let db = DbContext::create_db_in_memory()?;
         Ok(DbContext {
-        database: Arc::new(db),
+            database: Arc::new(db),
         })
     }
 

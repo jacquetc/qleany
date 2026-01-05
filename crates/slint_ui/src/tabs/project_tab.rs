@@ -5,12 +5,12 @@
 
 use std::sync::Arc;
 
-use slint::ComponentHandle;
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use crate::app_context::AppContext;
 use crate::commands::{global_commands, root_commands};
-use crate::{App, ProjectTabState, AppState};
 use crate::event_hub_client::EventHubClient;
+use crate::{App, AppState, ProjectTabState};
+use common::event::{DirectAccessEntity, EntityEvent, Origin};
+use slint::ComponentHandle;
 
 /// Fill the ProjectTabState with data from the Global entity
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
@@ -22,17 +22,26 @@ fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
                 "cpp-qt" => "C++ / Qt",
                 _ => "Rust",
             };
-            app.global::<ProjectTabState>().set_language(slint::SharedString::from(language));
-            app.global::<ProjectTabState>().set_application_name(slint::SharedString::from(&global.application_name));
-            app.global::<ProjectTabState>().set_organisation_name(slint::SharedString::from(&global.organisation_name));
-            app.global::<ProjectTabState>().set_organisation_domain(slint::SharedString::from(&global.organisation_domain));
-            app.global::<ProjectTabState>().set_prefix_path(slint::SharedString::from(&global.prefix_path));
+            app.global::<ProjectTabState>()
+                .set_language(slint::SharedString::from(language));
+            app.global::<ProjectTabState>()
+                .set_application_name(slint::SharedString::from(&global.application_name));
+            app.global::<ProjectTabState>()
+                .set_organisation_name(slint::SharedString::from(&global.organisation_name));
+            app.global::<ProjectTabState>()
+                .set_organisation_domain(slint::SharedString::from(&global.organisation_domain));
+            app.global::<ProjectTabState>()
+                .set_prefix_path(slint::SharedString::from(&global.prefix_path));
         }
     }
 }
 
 /// Subscribe to Global created events to populate ProjectTabState when manifest is loaded
-fn subscribe_global_created_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+fn subscribe_global_created_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Created)),
         {
@@ -54,7 +63,11 @@ fn subscribe_global_created_event(event_hub_client: &EventHubClient, app: &App, 
 }
 
 /// Subscribe to Global update events to refresh ProjectTabState
-fn subscribe_global_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+fn subscribe_global_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
         {
@@ -70,7 +83,6 @@ fn subscribe_global_updated_event(event_hub_client: &EventHubClient, app: &App, 
                         if app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-
                     }
                 });
             }
@@ -121,7 +133,6 @@ fn setup_language_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let value_str = new_value.to_string();
                 update_global_helper(&app, &ctx, |global| {
-
                     global.language = match value_str.to_lowercase().as_str() {
                         "rust" => "Rust".to_string(),
                         "cpp-qt" => "C++ / Qt".to_string(),
@@ -134,48 +145,51 @@ fn setup_language_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_application_name_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<ProjectTabState>().on_application_name_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let value_str = new_value.to_string();
-                update_global_helper(&app, &ctx, |global| {
-                    global.application_name = value_str;
-                });
+    app.global::<ProjectTabState>()
+        .on_application_name_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let value_str = new_value.to_string();
+                    update_global_helper(&app, &ctx, |global| {
+                        global.application_name = value_str;
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_organisation_name_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<ProjectTabState>().on_organisation_name_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let value_str = new_value.to_string();
-                update_global_helper(&app, &ctx, |global| {
-                    global.organisation_name = value_str;
-                });
+    app.global::<ProjectTabState>()
+        .on_organisation_name_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let value_str = new_value.to_string();
+                    update_global_helper(&app, &ctx, |global| {
+                        global.organisation_name = value_str;
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_organisation_domain_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<ProjectTabState>().on_organisation_domain_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let value_str = new_value.to_string();
-                update_global_helper(&app, &ctx, |global| {
-                    global.organisation_domain = value_str;
-                });
+    app.global::<ProjectTabState>()
+        .on_organisation_domain_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let value_str = new_value.to_string();
+                    update_global_helper(&app, &ctx, |global| {
+                        global.organisation_domain = value_str;
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_prefix_path_callback(app: &App, app_context: &Arc<AppContext>) {

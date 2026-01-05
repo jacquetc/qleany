@@ -5,7 +5,8 @@ use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork,
     entities::{
-        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, RelationshipType, Root, UseCase,
+        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, RelationshipType,
+        Root, UseCase,
     },
 };
 
@@ -195,7 +196,9 @@ impl LoadUseCase {
                     Some("one_to_many") => RelationshipType::OneToMany,
                     Some("ordered_one_to_many") => RelationshipType::OrderedOneToMany,
                     Some("many_to_many") => RelationshipType::ManyToMany,
-                    Some(other) => return Err(anyhow::anyhow!("Unknown relationship type: {}", other)),
+                    Some(other) => {
+                        return Err(anyhow::anyhow!("Unknown relationship type: {}", other));
+                    }
                     None => RelationshipType::OneToOne, // default for entity fields
                 };
 

@@ -19,7 +19,7 @@ pub trait QueryUnitOfWork {
 use bincode::{deserialize, serialize};
 use redb::Key;
 use redb::{TypeName, Value};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::any::type_name;
 use std::cmp::Ordering;
 use std::fmt::Debug;

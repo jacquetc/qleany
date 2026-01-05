@@ -68,9 +68,7 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                RelationshipType::OneToMany => {
-                    (Cardinality::ZeroOrMore, Some(Order::Unordered))
-                }
+                RelationshipType::OneToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
                 RelationshipType::OrderedOneToMany => {
                     (Cardinality::ZeroOrMore, Some(Order::Ordered))
                 }
@@ -82,9 +80,7 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                RelationshipType::ManyToMany => {
-                    (Cardinality::ZeroOrMore, Some(Order::Unordered))
-                }
+                RelationshipType::ManyToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
             };
 
             Relationship {

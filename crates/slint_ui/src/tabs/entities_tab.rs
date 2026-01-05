@@ -5,20 +5,24 @@
 
 use std::sync::Arc;
 
-use slint::{ComponentHandle, Model};
-use common::direct_access::root::RootRelationshipField;
 use common::direct_access::entity::EntityRelationshipField;
+use common::direct_access::root::RootRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use direct_access::RootRelationshipDto;
 use direct_access::EntityRelationshipDto;
+use direct_access::RootRelationshipDto;
+use slint::{ComponentHandle, Model};
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, root_commands, field_commands};
+use crate::commands::{entity_commands, field_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
-use crate::{App, EntitiesTabState, AppState, ListItem};
+use crate::{App, AppState, EntitiesTabState, ListItem};
 
 /// Subscribe to Root update events to refresh entity_cr_list
-fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+fn subscribe_root_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
         {
@@ -36,7 +40,6 @@ fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, ap
                             fill_entity_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-
                     }
                 });
             }
@@ -45,7 +48,11 @@ fn subscribe_root_updated_event(event_hub_client: &EventHubClient, app: &App, ap
 }
 
 /// Subscribe to Entity update events to refresh entity_cr_list
-fn subscribe_entity_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+fn subscribe_entity_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
         {
@@ -63,18 +70,19 @@ fn subscribe_entity_updated_event(event_hub_client: &EventHubClient, app: &App, 
                             fill_entity_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-
                     }
                 });
-
             }
-        }
+        },
     )
 }
 
-
 /// Subscribe to Entity update events to refresh entity_cr_list
-fn subscribe_field_updated_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
+fn subscribe_field_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
     event_hub_client.subscribe(
         Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
         {
@@ -92,16 +100,14 @@ fn subscribe_field_updated_event(event_hub_client: &EventHubClient, app: &App, a
                             fill_field_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-
                     }
                 });
             }
-        }
+        },
     )
 }
 
 fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
-
     let ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
@@ -122,7 +128,8 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                     // empty entity list if no entities
                     if entity_ids.is_empty() {
                         let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
-                        app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+                        app.global::<EntitiesTabState>()
+                            .set_entity_cr_list(model.into());
                         log::info!("Entity list cleared (no entities)");
                         return;
                     }
@@ -145,7 +152,8 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
 
                             // Apply to AppState
                             let model = std::rc::Rc::new(slint::VecModel::from(list));
-                            app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+                            app.global::<EntitiesTabState>()
+                                .set_entity_cr_list(model.into());
                             log::info!("Entity list refreshed");
                         }
                         Err(e) => {
@@ -168,19 +176,19 @@ fn clear_entity_list(app: &App, app_context: &Arc<AppContext>) {
     if let Some(app) = app_weak.upgrade() {
         // Clear entity list
         let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
-        app.global::<EntitiesTabState>().set_entity_cr_list(model.into());
+        app.global::<EntitiesTabState>()
+            .set_entity_cr_list(model.into());
         log::info!("Entity list cleared");
     }
 }
 
-
 fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
-
     let ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {
-        let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id() as common::types::EntityId;
+        let entity_id =
+            app.global::<EntitiesTabState>().get_selected_entity_id() as common::types::EntityId;
 
         // Only refresh if we have a valid root_id
         if entity_id > 0 {
@@ -196,7 +204,8 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                     // empty field list if no fields
                     if field_ids.is_empty() {
                         let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
-                        app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+                        app.global::<EntitiesTabState>()
+                            .set_field_cr_list(model.into());
                         log::info!("Field list cleared (no fields)");
                         return;
                     }
@@ -219,7 +228,8 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
 
                             // Apply to AppState
                             let model = std::rc::Rc::new(slint::VecModel::from(list));
-                            app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+                            app.global::<EntitiesTabState>()
+                                .set_field_cr_list(model.into());
                             log::info!("Field list refreshed");
                         }
                         Err(e) => {
@@ -242,15 +252,69 @@ fn clear_field_list(app: &App, app_context: &Arc<AppContext>) {
     if let Some(app) = app_weak.upgrade() {
         // Clear field list
         let model = std::rc::Rc::new(slint::VecModel::from(Vec::<ListItem>::new()));
-        app.global::<EntitiesTabState>().set_field_cr_list(model.into());
+        app.global::<EntitiesTabState>()
+            .set_field_cr_list(model.into());
         log::info!("Field list cleared");
     }
 }
 
-
 /// Wire up the on_request_entities_reorder callback on AppState
 fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_request_entities_reorder({
+    app.global::<EntitiesTabState>()
+        .on_request_entities_reorder({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |from_index, to_index| {
+                let from = from_index as usize;
+                let to = to_index as usize;
+
+                if let Some(app) = app_weak.upgrade() {
+                    // 1) Get entities attached to the root
+
+                    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+                    let entity_ids_res = root_commands::get_root_relationship(
+                        &ctx,
+                        &root_id,
+                        &RootRelationshipField::Entities,
+                    );
+                    let mut entity_ids = entity_ids_res.unwrap_or_default();
+
+                    if from == to || from >= entity_ids.iter().count() {
+                        return;
+                    }
+
+                    let moving_entity_id = entity_ids.remove(from);
+                    // Adjust target slot when moving downwards because removing shifts indices left
+                    let mut insert_at = if to > from { to - 1 } else { to };
+                    if insert_at > entity_ids.iter().count() {
+                        insert_at = entity_ids.iter().count();
+                    }
+                    entity_ids.insert(insert_at, moving_entity_id);
+
+                    let result = root_commands::set_root_relationship(
+                        &ctx,
+                        &RootRelationshipDto {
+                            id: root_id,
+                            field: RootRelationshipField::Entities,
+                            right_ids: entity_ids,
+                        },
+                    );
+
+                    match result {
+                        Ok(()) => {
+                            log::info!("Entities reordered successfully");
+                        }
+                        Err(e) => {
+                            log::error!("Failed to reorder entities: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}
+
+fn setup_fields_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_request_fields_reorder({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |from_index, to_index| {
@@ -258,98 +322,46 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
             let to = to_index as usize;
 
             if let Some(app) = app_weak.upgrade() {
+                // 1) Get fields attached to the entity
 
-                // 1) Get entities attached to the root
-
-                let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-                let entity_ids_res = root_commands::get_root_relationship(
+                let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id()
+                    as common::types::EntityId;
+                let field_ids_res = entity_commands::get_entity_relationship(
                     &ctx,
-                    &root_id,
-                    &RootRelationshipField::Entities,
+                    &entity_id,
+                    &EntityRelationshipField::Fields,
                 );
-                let mut entity_ids = entity_ids_res.unwrap_or_default();
+                let mut field_ids = field_ids_res.unwrap_or_default();
 
-                if from == to || from >= entity_ids.iter().count() {
-                         return;
-                     }
+                if from == to || from >= field_ids.iter().count() {
+                    return;
+                }
 
-                let moving_entity_id = entity_ids.remove(from);
+                let moving_field_id = field_ids.remove(from);
                 // Adjust target slot when moving downwards because removing shifts indices left
                 let mut insert_at = if to > from { to - 1 } else { to };
-                if insert_at > entity_ids.iter().count() { insert_at = entity_ids.iter().count(); }
-                entity_ids.insert(insert_at, moving_entity_id);
-
-
-                let result = root_commands::set_root_relationship(
+                if insert_at > field_ids.iter().count() {
+                    insert_at = field_ids.iter().count();
+                }
+                field_ids.insert(insert_at, moving_field_id);
+                let result = entity_commands::set_entity_relationship(
                     &ctx,
-                    &RootRelationshipDto {
-                        id: root_id,
-                        field: RootRelationshipField::Entities,
-                        right_ids: entity_ids,
-                    }
+                    &EntityRelationshipDto {
+                        id: entity_id,
+                        field: EntityRelationshipField::Fields,
+                        right_ids: field_ids,
+                    },
                 );
-
                 match result {
                     Ok(()) => {
-                        log::info!("Entities reordered successfully");
+                        log::info!("Fields reordered successfully");
                     }
                     Err(e) => {
-                        log::error!("Failed to reorder entities: {}", e);
+                        log::error!("Failed to reorder fields: {}", e);
                     }
                 }
-
             }
         }
-    });
-}
-
-fn setup_fields_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_request_fields_reorder({
-         let ctx = Arc::clone(app_context);
-         let app_weak = app.as_weak();
-         move |from_index, to_index| {
-             let from = from_index as usize;
-             let to = to_index as usize;
-
-             if let Some(app) = app_weak.upgrade() {
-
-                 // 1) Get fields attached to the entity
-
-                 let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id() as common::types::EntityId;
-                 let field_ids_res = entity_commands::get_entity_relationship(
-                     &ctx,
-                     &entity_id,
-                     &EntityRelationshipField::Fields,
-                 );
-                 let mut field_ids = field_ids_res.unwrap_or_default();
-
-                 if from == to || from >= field_ids.iter().count() {
-                          return;
-                      }
-
-                 let moving_field_id = field_ids.remove(from);
-                 // Adjust target slot when moving downwards because removing shifts indices left
-                 let mut insert_at = if to > from { to - 1 } else { to };
-                 if insert_at > field_ids.iter().count() { insert_at = field_ids.iter().count(); }
-                 field_ids.insert(insert_at, moving_field_id);
-                    let result = entity_commands::set_entity_relationship(
-                        &ctx,
-                        &EntityRelationshipDto {
-                            id: entity_id,
-                            field: EntityRelationshipField::Fields,
-                            right_ids: field_ids,
-                        }
-                    );
-                    match result {
-                        Ok(()) => {
-                            log::info!("Fields reordered successfully");
-                        }
-                        Err(e) => {
-                            log::error!("Failed to reorder fields: {}", e);
-                        }
-                }
-                }
-            }
     });
 }
 
@@ -359,10 +371,8 @@ fn setup_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
         let app_weak = app.as_weak();
         move |field_id| {
             if let Some(app) = app_weak.upgrade() {
-                let result = field_commands::remove_field(
-                    &ctx,
-                    &(field_id as common::types::EntityId)
-                );
+                let result =
+                    field_commands::remove_field(&ctx, &(field_id as common::types::EntityId));
                 match result {
                     Ok(()) => {
                         log::info!("Field deleted successfully");
@@ -381,33 +391,33 @@ fn setup_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_entity_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_request_entity_deletion({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |entity_id| {
-            if let Some(app) = app_weak.upgrade() {
-                let result = entity_commands::remove_entity(
-                    &ctx,
-                    &(entity_id as common::types::EntityId)
-                );
-                match result {
-                    Ok(()) => {
-                        log::info!("Entity deleted successfully");
-                        // Refresh entity list
-                        fill_entity_list(&app, &ctx);
-                        // Clear field list and form
-                        clear_field_list(&app, &ctx);
-                        clear_field_form(&app);
-                    }
-                    Err(e) => {
-                        log::error!("Failed to delete entity: {}", e);
+    app.global::<EntitiesTabState>()
+        .on_request_entity_deletion({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |entity_id| {
+                if let Some(app) = app_weak.upgrade() {
+                    let result = entity_commands::remove_entity(
+                        &ctx,
+                        &(entity_id as common::types::EntityId),
+                    );
+                    match result {
+                        Ok(()) => {
+                            log::info!("Entity deleted successfully");
+                            // Refresh entity list
+                            fill_entity_list(&app, &ctx);
+                            // Clear field list and form
+                            clear_field_list(&app, &ctx);
+                            clear_field_form(&app);
+                        }
+                        Err(e) => {
+                            log::error!("Failed to delete entity: {}", e);
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 }
-
 
 fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_entity_selected({
@@ -418,19 +428,21 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                 if selected_entity_id >= 0 {
                     let entity_res = entity_commands::get_entity(
                         &ctx,
-                        &(selected_entity_id as common::types::EntityId)
+                        &(selected_entity_id as common::types::EntityId),
                     );
                     // Update ALL dependent properties here
                     match entity_res {
                         Ok(Some(entity)) => {
-                            app.global::<EntitiesTabState>().set_selected_entity_id(selected_entity_id);
-                            app.global::<EntitiesTabState>().set_selected_entity_name(entity.name.into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_id(selected_entity_id);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_name(entity.name.into());
                             fill_field_list(&app, &ctx);
-
                         }
                         _ => {
                             app.global::<EntitiesTabState>().set_selected_entity_id(-1);
-                            app.global::<EntitiesTabState>().set_selected_entity_name("".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_name("".into());
                         }
                     };
                 }
@@ -506,11 +518,20 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     state.set_selected_field_strong(field.strong);
     state.set_selected_field_list_model(field.list_model);
     state.set_selected_field_list_model_displayed_field(
-        field.list_model_displayed_field.clone().unwrap_or_default().into()
+        field
+            .list_model_displayed_field
+            .clone()
+            .unwrap_or_default()
+            .into(),
     );
     state.set_selected_field_enum_name(field.enum_name.clone().unwrap_or_default().into());
     state.set_selected_field_enum_values(
-        field.enum_values.clone().map(|v| v.join("\n")).unwrap_or_default().into()
+        field
+            .enum_values
+            .clone()
+            .map(|v| v.join("\n"))
+            .unwrap_or_default()
+            .into(),
     );
 }
 
@@ -554,8 +575,10 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
                 }
                 let names_model = std::rc::Rc::new(slint::VecModel::from(names));
                 let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
-                app.global::<EntitiesTabState>().set_entity_options(names_model.into());
-                app.global::<EntitiesTabState>().set_entity_option_ids(ids_model.into());
+                app.global::<EntitiesTabState>()
+                    .set_entity_options(names_model.into());
+                app.global::<EntitiesTabState>()
+                    .set_entity_option_ids(ids_model.into());
             }
         }
     }
@@ -594,7 +617,7 @@ fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
                 if selected_field_id >= 0 {
                     let field_res = field_commands::get_field(
                         &ctx,
-                        &(selected_field_id as common::types::EntityId)
+                        &(selected_field_id as common::types::EntityId),
                     );
 
                     if let Ok(Some(field)) = field_res {
@@ -658,8 +681,14 @@ fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 // Get the entity id from the index
                 let entity_option_ids = app.global::<EntitiesTabState>().get_entity_option_ids();
-                let entity_id = if entity_index >= 0 && (entity_index as usize) < entity_option_ids.row_count() {
-                    Some(entity_option_ids.row_data(entity_index as usize).unwrap_or(-1) as common::types::EntityId)
+                let entity_id = if entity_index >= 0
+                    && (entity_index as usize) < entity_option_ids.row_count()
+                {
+                    Some(
+                        entity_option_ids
+                            .row_data(entity_index as usize)
+                            .unwrap_or(-1) as common::types::EntityId,
+                    )
                 } else {
                     None
                 };
@@ -672,19 +701,20 @@ fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_relationship_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                let relationship_type = string_to_relationship_type(value.as_str());
-                update_field_helper(&ctx, field_id, |field| {
-                    field.relationship = relationship_type.clone();
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_relationship_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    let relationship_type = string_to_relationship_type(value.as_str());
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.relationship = relationship_type.clone();
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
@@ -703,20 +733,20 @@ fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_field_is_primary_key_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_is_primary_key_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                update_field_helper(&ctx, field_id, |field| {
-                    field.is_primary_key = value;
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_is_primary_key_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.is_primary_key = value;
+                    });
+                }
             }
-        }
-    });
+        });
 }
-
 
 fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_strong_changed({
@@ -734,91 +764,108 @@ fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_field_single_model_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_single_model_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                update_field_helper(&ctx, field_id, |field| {
-                    field.single_model = value;
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_single_model_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.single_model = value;
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_list_model_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                update_field_helper(&ctx, field_id, |field| {
-                    field.list_model = value;
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_list_model_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.list_model = value;
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_field_list_model_displayed_field_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_list_model_displayed_field_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                let value_str = new_value.to_string();
-                update_field_helper(&ctx, field_id, |field| {
-                    field.list_model_displayed_field = if value_str.is_empty() { None } else { Some(value_str) };
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_list_model_displayed_field_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    let value_str = new_value.to_string();
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.list_model_displayed_field = if value_str.is_empty() {
+                            None
+                        } else {
+                            Some(value_str)
+                        };
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_field_enum_name_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_enum_name_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                let value_str = new_value.to_string();
-                update_field_helper(&ctx, field_id, |field| {
-                    field.enum_name = if value_str.is_empty() { None } else { Some(value_str) };
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_enum_name_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    let value_str = new_value.to_string();
+                    update_field_helper(&ctx, field_id, |field| {
+                        field.enum_name = if value_str.is_empty() {
+                            None
+                        } else {
+                            Some(value_str)
+                        };
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_enum_values_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |new_value| {
-            if let Some(app) = app_weak.upgrade() {
-                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                let value_str = new_value.to_string();
-                update_field_helper(&ctx, field_id, |field| {
-                    if value_str.is_empty() {
-                        field.enum_values = None;
-                    } else {
-                        // Split by newlines or commas
-                        let values: Vec<String> = value_str
-                            .split(|c| c == '\n' || c == ',')
-                            .map(|s| s.trim().to_string())
-                            .filter(|s| !s.is_empty())
-                            .collect();
-                        field.enum_values = if values.is_empty() { None } else { Some(values) };
-                    }
-                });
+    app.global::<EntitiesTabState>()
+        .on_field_enum_values_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |new_value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                    let value_str = new_value.to_string();
+                    update_field_helper(&ctx, field_id, |field| {
+                        if value_str.is_empty() {
+                            field.enum_values = None;
+                        } else {
+                            // Split by newlines or commas
+                            let values: Vec<String> = value_str
+                                .split(|c| c == '\n' || c == ',')
+                                .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
+                                .collect();
+                            field.enum_values = if values.is_empty() {
+                                None
+                            } else {
+                                Some(values)
+                            };
+                        }
+                    });
+                }
             }
-        }
-    });
+        });
 }
 
 fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
@@ -828,11 +875,11 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
         move |new_entity_name| {
             if let Some(app) = app_weak.upgrade() {
                 if new_entity_name != "" {
-
-                    let current_entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                    let current_entity_id =
+                        app.global::<EntitiesTabState>().get_selected_entity_id();
                     let entity_res = entity_commands::get_entity(
                         &ctx,
-                        &(current_entity_id as common::types::EntityId)
+                        &(current_entity_id as common::types::EntityId),
                     );
 
                     // Update
@@ -853,10 +900,8 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
                                     log::error!("Failed to update entity name: {}", e);
                                 }
                             }
-
                         }
-                        _ => {
-                        }
+                        _ => {}
                     };
                 }
             };

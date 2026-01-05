@@ -3,7 +3,7 @@
 use crate::app_context::AppContext;
 use common::direct_access::feature::FeatureRelationshipField;
 use common::types::EntityId;
-use direct_access::{feature_controller, CreateFeatureDto, FeatureDto, FeatureRelationshipDto};
+use direct_access::{CreateFeatureDto, FeatureDto, FeatureRelationshipDto, feature_controller};
 
 /// Create a new feature
 pub fn create_feature(ctx: &AppContext, dto: &CreateFeatureDto) -> Result<FeatureDto, String> {
@@ -18,7 +18,10 @@ pub fn create_feature(ctx: &AppContext, dto: &CreateFeatureDto) -> Result<Featur
 }
 
 /// Create multiple features
-pub fn create_feature_multi(ctx: &AppContext, dtos: &[CreateFeatureDto]) -> Result<Vec<FeatureDto>, String> {
+pub fn create_feature_multi(
+    ctx: &AppContext,
+    dtos: &[CreateFeatureDto],
+) -> Result<Vec<FeatureDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     feature_controller::create_multi(
         &ctx.db_context,
@@ -36,7 +39,10 @@ pub fn get_feature(ctx: &AppContext, id: &EntityId) -> Result<Option<FeatureDto>
 }
 
 /// Get multiple features by IDs
-pub fn get_feature_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<FeatureDto>>, String> {
+pub fn get_feature_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<FeatureDto>>, String> {
     feature_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting features: {:?}", e))
 }
@@ -54,7 +60,10 @@ pub fn update_feature(ctx: &AppContext, dto: &FeatureDto) -> Result<FeatureDto, 
 }
 
 /// Update multiple features
-pub fn update_feature_multi(ctx: &AppContext, dtos: &[FeatureDto]) -> Result<Vec<FeatureDto>, String> {
+pub fn update_feature_multi(
+    ctx: &AppContext,
+    dtos: &[FeatureDto],
+) -> Result<Vec<FeatureDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     feature_controller::update_multi(
         &ctx.db_context,
@@ -68,13 +77,8 @@ pub fn update_feature_multi(ctx: &AppContext, dtos: &[FeatureDto]) -> Result<Vec
 /// Remove a feature by ID
 pub fn remove_feature(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    feature_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting feature: {:?}", e))
+    feature_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting feature: {:?}", e))
 }
 
 /// Remove multiple features by IDs
@@ -100,7 +104,10 @@ pub fn get_feature_relationship(
 }
 
 /// Set a feature relationship
-pub fn set_feature_relationship(ctx: &AppContext, dto: &FeatureRelationshipDto) -> Result<(), String> {
+pub fn set_feature_relationship(
+    ctx: &AppContext,
+    dto: &FeatureRelationshipDto,
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     feature_controller::set_relationship(
         &ctx.db_context,

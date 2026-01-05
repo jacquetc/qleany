@@ -2,7 +2,9 @@ use crate::SaveDto;
 use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, RelationshipType, Root, UseCase};
+use common::entities::{
+    Dto, DtoField, Entity, Feature, Field, Global, RelationshipType, Root, UseCase,
+};
 use common::types::EntityId;
 
 pub trait SaveUnitOfWorkFactoryTrait {

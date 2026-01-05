@@ -3,7 +3,7 @@
 use crate::app_context::AppContext;
 use common::direct_access::entity::EntityRelationshipField;
 use common::types::EntityId;
-use direct_access::{entity_controller, CreateEntityDto, EntityDto, EntityRelationshipDto};
+use direct_access::{CreateEntityDto, EntityDto, EntityRelationshipDto, entity_controller};
 
 /// Create a new entity
 pub fn create_entity(ctx: &AppContext, dto: &CreateEntityDto) -> Result<EntityDto, String> {
@@ -18,7 +18,10 @@ pub fn create_entity(ctx: &AppContext, dto: &CreateEntityDto) -> Result<EntityDt
 }
 
 /// Create multiple entities
-pub fn create_entity_multi(ctx: &AppContext, dtos: &[CreateEntityDto]) -> Result<Vec<EntityDto>, String> {
+pub fn create_entity_multi(
+    ctx: &AppContext,
+    dtos: &[CreateEntityDto],
+) -> Result<Vec<EntityDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::create_multi(
         &ctx.db_context,
@@ -36,7 +39,10 @@ pub fn get_entity(ctx: &AppContext, id: &EntityId) -> Result<Option<EntityDto>, 
 }
 
 /// Get multiple entities by IDs
-pub fn get_entity_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<EntityDto>>, String> {
+pub fn get_entity_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<EntityDto>>, String> {
     entity_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting entities: {:?}", e))
 }
@@ -68,13 +74,8 @@ pub fn update_entity_multi(ctx: &AppContext, dtos: &[EntityDto]) -> Result<Vec<E
 /// Remove an entity by ID
 pub fn remove_entity(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    entity_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting entity: {:?}", e))
+    entity_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting entity: {:?}", e))
 }
 
 /// Remove multiple entities by IDs
@@ -100,7 +101,10 @@ pub fn get_entity_relationship(
 }
 
 /// Set an entity relationship
-pub fn set_entity_relationship(ctx: &AppContext, dto: &EntityRelationshipDto) -> Result<(), String> {
+pub fn set_entity_relationship(
+    ctx: &AppContext,
+    dto: &EntityRelationshipDto,
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::set_relationship(
         &ctx.db_context,

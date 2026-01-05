@@ -3,7 +3,7 @@
 use crate::app_context::AppContext;
 use common::direct_access::field::FieldRelationshipField;
 use common::types::EntityId;
-use direct_access::{field_controller, CreateFieldDto, FieldDto, FieldRelationshipDto};
+use direct_access::{CreateFieldDto, FieldDto, FieldRelationshipDto, field_controller};
 
 /// Create a new field
 pub fn create_field(ctx: &AppContext, dto: &CreateFieldDto) -> Result<FieldDto, String> {
@@ -18,7 +18,10 @@ pub fn create_field(ctx: &AppContext, dto: &CreateFieldDto) -> Result<FieldDto, 
 }
 
 /// Create multiple fields
-pub fn create_field_multi(ctx: &AppContext, dtos: &[CreateFieldDto]) -> Result<Vec<FieldDto>, String> {
+pub fn create_field_multi(
+    ctx: &AppContext,
+    dtos: &[CreateFieldDto],
+) -> Result<Vec<FieldDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     field_controller::create_multi(
         &ctx.db_context,
@@ -31,12 +34,14 @@ pub fn create_field_multi(ctx: &AppContext, dtos: &[CreateFieldDto]) -> Result<V
 
 /// Get a field by ID
 pub fn get_field(ctx: &AppContext, id: &EntityId) -> Result<Option<FieldDto>, String> {
-    field_controller::get(&ctx.db_context, id)
-        .map_err(|e| format!("Error getting field: {:?}", e))
+    field_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting field: {:?}", e))
 }
 
 /// Get multiple fields by IDs
-pub fn get_field_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<FieldDto>>, String> {
+pub fn get_field_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<FieldDto>>, String> {
     field_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting fields: {:?}", e))
 }
@@ -68,13 +73,8 @@ pub fn update_field_multi(ctx: &AppContext, dtos: &[FieldDto]) -> Result<Vec<Fie
 /// Remove a field by ID
 pub fn remove_field(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    field_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting field: {:?}", e))
+    field_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting field: {:?}", e))
 }
 
 /// Remove multiple fields by IDs

@@ -5,61 +5,63 @@
 
 use std::sync::Arc;
 
-use slint::ComponentHandle;
 use common::direct_access::root::RootRelationshipField;
 use common::event::{HandlingManifestEvent, Origin};
 use handling_manifest::LoadDto;
+use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, handling_manifest_commands, root_commands};
-use crate::{App, AppState, ManifestCommands};
 use crate::event_hub_client::EventHubClient;
+use crate::{App, AppState, ManifestCommands};
 use slint::Timer;
 
-fn subscribe_loaded_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
-    event_hub_client.subscribe(
-        Origin::HandlingManifest(HandlingManifestEvent::Loaded),
-        {
-            let ctx = Arc::clone(&app_context);
-            let app_weak = app.as_weak();
-            move |event| {
-                log::info!("Manifest loaded event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
-                let app_weak = app_weak.clone();
+fn subscribe_loaded_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Loaded), {
+        let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("Manifest loaded event received: {:?}", event);
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
 
-                // Use invoke_from_event_loop to safely update UI from background thread
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_manifest_is_open(true);
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                    }
-                });
-            }
-        },
-    );
+            // Use invoke_from_event_loop to safely update UI from background thread
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    app.global::<AppState>().set_manifest_is_open(true);
+                    app.global::<AppState>().set_manifest_is_saved(true);
+                }
+            });
+        }
+    });
 }
 
-fn subscribe_closed_event(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
-    event_hub_client.subscribe(
-        Origin::HandlingManifest(HandlingManifestEvent::Closed),
-        {
-            let ctx = Arc::clone(&app_context);
-            let app_weak = app.as_weak();
-            move |event| {
-                log::info!("Manifest closed event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
-                let app_weak = app_weak.clone();
+fn subscribe_closed_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Closed), {
+        let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("Manifest closed event received: {:?}", event);
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
 
-                // Use invoke_from_event_loop to safely update UI from background thread
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_manifest_is_open(false);
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                    }
-                });
-            }
-        },
-    );
+            // Use invoke_from_event_loop to safely update UI from background thread
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    app.global::<AppState>().set_manifest_is_open(false);
+                    app.global::<AppState>().set_manifest_is_saved(true);
+                }
+            });
+        }
+    });
 }
 
 /// Wire up the on_new_manifest callback
@@ -69,7 +71,6 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
         let app_weak = app.as_weak();
         move || {
             log::info!("New Manifest clicked");
-
 
             // Close any currently open manifest first
             match handling_manifest_commands::close_manifest(&ctx) {
@@ -85,7 +86,6 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
             let _ = ctx; // Use context when implementing
 
             if let Some(app) = app_weak.upgrade() {
-
                 // set loading
                 app.global::<AppState>().set_is_loading(true);
                 Timer::single_shot(std::time::Duration::from_millis(100), move || {
@@ -118,7 +118,6 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 let manifest_path = path.to_string_lossy().to_string();
                 log::info!("Selected manifest file: {}", manifest_path);
 
-
                 // Close any currently open manifest first
                 match handling_manifest_commands::close_manifest(&ctx) {
                     Ok(()) => {
@@ -129,16 +128,14 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                     }
                 }
 
-
-                let load_dto = LoadDto {
-                    manifest_path,
-                };
+                let load_dto = LoadDto { manifest_path };
                 match handling_manifest_commands::load_manifest(&ctx, &load_dto) {
                     Ok(result) => {
                         log::info!("Manifest loaded successfully: {:?}", result);
                         if let Some(app) = app_weak.upgrade() {
                             // clear any previous error
-                            app.global::<AppState>().set_error_message(slint::SharedString::from(""));
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(""));
 
                             // set root_id
                             app.global::<AppState>().set_root_id(result.root_id as i32);
@@ -154,7 +151,8 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                     Err(e) => {
                         log::error!("Failed to load manifest: {}", e);
                         if let Some(app) = app_weak.upgrade() {
-                            app.global::<AppState>().set_error_message(slint::SharedString::from(e));
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(e));
                         }
                     }
                 }
@@ -186,21 +184,21 @@ pub fn setup_save_manifest_as_callback(app: &App, app_context: &Arc<AppContext>)
                 let manifest_path = path.to_string_lossy().to_string();
                 log::info!("Selected save path: {}", manifest_path);
 
-                let save_dto = handling_manifest::SaveDto {
-                    manifest_path,
-                };
+                let save_dto = handling_manifest::SaveDto { manifest_path };
                 match handling_manifest_commands::save_manifest(&ctx, &save_dto) {
                     Ok(()) => {
                         log::info!("Manifest saved successfully");
                         if let Some(app) = app_weak.upgrade() {
-                            app.global::<AppState>().set_error_message(slint::SharedString::from(""));
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(""));
                             app.global::<AppState>().set_manifest_is_saved(true);
                         }
                     }
                     Err(e) => {
                         log::error!("Failed to save manifest: {}", e);
                         if let Some(app) = app_weak.upgrade() {
-                            app.global::<AppState>().set_error_message(slint::SharedString::from(e));
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(e));
                         }
                     }
                 }
@@ -219,7 +217,9 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
         move || {
             log::info!("Save Manifest clicked");
 
-            let root_id = app_weak.upgrade().map_or(0, |app| app.global::<AppState>().get_root_id() as u64);
+            let root_id = app_weak
+                .upgrade()
+                .map_or(0, |app| app.global::<AppState>().get_root_id() as u64);
             if root_id < 1 {
                 log::error!("No manifest is currently loaded, cannot save");
                 return;
@@ -251,14 +251,16 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 Ok(()) => {
                     log::info!("Manifest saved successfully");
                     if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_error_message(slint::SharedString::from(""));
+                        app.global::<AppState>()
+                            .set_error_message(slint::SharedString::from(""));
                         app.global::<AppState>().set_manifest_is_saved(true);
                     }
                 }
                 Err(e) => {
                     log::error!("Failed to save manifest: {}", e);
                     if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_error_message(slint::SharedString::from(e));
+                        app.global::<AppState>()
+                            .set_error_message(slint::SharedString::from(e));
                     }
                 }
             }
@@ -311,7 +313,8 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                     log::info!("Qleany manifest loaded: {:?}", result);
                     if let Some(app) = app_weak.upgrade() {
                         // clear any previous error
-                        app.global::<AppState>().set_error_message(slint::SharedString::from(""));
+                        app.global::<AppState>()
+                            .set_error_message(slint::SharedString::from(""));
 
                         // set root_id
                         app.global::<AppState>().set_root_id(result.root_id as i32);
@@ -322,13 +325,13 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                             app.global::<AppState>().set_manifest_is_saved(true);
                             app.global::<AppState>().set_is_loading(false);
                         });
-
                     }
                 }
                 Err(e) => {
                     log::error!("Failed to load qleany manifest: {}", e);
                     if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>().set_error_message(slint::SharedString::from(e));
+                        app.global::<AppState>()
+                            .set_error_message(slint::SharedString::from(e));
                     }
                 }
             }

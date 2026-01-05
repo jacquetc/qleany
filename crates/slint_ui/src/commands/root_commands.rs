@@ -3,7 +3,7 @@
 use crate::app_context::AppContext;
 use common::direct_access::root::RootRelationshipField;
 use common::types::EntityId;
-use direct_access::{root_controller, CreateRootDto, RootDto, RootRelationshipDto};
+use direct_access::{CreateRootDto, RootDto, RootRelationshipDto, root_controller};
 
 /// Create a new root entity
 pub fn create_root(ctx: &AppContext, dto: &CreateRootDto) -> Result<RootDto, String> {
@@ -31,8 +31,7 @@ pub fn create_root_multi(ctx: &AppContext, dtos: &[CreateRootDto]) -> Result<Vec
 
 /// Get a root entity by ID
 pub fn get_root(ctx: &AppContext, id: &EntityId) -> Result<Option<RootDto>, String> {
-    root_controller::get(&ctx.db_context, id)
-        .map_err(|e| format!("Error getting root: {:?}", e))
+    root_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting root: {:?}", e))
 }
 
 /// Get multiple root entities by IDs
@@ -68,13 +67,8 @@ pub fn update_root_multi(ctx: &AppContext, dtos: &[RootDto]) -> Result<Vec<RootD
 /// Remove a root entity by ID
 pub fn remove_root(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    root_controller::remove(
-        &ctx.db_context,
-        &ctx.event_hub,
-        &mut *undo_redo_manager,
-        id,
-    )
-    .map_err(|e| format!("Error deleting root: {:?}", e))
+    root_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
+        .map_err(|e| format!("Error deleting root: {:?}", e))
 }
 
 /// Remove multiple root entities by IDs

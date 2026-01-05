@@ -1,7 +1,7 @@
 //! Manifest handling commands for Slint UI
 
 use crate::app_context::AppContext;
-use handling_manifest::{handling_manifest_controller, LoadDto, LoadReturnDto, SaveDto};
+use handling_manifest::{LoadDto, LoadReturnDto, SaveDto, handling_manifest_controller};
 
 /// Load a manifest file
 pub fn load_manifest(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, String> {

@@ -7,7 +7,7 @@ pub fn undo(ctx: &AppContext) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     // Inject event hub before operation
     undo_redo_manager.set_event_hub(&ctx.event_hub);
-    
+
     undo_redo_manager.undo().map_err(|e| e.to_string())
 }
 
@@ -15,7 +15,7 @@ pub fn undo(ctx: &AppContext) -> Result<(), String> {
 pub fn redo(ctx: &AppContext) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     undo_redo_manager.set_event_hub(&ctx.event_hub);
-    
+
     undo_redo_manager.redo().map_err(|e| e.to_string())
 }
 

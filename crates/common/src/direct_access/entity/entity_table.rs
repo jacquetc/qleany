@@ -1,8 +1,8 @@
 use super::entity_repository::EntityRelationshipField;
 use super::entity_repository::EntityTable;
 use super::entity_repository::EntityTableRO;
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Entity;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

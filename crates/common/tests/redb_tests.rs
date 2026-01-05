@@ -160,7 +160,7 @@ fn modify_db_and_return_error(db: &Database) -> Result<()> {
     // Make changes to the database
     let mut table = write_txn.open_table(TEST_TABLE)?;
     table.insert("key1", 100)?; // Update existing key
-    table.insert("key3", 3)?;   // Add new key
+    table.insert("key3", 3)?; // Add new key
 
     // Don't commit or rollback - return an error
     // This will cause the transaction to go out of scope without commit/rollback
@@ -198,13 +198,22 @@ fn test_transaction_out_of_scope_with_error() -> Result<()> {
 
     // If key1 is still 1 and key3 doesn't exist, there was an implicit rollback
     // If key1 is 100 and key3 exists with value 3, there was an implicit commit
-    println!("After transaction went out of scope with error: key1={:?}, key2={:?}, key3={:?}", 
-             key1_value, key2_value, key3_value);
+    println!(
+        "After transaction went out of scope with error: key1={:?}, key2={:?}, key3={:?}",
+        key1_value, key2_value, key3_value
+    );
 
     // Assert based on the expected behavior (this will depend on redb's implementation)
     // Here we're assuming an implicit rollback, but the test will show the actual behavior
-    assert_eq!(key1_value, Some(1), "Transaction was implicitly committed instead of rolled back");
-    assert_eq!(key3_value, None, "Transaction was implicitly committed instead of rolled back");
+    assert_eq!(
+        key1_value,
+        Some(1),
+        "Transaction was implicitly committed instead of rolled back"
+    );
+    assert_eq!(
+        key3_value, None,
+        "Transaction was implicitly committed instead of rolled back"
+    );
 
     Ok(())
 }

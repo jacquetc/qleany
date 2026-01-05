@@ -362,17 +362,14 @@ impl SnapshotBuilder {
             if rel.left_entity == entity.id || rel.right_entity == entity.id {
                 rel_all.entry(*rid).or_insert_with(|| RelationshipVM {
                     inner: rel.clone(),
-                    field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
-                        .to_string(),
-                    field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
-                        .to_string(),
+                    field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
+                    field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
                 });
                 if rel.left_entity == entity.id {
                     if fwd_seen.insert(rel.field_name.clone()) {
                         rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
                             inner: rel.clone(),
-                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
-                                .to_string(),
+                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                             field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
                                 .to_string(),
                         });
@@ -383,8 +380,7 @@ impl SnapshotBuilder {
                     if bwd_seen.insert(key) {
                         rel_bwd.entry(*rid).or_insert_with(|| RelationshipVM {
                             inner: rel.clone(),
-                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
-                                .to_string(),
+                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                             field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
                                 .to_string(),
                         });
