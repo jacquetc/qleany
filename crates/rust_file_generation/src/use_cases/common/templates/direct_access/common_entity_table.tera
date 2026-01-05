@@ -15,11 +15,11 @@ const {{ s.entities[e].snake_name | upper }}_TABLE: TableDefinition<EntityId, Bi
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 {% for rid, r in s.entities[e].forward_relationships %}
-const {{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[r.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_name }}_junction");
+const {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction");
 {%- endfor %}
 // backward relationships
 {% for rid, r in s.entities[e].backward_relationships %}
-const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.left_entity].snake_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.left_entity].snake_name }}_{{ r.field_name }}_junction");
+const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction");
 {%- endfor %}
 
 {% if s.entities[e].forward_relationships | length > 0 %}
@@ -28,7 +28,7 @@ fn get_junction_table_definition(
 ) -> TableDefinition<EntityId, Vec<EntityId>> {
     match field {
         {% for rid, r in s.entities[e].forward_relationships %}
-        {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_name | capitalize }} => {{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE,
+        {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE,
         {%- endfor %}
     }
 }
@@ -49,7 +49,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         let mut counter = if let Some(counter) = counter_table.get(&"{{ s.entities[e].snake_name }}".to_string())? { {% if s.entities[e].snake_name == "file" %}counter.value() + 1{% else %}counter.value(){% endif %} } else { 1 };
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE)?;
+        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         for entity in entities {
@@ -65,15 +65,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {% if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{% endif %}
             {{ s.entities[e].snake_name }}_table.insert(new_entity.id, new_entity.clone())?;
             {% for rid, r in s.entities[e].forward_relationships %}
-            {{ r.field_name }}_junction_table.insert(new_entity.id, {
-                {% if r.cardinality == "ZeroOrMore" or r.cardinality == "OneOrMore" %}
-                new_entity.{{ r.field_name }}.clone()
-                {%- elif r.cardinality == "One" %}
-                vec![new_entity.{{ r.field_name }}] as Vec<EntityId>
-                {%- elif r.cardinality == "ZeroOrOne" %}
-                new_entity.{{ r.field_name }}.clone().into_iter().collect::<Vec<EntityId>>()
+            {{ r.field_snake_name }}_junction_table.insert(new_entity.id,
+                {% if r.inner.cardinality == "ZeroOrMore" or r.inner.cardinality == "OneOrMore" %}
+                new_entity.{{ r.field_snake_name }}.clone())?;
+                {%- elif r.inner.cardinality == "One" %}
+                vec![new_entity.{{ r.field_snake_name }}] as Vec<EntityId>)?;
+                {%- elif r.inner.cardinality == "ZeroOrOne" %}
+                new_entity.{{ r.field_snake_name }}.clone().into_iter().collect::<Vec<EntityId>>())?;
                 {%- endif %}
-            })?;
+
             {%- endfor %}
             created.push(new_entity);
             if entity.id == EntityId::default() { counter += 1; }
@@ -86,7 +86,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         let mut list = Vec::new();
         let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper  }}_JUNCTION_TABLE)?;
+        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         if ids.is_empty() {
@@ -117,7 +117,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         let mut updated = Vec::new();
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper  }}_JUNCTION_TABLE)?;
+        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         for entity in entities {
@@ -141,10 +141,10 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper  }}_JUNCTION_TABLE)?;
+        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {% endfor %}
         {% for rid, r in s.entities[e].backward_relationships %}
-        let mut backward_{{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.left_entity].snake_name | upper }}_{{ r.field_name | upper }}_JUNCTION_TABLE)?;
+        let mut backward_{{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         for id in ids {
@@ -155,7 +155,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {% endif %}
             {% endfor %}
             {% for rid, r in s.entities[e].backward_relationships %}
-            db_helpers::delete_from_backward_junction_table(&mut backward_{{ r.field_name }}_junction_table, id)?;
+            db_helpers::delete_from_backward_junction_table(&mut backward_{{ r.field_snake_name }}_junction_table, id)?;
             {% endfor %}
         }
         Ok(())
@@ -204,7 +204,7 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         let mut list = Vec::new();
         let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_name }}_junction_table = self.transaction.open_table({{ s.entities[r.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_name | upper  }}_JUNCTION_TABLE)?;
+        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         if ids.is_empty() {

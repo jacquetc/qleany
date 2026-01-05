@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum {{ s.entities[e].pascal_name }}RelationshipField {
     {% for rid, r in s.entities[e].forward_relationships %}
-    {{ r.field_name | capitalize }},
+    {{ r.field_pascal_name }},
     {%- endfor %}
 }
 

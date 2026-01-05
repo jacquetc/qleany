@@ -58,9 +58,9 @@ struct GlobalVM {
 #[derive(Debug, Serialize, Clone)]
 struct EntityVM {
     pub inner: Entity,
-    pub relationships: IndexMap<EntityId, Relationship>,
-    pub forward_relationships: IndexMap<EntityId, Relationship>,
-    pub backward_relationships: IndexMap<EntityId, Relationship>,
+    pub relationships: IndexMap<EntityId, RelationshipVM>,
+    pub forward_relationships: IndexMap<EntityId, RelationshipVM>,
+    pub backward_relationships: IndexMap<EntityId, RelationshipVM>,
     pub snake_name: String,
     pub pascal_name: String,
     pub fields: Vec<FieldVM>,
@@ -109,6 +109,13 @@ struct DtoFieldVM {
     pub snake_name: String,
     pub rust_base_type: String,
     pub rust_type: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct RelationshipVM {
+    pub inner: Relationship,
+    pub field_snake_name: String,
+    pub field_pascal_name: String,
 }
 
 static RUST_TEMPLATES_DIR: Dir<'_> =
@@ -283,8 +290,7 @@ impl SnapshotBuilder {
                         rust_base_type.clone()
                     } else if f.field_type == FieldType::Entity {
                         format!("Option<{}>", &rust_base_type)
-                    }
-                    else {
+                    } else {
                         rust_base_type.clone()
                     }
                 }
@@ -346,24 +352,42 @@ impl SnapshotBuilder {
         }
 
         // Now split into all/forward/backward with deduplication strategy used in for_file
-        let mut rel_all: IndexMap<EntityId, Relationship> = IndexMap::new();
-        let mut rel_fwd: IndexMap<EntityId, Relationship> = IndexMap::new();
-        let mut rel_bwd: IndexMap<EntityId, Relationship> = IndexMap::new();
+        let mut rel_all: IndexMap<EntityId, RelationshipVM> = IndexMap::new();
+        let mut rel_fwd: IndexMap<EntityId, RelationshipVM> = IndexMap::new();
+        let mut rel_bwd: IndexMap<EntityId, RelationshipVM> = IndexMap::new();
         let mut fwd_seen: HashSet<String> = HashSet::new();
         let mut bwd_seen: HashSet<(EntityId, String)> = HashSet::new();
 
         for (rid, rel) in &relationships_map {
             if rel.left_entity == entity.id || rel.right_entity == entity.id {
-                rel_all.entry(*rid).or_insert_with(|| rel.clone());
+                rel_all.entry(*rid).or_insert_with(|| RelationshipVM {
+                    inner: rel.clone(),
+                    field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
+                        .to_string(),
+                    field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
+                        .to_string(),
+                });
                 if rel.left_entity == entity.id {
                     if fwd_seen.insert(rel.field_name.clone()) {
-                        rel_fwd.entry(*rid).or_insert_with(|| rel.clone());
+                        rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
+                            inner: rel.clone(),
+                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
+                                .to_string(),
+                            field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
+                                .to_string(),
+                        });
                     }
                 }
                 if rel.right_entity == entity.id {
                     let key = (rel.left_entity, rel.field_name.clone());
                     if bwd_seen.insert(key) {
-                        rel_bwd.entry(*rid).or_insert_with(|| rel.clone());
+                        rel_bwd.entry(*rid).or_insert_with(|| RelationshipVM {
+                            inner: rel.clone(),
+                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone())
+                                .to_string(),
+                            field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
+                                .to_string(),
+                        });
                     }
                 }
             }
@@ -680,7 +704,7 @@ impl SnapshotBuilder {
 
         // Now wrap into snapshot similarly to adapter
         let mut entities_vm: IndexMap<EntityId, EntityVM> = IndexMap::new();
-        for (eid, e) in &entities {
+        for (eid, _e) in &entities {
             // Use the unified entity view model builder
             let evm = SnapshotBuilder::get_entity_vm(uow, eid)?;
             entities_vm.insert(*eid, evm);
