@@ -64,9 +64,6 @@ __pycache__/
 *.py[cod]
 .venv
 
-# C extensions
-*.so
-
 cmake/build-*
 
 # Distribution / packaging
@@ -92,7 +89,6 @@ var/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-.venv
 
 # Installer logs
 pip-log.txt
@@ -120,7 +116,6 @@ docs/_build/
 
 # PyBuilder
 target/
-.venv
 
 # Eclipse
 .project
@@ -131,7 +126,6 @@ target/
 .directory
 
 #cx_Freeze
-build/
 build
 
 #gedit
@@ -143,18 +137,9 @@ build
 .idea
 
 #Qt Creator
-*.autosave
-*.pro.user
-*.pro.user.*
-*.qbs.user
-*.qbs.user.*
 CMakeLists.txt.user
 *.qtds.*
 *.qtds
-
-# QML
-*.qmlc
-*.jsc
 
 #plume
 .~lock.*
