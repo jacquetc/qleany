@@ -51,6 +51,9 @@ fn main() {
     // Initialize project tab callbacks (project settings)
     tabs::project_tab::init(&event_hub_client, &app, &app_context);
 
+    // Initialize generate tab callbacks (rust file generation)
+    tabs::generate_tab::init(&event_hub_client, &app, &app_context);
+
     app.window().on_close_requested({
         let app_weak = app.as_weak();
         let ctx = Arc::clone(&app_context);
@@ -116,8 +119,6 @@ fn main() {
     });
 
 
-    // Initialize generate tab callbacks (rust file generation)
-    tabs::generate_tab::init(&event_hub_client, &app, &app_context);
 
     // Run the application
     log::info!("Running Slint UI");

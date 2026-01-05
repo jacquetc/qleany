@@ -92,7 +92,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             if file_name.ends_with(".rs") {
                 code = rustfmt_string(&code, None).to_string();
             }
-            println!("Generated code for file {}:\n{}", file_name, code);
+            println!("Generated code for file {}:\n{}", file_name, "code omitted");
 
             // Compute destination path: root_path/prefix/relative_path/name
             let mut out_dir = root_path.clone();

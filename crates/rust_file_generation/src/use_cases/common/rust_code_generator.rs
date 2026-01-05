@@ -3,7 +3,10 @@ mod rust_code_generator_tests;
 
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType, UseCase};
+use common::entities::{
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
+    RelationshipType, UseCase,
+};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
