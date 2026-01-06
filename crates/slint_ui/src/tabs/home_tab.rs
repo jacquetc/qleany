@@ -90,6 +90,8 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 Timer::single_shot(std::time::Duration::from_millis(100), move || {
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
+                    app.global::<AppState>()
+                        .set_manifest_is_open(true);
                 });
             }
         }
@@ -144,6 +146,8 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                             Timer::single_shot(std::time::Duration::from_millis(100), move || {
                                 app.global::<AppState>().set_manifest_is_saved(true);
                                 app.global::<AppState>().set_is_loading(false);
+                                app.global::<AppState>()
+                                    .set_manifest_is_open(true);
                             });
                         }
                     }
@@ -271,16 +275,23 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
 pub fn setup_close_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<ManifestCommands>().on_close_manifest({
         let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
         move || {
             log::info!("Close Manifest clicked");
             match handling_manifest_commands::close_manifest(&ctx) {
                 Ok(()) => {
                     log::info!("Manifest closed successfully");
+                    if let Some(app) = app_weak.upgrade() {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        app.global::<AppState>()
+                            .set_manifest_is_open(false);
+                    }
                 }
                 Err(e) => {
                     log::error!("Failed to close manifest: {}", e);
                 }
             }
+
         }
     });
 }
@@ -323,6 +334,8 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                         Timer::single_shot(std::time::Duration::from_millis(100), move || {
                             app.global::<AppState>().set_manifest_is_saved(true);
                             app.global::<AppState>().set_is_loading(false);
+                            app.global::<AppState>()
+                                .set_manifest_is_open(true);
                         });
                     }
                 }
