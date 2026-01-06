@@ -135,6 +135,16 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 }
                 root.clone()
             };
+            // one-to-one constraint check: ensure global is not already referenced by another root
+            {
+                let mut iter = global_junction_table.iter()?;
+                while let Some(Ok((existing_root_id, global_ids))) = iter.next() {
+                    let existing_root_id = existing_root_id.value();
+                    if existing_root_id != new_root.id && global_ids.value().contains(&new_root.global) {
+                        panic!("One-to-one constraint violation: Global {} is already referenced by Root {}", new_root.global, existing_root_id);
+                    }
+                }
+            }
             root_table.insert(new_root.id, new_root.clone())?;
             global_junction_table.insert(new_root.id, vec![new_root.global] as Vec<EntityId>)?;
             entity_junction_table.insert(new_root.id, new_root.entities.clone())?;
@@ -257,6 +267,16 @@ impl<'a> RootTable for RootRedbTable<'a> {
             .open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
 
         for root in roots {
+            // one-to-one constraint check: ensure global is not already referenced by another root
+            {
+                let mut iter = global_junction_table.iter()?;
+                while let Some(Ok((existing_root_id, global_ids))) = iter.next() {
+                    let existing_root_id = existing_root_id.value();
+                    if existing_root_id != root.id && global_ids.value().contains(&root.global) {
+                        panic!("One-to-one constraint violation: Global {} is already referenced by Root {}", root.global, existing_root_id);
+                    }
+                }
+            }
             root_table.insert(root.id, root)?;
             global_junction_table.insert(root.id, vec![root.global] as Vec<EntityId>)?;
             entity_junction_table.insert(root.id, root.entities.clone())?;

@@ -63,6 +63,28 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             entity.clone()
             };
             {% if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{% endif %}
+            {% for f in s.entities[e].fields %}
+            {% if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+            // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
+            {
+                let mut iter = {{ f.snake_name }}_junction_table.iter()?;
+                while let Some(Ok((existing_id, right_ids))) = iter.next() {
+                    let existing_id = existing_id.value();
+                    {% if f.required %}
+                    if existing_id != new_entity.id && right_ids.value().contains(&new_entity.{{ f.snake_name }}) {
+                        panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id);
+                    }
+                    {% else %}
+                    if let Some(ref right_id) = new_entity.{{ f.snake_name }} {
+                        if existing_id != new_entity.id && right_ids.value().contains(right_id) {
+                            panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
+                        }
+                    }
+                    {% endif %}
+                }
+            }
+            {% endif %}
+            {% endfor %}
             {{ s.entities[e].snake_name }}_table.insert(new_entity.id, new_entity.clone())?;
             {% for rid, r in s.entities[e].forward_relationships %}
             {{ r.field_snake_name }}_junction_table.insert(new_entity.id,
@@ -154,6 +176,28 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         {%- endfor %}
 
         for entity in entities {
+            {% for f in s.entities[e].fields %}
+            {% if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+            // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
+            {
+                let mut iter = {{ f.snake_name }}_junction_table.iter()?;
+                while let Some(Ok((existing_id, right_ids))) = iter.next() {
+                    let existing_id = existing_id.value();
+                    {% if f.required %}
+                    if existing_id != entity.id && right_ids.value().contains(&entity.{{ f.snake_name }}) {
+                        panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id);
+                    }
+                    {% else %}
+                    if let Some(ref right_id) = entity.{{ f.snake_name }} {
+                        if existing_id != entity.id && right_ids.value().contains(right_id) {
+                            panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
+                        }
+                    }
+                    {% endif %}
+                }
+            }
+            {% endif %}
+            {% endfor %}
             {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}

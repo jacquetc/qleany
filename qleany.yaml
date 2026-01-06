@@ -89,15 +89,15 @@ entities:
   - name: entity
     type: entity
     entity: Entity
-    relationship: one_to_one
+    relationship: many_to_one
   - name: relationship
     type: enum
     enum_name: FieldRelationshipType
     enum_values:
     - OneToOne
+    - ManyToOne
     - OrderedOneToMany
     - OneToMany
-    - ManyToOne
     - ManyToMany
   - name: is_required
     type: boolean
