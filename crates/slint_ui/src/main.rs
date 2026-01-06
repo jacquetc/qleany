@@ -40,7 +40,7 @@ fn main() {
     tabs::entities_tab::init(&event_hub_client, &app, &app_context);
 
     // Initialize features tab subscriptions and callbacks
-    tabs::features_tab::init(&event_hub_client, &app, &app_context);
+    tabs::features::init(&event_hub_client, &app, &app_context);
 
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&event_hub_client, &app, &app_context);
