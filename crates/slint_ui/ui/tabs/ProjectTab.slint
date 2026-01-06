@@ -7,6 +7,7 @@ component StyledComboBox inherits Rectangle {
     in-out property <string> current-value;
     in property <[string]> model;
     in property <bool> enabled: true;
+    callback selected(string);
     
     height: 36px;
     background: enabled ? #ffffff : #f8f9fa;
@@ -18,6 +19,7 @@ component StyledComboBox inherits Rectangle {
         current-value <=> root.current-value;
         model: root.model;
         enabled: root.enabled;
+        selected(val) => { root.selected(val); }
     }
 }
 
@@ -94,8 +96,8 @@ export component ProjectTab inherits Rectangle {
                     language-combo := StyledComboBox {
                         current-value <=> ProjectTabState.language;
                         model: ["Rust", "C++ / Qt"];
-                        changed current-value => {
-                            ProjectTabState.language_changed(self.current-value);
+                        selected(val) => {
+                            ProjectTabState.language_changed(val);
                         }
                     }
                 }

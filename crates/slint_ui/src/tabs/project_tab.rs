@@ -164,13 +164,14 @@ fn subscribe_global_updated_event(
             let app_weak = app.as_weak();
             move |event| {
                 log::info!("Global updated event received {:?}", event);
-                let _ctx = Arc::clone(&ctx);
+                let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         if app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
+                            fill_project_tab(&app, &ctx);
                         }
                     }
                 });
@@ -223,10 +224,10 @@ fn setup_language_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let value_str = new_value.to_string();
                 update_global_helper(&app, &ctx, |global| {
-                    global.language = match value_str.to_lowercase().as_str() {
-                        "rust" => "Rust".to_string(),
-                        "cpp-qt" => "C++ / Qt".to_string(),
-                        _ => "rust".to_string(),
+                    global.language = match value_str.as_str() {
+                        "Rust" => "rust".to_string(),
+                        "C++ / Qt" => "cpp-qt".to_string(),
+                        _ => value_str.to_lowercase(),
                     };
                 });
             }
