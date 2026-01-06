@@ -166,7 +166,7 @@ export component App inherits Window {
                             active: AppState.current_tab == 5 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
                             clicked => { 
-                                AppState.current_tab = 5; 
+                                AppState.current_tab = 5;
                                 AppState.refresh_generate_tab();
                             }
                         }

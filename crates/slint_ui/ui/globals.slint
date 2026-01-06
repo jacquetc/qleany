@@ -205,6 +205,10 @@ export global FeaturesTabState {
     callback dto_out_field_type_changed(string);
     callback dto_out_field_is_nullable_changed(bool);
     callback dto_out_field_is_list_changed(bool);
+
+    // Use case entities list (checkable list of all entities, checked = associated with use case)
+    in-out property <[CRListItem]> use_case_entity_cr_list: [];
+    callback use_case_entity_check_changed(int /* entity_id */, bool /* checked */);
 }
 
 // Application-wide state
@@ -247,9 +251,22 @@ export global AppState {
     in-out property <int> selected_group_index: -1;
     in-out property <int> selected_file_index: -1;
     in-out property <string> code_preview: "";
+    // File filter text input
+    in-out property <string> file_filter_text: "";
+    // Number of selected (checked) files
+    in-out property <int> selected_files_count: 0;
+    // Pre-computed text parts for bold filename display
+    in-out property <[string]> file_text_prefixes: [];
+    in-out property <[string]> file_text_bolds: [];
     
     // Generate tab callbacks
     callback group_selected(int);
     callback file_selected(int);
     callback refresh_generate_tab();
+    // File filter callback
+    callback file_filter_changed(string);
+    // Group check change callback (for exclusive selection behavior)
+    callback group_check_changed(int, bool);
+    // File check change callback (for updating selected files count)
+    callback file_check_changed(int, bool);
 }

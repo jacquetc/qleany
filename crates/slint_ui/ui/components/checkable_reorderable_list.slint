@@ -62,6 +62,13 @@ component DraggableItem inherits Rectangle {
     in property <brush> theme-highlight: #e3f2fd; // Light background for drop targets
     in property <brush> theme-text: #212121;
     in property <brush> theme-subtitle: #21212180; // Subtitle text color
+    // When true, display the portion after the last "/" in bold
+    in property <bool> bold-after-slash: false;
+    // Pre-computed text parts for bold display (set by parent)
+    in property <string> text-prefix: "";
+    in property <string> text-bold: "";
+    // When true, align text to the right
+    in property <bool> text-align-right: false;
 
     callback move-item(int); // Request reorder by offset
 
@@ -207,15 +214,37 @@ component DraggableItem inherits Rectangle {
         // Title + optional subtitle
         VerticalLayout {
             spacing: 2px;
-            Text {
+            horizontal-stretch: text-align-right ? 1 : 0;
+            // Normal text display (when bold-after-slash is false)
+            if !bold-after-slash: Text {
                 text: item.text;
                 vertical-alignment: center;
+                horizontal-alignment: text-align-right ? right : left;
                 font-size: 14px;
                 color: theme-text;
+            }
+            // Bold filename display (when bold-after-slash is true)
+            if bold-after-slash: HorizontalLayout {
+                spacing: 0px;
+                alignment: text-align-right ? end : start;
+                Text {
+                    text: text-prefix;
+                    vertical-alignment: center;
+                    font-size: 14px;
+                    color: theme-text;
+                }
+                Text {
+                    text: text-bold;
+                    vertical-alignment: center;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: theme-text;
+                }
             }
             if item.subtitle != "": Text {
                 text: item.subtitle;
                 font-size: 11px;
+                horizontal-alignment: text-align-right ? right : left;
                 color: theme-subtitle;
             }
         }
@@ -278,6 +307,14 @@ export component CheckableReorderableList inherits Rectangle {
     in-out property <bool> enable-checkbox: false;
     // Selection state (used to show context menu button)
     in-out property <int> selected-id: -1;
+    // When true, display the portion after the last "/" in bold for each item
+    in-out property <bool> bold-after-slash: false;
+    // Pre-computed text parts for bold display (parallel arrays, same length as items)
+    // These should be set by the parent when bold-after-slash is true
+    in-out property <[string]> text-prefixes: [];
+    in-out property <[string]> text-bolds: [];
+    // When true, align text to the right
+    in-out property <bool> text-align-right: false;
 
     // Styling configuration
     in property <length> item-height: 60px;
@@ -367,6 +404,12 @@ export component CheckableReorderableList inherits Rectangle {
                     theme-border: root.item-border-color;
                     theme-text: root.text-color;
                     theme-subtitle: root.subtitle-color;
+                    // Bold filename display
+                    bold-after-slash: root.bold-after-slash;
+                    text-prefix: root.bold-after-slash && idx < root.text-prefixes.length ? root.text-prefixes[idx] : "";
+                    text-bold: root.bold-after-slash && idx < root.text-bolds.length ? root.text-bolds[idx] : "";
+                    // Text alignment
+                    text-align-right: root.text-align-right;
 
                     // Handle keyboard reorder
                     move-item(offset) => {

@@ -16,6 +16,7 @@ use crate::commands::rust_file_generation_commands;
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, ListRustFilesDto};
+use slint::{Timer, TimerMode};
 
 /// Internal state for tracking file data
 struct FileData {
@@ -57,7 +58,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
             let mut group_names: Vec<String> = groups.keys().cloned().collect();
             group_names.sort();
 
-            // Build group list items with "All" as first entry
+            // Build group list items with "All" as first entry (only "All" is checked by default)
             let mut group_items: Vec<ListItem> = vec![ListItem {
                 id: 0,
                 text: SharedString::from("All"),
@@ -65,17 +66,17 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 checked: true,
             }];
 
-            // Add actual groups starting from id 1
+            // Add actual groups starting from id 1 (unchecked by default)
             for (idx, group_name) in group_names.iter().enumerate() {
                 group_items.push(ListItem {
                     id: (idx + 1) as i32,
                     text: SharedString::from(group_name.as_str()),
                     subtitle: SharedString::default(),
-                    checked: true,
+                    checked: false,
                 });
             }
 
-            // Build file list items (all files initially)
+            // Build file list items (all files initially, all checked since "All" is checked)
             let file_items: Vec<ListItem> = result
                 .file_names
                 .iter()
@@ -87,6 +88,28 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                     checked: true,
                 })
                 .collect();
+
+            // Compute text prefixes and bolds for bold filename display
+            let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) = result
+                .file_names
+                .iter()
+                .map(|file_name| {
+                    if let Some(last_slash) = file_name.rfind('/') {
+                        let prefix = &file_name[..=last_slash];
+                        let bold = &file_name[last_slash + 1..];
+                        (SharedString::from(prefix), SharedString::from(bold))
+                    } else {
+                        // No slash, entire name is bold
+                        (
+                            SharedString::default(),
+                            SharedString::from(file_name.as_str()),
+                        )
+                    }
+                })
+                .unzip();
+
+            // Update selected files count
+            let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
 
             // Update UI
             let group_model = std::rc::Rc::new(VecModel::from(group_items));
@@ -113,11 +136,25 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
             app.global::<AppState>()
                 .set_file_list(file_list_model.into());
 
-            // Reset selection
+            // Set text prefixes and bolds for bold filename display
+            let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
+            let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
+            app.global::<AppState>()
+                .set_file_text_prefixes(text_prefixes_model.into());
+            app.global::<AppState>()
+                .set_file_text_bolds(text_bolds_model.into());
+
+            // Set selected files count
+            app.global::<AppState>()
+                .set_selected_files_count(selected_count);
+
+            // Reset selection and filter
             app.global::<AppState>().set_selected_group_index(-1);
             app.global::<AppState>().set_selected_file_index(-1);
             app.global::<AppState>()
                 .set_code_preview(SharedString::from(""));
+            app.global::<AppState>()
+                .set_file_filter_text(SharedString::from(""));
 
             log::info!(
                 "Loaded {} groups and {} files",
@@ -236,7 +273,18 @@ fn setup_list_files_callback(app: &App, app_context: &Arc<AppContext>) {
         move || {
             log::info!("List Rust Files clicked");
             if let Some(app) = app_weak.upgrade() {
+                // Preserve manifest_is_saved state
+                let was_saved = app.global::<AppState>().get_manifest_is_saved();
+
                 refresh_file_lists(&app, &ctx);
+
+                // Re-apply manifest_is_saved after a short delay
+                Timer::single_shot(std::time::Duration::from_millis(800), move || {
+                    if was_saved {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        println!("Re-applied manifest_is_saved after refresh");
+                    }
+                });
             }
         }
     });
@@ -420,7 +468,268 @@ fn setup_refresh_generate_tab_callback(app: &App, app_context: &Arc<AppContext>)
         move || {
             log::info!("Refreshing generate tab");
             if let Some(app) = app_weak.upgrade() {
+                // Preserve manifest_is_saved state
+                let was_saved = app.global::<AppState>().get_manifest_is_saved();
+
+                // Refresh file lists
                 refresh_file_lists(&app, &ctx);
+
+                // Re-apply manifest_is_saved after a short delay
+                Timer::single_shot(std::time::Duration::from_millis(800), move || {
+                    if was_saved {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        println!("Re-applied manifest_is_saved after refresh");
+                    }
+                });
+            }
+        }
+    });
+}
+
+/// Setup the group_check_changed callback for exclusive group selection
+fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_group_check_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |group_id, checked| {
+            log::info!("Group check changed: id={}, checked={}", group_id, checked);
+            if let Some(app) = app_weak.upgrade() {
+                if checked {
+                    // When a group is checked, uncheck all other groups and display only files in this group
+                    let group_list = app.global::<AppState>().get_group_cr_list();
+                    let group_names = app.global::<AppState>().get_group_list();
+
+                    // Update group checkboxes: only the selected group is checked
+                    let mut updated_groups: Vec<ListItem> = Vec::new();
+                    for i in 0..group_list.row_count() {
+                        if let Some(mut item) = group_list.row_data(i) {
+                            item.checked = item.id == group_id;
+                            updated_groups.push(item);
+                        }
+                    }
+                    let group_model = std::rc::Rc::new(VecModel::from(updated_groups));
+                    app.global::<AppState>()
+                        .set_group_cr_list(group_model.into());
+
+                    // Get the selected group name
+                    let selected_group_name = if group_id == 0 {
+                        "All".to_string()
+                    } else if (group_id as usize) < group_names.row_count() {
+                        group_names
+                            .row_data(group_id as usize)
+                            .unwrap_or_default()
+                            .to_string()
+                    } else {
+                        return;
+                    };
+
+                    // Get all files and filter to show only files from the selected group (like clicking on the group)
+                    let dto = ListRustFilesDto {
+                        only_list_already_existing: false,
+                    };
+
+                    if let Ok(result) = rust_file_generation_commands::list_rust_files(&ctx, &dto) {
+                        // Filter files by group (like clicking on the group item)
+                        let filtered_indices: Vec<usize> = result
+                            .file_names
+                            .iter()
+                            .enumerate()
+                            .filter(|(idx, _)| {
+                                selected_group_name == "All"
+                                    || result.file_groups[*idx] == selected_group_name
+                            })
+                            .map(|(idx, _)| idx)
+                            .collect();
+
+                        let file_items: Vec<ListItem> = filtered_indices
+                            .iter()
+                            .map(|&idx| {
+                                ListItem {
+                                    id: result.file_ids[idx] as i32,
+                                    text: SharedString::from(result.file_names[idx].as_str()),
+                                    subtitle: SharedString::default(),
+                                    checked: true, // All displayed files are checked
+                                }
+                            })
+                            .collect();
+
+                        // Compute text prefixes and bolds for filtered files
+                        let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
+                            filtered_indices
+                                .iter()
+                                .map(|&idx| {
+                                    let file_name = &result.file_names[idx];
+                                    if let Some(last_slash) = file_name.rfind('/') {
+                                        let prefix = &file_name[..=last_slash];
+                                        let bold = &file_name[last_slash + 1..];
+                                        (SharedString::from(prefix), SharedString::from(bold))
+                                    } else {
+                                        (
+                                            SharedString::default(),
+                                            SharedString::from(file_name.as_str()),
+                                        )
+                                    }
+                                })
+                                .unzip();
+
+                        // Update selected files count
+                        let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
+
+                        let file_model = std::rc::Rc::new(VecModel::from(file_items));
+                        app.global::<AppState>().set_file_cr_list(file_model.into());
+
+                        let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
+                        let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
+                        app.global::<AppState>()
+                            .set_file_text_prefixes(text_prefixes_model.into());
+                        app.global::<AppState>()
+                            .set_file_text_bolds(text_bolds_model.into());
+                        app.global::<AppState>()
+                            .set_selected_files_count(selected_count);
+
+                        // Reset file selection and code preview
+                        app.global::<AppState>().set_selected_file_index(-1);
+                        app.global::<AppState>()
+                            .set_code_preview(SharedString::from(""));
+                    }
+                }
+            }
+        }
+    });
+}
+
+/// Setup the file_filter_changed callback for filtering files by text
+fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_file_filter_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |filter_text| {
+            log::info!("File filter changed: {}", filter_text);
+            if let Some(app) = app_weak.upgrade() {
+                let filter_lower = filter_text.to_string().to_lowercase();
+
+                // Get all files
+                let dto = ListRustFilesDto {
+                    only_list_already_existing: false,
+                };
+
+                if let Ok(result) = rust_file_generation_commands::list_rust_files(&ctx, &dto) {
+                    // Get current group selection to maintain checked state
+                    let group_list = app.global::<AppState>().get_group_cr_list();
+                    let group_names = app.global::<AppState>().get_group_list();
+
+                    // Find which group is checked
+                    let mut checked_group_name = "All".to_string();
+                    for i in 0..group_list.row_count() {
+                        if let Some(item) = group_list.row_data(i) {
+                            if item.checked {
+                                if item.id == 0 {
+                                    checked_group_name = "All".to_string();
+                                } else if (item.id as usize) < group_names.row_count() {
+                                    checked_group_name = group_names
+                                        .row_data(item.id as usize)
+                                        .unwrap_or_default()
+                                        .to_string();
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    // Filter files by text and build list
+                    let filtered_indices: Vec<usize> = result
+                        .file_names
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, file_name)| {
+                            filter_lower.is_empty()
+                                || file_name.to_lowercase().contains(&filter_lower)
+                        })
+                        .map(|(idx, _)| idx)
+                        .collect();
+
+                    let file_items: Vec<ListItem> = filtered_indices
+                        .iter()
+                        .map(|&idx| {
+                            let file_name = &result.file_names[idx];
+                            let file_group = &result.file_groups[idx];
+                            let is_checked =
+                                checked_group_name == "All" || file_group == &checked_group_name;
+                            ListItem {
+                                id: result.file_ids[idx] as i32,
+                                text: SharedString::from(file_name.as_str()),
+                                subtitle: SharedString::default(),
+                                checked: is_checked,
+                            }
+                        })
+                        .collect();
+
+                    // Compute text prefixes and bolds for filtered files
+                    let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
+                        filtered_indices
+                            .iter()
+                            .map(|&idx| {
+                                let file_name = &result.file_names[idx];
+                                if let Some(last_slash) = file_name.rfind('/') {
+                                    let prefix = &file_name[..=last_slash];
+                                    let bold = &file_name[last_slash + 1..];
+                                    (SharedString::from(prefix), SharedString::from(bold))
+                                } else {
+                                    (
+                                        SharedString::default(),
+                                        SharedString::from(file_name.as_str()),
+                                    )
+                                }
+                            })
+                            .unzip();
+
+                    // Update selected files count (only count checked files that are visible)
+                    let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
+
+                    let file_model = std::rc::Rc::new(VecModel::from(file_items));
+                    app.global::<AppState>().set_file_cr_list(file_model.into());
+
+                    let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
+                    let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
+                    app.global::<AppState>()
+                        .set_file_text_prefixes(text_prefixes_model.into());
+                    app.global::<AppState>()
+                        .set_file_text_bolds(text_bolds_model.into());
+                    app.global::<AppState>()
+                        .set_selected_files_count(selected_count);
+                }
+            }
+        }
+    });
+}
+
+/// Setup the file_check_changed callback for updating selected files count
+fn setup_file_check_changed_callback(app: &App, _app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_file_check_changed({
+        let app_weak = app.as_weak();
+        move |file_id, checked| {
+            log::info!("File check changed: id={}, checked={}", file_id, checked);
+            if let Some(app) = app_weak.upgrade() {
+                // Update the checked state in the file list model
+                let file_list = app.global::<AppState>().get_file_cr_list();
+                let mut updated_files: Vec<ListItem> = Vec::new();
+
+                for i in 0..file_list.row_count() {
+                    if let Some(mut item) = file_list.row_data(i) {
+                        if item.id == file_id {
+                            item.checked = checked;
+                        }
+                        updated_files.push(item);
+                    }
+                }
+
+                // Recalculate selected files count
+                let selected_count = updated_files.iter().filter(|f| f.checked).count() as i32;
+
+                let file_model = std::rc::Rc::new(VecModel::from(updated_files));
+                app.global::<AppState>().set_file_cr_list(file_model.into());
+                app.global::<AppState>()
+                    .set_selected_files_count(selected_count);
             }
         }
     });
@@ -437,4 +746,9 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_group_selected_callback(app, app_context);
     setup_file_selected_callback(app, app_context);
     setup_refresh_generate_tab_callback(app, app_context);
+
+    // Setup group check, file check, and file filter callbacks
+    setup_group_check_changed_callback(app, app_context);
+    setup_file_check_changed_callback(app, app_context);
+    setup_file_filter_changed_callback(app, app_context);
 }

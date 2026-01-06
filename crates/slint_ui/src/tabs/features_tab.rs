@@ -16,7 +16,8 @@ use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
 use crate::commands::{
-    dto_commands, dto_field_commands, feature_commands, root_commands, use_case_commands,
+    dto_commands, dto_field_commands, entity_commands, feature_commands, root_commands,
+    use_case_commands,
 };
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
@@ -577,6 +578,72 @@ fn load_use_case_dtos(
     }
 }
 
+/// Fill the use case entity list with all entities, marking which are associated with the use case
+fn fill_use_case_entity_list(app: &App, app_context: &Arc<AppContext>) {
+    let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+    if use_case_id < 0 {
+        // Clear the list if no use case is selected
+        let empty_model = std::rc::Rc::new(slint::VecModel::<ListItem>::default());
+        app.global::<FeaturesTabState>()
+            .set_use_case_entity_cr_list(empty_model.into());
+        return;
+    }
+
+    // Get all entity IDs from root
+    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+    let all_entity_ids_res =
+        root_commands::get_root_relationship(app_context, &root_id, &RootRelationshipField::Entities);
+
+    let all_entity_ids = match all_entity_ids_res {
+        Ok(ids) => ids,
+        Err(e) => {
+            log::error!("Failed to get all entities from root: {}", e);
+            return;
+        }
+    };
+
+    // Get entity IDs associated with this use case
+    let use_case_entity_ids_res = use_case_commands::get_use_case_relationship(
+        app_context,
+        &(use_case_id as common::types::EntityId),
+        &UseCaseRelationshipField::Entities,
+    );
+
+    let use_case_entity_ids: Vec<common::types::EntityId> = match use_case_entity_ids_res {
+        Ok(ids) => ids,
+        Err(e) => {
+            log::error!("Failed to get use case entities: {}", e);
+            Vec::new()
+        }
+    };
+
+    // Get all entity details
+    match entity_commands::get_entity_multi(app_context, &all_entity_ids) {
+        Ok(entities_options) => {
+            let items: Vec<ListItem> = entities_options
+                .iter()
+                .filter_map(|opt| opt.as_ref())
+                .map(|entity| {
+                    let is_checked = use_case_entity_ids.contains(&entity.id);
+                    ListItem {
+                        id: entity.id as i32,
+                        text: slint::SharedString::from(entity.name.as_str()),
+                        subtitle: slint::SharedString::default(),
+                        checked: is_checked,
+                    }
+                })
+                .collect();
+
+            let model = std::rc::Rc::new(slint::VecModel::from(items));
+            app.global::<FeaturesTabState>()
+                .set_use_case_entity_cr_list(model.into());
+        }
+        Err(e) => {
+            log::error!("Failed to fetch entities: {}", e);
+        }
+    }
+}
+
 /// Helper function to update a DTO with new values
 fn update_dto_helper<F>(app_context: &Arc<AppContext>, dto_id: i32, update_fn: F)
 where
@@ -857,6 +924,8 @@ fn setup_select_use_case_callbacks(app: &App, app_context: &Arc<AppContext>) {
                             fill_use_case_form(&app, &use_case);
                             // Load DTOs for the selected use case
                             load_use_case_dtos(&app, &ctx, use_case.id);
+                            // Load entities for the selected use case
+                            fill_use_case_entity_list(&app, &ctx);
                         }
                         _ => {
                             clear_use_case_form(&app);
@@ -987,6 +1056,73 @@ fn setup_use_case_long_operation_callback(app: &App, app_context: &Arc<AppContex
                     update_use_case_helper(&ctx, use_case_id, |use_case| {
                         use_case.long_operation = value;
                     });
+                }
+            }
+        });
+}
+
+fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_use_case_entity_check_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |entity_id, checked| {
+                if let Some(app) = app_weak.upgrade() {
+                    let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+                    if use_case_id < 0 {
+                        return;
+                    }
+
+                    // Get current entity IDs for this use case
+                    let current_entity_ids_res = use_case_commands::get_use_case_relationship(
+                        &ctx,
+                        &(use_case_id as common::types::EntityId),
+                        &UseCaseRelationshipField::Entities,
+                    );
+
+                    let mut entity_ids: Vec<common::types::EntityId> = match current_entity_ids_res {
+                        Ok(ids) => ids,
+                        Err(e) => {
+                            log::error!("Failed to get use case entities: {}", e);
+                            return;
+                        }
+                    };
+
+                    let entity_id_u64 = entity_id as common::types::EntityId;
+
+                    if checked {
+                        // Add entity if not already present
+                        if !entity_ids.contains(&entity_id_u64) {
+                            entity_ids.push(entity_id_u64);
+                        }
+                    } else {
+                        // Remove entity
+                        entity_ids.retain(|&id| id != entity_id_u64);
+                    }
+
+                    // Update the relationship
+                    let relationship_dto = UseCaseRelationshipDto {
+                        id: use_case_id as common::types::EntityId,
+                        field: UseCaseRelationshipField::Entities,
+                        right_ids: entity_ids,
+                    };
+
+                    match use_case_commands::set_use_case_relationship(&ctx, &relationship_dto) {
+                        Ok(()) => {
+                            log::info!(
+                                "Use case entity {} {}",
+                                entity_id,
+                                if checked { "added" } else { "removed" }
+                            );
+                            // Refresh the entity list to reflect the change
+                            fill_use_case_entity_list(&app, &ctx);
+                        }
+                        Err(e) => {
+                            log::error!("Failed to update use case entities: {}", e);
+                            // Refresh to revert UI state
+                            fill_use_case_entity_list(&app, &ctx);
+                        }
+                    }
                 }
             }
         });
@@ -1605,6 +1741,9 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_use_case_undoable_callback(app, app_context);
     setup_use_case_read_only_callback(app, app_context);
     setup_use_case_long_operation_callback(app, app_context);
+
+    // Use case entities callback
+    setup_use_case_entity_check_callback(app, app_context);
 
     // DTO In callbacks
     setup_dto_in_enabled_callback(app, app_context);

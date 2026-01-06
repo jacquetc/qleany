@@ -402,5 +402,39 @@ export component DtoDetails inherits Rectangle {
                 }
             }
         }
+
+        // ====== Entities Tab ======
+        Tab {
+            title: "Entities";
+
+            VerticalLayout {
+                spacing: 0px;
+
+                // Header
+                SectionHeader {
+                    title: "Associated Entities";
+                }
+
+                Rectangle {
+                    height: 1px;
+                    background: #dee2e6;
+                }
+
+                // Entities list (checkable)
+                Rectangle {
+                    vertical-stretch: 1;
+
+                    use_case_entity_list := CheckableReorderableList {
+                        items: FeaturesTabState.use_case_entity_cr_list;
+                        reorderable: false;
+                        enable-checkbox: true;
+                        enable-delete: false;
+                        request-check-change(id, checked) => {
+                            FeaturesTabState.use_case_entity_check_changed(id, checked);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

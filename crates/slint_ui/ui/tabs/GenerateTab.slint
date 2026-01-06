@@ -1,4 +1,4 @@
-import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView } from "std-widgets.slint";
+import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView, LineEdit } from "std-widgets.slint";
 import { GenerateCommands, AppState, CRListItem } from "../globals.slint";
 import { StyledButton } from "../components/buttons.slint";
 import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
@@ -68,13 +68,15 @@ export component GenerateTab inherits Rectangle {
             
             Button {
                 text: "List Rust Files";
-                clicked => { GenerateCommands.list_files(); }
+                clicked => {
+                    GenerateCommands.list_files();
+                     }
                 primary: true;
             }
             
             Button {
-                text: AppState.generate_is_running ? "Generating..." : "Generate";
-                enabled: !AppState.generate_is_running;
+                text: AppState.generate_is_running ? "Generating..." : "Generate (" + AppState.selected_files_count + ")";
+                enabled: !AppState.generate_is_running && AppState.selected_files_count > 0;
                 clicked => { GenerateCommands.start_generate(); }
                 primary: true;
             }
@@ -122,6 +124,9 @@ export component GenerateTab inherits Rectangle {
                                 AppState.selected_group_index = id;
                                 AppState.group_selected(id);
                             }
+                            request-check-change(id, checked) => {
+                                AppState.group_check_changed(id, checked);
+                            }
                         }
                     }
                 }
@@ -138,8 +143,33 @@ export component GenerateTab inherits Rectangle {
                 border-color: #dee2e6;
 
                 VerticalLayout {
-                    SectionHeader {
-                        title: "Files";
+                    // Custom header with filter input
+                    Rectangle {
+                        height: 48px;
+                        background: #f8f9fa;
+                        
+                        HorizontalLayout {
+                            padding: 8px;
+                            spacing: 8px;
+                            alignment: center;
+                            
+                            Text {
+                                text: "Files";
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+                            
+                            LineEdit {
+                                horizontal-stretch: 1;
+                                placeholder-text: "Filter...";
+                                text <=> AppState.file_filter_text;
+                                edited => {
+                                    AppState.file_filter_changed(self.text);
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -155,9 +185,16 @@ export component GenerateTab inherits Rectangle {
                             reorderable: false;
                             enable-checkbox: true;
                             selected-id: AppState.selected_file_index;
+                            bold-after-slash: true;
+                            text-align-right: true;
+                            text-prefixes: AppState.file_text_prefixes;
+                            text-bolds: AppState.file_text_bolds;
                             selection-changed(id) => {
                                 AppState.selected_file_index = id;
                                 AppState.file_selected(id);
+                            }
+                            request-check-change(id, checked) => {
+                                AppState.file_check_changed(id, checked);
                             }
                         }
                     }
