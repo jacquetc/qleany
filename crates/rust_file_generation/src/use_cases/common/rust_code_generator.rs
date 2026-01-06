@@ -250,16 +250,30 @@ impl SnapshotBuilder {
             .get_entity(entity_id)?
             .ok_or_else(|| anyhow!("Entity not found"))?;
 
+
+        let mut fields_vec: Vec<Field> = Vec::new();
+
+        // Load fields from the inherited entity first, if any
+        if let Some(parent_entity_id) = entity.inherits_from {
+            let parent_entity_vm = Self::get_entity_vm(uow, &parent_entity_id)?;
+            for parent_field_vm in &parent_entity_vm.fields {
+                fields_vec.push(parent_field_vm.inner.clone());
+            }
+        }
+
         // Load fields belonging to the entity
-        let fields_vec: Vec<Field> = uow
+        fields_vec.extend(uow
             .get_field_multi(&entity.fields)?
             .into_iter()
-            .filter_map(|f| f)
-            .collect();
+            .filter_map(|f| f));
 
         // Build FieldVMs with the same Rust type mapping as used elsewhere
         let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
         for f in &fields_vec {
+            if f.name == "id" {
+                continue; // skip id field
+            }
+
             let rust_base_type = match f.field_type {
                 FieldType::Boolean => "bool".to_string(),
                 FieldType::Integer => "i64".to_string(),
@@ -650,14 +664,15 @@ impl SnapshotBuilder {
                     if ent_opt.only_for_heritage {
                         continue;
                     }
-                    if file.template_name.starts_with("direct_access_")
-                        || file.template_name.contains("entity_")
-                        || file.template_name.contains("common_entity_")
-                    {
-                        if !ent_opt.allow_direct_access {
-                            continue;
-                        }
-                    }
+                    //TODO: commented out for now; revisit later
+                    // if file.template_name.starts_with("direct_access_")
+                    //     || file.template_name.contains("entity_")
+                    //     || file.template_name.contains("common_entity_")
+                    // {
+                    //     if !ent_opt.allow_direct_access {
+                    //         continue;
+                    //     }
+                    // }
                     // load fields
                     let entity_fields: Vec<Field> = uow
                         .get_field_multi(&ent_opt.fields)?
@@ -685,6 +700,7 @@ impl SnapshotBuilder {
                     .into_iter()
                     .filter_map(|f| f)
                     .collect();
+                // load fields ao as to list entity dependencies
                 for field in &entity_fields {
                     if let Some(eid) = field.entity {
                         if field.field_type == FieldType::Entity {

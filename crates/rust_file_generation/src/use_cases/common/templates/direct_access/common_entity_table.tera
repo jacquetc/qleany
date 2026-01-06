@@ -19,7 +19,11 @@ const {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entiti
 {%- endfor %}
 // backward relationships
 {% for rid, r in s.entities[e].backward_relationships %}
+{%- if r.inner.left_entity == e %}
+const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction");
+{%- else %}
 const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction");
+{%- endif %}
 {%- endfor %}
 
 {% if s.entities[e].forward_relationships | length > 0 %}
@@ -217,11 +221,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
+
+        // forward relationships
         {% for rid, r in s.entities[e].forward_relationships %}
         let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {% endfor %}
+
+        // backward relationships
         {% for rid, r in s.entities[e].backward_relationships %}
-        let mut backward_{{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+        let mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         for id in ids {
@@ -232,7 +240,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {% endif %}
             {% endfor %}
             {% for rid, r in s.entities[e].backward_relationships %}
-            db_helpers::delete_from_backward_junction_table(&mut backward_{{ r.field_snake_name }}_junction_table, id)?;
+            db_helpers::delete_from_backward_junction_table(&mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table, id)?;
             {% endfor %}
         }
         Ok(())

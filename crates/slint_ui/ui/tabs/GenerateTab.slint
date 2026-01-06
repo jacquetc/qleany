@@ -169,6 +169,16 @@ export component GenerateTab inherits Rectangle {
                                     AppState.file_filter_changed(self.text);
                                 }
                             }
+
+                            Button {
+                                text: "Select All";
+                                clicked => { AppState.select_all_files(); }
+                            }
+
+                            Button {
+                                text: "Unselect All";
+                                clicked => { AppState.unselect_all_files(); }
+                            }
                         }
                     }
 

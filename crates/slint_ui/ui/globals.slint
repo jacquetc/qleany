@@ -284,4 +284,7 @@ export global AppState {
     callback group_check_changed(int, bool);
     // File check change callback (for updating selected files count)
     callback file_check_changed(int, bool);
+    // Select/Unselect all files
+    callback select_all_files();
+    callback unselect_all_files();
 }

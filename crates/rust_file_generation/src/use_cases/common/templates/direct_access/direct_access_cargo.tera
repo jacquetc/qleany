@@ -14,6 +14,7 @@ common = { path = "../common" }
 anyhow = { workspace = true }
 serde = { version = "1", features = ["derive"], workspace = true }
 macros = { path = "../macros" }
+chrono = { version = "0.4" , features = ["serde"] }
 
 [lints]
 workspace = true

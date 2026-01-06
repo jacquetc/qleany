@@ -173,8 +173,22 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
 /// Filter files by selected group
 fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: i32) {
     if group_index < 0 {
+        let was_saved = app.global::<AppState>().get_manifest_is_saved();
         // No group selected, show all files
         refresh_file_lists(app, app_context);
+
+        // Re-apply manifest_is_saved after a short delay
+        Timer::single_shot(std::time::Duration::from_millis(800), {
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if was_saved {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        println!("Re-applied manifest_is_saved after refresh");
+                    }
+                }
+            }
+        });
         return;
     }
 
@@ -440,7 +454,18 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
         move |group_index| {
             log::info!("Group selected: {}", group_index);
             if let Some(app) = app_weak.upgrade() {
+                let was_saved = app.global::<AppState>().get_manifest_is_saved();
+
                 filter_files_by_group(&app, &ctx, group_index);
+
+
+                // Re-apply manifest_is_saved after a short delay
+                Timer::single_shot(std::time::Duration::from_millis(800), move || {
+                    if was_saved {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        println!("Re-applied manifest_is_saved after refresh");
+                    }
+                });
             }
         }
     });
@@ -493,7 +518,10 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
         let app_weak = app.as_weak();
         move |group_id, checked| {
             log::info!("Group check changed: id={}, checked={}", group_id, checked);
+
             if let Some(app) = app_weak.upgrade() {
+                let was_saved = app.global::<AppState>().get_manifest_is_saved();
+                
                 if checked {
                     // When a group is checked, uncheck all other groups and display only files in this group
                     let group_list = app.global::<AppState>().get_group_cr_list();
@@ -591,6 +619,15 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         app.global::<AppState>().set_selected_file_index(-1);
                         app.global::<AppState>()
                             .set_code_preview(SharedString::from(""));
+
+
+                        // Re-apply manifest_is_saved after a short delay
+                        Timer::single_shot(std::time::Duration::from_millis(800), move || {
+                            if was_saved {
+                                app.global::<AppState>().set_manifest_is_saved(true);
+                                println!("Re-applied manifest_is_saved after refresh");
+                            }
+                        });
                     }
                 }
             }
@@ -735,6 +772,58 @@ fn setup_file_check_changed_callback(app: &App, _app_context: &Arc<AppContext>) 
     });
 }
 
+/// Setup the select_all_files callback
+fn setup_select_all_files_callback(app: &App, _app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_select_all_files({
+        let app_weak = app.as_weak();
+        move || {
+            log::info!("Select All Files clicked");
+            if let Some(app) = app_weak.upgrade() {
+                let file_list = app.global::<AppState>().get_file_cr_list();
+                let mut updated_files: Vec<ListItem> = Vec::new();
+
+                for i in 0..file_list.row_count() {
+                    if let Some(mut item) = file_list.row_data(i) {
+                        item.checked = true;
+                        updated_files.push(item);
+                    }
+                }
+
+                let selected_count = updated_files.len() as i32;
+                let file_model = std::rc::Rc::new(VecModel::from(updated_files));
+                app.global::<AppState>().set_file_cr_list(file_model.into());
+                app.global::<AppState>()
+                    .set_selected_files_count(selected_count);
+            }
+        }
+    });
+}
+
+/// Setup the unselect_all_files callback
+fn setup_unselect_all_files_callback(app: &App, _app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_unselect_all_files({
+        let app_weak = app.as_weak();
+        move || {
+            log::info!("Unselect All Files clicked");
+            if let Some(app) = app_weak.upgrade() {
+                let file_list = app.global::<AppState>().get_file_cr_list();
+                let mut updated_files: Vec<ListItem> = Vec::new();
+
+                for i in 0..file_list.row_count() {
+                    if let Some(mut item) = file_list.row_data(i) {
+                        item.checked = false;
+                        updated_files.push(item);
+                    }
+                }
+
+                let file_model = std::rc::Rc::new(VecModel::from(updated_files));
+                app.global::<AppState>().set_file_cr_list(file_model.into());
+                app.global::<AppState>().set_selected_files_count(0);
+            }
+        }
+    });
+}
+
 /// Initialize all generate tab related subscriptions and callbacks
 pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Setup command callbacks
@@ -751,4 +840,6 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_group_check_changed_callback(app, app_context);
     setup_file_check_changed_callback(app, app_context);
     setup_file_filter_changed_callback(app, app_context);
+    setup_select_all_files_callback(app, app_context);
+    setup_unselect_all_files_callback(app, app_context);
 }
