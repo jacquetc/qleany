@@ -58,8 +58,17 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 //TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+// DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
+// GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//
+// You have here a long operation read-only unit of work.
+//
+// RO means Read Only, so *RO actions should be used here.
+// Don't forget to set thread_safe = true for long operation's unit of work.
+// Do not mix read-only and write actions in the same unit of work.
+//
+// Exactly the same macros (without thread_safe) must be set in the use case uow trait file in ../use_cases/{{ uc.snake_name }}_uc.rs
+//
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO", thread_safe = true)]
@@ -136,7 +145,18 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
         Ok(())
     }
 }
-
+//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
+//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
+//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//
+// You have here a long operation read-write unit of work.
+//
+// RO means Read Only, so *RO actions should not used be here.
+// Don't forget to set thread_safe = true for long operation's unit of work.
+// Do not mix read-only and write actions in the same unit of work.
+//
+// Exactly the same macros must be set in the use case uow trait file in ../use_cases/{{ uc.snake_name }}_uc.rs
+//
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get", thread_safe = true)]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti", thread_safe = true)]
@@ -223,7 +243,17 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 
-
+//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
+//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
+//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//
+// You have here a read-only unit of work.
+//
+// RO means Read Only, so *RO actions should be used here.
+// Do not mix read-only and write actions in the same unit of work.
+//
+// Exactly the same macros must be set in the use case uow trait file in ../use_cases/{{ uc.snake_name }}_uc.rs
+//
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO")]
@@ -303,6 +333,18 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 
+//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
+//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
+//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//
+// You have here a read-write unit of work.
+//
+// RO means Read Only, so *RO actions should not used be here.
+// Don't forget to set thread_safe = true for long operation's unit of work.
+// Do not mix read-only and write actions in the same unit of work.
+//
+// Exactly the same macros must be set in the use case uow trait file in ../use_cases/{{ uc.snake_name }}_uc.rs
+//
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
