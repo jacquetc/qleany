@@ -1,17 +1,22 @@
+use crate::units_of_work::close_uow::CloseUnitOfWorkFactory;
+use crate::units_of_work::load_uow::LoadUnitOfWorkFactory;
+use crate::units_of_work::new_uow::NewUnitOfWorkFactory;
+use crate::units_of_work::save_uow::SaveUnitOfWorkFactory;
+use crate::use_cases::close_uc::CloseUseCase;
+use crate::use_cases::load_uc::LoadUseCase;
+use crate::use_cases::new_uc::NewUseCase;
+use crate::use_cases::save_uc::SaveUseCase;
 use crate::LoadDto;
 use crate::LoadReturnDto;
 use crate::SaveDto;
-use crate::units_of_work::load_uow::LoadUnitOfWorkFactory;
-use crate::units_of_work::save_uow::SaveUnitOfWorkFactory;
-use crate::use_cases::load_uc::LoadUseCase;
-use crate::use_cases::save_uc::SaveUseCase;
 use anyhow::Result;
-use common::event::{Event, HandlingManifestEvent, Origin};
+use common::event::{Event, Origin};
 
-use common::event::HandlingManifestEvent::Loaded;
-use common::event::HandlingManifestEvent::Saved;
+use common::event::HandlingManifestEvent::Close;
+use common::event::HandlingManifestEvent::Load;
+use common::event::HandlingManifestEvent::New;
+use common::event::HandlingManifestEvent::Save;
 
-use crate::units_of_work::close_uow::CloseUnitOfWorkFactory;
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
@@ -25,7 +30,7 @@ pub fn load(
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::HandlingManifest(Loaded),
+        origin: Origin::HandlingManifest(Load),
         ids: vec![],
         data: None,
     });
@@ -38,21 +43,35 @@ pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) ->
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::HandlingManifest(Saved),
+        origin: Origin::HandlingManifest(Save),
         ids: vec![],
         data: None,
     });
     Ok(return_dto)
 }
 
-pub fn close(_db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
-    let uow_context = CloseUnitOfWorkFactory::new(&_db_context, &event_hub);
-    let mut uc = crate::use_cases::close_uc::CloseUseCase::new(Box::new(uow_context));
-    uc.execute()?;
+pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
+    let uow_context = NewUnitOfWorkFactory::new(&db_context, &event_hub);
+    let mut uc = NewUseCase::new(Box::new(uow_context));
+    let return_dto = uc.execute()?;
+    // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::HandlingManifest(HandlingManifestEvent::Closed),
+        origin: Origin::HandlingManifest(New),
         ids: vec![],
         data: None,
     });
-    Ok(())
+    Ok(return_dto)
+}
+
+pub fn close(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
+    let uow_context = CloseUnitOfWorkFactory::new(&db_context, &event_hub);
+    let mut uc = CloseUseCase::new(Box::new(uow_context));
+    let return_dto = uc.execute()?;
+    // Notify that the handling manifest has been loaded
+    event_hub.send_event(Event {
+        origin: Origin::HandlingManifest(Close),
+        ids: vec![],
+        data: None,
+    });
+    Ok(return_dto)
 }

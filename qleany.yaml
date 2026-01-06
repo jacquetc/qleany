@@ -315,9 +315,14 @@ features:
   - name: new
     validator: false
     entities:
-    - Root
-    - Entity
-    - Field
+      - Root
+      - Entity
+      - Field
+    undoable: false
+  - name: close
+    validator: false
+    entities:
+      - Root
     undoable: false
 - name: rust_file_generation
   use_cases:

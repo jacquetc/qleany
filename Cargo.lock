@@ -1052,7 +1052,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
@@ -1266,7 +1266,7 @@ dependencies = [
 
 [[package]]
 name = "cpp_qt_file_generation"
-version = "0.0.1"
+version = "2.0.0"
 
 [[package]]
 name = "cpufeatures"
@@ -1421,7 +1421,7 @@ dependencies = [
 
 [[package]]
 name = "direct_access"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "common",
@@ -2294,7 +2294,7 @@ dependencies = [
 
 [[package]]
 name = "handling_manifest"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "common",
@@ -3359,7 +3359,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4443,11 +4443,11 @@ dependencies = [
 
 [[package]]
 name = "python_file_generation"
-version = "0.0.1"
+version = "2.0.0"
 
 [[package]]
 name = "qleany"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
@@ -4468,7 +4468,7 @@ dependencies = [
 
 [[package]]
 name = "qleany-cli"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -4899,7 +4899,7 @@ checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
 
 [[package]]
 name = "rust_file_generation"
-version = "0.0.1"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "chrono",

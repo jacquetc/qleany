@@ -20,7 +20,7 @@ fn subscribe_loaded_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Loaded), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Load), {
         let ctx = Arc::clone(&app_context);
         let app_weak = app.as_weak();
         move |event| {
@@ -44,7 +44,7 @@ fn subscribe_closed_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Closed), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
         let ctx = Arc::clone(&app_context);
         let app_weak = app.as_weak();
         move |event| {
