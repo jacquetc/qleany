@@ -28,7 +28,11 @@ Qleany generates this scaffolding so you can focus on business logic. It targets
 | Language | Status | Database | Frontend |
 |----------|--------|----------|----------|
 | C++/Qt6 | ✓ Done | SQLite | QML with reactive models |
-| Rust | ✓ Done | redb | Slint |
+| Rust | ✓ Done | redb | CLI |
+
+**Rust frontend examples (not generated, but working references):**
+- **Slint UI**: [qleany/crates/slint_ui](https://github.com/jacquetc/qleany/tree/generator_in_rust/crates/slint_ui)
+- **Tauri/React**: [qleany/crates/qleany-app](https://github.com/jacquetc/qleany/tree/885c3ac6fdf6f115aed2c5a30fd26b81e331b4dd/crates/qleany-app)
 
 ## Architecture Background
 
