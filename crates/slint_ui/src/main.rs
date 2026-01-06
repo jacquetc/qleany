@@ -66,13 +66,15 @@ fn main() {
             if app.global::<AppState>().get_manifest_is_saved()
                 || app.global::<AppState>().get_force_exit()
             {
-                log::info!("Closing Manifest before exit");
-                match handling_manifest_commands::close_manifest(&ctx) {
-                    Ok(()) => {
-                        log::info!("Manifest closed successfully");
-                    }
-                    Err(e) => {
-                        log::error!("Failed to close manifest: {}", e);
+                if app.global::<AppState>().get_manifest_is_open() {
+                    log::info!("Closing Manifest before exit");
+                    match handling_manifest_commands::close_manifest(&ctx) {
+                        Ok(()) => {
+                            log::info!("Manifest closed successfully");
+                        }
+                        Err(e) => {
+                            log::error!("Failed to close manifest: {}", e);
+                        }
                     }
                 }
                 ctx.shutdown();
