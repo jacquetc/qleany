@@ -519,7 +519,6 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     state.set_selected_field_name(field.name.clone().into());
     state.set_selected_field_type(field_type_to_string(&field.field_type).into());
     state.set_selected_field_entity(field.entity.map(|e| e as i32).unwrap_or(-1));
-    state.set_selected_field_is_primary_key(field.is_primary_key);
     state.set_selected_field_relationship(relationship_type_to_string(&field.relationship).into());
     state.set_selected_field_required(field.required);
     state.set_selected_field_single_model(field.single_model);
@@ -550,7 +549,6 @@ fn clear_field_form(app: &App) {
     state.set_selected_field_name("".into());
     state.set_selected_field_type("String".into());
     state.set_selected_field_entity(-1);
-    state.set_selected_field_is_primary_key(false);
     state.set_selected_field_relationship("one_to_one".into());
     state.set_selected_field_required(false);
     state.set_selected_field_single_model(true);
@@ -802,21 +800,6 @@ fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
-fn setup_field_is_primary_key_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>()
-        .on_field_is_primary_key_changed({
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move |value| {
-                if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                    update_field_helper(&ctx, field_id, |field| {
-                        field.is_primary_key = value;
-                    });
-                }
-            }
-        });
-}
 
 fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_strong_changed({
@@ -1108,10 +1091,9 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         name: "new_field".to_string(),
                         field_type: common::entities::FieldType::String,
                         entity: None,
-                        is_primary_key: false,
                         relationship: common::entities::RelationshipType::OneToOne,
                         required: false,
-                        single_model: true,
+                        single_model: false,
                         strong: true,
                         list_model: false,
                         list_model_displayed_field: None,
@@ -1256,7 +1238,6 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_field_name_callback(app, app_context);
     setup_field_type_callback(app, app_context);
     setup_field_entity_callback(app, app_context);
-    setup_field_is_primary_key_callback(app, app_context);
     setup_field_relationship_callback(app, app_context);
     setup_field_required_callback(app, app_context);
     setup_field_single_model_callback(app, app_context);

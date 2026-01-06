@@ -180,7 +180,6 @@ mod tests {
                 name: "single_child".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
-                is_primary_key: false,
                 relationship: RelationshipType::OneToOne,
                 required: true,
                 strong: true,
@@ -196,7 +195,6 @@ mod tests {
                 name: "multiple_children".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
-                is_primary_key: false,
                 relationship: RelationshipType::OrderedOneToMany,
                 required: false,
                 strong: true,

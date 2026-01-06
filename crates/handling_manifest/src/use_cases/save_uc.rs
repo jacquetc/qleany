@@ -163,11 +163,6 @@ impl SaveUseCase {
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),
-                            is_primary_key: if field.is_primary_key {
-                                Some(true)
-                            } else {
-                                None
-                            },
                             single_model: if field.single_model { Some(true) } else { None },
                             enum_name: field.enum_name.clone(),
                             enum_values: field.enum_values.clone(),

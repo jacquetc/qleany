@@ -47,9 +47,6 @@ pub struct Field {
     pub list_model_displayed_field: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_primary_key: Option<bool>,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub single_model: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]

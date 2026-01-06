@@ -218,7 +218,6 @@ impl LoadUseCase {
                                 .ok_or(anyhow::anyhow!("Entity not found"))
                         })
                         .transpose()?,
-                    is_primary_key: model_field.is_primary_key.unwrap_or_default(),
                     relationship,
                     required: model_field.required.unwrap_or_default(),
                     single_model: model_field.single_model.unwrap_or_default(),

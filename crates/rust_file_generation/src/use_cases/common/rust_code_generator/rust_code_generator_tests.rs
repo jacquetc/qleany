@@ -196,7 +196,6 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         name: "name".into(),
         field_type: FieldType::String,
         entity: Some(300),
-        is_primary_key: false,
         relationship: RelationshipType::OneToOne,
         required: false,
         single_model: true,

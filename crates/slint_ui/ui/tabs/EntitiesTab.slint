@@ -347,13 +347,6 @@ export component EntitiesTab inherits Rectangle {
                                 VerticalLayout {
                                     spacing: 8px;
 
-                                    CheckBox {
-                                        text: "Primary Key";
-                                        checked <=> EntitiesTabState.selected_field_is_primary_key;
-                                        toggled => {
-                                            EntitiesTabState.field_is_primary_key_changed(self.checked);
-                                        }
-                                    }
                                 }
                             }
 

@@ -89,7 +89,6 @@ pub struct Field {
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
-    pub is_primary_key: bool,
     pub relationship: RelationshipType,
     pub required: bool,
     pub single_model: bool,

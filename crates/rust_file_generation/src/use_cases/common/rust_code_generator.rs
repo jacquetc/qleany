@@ -1102,7 +1102,6 @@ mod tests {
             name: "name".to_string(),
             field_type: FieldType::Entity,
             entity: Some(entity_id),
-            is_primary_key: false,
             relationship: RelationshipType::OneToOne,
             required: false, // nullable
             single_model: true,
@@ -1117,7 +1116,6 @@ mod tests {
             name: "tags".to_string(),
             field_type: FieldType::String,
             entity: None,
-            is_primary_key: false,
             relationship: RelationshipType::OneToMany,
             required: false,
             single_model: true,
