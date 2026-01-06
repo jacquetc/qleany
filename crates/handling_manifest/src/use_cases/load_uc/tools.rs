@@ -166,7 +166,7 @@ mod tests {
             id: 1,
             name: "Parent".to_string(),
             only_for_heritage: false,
-            parent: None,
+            inherits_from: None,
             allow_direct_access: true,
             fields: vec![1, 2], // Field IDs
             relationships: vec![],

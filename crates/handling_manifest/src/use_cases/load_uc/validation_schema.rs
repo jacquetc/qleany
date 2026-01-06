@@ -51,7 +51,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                         "name": {
                             "type": "string"
                         },
-                        "parent": {
+                        "inherits_from": {
                             "type": "string"
                         },
                         "only_for_heritage": {

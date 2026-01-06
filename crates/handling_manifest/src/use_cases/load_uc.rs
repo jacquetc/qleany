@@ -145,7 +145,7 @@ impl LoadUseCase {
                 id: 0,
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
-                parent: None, // will be filled in later
+                inherits_from: None, // will be filled in later
                 allow_direct_access: model_entity.allow_direct_access,
                 fields: vec![],        // will be filled in later
                 relationships: vec![], // will be filled in later
@@ -242,13 +242,13 @@ impl LoadUseCase {
 
             // update entity with parent
 
-            if let Some(parent_name) = model_entity.parent.clone() {
+            if let Some(parent_name) = model_entity.inherits_from.clone() {
                 let parent_id = entities
                     .iter()
                     .find(|e| e.name == parent_name)
                     .map(|e| e.id)
                     .ok_or(anyhow::anyhow!("Parent not found"))?;
-                entity.parent = Some(parent_id);
+                entity.inherits_from = Some(parent_id);
             }
 
             // update entity in entities

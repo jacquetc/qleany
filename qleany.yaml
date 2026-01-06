@@ -16,8 +16,7 @@ entities:
   - name: id
     type: integer
 - name: Root
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: global
@@ -48,12 +47,17 @@ entities:
     list_model: true
     list_model_displayed_field: name
 - name: Entity
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
     type: string
+  - name: inherits_from
+    type: entity
+    entity: Entity
+    relationship: many_to_one
+  - name: only_for_heritage
+    type: boolean
   - name: fields
     type: entity
     entity: Field
@@ -67,8 +71,7 @@ entities:
     relationship: one_to_many
     strong: true
 - name: Field
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -112,8 +115,7 @@ entities:
   - name: list_model_displayed_field
     type: string
 - name: Feature
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -126,8 +128,7 @@ entities:
     list_model: true
     list_model_displayed_field: name
 - name: File
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -137,8 +138,7 @@ entities:
   - name: group
     type: string
 - name: UseCase
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -168,8 +168,7 @@ entities:
     relationship: one_to_one
     strong: true
 - name: Dto
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -182,8 +181,7 @@ entities:
     list_model: true
     list_model_displayed_field: name
 - name: DtoField
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
@@ -209,8 +207,7 @@ entities:
   - name: enum_values
     type: string
 - name: Global
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: language
@@ -224,8 +221,7 @@ entities:
   - name: prefix_path
     type: string
 - name: Relationship
-  only_for_heritage: false
-  parent: EntityBase
+  inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: left_entity_name
@@ -239,8 +235,8 @@ entities:
     enum_name: RelationshipType
     enum_values:
     - OneToOne
-    - OneToMany
     - ManyToOne
+    - OneToMany
     - ManyToMany
   - name: strength
     type: enum

@@ -1092,7 +1092,7 @@ mod tests {
             id: entity_id,
             name: "User".to_string(),
             only_for_heritage: false,
-            parent: None,
+            inherits_from: None,
             allow_direct_access: true,
             fields: vec![100, 101],
             relationships: vec![],

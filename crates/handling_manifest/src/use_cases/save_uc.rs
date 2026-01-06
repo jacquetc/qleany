@@ -117,7 +117,7 @@ impl SaveUseCase {
         let model_entities = entities
             .iter()
             .map(|entity| {
-                let parent = entity.parent.and_then(|parent_id| {
+                let inherits_from = entity.inherits_from.and_then(|parent_id| {
                     entities
                         .iter()
                         .find(|e| e.id == parent_id)
@@ -184,7 +184,7 @@ impl SaveUseCase {
                 model_structs::Entity {
                     name: entity.name.clone(),
                     only_for_heritage,
-                    parent,
+                    inherits_from,
                     allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
                 }

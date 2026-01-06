@@ -23,14 +23,14 @@ const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Ve
     TableDefinition::new("entity_from_use_case_entities_junction");
 const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("entity_from_field_entity_junction");
-const ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_entity_parent_junction");
+const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_entity_inherits_from_junction");
 
 fn get_junction_table_definition(
     field: &EntityRelationshipField,
 ) -> TableDefinition<EntityId, Vec<EntityId>> {
     match field {
-        EntityRelationshipField::Parent => ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE,
+        EntityRelationshipField::Parent => ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE,
         EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
         EntityRelationshipField::Relationships => {
             RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
@@ -81,7 +81,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         // open junction tables
         let mut parent_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -108,7 +108,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             };
             entity_table.insert(new_entity.id, new_entity.clone())?;
             // insert into junction tables
-            if let Some(parent) = new_entity.parent {
+            if let Some(parent) = new_entity.inherits_from {
                 parent_junction_table.insert(new_entity.id, vec![parent])?;
             }
             field_junction_table.insert(new_entity.id, new_entity.fields.clone())?;
@@ -131,7 +131,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         // open junction tables
         let parent_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -171,7 +171,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
-                entity.parent = parent;
+                entity.inherits_from = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
                 entities.push(Some(entity));
@@ -202,7 +202,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                         .map(|guard| guard.value().clone())
                         .unwrap_or_default();
 
-                    entity.parent = parent;
+                    entity.inherits_from = parent;
                     entity.fields = fields;
                     entity.relationships = relationships;
                     Some(entity)
@@ -222,7 +222,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         // open junction tables
         let mut parent_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -233,7 +233,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         for entity in entities {
             entity_table.insert(entity.id, entity)?;
             // update parent in junction table
-            if let Some(parent) = entity.parent {
+            if let Some(parent) = entity.inherits_from {
                 parent_junction_table.insert(entity.id, vec![parent])?;
             } else {
                 parent_junction_table.remove(entity.id)?;
@@ -251,7 +251,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         // open junction tables
         let mut parent_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let mut field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -365,7 +365,7 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
         // open junction tables
         let parent_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_ENTITY_PARENT_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let field_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
@@ -405,7 +405,7 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
                     .map(|guard| guard.value().clone())
                     .unwrap_or_default();
 
-                entity.parent = parent;
+                entity.inherits_from = parent;
                 entity.fields = fields;
                 entity.relationships = relationships;
                 entities.push(Some(entity));
@@ -436,7 +436,7 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
                         .map(|guard| guard.value().clone())
                         .unwrap_or_default();
 
-                    entity.parent = parent;
+                    entity.inherits_from = parent;
                     entity.fields = fields;
                     entity.relationships = relationships;
                     Some(entity)
