@@ -333,7 +333,7 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
                 let in_temp = app.global::<AppState>().get_generate_in_temp();
                 let root_path = ".".to_string();
                 let prefix = if in_temp {
-                    "temp_generated".to_string()
+                    "temp".to_string()
                 } else {
                     String::new()
                 };
@@ -521,7 +521,7 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
 
             if let Some(app) = app_weak.upgrade() {
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
-                
+
                 if checked {
                     // When a group is checked, uncheck all other groups and display only files in this group
                     let group_list = app.global::<AppState>().get_group_cr_list();

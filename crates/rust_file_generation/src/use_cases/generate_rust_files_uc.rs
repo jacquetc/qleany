@@ -32,6 +32,7 @@ impl GenerateRustFilesUseCase {
             dto: dto.clone(),
         }
     }
+
 }
 impl LongOperation for GenerateRustFilesUseCase {
     type Output = GenerateRustFilesReturnDto;
@@ -47,7 +48,6 @@ impl LongOperation for GenerateRustFilesUseCase {
         let start_time = std::time::Instant::now();
         let timestamp = chrono::Utc::now();
         let total = self.dto.file_ids.len().max(1); // avoid div by zero
-        let root_path = PathBuf::from(&self.dto.root_path);
         let prefix_path = if self.dto.prefix.is_empty() {
             PathBuf::new()
         } else {
@@ -66,6 +66,19 @@ impl LongOperation for GenerateRustFilesUseCase {
 
         let mut written_files: Vec<String> = Vec::new();
         let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
+
+        let root_path: PathBuf = if self.dto.root_path.is_empty() || self.dto.root_path == "." {
+            let manifest_absolute_path = uow_read.get_root_multi(&vec![])?
+                .into_iter()
+                .filter_map(|r| r)
+                .next()
+                .ok_or_else(|| anyhow!("Root entity not found"))?
+                .manifest_absolute_path;
+            PathBuf::from(manifest_absolute_path)
+        }
+        else {
+            PathBuf::from(&self.dto.root_path)
+        };
 
         println!(
             "Generating Rust files to root path: {}, with prefix: {}",
