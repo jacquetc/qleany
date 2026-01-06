@@ -15,6 +15,12 @@ entities:
   fields:
   - name: id
     type: integer
+  - name: created_at
+    type: datetime
+    strong: true
+  - name: updated_at
+    type: datetime
+    strong: true
 - name: Root
   inherits_from: EntityBase
   allow_direct_access: true
