@@ -104,7 +104,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         // delete all strong relationships, initiating a cascade delete
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong %}
-        {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+        {% if f.inner.relationship == "OneToOne" %}
             {% if f.required %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete(event_hub, &{{ f.snake_name }})?;
@@ -134,7 +134,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong %}
-        {% if f.inner.relationship == "OneToOne" or f.inner.relationship == "ManyToOne" %}
+        {% if f.inner.relationship == "OneToOne" %}
             {% if f.required %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
