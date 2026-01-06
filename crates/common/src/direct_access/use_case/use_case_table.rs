@@ -40,6 +40,16 @@ impl<'a> UseCaseRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         UseCaseRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(USE_CASE_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+        transaction.open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+        transaction.open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> UseCaseTable for UseCaseRedbTable<'a> {

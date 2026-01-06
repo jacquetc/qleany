@@ -36,6 +36,16 @@ impl<'a> RootRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         RootRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(ROOT_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
+        transaction.open_table(FILE_FROM_ROOT_FILES_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> RootTable for RootRedbTable<'a> {

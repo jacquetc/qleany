@@ -1,0 +1,25 @@
+use crate::direct_access::dto::dto_table::DtoRedbTable;
+use crate::direct_access::dto_field::dto_field_table::DtoFieldRedbTable;
+use crate::direct_access::entity::entity_table::EntityRedbTable;
+use crate::direct_access::feature::feature_table::FeatureRedbTable;
+use crate::direct_access::field::field_table::FieldRedbTable;
+use crate::direct_access::file::file_table::FileRedbTable;
+use crate::direct_access::global::global_table::GlobalRedbTable;
+use crate::direct_access::relationship::relationship_table::RelationshipRedbTable;
+use crate::direct_access::root::root_table::RootRedbTable;
+use crate::direct_access::use_case::use_case_table::UseCaseRedbTable;
+use redb::{Error, WriteTransaction};
+
+pub fn initialize_all_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    DtoRedbTable::init_tables(transaction)?;
+    DtoFieldRedbTable::init_tables(transaction)?;
+    EntityRedbTable::init_tables(transaction)?;
+    FeatureRedbTable::init_tables(transaction)?;
+    FieldRedbTable::init_tables(transaction)?;
+    FileRedbTable::init_tables(transaction)?;
+    GlobalRedbTable::init_tables(transaction)?;
+    RelationshipRedbTable::init_tables(transaction)?;
+    RootRedbTable::init_tables(transaction)?;
+    UseCaseRedbTable::init_tables(transaction)?;
+    Ok(())
+}

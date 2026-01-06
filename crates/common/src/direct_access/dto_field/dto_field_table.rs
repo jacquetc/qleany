@@ -22,6 +22,13 @@ impl<'a> DtoFieldRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         DtoFieldRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(DTO_FIELD_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {

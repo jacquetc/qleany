@@ -8,4 +8,5 @@ pub mod global;
 pub mod relationship;
 pub mod repository_factory;
 pub mod root;
+pub mod setup;
 pub mod use_case;

@@ -21,6 +21,13 @@ impl<'a> GlobalRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         GlobalRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(GLOBAL_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(GLOBAL_FROM_ROOT_GLOBAL_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> GlobalTable for GlobalRedbTable<'a> {

@@ -32,6 +32,14 @@ impl<'a> FieldRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         FieldRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(FIELD_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> FieldTable for FieldRedbTable<'a> {

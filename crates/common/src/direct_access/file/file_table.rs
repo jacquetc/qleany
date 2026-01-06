@@ -21,6 +21,13 @@ impl<'a> FileRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         FileRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(FILE_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(FILE_FROM_ROOT_FILE_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> FileTable for FileRedbTable<'a> {

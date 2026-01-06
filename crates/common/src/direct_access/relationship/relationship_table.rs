@@ -46,6 +46,15 @@ impl<'a> RelationshipRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         RelationshipRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(RELATIONSHIP_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> RelationshipTable for RelationshipRedbTable<'a> {

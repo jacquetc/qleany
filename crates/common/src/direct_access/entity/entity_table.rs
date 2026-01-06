@@ -46,6 +46,18 @@ impl<'a> EntityRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         EntityRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(ENTITY_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> EntityTable for EntityRedbTable<'a> {

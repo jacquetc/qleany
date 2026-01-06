@@ -32,6 +32,14 @@ impl<'a> FeatureRedbTable<'a> {
     pub fn new(transaction: &'a WriteTransaction) -> Self {
         FeatureRedbTable { transaction }
     }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table(FEATURE_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        transaction.open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+        transaction.open_table(FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE)?;
+        Ok(())
+    }
 }
 
 impl<'a> FeatureTable for FeatureRedbTable<'a> {
