@@ -1,0 +1,25 @@
+use super::RootUnitOfWorkROFactoryTrait;
+use anyhow::Result;
+use common::types::EntityId;
+
+pub struct GetRootRelationshipUseCase {
+    uow_factory: Box<dyn RootUnitOfWorkROFactoryTrait>,
+}
+
+impl GetRootRelationshipUseCase {
+    pub fn new(uow_factory: Box<dyn RootUnitOfWorkROFactoryTrait>) -> Self {
+        GetRootRelationshipUseCase { uow_factory }
+    }
+
+    pub fn execute(
+        &self,
+        id: &EntityId,
+        field: &common::direct_access::root::RootRelationshipField,
+    ) -> Result<Vec<EntityId>> {
+        let uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let roots = uow.get_root_relationship(id, field)?;
+        uow.end_transaction()?;
+        Ok(roots)
+    }
+}

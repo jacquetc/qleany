@@ -1,0 +1,438 @@
+import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox, TextEdit } from "std-widgets.slint";
+import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+
+export component EntitiesTab inherits Rectangle {
+    background: #ffffff;
+
+    VerticalLayout {
+        padding: 40px;
+        spacing: 0px;
+
+        // Title
+        Text {
+            text: "Entities";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        Rectangle { height: 24px; }
+
+        // Main content area - 3 columns
+        HorizontalLayout {
+            spacing: 0px;
+
+            // Column 1: Entity List
+            Rectangle {
+                width: 300px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Entities";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-entity-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-entity-touch := TouchArea {
+                                    clicked => {
+                                        EntitiesTabState.request_entity_addition();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        entity_list := CheckableReorderableList {
+
+                            items: EntitiesTabState.entity_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            enable-delete: true;
+                            selected-id: EntitiesTabState.selected_entity_id;
+                            selection-changed(id) => {
+                                EntitiesTabState.entity-selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                EntitiesTabState.request_entities_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                EntitiesTabState.request_entity_deletion(id);
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            // Divider
+            Divider {}
+
+            // Column 2: Entity Details + Fields
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    // Entity Details Section
+                    SectionHeader {
+                        title: EntitiesTabState.selected_entity_id >= 0 ? EntitiesTabState.selected_entity_name : "Select an entity";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    if EntitiesTabState.selected_entity_id >= 0 : Rectangle {
+                        height: 250px;
+                        
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 8px;
+                            
+                            Text {
+                                text: "Entity details will be displayed here";
+                                font-size: 14px;
+                                color: #868e96;
+                            }
+                        entityNameFormField := FormField {
+                            label: "Name";
+                            required: true;
+
+                            StyledLineEdit {
+                                text <=> EntitiesTabState.selected_entity_name;
+                                placeholder: "Enter the entity name (e.g., Person)";
+                                edited(text) => {
+                                    EntitiesTabState.entity_name_changed(text);
+                                }
+                            }
+                        }
+
+                        FormField {
+                            label: "Only for heritage";
+
+                            CheckBox {
+                                text: "Only for heritage";
+                                checked <=> EntitiesTabState.selected_entity_only_for_heritage;
+                                toggled => {
+                                    EntitiesTabState.entity_only_for_heritage_changed(self.checked);
+                                }
+                            }
+                        }
+
+                        FormField {
+                            label: "Inherits from";
+
+                            inherits-from-combo := ComboBox {
+                                model: EntitiesTabState.inherits_from_options;
+                                current-value <=> EntitiesTabState.selected_entity_inherits_from_value;
+                                selected(value) => {
+                                    EntitiesTabState.entity_inherits_from_changed(inherits-from-combo.current-index);
+                                }
+                            }
+                        }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    // Fields Section
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Fields";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-field-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-field-touch := TouchArea {
+                                    clicked => {
+                                        EntitiesTabState.request_field_addition();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        field_list := CheckableReorderableList {
+                            items: EntitiesTabState.field_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            enable-delete: true;
+                            selected-id: EntitiesTabState.selected_field_id;
+                            selection-changed(id) => {
+                                EntitiesTabState.field_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                EntitiesTabState.request_fields_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                EntitiesTabState.request_field_deletion(id);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Conditional: Field Details Column (only show when field is selected)
+            if EntitiesTabState.selected_field_id >= 0 : Divider {}
+
+            if EntitiesTabState.selected_field_id >= 0 : Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-radius: 8px;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Field Details";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    ScrollView {
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 12px;
+                            alignment: start;
+
+                            // Field Name
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_name;
+                                    placeholder: "Enter field name";
+                                    edited(text) => {
+                                        EntitiesTabState.field_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Field Type
+                            FormField {
+                                label: "Type";
+                                required: true;
+
+                                ComboBox {
+                                    model: EntitiesTabState.field_type_options;
+                                    current-value <=> EntitiesTabState.selected_field_type;
+                                    selected(value) => {
+                                        EntitiesTabState.field_type_changed(value);
+                                    }
+                                }
+                            }
+
+                            // Referenced Entity (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Referenced Entity";
+
+                                entity-combo := ComboBox {
+                                    model: EntitiesTabState.entity_options;
+                                    selected(value) => {
+                                        // Pass the selected index to the callback
+                                        EntitiesTabState.field_entity_changed(entity-combo.current-index);
+                                    }
+                                }
+                            }
+
+                            // Enum Name (only visible when type is Enum)
+                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                                label: "Enum Name";
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_enum_name;
+                                    placeholder: "Enter enum name";
+                                    edited(text) => {
+                                        EntitiesTabState.field_enum_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Enum Values (only visible when type is Enum)
+                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                                label: "Enum Values (one per line)";
+
+                                TextEdit {
+                                    height: 100px;
+                                    text <=> EntitiesTabState.selected_field_enum_values;
+                                    edited(text) => {
+                                        EntitiesTabState.field_enum_values_changed(text);
+                                    }
+                                }
+                            }
+
+                            // General field options
+                            FormField {
+                                label: "Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                }
+                            }
+
+                            // Entity-specific model options (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Model Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    CheckBox {
+                                        text: "List Model";
+                                        checked <=> EntitiesTabState.selected_field_list_model;
+                                        toggled => {
+                                            EntitiesTabState.field_list_model_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Single Model";
+                                        checked <=> EntitiesTabState.selected_field_single_model;
+                                        toggled => {
+                                            EntitiesTabState.field_single_model_changed(self.checked);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // List Model Displayed Field (only visible when list_model is true)
+                            if EntitiesTabState.selected_field_list_model : FormField {
+                                label: "List Model Displayed Field";
+
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_field_list_model_displayed_field;
+                                    placeholder: "Enter displayed field name";
+                                    edited(text) => {
+                                        EntitiesTabState.field_list_model_displayed_field_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Entity-specific options (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Relationship Type";
+
+                                relationship-combo := ComboBox {
+                                    model: EntitiesTabState.relationship_type_options;
+                                    current-value <=> EntitiesTabState.selected_field_relationship;
+                                    selected(value) => {
+                                        EntitiesTabState.field_relationship_changed(value);
+                                    }
+                                }
+                            }
+
+                            // Required checkbox (only visible when type is Entity and relationship is one_to_one)
+                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship == "one_to_one" : FormField {
+                                label: "Required";
+
+                                CheckBox {
+                                    text: "Required (not nullable)";
+                                    checked <=> EntitiesTabState.selected_field_required;
+                                    toggled => {
+                                        EntitiesTabState.field_required_changed(self.checked);
+                                    }
+                                }
+                            }
+
+                            // Strong checkbox (only visible when type is Entity and relationship is NOT many_to_many)
+                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship != "many_to_many" : FormField {
+                                label: "Cascade";
+
+                                CheckBox {
+                                    text: "Strong (cascade delete)";
+                                    checked <=> EntitiesTabState.selected_field_strong;
+                                    toggled => {
+                                        EntitiesTabState.field_strong_changed(self.checked);
+                                    }
+                                }
+                            }
+
+                            // Spacer
+                            Rectangle { vertical-stretch: 1; }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

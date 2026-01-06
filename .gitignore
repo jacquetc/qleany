@@ -64,9 +64,6 @@ __pycache__/
 *.py[cod]
 .venv
 
-# C extensions
-*.so
-
 cmake/build-*
 
 # Distribution / packaging
@@ -86,6 +83,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.output.txt
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -129,7 +127,6 @@ target/
 .directory
 
 #cx_Freeze
-build/
 build
 
 #gedit
@@ -141,18 +138,9 @@ build
 .idea
 
 #Qt Creator
-*.autosave
-*.pro.user
-*.pro.user.*
-*.qbs.user
-*.qbs.user.*
 CMakeLists.txt.user
 *.qtds.*
 *.qtds
-
-# QML
-*.qmlc
-*.jsc
 
 #plume
 .~lock.*
@@ -178,3 +166,10 @@ build-dir/
 #vcpkg
 .vcpkg/
 .vcpkg_installed/
+
+# Added by cargo
+
+/target
+out/
+temp
+temp_*/

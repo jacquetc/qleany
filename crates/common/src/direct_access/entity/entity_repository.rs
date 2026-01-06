@@ -1,0 +1,323 @@
+use crate::{
+    database::transactions::Transaction,
+    direct_access::repository_factory,
+    entities::Entity,
+    event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    types::EntityId,
+};
+use redb::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
+use std::sync::Arc;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum EntityRelationshipField {
+    Parent,
+    Fields,
+    Relationships,
+}
+
+impl Display for EntityRelationshipField {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub trait EntityTable {
+    fn create(&mut self, entity: &Entity) -> Result<Entity, Error>;
+    fn create_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error>;
+    fn update(&mut self, entity: &Entity) -> Result<Entity, Error>;
+    fn update_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error>;
+    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
+    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    fn set_relationship_multi(
+        &mut self,
+        field: &EntityRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error>;
+    fn set_relationship(
+        &mut self,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error>;
+}
+
+pub trait EntityTableRO {
+    fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error>;
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+}
+
+pub struct EntityRepository<'a> {
+    redb_table: Box<dyn EntityTable + 'a>,
+    transaction: &'a Transaction,
+}
+
+impl<'a> EntityRepository<'a> {
+    pub fn new(redb_table: Box<dyn EntityTable + 'a>, transaction: &'a Transaction) -> Self {
+        EntityRepository {
+            redb_table,
+            transaction,
+        }
+    }
+
+    pub fn create(&mut self, event_hub: &Arc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
+        let new = self.redb_table.create(entity)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Created)),
+            ids: vec![new.id.clone()],
+            data: None,
+        });
+        Ok(new)
+    }
+
+    pub fn create_multi(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        entities: &[Entity],
+    ) -> Result<Vec<Entity>, Error> {
+        let new_entities = self.redb_table.create_multi(entities)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Created)),
+            ids: new_entities
+                .iter()
+                .map(|entity| entity.id.clone())
+                .collect(),
+            data: None,
+        });
+
+        Ok(new_entities)
+    }
+
+    pub fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error> {
+        self.redb_table.get(id)
+    }
+
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        self.redb_table.get_multi(ids)
+    }
+
+    pub fn update(&mut self, event_hub: &Arc<EventHub>, entity: &Entity) -> Result<Entity, Error> {
+        let updated_entity = self.redb_table.update(entity)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
+            ids: vec![updated_entity.id.clone()],
+            data: None,
+        });
+        Ok(updated_entity)
+    }
+
+    pub fn update_multi(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        entities: &[Entity],
+    ) -> Result<Vec<Entity>, Error> {
+        let updated_entities = self.redb_table.update_multi(entities)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
+            ids: updated_entities
+                .iter()
+                .map(|entity| entity.id.clone())
+                .collect(),
+            data: None,
+        });
+
+        Ok(updated_entities)
+    }
+
+    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
+        let entity = match self.redb_table.get(id)? {
+            Some(entity) => entity,
+            None => return Ok(()),
+        };
+
+        // get all strong forward relationship fields
+        let fields = entity.fields.clone();
+        let relationships = entity.relationships.clone();
+
+        // delete all strong relationships, initiating a cascade delete
+        repository_factory::write::create_field_repository(self.transaction)
+            .delete_multi(event_hub, &fields)?;
+        repository_factory::write::create_relationship_repository(self.transaction)
+            .delete_multi(event_hub, &relationships)?;
+
+        // delete entity
+        self.redb_table.delete(id)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Removed)),
+            ids: vec![id.clone()],
+            data: None,
+        });
+
+        Ok(())
+    }
+
+    pub fn delete_multi(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        ids: &[EntityId],
+    ) -> Result<(), Error> {
+        let entities = self.redb_table.get_multi(ids)?;
+
+        if entities.is_empty() || entities.iter().all(|root| root.is_none()) {
+            return Ok(());
+        }
+
+        // get all strong forward relationship fields
+        let mut fields: Vec<EntityId> = entities
+            .iter()
+            .flat_map(|entity| entity.as_ref().map(|entity| entity.fields.clone()))
+            .flatten()
+            .collect();
+        fields.sort();
+        fields.dedup();
+
+        let mut relationships: Vec<EntityId> = entities
+            .iter()
+            .flat_map(|entity| entity.as_ref().map(|entity| entity.relationships.clone()))
+            .flatten()
+            .collect();
+        relationships.sort();
+        relationships.dedup();
+
+        // delete all strong relationships, initiating a cascade delete
+        repository_factory::write::create_field_repository(self.transaction)
+            .delete_multi(event_hub, &fields)?;
+        repository_factory::write::create_relationship_repository(self.transaction)
+            .delete_multi(event_hub, &relationships)?;
+
+        self.redb_table.delete_multi(ids)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Removed)),
+            ids: ids.into(),
+            data: None,
+        });
+
+        Ok(())
+    }
+    pub fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+
+    pub fn get_relationships_from_right_ids(
+        &self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        self.redb_table
+            .get_relationships_from_right_ids(field, right_ids)
+    }
+
+    pub fn set_relationship_multi(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        field: &EntityRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error> {
+        self.redb_table
+            .set_relationship_multi(field, relationships.clone())?;
+
+        for relationship in relationships {
+            let (left_id, right_ids) = relationship;
+            event_hub.send_event(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
+                ids: vec![left_id],
+                data: Some(format!(
+                    "{}:{}",
+                    field,
+                    right_ids
+                        .iter()
+                        .map(|id| id.to_string())
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )),
+            });
+        }
+
+        Ok(())
+    }
+
+    pub fn set_relationship(
+        &mut self,
+        event_hub: &Arc<EventHub>,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error> {
+        self.redb_table.set_relationship(id, field, right_ids)?;
+        event_hub.send_event(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Updated)),
+            ids: vec![id.clone()],
+            data: Some(format!(
+                "{}:{}",
+                field,
+                right_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )),
+        });
+
+        Ok(())
+    }
+}
+
+pub struct EntityRepositoryRO<'a> {
+    redb_table: Box<dyn EntityTableRO + 'a>,
+}
+
+impl<'a> EntityRepositoryRO<'a> {
+    pub fn new(redb_table: Box<dyn EntityTableRO + 'a>) -> Self {
+        EntityRepositoryRO { redb_table }
+    }
+
+    pub fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error> {
+        self.redb_table.get(id)
+    }
+
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        self.redb_table.get_multi(ids)
+    }
+    pub fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &EntityRelationshipField,
+    ) -> Result<Vec<EntityId>, Error> {
+        self.redb_table.get_relationship(id, field)
+    }
+    pub fn get_relationships_from_right_ids(
+        &self,
+        field: &EntityRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+        self.redb_table
+            .get_relationships_from_right_ids(field, right_ids)
+    }
+}

@@ -1,0 +1,207 @@
+import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
+import { ManifestCommands, AppState } from "../globals.slint";
+import { Paper } from "../components/misc.slint";
+
+
+// Alert component for error messages
+component Alert inherits Rectangle {
+    in property <string> message;
+    in property <color> alert-color: #fa5252;
+    
+    background: #fff5f5;
+    border-width: 1px;
+    border-color: alert-color;
+    border-radius: 8px;
+    min-height: 48px;
+    
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        
+        Rectangle {
+            width: 4px;
+            background: alert-color;
+            border-radius: 2px;
+        }
+        
+        VerticalLayout {
+            spacing: 4px;
+            alignment: center;
+            
+            Text {
+                text: "Error";
+                font-size: 14px;
+                font-weight: 600;
+                color: alert-color;
+            }
+            
+            Text {
+                text: message;
+                font-size: 14px;
+                color: #495057;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
+
+export component HomeTab inherits Rectangle {
+    background: #ffffff;
+
+    VerticalLayout {
+        padding: 40px;
+        spacing: 24px;
+
+        // Title
+        Text {
+            text: "Qleany";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        // Subtitle
+        Text {
+            text: "Welcome to Qleany! Use the buttons below to manage your manifests.";
+            font-size: 16px;
+            color: #495057;
+        }
+
+        // Error message
+
+        if (AppState.error_message != "") : Alert {
+            message: AppState.error_message;
+        }
+
+        // Main action buttons in Paper
+        Paper {
+            with-border: true;
+            
+            VerticalLayout {
+                padding: 16px;
+                spacing: 16px;
+
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: start;
+
+                    Button {
+                        text: "New Manifest";
+                        enabled: !AppState.is_loading;
+                        clicked => {
+                            if (AppState.manifest_is_saved || !AppState.manifest_is_open) {
+                                ManifestCommands.new_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "new";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to create a new manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
+                        primary: true;
+                    }
+
+
+                    Button {
+                        text: "Open Manifest";
+                        enabled: !AppState.is_loading;
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.open_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "open";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to open another manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Save Manifest";
+                        enabled: AppState.manifest_is_open && !AppState.manifest_is_saved && !AppState.is_loading;
+                        clicked => { ManifestCommands.save_manifest(); }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Save Manifest As...";
+                        enabled: AppState.manifest_is_open && !AppState.is_loading;
+                        clicked => { ManifestCommands.save_manifest_as(); }
+                        primary: true;
+                    }
+                    Button {
+                        text: "Close Current Manifest";
+                        enabled: AppState.manifest_is_open && !AppState.is_loading;
+                        clicked => {
+                            if (AppState.manifest_is_saved) {
+                                ManifestCommands.close_manifest();
+                            } else {
+                                AppState.confirm_dialog_pending_action = "close";
+                                AppState.confirm_dialog_message = "You have unsaved changes. Do you want to close the manifest without saving?";
+                                AppState.confirm_dialog_visible = true;
+                            }
+                        }
+                        primary: true;
+                    }
+                }
+
+                // For Testing section
+                Paper {
+                    bg: #f8f9fa;
+                    with-border: true;
+
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "For Testing";
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #212529;
+                        }
+
+                        Button {
+                            width: 180px;
+                            height: 36px;
+                            enabled: !AppState.is_loading;
+                            clicked => {
+                                if (AppState.manifest_is_saved) {
+                                    ManifestCommands.open_qleany_manifest();
+                                } else {
+                                    AppState.confirm_dialog_pending_action = "open_qleany";
+                                    AppState.confirm_dialog_message = "You have unsaved changes. Do you want to open the Qleany manifest without saving?";
+                                    AppState.confirm_dialog_visible = true;
+                                }
+                            }
+                            text: "Open Qleany Manifest";
+                            primary: true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Spacer
+        Rectangle { vertical-stretch: 1; }
+            AboutSlint {
+            width: 200px;
+            }
+
+    }
+
+    // Loading overlay
+    if AppState.is_loading : Rectangle {
+        background: #ffffff80;
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+
+        ProgressIndicator {
+            width: 48px;
+            height: 48px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            indeterminate: true;
+        }
+    }
+}

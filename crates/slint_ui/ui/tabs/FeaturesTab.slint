@@ -1,0 +1,402 @@
+import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
+import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
+import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+import { DtoDetails } from "dto_details.slint";
+
+
+// Alert component
+component Alert inherits Rectangle {
+    in property <string> message;
+    in property <string> title: "Loading";
+    in property <color> alert-color: #228be6;
+    
+    background: #e7f5ff;
+    border-width: 1px;
+    border-color: alert-color;
+    border-radius: 8px;
+    min-height: 48px;
+    
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        
+        Rectangle {
+            width: 4px;
+            background: alert-color;
+            border-radius: 2px;
+        }
+        
+        VerticalLayout {
+            spacing: 4px;
+            alignment: center;
+            
+            Text {
+                text: title;
+                font-size: 14px;
+                font-weight: 600;
+                color: alert-color;
+            }
+            
+            Text {
+                text: message;
+                font-size: 14px;
+                color: #495057;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
+
+export component FeaturesTab inherits Rectangle {
+    background: #ffffff;
+
+    VerticalLayout {
+        padding: 40px;
+        spacing: 0px;
+
+        // Title
+        Text {
+            text: "Features";
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        Rectangle { height: 24px; }
+
+        // Loading state
+        if FeaturesTabState.features_is_loading : Alert {
+            title: "Loading";
+            message: "Loading features data...";
+            alert-color: #228be6;
+        }
+
+        // Error state
+        if FeaturesTabState.features_error_message != "" : Alert {
+            title: "Error Loading Data";
+            message: FeaturesTabState.features_error_message;
+            alert-color: #fa5252;
+        }
+
+        // Main content area - 3 columns
+        if !FeaturesTabState.features_is_loading && FeaturesTabState.features_error_message == "" : HorizontalLayout {
+            spacing: 0px;
+
+            // Column 1: Feature List
+            Rectangle {
+                width: 300px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Features";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-feature-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-feature-touch := TouchArea {
+                                    clicked => {
+                                        FeaturesTabState.request_feature_addition();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        feature_list := CheckableReorderableList {
+                            items: FeaturesTabState.feature_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            enable-delete: true;
+                            selected-id: FeaturesTabState.selected_feature_id;
+                            selection-changed(id) => {
+                                FeaturesTabState.feature_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                FeaturesTabState.request_features_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                FeaturesTabState.request_feature_deletion(id);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Divider
+            Divider {}
+
+            // Column 2: Feature Details + Use Cases
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+
+                VerticalLayout {
+                    // Feature Details Section
+                    SectionHeader {
+                        title: FeaturesTabState.selected_feature_id >= 0 ? "Feature Details" : "Select a feature";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    if FeaturesTabState.selected_feature_id >= 0 : Rectangle {
+                        height: 100px;
+                        
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 8px;
+                            
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> FeaturesTabState.selected_feature_name;
+                                    placeholder: "Enter the feature name";
+
+                                    edited(text) => {
+                                        FeaturesTabState.feature_name_changed(text);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    // Use Cases Section
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Use Cases";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-use-case-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-use-case-touch := TouchArea {
+                                    clicked => {
+                                        FeaturesTabState.request_use_case_addition();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        use_case_list :=  CheckableReorderableList {
+                            items: FeaturesTabState.use_case_cr_list;
+                            reorderable: true;
+                            enable-checkbox: false;
+                            enable-delete: true;
+                            selected-id: FeaturesTabState.selected_use_case_id;
+                            selection-changed(id) => {
+                                FeaturesTabState.use_case_selected(id);
+                            }
+                            request-reorder(from_index, to_index) => {
+                                FeaturesTabState.request_use_cases_reorder(from_index, to_index)
+                            }
+                            request-delete(id) => {
+                                FeaturesTabState.request_use_case_deletion(id);
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            // Conditional: Use Case Details Column (only show when use case is selected)
+            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
+
+            if FeaturesTabState.selected_use_case_id >= 0 : Rectangle {
+                horizontal-stretch: 1;
+                min-width: 400px;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-radius: 8px;
+
+                VerticalLayout {
+                    SectionHeader {
+                        title: "Use Case Details";
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: #dee2e6;
+                    }
+
+                    ScrollView {
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 12px;
+                            alignment: start;
+
+                            // Use Case Name
+                            FormField {
+                                label: "Name";
+                                required: true;
+
+                                StyledLineEdit {
+                                    text <=> FeaturesTabState.selected_use_case_name;
+                                    placeholder: "Enter the use case name";
+
+                                    edited(text) => {
+                                        FeaturesTabState.use_case_name_changed(text);
+                                    }
+                                }
+                            }
+
+                            // Boolean options
+                            FormField {
+                                label: "Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    CheckBox {
+                                        text: "Validator";
+                                        checked <=> FeaturesTabState.selected_use_case_validator;
+
+                                        toggled => {
+                                            FeaturesTabState.use_case_validator_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Undoable";
+                                        checked <=> FeaturesTabState.selected_use_case_undoable;
+
+                                        toggled => {
+                                            FeaturesTabState.use_case_undoable_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Read Only";
+                                        checked <=> FeaturesTabState.selected_use_case_read_only;
+
+                                        toggled => {
+                                            FeaturesTabState.use_case_read_only_changed(self.checked);
+                                        }
+                                    }
+
+                                    CheckBox {
+                                        text: "Long Operation";
+                                        checked <=> FeaturesTabState.selected_use_case_long_operation;
+
+                                        toggled => {
+                                            FeaturesTabState.use_case_long_operation_changed(self.checked);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Spacer
+                            Rectangle { vertical-stretch: 1; }
+                        }
+                    }
+                }
+            }
+
+            // Conditional: DTO Details Column (only show when use case is selected)
+            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
+
+            if FeaturesTabState.selected_use_case_id >= 0 : ScrollView {
+                horizontal-stretch: 1;
+                min-width: 500px;
+
+                DtoDetails {}
+            }
+        }
+    }
+
+    // Loading overlay
+    if FeaturesTabState.features_is_loading : Rectangle {
+        background: #ffffff80;
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+
+        ProgressIndicator {
+            width: 48px;
+            height: 48px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            indeterminate: true;
+        }
+    }
+}

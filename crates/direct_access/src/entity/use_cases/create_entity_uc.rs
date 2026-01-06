@@ -1,0 +1,63 @@
+use super::EntityUnitOfWorkFactoryTrait;
+use crate::entity::dtos::{CreateEntityDto, EntityDto};
+use anyhow::{Ok, Result};
+use common::entities::Entity;
+use common::undo_redo::UndoRedoCommand;
+use std::any::Any;
+use std::collections::VecDeque;
+
+pub struct CreateEntityUseCase {
+    uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>,
+    undo_stack: VecDeque<Entity>,
+    redo_stack: VecDeque<Entity>,
+}
+
+impl CreateEntityUseCase {
+    pub fn new(uow_factory: Box<dyn EntityUnitOfWorkFactoryTrait>) -> Self {
+        CreateEntityUseCase {
+            uow_factory,
+            undo_stack: VecDeque::new(),
+            redo_stack: VecDeque::new(),
+        }
+    }
+
+    pub fn execute(&mut self, dto: CreateEntityDto) -> Result<EntityDto> {
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+        let entity = uow.create_entity(&dto.into())?;
+        uow.commit()?;
+
+        // store in undo stack
+        self.undo_stack.push_back(entity.clone());
+        self.redo_stack.clear();
+
+        Ok(entity.into())
+    }
+}
+
+impl UndoRedoCommand for CreateEntityUseCase {
+    fn undo(&mut self) -> Result<()> {
+        if let Some(last_entity) = self.undo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.delete_entity(&last_entity.id)?;
+            uow.commit()?;
+            self.redo_stack.push_back(last_entity);
+        }
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        if let Some(last_entity) = self.redo_stack.pop_back() {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.create_entity(&last_entity)?;
+            uow.commit()?;
+            self.undo_stack.push_back(last_entity);
+        }
+        Ok(())
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}

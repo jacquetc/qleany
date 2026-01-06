@@ -1,0 +1,43 @@
+pub(super) mod create_entity_multi_uc;
+pub(super) mod create_entity_uc;
+pub(super) mod get_entity_multi_uc;
+pub(super) mod get_entity_relationship_uc;
+pub(super) mod get_entity_uc;
+pub(super) mod remove_entity_multi_uc;
+pub(super) mod remove_entity_uc;
+pub(super) mod set_entity_relationship_uc;
+pub(super) mod update_entity_multi_uc;
+pub(super) mod update_entity_uc;
+
+use anyhow::Result;
+use common::database::{CommandUnitOfWork, QueryUnitOfWork};
+use common::entities::Entity;
+use common::types::EntityId;
+
+pub(in crate::entity) trait EntityUnitOfWorkFactoryTrait: Send + Sync {
+    fn create(&self) -> Box<dyn EntityUnitOfWorkTrait>;
+}
+
+#[macros::uow_action(entity = "Entity", action = "Create")]
+#[macros::uow_action(entity = "Entity", action = "CreateMulti")]
+#[macros::uow_action(entity = "Entity", action = "Get")]
+#[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "Update")]
+#[macros::uow_action(entity = "Entity", action = "UpdateMulti")]
+#[macros::uow_action(entity = "Entity", action = "Delete")]
+#[macros::uow_action(entity = "Entity", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationship")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIds")]
+#[macros::uow_action(entity = "Entity", action = "SetRelationship")]
+#[macros::uow_action(entity = "Entity", action = "SetRelationshipMulti")]
+pub(in crate::entity) trait EntityUnitOfWorkTrait: CommandUnitOfWork {}
+
+pub(in crate::entity) trait EntityUnitOfWorkROFactoryTrait {
+    fn create(&self) -> Box<dyn EntityUnitOfWorkROTrait>;
+}
+
+#[macros::uow_action(entity = "Entity", action = "GetRO")]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIdsRO")]
+pub(in crate::entity) trait EntityUnitOfWorkROTrait: QueryUnitOfWork {}

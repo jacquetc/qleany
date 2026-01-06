@@ -1,0 +1,397 @@
+---
+schema:
+  version: 2
+
+global:
+  language: rust
+  application_name: SimpleRust
+  organisation:
+    name: qleany
+    domain: qleany.eu
+  prefix_path:
+
+entities:
+  - name: EntityBase
+    only_for_heritage: true
+    fields:
+      - name: id
+        type: int
+
+  - name: Root
+    parent: EntityBase
+    fields:
+      - name: global
+        type: entity
+        entity: Global
+        strong: true
+      - name: entities
+        type: entity
+        entity: Entity
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: features
+        type: entity
+        entity: Feature
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: files
+        type: entity
+        entity: File
+        is_list: true
+        ordered: false
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+
+  - name: Entity
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: fields
+        type: entity
+        entity: Field
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: relationships
+        type: entity
+        entity: Relationship
+        is_list: true
+        ordered: false
+        strong: true
+
+  - name: Field
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: field_type
+        type: enum
+        enum_name: FieldType
+        enum_values:
+          - Bool
+          - Int
+          - Uint
+          - Float
+          - String
+          - Uuid
+          - Datetime
+          - Entity
+          - Enum
+      - name: entity
+        type: entity
+        entity: Entity
+        strong: false
+        is_nullable: true
+      - name: is_nullable
+        type: bool
+      - name: is_primary_key
+        type: bool
+      - name: is_list
+        type: bool
+      - name: single_model
+        type: bool
+      - name: strong
+        type: bool
+      - name: ordered
+        type: bool
+      - name: list_model
+        type: bool
+      - name: list_model_displayed_field
+        type: string
+
+  - name: Feature
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: use_cases
+        type: entity
+        entity: UseCase
+        is_list: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+        ordered: true
+
+  - name: File
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: path
+        type: string
+      - name: group
+        type: string
+
+  - name: UseCase
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: validator
+        type: bool
+      - name: entities
+        type: entity
+        entity: Entity
+        is_list: true
+        list_model: true
+        list_model_displayed_field: name
+        ordered: true
+      - name: undoable
+        type: bool
+      - name: read_only
+        type: bool
+      - name: long_operation
+        type: bool
+      - name: dto_in
+        type: entity
+        entity: Dto
+        strong: true
+        is_nullable: true
+      - name: dto_out
+        type: entity
+        entity: Dto
+        strong: true
+        is_nullable: true
+
+  - name: Dto
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: fields
+        type: entity
+        entity: DtoField
+        is_list: true
+        ordered: true
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+
+  - name: DtoField
+    parent: EntityBase
+    fields:
+      - name: name
+        type: string
+      - name: field_type
+        type: enum
+        enum_name: DtoFieldType
+        enum_values:
+          - Boolean
+          - Integer
+          - UInteger
+          - Float
+          - String
+          - Uuid
+          - DateTime
+          - Enum
+      - name: is_nullable
+        type: bool
+      - name: is_list
+        type: bool
+      - name: enum_name
+        type: string
+        is_nullable: true
+      - name: enum_values
+        type: string
+        is_list: true
+        is_nullable: true
+
+  - name: Global
+    parent: EntityBase
+    fields:
+      - name: language
+        type: string
+      - name: application_name
+        type: string
+      - name: organisation_name
+        type: string
+      - name: organisation_domain
+        type: string
+      - name: prefix_path
+        type: string
+
+  - name: Relationship
+    parent: EntityBase
+    fields:
+      - name: left_entity_name
+        type: string
+      - name: right_entity_name
+        type: string
+      - name: field_name
+        type: string
+      - name: relationship_type
+        type: enum
+        enum_name: RelationshipType
+        enum_values:
+          - OneToOne
+          - OneToMany
+          - ManyToOne
+          - ManyToMany
+      - name: strength
+        type: enum
+        enum_name: Strength
+        enum_values:
+          - Weak
+          - Strong
+      - name: direction
+        type: enum
+        enum_name: Direction
+        enum_values:
+          - Forward
+          - Backward
+      - name: cardinality
+        type: enum
+        enum_name: Cardinality
+        enum_values:
+          - ZeroOrOne
+          - One
+          - ZeroOrMore
+          - OneOrMore
+      - name: order
+        type: enum
+        enum_name: Order
+        enum_values:
+          - Ordered
+          - Unordered
+        is_nullable: true
+
+features:
+  - name: handling_manifest
+    use_cases:
+      - name: load
+        validator: true
+        entities:
+          - Root
+          - Entity
+          - Feature
+          - UseCase
+          - Dto
+          - DtoField
+          - Field
+          - Relationship
+          - Global
+        undoable: false
+        dto_in:
+          name: LoadDto
+          fields:
+            - name: manifest_path
+              type: string
+      - name: save
+        validator: true
+        entities:
+          - Root
+          - Entity
+          - Feature
+          - UseCase
+          - Dto
+          - DtoField
+          - Field
+          - Relationship
+          - Global
+        undoable: false
+        dto_in:
+          name: SaveDto
+          fields:
+            - name: manifest_path
+              type: string
+  - name: rust_file_generation
+    use_cases:
+      - name: list_rust_files
+        validator: true
+        entities:
+          - Root
+          - Global
+          - Relationship
+          - Feature
+          - UseCase
+          - Entity
+          - File
+        undoable: false
+        dto_in:
+          name: ListRustFilesDto
+          fields:
+            - name: only_list_already_existing
+              type: bool
+        dto_out:
+          name: ListRustFilesReturnDto
+          fields:
+            - name: file_ids
+              type: int
+              is_list: true
+            - name: files
+              type: string
+              is_list: true
+      - name: generate_rust_code
+        validator: true
+        entities:
+          - Root
+          - Global
+          - Relationship
+          - Feature
+          - UseCase
+          - Entity
+          - File
+        undoable: false
+        read_only: true
+        dto_in:
+          name: GenerateRustCodeDto
+          fields:
+            - name: file_id
+              type: int
+        dto_out:
+          name: GenerateRustCodeReturnDto
+          fields:
+            - name: generated_code
+              type: string
+            - name: timestamp
+              type: string
+      - name: generate_rust_files
+        validator: true
+        entities:
+          - Root
+          - Global
+          - Relationship
+          - Feature
+          - UseCase
+          - Entity
+          - File
+          - Field
+          - Dto
+          - DtoField
+        undoable: false
+        read_only: true
+        long_operation: true
+        dto_in:
+          name: GenerateRustFilesDto
+          fields:
+            - name: file_ids
+              type: int
+              is_list: true
+            - name: root_path
+              type: string
+            - name: prefix
+              type: string
+        dto_out:
+          name: GenerateRustFilesReturnDto
+          fields:
+            - name: files
+              type: string
+              is_list: true
+            - name: timestamp
+              type: string
+
+
+ui:
+  cli: true
+  tauri_ts: true

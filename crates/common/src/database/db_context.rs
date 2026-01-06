@@ -1,0 +1,31 @@
+use std::sync::Arc;
+use crate::direct_access::setup::initialize_all_tables;
+use redb::{Database, Error};
+
+#[derive(Clone, Debug)]
+pub struct DbContext {
+    database: Arc<Database>,
+}
+
+impl DbContext {
+    pub fn new() -> Result<Self, Error> {
+        let db = DbContext::create_db_in_memory()?;
+        let write_txn = db.begin_write()?;
+        initialize_all_tables(&write_txn)?;
+        write_txn.commit()?;
+        Ok(DbContext {
+            database: Arc::new(db),
+        })
+    }
+
+    fn create_db_in_memory() -> Result<Database, Error> {
+        let redb_builder = redb::Builder::new();
+        let in_memory_backend = redb::backends::InMemoryBackend::new();
+        let db = redb_builder.create_with_backend(in_memory_backend)?;
+        Ok(db)
+    }
+
+    pub fn get_database(&self) -> &Database {
+        &self.database
+    }
+}

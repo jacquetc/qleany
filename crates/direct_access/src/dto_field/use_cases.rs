@@ -1,0 +1,43 @@
+pub(super) mod create_dto_field_multi_uc;
+pub(super) mod create_dto_field_uc;
+pub(super) mod get_dto_field_multi_uc;
+pub(super) mod get_dto_field_uc;
+pub(super) mod remove_dto_field_multi_uc;
+pub(super) mod remove_dto_field_uc;
+pub(super) mod update_dto_field_multi_uc;
+pub(super) mod update_dto_field_uc;
+
+use anyhow::Result;
+use common::database::{CommandUnitOfWork, QueryUnitOfWork};
+use common::entities::DtoField;
+use common::types::EntityId;
+
+pub(in crate::dto_field) trait DtoFieldUnitOfWorkFactoryTrait:
+    Send + Sync
+{
+    fn create(&self) -> Box<dyn DtoFieldUnitOfWorkTrait>;
+}
+
+#[macros::uow_action(entity = "DtoField", action = "Create")]
+#[macros::uow_action(entity = "DtoField", action = "CreateMulti")]
+#[macros::uow_action(entity = "DtoField", action = "Get")]
+#[macros::uow_action(entity = "DtoField", action = "GetMulti")]
+#[macros::uow_action(entity = "DtoField", action = "Update")]
+#[macros::uow_action(entity = "DtoField", action = "UpdateMulti")]
+#[macros::uow_action(entity = "DtoField", action = "Delete")]
+#[macros::uow_action(entity = "DtoField", action = "DeleteMulti")]
+pub(in crate::dto_field) trait DtoFieldUnitOfWorkTrait:
+    CommandUnitOfWork
+{
+}
+
+pub(in crate::dto_field) trait DtoFieldUnitOfWorkROFactoryTrait {
+    fn create(&self) -> Box<dyn DtoFieldUnitOfWorkROTrait>;
+}
+
+#[macros::uow_action(entity = "DtoField", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
+pub(in crate::dto_field) trait DtoFieldUnitOfWorkROTrait:
+    QueryUnitOfWork
+{
+}
