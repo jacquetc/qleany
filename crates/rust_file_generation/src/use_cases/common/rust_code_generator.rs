@@ -4,7 +4,7 @@ mod rust_code_generator_tests;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
+    Root, Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
     RelationshipType, UseCase,
 };
 use common::types::EntityId;
@@ -17,6 +17,7 @@ use tera::{Context, Tera};
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
@@ -240,6 +241,18 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
+    fn get_root_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
+        use anyhow::anyhow;
+        let roots = uow
+            .get_root_multi(&vec![])?;
+        let root = roots
+            .into_iter()
+            .filter_map(|r| r)
+            .next()
+            .ok_or_else(|| anyhow!("Root entity not found"))?;
+        Ok(root.id)
+    }
+
     fn get_entity_vm(
         uow: &dyn GenerationReadOps,
         entity_id: &EntityId,
@@ -341,7 +354,7 @@ impl SnapshotBuilder {
         // Additionally, scan all entities from root to discover relationships that reference this
         // entity as the right side (backward relationships) but may not be listed on this entity.
         // This mirrors broader snapshot building behavior where backward rels are gathered from peers.
-        let root_id: EntityId = 1;
+        let root_id: EntityId = SnapshotBuilder::get_root_id(uow)?;
         let all_entity_ids = uow.get_root_relationship(
             &root_id,
             &common::direct_access::root::RootRelationshipField::Entities,
@@ -454,7 +467,7 @@ impl SnapshotBuilder {
         }
 
 
-        let root_id: EntityId = 1;
+        let root_id: EntityId = SnapshotBuilder::get_root_id(uow)?;
         let global_ids = uow.get_root_relationship(
             &root_id,
             &common::direct_access::root::RootRelationshipField::Global,
@@ -481,7 +494,6 @@ impl SnapshotBuilder {
         if let Some(feature_id) = file.feature {
             if feature_id == 0 {
                 // Load all features via Root -> Features
-                let root_id: EntityId = 1;
                 let feature_ids = uow.get_root_relationship(
                     &root_id,
                     &common::direct_access::root::RootRelationshipField::Features,
@@ -653,7 +665,6 @@ impl SnapshotBuilder {
         if let Some(entity_id) = file.entity {
             if entity_id == 0 {
                 // Load all entities via Root -> Entities
-                let root_id: EntityId = 1;
                 let entity_ids = uow.get_root_relationship(
                     &root_id,
                     &common::direct_access::root::RootRelationshipField::Entities,

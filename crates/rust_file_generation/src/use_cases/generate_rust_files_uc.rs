@@ -2,7 +2,7 @@ use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotB
 use crate::use_cases::common::rust_formatter::rustfmt_files_batch;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
-use common::entities::{File, Global};
+use common::entities::{Root, File, Global};
 use common::long_operation::LongOperation;
 use common::types::EntityId;
 use std::path::PathBuf;
@@ -13,6 +13,7 @@ pub trait GenerateRustFilesUnitOfWorkFactoryTrait: Send + Sync {
 }
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Global", action = "GetMultiRO")]
 pub trait GenerateRustFilesUnitOfWorkTrait: GenerationReadOps + Send + Sync {}
 

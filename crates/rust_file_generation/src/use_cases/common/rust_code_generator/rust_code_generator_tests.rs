@@ -2,7 +2,7 @@ use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType,
+    Root, Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType,
     UseCase,
 };
 use common::types::EntityId;
@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 // DummyGenerationReadOps that allows setting return values
 struct DummyGenerationReadOps {
+    roots: HashMap<EntityId, Root>,
     files: HashMap<EntityId, File>,
     globals: HashMap<EntityId, Global>,
     features: HashMap<EntityId, Feature>,
@@ -25,6 +26,7 @@ struct DummyGenerationReadOps {
 impl DummyGenerationReadOps {
     fn new() -> Self {
         Self {
+            roots: HashMap::new(),
             files: HashMap::new(),
             globals: HashMap::new(),
             features: HashMap::new(),
@@ -113,6 +115,13 @@ impl GenerationReadOps for DummyGenerationReadOps {
             .iter()
             .map(|i| self.relationships.get(i).cloned())
             .collect())
+    }
+    fn get_root_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>> {
+        Ok(self.roots
+            .iter()
+            .filter(|(id, _)| ids.contains(id))
+            .map(|(_, root)| Some(root.clone()))
+            .collect::<Vec<Option<Root>>>())
     }
 }
 
