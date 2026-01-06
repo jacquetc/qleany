@@ -39,7 +39,25 @@ fn get_junction_table_definition(
 {% endif %}
 
 pub struct {{ s.entities[e].pascal_name }}RedbTable<'a> { transaction: &'a WriteTransaction }
-impl<'a> {{ s.entities[e].pascal_name }}RedbTable<'a> { pub fn new(transaction: &'a WriteTransaction) -> Self { {{ s.entities[e].pascal_name }}RedbTable { transaction } } }
+impl<'a> {{ s.entities[e].pascal_name }}RedbTable<'a> {
+    pub fn new(transaction: &'a WriteTransaction) -> Self { {{ s.entities[e].pascal_name }}RedbTable { transaction } }
+
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+        transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
+        transaction.open_table(COUNTER_TABLE)?;
+        {% for rid, r in s.entities[e].forward_relationships %}
+        transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+        {%- endfor %}
+        {% for rid, r in s.entities[e].backward_relationships %}
+        {%- if r.inner.left_entity == e %}
+        transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
+        {%- else %}
+        transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+        {%- endif %}
+        {%- endfor %}
+        Ok(())
+    }
+}
 
 impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }}RedbTable<'a> {
     fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.create_multi(&[entity.clone()])?; Ok(v.into_iter().next().unwrap()) }

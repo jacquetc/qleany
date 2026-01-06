@@ -179,6 +179,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "redb_tests" => tera.render("redb_tests", &context)?,
         "undo_redo_tests" => tera.render("undo_redo_tests", &context)?,
         "repository_factory" => tera.render("repository_factory", &context)?,
+        "common_setup" => tera.render("common_setup", &context)?,
         // common direct access entities registry
         "common_entities" => tera.render("common_entities", &context)?,
         "common_event" => tera.render("common_event", &context)?,

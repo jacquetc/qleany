@@ -1,5 +1,5 @@
 use std::sync::Arc;
-
+use crate::direct_access::setup::initialize_all_tables;
 use redb::{Database, Error};
 
 #[derive(Clone, Debug)]
@@ -10,6 +10,12 @@ pub struct DbContext {
 impl DbContext {
     pub fn new() -> Result<Self, Error> {
         let db = DbContext::create_db_in_memory()?;
+
+        // Initialize all necessary tables
+        let write_txn = db.begin_write()?;
+        initialize_all_tables(&write_txn)?;
+        write_txn.commit()?;
+
         Ok(DbContext {
         database: Arc::new(db),
         })

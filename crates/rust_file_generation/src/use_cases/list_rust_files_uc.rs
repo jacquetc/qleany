@@ -137,6 +137,17 @@ impl ListRustFilesUseCase {
 
         files.push(File {
             id: 0,
+            name: "setup.rs".to_string(),
+            relative_path: "crates/common/src/direct_access/".to_string(),
+            group: "base".to_string(),
+            template_name: "common_setup".to_string(),
+            feature: None,
+            entity: Some(0),
+            use_case: None,
+        });
+
+        files.push(File {
+            id: 0,
             name: "types.rs".to_string(),
             relative_path: "crates/common/src/".to_string(),
             group: "base".to_string(),
