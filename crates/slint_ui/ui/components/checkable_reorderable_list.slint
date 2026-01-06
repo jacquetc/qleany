@@ -158,8 +158,8 @@ component DraggableItem inherits Rectangle {
     
     // Content row
     HorizontalBox {
-        padding: 8px;
-        spacing: 12px;
+        padding: 4px;
+        spacing: 8px;
 
         // Optional checkbox on the far left
         if enable-checkbox: CheckBox {
@@ -254,6 +254,7 @@ component DraggableItem inherits Rectangle {
 
         // Context menu button (visible when hovered or selected)
         menu_btn := Button {
+            width: 20px;
             visible: enable-delete && (touch.has-hover || (selected-id == item.id));
             text: "⋯";
             clicked => {
@@ -261,6 +262,8 @@ component DraggableItem inherits Rectangle {
                 else { open-menu-geo(index, item.id, self.x, self.y, self.width, self.height); }
             }
         }
+    // Spacer to the right edge
+    Rectangle { min-width: 30px; background: transparent; }
     }
 
     // (Removed per-row popup; centralized popup is rendered by parent)
