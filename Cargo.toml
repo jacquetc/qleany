@@ -6,7 +6,6 @@ members = [
     "crates/direct_access",
     "crates/handling_manifest",
     "crates/cpp_qt_file_generation",
-    "crates/python_file_generation",
     "crates/rust_file_generation",
     "crates/slint_ui",
     "crates/macros",
