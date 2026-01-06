@@ -71,11 +71,8 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "entity": {
                                         "type": "string"
                                     },
-                                    "is_list": {
-                                        "type": "boolean"
-                                    },
-                                    "ordered": {
-                                        "type": "boolean"
+                                    "relationship": {
+                                        "type": "string"
                                     },
                                     "strong": {
                                         "type": "boolean"

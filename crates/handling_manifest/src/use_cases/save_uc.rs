@@ -143,12 +143,22 @@ impl SaveUseCase {
                             RelationshipType::ManyToOne => "many_to_one",
                             RelationshipType::ManyToMany => "many_to_many",
                         };
+                        if field.relationship == RelationshipType::ManyToMany
+                            && entity.is_none()
+                        {
+                            panic!("Many-to-many field must have an entity");
+                        }
+                        let relationship = if field_type == "entity" {
+                            Some(relationship_str.to_string())
+                        } else {
+                            None
+                        };
 
                         model_structs::Field {
                             name: field.name.clone(),
                             r#type: field_type,
                             entity,
-                            relationship: Some(relationship_str.to_string()),
+                            relationship,
                             required: if field.required { Some(true) } else { None },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
@@ -271,7 +281,7 @@ impl SaveUseCase {
                             undoable: if (use_case.undoable) {
                                 Some(true)
                             } else {
-                                None
+                                Some(false)
                             },
                             read_only: if (use_case.read_only) {
                                 Some(true)

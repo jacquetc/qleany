@@ -107,7 +107,6 @@ pub struct UseCase {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entities: Option<Vec<String>>,
     #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub undoable: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
