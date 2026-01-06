@@ -175,9 +175,15 @@ impl SaveUseCase {
                     })
                     .collect::<Vec<model_structs::Field>>();
 
+                let only_for_heritage = if entity.only_for_heritage {
+                    Some(true)
+                } else {
+                    None
+                };
+
                 model_structs::Entity {
                     name: entity.name.clone(),
-                    only_for_heritage: Some(entity.only_for_heritage),
+                    only_for_heritage,
                     parent,
                     allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
