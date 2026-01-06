@@ -233,20 +233,19 @@ export component GenerateTab inherits Rectangle {
                     }
 
                     ScrollView {
+                        viewport-width: text-preview.preferred-width + 32px;
+                        viewport-height: text-preview.preferred-height + 32px;
+
                         Rectangle {
                             background: #f8f9fa;
                             
-                            VerticalLayout {
-                                padding: 16px;
-                                alignment: start;
-
-                                Text {
-                                    text: AppState.selected_file_index >= 0 ? AppState.code_preview : "Select a file to preview";
-                                    font-size: 14px;
-                                    font-family: "monospace";
-                                    color: AppState.selected_file_index >= 0 ? #212529 : #868e96;
-                                    wrap: word-wrap;
-                                }
+                            text-preview := Text {
+                                x: 16px;
+                                y: 16px;
+                                text: AppState.selected_file_index >= 0 ? AppState.code_preview : "Select a file to preview";
+                                font-size: 14px;
+                                font-family: "monospace";
+                                color: AppState.selected_file_index >= 0 ? #212529 : #868e96;
                             }
                         }
                     }
