@@ -46,7 +46,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
     fn create_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
-        let mut counter = if let Some(counter) = counter_table.get(&"{{ s.entities[e].snake_name }}".to_string())? { {% if s.entities[e].snake_name == "file" %}counter.value() + 1{% else %}counter.value(){% endif %} } else { 1 };
+        let mut counter = if let Some(counter) = counter_table.get(&"{{ s.entities[e].snake_name }}".to_string())? { counter.value() } else { 1 };
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
         let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
