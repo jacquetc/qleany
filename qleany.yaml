@@ -11,16 +11,14 @@ global:
 entities:
 - name: EntityBase
   only_for_heritage: true
-  allow_direct_access: true
+  allow_direct_access: false
   fields:
   - name: id
     type: integer
   - name: created_at
     type: datetime
-    strong: true
   - name: updated_at
     type: datetime
-    strong: true
 - name: Root
   inherits_from: EntityBase
   allow_direct_access: true
