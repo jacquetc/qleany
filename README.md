@@ -258,6 +258,14 @@ UI developers can iterate on screens with mock data. When ready, disable the fla
 
 Everything is defined in `qleany.yaml`:
 
+> **Required fields:** All entities must have `id`, `created_at`, and `updated_at` fields. These are essential for identity, caching, and change tracking.
+>
+> To simplify this, Qleany provides `EntityBase` — a heritable entity with these three fields pre-defined. When you create a new manifest, Qleany automatically generates:
+> - `EntityBase` with `id`, `created_at`, `updated_at`
+> - An empty `Root` entity inheriting from `EntityBase`
+>
+> All your entities should inherit from `EntityBase` using the `inherits_from` field.
+
 ```yaml
 schema:
   version: 2
@@ -271,8 +279,20 @@ global:
   prefix_path: src
 
 entities:
+  # EntityBase provides the necessary id, created_at, updated_at
+  - name: EntityBase
+    only_for_heritage: true
+    allow_direct_access: false
+    fields:
+      - name: id
+        type: integer
+      - name: created_at
+        type: datetime
+      - name: updated_at
+        type: datetime
+        
   - name: Root
-    parent: EntityBase
+    inherits_from: EntityBase
     fields:
       - name: works
         type: entity
@@ -283,7 +303,7 @@ entities:
         list_model_displayed_field: title
 
   - name: Work
-    parent: EntityBase
+    inherits_from: EntityBase
     fields:
       - name: title
         type: string
@@ -301,7 +321,7 @@ entities:
         strong: true
 
   - name: Binder
-    parent: EntityBase
+    inherits_from: EntityBase
     fields:
       - name: name
         type: string
@@ -314,14 +334,14 @@ entities:
         list_model_displayed_field: title
 
   - name: BinderItem
-    parent: EntityBase
+    inherits_from: EntityBase
     fields:
       - name: title
         type: string
       - name: parentItem
         type: entity
         entity: BinderItem
-        relationship: one_to_one
+        relationship: many_to_one
       - name: tags
         type: entity
         entity: BinderTag
@@ -353,6 +373,7 @@ features:
 | Relationship | Junction Type | Return Type |
 |--------------|---------------|-------------|
 | `one_to_one` | OneToOne | `std::optional<int>` |
+| `many_to_one` | ManyToOne | `std::optional<int>` |
 | `one_to_many` | UnorderedOneToMany | `QList<int>` |
 | `ordered_one_to_many` | OrderedOneToMany | `QList<int>` |
 | `many_to_many` | UnorderedManyToMany | `QList<int>` |
@@ -361,7 +382,7 @@ features:
 
 | Flag | Valid for | Effect |
 |------|-----------|--------|
-| `required` | `one_to_one` | Validated on create/update (1..1 instead of 0..1) |
+| `required` | `one_to_one`, `many_to_one` | Validated on create/update (1..1 instead of 0..1) |
 | `strong` | `one_to_one`, `one_to_many`, `ordered_one_to_many` | Cascade deletion — removing parent removes children |
 
 **QML generation flags:**
@@ -372,39 +393,101 @@ features:
 | `list_model_displayed_field` | Default display role for the list model |
 | `single` | Generate `Single{Entity}` wrapper |
 
+### Understanding Relationships
+
+Database relationships describe how entities connect. Two concepts matter:
+
+**Cardinality** — How many entities can participate on each side?
+- **One** — At most one entity (0..1 or exactly 1)
+- **Many** — Zero or more entities (0..*)
+
+**Direction** — Which side "owns" the relationship?
+- The **parent** side holds the list of children
+- The **child** side holds a reference back to its parent
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     RELATIONSHIP TYPES                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ONE-TO-ONE (1:1)                                          │
+│   ┌───────┐         ┌───────┐                               │
+│   │ User  │─────────│Profile│   Each user has one profile   │
+│   └───────┘         └───────┘   Each profile belongs to     │
+│                                 one user                    │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ONE-TO-MANY (1:N) — Parent side                           │
+│   ┌───────┐         ┌───────┐                               │
+│   │Binder │────────<│ Item  │   One binder has many items   │
+│   └───────┘         └───────┘   Binder.items: [1, 2, 3]     │
+│                                                             │
+│   MANY-TO-ONE (N:1) — Child side (inverse of above)         │
+│   ┌───────┐         ┌───────┐                               │
+│   │ Item  │>────────│Binder │   Many items belong to one    │
+│   └───────┘         └───────┘   binder. Item.binder: 5      │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   MANY-TO-MANY (N:M)                                        │
+│   ┌───────┐         ┌───────┐                               │
+│   │ Item  │>───────<│  Tag  │   Items have many tags        │
+│   └───────┘         └───────┘   Tags apply to many items    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**When to use each:**
+
+| Relationship | Use when... | Example |
+|--------------|-------------|---------|
+| `one_to_one` | Exactly one related entity, exclusive | User → Profile |
+| `many_to_one` | Many entities reference one parent | Item → Binder, Comment → Post |
+| `one_to_many` | Parent owns a collection of children | Binder → Items, Post → Comments |
+| `ordered_one_to_many` | Same as above, but order matters | Book → Chapters, Playlist → Songs |
+| `many_to_many` | Entities share references both ways | Items ↔ Tags, Students ↔ Courses |
+
 ### Relationship Types
 
-Four relationship types mapping directly to four junction table implementations:
+Five relationship types mapping to four junction table implementations:
 
 ```yaml
-# Optional single reference (0..1)
+# Exclusive single reference (0..1) — each side has at most one
+- name: profile
+  type: entity
+  entity: UserProfile
+  relationship: one_to_one
+  strong: true
+
+# Back-reference to parent (N:1) — many children point to one parent
 - name: parentItem
   type: entity
   entity: BinderItem
-  relationship: one_to_one
+  relationship: many_to_one
 
-# Required single reference (1..1)
-- name: owner
+# Required back-reference
+- name: binder
   type: entity
-  entity: User
-  relationship: one_to_one
+  entity: Binder
+  relationship: many_to_one
   required: true
 
-# Unordered children with cascade delete
+# Unordered children with cascade delete (1:N)
 - name: tags
   type: entity
   entity: BinderTag
   relationship: one_to_many
   strong: true
 
-# Ordered children (chapters, items)
+# Ordered children (1:N with order)
 - name: chapters
   type: entity
   entity: BinderItem
   relationship: ordered_one_to_many
   strong: true
 
-# Shared references (tags on items)
+# Shared references (N:M)
 - name: tags
   type: entity
   entity: BinderTag
@@ -413,48 +496,66 @@ Four relationship types mapping directly to four junction table implementations:
 
 **Validation rules:**
 
-| Flag | `one_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
-|------|--------------|---------------|----------------------|----------------|
-| `required` | ✓ | ✗ | ✗ | ✗ |
-| `strong` | ✓ | ✓ | ✓ | ✗ |
+| Flag | `one_to_one` | `many_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
+|------|--------------|---------------|---------------|----------------------|----------------|
+| `required` | ✓ | ✓ | ✗ | ✗ | ✗ |
+| `strong` | ✓ | ✗ | ✓ | ✓ | ✗ |
 
 Invalid combinations are rejected at manifest parsing.
 
-**Ownership pattern for many-to-many:**
+**Weak relationships (`many_to_one` and `many_to_many`):**
 
-Many-to-many relationships are always weak — the entities must be owned elsewhere. For tags:
+Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true` because cascade deletion is controlled by the owning side.
 
 ```yaml
 entities:
   - name: Work
     fields:
-      - name: tags                        # Owns the tags
+      - name: tags                        # Owns the tags (strong one-to-many)
         type: entity
         entity: BinderTag
         relationship: one_to_many
         strong: true
 
+  - name: Binder
+    fields:
+      - name: items                       # Owns the items (strong ordered)
+        type: entity
+        entity: BinderItem
+        relationship: ordered_one_to_many
+        strong: true
+
   - name: BinderItem
     fields:
-      - name: tags                        # References tags owned by Work
+      - name: binder                      # Back-reference (weak many-to-one)
+        type: entity
+        entity: Binder
+        relationship: many_to_one
+        required: true
+
+      - name: tags                        # Shared reference (weak many-to-many)
         type: entity
         entity: BinderTag
         relationship: many_to_many
 ```
 
-`Work` owns `BinderTag` entities. `BinderItem` references them. Deleting a `Work` deletes its tags. Deleting a `BinderItem` only removes the references.
+`Work` owns `BinderTag` entities. `Binder` owns `BinderItem` entities. The `many_to_one` and `many_to_many` fields are references only — deleting a `BinderItem` removes references, not the referenced entities.
 
-## Generated Infrastructure
+> **Rule of thumb:** Every entity referenced by a weak relationship (`many_to_one` or `many_to_many`) must be strongly owned somewhere else in your entity graph. Without strong ownership, entities become orphans with no lifecycle management.
+>
+> For example, `BinderTag` is referenced via `many_to_many` by `BinderItem`. To manage tag lifetime, `Work` (or `Root`) must own tags via a strong `one_to_many`. When `Work` is deleted, all its tags are cleaned up automatically. If tags had no strong owner, they would accumulate forever.
+
+## Generated Infrastructure (C++/Qt)
 
 ### Database Layer
 
 **DbContext / DbSubContext**: Connection pool with scoped transactions. Each unit of work owns a `DbSubContext` providing `beginTransaction`, `commit`, `rollback`, and savepoint support.
 
-**Repository Factory**: Creates repositories bound to a specific `DbSubContext`. Returns owned instances (`std::unique_ptr` in C++) — no cross-thread sharing.
+**Repository Factory**: Creates repositories bound to a specific `DbSubContext`. Returns owned instances (`std::unique_ptr`) — no cross-thread sharing.
 
 **Table Cache / Junction Cache**: Thread-safe, time-expiring (30 minutes), invalidated at write time. Improves performance for repeated queries within a session.
 
-### C++/Qt Specific
+### SQLite Configuration
 
 **SQLite with WAL mode**: Optimized for desktop writing applications:
 ```sql
@@ -474,7 +575,7 @@ PRAGMA mmap_size=268435456;     -- 256MB
 
 **Event Registry**: QObject-based event dispatch. Repositories emit `created`, `updated`, `removed` signals. Models subscribe for reactive updates.
 
-### Rust Specific
+## Generated Infrastructure (Rust)
 
 **redb Backend**: Embedded key-value storage with the same patterns as SQLite.
 
