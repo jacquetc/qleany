@@ -15,6 +15,7 @@ entities:
   fields:
   - name: id
     type: integer
+    relationship: one_to_one
 - name: Root
   only_for_heritage: false
   parent: EntityBase
@@ -54,6 +55,7 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: fields
     type: entity
     entity: Field
@@ -73,8 +75,10 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: field_type
     type: enum
+    relationship: one_to_one
     enum_name: FieldType
     enum_values:
     - Bool
@@ -90,28 +94,34 @@ entities:
     type: entity
     entity: Entity
     relationship: one_to_one
-    required: false
   - name: relationship
     type: enum
+    relationship: one_to_one
     enum_name: FieldRelationshipType
     enum_values:
-      - OneToOne
-      - OrderedOneToMany
-      - OneToMany
-      - ManyToOne
-      - ManyToMany
+    - OneToOne
+    - OrderedOneToMany
+    - OneToMany
+    - ManyToOne
+    - ManyToMany
   - name: is_required
     type: boolean
+    relationship: one_to_one
   - name: is_primary_key
     type: boolean
+    relationship: one_to_one
   - name: single_model
     type: boolean
+    relationship: one_to_one
   - name: strong
     type: boolean
+    relationship: one_to_one
   - name: list_model
     type: boolean
+    relationship: one_to_one
   - name: list_model_displayed_field
     type: string
+    relationship: one_to_one
 - name: Feature
   only_for_heritage: false
   parent: EntityBase
@@ -119,6 +129,7 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: use_cases
     type: entity
     entity: UseCase
@@ -133,10 +144,13 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: path
     type: string
+    relationship: one_to_one
   - name: group
     type: string
+    relationship: one_to_one
 - name: UseCase
   only_for_heritage: false
   parent: EntityBase
@@ -144,8 +158,10 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: validator
     type: boolean
+    relationship: one_to_one
   - name: entities
     type: entity
     entity: Entity
@@ -154,10 +170,13 @@ entities:
     list_model_displayed_field: name
   - name: undoable
     type: boolean
+    relationship: one_to_one
   - name: read_only
     type: boolean
+    relationship: one_to_one
   - name: long_operation
     type: boolean
+    relationship: one_to_one
   - name: dto_in
     type: entity
     entity: Dto
@@ -175,6 +194,7 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: fields
     type: entity
     entity: DtoField
@@ -189,8 +209,10 @@ entities:
   fields:
   - name: name
     type: string
+    relationship: one_to_one
   - name: field_type
     type: enum
+    relationship: one_to_one
     enum_name: DtoFieldType
     enum_values:
     - Boolean
@@ -203,15 +225,16 @@ entities:
     - Enum
   - name: is_nullable
     type: boolean
+    relationship: one_to_one
   - name: is_list
     type: boolean
+    relationship: one_to_one
   - name: enum_name
     type: string
-    is_nullable: true
+    relationship: one_to_one
   - name: enum_values
     type: string
-    is_list: true
-    is_nullable: true
+    relationship: one_to_one
 - name: Global
   only_for_heritage: false
   parent: EntityBase
@@ -219,14 +242,19 @@ entities:
   fields:
   - name: language
     type: string
+    relationship: one_to_one
   - name: application_name
     type: string
+    relationship: one_to_one
   - name: organisation_name
     type: string
+    relationship: one_to_one
   - name: organisation_domain
     type: string
+    relationship: one_to_one
   - name: prefix_path
     type: string
+    relationship: one_to_one
 - name: Relationship
   only_for_heritage: false
   parent: EntityBase
@@ -234,12 +262,16 @@ entities:
   fields:
   - name: left_entity_name
     type: string
+    relationship: one_to_one
   - name: right_entity_name
     type: string
+    relationship: one_to_one
   - name: field_name
     type: string
+    relationship: one_to_one
   - name: relationship_type
     type: enum
+    relationship: one_to_one
     enum_name: RelationshipType
     enum_values:
     - OneToOne
@@ -248,18 +280,21 @@ entities:
     - ManyToMany
   - name: strength
     type: enum
+    relationship: one_to_one
     enum_name: Strength
     enum_values:
     - Weak
     - Strong
   - name: direction
     type: enum
+    relationship: one_to_one
     enum_name: Direction
     enum_values:
     - Forward
     - Backward
   - name: cardinality
     type: enum
+    relationship: one_to_one
     enum_name: Cardinality
     enum_values:
     - ZeroOrOne
@@ -268,7 +303,7 @@ entities:
     - OneOrMore
   - name: order
     type: enum
-    is_nullable: true
+    relationship: one_to_one
     enum_name: Order
     enum_values:
     - Ordered
@@ -278,7 +313,6 @@ features:
   use_cases:
   - name: load
     validator: true
-    undoable: false
     entities:
     - Root
     - Entity
@@ -301,7 +335,6 @@ features:
         type: integer
   - name: save
     validator: true
-    undoable: false
     entities:
     - Root
     - Entity
@@ -321,7 +354,6 @@ features:
   use_cases:
   - name: list_rust_files
     validator: true
-    undoable: false
     entities:
     - Root
     - Entity
@@ -346,7 +378,6 @@ features:
         is_list: true
   - name: generate_rust_code
     validator: true
-    undoable: false
     entities:
     - Root
     - Entity
@@ -370,7 +401,6 @@ features:
         type: string
   - name: generate_rust_files
     validator: true
-    undoable: false
     entities:
     - Root
     - Entity
