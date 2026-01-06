@@ -47,7 +47,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         let mut created_globals = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"global".to_string())? {
-            counter.value() + 1
+            counter.value()
         } else {
             1
         };
