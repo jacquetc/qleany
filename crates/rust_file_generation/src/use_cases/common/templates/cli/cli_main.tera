@@ -25,7 +25,7 @@ enum Commands {
 #[derive(Subcommand)]
 enum ProjectCommands {
     /// Creates a new project.
-    Create { dpy_file: String },
+    Create { file: String },
     // Kill { project_id: Option<u32> },
     // List {},
     // Start { project_id: Option<u32> },
@@ -41,5 +41,14 @@ fn main() {
 
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
-    // match &cli.command {
+     match &cli.command {
+         Commands::Project { command } => match command {
+             ProjectCommands::Create { file } => {
+                 println!("Creating project with file: {}", file);
+                 // Add your project creation logic here, call for a feature controller, etc...
+             }
+             // Handle other subcommands here
+         },
+
+    }
 }

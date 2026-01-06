@@ -143,9 +143,7 @@ impl SaveUseCase {
                             RelationshipType::ManyToOne => "many_to_one",
                             RelationshipType::ManyToMany => "many_to_many",
                         };
-                        if field.relationship == RelationshipType::ManyToMany
-                            && entity.is_none()
-                        {
+                        if field.relationship == RelationshipType::ManyToMany && entity.is_none() {
                             panic!("Many-to-many field must have an entity");
                         }
                         let relationship = if field_type == "entity" {
@@ -273,7 +271,11 @@ impl SaveUseCase {
 
                         model_structs::UseCase {
                             name: use_case.name.clone(),
-                            validator: if use_case.validator { Some(true) } else { None },
+                            validator: if use_case.validator {
+                                Some(true)
+                            } else {
+                                Some(false)
+                            },
                             entities: if entity_names.is_empty() {
                                 None
                             } else {

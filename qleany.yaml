@@ -314,6 +314,13 @@ features:
       fields:
       - name: manifest_path
         type: string
+  - name: new
+    validator: false
+    entities:
+    - Root
+    - Entity
+    - Field
+    undoable: false
 - name: rust_file_generation
   use_cases:
   - name: list_rust_files

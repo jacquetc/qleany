@@ -38,7 +38,7 @@ pub fn {{ uc.snake_name }}(
 {%- endif %}
 ) -> Result<String> {
     let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context);
-    let uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context), dto);
+    let uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context) {% if uc.dto_in %} , dto {% endif %} );
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)
 }
@@ -76,7 +76,7 @@ pub fn {{ uc.snake_name }} (
     let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
 {%- endif %}{# read_only #}
     let mut uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context));
-    let return_dto = uc.execute(dto)?;
+    let return_dto = uc.execute({% if uc.dto_in %} dto {% endif %})?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
