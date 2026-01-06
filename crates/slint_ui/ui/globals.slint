@@ -65,6 +65,16 @@ export global EntitiesTabState {
     in-out property <string> selected_entity_name: "";
     callback entity_name_changed(string);
 
+    // only_for_heritage checkbox
+    in-out property <bool> selected_entity_only_for_heritage: false;
+    callback entity_only_for_heritage_changed(bool);
+
+    // inherits_from combo box
+    in-out property <int> selected_entity_inherits_from: -1;  // -1 means "None"
+    in-out property <string> selected_entity_inherits_from_value: "None";  // The actual value for current-value binding
+    in-out property <[string]> inherits_from_options: ["None"];  // "None" + entity names
+    in-out property <[int]> inherits_from_option_ids: [-1];  // -1 for "None" + entity ids
+    callback entity_inherits_from_changed(int);  // receives the index in the combo box
 
     // fields
     in-out property <[CRListItem]> field_cr_list: [];

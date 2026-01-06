@@ -89,7 +89,7 @@ export component EntitiesTab inherits Rectangle {
                     }
 
                     if EntitiesTabState.selected_entity_id >= 0 : Rectangle {
-                        height: 100px;
+                        height: 250px;
                         
                         VerticalLayout {
                             padding: 16px;
@@ -109,6 +109,30 @@ export component EntitiesTab inherits Rectangle {
                                 placeholder: "Enter the entity name (e.g., Person)";
                                 edited(text) => {
                                     EntitiesTabState.entity_name_changed(text);
+                                }
+                            }
+                        }
+
+                        FormField {
+                            label: "Only for heritage";
+
+                            CheckBox {
+                                text: "Only for heritage";
+                                checked <=> EntitiesTabState.selected_entity_only_for_heritage;
+                                toggled => {
+                                    EntitiesTabState.entity_only_for_heritage_changed(self.checked);
+                                }
+                            }
+                        }
+
+                        FormField {
+                            label: "Inherits from";
+
+                            inherits-from-combo := ComboBox {
+                                model: EntitiesTabState.inherits_from_options;
+                                current-value <=> EntitiesTabState.selected_entity_inherits_from_value;
+                                selected(value) => {
+                                    EntitiesTabState.entity_inherits_from_changed(inherits-from-combo.current-index);
                                 }
                             }
                         }
@@ -260,6 +284,15 @@ export component EntitiesTab inherits Rectangle {
                                             EntitiesTabState.field_is_primary_key_changed(self.checked);
                                         }
                                     }
+                                }
+                            }
+
+                            // Entity-specific model options (only visible when type is Entity)
+                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                                label: "Model Options";
+
+                                VerticalLayout {
+                                    spacing: 8px;
 
                                     CheckBox {
                                         text: "List Model";

@@ -437,12 +437,20 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                                 .set_selected_entity_id(selected_entity_id);
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_name(entity.name.into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_only_for_heritage(entity.only_for_heritage);
+                            // Fill inherits_from options and set the selected index
+                            fill_inherits_from_options(&app, &ctx, entity.inherits_from);
                             fill_field_list(&app, &ctx);
                         }
                         _ => {
                             app.global::<EntitiesTabState>().set_selected_entity_id(-1);
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_name("".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_only_for_heritage(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_inherits_from(-1);
                         }
                     };
                 }
@@ -581,6 +589,68 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
                     .set_entity_option_ids(ids_model.into());
             }
         }
+    }
+}
+
+/// Helper function to populate inherits_from options for the Inherits From ComboBox
+/// Also sets the selected_entity_inherits_from_value directly to ensure proper synchronization
+fn fill_inherits_from_options(
+    app: &App,
+    app_context: &Arc<AppContext>,
+    current_inherits_from: Option<common::types::EntityId>,
+) {
+    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+    let mut selected_index: i32 = 0; // Default to "None"
+    let mut selected_value: String = "None".to_string(); // Default to "None"
+
+    if root_id > 0 {
+        let entity_ids_res = root_commands::get_root_relationship(
+            app_context,
+            &root_id,
+            &RootRelationshipField::Entities,
+        );
+
+        if let Ok(entity_ids) = entity_ids_res {
+            if let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
+                // Start with "None" option
+                let mut names: Vec<slint::SharedString> = vec!["None".into()];
+                let mut ids: Vec<i32> = vec![-1];
+
+                for maybe_entity in entities_opt.into_iter() {
+                    if let Some(e) = maybe_entity {
+                        names.push(e.name.clone().into());
+                        ids.push(e.id as i32);
+
+                        // Check if this is the currently selected inherits_from
+                        if let Some(inherits_id) = current_inherits_from {
+                            if e.id == inherits_id {
+                                selected_index = (names.len() - 1) as i32;
+                                selected_value = e.name.clone();
+                            }
+                        }
+                    }
+                }
+
+                let names_model = std::rc::Rc::new(slint::VecModel::from(names));
+                let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
+                app.global::<EntitiesTabState>()
+                    .set_inherits_from_options(names_model.into());
+                app.global::<EntitiesTabState>()
+                    .set_inherits_from_option_ids(ids_model.into());
+                // Set the selected index for the callback to use
+                app.global::<EntitiesTabState>()
+                    .set_selected_entity_inherits_from(selected_index);
+                // Set the selected value for the ComboBox current-value binding
+                app.global::<EntitiesTabState>()
+                    .set_selected_entity_inherits_from_value(selected_value.into());
+            }
+        }
+    } else {
+        // No root, set default "None" option and value
+        app.global::<EntitiesTabState>()
+            .set_selected_entity_inherits_from(0);
+        app.global::<EntitiesTabState>()
+            .set_selected_entity_inherits_from_value("None".into());
     }
 }
 
@@ -909,6 +979,109 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
+fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_entity_only_for_heritage_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let current_entity_id =
+                        app.global::<EntitiesTabState>().get_selected_entity_id();
+                    if current_entity_id < 0 {
+                        return;
+                    }
+                    let entity_res = entity_commands::get_entity(
+                        &ctx,
+                        &(current_entity_id as common::types::EntityId),
+                    );
+
+                    match entity_res {
+                        Ok(Some(mut entity)) => {
+                            if entity.only_for_heritage == value {
+                                return;
+                            }
+                            entity.only_for_heritage = value;
+
+                            let result = entity_commands::update_entity(&ctx, &entity);
+
+                            match result {
+                                Ok(_) => {
+                                    log::info!("Entity only_for_heritage updated successfully");
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to update entity only_for_heritage: {}", e);
+                                }
+                            }
+                        }
+                        _ => {}
+                    };
+                }
+            }
+        });
+}
+
+fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_entity_inherits_from_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |selected_index| {
+                if let Some(app) = app_weak.upgrade() {
+                    let current_entity_id =
+                        app.global::<EntitiesTabState>().get_selected_entity_id();
+                    if current_entity_id < 0 {
+                        return;
+                    }
+
+                    // Get the entity id from the selected index
+                    let inherits_from_option_ids =
+                        app.global::<EntitiesTabState>().get_inherits_from_option_ids();
+                    let inherits_from_id = if selected_index >= 0
+                        && (selected_index as usize) < inherits_from_option_ids.row_count()
+                    {
+                        let id = inherits_from_option_ids
+                            .row_data(selected_index as usize)
+                            .unwrap_or(-1);
+                        if id < 0 {
+                            None // "None" selected
+                        } else {
+                            Some(id as common::types::EntityId)
+                        }
+                    } else {
+                        None
+                    };
+
+                    let entity_res = entity_commands::get_entity(
+                        &ctx,
+                        &(current_entity_id as common::types::EntityId),
+                    );
+
+                    match entity_res {
+                        Ok(Some(mut entity)) => {
+                            if entity.inherits_from == inherits_from_id {
+                                return;
+                            }
+                            entity.inherits_from = inherits_from_id;
+
+                            let result = entity_commands::update_entity(&ctx, &entity);
+
+                            match result {
+                                Ok(_) => {
+                                    log::info!("Entity inherits_from updated successfully");
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to update entity inherits_from: {}", e);
+                                }
+                            }
+                        }
+                        _ => {}
+                    };
+                }
+            }
+        });
+}
+
 /// Initialize all entities tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
@@ -920,6 +1093,8 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_entities_reorder_callback(app, app_context);
     setup_select_entity_callbacks(app, app_context);
     setup_entity_name_callbacks(app, app_context);
+    setup_entity_only_for_heritage_callback(app, app_context);
+    setup_entity_inherits_from_callback(app, app_context);
     setup_entity_deletion_callback(app, app_context);
 
     // Field list callbacks
