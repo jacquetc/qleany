@@ -89,7 +89,7 @@ export component HomeTab inherits Rectangle {
                         text: "New Manifest";
                         enabled: !AppState.is_loading;
                         clicked => {
-                            if (AppState.manifest_is_saved) {
+                            if (AppState.manifest_is_saved || !AppState.manifest_is_open) {
                                 ManifestCommands.new_manifest();
                             } else {
                                 AppState.confirm_dialog_pending_action = "new";

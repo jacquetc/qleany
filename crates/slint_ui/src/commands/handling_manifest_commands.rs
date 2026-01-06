@@ -1,7 +1,7 @@
 //! Manifest handling commands for Slint UI
 
 use crate::app_context::AppContext;
-use handling_manifest::{LoadDto, LoadReturnDto, SaveDto, handling_manifest_controller};
+use handling_manifest::{LoadDto, LoadReturnDto, SaveDto, NewReturnDto, handling_manifest_controller};
 
 /// Load a manifest file
 pub fn load_manifest(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, String> {
@@ -23,6 +23,14 @@ pub fn save_manifest(ctx: &AppContext, dto: &SaveDto) -> Result<(), String> {
     ctx.undo_redo_manager.lock().unwrap().clear();
 
     Ok(())
+}
+
+/// New manifest
+pub fn new_manifest(ctx: &AppContext) -> Result<NewReturnDto, String> {
+    let result = handling_manifest_controller::new(&ctx.db_context, &ctx.event_hub)
+        .map_err(|e| format!("Error while creating new manifest: {:?}", e))?;
+    ctx.undo_redo_manager.lock().unwrap().clear();
+    Ok(result)
 }
 
 /// Close the current manifest

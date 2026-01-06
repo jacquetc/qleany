@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::root::RootRelationshipField;
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use slint::ComponentHandle;
+use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use slint::{ComponentHandle, Timer};
 
 use crate::app_context::AppContext;
 use crate::commands::{feature_commands, root_commands};
@@ -16,6 +16,83 @@ use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
 use super::use_case_handlers::{clear_use_case_form, clear_use_case_list, fill_use_case_list};
+
+pub fn subscribe_close_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
+        let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("Manifest closed event received: {:?}", event);
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            // Use invoke_from_event_loop to safely update UI from background thread
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    clear_feature_list(&app, &ctx);
+                    clear_use_case_list(&app, &ctx);
+                }
+            });
+        }
+    });
+}
+
+pub fn subscribe_new_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("New manifest created event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        fill_feature_list(&app, &ctx);
+                        fill_use_case_list(&app, &ctx);
+                    }
+                }
+            });
+        }
+    });
+}
+
+pub fn subscribe_load_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Load), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("Manifest loaded event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    log::info!("Refreshing feature and use case lists after manifest load");
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        log::info!("Manifest is open, scheduling list refresh");
+                        fill_feature_list(&app, &ctx);
+                        fill_use_case_list(&app, &ctx);
+                        log::info!("Feature and Use Case lists refreshed after manifest load");
+                    }
+                }
+            });
+        }
+    });
+}
 
 /// Subscribe to Root update events to refresh feature_cr_list
 pub fn subscribe_root_updated_event(
@@ -77,6 +154,8 @@ pub fn subscribe_feature_updated_event(
 }
 
 pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
+    log::info!("Filling feature list ...");
+
     let ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
@@ -246,10 +325,8 @@ pub fn setup_select_feature_callbacks(app: &App, app_context: &Arc<AppContext>) 
         let app_weak = app.as_weak();
         move |feature_id| {
             if let Some(app) = app_weak.upgrade() {
-                let feature_res = feature_commands::get_feature(
-                    &ctx,
-                    &(feature_id as common::types::EntityId),
-                );
+                let feature_res =
+                    feature_commands::get_feature(&ctx, &(feature_id as common::types::EntityId));
                 match feature_res {
                     Ok(Some(feature)) => {
                         fill_feature_form(&app, &feature);
@@ -281,10 +358,8 @@ pub fn setup_feature_name_callback(app: &App, app_context: &Arc<AppContext>) {
                     return;
                 }
 
-                let feature_res = feature_commands::get_feature(
-                    &ctx,
-                    &(feature_id as common::types::EntityId),
-                );
+                let feature_res =
+                    feature_commands::get_feature(&ctx, &(feature_id as common::types::EntityId));
 
                 if let Ok(Some(mut feature)) = feature_res {
                     feature.name = name.to_string();
@@ -344,9 +419,10 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                         right_ids: feature_ids,
                                     };
 
-                                    if let Err(e) =
-                                        root_commands::set_root_relationship(&ctx, &relationship_dto)
-                                    {
+                                    if let Err(e) = root_commands::set_root_relationship(
+                                        &ctx,
+                                        &relationship_dto,
+                                    ) {
                                         log::error!(
                                             "Failed to add feature to root relationship: {}",
                                             e

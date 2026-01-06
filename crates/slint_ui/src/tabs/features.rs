@@ -23,6 +23,9 @@ use crate::App;
 /// Initialize all features tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
+    feature_handlers::subscribe_new_manifest_event(event_hub_client, app, app_context);
+    feature_handlers::subscribe_close_manifest_event(event_hub_client, app, app_context);
+    feature_handlers::subscribe_load_manifest_event(event_hub_client, app, app_context);
     feature_handlers::subscribe_root_updated_event(event_hub_client, app, app_context);
     feature_handlers::subscribe_feature_updated_event(event_hub_client, app, app_context);
     use_case_handlers::subscribe_use_case_updated_event(event_hub_client, app, app_context);

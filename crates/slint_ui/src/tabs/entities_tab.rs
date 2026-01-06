@@ -7,15 +7,85 @@ use std::sync::Arc;
 
 use common::direct_access::entity::EntityRelationshipField;
 use common::direct_access::root::RootRelationshipField;
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
+use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use direct_access::EntityRelationshipDto;
 use direct_access::RootRelationshipDto;
-use slint::{ComponentHandle, Model};
+use slint::{ComponentHandle, Model, Timer};
 
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, field_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
+
+fn subscribe_close_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
+        let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("Manifest closed event received: {:?}", event);
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    clear_entity_list(&app, &ctx);
+                }
+            });
+        }
+    });
+}
+
+fn subscribe_new_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("New manifest created event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        fill_entity_list(&app, &ctx);
+                    }
+                }
+            });
+        }
+    });
+}
+
+fn subscribe_load_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Load), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("Manifest loaded event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        fill_entity_list(&app, &ctx);
+                    }
+                }
+            });
+        }
+    });
+}
 
 /// Subscribe to Root update events to refresh entity_cr_list
 fn subscribe_root_updated_event(
@@ -33,7 +103,6 @@ fn subscribe_root_updated_event(
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
-                // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         if app.global::<AppState>().get_manifest_is_open() {
@@ -63,7 +132,6 @@ fn subscribe_entity_updated_event(
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
-                // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         if app.global::<AppState>().get_manifest_is_open() {
@@ -93,7 +161,6 @@ fn subscribe_field_updated_event(
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
-                // Use invoke_from_event_loop to safely update UI from background thread
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
                         if app.global::<AppState>().get_manifest_is_open() {
@@ -108,6 +175,7 @@ fn subscribe_field_updated_event(
 }
 
 fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
+    log::info!("Filling entity list...");
     let ctx = Arc::clone(app_context);
     let app_weak = app.as_weak();
 
@@ -800,7 +868,6 @@ fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
-
 fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_strong_changed({
         let ctx = Arc::clone(app_context);
@@ -1050,9 +1117,10 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                                         right_ids: entity_ids,
                                     };
 
-                                    if let Err(e) =
-                                        root_commands::set_root_relationship(&ctx, &relationship_dto)
-                                    {
+                                    if let Err(e) = root_commands::set_root_relationship(
+                                        &ctx,
+                                        &relationship_dto,
+                                    ) {
                                         log::error!(
                                             "Failed to add entity to root relationship: {}",
                                             e
@@ -1074,81 +1142,80 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>()
-        .on_request_field_addition({
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move || {
-                if let Some(app) = app_weak.upgrade() {
-                    let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
-                    if entity_id < 0 {
-                        log::warn!("Cannot add field: no entity selected");
-                        return;
-                    }
+    app.global::<EntitiesTabState>().on_request_field_addition({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move || {
+            if let Some(app) = app_weak.upgrade() {
+                let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                if entity_id < 0 {
+                    log::warn!("Cannot add field: no entity selected");
+                    return;
+                }
 
-                    // Create a new field with default values
-                    let create_dto = direct_access::CreateFieldDto {
-                        name: "new_field".to_string(),
-                        field_type: common::entities::FieldType::String,
-                        entity: None,
-                        relationship: common::entities::RelationshipType::OneToOne,
-                        required: false,
-                        single_model: false,
-                        strong: true,
-                        list_model: false,
-                        list_model_displayed_field: None,
-                        enum_name: None,
-                        enum_values: None,
-                    };
+                // Create a new field with default values
+                let create_dto = direct_access::CreateFieldDto {
+                    name: "new_field".to_string(),
+                    field_type: common::entities::FieldType::String,
+                    entity: None,
+                    relationship: common::entities::RelationshipType::OneToOne,
+                    required: false,
+                    single_model: false,
+                    strong: true,
+                    list_model: false,
+                    list_model_displayed_field: None,
+                    enum_name: None,
+                    enum_values: None,
+                };
 
-                    match field_commands::create_field(&ctx, &create_dto) {
-                        Ok(new_field) => {
-                            log::info!("Field created successfully with id: {}", new_field.id);
+                match field_commands::create_field(&ctx, &create_dto) {
+                    Ok(new_field) => {
+                        log::info!("Field created successfully with id: {}", new_field.id);
 
-                            // Get current field ids from entity
-                            let field_ids_res = entity_commands::get_entity_relationship(
-                                &ctx,
-                                &(entity_id as common::types::EntityId),
-                                &EntityRelationshipField::Fields,
-                            );
+                        // Get current field ids from entity
+                        let field_ids_res = entity_commands::get_entity_relationship(
+                            &ctx,
+                            &(entity_id as common::types::EntityId),
+                            &EntityRelationshipField::Fields,
+                        );
 
-                            match field_ids_res {
-                                Ok(mut field_ids) => {
-                                    // Add the new field id to the list
-                                    field_ids.push(new_field.id);
+                        match field_ids_res {
+                            Ok(mut field_ids) => {
+                                // Add the new field id to the list
+                                field_ids.push(new_field.id);
 
-                                    // Update the entity relationship
-                                    let relationship_dto = EntityRelationshipDto {
-                                        id: entity_id as common::types::EntityId,
-                                        field: EntityRelationshipField::Fields,
-                                        right_ids: field_ids,
-                                    };
+                                // Update the entity relationship
+                                let relationship_dto = EntityRelationshipDto {
+                                    id: entity_id as common::types::EntityId,
+                                    field: EntityRelationshipField::Fields,
+                                    right_ids: field_ids,
+                                };
 
-                                    if let Err(e) = entity_commands::set_entity_relationship(
-                                        &ctx,
-                                        &relationship_dto,
-                                    ) {
-                                        log::error!(
-                                            "Failed to add field to entity relationship: {}",
-                                            e
-                                        );
-                                    } else {
-                                        // Refresh the field list to show the new field
-                                        fill_field_list(&app, &ctx);
-                                    }
-                                }
-                                Err(e) => {
-                                    log::error!("Failed to get entity fields relationship: {}", e);
+                                if let Err(e) = entity_commands::set_entity_relationship(
+                                    &ctx,
+                                    &relationship_dto,
+                                ) {
+                                    log::error!(
+                                        "Failed to add field to entity relationship: {}",
+                                        e
+                                    );
+                                } else {
+                                    // Refresh the field list to show the new field
+                                    fill_field_list(&app, &ctx);
                                 }
                             }
+                            Err(e) => {
+                                log::error!("Failed to get entity fields relationship: {}", e);
+                            }
                         }
-                        Err(e) => {
-                            log::error!("Failed to create field: {}", e);
-                        }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to create field: {}", e);
                     }
                 }
             }
-        });
+        }
+    });
 }
 
 fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>) {
@@ -1165,8 +1232,9 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
                     }
 
                     // Get the entity id from the selected index
-                    let inherits_from_option_ids =
-                        app.global::<EntitiesTabState>().get_inherits_from_option_ids();
+                    let inherits_from_option_ids = app
+                        .global::<EntitiesTabState>()
+                        .get_inherits_from_option_ids();
                     let inherits_from_id = if selected_index >= 0
                         && (selected_index as usize) < inherits_from_option_ids.row_count()
                     {
@@ -1216,6 +1284,9 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
     subscribe_root_updated_event(event_hub_client, app, app_context);
+    subscribe_new_manifest_event(event_hub_client, app, app_context);
+    subscribe_close_manifest_event(event_hub_client, app, app_context);
+    subscribe_load_manifest_event(event_hub_client, app, app_context);
     subscribe_entity_updated_event(event_hub_client, app, app_context);
     subscribe_field_updated_event(event_hub_client, app, app_context);
 

@@ -9,11 +9,13 @@ use crate::app_context::AppContext;
 use crate::commands::{global_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ProjectTabState};
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use slint::ComponentHandle;
+use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use slint::{ComponentHandle, Timer};
 
 /// Fill the ProjectTabState with data from the Global entity
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
+    log::info!("Filling ProjectTabState with data from Global entity");
+
     if let Some(global_id) = get_global_id(app, app_context) {
         if let Ok(Some(global)) = global_commands::get_global(app_context, &global_id) {
             log::info!("Filling ProjectTabState with global data: {:?}", global);
@@ -36,6 +38,91 @@ fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
     }
 }
 
+fn clear_project_tab(app: &App) {
+    log::info!("Clearing ProjectTabState data");
+    app.global::<ProjectTabState>()
+        .set_language(slint::SharedString::from("Rust"));
+    app.global::<ProjectTabState>()
+        .set_application_name(slint::SharedString::from(""));
+    app.global::<ProjectTabState>()
+        .set_organisation_name(slint::SharedString::from(""));
+    app.global::<ProjectTabState>()
+        .set_organisation_domain(slint::SharedString::from(""));
+    app.global::<ProjectTabState>()
+        .set_prefix_path(slint::SharedString::from(""));
+}
+
+fn subscribe_close_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
+        let ctx = Arc::clone(&app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("Manifest closed event received: {:?}", event);
+            let _ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        clear_project_tab(&app);
+                    }
+                }
+            });
+        }
+    });
+}
+
+fn subscribe_new_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("New manifest created event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        fill_project_tab(&app, &ctx);
+                    }
+                }
+            });
+        }
+    });
+}
+
+fn subscribe_load_manifest_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Load), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_event| {
+            log::info!("Manifest loaded event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    if app.global::<AppState>().get_manifest_is_open() {
+                        fill_project_tab(&app, &ctx);
+                    }
+                }
+            });
+        }
+    });
+}
+
 /// Subscribe to Global created events to populate ProjectTabState when manifest is loaded
 fn subscribe_global_created_event(
     event_hub_client: &EventHubClient,
@@ -54,7 +141,9 @@ fn subscribe_global_created_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        fill_project_tab(&app, &ctx);
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            fill_project_tab(&app, &ctx);
+                        }
                     }
                 });
             }
@@ -96,6 +185,7 @@ fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::typ
     if root_id > 0 {
         if let Ok(Some(root)) = root_commands::get_root(app_context, &root_id) {
             if root.global > 0 {
+                println!("Found global_id: {}", root.global);
                 return Some(root.global);
             }
         }
@@ -211,6 +301,9 @@ fn setup_prefix_path_callback(app: &App, app_context: &Arc<AppContext>) {
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     subscribe_global_created_event(event_hub_client, app, app_context);
     subscribe_global_updated_event(event_hub_client, app, app_context);
+    subscribe_new_manifest_event(event_hub_client, app, app_context);
+    subscribe_close_manifest_event(event_hub_client, app, app_context);
+    subscribe_load_manifest_event(event_hub_client, app, app_context);
     setup_language_callback(app, app_context);
     setup_application_name_callback(app, app_context);
     setup_organisation_name_callback(app, app_context);
