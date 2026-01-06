@@ -13,3 +13,7 @@ pub struct LoadReturnDto {
 pub struct SaveDto {
     pub manifest_path: String,
 }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NewReturnDto {
+    pub root_id: u64,
+}

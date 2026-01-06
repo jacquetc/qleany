@@ -8,6 +8,7 @@ use crate::use_cases::new_uc::NewUseCase;
 use crate::use_cases::save_uc::SaveUseCase;
 use crate::LoadDto;
 use crate::LoadReturnDto;
+use crate::NewReturnDto;
 use crate::SaveDto;
 use anyhow::Result;
 use common::event::{Event, Origin};
@@ -31,7 +32,7 @@ pub fn load(
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(Load),
-        ids: vec![],
+        ids: vec![return_dto.root_id],
         data: None,
     });
     Ok(return_dto)
@@ -50,14 +51,14 @@ pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) ->
     Ok(return_dto)
 }
 
-pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
+pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<NewReturnDto> {
     let uow_context = NewUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = NewUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute()?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(New),
-        ids: vec![],
+        ids: vec![return_dto.root_id],
         data: None,
     });
     Ok(return_dto)

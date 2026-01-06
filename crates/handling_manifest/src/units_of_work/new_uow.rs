@@ -2,7 +2,7 @@ use crate::use_cases::new_uc::{NewUnitOfWorkFactoryTrait, NewUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{Entity, Field, Root};
+use common::entities::{Entity, Field, Root, Global};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -62,12 +62,10 @@ impl CommandUnitOfWork for NewUnitOfWork {
         Ok(())
     }
 }
-#[macros::uow_action(entity = "Root", action = "Get")]
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
-#[macros::uow_action(entity = "Entity", action = "Get")]
-#[macros::uow_action(entity = "Entity", action = "GetMulti")]
-#[macros::uow_action(entity = "Field", action = "Get")]
-#[macros::uow_action(entity = "Field", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "CreateMulti")]
+#[macros::uow_action(entity = "Global", action = "CreateMulti")]
+#[macros::uow_action(entity = "Entity", action = "CreateMulti")]
+#[macros::uow_action(entity = "Field", action = "CreateMulti")]
 impl NewUnitOfWorkTrait for NewUnitOfWork {}
 
 pub struct NewUnitOfWorkFactory {
