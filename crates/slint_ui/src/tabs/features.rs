@@ -32,11 +32,13 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     feature_handlers::setup_select_feature_callbacks(app, app_context);
     feature_handlers::setup_feature_name_callback(app, app_context);
     feature_handlers::setup_feature_deletion_callback(app, app_context);
+    feature_handlers::setup_feature_addition_callback(app, app_context);
 
     // Use case list callbacks
     use_case_handlers::setup_use_cases_reorder_callback(app, app_context);
     use_case_handlers::setup_select_use_case_callbacks(app, app_context);
     use_case_handlers::setup_use_case_deletion_callback(app, app_context);
+    use_case_handlers::setup_use_case_addition_callback(app, app_context);
 
     // Use case detail callbacks
     use_case_handlers::setup_use_case_name_callback(app, app_context);
@@ -58,6 +60,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     dto_in_handlers::setup_dto_in_field_is_list_callback(app, app_context);
     dto_in_handlers::setup_dto_in_fields_reorder_callback(app, app_context);
     dto_in_handlers::setup_dto_in_field_deletion_callback(app, app_context);
+    dto_in_handlers::setup_dto_in_field_addition_callback(app, app_context);
 
     // DTO Out callbacks
     dto_out_handlers::setup_dto_out_enabled_callback(app, app_context);
@@ -69,4 +72,5 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     dto_out_handlers::setup_dto_out_field_is_list_callback(app, app_context);
     dto_out_handlers::setup_dto_out_fields_reorder_callback(app, app_context);
     dto_out_handlers::setup_dto_out_field_deletion_callback(app, app_context);
+    dto_out_handlers::setup_dto_out_field_addition_callback(app, app_context);
 }

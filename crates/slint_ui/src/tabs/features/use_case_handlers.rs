@@ -558,3 +558,75 @@ pub fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppCont
             }
         });
 }
+
+pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_request_use_case_addition({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let feature_id = app.global::<FeaturesTabState>().get_selected_feature_id();
+                    if feature_id < 0 {
+                        log::warn!("Cannot add use case: no feature selected");
+                        return;
+                    }
+
+                    // Create a new use case with default values
+                    let create_dto = direct_access::CreateUseCaseDto {
+                        name: "NewUseCase".to_string(),
+                        validator: false,
+                        undoable: false,
+                        read_only: false,
+                        long_operation: false,
+                        dto_in: None,
+                        dto_out: None,
+                        entities: vec![],
+                    };
+
+                    match use_case_commands::create_use_case(&ctx, &create_dto) {
+                        Ok(new_use_case) => {
+                            log::info!("Use case created successfully with id: {}", new_use_case.id);
+
+                            // Get current use case ids from feature
+                            let use_case_ids_res = feature_commands::get_feature_relationship(
+                                &ctx,
+                                &(feature_id as common::types::EntityId),
+                                &FeatureRelationshipField::UseCases,
+                            );
+
+                            match use_case_ids_res {
+                                Ok(mut use_case_ids) => {
+                                    // Add the new use case id to the list
+                                    use_case_ids.push(new_use_case.id);
+
+                                    // Update the feature relationship
+                                    let relationship_dto = FeatureRelationshipDto {
+                                        id: feature_id as common::types::EntityId,
+                                        field: FeatureRelationshipField::UseCases,
+                                        right_ids: use_case_ids,
+                                    };
+
+                                    if let Err(e) = feature_commands::set_feature_relationship(
+                                        &ctx,
+                                        &relationship_dto,
+                                    ) {
+                                        log::error!(
+                                            "Failed to add use case to feature relationship: {}",
+                                            e
+                                        );
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get feature use cases relationship: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to create use case: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}

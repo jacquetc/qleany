@@ -61,6 +61,7 @@ export global EntitiesTabState {
     in-out property <int> selected_entity_id: -1;
     callback entity_selected(int);
     callback request_entity_deletion(int /* entity_id */);
+    callback request_entity_addition();
     // name input :
     in-out property <string> selected_entity_name: "";
     callback entity_name_changed(string);
@@ -82,6 +83,7 @@ export global EntitiesTabState {
     in-out property <int> selected_field_id: -1;
     callback field_selected(int);
     callback request_field_deletion(int /* field_id */);
+    callback request_field_addition();
 
     // Field details properties
     in-out property <string> selected_field_name: "";
@@ -131,6 +133,7 @@ export global FeaturesTabState {
     in-out property <int> selected_feature_id: -1;
     callback feature_selected(int);
     callback request_feature_deletion(int /* feature_id */);
+    callback request_feature_addition();
 
     // Feature details
     in-out property <string> selected_feature_name: "";
@@ -142,6 +145,7 @@ export global FeaturesTabState {
     in-out property <int> selected_use_case_id: -1;
     callback use_case_selected(int);
     callback request_use_case_deletion(int /* use_case_id */);
+    callback request_use_case_addition();
 
     // Use case details properties
     in-out property <string> selected_use_case_name: "";
@@ -179,6 +183,7 @@ export global FeaturesTabState {
     in-out property <int> selected_dto_in_field_id: -1;
     callback dto_in_field_selected(int);
     callback request_dto_in_field_deletion(int /* dto_in_field_id */);
+    callback request_dto_in_field_addition();
 
     // DTO In field details properties
     in-out property <string> selected_dto_in_field_name: "";
@@ -203,6 +208,7 @@ export global FeaturesTabState {
     in-out property <int> selected_dto_out_field_id: -1;
     callback dto_out_field_selected(int);
     callback request_dto_out_field_deletion(int /* dto_out_field_id */);
+    callback request_dto_out_field_addition();
 
     // DTO Out field details properties
     in-out property <string> selected_dto_out_field_name: "";

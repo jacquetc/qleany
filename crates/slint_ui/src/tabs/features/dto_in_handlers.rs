@@ -466,3 +466,75 @@ pub fn setup_dto_in_field_deletion_callback(app: &App, app_context: &Arc<AppCont
             }
         });
 }
+
+pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_request_dto_in_field_addition({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
+                    if dto_id < 0 {
+                        log::warn!("Cannot add DTO In field: no DTO In selected");
+                        return;
+                    }
+
+                    // Create a new DTO field with default values
+                    let create_dto = direct_access::CreateDtoFieldDto {
+                        name: "new_field".to_string(),
+                        field_type: DtoFieldType::String,
+                        is_nullable: false,
+                        is_list: false,
+                        enum_name: None,
+                        enum_values: None,
+                    };
+
+                    match dto_field_commands::create_dto_field(&ctx, &create_dto) {
+                        Ok(new_field) => {
+                            log::info!("DTO In field created successfully with id: {}", new_field.id);
+
+                            // Get current field ids from DTO
+                            let field_ids_res = dto_commands::get_dto_relationship(
+                                &ctx,
+                                &(dto_id as common::types::EntityId),
+                                &DtoRelationshipField::Fields,
+                            );
+
+                            match field_ids_res {
+                                Ok(mut field_ids) => {
+                                    // Add the new field id to the list
+                                    field_ids.push(new_field.id);
+
+                                    // Update the DTO relationship
+                                    let relationship_dto = DtoRelationshipDto {
+                                        id: dto_id as common::types::EntityId,
+                                        field: DtoRelationshipField::Fields,
+                                        right_ids: field_ids,
+                                    };
+
+                                    if let Err(e) =
+                                        dto_commands::set_dto_relationship(&ctx, &relationship_dto)
+                                    {
+                                        log::error!(
+                                            "Failed to add field to DTO In relationship: {}",
+                                            e
+                                        );
+                                    } else {
+                                        // Refresh the field list
+                                        fill_dto_in_field_list(&app, &ctx);
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get DTO In fields relationship: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to create DTO In field: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}

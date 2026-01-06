@@ -301,3 +301,68 @@ pub fn setup_feature_name_callback(app: &App, app_context: &Arc<AppContext>) {
         }
     });
 }
+
+pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_request_feature_addition({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let root_id = app.global::<AppState>().get_root_id();
+                    if root_id <= 0 {
+                        log::warn!("Cannot add feature: no root loaded");
+                        return;
+                    }
+
+                    // Create a new feature with default values
+                    let create_dto = direct_access::CreateFeatureDto {
+                        name: "NewFeature".to_string(),
+                        use_cases: vec![],
+                    };
+
+                    match feature_commands::create_feature(&ctx, &create_dto) {
+                        Ok(new_feature) => {
+                            log::info!("Feature created successfully with id: {}", new_feature.id);
+
+                            // Get current feature ids from root
+                            let feature_ids_res = root_commands::get_root_relationship(
+                                &ctx,
+                                &(root_id as common::types::EntityId),
+                                &RootRelationshipField::Features,
+                            );
+
+                            match feature_ids_res {
+                                Ok(mut feature_ids) => {
+                                    // Add the new feature id to the list
+                                    feature_ids.push(new_feature.id);
+
+                                    // Update the root relationship
+                                    let relationship_dto = direct_access::RootRelationshipDto {
+                                        id: root_id as common::types::EntityId,
+                                        field: RootRelationshipField::Features,
+                                        right_ids: feature_ids,
+                                    };
+
+                                    if let Err(e) =
+                                        root_commands::set_root_relationship(&ctx, &relationship_dto)
+                                    {
+                                        log::error!(
+                                            "Failed to add feature to root relationship: {}",
+                                            e
+                                        );
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get root features relationship: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to create feature: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}

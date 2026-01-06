@@ -34,8 +34,43 @@ export component EntitiesTab inherits Rectangle {
 
                 VerticalLayout {
 
-                    SectionHeader {
-                        title: "Entities";
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Entities";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-entity-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-entity-touch := TouchArea {
+                                    clicked => {
+                                        EntitiesTabState.request_entity_addition();
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -145,8 +180,43 @@ export component EntitiesTab inherits Rectangle {
                     }
 
                     // Fields Section
-                    SectionHeader {
-                        title: "Fields";
+                    Rectangle {
+                        height: 48px;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            alignment: space-between;
+
+                            Text {
+                                text: "Fields";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle {
+                                width: 28px;
+                                height: 28px;
+                                background: add-field-touch.has-hover ? #e7f5ff : transparent;
+                                border-radius: 4px;
+
+                                Text {
+                                    text: "+";
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    color: #228be6;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                add-field-touch := TouchArea {
+                                    clicked => {
+                                        EntitiesTabState.request_field_addition();
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {

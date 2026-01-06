@@ -1021,6 +1021,154 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
         });
 }
 
+fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_request_entity_addition({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let root_id = app.global::<AppState>().get_root_id();
+                    if root_id <= 0 {
+                        log::warn!("Cannot add entity: no root loaded");
+                        return;
+                    }
+
+                    // Create a new entity with default values
+                    let create_dto = direct_access::CreateEntityDto {
+                        name: "NewEntity".to_string(),
+                        only_for_heritage: false,
+                        inherits_from: None,
+                        allow_direct_access: true,
+                        fields: vec![],
+                        relationships: vec![],
+                    };
+
+                    match entity_commands::create_entity(&ctx, &create_dto) {
+                        Ok(new_entity) => {
+                            log::info!("Entity created successfully with id: {}", new_entity.id);
+
+                            // Get current entity ids from root
+                            let entity_ids_res = root_commands::get_root_relationship(
+                                &ctx,
+                                &(root_id as common::types::EntityId),
+                                &RootRelationshipField::Entities,
+                            );
+
+                            match entity_ids_res {
+                                Ok(mut entity_ids) => {
+                                    // Add the new entity id to the list
+                                    entity_ids.push(new_entity.id);
+
+                                    // Update the root relationship
+                                    let relationship_dto = RootRelationshipDto {
+                                        id: root_id as common::types::EntityId,
+                                        field: RootRelationshipField::Entities,
+                                        right_ids: entity_ids,
+                                    };
+
+                                    if let Err(e) =
+                                        root_commands::set_root_relationship(&ctx, &relationship_dto)
+                                    {
+                                        log::error!(
+                                            "Failed to add entity to root relationship: {}",
+                                            e
+                                        );
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get root entities relationship: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to create entity: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}
+
+fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_request_field_addition({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                    if entity_id < 0 {
+                        log::warn!("Cannot add field: no entity selected");
+                        return;
+                    }
+
+                    // Create a new field with default values
+                    let create_dto = direct_access::CreateFieldDto {
+                        name: "new_field".to_string(),
+                        field_type: common::entities::FieldType::String,
+                        entity: None,
+                        is_primary_key: false,
+                        relationship: common::entities::RelationshipType::OneToOne,
+                        required: false,
+                        single_model: true,
+                        strong: true,
+                        list_model: false,
+                        list_model_displayed_field: None,
+                        enum_name: None,
+                        enum_values: None,
+                    };
+
+                    match field_commands::create_field(&ctx, &create_dto) {
+                        Ok(new_field) => {
+                            log::info!("Field created successfully with id: {}", new_field.id);
+
+                            // Get current field ids from entity
+                            let field_ids_res = entity_commands::get_entity_relationship(
+                                &ctx,
+                                &(entity_id as common::types::EntityId),
+                                &EntityRelationshipField::Fields,
+                            );
+
+                            match field_ids_res {
+                                Ok(mut field_ids) => {
+                                    // Add the new field id to the list
+                                    field_ids.push(new_field.id);
+
+                                    // Update the entity relationship
+                                    let relationship_dto = EntityRelationshipDto {
+                                        id: entity_id as common::types::EntityId,
+                                        field: EntityRelationshipField::Fields,
+                                        right_ids: field_ids,
+                                    };
+
+                                    if let Err(e) = entity_commands::set_entity_relationship(
+                                        &ctx,
+                                        &relationship_dto,
+                                    ) {
+                                        log::error!(
+                                            "Failed to add field to entity relationship: {}",
+                                            e
+                                        );
+                                    } else {
+                                        // Refresh the field list to show the new field
+                                        fill_field_list(&app, &ctx);
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get entity fields relationship: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to create field: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}
+
 fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>()
         .on_entity_inherits_from_changed({
@@ -1096,11 +1244,13 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_entity_only_for_heritage_callback(app, app_context);
     setup_entity_inherits_from_callback(app, app_context);
     setup_entity_deletion_callback(app, app_context);
+    setup_entity_addition_callback(app, app_context);
 
     // Field list callbacks
     setup_fields_reorder_callback(app, app_context);
     setup_select_field_callbacks(app, app_context);
     setup_field_deletion_callback(app, app_context);
+    setup_field_addition_callback(app, app_context);
 
     // Field detail callbacks
     setup_field_name_callback(app, app_context);
