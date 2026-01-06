@@ -36,14 +36,14 @@ fn main() {
     // Initialize global AppState (defaults are set in globals.slint, but we can override here if needed)
     // The globals are already initialized with defaults in globals.slint
 
+    // Initialize home tab callbacks (manifest operations)
+    tabs::home_tab::init(&event_hub_client, &app, &app_context);
+
     // Initialize entities tab subscriptions and callbacks
     tabs::entities_tab::init(&event_hub_client, &app, &app_context);
 
     // Initialize features tab subscriptions and callbacks
     tabs::features::init(&event_hub_client, &app, &app_context);
-
-    // Initialize home tab callbacks (manifest operations)
-    tabs::home_tab::init(&event_hub_client, &app, &app_context);
 
     // Initialize project tab callbacks (project settings)
     tabs::project_tab::init(&event_hub_client, &app, &app_context);

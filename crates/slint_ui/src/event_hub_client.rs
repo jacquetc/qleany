@@ -47,7 +47,8 @@ impl EventHubClient {
             log::info!("EventHubClient event loop started");
             loop {
                 // Process all pending events
-                while let Some(event) = queue.lock().unwrap().pop() {
+                while !queue.lock().unwrap().is_empty() {
+                    let event = queue.lock().unwrap().remove(0);
                     log::debug!("EventHubClient received event: {:?}", event);
                     let subs = subscribers.lock().unwrap();
                     if let Some(callbacks) = subs.get(&event.origin) {
