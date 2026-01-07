@@ -1,52 +1,9 @@
 import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
 import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 import { DtoDetails } from "dto_details.slint";
 
-
-// Alert component
-component Alert inherits Rectangle {
-    in property <string> message;
-    in property <string> title: "Loading";
-    in property <color> alert-color: #228be6;
-    
-    background: #e7f5ff;
-    border-width: 1px;
-    border-color: alert-color;
-    border-radius: 8px;
-    min-height: 48px;
-    
-    HorizontalLayout {
-        padding: 12px;
-        spacing: 12px;
-        
-        Rectangle {
-            width: 4px;
-            background: alert-color;
-            border-radius: 2px;
-        }
-        
-        VerticalLayout {
-            spacing: 4px;
-            alignment: center;
-            
-            Text {
-                text: title;
-                font-size: 14px;
-                font-weight: 600;
-                color: alert-color;
-            }
-            
-            Text {
-                text: message;
-                font-size: 14px;
-                color: #495057;
-                wrap: word-wrap;
-            }
-        }
-    }
-}
 
 export component FeaturesTab inherits Rectangle {
     background: #ffffff;
@@ -70,6 +27,7 @@ export component FeaturesTab inherits Rectangle {
             title: "Loading";
             message: "Loading features data...";
             alert-color: #228be6;
+            bg-color: #e7f5ff;
         }
 
         // Error state

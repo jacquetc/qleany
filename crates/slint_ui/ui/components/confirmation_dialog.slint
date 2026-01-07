@@ -1,4 +1,4 @@
-import { Button } from "std-widgets.slint";
+import { StyledButton } from "misc.slint";
 
 // Confirmation dialog component for unsaved changes warning
 export component ConfirmationDialog inherits Rectangle {
@@ -14,7 +14,7 @@ export component ConfirmationDialog inherits Rectangle {
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
         z: 1;
-        width: 400px;
+        width: 450px;
         height: 180px;
         background: #ffffff;
         border-radius: 12px;
@@ -52,14 +52,14 @@ export component ConfirmationDialog inherits Rectangle {
                 spacing: 12px;
                 alignment: center;
 
-                Button {
+                StyledButton {
                     text: "Cancel";
                     clicked => { 
                         root.rejected();
                     }
                 }
 
-                Button {
+                StyledButton {
                     text: "Continue Without Saving";
                     primary: true;
                     clicked => { 

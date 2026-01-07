@@ -1,49 +1,7 @@
 import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
 import { ManifestCommands, AppState } from "../globals.slint";
-import { Paper } from "../components/misc.slint";
+import { Paper, Alert, StyledButton } from "../components/misc.slint";
 
-
-// Alert component for error messages
-component Alert inherits Rectangle {
-    in property <string> message;
-    in property <color> alert-color: #fa5252;
-    
-    background: #fff5f5;
-    border-width: 1px;
-    border-color: alert-color;
-    border-radius: 8px;
-    min-height: 48px;
-    
-    HorizontalLayout {
-        padding: 12px;
-        spacing: 12px;
-        
-        Rectangle {
-            width: 4px;
-            background: alert-color;
-            border-radius: 2px;
-        }
-        
-        VerticalLayout {
-            spacing: 4px;
-            alignment: center;
-            
-            Text {
-                text: "Error";
-                font-size: 14px;
-                font-weight: 600;
-                color: alert-color;
-            }
-            
-            Text {
-                text: message;
-                font-size: 14px;
-                color: #495057;
-                wrap: word-wrap;
-            }
-        }
-    }
-}
 
 export component HomeTab inherits Rectangle {
     background: #ffffff;
@@ -85,7 +43,7 @@ export component HomeTab inherits Rectangle {
                     spacing: 12px;
                     alignment: start;
 
-                    Button {
+                    StyledButton {
                         text: "New Manifest";
                         enabled: !AppState.is_loading;
                         clicked => {
@@ -101,7 +59,7 @@ export component HomeTab inherits Rectangle {
                     }
 
 
-                    Button {
+                    StyledButton {
                         text: "Open Manifest";
                         enabled: !AppState.is_loading;
                         clicked => {
@@ -115,19 +73,19 @@ export component HomeTab inherits Rectangle {
                         }
                         primary: true;
                     }
-                    Button {
+                    StyledButton {
                         text: "Save Manifest";
                         enabled: AppState.manifest_is_open && !AppState.manifest_is_saved && !AppState.is_loading;
                         clicked => { ManifestCommands.save_manifest(); }
                         primary: true;
                     }
-                    Button {
+                    StyledButton {
                         text: "Save Manifest As...";
                         enabled: AppState.manifest_is_open && !AppState.is_loading;
                         clicked => { ManifestCommands.save_manifest_as(); }
                         primary: true;
                     }
-                    Button {
+                    StyledButton {
                         text: "Close Current Manifest";
                         enabled: AppState.manifest_is_open && !AppState.is_loading;
                         clicked => {
@@ -159,7 +117,7 @@ export component HomeTab inherits Rectangle {
                             color: #212529;
                         }
 
-                        Button {
+                        StyledButton {
                             width: 180px;
                             height: 36px;
                             enabled: !AppState.is_loading;

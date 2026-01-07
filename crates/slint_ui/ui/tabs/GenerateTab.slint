@@ -1,7 +1,6 @@
 import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView, LineEdit } from "std-widgets.slint";
 import { GenerateCommands, AppState, CRListItem } from "../globals.slint";
-import { StyledButton } from "../components/buttons.slint";
-import { ListItem, Divider, SectionHeader } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, StyledButton } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 
@@ -66,25 +65,11 @@ export component GenerateTab inherits Rectangle {
                 checked <=> AppState.generate_in_temp;
             }
             
-            Button {
-                text: "List Rust Files";
-                clicked => {
-                    GenerateCommands.list_files();
-                     }
-                primary: true;
-            }
-            
-            Button {
+            StyledButton {
                 text: AppState.generate_is_running ? "Generating..." : "Generate (" + AppState.selected_files_count + ")";
                 enabled: !AppState.generate_is_running && AppState.selected_files_count > 0;
                 clicked => { GenerateCommands.start_generate(); }
                 primary: true;
-            }
-            
-            Button {
-                text: "Cancel";
-                enabled: AppState.generate_is_running;
-                clicked => { GenerateCommands.cancel_generate(); }
             }
         }
 
@@ -170,12 +155,12 @@ export component GenerateTab inherits Rectangle {
                                 }
                             }
 
-                            Button {
+                            StyledButton {
                                 text: "Select All";
                                 clicked => { AppState.select_all_files(); }
                             }
 
-                            Button {
+                            StyledButton {
                                 text: "Unselect All";
                                 clicked => { AppState.unselect_all_files(); }
                             }
@@ -273,7 +258,7 @@ export component GenerateTab inherits Rectangle {
             alignment: center;
             
             StyledButton {
-                label: "Cancel";
+                text: "Cancel";
                 outline: true;
                 bg-color: #fa5252;
                 enabled: AppState.generate_is_running;

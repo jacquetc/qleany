@@ -5,6 +5,7 @@ import { EntitiesTab } from "tabs/EntitiesTab.slint";
 import { FeaturesTab } from "tabs/FeaturesTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
+import { StyledButton } from "components/misc.slint";
 
 // Import and export globals for Rust access
 import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, AppState } from "globals.slint";
@@ -81,7 +82,7 @@ export component App inherits Window {
                     }
 
                     // Undo button
-                    Button {
+                    StyledButton {
                         text: "↩";
                         enabled: AppState.manifest_is_open;
                         clicked => { UndoRedoCommands.undo(); }
@@ -89,7 +90,7 @@ export component App inherits Window {
                     }
 
                     // Redo button
-                    Button {
+                    StyledButton {
                         text: "↪";
                         enabled: AppState.manifest_is_open;
                         clicked => { UndoRedoCommands.redo(); }
@@ -97,7 +98,7 @@ export component App inherits Window {
                     }
 
                     // Save button
-                    Button {
+                    StyledButton {
                         text: "Save Manifest";
                         enabled: AppState.manifest_is_open && !AppState.manifest_is_saved && !AppState.is_loading;
                         clicked => { ManifestCommands.save_manifest(); }
