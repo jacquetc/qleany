@@ -1,6 +1,10 @@
 # Qleany
 
-**Architecture scaffolding generator for desktop applications and CLI tools.**
+**Architecture scaffolding generator for C++/Qt6 or Rust desktop applications and CLI tools.**
+
+Building a desktop app in Qt or Rust? Not sure how to structure it beyond "put code in files"?
+Qleany generates a complete architecture: controllers, repositories, DTOs, undo/redo, reactive models — organized by feature, ready to extend.
+Define your entities and relationships in a YAML manifest. Get a working structure that scales.
 
 Qleany generates Package by Feature (Vertical Slice Architecture) code from a YAML manifest. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt.
 
@@ -250,10 +254,10 @@ mock_imports/
         └── SingleBinderItem.qml
 ```
 
-Build with `SKR_BUILD_WITH_MOCKS` to develop UI without backend compilation:
+Build with `YOUR_APP_BUILD_WITH_MOCKS` to develop UI without backend compilation:
 
 ```cmake
-option(SKR_BUILD_WITH_MOCKS "Build with QML mocks instead of real backend" OFF)
+option(YOUR_APP_BUILD_WITH_MOCKS "Build with QML mocks instead of real backend" OFF)
 ```
 
 UI developers can iterate on screens with mock data. When ready, disable the flag and the real controllers take over with no QML changes required.
@@ -422,15 +426,15 @@ Database relationships describe how entities connect. Two concepts matter:
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│   ONE-TO-MANY (1:N) — Parent side                           │
+│   ONE-TO-MANY (1:N)                                         │
 │   ┌───────┐         ┌───────┐                               │
-│   │Binder │────────<│ Item  │   One binder has many items   │
+│   │Group  │────────<│ Item  │   One group  has many items   │
 │   └───────┘         └───────┘   Binder.items: [1, 2, 3]     │
 │                                                             │
-│   MANY-TO-ONE (N:1) — Child side (inverse of above)         │
+│   MANY-TO-ONE (N:1)                                         │
 │   ┌───────┐         ┌───────┐                               │
-│   │ Item  │>────────│Binder │   Many items belong to one    │
-│   └───────┘         └───────┘   binder. Item.binder: 5      │
+│   │ Car   │>────────│Brand  │   Many items belong to one    │
+│   └───────┘         └───────┘   brand.  Car.brand: 5        │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
@@ -444,13 +448,13 @@ Database relationships describe how entities connect. Two concepts matter:
 
 **When to use each:**
 
-| Relationship | Use when... | Example |
-|--------------|-------------|---------|
+| Relationship | Use when...                           | Example |
+|--------------|---------------------------------------|---------|
 | `one_to_one` | Exactly one related entity, exclusive | User → Profile |
-| `many_to_one` | Many entities reference one parent | Item → Binder, Comment → Post |
-| `one_to_many` | Parent owns a collection of children | Binder → Items, Post → Comments |
-| `ordered_one_to_many` | Same as above, but order matters | Book → Chapters, Playlist → Songs |
-| `many_to_many` | Entities share references both ways | Items ↔ Tags, Students ↔ Courses |
+| `many_to_one` | Many entities reference one child     | Car → Brand, Comment → Post |
+| `one_to_many` | Parent owns a collection of children  | Binder → Items, Post → Comments |
+| `ordered_one_to_many` | Same as above, but order matters      | Book → Chapters, Playlist → Songs |
+| `many_to_many` | Entities share references both ways   | Items ↔ Tags, Students ↔ Courses |
 
 ### Relationship Types
 
