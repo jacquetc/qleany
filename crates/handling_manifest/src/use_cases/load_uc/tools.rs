@@ -1,7 +1,4 @@
-use common::entities::{
-    Cardinality, Direction, DtoFieldType, Entity, Field, FieldType, Order, Relationship,
-    RelationshipType, Strength,
-};
+use common::entities::{Cardinality, Direction, DtoFieldType, Entity, Field, FieldRelationshipType, FieldType, Order, Relationship, RelationshipType, Strength};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -60,7 +57,7 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
         .map(|field| {
             // Derive cardinality and order from relationship type
             let (cardinality, order) = match field.relationship {
-                RelationshipType::OneToOne => {
+                FieldRelationshipType::OneToOne => {
                     let card = if field.required {
                         Cardinality::One
                     } else {
@@ -68,11 +65,11 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                RelationshipType::OneToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
-                RelationshipType::OrderedOneToMany => {
+                FieldRelationshipType::OneToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
+                FieldRelationshipType::OrderedOneToMany => {
                     (Cardinality::ZeroOrMore, Some(Order::Ordered))
                 }
-                RelationshipType::ManyToOne => {
+                FieldRelationshipType::ManyToOne => {
                     let card = if field.required {
                         Cardinality::One
                     } else {
@@ -80,7 +77,7 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                RelationshipType::ManyToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
+                FieldRelationshipType::ManyToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
             };
 
             Relationship {
@@ -88,7 +85,13 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                 left_entity: entity.id,
                 right_entity: field.entity.unwrap(),
                 field_name: field.name.clone(),
-                relationship_type: field.relationship.clone(),
+                relationship_type: match field.relationship {
+                    FieldRelationshipType::OneToOne => RelationshipType::OneToOne,
+                    FieldRelationshipType::OneToMany => RelationshipType::OneToMany,
+                    FieldRelationshipType::OrderedOneToMany => RelationshipType::OrderedOneToMany,
+                    FieldRelationshipType::ManyToOne => RelationshipType::ManyToOne,
+                    FieldRelationshipType::ManyToMany => RelationshipType::ManyToMany,
+                },
                 strength: if field.strong {
                     Strength::Strong
                 } else {
@@ -170,6 +173,7 @@ mod tests {
             allow_direct_access: true,
             fields: vec![1, 2], // Field IDs
             relationships: vec![],
+            single_model: false,
         };
 
         // Create fields for the parent entity
@@ -180,10 +184,9 @@ mod tests {
                 name: "single_child".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
-                relationship: RelationshipType::OneToOne,
+                relationship: FieldRelationshipType::OneToOne,
                 required: true,
                 strong: true,
-                single_model: false,
                 list_model: false,
                 list_model_displayed_field: None,
                 enum_name: None,
@@ -195,10 +198,9 @@ mod tests {
                 name: "multiple_children".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
-                relationship: RelationshipType::OrderedOneToMany,
+                relationship: FieldRelationshipType::OrderedOneToMany,
                 required: false,
                 strong: true,
-                single_model: false,
                 list_model: true,
                 list_model_displayed_field: None,
                 enum_name: None,

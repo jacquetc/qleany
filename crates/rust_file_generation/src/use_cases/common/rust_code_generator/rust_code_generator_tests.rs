@@ -1,10 +1,7 @@
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{
-    Root, Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType,
-    UseCase,
-};
+use common::entities::{Root, Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType, UseCase, FieldRelationshipType};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -204,6 +201,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         name: "User".into(),
         only_for_heritage: false,
         inherits_from: None,
+        single_model: true,
         allow_direct_access: true,
         fields: vec![400],
         relationships: vec![],
@@ -213,9 +211,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         name: "name".into(),
         field_type: FieldType::String,
         entity: Some(300),
-        relationship: RelationshipType::OneToOne,
+        relationship: FieldRelationshipType::OneToOne,
         required: false,
-        single_model: true,
         strong: true,
         list_model: false,
         list_model_displayed_field: None,
@@ -285,6 +282,7 @@ fn for_file_various_combinations_generate_expected_items() {
         name: "A".into(),
         only_for_heritage: false,
         inherits_from: None,
+        single_model: true,
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],
@@ -294,6 +292,7 @@ fn for_file_various_combinations_generate_expected_items() {
         name: "B".into(),
         only_for_heritage: false,
         inherits_from: None,
+        single_model: true,
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],

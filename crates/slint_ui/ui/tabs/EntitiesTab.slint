@@ -157,17 +157,15 @@ export component EntitiesTab inherits Rectangle {
                             }
                         }
 
-                        FormField {
-                            label: "Only for heritage";
 
-                            CheckBox {
-                                text: "Only for heritage";
-                                checked <=> EntitiesTabState.selected_entity_only_for_heritage;
-                                toggled => {
-                                    EntitiesTabState.entity_only_for_heritage_changed(self.checked);
-                                }
+                        CheckBox {
+                            text: "Only for heritage";
+                            checked <=> EntitiesTabState.selected_entity_only_for_heritage;
+                            toggled => {
+                                EntitiesTabState.entity_only_for_heritage_changed(self.checked);
                             }
                         }
+
 
                         FormField {
                             label: "Inherits from";
@@ -178,6 +176,14 @@ export component EntitiesTab inherits Rectangle {
                                 selected(value) => {
                                     EntitiesTabState.entity_inherits_from_changed(inherits-from-combo.current-index);
                                 }
+                            }
+                        }
+
+                        CheckBox {
+                            text: "Single Model";
+                            checked <=> EntitiesTabState.selected_entity_single_model;
+                            toggled => {
+                                EntitiesTabState.entity_single_model_changed(self.checked);
                             }
                         }
                         }
@@ -376,14 +382,6 @@ export component EntitiesTab inherits Rectangle {
                                             checked <=> EntitiesTabState.selected_field_list_model;
                                             toggled => {
                                                 EntitiesTabState.field_list_model_changed(self.checked);
-                                            }
-                                        }
-
-                                        CheckBox {
-                                            text: "Single Model";
-                                            checked <=> EntitiesTabState.selected_field_single_model;
-                                            toggled => {
-                                                EntitiesTabState.field_single_model_changed(self.checked);
                                             }
                                         }
                                     }

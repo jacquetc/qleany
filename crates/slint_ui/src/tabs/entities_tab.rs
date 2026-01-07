@@ -11,7 +11,7 @@ use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Orig
 use direct_access::EntityRelationshipDto;
 use direct_access::RootRelationshipDto;
 use slint::{ComponentHandle, Model, Timer};
-
+use common::entities::{FieldType, RelationshipType, FieldRelationshipType};
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, field_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
@@ -507,6 +507,9 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                                 .set_selected_entity_name(entity.name.into());
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_only_for_heritage(entity.only_for_heritage);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_single_model(entity.single_model);
+
                             // Fill inherits_from options and set the selected index
                             fill_inherits_from_options(&app, &ctx, entity.inherits_from);
                             fill_field_list(&app, &ctx);
@@ -528,57 +531,83 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
 }
 
 /// Helper function to convert FieldType to string
-fn field_type_to_string(field_type: &common::entities::FieldType) -> &'static str {
+fn field_type_to_string(field_type: &FieldType) -> &'static str {
     match field_type {
-        common::entities::FieldType::Boolean => "Boolean",
-        common::entities::FieldType::Integer => "Integer",
-        common::entities::FieldType::UInteger => "UInteger",
-        common::entities::FieldType::Float => "Float",
-        common::entities::FieldType::String => "String",
-        common::entities::FieldType::Uuid => "Uuid",
-        common::entities::FieldType::DateTime => "DateTime",
-        common::entities::FieldType::Entity => "Entity",
-        common::entities::FieldType::Enum => "Enum",
+        FieldType::Boolean => "Boolean",
+        FieldType::Integer => "Integer",
+        FieldType::UInteger => "UInteger",
+        FieldType::Float => "Float",
+        FieldType::String => "String",
+        FieldType::Uuid => "Uuid",
+        FieldType::DateTime => "DateTime",
+        FieldType::Entity => "Entity",
+        FieldType::Enum => "Enum",
     }
 }
 
 /// Helper function to convert string to FieldType
-fn string_to_field_type(s: &str) -> common::entities::FieldType {
+fn string_to_field_type(s: &str) -> FieldType {
     match s {
-        "Boolean" => common::entities::FieldType::Boolean,
-        "Integer" => common::entities::FieldType::Integer,
-        "UInteger" => common::entities::FieldType::UInteger,
-        "Float" => common::entities::FieldType::Float,
-        "Uuid" => common::entities::FieldType::Uuid,
-        "DateTime" => common::entities::FieldType::DateTime,
-        "Entity" => common::entities::FieldType::Entity,
-        "Enum" => common::entities::FieldType::Enum,
-        _ => common::entities::FieldType::String,
+        "Boolean" => FieldType::Boolean,
+        "Integer" => FieldType::Integer,
+        "UInteger" => FieldType::UInteger,
+        "Float" => FieldType::Float,
+        "Uuid" => FieldType::Uuid,
+        "DateTime" => FieldType::DateTime,
+        "Entity" => FieldType::Entity,
+        "Enum" => FieldType::Enum,
+        _ => FieldType::String,
     }
 }
 
 /// Helper function to convert RelationshipType to string for UI
-fn relationship_type_to_string(rel_type: &common::entities::RelationshipType) -> &'static str {
+fn relationship_type_to_string(rel_type: &RelationshipType) -> &'static str {
     match rel_type {
-        common::entities::RelationshipType::OneToOne => "one_to_one",
-        common::entities::RelationshipType::OneToMany => "one_to_many",
-        common::entities::RelationshipType::OrderedOneToMany => "ordered_one_to_many",
-        common::entities::RelationshipType::ManyToOne => "many_to_one",
-        common::entities::RelationshipType::ManyToMany => "many_to_many",
+        RelationshipType::OneToOne => "one_to_one",
+        RelationshipType::OneToMany => "one_to_many",
+        RelationshipType::OrderedOneToMany => "ordered_one_to_many",
+        RelationshipType::ManyToOne => "many_to_one",
+        RelationshipType::ManyToMany => "many_to_many",
     }
 }
 
 /// Helper function to convert string to RelationshipType
-fn string_to_relationship_type(s: &str) -> common::entities::RelationshipType {
+fn string_to_relationship_type(s: &str) -> RelationshipType {
     match s {
-        "one_to_one" => common::entities::RelationshipType::OneToOne,
-        "one_to_many" => common::entities::RelationshipType::OneToMany,
-        "ordered_one_to_many" => common::entities::RelationshipType::OrderedOneToMany,
-        "many_to_one" => common::entities::RelationshipType::ManyToOne,
-        "many_to_many" => common::entities::RelationshipType::ManyToMany,
-        _ => common::entities::RelationshipType::OneToOne,
+        "one_to_one" => RelationshipType::OneToOne,
+        "one_to_many" => RelationshipType::OneToMany,
+        "ordered_one_to_many" => RelationshipType::OrderedOneToMany,
+        "many_to_one" => RelationshipType::ManyToOne,
+        "many_to_many" => RelationshipType::ManyToMany,
+        _ => RelationshipType::OneToOne,
     }
 }
+
+/// Helper function to convert FieldRelationshipType to string for UI
+fn field_relationship_type_to_string(
+    rel_type: &FieldRelationshipType,
+) -> &'static str {
+    match rel_type {
+        FieldRelationshipType::OneToOne => "one_to_one",
+        FieldRelationshipType::OneToMany => "one_to_many",
+        FieldRelationshipType::OrderedOneToMany => "ordered_one_to_many",
+        FieldRelationshipType::ManyToOne => "many_to_one",
+        FieldRelationshipType::ManyToMany => "many_to_many",
+    }
+}
+
+/// Helper function to convert string to FieldRelationshipType
+fn string_to_field_relationship_type(s: &str) -> FieldRelationshipType {
+    match s {
+        "one_to_one" => FieldRelationshipType::OneToOne,
+        "one_to_many" => FieldRelationshipType::OneToMany,
+        "ordered_one_to_many" => FieldRelationshipType::OrderedOneToMany,
+        "many_to_one" => FieldRelationshipType::ManyToOne,
+        "many_to_many" => FieldRelationshipType::ManyToMany,
+        _ => FieldRelationshipType::OneToOne,
+    }
+}
+
 
 /// Helper function to fill all field form properties from a FieldDto
 fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
@@ -587,9 +616,8 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     state.set_selected_field_name(field.name.clone().into());
     state.set_selected_field_type(field_type_to_string(&field.field_type).into());
     state.set_selected_field_entity(field.entity.map(|e| e as i32).unwrap_or(-1));
-    state.set_selected_field_relationship(relationship_type_to_string(&field.relationship).into());
+    state.set_selected_field_relationship(field_relationship_type_to_string(&field.relationship).into());
     state.set_selected_field_required(field.required);
-    state.set_selected_field_single_model(field.single_model);
     state.set_selected_field_strong(field.strong);
     state.set_selected_field_list_model(field.list_model);
     state.set_selected_field_list_model_displayed_field(
@@ -619,7 +647,6 @@ fn clear_field_form(app: &App) {
     state.set_selected_field_entity(-1);
     state.set_selected_field_relationship("one_to_one".into());
     state.set_selected_field_required(false);
-    state.set_selected_field_single_model(true);
     state.set_selected_field_strong(true);
     state.set_selected_field_list_model(false);
     state.set_selected_field_list_model_displayed_field("".into());
@@ -744,6 +771,30 @@ where
     }
 }
 
+/// Helper function to update a field with new values
+fn update_entity_helper<F>(app_context: &Arc<AppContext>, entity_id: i32, update_fn: F)
+where
+    F: FnOnce(&mut direct_access::EntityDto),
+{
+    if entity_id < 0 {
+        return;
+    }
+
+    let entity_res = entity_commands::get_entity(app_context, &(entity_id as common::types::EntityId));
+
+    if let Ok(Some(mut entity)) = entity_res {
+        update_fn(&mut entity);
+        match entity_commands::update_entity(app_context, &entity) {
+            Ok(_) => {
+                log::info!("Field updated successfully");
+            }
+            Err(e) => {
+                log::error!("Failed to update field: {}", e);
+            }
+        }
+    }
+}
+
 fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_selected({
         let ctx = Arc::clone(app_context);
@@ -799,7 +850,7 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                 update_field_helper(&ctx, field_id, |field| {
                     field.field_type = string_to_field_type(&type_str);
                     // Clear entity reference if not Entity type
-                    if field.field_type != common::entities::FieldType::Entity {
+                    if field.field_type != FieldType::Entity {
                         field.entity = None;
                     }
                 });
@@ -844,7 +895,7 @@ fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
             move |value| {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                    let relationship_type = string_to_relationship_type(value.as_str());
+                    let relationship_type = string_to_field_relationship_type(value.as_str());
                     update_field_helper(&ctx, field_id, |field| {
                         field.relationship = relationship_type.clone();
                     });
@@ -883,16 +934,16 @@ fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
-fn setup_field_single_model_callback(app: &App, app_context: &Arc<AppContext>) {
+fn setup_entity_single_model_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>()
-        .on_field_single_model_changed({
+        .on_entity_single_model_changed({
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |value| {
                 if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                    update_field_helper(&ctx, field_id, |field| {
-                        field.single_model = value;
+                    let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                    update_entity_helper(&ctx, entity_id, |entity| {
+                        entity.single_model = value;
                     });
                 }
             }
@@ -1089,6 +1140,7 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         name: "NewEntity".to_string(),
                         only_for_heritage: false,
                         inherits_from: None,
+                        single_model: false,
                         allow_direct_access: true,
                         fields: vec![],
                         relationships: vec![],
@@ -1156,11 +1208,10 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                 // Create a new field with default values
                 let create_dto = direct_access::CreateFieldDto {
                     name: "new_field".to_string(),
-                    field_type: common::entities::FieldType::String,
+                    field_type: FieldType::String,
                     entity: None,
-                    relationship: common::entities::RelationshipType::OneToOne,
+                    relationship: FieldRelationshipType::OneToOne,
                     required: false,
-                    single_model: false,
                     strong: true,
                     list_model: false,
                     list_model_displayed_field: None,
@@ -1295,6 +1346,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_select_entity_callbacks(app, app_context);
     setup_entity_name_callbacks(app, app_context);
     setup_entity_only_for_heritage_callback(app, app_context);
+    setup_entity_single_model_callback(app, app_context);
     setup_entity_inherits_from_callback(app, app_context);
     setup_entity_deletion_callback(app, app_context);
     setup_entity_addition_callback(app, app_context);
@@ -1311,7 +1363,6 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_field_entity_callback(app, app_context);
     setup_field_relationship_callback(app, app_context);
     setup_field_required_callback(app, app_context);
-    setup_field_single_model_callback(app, app_context);
     setup_field_strong_callback(app, app_context);
     setup_field_list_model_callback(app, app_context);
     setup_field_list_model_displayed_field_callback(app, app_context);

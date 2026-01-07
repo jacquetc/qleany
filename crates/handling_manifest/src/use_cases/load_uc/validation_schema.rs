@@ -54,6 +54,9 @@ pub fn json_validation_schema() -> serde_json::Value {
                         "inherits_from": {
                             "type": "string"
                         },
+                        "single_model": {
+                            "type": "boolean"
+                        },
                         "only_for_heritage": {
                             "type": "boolean"
                         },
@@ -80,13 +83,13 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "list_model": {
                                         "type": "boolean"
                                     },
+                                    "required": {
+                                        "type": "boolean"
+                                    },
                                     "list_model_displayed_field": {
                                         "type": "string"
                                     },
                                     "is_nullable": {
-                                        "type": "boolean"
-                                    },
-                                    "is_primary_key": {
                                         "type": "boolean"
                                     },
                                     "enum_values": {
@@ -96,7 +99,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                                         }
                                     },
                                 },
-                                "required": ["name", "type"]
+                                "required": ["name", "type", "required"]
                             }
                         }
                     },

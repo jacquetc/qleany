@@ -9,7 +9,7 @@ use common::{
         Root, UseCase,
     },
 };
-
+use common::entities::FieldRelationshipType;
 use crate::use_cases::common::model_structs;
 use crate::{LoadDto, LoadReturnDto};
 
@@ -145,6 +145,7 @@ impl LoadUseCase {
                 id: 0,
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
+                single_model: model_entity.single_model.unwrap_or_default(),
                 inherits_from: None, // will be filled in later
                 allow_direct_access: model_entity.allow_direct_access,
                 fields: vec![],        // will be filled in later
@@ -191,15 +192,15 @@ impl LoadUseCase {
 
                 // parse relationship type from string
                 let relationship = match model_field.relationship.as_deref() {
-                    Some("one_to_one") => RelationshipType::OneToOne,
-                    Some("many_to_one") => RelationshipType::ManyToOne,
-                    Some("one_to_many") => RelationshipType::OneToMany,
-                    Some("ordered_one_to_many") => RelationshipType::OrderedOneToMany,
-                    Some("many_to_many") => RelationshipType::ManyToMany,
+                    Some("one_to_one") => FieldRelationshipType::OneToOne,
+                    Some("many_to_one") => FieldRelationshipType::ManyToOne,
+                    Some("one_to_many") => FieldRelationshipType::OneToMany,
+                    Some("ordered_one_to_many") => FieldRelationshipType::OrderedOneToMany,
+                    Some("many_to_many") => FieldRelationshipType::ManyToMany,
                     Some(other) => {
                         return Err(anyhow::anyhow!("Unknown relationship type: {}", other));
                     }
-                    None => RelationshipType::OneToOne, // default for entity fields
+                    None => FieldRelationshipType::OneToOne, // default for entity fields
                 };
 
                 // create field
@@ -220,7 +221,6 @@ impl LoadUseCase {
                         .transpose()?,
                     relationship,
                     required: model_field.required.unwrap_or_default(),
-                    single_model: model_field.single_model.unwrap_or_default(),
                     strong: model_field.strong.unwrap_or_default(),
                     list_model: model_field.list_model.unwrap_or_default(),
                     list_model_displayed_field: model_field.list_model_displayed_field.clone(),

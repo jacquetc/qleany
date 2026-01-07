@@ -21,6 +21,7 @@ pub struct Entity {
     pub allow_direct_access: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
+    pub single_model: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -89,9 +90,8 @@ pub struct Field {
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
-    pub relationship: RelationshipType,
+    pub relationship: FieldRelationshipType,
     pub required: bool,
-    pub single_model: bool,
     pub strong: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
@@ -140,6 +140,21 @@ pub enum FieldType {
     DateTime,
     Entity,
     Enum,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum FieldRelationshipType {
+    OneToOne,
+    OneToMany,
+    OrderedOneToMany,
+    ManyToOne,
+    ManyToMany,
+}
+
+impl Default for FieldRelationshipType {
+    fn default() -> Self {
+        FieldRelationshipType::OneToOne
+    }
 }
 
 impl Default for FieldType {

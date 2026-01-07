@@ -47,9 +47,6 @@ pub struct Field {
     pub list_model_displayed_field: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub single_model: Option<bool>,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub enum_name: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -62,6 +59,9 @@ pub struct Entity {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub only_for_heritage: Option<bool>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub single_model: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inherits_from: Option<String>,

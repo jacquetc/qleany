@@ -1,9 +1,10 @@
-use crate::use_cases::common::model_structs;
 use crate::SaveDto;
+use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, RelationshipType, Root, UseCase,
+    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, RelationshipType, Root,
+    UseCase,
 };
 use common::types::EntityId;
 
@@ -137,13 +138,15 @@ impl SaveUseCase {
 
                         // Convert RelationshipType enum to string
                         let relationship_str = match field.relationship {
-                            RelationshipType::OneToOne => "one_to_one",
-                            RelationshipType::OneToMany => "one_to_many",
-                            RelationshipType::OrderedOneToMany => "ordered_one_to_many",
-                            RelationshipType::ManyToOne => "many_to_one",
-                            RelationshipType::ManyToMany => "many_to_many",
+                            FieldRelationshipType::OneToOne => "one_to_one",
+                            FieldRelationshipType::OneToMany => "one_to_many",
+                            FieldRelationshipType::OrderedOneToMany => "ordered_one_to_many",
+                            FieldRelationshipType::ManyToOne => "many_to_one",
+                            FieldRelationshipType::ManyToMany => "many_to_many",
                         };
-                        if field.relationship == RelationshipType::ManyToMany && entity.is_none() {
+                        if field.relationship == FieldRelationshipType::ManyToMany
+                            && entity.is_none()
+                        {
                             panic!("Many-to-many field must have an entity");
                         }
                         let relationship = if field_type == "entity" {
@@ -157,11 +160,10 @@ impl SaveUseCase {
                             r#type: field_type,
                             entity,
                             relationship,
-                            required: if field.required { Some(true) } else { None },
+                            required: if field.required { Some(true) } else { Some(false) },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),
-                            single_model: if field.single_model { Some(true) } else { None },
                             enum_name: field.enum_name.clone(),
                             enum_values: field.enum_values.clone(),
                         }
@@ -178,6 +180,11 @@ impl SaveUseCase {
                     name: entity.name.clone(),
                     only_for_heritage,
                     inherits_from,
+                    single_model: if entity.single_model {
+                        Some(true)
+                    } else {
+                        None
+                    },
                     allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
                 }

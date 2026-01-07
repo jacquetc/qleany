@@ -4,8 +4,8 @@ mod rust_code_generator_tests;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Root, Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldType, File, Global, Relationship,
-    RelationshipType, UseCase,
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
+    Global, Relationship, RelationshipType, Root, UseCase,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -244,8 +244,7 @@ pub(crate) struct SnapshotBuilder;
 impl SnapshotBuilder {
     fn get_root_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
         use anyhow::anyhow;
-        let roots = uow
-            .get_root_multi(&vec![])?;
+        let roots = uow.get_root_multi(&vec![])?;
         let root = roots
             .into_iter()
             .filter_map(|r| r)
@@ -264,7 +263,6 @@ impl SnapshotBuilder {
             .get_entity(entity_id)?
             .ok_or_else(|| anyhow!("Entity not found"))?;
 
-
         let mut fields_vec: Vec<Field> = Vec::new();
 
         // Load fields from the inherited entity first, if any
@@ -276,10 +274,11 @@ impl SnapshotBuilder {
         }
 
         // Load fields belonging to the entity
-        fields_vec.extend(uow
-            .get_field_multi(&entity.fields)?
-            .into_iter()
-            .filter_map(|f| f));
+        fields_vec.extend(
+            uow.get_field_multi(&entity.fields)?
+                .into_iter()
+                .filter_map(|f| f),
+        );
 
         // Build FieldVMs with the same Rust type mapping as used elsewhere
         let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
@@ -305,26 +304,24 @@ impl SnapshotBuilder {
             };
             //
             let relationship = match f.relationship {
-                RelationshipType::OneToOne => "OneToOne".to_string(),
-                RelationshipType::OrderedOneToMany => "OrderedOneToMany".to_string(),
-                RelationshipType::OneToMany => "OneToMany".to_string(),
-                RelationshipType::ManyToOne => "ManyToOne".to_string(),
-                RelationshipType::ManyToMany => "ManyToMany".to_string(),
+                FieldRelationshipType::OneToOne => "OneToOne".to_string(),
+                FieldRelationshipType::OrderedOneToMany => "OrderedOneToMany".to_string(),
+                FieldRelationshipType::OneToMany => "OneToMany".to_string(),
+                FieldRelationshipType::ManyToOne => "ManyToOne".to_string(),
+                FieldRelationshipType::ManyToMany => "ManyToMany".to_string(),
             };
 
             let rust_type = match f.relationship {
-                RelationshipType::OneToOne | RelationshipType::ManyToOne => {
+                FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne => {
                     if f.required {
                         rust_base_type.clone()
-                    } else if f.field_type == FieldType::Entity {
-                        format!("Option<{}>", &rust_base_type)
                     } else {
-                        rust_base_type.clone()
+                        format!("Option<{}>", &rust_base_type)
                     }
                 }
-                RelationshipType::OrderedOneToMany
-                | RelationshipType::OneToMany
-                | RelationshipType::ManyToMany => format!("Vec<{}>", rust_base_type),
+                FieldRelationshipType::OrderedOneToMany
+                | FieldRelationshipType::OneToMany
+                | FieldRelationshipType::ManyToMany => format!("Vec<{}>", rust_base_type),
             };
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
@@ -466,7 +463,6 @@ impl SnapshotBuilder {
                 return Ok((new_snapshot, true));
             }
         }
-
 
         let root_id: EntityId = SnapshotBuilder::get_root_id(uow)?;
         let global_ids = uow.get_root_relationship(
@@ -1071,14 +1067,17 @@ impl SnapshotBuilder {
             .collect();
 
         // compute entity_snake if entity scope
-        Ok((GenerationSnapshot {
-            file: FileVM { inner: file },
-            global: global_vm,
-            entities: entities_vm,
-            features: features_vm,
-            use_cases: use_cases_vm,
-            dtos: dtos_vm,
-        }, false))
+        Ok((
+            GenerationSnapshot {
+                file: FileVM { inner: file },
+                global: global_vm,
+                entities: entities_vm,
+                features: features_vm,
+                use_cases: use_cases_vm,
+                dtos: dtos_vm,
+            },
+            false,
+        ))
     }
 }
 
@@ -1151,6 +1150,7 @@ mod tests {
             name: "User".to_string(),
             only_for_heritage: false,
             inherits_from: None,
+            single_model: true,
             allow_direct_access: true,
             fields: vec![100, 101],
             relationships: vec![],
@@ -1160,9 +1160,8 @@ mod tests {
             name: "name".to_string(),
             field_type: FieldType::Entity,
             entity: Some(entity_id),
-            relationship: RelationshipType::OneToOne,
+            relationship: FieldRelationshipType::OneToOne,
             required: false, // nullable
-            single_model: true,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1174,9 +1173,8 @@ mod tests {
             name: "tags".to_string(),
             field_type: FieldType::String,
             entity: None,
-            relationship: RelationshipType::OneToMany,
+            relationship: FieldRelationshipType::OneToMany,
             required: false,
-            single_model: true,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,

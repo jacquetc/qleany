@@ -77,6 +77,10 @@ export global EntitiesTabState {
     in-out property <[int]> inherits_from_option_ids: [-1];  // -1 for "None" + entity ids
     callback entity_inherits_from_changed(int);  // receives the index in the combo box
 
+    // Other entity details properties
+    in-out property <bool> selected_entity_single_model: true;
+    callback entity_single_model_changed(bool);
+
     // fields
     in-out property <[CRListItem]> field_cr_list: [];
     callback request_fields_reorder(int /* from_index */, int /* to_index */);
@@ -91,7 +95,6 @@ export global EntitiesTabState {
     in-out property <int> selected_field_entity: -1;
     in-out property <string> selected_field_relationship: "one_to_one";
     in-out property <bool> selected_field_required: false;
-    in-out property <bool> selected_field_single_model: true;
     in-out property <bool> selected_field_strong: true;
     in-out property <bool> selected_field_list_model: false;
     in-out property <string> selected_field_list_model_displayed_field: "";
@@ -113,7 +116,6 @@ export global EntitiesTabState {
     callback field_is_primary_key_changed(bool);
     callback field_relationship_changed(string);
     callback field_required_changed(bool);
-    callback field_single_model_changed(bool);
     callback field_strong_changed(bool);
     callback field_list_model_changed(bool);
     callback field_list_model_displayed_field_changed(string);

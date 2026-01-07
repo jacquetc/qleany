@@ -15,10 +15,7 @@ entities:
   fields:
   - name: id
     type: integer
-  - name: created_at
-    type: datetime
-  - name: updated_at
-    type: datetime
+    required: false
 - name: Root
   inherits_from: EntityBase
   allow_direct_access: true
@@ -33,6 +30,7 @@ entities:
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -40,6 +38,7 @@ entities:
     type: entity
     entity: Feature
     relationship: ordered_one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -47,6 +46,7 @@ entities:
     type: entity
     entity: File
     relationship: one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -56,16 +56,20 @@ entities:
   fields:
   - name: name
     type: string
+    required: true
   - name: inherits_from
     type: entity
     entity: Entity
     relationship: many_to_one
+    required: false
   - name: only_for_heritage
     type: boolean
+    required: true
   - name: fields
     type: entity
     entity: Field
     relationship: ordered_one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -73,6 +77,11 @@ entities:
     type: entity
     entity: Relationship
     relationship: one_to_many
+    required: false
+    strong: true
+  - name: single_model
+    type: boolean
+    required: true
     strong: true
 - name: Field
   inherits_from: EntityBase
@@ -80,8 +89,10 @@ entities:
   fields:
   - name: name
     type: string
+    required: true
   - name: field_type
     type: enum
+    required: true
     enum_name: FieldType
     enum_values:
     - Bool
@@ -97,8 +108,10 @@ entities:
     type: entity
     entity: Entity
     relationship: many_to_one
+    required: false
   - name: relationship
     type: enum
+    required: true
     enum_name: FieldRelationshipType
     enum_values:
     - OneToOne
@@ -106,28 +119,30 @@ entities:
     - OrderedOneToMany
     - OneToMany
     - ManyToMany
-  - name: is_required
+  - name: required
     type: boolean
-  - name: is_primary_key
-    type: boolean
-  - name: single_model
-    type: boolean
+    required: true
   - name: strong
     type: boolean
+    required: true
   - name: list_model
     type: boolean
+    required: true
   - name: list_model_displayed_field
     type: string
+    required: false
 - name: Feature
   inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
     type: string
+    required: true
   - name: use_cases
     type: entity
     entity: UseCase
     relationship: ordered_one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -137,39 +152,50 @@ entities:
   fields:
   - name: name
     type: string
+    required: true
   - name: path
     type: string
+    required: true
   - name: group
     type: string
+    required: true
 - name: UseCase
   inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: name
     type: string
+    required: true
   - name: validator
     type: boolean
+    required: true
   - name: entities
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
+    required: false
     list_model: true
     list_model_displayed_field: name
   - name: undoable
     type: boolean
+    required: true
   - name: read_only
     type: boolean
+    required: true
   - name: long_operation
     type: boolean
+    required: true
   - name: dto_in
     type: entity
     entity: Dto
     relationship: one_to_one
+    required: false
     strong: true
   - name: dto_out
     type: entity
     entity: Dto
     relationship: one_to_one
+    required: false
     strong: true
 - name: Dto
   inherits_from: EntityBase
@@ -177,10 +203,12 @@ entities:
   fields:
   - name: name
     type: string
+    required: true
   - name: fields
     type: entity
     entity: DtoField
     relationship: ordered_one_to_many
+    required: false
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -190,8 +218,10 @@ entities:
   fields:
   - name: name
     type: string
+    required: true
   - name: field_type
     type: enum
+    required: true
     enum_name: DtoFieldType
     enum_values:
     - Boolean
@@ -204,38 +234,51 @@ entities:
     - Enum
   - name: is_nullable
     type: boolean
+    required: true
   - name: is_list
     type: boolean
+    required: true
   - name: enum_name
     type: string
+    required: false
   - name: enum_values
     type: string
+    required: false
 - name: Global
   inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: language
     type: string
+    required: true
   - name: application_name
     type: string
+    required: true
   - name: organisation_name
     type: string
+    required: true
   - name: organisation_domain
     type: string
+    required: true
   - name: prefix_path
     type: string
+    required: true
 - name: Relationship
   inherits_from: EntityBase
   allow_direct_access: true
   fields:
   - name: left_entity_name
     type: string
+    required: true
   - name: right_entity_name
     type: string
+    required: true
   - name: field_name
     type: string
+    required: true
   - name: relationship_type
     type: enum
+    required: true
     enum_name: RelationshipType
     enum_values:
     - OneToOne
@@ -244,18 +287,21 @@ entities:
     - ManyToMany
   - name: strength
     type: enum
+    required: true
     enum_name: Strength
     enum_values:
     - Weak
     - Strong
   - name: direction
     type: enum
+    required: true
     enum_name: Direction
     enum_values:
     - Forward
     - Backward
   - name: cardinality
     type: enum
+    required: true
     enum_name: Cardinality
     enum_values:
     - ZeroOrOne
@@ -264,6 +310,7 @@ entities:
     - OneOrMore
   - name: order
     type: enum
+    required: true
     enum_name: Order
     enum_values:
     - Ordered
