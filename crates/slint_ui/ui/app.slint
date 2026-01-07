@@ -147,6 +147,7 @@ export component App inherits Window {
 
                         NavItem {
                             label: "Entity Map";
+                            visible: false;
                             icon: @image-url("icons/sitemap.svg");
                             active: AppState.current_tab == 3 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;

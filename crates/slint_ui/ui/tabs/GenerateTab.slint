@@ -241,7 +241,7 @@ export component GenerateTab inherits Rectangle {
 
     // Progress Modal
     if AppState.generate_is_running : Modal {
-        title: "Generating Rust Files";
+        title: "Generating Files";
         show-modal: AppState.generate_is_running;
 
         ProgressIndicator {
