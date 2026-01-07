@@ -1,6 +1,6 @@
 import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
 import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert, Breadcrumb } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 import { DtoDetails } from "dto_details.slint";
 
@@ -18,6 +18,34 @@ export component FeaturesTab inherits Rectangle {
             font-size: 32px;
             font-weight: 700;
             color: #212529;
+        }
+
+        if FeaturesTabState.selected_feature_id >= 0 : Rectangle { height: 12px; }
+        if FeaturesTabState.selected_feature_id >= 0 : Breadcrumb {
+            path: (FeaturesTabState.selected_use_case_id >= 0) ? (
+                (FeaturesTabState.selected_dto_in_field_id >= 0) ? [
+                    "Features",
+                    FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
+                    FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case",
+                    "DTO In",
+                    FeaturesTabState.selected_dto_in_field_name != "" ? FeaturesTabState.selected_dto_in_field_name : "Unnamed Field"
+                ] : (
+                    (FeaturesTabState.selected_dto_out_field_id >= 0) ? [
+                        "Features",
+                        FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
+                        FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case",
+                        "DTO Out",
+                        FeaturesTabState.selected_dto_out_field_name != "" ? FeaturesTabState.selected_dto_out_field_name : "Unnamed Field"
+                    ] : [
+                        "Features",
+                        FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
+                        FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case"
+                    ]
+                )
+            ) : [
+                "Features",
+                FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature"
+            ];
         }
 
         Rectangle { height: 24px; }

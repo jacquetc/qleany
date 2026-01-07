@@ -1,6 +1,6 @@
 import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView, LineEdit } from "std-widgets.slint";
 import { GenerateCommands, AppState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, StyledButton } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, StyledButton, Breadcrumb } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 
@@ -51,6 +51,18 @@ export component GenerateTab inherits Rectangle {
             font-size: 32px;
             font-weight: 700;
             color: #212529;
+        }
+
+        if AppState.selected_group_index >= 0 : Rectangle { height: 12px; }
+        if AppState.selected_group_index >= 0 : Breadcrumb {
+            path: (AppState.selected_file_index >= 0) ? [
+                "Generate",
+                AppState.selected_group_name,
+                AppState.selected_file_name
+            ] : [
+                "Generate",
+                AppState.selected_group_name
+            ];
         }
 
         Rectangle { height: 24px; }
@@ -107,6 +119,7 @@ export component GenerateTab inherits Rectangle {
                             selected-id: AppState.selected_group_index;
                             selection-changed(id) => {
                                 AppState.selected_group_index = id;
+                                // Selection is handled by Rust controller, we just update index here
                                 AppState.group_selected(id);
                             }
                             request-check-change(id, checked) => {

@@ -173,3 +173,6 @@ build-dir/
 out/
 temp
 temp_*/
+
+# qleany specific
+temp_manifest.yaml

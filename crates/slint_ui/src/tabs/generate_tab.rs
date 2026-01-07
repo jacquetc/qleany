@@ -456,6 +456,14 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
 
+                // Update selected group name for breadcrumb
+                let group_list = app.global::<AppState>().get_group_cr_list();
+                if group_index >= 0 && (group_index as usize) < group_list.row_count() {
+                    if let Some(item) = group_list.row_data(group_index as usize) {
+                        app.global::<AppState>().set_selected_group_name(item.text);
+                    }
+                }
+
                 filter_files_by_group(&app, &ctx, group_index);
 
 
@@ -479,6 +487,14 @@ fn setup_file_selected_callback(app: &App, app_context: &Arc<AppContext>) {
         move |file_id| {
             log::info!("File selected: {}", file_id);
             if let Some(app) = app_weak.upgrade() {
+                // Update selected file name for breadcrumb
+                let file_list = app.global::<AppState>().get_file_cr_list();
+                if file_id >= 0 && (file_id as usize) < file_list.row_count() {
+                    if let Some(item) = file_list.row_data(file_id as usize) {
+                        app.global::<AppState>().set_selected_file_name(item.text);
+                    }
+                }
+
                 load_code_preview(&app, &ctx, file_id);
             }
         }
