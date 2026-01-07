@@ -560,29 +560,6 @@ fn string_to_field_type(s: &str) -> FieldType {
     }
 }
 
-/// Helper function to convert RelationshipType to string for UI
-fn relationship_type_to_string(rel_type: &RelationshipType) -> &'static str {
-    match rel_type {
-        RelationshipType::OneToOne => "one_to_one",
-        RelationshipType::OneToMany => "one_to_many",
-        RelationshipType::OrderedOneToMany => "ordered_one_to_many",
-        RelationshipType::ManyToOne => "many_to_one",
-        RelationshipType::ManyToMany => "many_to_many",
-    }
-}
-
-/// Helper function to convert string to RelationshipType
-fn string_to_relationship_type(s: &str) -> RelationshipType {
-    match s {
-        "one_to_one" => RelationshipType::OneToOne,
-        "one_to_many" => RelationshipType::OneToMany,
-        "ordered_one_to_many" => RelationshipType::OrderedOneToMany,
-        "many_to_one" => RelationshipType::ManyToOne,
-        "many_to_many" => RelationshipType::ManyToMany,
-        _ => RelationshipType::OneToOne,
-    }
-}
-
 /// Helper function to convert FieldRelationshipType to string for UI
 fn field_relationship_type_to_string(
     rel_type: &FieldRelationshipType,

@@ -10,7 +10,7 @@ use crate::commands::{global_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ProjectTabState};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
-use slint::{ComponentHandle, Timer};
+use slint::ComponentHandle;
 
 /// Fill the ProjectTabState with data from the Global entity
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {

@@ -16,7 +16,7 @@ use crate::commands::rust_file_generation_commands;
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, ListRustFilesDto};
-use slint::{Timer, TimerMode};
+use slint::Timer;
 
 /// Internal state for tracking file data
 struct FileData {
@@ -466,7 +466,6 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 filter_files_by_group(&app, &ctx, group_index);
 
-
                 // Re-apply manifest_is_saved after a short delay
                 Timer::single_shot(std::time::Duration::from_millis(800), move || {
                     if was_saved {
@@ -635,7 +634,6 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         app.global::<AppState>().set_selected_file_index(-1);
                         app.global::<AppState>()
                             .set_code_preview(SharedString::from(""));
-
 
                         // Re-apply manifest_is_saved after a short delay
                         Timer::single_shot(std::time::Duration::from_millis(800), move || {
