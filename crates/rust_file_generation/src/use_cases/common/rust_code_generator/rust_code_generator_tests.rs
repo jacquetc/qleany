@@ -117,11 +117,10 @@ impl GenerationReadOps for DummyGenerationReadOps {
             .collect())
     }
     fn get_root_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>> {
-        Ok(self.roots
-            .iter()
-            .filter(|(id, _)| ids.contains(id))
-            .map(|(_, root)| Some(root.clone()))
-            .collect::<Vec<Option<Root>>>())
+        if ids.is_empty() {
+            return Ok(self.roots.values().map(|r| Some(r.clone())).collect());
+        }
+        Ok(ids.iter().map(|id| self.roots.get(id).cloned()).collect())
     }
 }
 
@@ -152,6 +151,15 @@ fn for_file_feature_without_use_cases_errors() {
         use_cases: vec![],
     };
     uow.features.insert(10, feature);
+    let root = Root {
+        id: 1,
+        manifest_absolute_path: "".into(),
+        global: 0,
+        entities: vec![],
+        features: vec![],
+        files: vec![],
+    };
+    uow.roots.insert(1, root);
     let res = SnapshotBuilder::for_file(&uow, 1, &Vec::new());
     assert!(res.is_err());
 }
@@ -249,6 +257,15 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     uow.dto_fields.insert(500, df_in);
     uow.dto_fields.insert(501, df_out);
+    let root = Root {
+        id: 1,
+        manifest_absolute_path: "".into(),
+        global: 0,
+        entities: vec![],
+        features: vec![],
+        files: vec![],
+    };
+    uow.roots.insert(1, root);
 
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1, &Vec::new()).expect("snapshot");
     assert!(snap.features.contains_key(&10));
@@ -321,6 +338,15 @@ fn for_file_various_combinations_generate_expected_items() {
         use_cases: vec![100],
     };
     uow.features.insert(200, feat.clone());
+    let root = Root {
+        id: 1,
+        manifest_absolute_path: "".into(),
+        global: 0,
+        entities: vec![],
+        features: vec![],
+        files: vec![],
+    };
+    uow.roots.insert(1, root);
 
     // 1) File with only feature
     let file_feature_only = File {

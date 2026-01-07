@@ -156,7 +156,8 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let id = 115;
         let result = get(&db_context, &id);
-        assert!(result.is_err());
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
 
         // create
         let field = CreateFieldDto {

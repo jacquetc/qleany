@@ -1089,6 +1089,36 @@ mod tests {
     fn test_root_cargo_tera_template() {
         let tera = get_rust_tera();
         let mut context = Context::new();
+        let snapshot = GenerationSnapshot {
+            file: FileVM {
+                inner: File {
+                    id: 1,
+                    name: "Cargo.toml".into(),
+                    relative_path: "".into(),
+                    group: "root".into(),
+                    template_name: "root_cargo".into(),
+                    feature: None,
+                    entity: None,
+                    use_case: None,
+                },
+            },
+            global: GlobalVM {
+                inner: Global {
+                    id: 1,
+                    language: "rust".into(),
+                    application_name: "test".into(),
+                    organisation_name: "test".into(),
+                    organisation_domain: "test".into(),
+                    prefix_path: "".into(),
+                },
+                application_kebab_name: "test".into(),
+            },
+            entities: IndexMap::new(),
+            features: IndexMap::new(),
+            use_cases: IndexMap::new(),
+            dtos: IndexMap::new(),
+        };
+        context.insert("s", &snapshot);
         let code = tera.render("root_cargo", &context).unwrap();
         println!("{}", code);
     }

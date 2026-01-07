@@ -156,7 +156,8 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let id = 115;
         let result = get(&db_context, &id);
-        assert!(result.is_err());
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
 
         // create
         let root = CreateRootDto {
@@ -191,6 +192,7 @@ mod tests {
 
         // create
         let root = CreateRootDto {
+            global: 1,
             ..Default::default()
         };
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
@@ -219,6 +221,7 @@ mod tests {
 
         // create
         let root = CreateRootDto {
+            global: 1,
             ..Default::default()
         };
         let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
@@ -236,12 +239,15 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let roots = vec![
             CreateRootDto {
+                global: 1,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 2,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 3,
                 ..Default::default()
             },
         ];
@@ -258,12 +264,15 @@ mod tests {
         // set up
         let roots = vec![
             CreateRootDto {
+                global: 1,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 2,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 3,
                 ..Default::default()
             },
         ];
@@ -285,12 +294,15 @@ mod tests {
         // set up
         let roots = vec![
             CreateRootDto {
+                global: 1,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 2,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 3,
                 ..Default::default()
             },
         ];
@@ -302,10 +314,12 @@ mod tests {
         let roots = vec![
             RootDto {
                 id: 1,
+                global: 4,
                 ..Default::default()
             },
             RootDto {
                 id: 2,
+                global: 5,
                 ..Default::default()
             },
         ];
@@ -322,12 +336,15 @@ mod tests {
         // set up
         let roots = vec![
             CreateRootDto {
+                global: 1,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 2,
                 ..Default::default()
             },
             CreateRootDto {
+                global: 3,
                 ..Default::default()
             },
         ];

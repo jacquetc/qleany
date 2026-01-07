@@ -1,6 +1,6 @@
 import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox, TextEdit } from "std-widgets.slint";
 import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Breadcrumb } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 export component EntitiesTab inherits Rectangle {
@@ -16,6 +16,18 @@ export component EntitiesTab inherits Rectangle {
             font-size: 32px;
             font-weight: 700;
             color: #212529;
+        }
+
+        if EntitiesTabState.selected_entity_id >= 0 : Rectangle { height: 12px; }
+        if EntitiesTabState.selected_entity_id >= 0 : Breadcrumb {
+            path: (EntitiesTabState.selected_field_id >= 0) ? [
+                "Entities",
+                EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity",
+                EntitiesTabState.selected_field_name != "" ? EntitiesTabState.selected_field_name : "Unnamed Field"
+            ] : [
+                "Entities",
+                EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity"
+            ];
         }
 
         Rectangle { height: 24px; }
@@ -130,11 +142,6 @@ export component EntitiesTab inherits Rectangle {
                             padding: 16px;
                             spacing: 8px;
                             
-                            Text {
-                                text: "Entity details will be displayed here";
-                                font-size: 14px;
-                                color: #868e96;
-                            }
                         entityNameFormField := FormField {
                             label: "Name";
                             required: true;
@@ -344,89 +351,73 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-                            // General field options
-                            FormField {
-                                label: "Options";
-
-                                VerticalLayout {
-                                    spacing: 8px;
-
-                                }
-                            }
-
-                            // Entity-specific model options (only visible when type is Entity)
-                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
-                                label: "Model Options";
-
-                                VerticalLayout {
-                                    spacing: 8px;
-
-                                    CheckBox {
-                                        text: "List Model";
-                                        checked <=> EntitiesTabState.selected_field_list_model;
-                                        toggled => {
-                                            EntitiesTabState.field_list_model_changed(self.checked);
-                                        }
-                                    }
-
-                                    CheckBox {
-                                        text: "Single Model";
-                                        checked <=> EntitiesTabState.selected_field_single_model;
-                                        toggled => {
-                                            EntitiesTabState.field_single_model_changed(self.checked);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // List Model Displayed Field (only visible when list_model is true)
-                            if EntitiesTabState.selected_field_list_model : FormField {
-                                label: "List Model Displayed Field";
-
-                                StyledLineEdit {
-                                    text <=> EntitiesTabState.selected_field_list_model_displayed_field;
-                                    placeholder: "Enter displayed field name";
-                                    edited(text) => {
-                                        EntitiesTabState.field_list_model_displayed_field_changed(text);
-                                    }
-                                }
-                            }
 
                             // Entity-specific options (only visible when type is Entity)
-                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
-                                label: "Relationship Type";
-
-                                relationship-combo := ComboBox {
-                                    model: EntitiesTabState.relationship_type_options;
-                                    current-value <=> EntitiesTabState.selected_field_relationship;
-                                    selected(value) => {
-                                        EntitiesTabState.field_relationship_changed(value);
+                            if EntitiesTabState.selected_field_type == "Entity" : VerticalLayout {
+                                spacing: 12px;
+                                
+                                FormField {
+                                    label: "Relationship Type";
+                                    relationship-combo := ComboBox {
+                                        model: EntitiesTabState.relationship_type_options;
+                                        current-value <=> EntitiesTabState.selected_field_relationship;
+                                        selected(value) => {
+                                            EntitiesTabState.field_relationship_changed(value);
+                                        }
                                     }
                                 }
-                            }
 
-                            // Required checkbox (only visible when type is Entity and relationship is one_to_one)
-                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship == "one_to_one" : FormField {
-                                label: "Required";
+                                FormField {
+                                    label: "Model Options";
+                                    HorizontalLayout {
+                                        spacing: 16px;
+                                        CheckBox {
+                                            text: "List Model";
+                                            checked <=> EntitiesTabState.selected_field_list_model;
+                                            toggled => {
+                                                EntitiesTabState.field_list_model_changed(self.checked);
+                                            }
+                                        }
 
-                                CheckBox {
-                                    text: "Required (not nullable)";
-                                    checked <=> EntitiesTabState.selected_field_required;
-                                    toggled => {
-                                        EntitiesTabState.field_required_changed(self.checked);
+                                        CheckBox {
+                                            text: "Single Model";
+                                            checked <=> EntitiesTabState.selected_field_single_model;
+                                            toggled => {
+                                                EntitiesTabState.field_single_model_changed(self.checked);
+                                            }
+                                        }
                                     }
                                 }
-                            }
 
-                            // Strong checkbox (only visible when type is Entity and relationship is NOT many_to_many)
-                            if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship != "many_to_many" : FormField {
-                                label: "Cascade";
+                                if EntitiesTabState.selected_field_list_model : FormField {
+                                    label: "List Model Displayed Field";
+                                    StyledLineEdit {
+                                        text <=> EntitiesTabState.selected_field_list_model_displayed_field;
+                                        placeholder: "Enter displayed field name";
+                                        edited(text) => {
+                                            EntitiesTabState.field_list_model_displayed_field_changed(text);
+                                        }
+                                    }
+                                }
 
-                                CheckBox {
-                                    text: "Strong (cascade delete)";
-                                    checked <=> EntitiesTabState.selected_field_strong;
-                                    toggled => {
-                                        EntitiesTabState.field_strong_changed(self.checked);
+                                HorizontalLayout {
+                                    spacing: 16px;
+                                    // Required checkbox (only visible when relationship is one_to_one)
+                                    if EntitiesTabState.selected_field_relationship == "one_to_one" : CheckBox {
+                                        text: "Required (not nullable)";
+                                        checked <=> EntitiesTabState.selected_field_required;
+                                        toggled => {
+                                            EntitiesTabState.field_required_changed(self.checked);
+                                        }
+                                    }
+
+                                    // Strong checkbox (only visible when relationship is NOT many_to_many)
+                                    if EntitiesTabState.selected_field_relationship != "many_to_many" : CheckBox {
+                                        text: "Strong (cascade delete)";
+                                        checked <=> EntitiesTabState.selected_field_strong;
+                                        toggled => {
+                                            EntitiesTabState.field_strong_changed(self.checked);
+                                        }
                                     }
                                 }
                             }
