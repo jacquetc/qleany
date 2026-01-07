@@ -138,10 +138,12 @@ export component EntitiesTab inherits Rectangle {
                         entityNameFormField := FormField {
                             label: "Name";
                             required: true;
+                            error-message: EntitiesTabState.selected_entity_name == "" ? "Entity name is required" : "";
 
                             StyledLineEdit {
                                 text <=> EntitiesTabState.selected_entity_name;
                                 placeholder: "Enter the entity name (e.g., Person)";
+                                has-error: EntitiesTabState.selected_entity_name == "";
                                 edited(text) => {
                                     EntitiesTabState.entity_name_changed(text);
                                 }
@@ -277,10 +279,12 @@ export component EntitiesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
+                                error-message: EntitiesTabState.selected_field_name == "" ? "Field name is required" : "";
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_name;
                                     placeholder: "Enter field name";
+                                    has-error: EntitiesTabState.selected_field_name == "";
                                     edited(text) => {
                                         EntitiesTabState.field_name_changed(text);
                                     }

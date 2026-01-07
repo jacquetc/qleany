@@ -105,10 +105,12 @@ export component ProjectTab inherits Rectangle {
                 FormField {
                     label: "Application Name";
                     required: true;
+                    error-message: ProjectTabState.application_name == "" ? "Application name is required" : "";
                     
                     StyledLineEdit {
                         text <=> ProjectTabState.application_name;
                         placeholder: "Enter application name";
+                        has-error: ProjectTabState.application_name == "";
                         edited(text) => {
                             ProjectTabState.application_name_changed(text);
                         }
@@ -118,10 +120,12 @@ export component ProjectTab inherits Rectangle {
                 FormField {
                     label: "Organisation Name";
                     required: true;
+                    error-message: ProjectTabState.organisation_name == "" ? "Organisation name is required" : "";
                     
                     StyledLineEdit {
                         text <=> ProjectTabState.organisation_name;
                         placeholder: "Enter organisation name";
+                        has-error: ProjectTabState.organisation_name == "";
                         edited(text) => {
                             ProjectTabState.organisation_name_changed(text);
                         }
@@ -131,10 +135,12 @@ export component ProjectTab inherits Rectangle {
                 FormField {
                     label: "Organisation Domain";
                     required: true;
+                    error-message: ProjectTabState.organisation_domain == "" ? "Organisation domain is required" : "";
                     
                     StyledLineEdit {
                         text <=> ProjectTabState.organisation_domain;
                         placeholder: "Enter organisation domain (e.g., com.example)";
+                        has-error: ProjectTabState.organisation_domain == "";
                         edited(text) => {
                             ProjectTabState.organisation_domain_changed(text);
                         }

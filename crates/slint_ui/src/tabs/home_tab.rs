@@ -242,6 +242,18 @@ pub fn setup_save_manifest_as_callback(app: &App, app_context: &Arc<AppContext>)
                             app.global::<AppState>()
                                 .set_error_message(slint::SharedString::from(""));
                             app.global::<AppState>().set_manifest_is_saved(true);
+                            
+                            // Show success message
+                            app.global::<AppState>().set_success_message(slint::SharedString::from("Manifest saved successfully"));
+                            app.global::<AppState>().set_success_message_visible(true);
+                            
+                            // Hide after 3 seconds
+                            let app_weak_timer = app.as_weak();
+                            Timer::single_shot(std::time::Duration::from_secs(3), move || {
+                                if let Some(app) = app_weak_timer.upgrade() {
+                                    app.global::<AppState>().set_success_message_visible(false);
+                                }
+                            });
                         }
                     }
                     Err(e) => {
@@ -304,6 +316,18 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         app.global::<AppState>()
                             .set_error_message(slint::SharedString::from(""));
                         app.global::<AppState>().set_manifest_is_saved(true);
+
+                        // Show success message
+                        app.global::<AppState>().set_success_message(slint::SharedString::from("Manifest saved successfully"));
+                        app.global::<AppState>().set_success_message_visible(true);
+
+                        // Hide after 3 seconds
+                        let app_weak_timer = app.as_weak();
+                        Timer::single_shot(std::time::Duration::from_secs(3), move || {
+                            if let Some(app) = app_weak_timer.upgrade() {
+                                app.global::<AppState>().set_success_message_visible(false);
+                            }
+                        });
                     }
                 }
                 Err(e) => {

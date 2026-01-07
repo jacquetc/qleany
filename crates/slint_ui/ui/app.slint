@@ -214,17 +214,25 @@ export component App inherits Window {
 
             // Status bar at the bottom
             Rectangle {
-                height: AppState.error_message != "" ? 32px : 0px;
-                background: #ffffff;
+                height: AppState.error_message != "" || AppState.success_message_visible ? 32px : 0px;
+                background: AppState.error_message != "" ? #ffc9c9 : (AppState.success_message_visible ? #d3f9d8 : #ffffff);
+                animate height { duration: 200ms; }
                 
                 HorizontalLayout {
                     padding-left: 16px;
                     padding-right: 16px;
                     alignment: start;
                     
-                    Text {
+                    if AppState.error_message != "" : Text {
                         text: AppState.error_message;
-                        color: #000000;
+                        color: #c92a2a;
+                        font-size: 14px;
+                        vertical-alignment: center;
+                    }
+
+                    if AppState.error_message == "" && AppState.success_message_visible : Text {
+                        text: AppState.success_message;
+                        color: #2b8a3e;
                         font-size: 14px;
                         vertical-alignment: center;
                     }

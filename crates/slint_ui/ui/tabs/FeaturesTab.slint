@@ -190,10 +190,12 @@ export component FeaturesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
+                                error-message: FeaturesTabState.selected_feature_name == "" ? "Feature name is required" : "";
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_feature_name;
                                     placeholder: "Enter the feature name";
+                                    has-error: FeaturesTabState.selected_feature_name == "";
 
                                     edited(text) => {
                                         FeaturesTabState.feature_name_changed(text);
@@ -308,10 +310,12 @@ export component FeaturesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
+                                error-message: FeaturesTabState.selected_use_case_name == "" ? "Use case name is required" : "";
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_use_case_name;
                                     placeholder: "Enter the use case name";
+                                    has-error: FeaturesTabState.selected_use_case_name == "";
 
                                     edited(text) => {
                                         FeaturesTabState.use_case_name_changed(text);

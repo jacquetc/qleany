@@ -76,6 +76,7 @@ export component Paper inherits Rectangle {
 export component FormField inherits VerticalLayout {
     in property <string> label;
     in property <bool> required: false;
+    in property <string> error-message: "";
 
     spacing: 4px;
 
@@ -85,7 +86,7 @@ export component FormField inherits VerticalLayout {
             text: label;
             font-size: 14px;
             font-weight: 500;
-            color: #212529;
+            color: error-message != "" ? #fa5252 : #212529;
         }
         if required : Text {
             text: "*";
@@ -95,6 +96,12 @@ export component FormField inherits VerticalLayout {
     }
 
     @children
+
+    if error-message != "" : Text {
+        text: error-message;
+        font-size: 12px;
+        color: #fa5252;
+    }
 }
 
 
@@ -103,12 +110,13 @@ export component StyledLineEdit inherits Rectangle {
     in-out property <string> text;
     in property <string> placeholder;
     in property <bool> enabled: true;
+    in property <bool> has-error: false;
     callback edited(string);
 
     height: 36px;
     background: enabled ? #ffffff : #f8f9fa;
     border-width: 1px;
-    border-color: input.has-focus ? #228be6 : #ced4da;
+    border-color: has-error ? #fa5252 : (input.has-focus ? #228be6 : #ced4da);
     border-radius: 4px;
 
     input := LineEdit {

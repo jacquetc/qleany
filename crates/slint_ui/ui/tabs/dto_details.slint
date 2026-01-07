@@ -64,10 +64,12 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
+                                    error-message: FeaturesTabState.selected_dto_in_name == "" ? "DTO name is required" : "";
 
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_in_name;
                                         placeholder: "Enter the DTO In name";
+                                        has-error: FeaturesTabState.selected_dto_in_name == "";
 
                                         edited(text) => {
                                             FeaturesTabState.dto_in_name_changed(text);
@@ -176,10 +178,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
+                                        error-message: FeaturesTabState.selected_dto_in_field_name == "" ? "Field name is required" : "";
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_in_field_name;
                                             placeholder: "Enter the field name";
+                                            has-error: FeaturesTabState.selected_dto_in_field_name == "";
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_in_field_name_changed(text);
@@ -294,10 +298,12 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
+                                    error-message: FeaturesTabState.selected_dto_out_name == "" ? "DTO name is required" : "";
 
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_out_name;
                                         placeholder: "Enter the DTO Out name";
+                                        has-error: FeaturesTabState.selected_dto_out_name == "";
 
                                         edited(text) => {
                                             FeaturesTabState.dto_out_name_changed(text);
@@ -406,10 +412,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
+                                        error-message: FeaturesTabState.selected_dto_out_field_name == "" ? "Field name is required" : "";
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_out_field_name;
                                             placeholder: "Enter the field name";
+                                            has-error: FeaturesTabState.selected_dto_out_field_name == "";
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_out_field_name_changed(text);
