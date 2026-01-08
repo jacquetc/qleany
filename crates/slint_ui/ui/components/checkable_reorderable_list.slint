@@ -450,9 +450,29 @@ export component CheckableReorderableList inherits Rectangle {
                         // Base position of this row within the Flickable
                         let row_x = 4px;
                         let row_y = idx * root.item-height + 2px;
-                        // Position the popup below the button, right-aligned to it
-                        root.menu-x = row_x + bx + bw - root.menu-width;
-                        root.menu-y = row_y + by + bh + 4px;
+
+                        // Position the popup below the button, right-aligned to it, but elsewhere if it would overflow
+                        if (row_x + bx + bw + root.menu-width > parent.width && row_y + by + bh + root.menu-height > parent.height) {
+                            // Overflowing right edge and bottom edge: align left edge to button left edge, above button
+                            root.menu-x = row_x + bx;
+                            root.menu-y = row_y + by - root.menu-height - 4px;
+                        }
+
+                        else if (row_x + bx + bw + root.menu-width > parent.width) {
+                            // Overflowing right edge: align left edge to button left edge
+                            root.menu-x = row_x + bx;
+                            root.menu-y = row_y + by + bh + 4px;
+                        }
+                        else if (row_y + by + bh + root.menu-height > parent.height) {
+                            // Overflowing bottom edge: align above the button
+                            root.menu-x = row_x + bx + bw - root.menu-width;
+                            root.menu-y = row_y + by - root.menu-height - 4px;
+                        }
+                        else {
+                            // Normal case: align right edge to button right edge
+                            root.menu-x = row_x + bx + bw - root.menu-width;
+                            root.menu-y = row_y + by + bh + 4px;
+                        }
                         root.open-menu-index = i;
                         root.open-menu-id = id_val;
                     }
