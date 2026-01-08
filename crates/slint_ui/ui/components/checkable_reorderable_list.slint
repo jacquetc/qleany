@@ -1,4 +1,5 @@
 import { VerticalBox, HorizontalBox, ScrollView, Button, CheckBox } from "std-widgets.slint";
+import { StyledButton } from "misc.slint";
 
 // Reusable checkable reorderable list component
 //
@@ -55,7 +56,7 @@ component DraggableItem inherits Rectangle {
     in property <ListItem> item;
 
     // Customization properties
-    in property <length> visual-height: 56px;
+    in property <length> visual-height: 40px;
     in property <brush> theme-background: white;
     in property <brush> theme-border: #e0e0e0;
     in property <brush> theme-primary: #2196f3;
@@ -159,7 +160,7 @@ component DraggableItem inherits Rectangle {
     // Content row
     HorizontalBox {
         padding: 4px;
-        spacing: 8px;
+        spacing: 4px;
 
         // Optional checkbox on the far left
         if enable-checkbox: CheckBox {
@@ -250,11 +251,12 @@ component DraggableItem inherits Rectangle {
         }
 
         // Spacer to push menu button to far right
-        Rectangle { width: 1px; background: transparent; horizontal-stretch: 1; }
+        Rectangle { background: transparent; horizontal-stretch: 1; }
 
         // Context menu button (visible when hovered or selected)
-        menu_btn := Button {
-            width: 20px;
+        menu_btn := StyledButton {
+            width: 40px;
+            flat: true;
             visible: enable-delete && (touch.has-hover || (selected-id == item.id));
             text: "⋯";
             clicked => {
@@ -320,7 +322,7 @@ export component CheckableReorderableList inherits Rectangle {
     in-out property <bool> text-align-right: false;
 
     // Styling configuration
-    in property <length> item-height: 60px;
+    in property <length> item-height: 50px;
     in property <brush> item-background: white;
     in property <brush> accent-color: #2196f3;
     in property <brush> item-border-color: #e0e0e0;
@@ -367,7 +369,7 @@ export component CheckableReorderableList inherits Rectangle {
     }
 
     VerticalBox {
-        padding: 16px;
+        padding: 5px;
         
         
         Rectangle {
@@ -397,7 +399,7 @@ export component CheckableReorderableList inherits Rectangle {
                     // local mouse coordinates and cause the dragged item to jitter between positions.
                     y: idx * root.item-height + 2px;
                     x: 4px;
-                    width: parent.width - 8px;
+                    width: parent.width - 30px;
                     index: idx;
 
                     // Bind styling

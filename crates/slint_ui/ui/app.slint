@@ -51,7 +51,7 @@ component NavItem inherits Rectangle {
 export component App inherits Window {
     title: "Qleany";
     min-width: 1600px;
-    min-height: 900px;
+    min-height: 500px;
 
 
     // All state and callbacks are now in globals (AppState, ManifestCommands, etc.)
@@ -118,7 +118,7 @@ export component App inherits Window {
                     background: #f8f9fa;
 
                     VerticalLayout {
-                        padding: 8px;
+                        padding: 4px;
                         spacing: 4px;
                         alignment: start;
 
@@ -148,18 +148,18 @@ export component App inherits Window {
                         NavItem {
                             label: "Features";
                             icon: @image-url("icons/features.svg");
-                            active: AppState.current_tab == 4 && AppState.manifest_is_open;
+                            active: AppState.current_tab == 3 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
-                            clicked => { AppState.current_tab = 4; }
+                            clicked => { AppState.current_tab = 3; }
                         }
 
                         NavItem {
                             label: "Generate";
                             icon: @image-url("icons/factory.svg");
-                            active: AppState.current_tab == 5 && AppState.manifest_is_open;
+                            active: AppState.current_tab == 4 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
                             clicked => { 
-                                AppState.current_tab = 5;
+                                AppState.current_tab = 4;
                                 AppState.refresh_generate_tab();
                             }
                         }
@@ -181,27 +181,9 @@ export component App inherits Window {
 
                     if AppState.current_tab == 2 && AppState.manifest_is_open  : EntitiesTab { }
 
-                    // Entity Map tab placeholder
-                    if AppState.current_tab == 3 && AppState.manifest_is_open  : Rectangle {
-                        VerticalBox {
-                            padding: 16px;
-                            Text {
-                                text: "Entity Map";
-                                font-size: 24px;
-                                font-weight: 700;
-                                color: #212529;
-                            }
-                            Text {
-                                text: "Entity relationship visualization coming soon...";
-                                font-size: 14px;
-                                color: #495057;
-                            }
-                        }
-                    }
+                    if AppState.current_tab == 3 && AppState.manifest_is_open : FeaturesTab { }
 
-                    if AppState.current_tab == 4 && AppState.manifest_is_open : FeaturesTab { }
-
-                    if AppState.current_tab == 5 && AppState.manifest_is_open : GenerateTab { }
+                    if AppState.current_tab == 4 && AppState.manifest_is_open : GenerateTab { }
                 }
             }
 

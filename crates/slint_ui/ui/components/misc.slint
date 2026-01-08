@@ -1,4 +1,4 @@
-import { LineEdit } from "std-widgets.slint";
+import { LineEdit, ComboBox } from "std-widgets.slint";
 
 // List item component
 export component ListItem inherits Rectangle {
@@ -92,6 +92,26 @@ export component SectionHeader inherits Rectangle {
     }
 }
 
+// Styled select/combo box
+export component StyledComboBox inherits Rectangle {
+    in-out property <string> current-value;
+    in property <[string]> model;
+    in property <bool> enabled: true;
+    callback selected(string);
+
+    height: 36px;
+    background: enabled ? #ffffff : #f8f9fa;
+    border-width: 1px;
+    border-color: #ced4da;
+    border-radius: 4px;
+
+    combo := ComboBox {
+        current-value <=> root.current-value;
+        model: root.model;
+        enabled: root.enabled;
+        selected(val) => { root.selected(val); }
+    }
+}
 
 // Paper-like card component
 export component Paper inherits Rectangle {
@@ -130,6 +150,10 @@ export component FormField inherits VerticalLayout {
             font-size: 14px;
             color: #fa5252;
         }
+        // spacer
+        Rectangle {
+            horizontal-stretch: 1;
+        }
     }
 
     @children
@@ -139,6 +163,7 @@ export component FormField inherits VerticalLayout {
         font-size: 12px;
         color: #fa5252;
     }
+
 }
 
 
@@ -214,9 +239,10 @@ export component Alert inherits Rectangle {
 export component StyledButton inherits Rectangle {
     in property <string> text: "";
     in property <bool> primary: false;
+    in property <bool> flat: false;
     in property <bool> outline: false;
-    in property <color> bg-color: primary ? #228be6 : (outline ? transparent : #e9ecef);
-    in property <color> btn-border-color: primary ? #228be6 : #ced4da;
+    in property <color> bg-color: flat ? #ffffff : (primary ? #228be6 : (outline ? transparent : #e9ecef));
+    in property <color> btn-border-color: flat ? #ffffff : (primary ? #228be6 : #ced4da);
     in property <color> text-color: primary ? #ffffff : (outline ? (bg-color == transparent ? #495057 : bg-color) : #495057);
     in property <bool> enabled: true;
     callback clicked();

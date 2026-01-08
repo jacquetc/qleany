@@ -1,34 +1,14 @@
-import { LineEdit, ComboBox, ProgressIndicator } from "std-widgets.slint";
+import { LineEdit, ProgressIndicator } from "std-widgets.slint";
 import { ProjectTabState } from "../globals.slint";
-import { Paper, FormField, StyledLineEdit, Alert } from "../components/misc.slint";
+import { Paper, FormField, StyledLineEdit, StyledComboBox, Alert } from "../components/misc.slint";
 
-// Styled select/combo box
-component StyledComboBox inherits Rectangle {
-    in-out property <string> current-value;
-    in property <[string]> model;
-    in property <bool> enabled: true;
-    callback selected(string);
-    
-    height: 36px;
-    background: enabled ? #ffffff : #f8f9fa;
-    border-width: 1px;
-    border-color: #ced4da;
-    border-radius: 4px;
-    
-    combo := ComboBox {
-        current-value <=> root.current-value;
-        model: root.model;
-        enabled: root.enabled;
-        selected(val) => { root.selected(val); }
-    }
-}
 
 export component ProjectTab inherits Rectangle {
     background: #ffffff;
 
     VerticalLayout {
-        padding: 40px;
-        spacing: 24px;
+        padding: 10px;
+        spacing: 0px;
 
         // Title
         Text {
