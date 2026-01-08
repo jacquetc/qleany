@@ -28,12 +28,12 @@ const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("entity_from_entity_inherits_from_junction");
-const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_field_entity_junction");
 const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("entity_from_root_entities_junction");
 const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("entity_from_use_case_entities_junction");
+const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_field_entity_junction");
 
 fn get_junction_table_definition(
     field: &EntityRelationshipField,
@@ -64,9 +64,9 @@ impl<'a> EntityRedbTable<'a> {
         transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD)?;
-        transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -298,45 +298,35 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         // backward relationships
 
-        let mut backward_entity_inherits_from_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
-        let mut backward_field_entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
         let mut backward_root_entities_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
         let mut backward_use_case_entities_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        let mut backward_field_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
         for id in ids {
             entity_table.remove(id)?;
 
             inherits_from_junction_table.remove(id)?;
-
             fields_junction_table.remove(id)?;
-
             relationships_junction_table.remove(id)?;
 
-            db_helpers::delete_from_backward_junction_table(
-                &mut backward_entity_inherits_from_junction_table,
-                id,
-            )?;
-
-            db_helpers::delete_from_backward_junction_table(
-                &mut backward_field_entity_junction_table,
-                id,
-            )?;
-
+            // special case: backward relationship to self
+            db_helpers::delete_from_backward_junction_table(&mut inherits_from_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_root_entities_junction_table,
                 id,
             )?;
-
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_use_case_entities_junction_table,
+                id,
+            )?;
+            db_helpers::delete_from_backward_junction_table(
+                &mut backward_field_entity_junction_table,
                 id,
             )?;
         }

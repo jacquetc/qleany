@@ -248,19 +248,27 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
         // backward relationships
         {% for rid, r in s.entities[e].backward_relationships %}
+            {%- if r.inner.left_entity == e %}
+                {%- continue %}
+            {%- endif %}
         let mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
         {%- endfor %}
 
         for id in ids {
             {{ s.entities[e].snake_name }}_table.remove(id)?;
             {% for f in s.entities[e].fields %}
-            {% if f.inner.field_type == "Entity" %}
+                {%- if f.inner.field_type == "Entity" %}
             {{ f.snake_name }}_junction_table.remove(id)?;
-            {% endif %}
-            {% endfor %}
+                {%- endif %}
+            {%- endfor %}
             {% for rid, r in s.entities[e].backward_relationships %}
+                {%- if r.inner.left_entity == e %}
+            // special case: backward relationship to self
+            db_helpers::delete_from_backward_junction_table(&mut {{ r.field_snake_name }}_junction_table, id)?;
+                    {%- continue %}
+                {%- endif %}
             db_helpers::delete_from_backward_junction_table(&mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table, id)?;
-            {% endfor %}
+            {%- endfor %}
         }
         Ok(())
     }
