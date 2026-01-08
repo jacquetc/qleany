@@ -1,6 +1,6 @@
 use crate::database::db_context::DbContext;
 use anyhow::{Ok, Result};
-use redb::{ReadTransaction, WriteTransaction};
+use redb::{ReadTransaction, ReadableDatabase, WriteTransaction};
 
 use crate::types;
 
