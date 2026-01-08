@@ -129,6 +129,13 @@ export component DtoDetails inherits Rectangle {
                             background: #dee2e6;
                         }
 
+                        if FeaturesTabState.dto_in_field_cr_list.length == 0: Text {
+                            font-size: 14px;
+                            text: "No fields yet. Click + to create one.";
+                            color: #868e96;
+                            horizontal-alignment: center;
+                        }
+
                         // Fields list
                         Rectangle {
                             vertical-stretch: 1;
@@ -361,6 +368,13 @@ export component DtoDetails inherits Rectangle {
                         Rectangle {
                             height: 1px;
                             background: #dee2e6;
+                        }
+
+                        if FeaturesTabState.dto_out_field_cr_list.length == 0: Text {
+                            font-size: 14px;
+                            text: "No fields yet. Click + to create one.";
+                            color: #868e96;
+                            horizontal-alignment: center;
                         }
 
                         // Fields list

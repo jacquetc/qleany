@@ -1,7 +1,25 @@
-import { LineEdit, ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox, ComboBox, TextEdit } from "std-widgets.slint";
+import {
+    LineEdit,
+    ScrollView,
+    ProgressIndicator,
+    VerticalBox,
+    ListView,
+    CheckBox,
+    ComboBox,
+    TextEdit,
+} from "std-widgets.slint";
 import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Breadcrumb } from "../components/misc.slint";
-import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+import {
+    ListItem,
+    Divider,
+    SectionHeader,
+    FormField,
+    StyledLineEdit,
+    Breadcrumb,
+} from "../components/misc.slint";
+import {
+    CheckableReorderableList,
+} from "../components/checkable_reorderable_list.slint";
 
 export component EntitiesTab inherits Rectangle {
     background: #ffffff;
@@ -18,8 +36,10 @@ export component EntitiesTab inherits Rectangle {
             color: #212529;
         }
 
-        if EntitiesTabState.selected_entity_id >= 0 : Rectangle { height: 12px; }
-        if EntitiesTabState.selected_entity_id >= 0 : Breadcrumb {
+        if EntitiesTabState.selected_entity_id >= 0: Rectangle {
+            height: 12px;
+        }
+        if EntitiesTabState.selected_entity_id >= 0: Breadcrumb {
             path: (EntitiesTabState.selected_field_id >= 0) ? [
                 "Entities",
                 EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity",
@@ -30,7 +50,9 @@ export component EntitiesTab inherits Rectangle {
             ];
         }
 
-        Rectangle { height: 24px; }
+        Rectangle {
+            height: 24px;
+        }
 
         // Main content area - 3 columns
         HorizontalLayout {
@@ -89,6 +111,14 @@ export component EntitiesTab inherits Rectangle {
                         height: 1px;
                         background: #dee2e6;
                     }
+
+                    if EntitiesTabState.entity_cr_list.length == 0: Text {
+                        font-size: 14px;
+                        text: "No entities yet. Click + to create one.";
+                        color: #868e96;
+                        horizontal-alignment: center;
+                    }
+
                     Rectangle {
                         vertical-stretch: 1;
 
@@ -109,13 +139,12 @@ export component EntitiesTab inherits Rectangle {
                                 EntitiesTabState.request_entity_deletion(id);
                             }
                         }
-
                     }
                 }
             }
 
             // Divider
-            Divider {}
+            Divider { }
 
             // Column 2: Entity Details + Fields
             Rectangle {
@@ -135,57 +164,53 @@ export component EntitiesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    if EntitiesTabState.selected_entity_id >= 0 : Rectangle {
+                    if EntitiesTabState.selected_entity_id >= 0: Rectangle {
                         height: 250px;
-                        
                         VerticalLayout {
                             padding: 16px;
                             spacing: 8px;
-                            
-                        entityNameFormField := FormField {
-                            label: "Name";
-                            required: true;
-                            error-message: EntitiesTabState.selected_entity_name == "" ? "Entity name is required" : "";
+                            entityNameFormField := FormField {
+                                label: "Name";
+                                required: true;
+                                error-message: EntitiesTabState.selected_entity_name == "" ? "Entity name is required" : "";
 
-                            StyledLineEdit {
-                                text <=> EntitiesTabState.selected_entity_name;
-                                placeholder: "Enter the entity name (e.g., Person)";
-                                has-error: EntitiesTabState.selected_entity_name == "";
-                                edited(text) => {
-                                    EntitiesTabState.entity_name_changed(text);
+                                StyledLineEdit {
+                                    text <=> EntitiesTabState.selected_entity_name;
+                                    placeholder: "Enter the entity name (e.g., Person)";
+                                    has-error: EntitiesTabState.selected_entity_name == "";
+                                    edited(text) => {
+                                        EntitiesTabState.entity_name_changed(text);
+                                    }
                                 }
                             }
-                        }
 
-
-                        CheckBox {
-                            text: "Only for heritage";
-                            checked <=> EntitiesTabState.selected_entity_only_for_heritage;
-                            toggled => {
-                                EntitiesTabState.entity_only_for_heritage_changed(self.checked);
-                            }
-                        }
-
-
-                        FormField {
-                            label: "Inherits from";
-
-                            inherits-from-combo := ComboBox {
-                                model: EntitiesTabState.inherits_from_options;
-                                current-value <=> EntitiesTabState.selected_entity_inherits_from_value;
-                                selected(value) => {
-                                    EntitiesTabState.entity_inherits_from_changed(inherits-from-combo.current-index);
+                            CheckBox {
+                                text: "Only for heritage";
+                                checked <=> EntitiesTabState.selected_entity_only_for_heritage;
+                                toggled => {
+                                    EntitiesTabState.entity_only_for_heritage_changed(self.checked);
                                 }
                             }
-                        }
 
-                        CheckBox {
-                            text: "Single Model";
-                            checked <=> EntitiesTabState.selected_entity_single_model;
-                            toggled => {
-                                EntitiesTabState.entity_single_model_changed(self.checked);
+                            FormField {
+                                label: "Inherits from";
+
+                                inherits-from-combo := ComboBox {
+                                    model: EntitiesTabState.inherits_from_options;
+                                    current-value <=> EntitiesTabState.selected_entity_inherits_from_value;
+                                    selected(value) => {
+                                        EntitiesTabState.entity_inherits_from_changed(inherits-from-combo.current-index);
+                                    }
+                                }
                             }
-                        }
+
+                            CheckBox {
+                                text: "Single Model";
+                                checked <=> EntitiesTabState.selected_entity_single_model;
+                                toggled => {
+                                    EntitiesTabState.entity_single_model_changed(self.checked);
+                                }
+                            }
                         }
                     }
 
@@ -239,6 +264,13 @@ export component EntitiesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
+                    if EntitiesTabState.field_cr_list.length == 0: Text {
+                        font-size: 14px;
+                        text: "No fields yet. Click + to create one.";
+                        color: #868e96;
+                        horizontal-alignment: center;
+                    }
+
                     Rectangle {
                         vertical-stretch: 1;
 
@@ -263,9 +295,9 @@ export component EntitiesTab inherits Rectangle {
             }
 
             // Conditional: Field Details Column (only show when field is selected)
-            if EntitiesTabState.selected_field_id >= 0 : Divider {}
+            if EntitiesTabState.selected_field_id >= 0: Divider { }
 
-            if EntitiesTabState.selected_field_id >= 0 : Rectangle {
+            if EntitiesTabState.selected_field_id >= 0: Rectangle {
                 horizontal-stretch: 1;
                 background: #ffffff;
                 border-width: 1px;
@@ -319,7 +351,7 @@ export component EntitiesTab inherits Rectangle {
                             }
 
                             // Referenced Entity (only visible when type is Entity)
-                            if EntitiesTabState.selected_field_type == "Entity" : FormField {
+                            if EntitiesTabState.selected_field_type == "Entity": FormField {
                                 label: "Referenced Entity";
 
                                 entity-combo := ComboBox {
@@ -332,7 +364,7 @@ export component EntitiesTab inherits Rectangle {
                             }
 
                             // Enum Name (only visible when type is Enum)
-                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                            if EntitiesTabState.selected_field_type == "Enum": FormField {
                                 label: "Enum Name";
 
                                 StyledLineEdit {
@@ -345,7 +377,7 @@ export component EntitiesTab inherits Rectangle {
                             }
 
                             // Enum Values (only visible when type is Enum)
-                            if EntitiesTabState.selected_field_type == "Enum" : FormField {
+                            if EntitiesTabState.selected_field_type == "Enum": FormField {
                                 label: "Enum Values (one per line)";
 
                                 TextEdit {
@@ -357,11 +389,9 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-
                             // Entity-specific options (only visible when type is Entity)
-                            if EntitiesTabState.selected_field_type == "Entity" : VerticalLayout {
+                            if EntitiesTabState.selected_field_type == "Entity": VerticalLayout {
                                 spacing: 12px;
-                                
                                 FormField {
                                     label: "Relationship Type";
                                     relationship-combo := ComboBox {
@@ -387,7 +417,7 @@ export component EntitiesTab inherits Rectangle {
                                     }
                                 }
 
-                                if EntitiesTabState.selected_field_list_model : FormField {
+                                if EntitiesTabState.selected_field_list_model: FormField {
                                     label: "List Model Displayed Field";
                                     StyledLineEdit {
                                         text <=> EntitiesTabState.selected_field_list_model_displayed_field;
@@ -401,7 +431,7 @@ export component EntitiesTab inherits Rectangle {
                                 HorizontalLayout {
                                     spacing: 16px;
                                     // Required checkbox (only visible when relationship is one_to_one)
-                                    if EntitiesTabState.selected_field_relationship == "one_to_one" : CheckBox {
+                                    if EntitiesTabState.selected_field_relationship == "one_to_one": CheckBox {
                                         text: "Required (not nullable)";
                                         checked <=> EntitiesTabState.selected_field_required;
                                         toggled => {
@@ -410,7 +440,7 @@ export component EntitiesTab inherits Rectangle {
                                     }
 
                                     // Strong checkbox (only visible when relationship is NOT many_to_many)
-                                    if EntitiesTabState.selected_field_relationship != "many_to_many" : CheckBox {
+                                    if EntitiesTabState.selected_field_relationship != "many_to_many": CheckBox {
                                         text: "Strong (cascade delete)";
                                         checked <=> EntitiesTabState.selected_field_strong;
                                         toggled => {
@@ -421,7 +451,9 @@ export component EntitiesTab inherits Rectangle {
                             }
 
                             // Spacer
-                            Rectangle { vertical-stretch: 1; }
+                            Rectangle {
+                                vertical-stretch: 1;
+                            }
                         }
                     }
                 }
