@@ -159,8 +159,8 @@ component DraggableItem inherits Rectangle {
     
     // Content row
     HorizontalBox {
-        padding: 4px;
-        spacing: 4px;
+        padding: 2px;
+        spacing: 2px;
 
         // Optional checkbox on the far left
         if enable-checkbox: CheckBox {
@@ -212,10 +212,13 @@ component DraggableItem inherits Rectangle {
             }
         }
 
+        // Spacer to push text to far right
+        if text-align-right: Rectangle { background: transparent; horizontal-stretch: 1; }
+
         // Title + optional subtitle
         VerticalLayout {
             spacing: 2px;
-            horizontal-stretch: text-align-right ? 1 : 0;
+
             // Normal text display (when bold-after-slash is false)
             if !bold-after-slash: Text {
                 text: item.text;
@@ -250,8 +253,11 @@ component DraggableItem inherits Rectangle {
             }
         }
 
+        // Spacer to push text to far left
+        if !text-align-right: Rectangle { background: transparent; horizontal-stretch: 1; }
+
         // Spacer to push menu button to far right
-        Rectangle { background: transparent; horizontal-stretch: 1; }
+        if enable-delete: Rectangle { background: transparent; horizontal-stretch: 1; }
 
         // Context menu button (visible when hovered or selected)
         menu_btn := StyledButton {
@@ -264,8 +270,6 @@ component DraggableItem inherits Rectangle {
                 else { open-menu-geo(index, item.id, self.x, self.y, self.width, self.height); }
             }
         }
-    // Spacer to the right edge
-    Rectangle { min-width: 30px; background: transparent; }
     }
 
     // (Removed per-row popup; centralized popup is rendered by parent)

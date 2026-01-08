@@ -100,23 +100,29 @@ export component StyledComboBox inherits Rectangle {
     callback selected(string);
 
     height: 36px;
+    width: root.preferred-width;
     background: enabled ? #ffffff : #f8f9fa;
     border-width: 1px;
     border-color: #ced4da;
-    border-radius: 4px;
+    border-radius: 6px;
 
-    combo := ComboBox {
-        current-value <=> root.current-value;
-        model: root.model;
-        enabled: root.enabled;
-        selected(val) => { root.selected(val); }
+    HorizontalLayout {
+        padding: 2px;
+        alignment: start;
+
+        combo := ComboBox {
+            current-value <=> root.current-value;
+            model: root.model;
+            enabled: root.enabled;
+            selected(val) => { root.selected(val); }
+        }
     }
 }
 
 // Paper-like card component
 export component Paper inherits Rectangle {
     in property <bool> with-border: true;
-    in property <color> bg: #ffffff;
+    in property <color> bg: #f8f9fa;
 
     background: bg;
     border-width: with-border ? 1px : 0px;
@@ -176,19 +182,26 @@ export component StyledLineEdit inherits Rectangle {
     callback edited(string);
 
     height: 36px;
+    width: root.preferred-width;
     background: enabled ? #ffffff : #f8f9fa;
     border-width: 1px;
     border-color: has-error ? #fa5252 : (input.has-focus ? #228be6 : #ced4da);
-    border-radius: 4px;
+    border-radius: 6px;
 
-    input := LineEdit {
-        text <=> root.text;
-        placeholder-text: placeholder;
-        enabled: root.enabled;
-        edited(text) => {
-            root.edited(text);
+    HorizontalLayout {
+        padding: 2px;
+        alignment: start;
+
+        input := LineEdit {
+            text <=> root.text;
+            placeholder-text: placeholder;
+            enabled: root.enabled;
+            edited(text) => {
+                root.edited(text);
+            }
         }
     }
+
 }
 
 // Alert component for messages (errors, info, etc.)

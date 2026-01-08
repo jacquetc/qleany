@@ -16,6 +16,7 @@ import {
     FormField,
     StyledLineEdit,
     Breadcrumb,
+    Paper,
 } from "../components/misc.slint";
 import {
     CheckableReorderableList,
@@ -59,12 +60,9 @@ export component EntitiesTab inherits Rectangle {
             spacing: 0px;
 
             // Column 1: Entity List
-            Rectangle {
-                width: 300px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                border-width: 1px;
-                border-color: #dee2e6;
+            Paper {
+                with-border: true;
+                width: 20%;
 
                 VerticalLayout {
 
@@ -147,11 +145,10 @@ export component EntitiesTab inherits Rectangle {
             Divider { }
 
             // Column 2: Entity Details + Fields
-            Rectangle {
+            Paper {
                 horizontal-stretch: 1;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
+                with-border: true;
+                width: 20%;
 
                 VerticalLayout {
                     // Entity Details Section
@@ -297,12 +294,9 @@ export component EntitiesTab inherits Rectangle {
             // Conditional: Field Details Column (only show when field is selected)
             if EntitiesTabState.selected_field_id >= 0: Divider { }
 
-            if EntitiesTabState.selected_field_id >= 0: Rectangle {
+            if EntitiesTabState.selected_field_id >= 0: Paper {
                 horizontal-stretch: 1;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
-                border-radius: 8px;
+                with-border: true;
 
                 VerticalLayout {
                     SectionHeader {

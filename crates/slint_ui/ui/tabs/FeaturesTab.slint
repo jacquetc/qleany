@@ -1,6 +1,6 @@
 import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
 import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert, Breadcrumb } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert, Breadcrumb, Paper } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 import { DtoDetails } from "dto_details.slint";
 
@@ -70,12 +70,11 @@ export component FeaturesTab inherits Rectangle {
             spacing: 0px;
 
             // Column 1: Feature List
-            Rectangle {
-                width: 300px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                border-width: 1px;
-                border-color: #dee2e6;
+
+            Paper {
+                horizontal-stretch: 1;
+                with-border: true;
+                width: 20%;
 
                 VerticalLayout {
                     Rectangle {
@@ -157,11 +156,9 @@ export component FeaturesTab inherits Rectangle {
             Divider {}
 
             // Column 2: Feature Details + Use Cases
-            Rectangle {
+            Paper {
                 horizontal-stretch: 1;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
+                with-border: true;
 
                 VerticalLayout {
                     // Feature Details Section
@@ -283,13 +280,9 @@ export component FeaturesTab inherits Rectangle {
             // Conditional: Use Case Details Column (only show when use case is selected)
             if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
 
-            if FeaturesTabState.selected_use_case_id >= 0 : Rectangle {
+            if FeaturesTabState.selected_use_case_id >= 0 : Paper {
                 horizontal-stretch: 1;
-                min-width: 400px;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
-                border-radius: 8px;
+                with-border: true;
 
                 VerticalLayout {
                     SectionHeader {

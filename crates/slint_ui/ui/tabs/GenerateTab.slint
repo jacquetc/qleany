@@ -1,6 +1,6 @@
-import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView, LineEdit } from "std-widgets.slint";
+import { ScrollView, ProgressIndicator, CheckBox, Button, VerticalBox, ListView, LineEdit, TextEdit } from "std-widgets.slint";
 import { GenerateCommands, AppState, CRListItem } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, StyledButton, Breadcrumb } from "../components/misc.slint";
+import { ListItem, Divider, SectionHeader, StyledButton, Breadcrumb, Paper } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 
 
@@ -92,12 +92,9 @@ export component GenerateTab inherits Rectangle {
             spacing: 0px;
 
             // Column 1: Groups (25%)
-            Rectangle {
-                width: 25%;
-                background: #f8f9fa;
-                border-radius: 8px;
-                border-width: 1px;
-                border-color: #dee2e6;
+            Paper {
+                with-border: true;
+                width: 200px;
 
                 VerticalLayout {
                     SectionHeader {
@@ -112,7 +109,7 @@ export component GenerateTab inherits Rectangle {
                     Rectangle {
                         vertical-stretch: 1;
 
-                        CheckableReorderableList {
+                        file_group_list:= CheckableReorderableList {
                             items: AppState.group_cr_list;
                             reorderable: false;
                             enable-checkbox: true;
@@ -134,11 +131,9 @@ export component GenerateTab inherits Rectangle {
             Divider {}
 
             // Column 2: Files (35%)
-            Rectangle {
-                width: 35%;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
+            Paper {
+                with-border: true;
+                width: 500px;
 
                 VerticalLayout {
                     // Custom header with filter input
@@ -188,7 +183,7 @@ export component GenerateTab inherits Rectangle {
                     Rectangle {
                         vertical-stretch: 1;
 
-                        CheckableReorderableList {
+                        file_list := CheckableReorderableList {
                             items: AppState.file_cr_list;
                             reorderable: false;
                             enable-checkbox: true;
@@ -213,12 +208,9 @@ export component GenerateTab inherits Rectangle {
             Divider {}
 
             // Column 3: Code Preview (40%)
-            Rectangle {
+            Paper {
                 horizontal-stretch: 1;
-                background: #ffffff;
-                border-width: 1px;
-                border-color: #dee2e6;
-                border-radius: 8px;
+                with-border: true;
 
                 VerticalLayout {
                     SectionHeader {
@@ -230,22 +222,21 @@ export component GenerateTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    ScrollView {
-                        viewport-width: text-preview.preferred-width + 32px;
-                        viewport-height: text-preview.preferred-height + 32px;
 
                         Rectangle {
                             background: #f8f9fa;
                             
-                            text-preview := Text {
+                            text-preview := TextEdit {
                                 x: 16px;
                                 y: 16px;
+                                width: parent.width - 32px;
+                                height: parent.height - 32px;
+                                wrap: no-wrap;
+                                read-only: true;
                                 text: AppState.selected_file_index >= 0 ? AppState.code_preview : "Select a file to preview";
                                 font-size: 14px;
-                                font-family: "monospace";
-                                color: AppState.selected_file_index >= 0 ? #212529 : #868e96;
                             }
-                        }
+
                     }
                 }
             }
