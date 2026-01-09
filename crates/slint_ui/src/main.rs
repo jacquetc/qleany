@@ -10,22 +10,35 @@ mod app_context;
 mod commands;
 mod event_hub_client;
 mod tabs;
+mod cli;
+mod cli_options;
 
 use crate::commands::handling_manifest_commands;
 use app_context::AppContext;
 use event_hub_client::EventHubClient;
 use std::sync::Arc;
+use crate::cli::run_cli;
 
 slint::include_modules!();
 
 fn main() {
     // Initialize logging
     env_logger::init();
-    log::info!("Starting Qleany Slint UI");
 
     // Create the application context (backend state)
     let app_context = Arc::new(AppContext::new());
 
+    if let Some(_args) = run_cli(&app_context){
+       run_slint(&app_context);
+    }
+
+    // Cleanup on exit
+    log::info!("Shutting down");
+    app_context.shutdown();
+}
+
+fn run_slint(app_context: &Arc<AppContext>) {
+    log::info!("Starting Qleany Slint UI");
     // Create the event hub client for backend-to-UI event passing
     let event_hub_client = EventHubClient::new(&app_context.event_hub);
     event_hub_client.start(app_context.quit_signal.clone());
@@ -103,7 +116,7 @@ fn main() {
                 app.window(),
                 slint::platform::WindowEvent::CloseRequested,
             )
-            .expect("Failed to dispatch close requested event");
+                .expect("Failed to dispatch close requested event");
         }
     });
 
@@ -130,7 +143,4 @@ fn main() {
     log::info!("Running Slint UI");
     app.run().unwrap();
 
-    // Cleanup on exit
-    log::info!("Shutting down");
-    app_context.shutdown();
 }

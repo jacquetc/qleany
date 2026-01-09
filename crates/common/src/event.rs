@@ -147,9 +147,10 @@ impl EventHub {
                     break;
                 }
 
-                let event = receiver.recv().unwrap();
-                let mut queue = queue.lock().unwrap();
-                queue.push(event.clone());
+                if let Ok(event) = receiver.recv() {
+                    let mut queue = queue.lock().unwrap();
+                    queue.push(event.clone());
+                }
             }
         });
     }

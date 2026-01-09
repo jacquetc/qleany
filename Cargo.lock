@@ -4376,6 +4376,7 @@ version = "2.0.0"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
+ "clap",
  "common",
  "direct_access",
  "dirs",
@@ -4389,20 +4390,6 @@ dependencies = [
  "slint",
  "slint-build",
  "thiserror 2.0.17",
-]
-
-[[package]]
-name = "qleany-cli"
-version = "2.0.0"
-dependencies = [
- "anyhow",
- "clap",
- "common",
- "direct_access",
- "env_logger",
- "handling_manifest",
- "log",
- "rust_file_generation",
 ]
 
 [[package]]

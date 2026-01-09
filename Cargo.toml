@@ -2,7 +2,6 @@
 
 members = [
     "crates/common",
-    "crates/cli",
     "crates/direct_access",
     "crates/handling_manifest",
     "crates/cpp_qt_file_generation",

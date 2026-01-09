@@ -1,12 +1,15 @@
 use crate::app_context::AppContext;
-
+use crate::cli_options;
+use clap::{Parser, Subcommand, ValueEnum};
+use std::path::PathBuf;
+use std::sync::Arc;
 
 /// The main CLI struct that represents the command-line interface.
 #[derive(Parser)]
 #[command(author, version)]
 #[command(about = "Scaffolding generator for C++/Qt6 and Rust projects", long_about = None)]
 #[command(propagate_version = true)]
-struct Cli {
+pub struct Cli {
     /// Path to the Qleany manifest, defaults to current directory
     #[arg(default_value = ".")]
     qleany_folder: PathBuf,
@@ -15,12 +18,12 @@ struct Cli {
     verbose: bool,
 
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 /// The available commands for the CLI.
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     ///
 
     /// Commands related to New.
@@ -55,14 +58,14 @@ enum Commands {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum LanguageOption {
+pub enum LanguageOption {
     Rust,
     CppQt,
 }
 
 /// The available subcommands for the `List` command.
 #[derive(Debug, Subcommand)]
-enum ListCommands {
+pub enum ListCommands {
     All,
     Features {
         /// Select the feature to be listed
@@ -79,7 +82,7 @@ enum ListCommands {
 
 /// The available subcommands for the `Generate` command.
 #[derive(Debug, Subcommand)]
-enum GenerateCommands {
+pub enum GenerateCommands {
     All,
     Feature {
         /// Select the feature to be generated
@@ -97,13 +100,10 @@ enum GenerateCommands {
     },
 }
 
-fn main() {
-    // Initialize logging
-    env_logger::init();
 
-    // Create the application context (backend state)
-    let app_context = Arc::new(AppContext::new());
-
+/// Run the CLI with the given application context. Returns Some(()) if the application should
+/// continue running as GUI, None otherwise.
+pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
     let cli = Cli::parse();
 
     let verbose = cli.verbose;
@@ -121,56 +121,65 @@ fn main() {
     }
 
     match &cli.command {
-        Commands::New {
-            folder_path,
-            language,
-        } => {
+        None => {
             if verbose {
-                println!(
-                    "Creating new project in folder: {:?} with language: {:?}",
-                    folder_path, language
-                );
+                println!("No command provided. Exiting.");
             }
-            cli_options::new::execute(&app_context, folder_path, language);
+            return Some(());
         }
-        Commands::List {
-            already_written,
-            command,
-        } => {
-            if verbose {
-                println!(
-                    "Listing with already_written: {:?}, command: {:?}",
-                    already_written, command
-                );
+        Some(command) => match command {
+            Commands::New {
+                folder_path,
+                language,
+            } => {
+                if verbose {
+                    println!(
+                        "Creating new project in folder: {:?} with language: {:?}",
+                        folder_path, language
+                    );
+                }
+                cli_options::new::execute(&app_context, folder_path, language);
             }
-            // Implement the logic for listing
-        }
-        Commands::Check {} => {
-            if verbose {
-                println!("Checking project...");
+            Commands::List {
+                already_written,
+                command,
+            } => {
+                if verbose {
+                    println!(
+                        "Listing with already_written: {:?}, command: {:?}",
+                        already_written, command
+                    );
+                }
+                // Implement the logic for listing
             }
-            // Implement the logic for checking the project
-        }
-        Commands::Generate {
-            dry_run,
-            in_temp,
-            file,
-            command,
-        } => {
-            if verbose {
-                println!(
-                    "Generating with dry_run: {:?}, in_temp: {:?}, file: {:?}, command: {:?}",
-                    dry_run, in_temp, file, command
-                );
+            Commands::Check {} => {
+                if verbose {
+                    println!("Checking project...");
+                }
+                // Implement the logic for checking the project
             }
-            // Implement the logic for generating files
-        }
-        Commands::Show {} => {
-            if verbose {
-                println!("Showing manifest...");
+            Commands::Generate {
+                dry_run,
+                in_temp,
+                file,
+                command,
+            } => {
+                if verbose {
+                    println!(
+                        "Generating with dry_run: {:?}, in_temp: {:?}, file: {:?}, command: {:?}",
+                        dry_run, in_temp, file, command
+                    );
+                }
+                // Implement the logic for generating files
             }
+            Commands::Show {} => {
+                if verbose {
+                    println!("Showing manifest...");
+                }
 
-            // Implement the logic for displaying the manifest
-        }
+                // Implement the logic for displaying the manifest
+            }
+        },
     }
+    None
 }
