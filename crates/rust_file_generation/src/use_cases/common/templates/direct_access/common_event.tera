@@ -27,6 +27,7 @@ pub enum UndoRedoEvent {
     Redone,
     BeginComposite,
     EndComposite,
+    CancelComposite,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
