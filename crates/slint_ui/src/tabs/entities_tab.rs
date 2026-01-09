@@ -564,6 +564,8 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                                 .set_selected_entity_only_for_heritage(entity.only_for_heritage);
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_single_model(entity.single_model);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_undoable(entity.undoable);
 
                             // Fill inherits_from options and set the selected index
                             fill_inherits_from_options(&app, &ctx, entity.inherits_from);
@@ -990,6 +992,22 @@ fn setup_entity_single_model_callback(app: &App, app_context: &Arc<AppContext>) 
                     let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
                     update_entity_helper(&app, &ctx, entity_id, |entity| {
                         entity.single_model = value;
+                    });
+                }
+            }
+        });
+}
+
+fn setup_entity_undoable_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_entity_undoable_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |value| {
+                if let Some(app) = app_weak.upgrade() {
+                    let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                    update_entity_helper(&app, &ctx, entity_id, |entity| {
+                        entity.undoable = value;
                     });
                 }
             }
@@ -1442,6 +1460,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_entity_name_callbacks(app, app_context);
     setup_entity_only_for_heritage_callback(app, app_context);
     setup_entity_single_model_callback(app, app_context);
+    setup_entity_undoable_callback(app, app_context);
     setup_entity_inherits_from_callback(app, app_context);
     setup_entity_deletion_callback(app, app_context);
     setup_entity_addition_callback(app, app_context);

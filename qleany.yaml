@@ -12,15 +12,14 @@ entities:
 - name: EntityBase
   only_for_heritage: true
   allow_direct_access: false
-  undoable: false
   fields:
   - name: id
     type: integer
     required: false
+  undoable: false
 - name: Root
   inherits_from: EntityBase
   allow_direct_access: false
-  undoable: false
   fields:
   - name: main
     type: entity
@@ -34,10 +33,10 @@ entities:
     relationship: one_to_one
     required: false
     strong: true
+  undoable: false
 - name: Main
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: global
     type: entity
@@ -61,10 +60,10 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+  undoable: true
 - name: System
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: false
   fields:
   - name: files
     type: entity
@@ -74,10 +73,10 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+  undoable: false
 - name: Entity
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -114,10 +113,10 @@ entities:
   - name: allow_direct_access
     type: boolean
     required: true
+  undoable: true
 - name: Field
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -163,10 +162,10 @@ entities:
   - name: list_model_displayed_field
     type: string
     required: false
+  undoable: true
 - name: Feature
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -179,10 +178,10 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+  undoable: true
 - name: File
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: false
   fields:
   - name: name
     type: string
@@ -193,10 +192,10 @@ entities:
   - name: group
     type: string
     required: true
+  undoable: false
 - name: UseCase
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -232,10 +231,10 @@ entities:
     relationship: one_to_one
     required: false
     strong: true
+  undoable: true
 - name: Dto
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -248,10 +247,10 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+  undoable: true
 - name: DtoField
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: name
     type: string
@@ -281,10 +280,10 @@ entities:
   - name: enum_values
     type: string
     required: false
+  undoable: true
 - name: Global
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: language
     type: string
@@ -301,10 +300,10 @@ entities:
   - name: prefix_path
     type: string
     required: true
+  undoable: true
 - name: Relationship
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: true
   fields:
   - name: left_entity
     type: entity
@@ -353,11 +352,12 @@ entities:
     - OneOrMore
   - name: order
     type: enum
-    required: true
+    required: false
     enum_name: Order
     enum_values:
     - Ordered
     - Unordered
+  undoable: true
 features:
 - name: handling_manifest
   use_cases:

@@ -201,11 +201,22 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-                            CheckBox {
-                                text: "Single Model";
-                                checked <=> EntitiesTabState.selected_entity_single_model;
-                                toggled => {
-                                    EntitiesTabState.entity_single_model_changed(self.checked);
+                            if !EntitiesTabState.selected_entity_only_for_heritage : HorizontalLayout {
+                                spacing: 16px;
+                                CheckBox{
+                                    text: "Single Model";
+                                    checked <=> EntitiesTabState.selected_entity_single_model;
+                                    toggled => {
+                                        EntitiesTabState.entity_single_model_changed(self.checked);
+                                    }
+                                }
+
+                                CheckBox {
+                                    text: "Undoable";
+                                    checked <=> EntitiesTabState.selected_entity_undoable;
+                                    toggled => {
+                                        EntitiesTabState.entity_undoable_changed(self.checked);
+                                    }
                                 }
                             }
                         }
@@ -383,6 +394,15 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
+                            // Required checkbox (only visible when relationship is one_to_one or type is NOT Entity)
+                            if EntitiesTabState.selected_field_relationship == "one_to_one" || EntitiesTabState.selected_field_type != "Entity" : CheckBox {
+                                text: "Required (not nullable)";
+                                checked <=> EntitiesTabState.selected_field_required;
+                                toggled => {
+                                    EntitiesTabState.field_required_changed(self.checked);
+                                }
+                            }
+
                             // Entity-specific options (only visible when type is Entity)
                             if EntitiesTabState.selected_field_type == "Entity": VerticalLayout {
                                 spacing: 12px;
@@ -424,17 +444,10 @@ export component EntitiesTab inherits Rectangle {
 
                                 HorizontalLayout {
                                     spacing: 16px;
-                                    // Required checkbox (only visible when relationship is one_to_one)
-                                    if EntitiesTabState.selected_field_relationship == "one_to_one": CheckBox {
-                                        text: "Required (not nullable)";
-                                        checked <=> EntitiesTabState.selected_field_required;
-                                        toggled => {
-                                            EntitiesTabState.field_required_changed(self.checked);
-                                        }
-                                    }
 
-                                    // Strong checkbox (only visible when relationship is NOT many_to_many)
-                                    if EntitiesTabState.selected_field_relationship != "many_to_many": CheckBox {
+                                    // Strong checkbox (only visible when relationship is NOT many_to_many or many_to_one)
+                                    if EntitiesTabState.selected_field_relationship != "many_to_many" &&
+                                    EntitiesTabState.selected_field_relationship != "many_to_one" : CheckBox {
                                         text: "Strong (cascade delete)";
                                         checked <=> EntitiesTabState.selected_field_strong;
                                         toggled => {
