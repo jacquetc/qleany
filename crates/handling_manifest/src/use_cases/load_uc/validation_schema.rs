@@ -60,6 +60,12 @@ pub fn json_validation_schema() -> serde_json::Value {
                         "only_for_heritage": {
                             "type": "boolean"
                         },
+                        "undoable": {
+                            "type": "boolean"
+                        },
+                        "allow_direct_access": {
+                            "type": "boolean"
+                        },
                         "fields": {
                             "type": "array",
                             "items": {

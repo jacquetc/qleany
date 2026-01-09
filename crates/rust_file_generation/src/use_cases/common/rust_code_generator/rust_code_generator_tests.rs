@@ -208,6 +208,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         allow_direct_access: true,
         fields: vec![400],
         relationships: vec![],
+        undoable: false,
     };
     let field = Field {
         id: 400,
@@ -289,6 +290,7 @@ fn for_file_various_combinations_generate_expected_items() {
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],
+        undoable: false,
     };
     let ent_b = Entity {
         id: 2,
@@ -299,6 +301,7 @@ fn for_file_various_combinations_generate_expected_items() {
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],
+        undoable: false,
     };
     uow.entities.insert(1, ent_a.clone());
     uow.entities.insert(2, ent_b.clone());

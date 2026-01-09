@@ -11,11 +11,12 @@ pub struct EntityDto {
     pub id: EntityId,
     pub name: String,
     pub inherits_from: Option<EntityId>,
-    pub allow_direct_access: bool,
     pub only_for_heritage: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
+    pub undoable: bool,
+    pub allow_direct_access: bool,
 }
 
 impl From<EntityDto> for Entity {
@@ -24,11 +25,12 @@ impl From<EntityDto> for Entity {
             id: dto.id,
             name: dto.name,
             inherits_from: dto.inherits_from,
-            allow_direct_access: dto.allow_direct_access,
             only_for_heritage: dto.only_for_heritage,
             fields: dto.fields,
             relationships: dto.relationships,
             single_model: dto.single_model,
+            undoable: dto.undoable,
+            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -39,11 +41,12 @@ impl From<&EntityDto> for Entity {
             id: dto.id,
             name: dto.name.clone(),
             inherits_from: dto.inherits_from.clone(),
-            allow_direct_access: dto.allow_direct_access.clone(),
             only_for_heritage: dto.only_for_heritage.clone(),
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
             single_model: dto.single_model.clone(),
+            undoable: dto.undoable.clone(),
+            allow_direct_access: dto.allow_direct_access.clone(),
         }
     }
 }
@@ -54,11 +57,12 @@ impl From<Entity> for EntityDto {
             id: entity.id,
             name: entity.name,
             inherits_from: entity.inherits_from,
-            allow_direct_access: entity.allow_direct_access,
             only_for_heritage: entity.only_for_heritage,
             fields: entity.fields,
             relationships: entity.relationships,
             single_model: entity.single_model,
+            undoable: entity.undoable,
+            allow_direct_access: entity.allow_direct_access,
         }
     }
 }
@@ -67,11 +71,12 @@ impl From<Entity> for EntityDto {
 pub struct CreateEntityDto {
     pub name: String,
     pub inherits_from: Option<EntityId>,
-    pub allow_direct_access: bool,
     pub only_for_heritage: bool,
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
+    pub undoable: bool,
+    pub allow_direct_access: bool,
 }
 
 impl From<CreateEntityDto> for Entity {
@@ -80,11 +85,12 @@ impl From<CreateEntityDto> for Entity {
             id: 0,
             name: dto.name,
             inherits_from: dto.inherits_from,
-            allow_direct_access: dto.allow_direct_access,
             only_for_heritage: dto.only_for_heritage,
             fields: dto.fields,
             relationships: dto.relationships,
             single_model: dto.single_model,
+            undoable: dto.undoable,
+            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -95,11 +101,12 @@ impl From<&CreateEntityDto> for Entity {
             id: 0,
             name: dto.name.clone(),
             inherits_from: dto.inherits_from.clone(),
-            allow_direct_access: dto.allow_direct_access.clone(),
             only_for_heritage: dto.only_for_heritage.clone(),
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
             single_model: dto.single_model.clone(),
+            undoable: dto.undoable.clone(),
+            allow_direct_access: dto.allow_direct_access.clone(),
         }
     }
 }
@@ -109,11 +116,12 @@ impl From<Entity> for CreateEntityDto {
         CreateEntityDto {
             name: entity.name,
             inherits_from: entity.inherits_from,
-            allow_direct_access: entity.allow_direct_access,
             only_for_heritage: entity.only_for_heritage,
             fields: entity.fields,
             relationships: entity.relationships,
             single_model: entity.single_model,
+            undoable: entity.undoable,
+            allow_direct_access: entity.allow_direct_access,
         }
     }
 }

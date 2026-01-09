@@ -1154,6 +1154,7 @@ mod tests {
             allow_direct_access: true,
             fields: vec![100, 101],
             relationships: vec![],
+            undoable: true,
         };
         let field_relationship = Field {
             id: 100,

@@ -12,13 +12,32 @@ entities:
 - name: EntityBase
   only_for_heritage: true
   allow_direct_access: false
+  undoable: false
   fields:
   - name: id
     type: integer
     required: false
 - name: Root
   inherits_from: EntityBase
+  allow_direct_access: false
+  undoable: false
+  fields:
+  - name: main
+    type: entity
+    entity: Main
+    relationship: one_to_one
+    required: false
+    strong: true
+  - name: system
+    type: entity
+    entity: System
+    relationship: one_to_one
+    required: false
+    strong: true
+- name: Main
+  inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: global
     type: entity
@@ -42,6 +61,11 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+- name: System
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: false
+  fields:
   - name: files
     type: entity
     entity: File
@@ -53,6 +77,7 @@ entities:
 - name: Entity
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -83,9 +108,16 @@ entities:
     type: boolean
     required: true
     strong: true
+  - name: undoable
+    type: boolean
+    required: true
+  - name: allow_direct_access
+    type: boolean
+    required: true
 - name: Field
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -134,6 +166,7 @@ entities:
 - name: Feature
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -149,6 +182,7 @@ entities:
 - name: File
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: false
   fields:
   - name: name
     type: string
@@ -162,6 +196,7 @@ entities:
 - name: UseCase
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -200,6 +235,7 @@ entities:
 - name: Dto
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -215,6 +251,7 @@ entities:
 - name: DtoField
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: name
     type: string
@@ -247,6 +284,7 @@ entities:
 - name: Global
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
   - name: language
     type: string
@@ -266,12 +304,17 @@ entities:
 - name: Relationship
   inherits_from: EntityBase
   allow_direct_access: true
+  undoable: true
   fields:
-  - name: left_entity_name
-    type: string
+  - name: left_entity
+    type: entity
+    entity: Entity
+    relationship: one_to_one
     required: true
-  - name: right_entity_name
-    type: string
+  - name: right_entity
+    type: entity
+    entity: Entity
+    relationship: one_to_one
     required: true
   - name: field_name
     type: string

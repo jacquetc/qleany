@@ -68,6 +68,7 @@ pub struct Entity {
     #[serde(default = "serde_true")]
     pub allow_direct_access: bool,
     pub fields: Vec<Field>,
+    pub undoable: bool,
 }
 
 #[derive(Serialize, Deserialize)]

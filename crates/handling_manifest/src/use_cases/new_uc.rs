@@ -80,6 +80,7 @@ impl NewUseCase {
             fields: created_field_ids,
             relationships: vec![],
             allow_direct_access: false,
+            undoable: false,
         };
 
         let created_entity = uow.create_entity_multi(&vec![entity_base])?;
@@ -92,6 +93,7 @@ impl NewUseCase {
             fields: vec![],
             relationships: vec![],
             allow_direct_access: true,
+            undoable: false,
         };
 
         let created_root_entity = uow.create_entity_multi(&vec![root_entity])?;

@@ -17,9 +17,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EntityRelationshipField {
+    Relationships,
     InheritsFrom,
     Fields,
-    Relationships,
 }
 
 impl Display for EntityRelationshipField {

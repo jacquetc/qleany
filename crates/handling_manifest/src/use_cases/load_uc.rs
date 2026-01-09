@@ -150,6 +150,7 @@ impl LoadUseCase {
                 allow_direct_access: model_entity.allow_direct_access,
                 fields: vec![],        // will be filled in later
                 relationships: vec![], // will be filled in later
+                undoable: model_entity.undoable,
             })?;
             entity_ids.push(entity.id);
             entities.push(entity);

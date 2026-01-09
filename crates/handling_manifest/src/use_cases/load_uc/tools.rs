@@ -181,6 +181,7 @@ mod tests {
             fields: vec![1, 2], // Field IDs
             relationships: vec![],
             single_model: false,
+            undoable: true,
         };
 
         // Create fields for the parent entity

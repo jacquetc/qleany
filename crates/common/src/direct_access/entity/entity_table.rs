@@ -4,8 +4,8 @@
 use super::entity_repository::EntityRelationshipField;
 use super::entity_repository::EntityTable;
 use super::entity_repository::EntityTableRO;
-use crate::database::Bincode;
 use crate::database::db_helpers;
+use crate::database::Bincode;
 use crate::entities::Entity;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
@@ -14,36 +14,36 @@ const ENTITY_TABLE: TableDefinition<EntityId, Bincode<Entity>> = TableDefinition
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 
-const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_entity_inherits_from_junction");
-const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("field_from_entity_fields_junction");
 const RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("relationship_from_entity_relationships_junction");
+const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_entity_inherits_from_junction");
+const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("field_from_entity_fields_junction");
 // backward relationships
 
+const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_use_case_entities_junction");
+const ENTITY_FROM_MAIN_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_main_entities_junction");
+const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_field_entity_junction");
 const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("entity_from_entity_inherits_from_junction");
-const ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_root_entities_junction");
-const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_use_case_entities_junction");
-const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_field_entity_junction");
 
 fn get_junction_table_definition(
     field: &EntityRelationshipField,
 ) -> TableDefinition<EntityId, Vec<EntityId>> {
     match field {
-        EntityRelationshipField::InheritsFrom => ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE,
-        EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
         EntityRelationshipField::Relationships => {
             RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE
         }
+        EntityRelationshipField::InheritsFrom => ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE,
+        EntityRelationshipField::Fields => FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE,
     }
 }
 
@@ -59,14 +59,14 @@ impl<'a> EntityRedbTable<'a> {
         transaction.open_table(ENTITY_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
+        transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD)?;
-        transaction.open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_MAIN_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD)?;
         Ok(())
     }
 }
@@ -98,15 +98,15 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         };
         let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
+        let mut relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
         let mut inherits_from_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let mut fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let mut relationships_junction_table = self
-            .transaction
-            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         for entity in entities {
             let new_entity = if entity.id == EntityId::default() {
@@ -125,6 +125,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
             entity_table.insert(new_entity.id, new_entity.clone())?;
 
+            relationships_junction_table.insert(new_entity.id, new_entity.relationships.clone())?;
             inherits_from_junction_table.insert(
                 new_entity.id,
                 new_entity
@@ -134,7 +135,6 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                     .collect::<Vec<EntityId>>(),
             )?;
             fields_junction_table.insert(new_entity.id, new_entity.fields.clone())?;
-            relationships_junction_table.insert(new_entity.id, new_entity.relationships.clone())?;
             created.push(new_entity);
             if entity.id == EntityId::default() {
                 counter += 1;
@@ -148,15 +148,15 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         let mut list = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
+        let relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
         let inherits_from_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let relationships_junction_table = self
-            .transaction
-            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         if ids.is_empty() {
             let mut iter = entity_table.iter()?;
@@ -249,15 +249,15 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         let mut updated = Vec::new();
         let mut entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
+        let mut relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
         let mut inherits_from_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let mut fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let mut relationships_junction_table = self
-            .transaction
-            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         for entity in entities {
             entity_table.insert(entity.id, entity)?;
@@ -284,6 +284,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         // forward relationships
 
+        let mut relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+
         let mut inherits_from_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
@@ -292,18 +296,14 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
 
-        let mut relationships_junction_table = self
-            .transaction
-            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
-
         // backward relationships
 
-        let mut backward_root_entities_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_ROOT_ENTITIES_JUNCTION_TABLE)?;
         let mut backward_use_case_entities_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        let mut backward_main_entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_MAIN_ENTITIES_JUNCTION_TABLE)?;
         let mut backward_field_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
@@ -315,20 +315,20 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             fields_junction_table.remove(id)?;
             relationships_junction_table.remove(id)?;
 
-            // special case: backward relationship to self
-            db_helpers::delete_from_backward_junction_table(&mut inherits_from_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(
-                &mut backward_root_entities_junction_table,
+                &mut backward_use_case_entities_junction_table,
                 id,
             )?;
             db_helpers::delete_from_backward_junction_table(
-                &mut backward_use_case_entities_junction_table,
+                &mut backward_main_entities_junction_table,
                 id,
             )?;
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_field_entity_junction_table,
                 id,
             )?;
+            // special case: backward relationship to self
+            db_helpers::delete_from_backward_junction_table(&mut inherits_from_junction_table, id)?;
         }
         Ok(())
     }
@@ -412,15 +412,15 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
         let mut list = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
+        let relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
         let inherits_from_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
         let fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let relationships_junction_table = self
-            .transaction
-            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         if ids.is_empty() {
             let mut iter = entity_table.iter()?;

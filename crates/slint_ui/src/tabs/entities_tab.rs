@@ -1206,6 +1206,7 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         allow_direct_access: true,
                         fields: vec![],
                         relationships: vec![],
+                        undoable: true,
                     };
 
                     match entity_commands::create_entity(

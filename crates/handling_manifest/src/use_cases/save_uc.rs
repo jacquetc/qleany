@@ -191,6 +191,7 @@ impl SaveUseCase {
                     },
                     allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
+                    undoable: entity.undoable,
                 }
             })
             .collect::<Vec<model_structs::Entity>>();

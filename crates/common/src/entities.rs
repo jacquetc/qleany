@@ -22,6 +22,7 @@ pub struct Entity {
     pub fields: Vec<EntityId>,
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
+    pub undoable: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

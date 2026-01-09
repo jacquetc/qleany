@@ -39,6 +39,7 @@ fn render_direct_access_lib_lists_entities() {
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],
+        undoable: false,
     };
     let e2 = Entity {
         id: 11,
@@ -49,6 +50,7 @@ fn render_direct_access_lib_lists_entities() {
         allow_direct_access: true,
         fields: vec![],
         relationships: vec![],
+        undoable: false,
     };
 
     let mut entities = IndexMap::new();
