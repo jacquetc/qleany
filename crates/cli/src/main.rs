@@ -1,12 +1,12 @@
-use std::path::PathBuf;
-use std::sync::Arc;
+use crate::app_context::AppContext;
 use anyhow::Result;
 use clap::Arg;
 use clap::{Parser, Subcommand, ValueEnum};
 use common::direct_access::root::RootRelationshipField;
 use direct_access::{global_controller, root_controller};
 use handling_manifest::handling_manifest_controller;
-use crate::app_context::AppContext;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 mod app_context;
 mod options;
@@ -45,8 +45,7 @@ enum Commands {
         #[command(subcommand)]
         command: Option<ListCommands>,
     },
-    Check {
-    },
+    Check {},
     Generate {
         /// Display the files that would be generated without actually creating them
         #[arg(short, long)]
@@ -60,13 +59,10 @@ enum Commands {
 
         #[command(subcommand)]
         command: Option<GenerateCommands>,
-
     },
     /// Display the manifest
-    Show {
-    },
+    Show {},
 }
-
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum LanguageOption {
@@ -88,8 +84,7 @@ enum ListCommands {
         #[arg(short, long)]
         name: Option<String>,
     },
-    Common {
-    },
+    Common {},
 }
 
 /// The available subcommands for the `Generate` command.
@@ -136,16 +131,27 @@ fn main() {
     }
 
     match &cli.command {
-        Commands::New { folder_path, language } => {
+        Commands::New {
+            folder_path,
+            language,
+        } => {
             if verbose {
-                println!("Creating new project in folder: {:?} with language: {:?}", folder_path, language);
+                println!(
+                    "Creating new project in folder: {:?} with language: {:?}",
+                    folder_path, language
+                );
             }
             options::new::execute(&app_context, folder_path, language);
-
         }
-        Commands::List { already_written, command } => {
+        Commands::List {
+            already_written,
+            command,
+        } => {
             if verbose {
-                println!("Listing with already_written: {:?}, command: {:?}", already_written, command);
+                println!(
+                    "Listing with already_written: {:?}, command: {:?}",
+                    already_written, command
+                );
             }
             // Implement the logic for listing
         }
@@ -155,9 +161,17 @@ fn main() {
             }
             // Implement the logic for checking the project
         }
-        Commands::Generate { dry_run, in_temp, file, command } => {
+        Commands::Generate {
+            dry_run,
+            in_temp,
+            file,
+            command,
+        } => {
             if verbose {
-                println!("Generating with dry_run: {:?}, in_temp: {:?}, file: {:?}, command: {:?}", dry_run, in_temp, file, command);
+                println!(
+                    "Generating with dry_run: {:?}, in_temp: {:?}, file: {:?}, command: {:?}",
+                    dry_run, in_temp, file, command
+                );
             }
             // Implement the logic for generating files
         }

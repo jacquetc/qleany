@@ -1,25 +1,36 @@
-use std::sync::Arc;
+use crate::LanguageOption;
+use crate::app_context::AppContext;
 use common::direct_access::root::RootRelationshipField;
 use direct_access::{global_controller, root_controller};
 use handling_manifest::handling_manifest_controller;
-use crate::app_context::AppContext;
-use crate::LanguageOption;
+use std::sync::Arc;
 
-pub fn execute(app_context: &Arc<AppContext>, folder_path: &Option<String>, language: &Option<LanguageOption>) {
-    let return_dto = handling_manifest_controller::new(&app_context.db_context, &app_context.event_hub)
-        .map_err(|e| format!("Error while creating new manifest: {:?}", e)).unwrap();
+pub fn execute(
+    app_context: &Arc<AppContext>,
+    folder_path: &Option<String>,
+    language: &Option<LanguageOption>,
+) {
+    let return_dto =
+        handling_manifest_controller::new(&app_context.db_context, &app_context.event_hub)
+            .map_err(|e| format!("Error while creating new manifest: {:?}", e))
+            .unwrap();
 
     // set language if provided
     if let Some(lang) = language {
-
         let root_id = return_dto.root_id;
         let lang_str = match lang {
             LanguageOption::Rust => "rust",
             LanguageOption::CppQt => "cpp-qt",
-        }.to_string();
+        }
+        .to_string();
 
-        let global_id_vec = root_controller::get_relationship(&app_context.db_context, &root_id, &RootRelationshipField::Global)
-            .map_err(|e| format!("Error while getting root relationship: {:?}", e)).unwrap();
+        let global_id_vec = root_controller::get_relationship(
+            &app_context.db_context,
+            &root_id,
+            &RootRelationshipField::Global,
+        )
+        .map_err(|e| format!("Error while getting root relationship: {:?}", e))
+        .unwrap();
 
         let global_id = match global_id_vec.first() {
             Some(id) => id.clone(),
@@ -29,15 +40,22 @@ pub fn execute(app_context: &Arc<AppContext>, folder_path: &Option<String>, lang
         };
 
         let mut global = global_controller::get(&app_context.db_context, &global_id)
-            .map_err(|e| format!("Error while getting global: {:?}", e)).unwrap()
+            .map_err(|e| format!("Error while getting global: {:?}", e))
+            .unwrap()
             .expect("Global not found");
 
         global.language = lang_str;
         let mut undo_redo_manager = app_context.undo_redo_manager.lock().unwrap();
-        global_controller::update(&app_context.db_context, &app_context.event_hub, &mut *undo_redo_manager, None, &global)
-            .map_err(|e| format!("Error while updating global: {:?}", e)).unwrap();
+        global_controller::update(
+            &app_context.db_context,
+            &app_context.event_hub,
+            &mut *undo_redo_manager,
+            None,
+            &global,
+        )
+        .map_err(|e| format!("Error while updating global: {:?}", e))
+        .unwrap();
     }
-
 
     // Determine folder path
     let folder_path = folder_path.clone().unwrap_or_else(|| ".".to_string());
@@ -57,5 +75,6 @@ pub fn execute(app_context: &Arc<AppContext>, folder_path: &Option<String>, lang
     };
 
     handling_manifest_controller::save(&app_context.db_context, &app_context.event_hub, &dto)
-        .map_err(|e| format!("Error while saving manifest: {:?}", e)).unwrap();
+        .map_err(|e| format!("Error while saving manifest: {:?}", e))
+        .unwrap();
 }

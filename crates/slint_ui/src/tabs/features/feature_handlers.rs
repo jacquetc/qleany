@@ -454,11 +454,7 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         use_cases: vec![],
                     };
 
-                    match feature_commands::create_feature(
-                        &ctx,
-                        Some(stack_id),
-                        &create_dto,
-                    ) {
+                    match feature_commands::create_feature(&ctx, Some(stack_id), &create_dto) {
                         Ok(new_feature) => {
                             log::info!("Feature created successfully with id: {}", new_feature.id);
 
@@ -495,10 +491,10 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                             e
                                         );
                                         undo_redo_commands::cancel_composite(&ctx);
-
-                                    }
-                                    else {
-                                        log::info!("Feature added to root relationship successfully");
+                                    } else {
+                                        log::info!(
+                                            "Feature added to root relationship successfully"
+                                        );
                                         undo_redo_commands::end_composite(&ctx);
                                     }
                                 }

@@ -343,7 +343,7 @@ impl UndoRedoManager {
 
         self.in_progress_composite = None;
         self.composite_stack_id = None;
-        
+
         // not sure if we want to send events for composites
         if let Some(event_hub) = &self.event_hub {
             event_hub.send_event(Event {
@@ -352,11 +352,9 @@ impl UndoRedoManager {
                 data: None,
             });
         }
-        
     }
 
-
-        /// Adds a command to the global undo stack (ID 0).
+    /// Adds a command to the global undo stack (ID 0).
     pub fn add_command(&mut self, command: Box<dyn UndoRedoCommand>) {
         let _ = self.add_command_to_stack(command, None);
     }

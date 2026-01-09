@@ -52,7 +52,6 @@ pub fn cancel_composite(ctx: &AppContext) {
     undo_redo_manager.cancel_composite();
 }
 
-
 /// Clears the undo and redo stacks for a specific stack ID.
 pub fn clear_stack(ctx: &AppContext, stack_id: u64) {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
