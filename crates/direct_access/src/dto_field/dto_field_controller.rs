@@ -25,7 +25,7 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entity: &CreateDtoFieldDto,
 ) -> Result<DtoFieldDto> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -45,7 +45,7 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entity: &DtoFieldDto,
 ) -> Result<DtoFieldDto> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -59,7 +59,7 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -73,7 +73,7 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entities: &[CreateDtoFieldDto],
 ) -> Result<Vec<DtoFieldDto>> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -93,7 +93,7 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entities: &[DtoFieldDto],
 ) -> Result<Vec<DtoFieldDto>> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -107,7 +107,7 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = DtoFieldUnitOfWorkFactory::new(&db_context, &event_hub);

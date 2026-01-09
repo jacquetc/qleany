@@ -1,4 +1,7 @@
-use common::entities::{Cardinality, Direction, DtoFieldType, Entity, Field, FieldRelationshipType, FieldType, Order, Relationship, RelationshipType, Strength};
+use common::entities::{
+    Cardinality, Direction, DtoFieldType, Entity, Field, FieldRelationshipType, FieldType, Order,
+    Relationship, RelationshipType, Strength,
+};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -65,7 +68,9 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                FieldRelationshipType::OneToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
+                FieldRelationshipType::OneToMany => {
+                    (Cardinality::ZeroOrMore, Some(Order::Unordered))
+                }
                 FieldRelationshipType::OrderedOneToMany => {
                     (Cardinality::ZeroOrMore, Some(Order::Ordered))
                 }
@@ -77,7 +82,9 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     };
                     (card, Some(Order::Unordered))
                 }
-                FieldRelationshipType::ManyToMany => (Cardinality::ZeroOrMore, Some(Order::Unordered)),
+                FieldRelationshipType::ManyToMany => {
+                    (Cardinality::ZeroOrMore, Some(Order::Unordered))
+                }
             };
 
             Relationship {

@@ -1,3 +1,7 @@
+use crate::LoadDto;
+use crate::LoadReturnDto;
+use crate::NewReturnDto;
+use crate::SaveDto;
 use crate::units_of_work::close_uow::CloseUnitOfWorkFactory;
 use crate::units_of_work::load_uow::LoadUnitOfWorkFactory;
 use crate::units_of_work::new_uow::NewUnitOfWorkFactory;
@@ -6,10 +10,6 @@ use crate::use_cases::close_uc::CloseUseCase;
 use crate::use_cases::load_uc::LoadUseCase;
 use crate::use_cases::new_uc::NewUseCase;
 use crate::use_cases::save_uc::SaveUseCase;
-use crate::LoadDto;
-use crate::LoadReturnDto;
-use crate::NewReturnDto;
-use crate::SaveDto;
 use anyhow::Result;
 use common::event::{Event, Origin};
 

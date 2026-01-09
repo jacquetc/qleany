@@ -259,7 +259,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
     }
 
@@ -284,7 +290,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
 
         let ids = vec![1, 2, 3];
@@ -314,7 +326,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
 
         // test update_multi
@@ -331,7 +349,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = update_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
     }
 
@@ -356,7 +380,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
 
         // test remove_multi
@@ -377,7 +407,13 @@ mod tests {
             ..Default::default()
         }];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &roots,
+        );
         assert!(result.is_ok());
 
         let id = 1;

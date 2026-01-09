@@ -1,5 +1,5 @@
 use crate::NewReturnDto;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
 use common::entities::{Entity, Field, FieldType, Global, Root};
 use common::types::EntityId;
@@ -111,7 +111,7 @@ impl NewUseCase {
             id: 0,
             manifest_absolute_path: "".to_string(),
             global: created_global[0].id,
-            entities: vec![ created_entity[0].id, created_root_entity[0].id],
+            entities: vec![created_entity[0].id, created_root_entity[0].id],
             features: vec![],
             files: vec![],
         };

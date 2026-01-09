@@ -5,7 +5,6 @@ use crate::use_cases::generate_rust_code_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::Root;
 use common::entities::Dto;
 use common::entities::DtoField;
 use common::entities::Entity;
@@ -14,6 +13,7 @@ use common::entities::Field;
 use common::entities::File;
 use common::entities::Global;
 use common::entities::Relationship;
+use common::entities::Root;
 use common::entities::UseCase;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;

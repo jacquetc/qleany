@@ -21,7 +21,7 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dto: &CreateDtoDto,
 ) -> Result<DtoDto> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -41,7 +41,7 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dto: &DtoDto,
 ) -> Result<DtoDto> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -55,7 +55,7 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     // delete dto
@@ -70,7 +70,7 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dtos: &[CreateDtoDto],
 ) -> Result<Vec<DtoDto>> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -90,7 +90,7 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dtos: &[DtoDto],
 ) -> Result<Vec<DtoDto>> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -104,7 +104,7 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -128,7 +128,7 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dto: &DtoRelationshipDto,
 ) -> Result<()> {
     let uow_factory = DtoUnitOfWorkFactory::new(&db_context, &event_hub);

@@ -160,7 +160,11 @@ impl SaveUseCase {
                             r#type: field_type,
                             entity,
                             relationship,
-                            required: if field.required { Some(true) } else { Some(false) },
+                            required: if field.required {
+                                Some(true)
+                            } else {
+                                Some(false)
+                            },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),

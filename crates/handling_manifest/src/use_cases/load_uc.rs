@@ -1,6 +1,9 @@
 mod tools;
 mod validation_schema;
+use crate::use_cases::common::model_structs;
+use crate::{LoadDto, LoadReturnDto};
 use anyhow::Result;
+use common::entities::FieldRelationshipType;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork,
@@ -9,9 +12,6 @@ use common::{
         Root, UseCase,
     },
 };
-use common::entities::FieldRelationshipType;
-use crate::use_cases::common::model_structs;
-use crate::{LoadDto, LoadReturnDto};
 
 pub trait LoadUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;

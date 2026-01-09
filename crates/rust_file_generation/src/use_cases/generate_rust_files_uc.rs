@@ -1,8 +1,10 @@
-use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot, GenerationSnapshot};
+use crate::use_cases::common::rust_code_generator::{
+    GenerationReadOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
+};
 use crate::use_cases::common::rust_formatter::rustfmt_files_batch;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
-use common::entities::{Root, File, Global};
+use common::entities::{File, Global, Root};
 use common::long_operation::LongOperation;
 use common::types::EntityId;
 use std::path::PathBuf;
@@ -32,7 +34,6 @@ impl GenerateRustFilesUseCase {
             dto: dto.clone(),
         }
     }
-
 }
 impl LongOperation for GenerateRustFilesUseCase {
     type Output = GenerateRustFilesReturnDto;
@@ -68,15 +69,15 @@ impl LongOperation for GenerateRustFilesUseCase {
         let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
 
         let root_path: PathBuf = if self.dto.root_path.is_empty() || self.dto.root_path == "." {
-            let manifest_absolute_path = uow_read.get_root_multi(&vec![])?
+            let manifest_absolute_path = uow_read
+                .get_root_multi(&vec![])?
                 .into_iter()
                 .filter_map(|r| r)
                 .next()
                 .ok_or_else(|| anyhow!("Root entity not found"))?
                 .manifest_absolute_path;
             PathBuf::from(manifest_absolute_path)
-        }
-        else {
+        } else {
             PathBuf::from(&self.dto.root_path)
         };
 
@@ -103,7 +104,8 @@ impl LongOperation for GenerateRustFilesUseCase {
             println!("Processing file ID {}: {}", file_id, file_meta.name);
 
             // Build snapshot and generate code for the file
-            let (snapshot, from_cache) = SnapshotBuilder::for_file(uow_read, *file_id, &generation_snapshot_cache)?;
+            let (snapshot, from_cache) =
+                SnapshotBuilder::for_file(uow_read, *file_id, &generation_snapshot_cache)?;
             let mut code = generate_code_with_snapshot(&snapshot)?;
             if !from_cache {
                 generation_snapshot_cache.push(snapshot);
@@ -176,7 +178,10 @@ impl LongOperation for GenerateRustFilesUseCase {
         if !rust_files_to_format.is_empty() {
             progress_callback(common::long_operation::OperationProgress::new(
                 99.0,
-                Some(format!("Formatting {} Rust files...", rust_files_to_format.len())),
+                Some(format!(
+                    "Formatting {} Rust files...",
+                    rust_files_to_format.len()
+                )),
             ));
             rustfmt_files_batch(&rust_files_to_format);
         }

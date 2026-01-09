@@ -1,6 +1,6 @@
-use std::sync::Arc;
 use crate::direct_access::setup::initialize_all_tables;
 use redb::{Database, Error};
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct DbContext {

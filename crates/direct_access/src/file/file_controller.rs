@@ -41,11 +41,7 @@ pub fn update(
     Ok(result)
 }
 
-pub fn remove(
-    db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
-    id: &EntityId,
-) -> Result<()> {
+pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<()> {
     // delete file
     let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut file_uc = RemoveFileUseCase::new(Box::new(uow_factory));

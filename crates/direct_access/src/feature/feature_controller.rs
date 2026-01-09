@@ -23,7 +23,7 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     feature: &CreateFeatureDto,
 ) -> Result<FeatureDto> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -43,7 +43,7 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     feature: &FeatureDto,
 ) -> Result<FeatureDto> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -57,7 +57,7 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     // delete feature
@@ -72,7 +72,7 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     features: &[CreateFeatureDto],
 ) -> Result<Vec<FeatureDto>> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -92,7 +92,7 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     features: &[FeatureDto],
 ) -> Result<Vec<FeatureDto>> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -106,7 +106,7 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -130,7 +130,7 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dto: &FeatureRelationshipDto,
 ) -> Result<()> {
     let uow_factory = FeatureUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -154,7 +154,13 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = create(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_ok());
     }
 
@@ -174,7 +180,13 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = create(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_ok());
 
         // get with valid id
@@ -196,14 +208,26 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = update(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_err());
 
         // create
         let feature = CreateFeatureDto {
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = create(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_ok());
 
         // update with valid id
@@ -212,7 +236,13 @@ mod tests {
             name: "test".to_string(),
             ..Default::default()
         };
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = update(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_ok());
         assert_eq!(result.unwrap().name, "test");
     }
@@ -231,7 +261,13 @@ mod tests {
         let feature = CreateFeatureDto {
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &feature);
+        let result = create(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &feature,
+        );
         assert!(result.is_ok());
 
         // remove with valid id
@@ -256,7 +292,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
     }
 
@@ -278,7 +320,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
 
         let ids = vec![1, 2, 3];
@@ -305,7 +353,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
 
         // test update_multi
@@ -320,7 +374,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = update_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
     }
 
@@ -342,7 +402,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
 
         // test remove_multi
@@ -363,7 +429,13 @@ mod tests {
             ..Default::default()
         }];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &features);
+        let result = create_multi(
+            &db_context,
+            &event_hub,
+            &mut undo_redo_manager,
+            None,
+            &features,
+        );
         assert!(result.is_ok());
 
         let id = 1;

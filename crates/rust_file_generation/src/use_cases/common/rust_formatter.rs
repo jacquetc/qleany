@@ -22,7 +22,7 @@ pub fn rustfmt_files_batch(files: &[PathBuf]) {
 
     for chunk in files.chunks(BATCH_SIZE) {
         let mut cmd = Command::new(&rustfmt_path);
-        
+
         // Add all file paths as arguments
         for file in chunk {
             cmd.arg(file);

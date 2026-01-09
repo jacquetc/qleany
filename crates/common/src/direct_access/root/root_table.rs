@@ -150,8 +150,13 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 let mut iter = global_junction_table.iter()?;
                 while let Some(Ok((existing_root_id, global_ids))) = iter.next() {
                     let existing_root_id = existing_root_id.value();
-                    if existing_root_id != new_root.id && global_ids.value().contains(&new_root.global) {
-                        panic!("One-to-one constraint violation: Global {} is already referenced by Root {}", new_root.global, existing_root_id);
+                    if existing_root_id != new_root.id
+                        && global_ids.value().contains(&new_root.global)
+                    {
+                        panic!(
+                            "One-to-one constraint violation: Global {} is already referenced by Root {}",
+                            new_root.global, existing_root_id
+                        );
                     }
                 }
             }
@@ -283,7 +288,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 while let Some(Ok((existing_root_id, global_ids))) = iter.next() {
                     let existing_root_id = existing_root_id.value();
                     if existing_root_id != root.id && global_ids.value().contains(&root.global) {
-                        panic!("One-to-one constraint violation: Global {} is already referenced by Root {}", root.global, existing_root_id);
+                        panic!(
+                            "One-to-one constraint violation: Global {} is already referenced by Root {}",
+                            root.global, existing_root_id
+                        );
                     }
                 }
             }

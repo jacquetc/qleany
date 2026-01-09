@@ -14,9 +14,9 @@ use super::{
 };
 use anyhow::{Ok, Result};
 
+use crate::EntityRelationshipDto;
 use crate::entity::use_cases::get_entity_relationship_uc::GetEntityRelationshipUseCase;
 use crate::entity::use_cases::set_entity_relationship_uc::SetEntityRelationshipUseCase;
-use crate::EntityRelationshipDto;
 use common::direct_access::entity::EntityRelationshipField;
 
 use common::undo_redo::UndoRedoManager;
@@ -27,7 +27,7 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entity: &CreateEntityDto,
 ) -> Result<EntityDto> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -47,7 +47,7 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entity: &EntityDto,
 ) -> Result<EntityDto> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -61,7 +61,7 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -75,7 +75,7 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entities: &[CreateEntityDto],
 ) -> Result<Vec<EntityDto>> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -95,7 +95,7 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     entities: &[EntityDto],
 ) -> Result<Vec<EntityDto>> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -109,7 +109,7 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -133,7 +133,7 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
-stack_id: Option<u64>,
+    stack_id: Option<u64>,
     dto: &EntityRelationshipDto,
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);

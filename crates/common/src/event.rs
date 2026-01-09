@@ -2,10 +2,10 @@
 // as changes will be lost.
 
 use crate::types::EntityId;
-use flume::{unbounded, Receiver, Sender};
+use flume::{Receiver, Sender, unbounded};
 use serde::Serialize;
 use std::{
-    sync::{atomic::AtomicBool, Arc, Mutex},
+    sync::{Arc, Mutex, atomic::AtomicBool},
     thread,
 };
 
@@ -140,14 +140,16 @@ impl EventHub {
     pub fn start_event_loop(&self, stop_signal: Arc<AtomicBool>) {
         let receiver = self.receiver.clone();
         let queue = self.queue.clone();
-        thread::spawn(move || loop {
-            if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
-            }
+        thread::spawn(move || {
+            loop {
+                if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
+                    break;
+                }
 
-            let event = receiver.recv().unwrap();
-            let mut queue = queue.lock().unwrap();
-            queue.push(event.clone());
+                let event = receiver.recv().unwrap();
+                let mut queue = queue.lock().unwrap();
+                queue.push(event.clone());
+            }
         });
     }
 

@@ -1,7 +1,10 @@
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Root, Dto, DtoField, Entity, Feature, Field, FieldType, File, Global, Relationship, RelationshipType, UseCase, FieldRelationshipType};
+use common::entities::{
+    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global,
+    Relationship, RelationshipType, Root, UseCase,
+};
 use common::types::EntityId;
 use std::collections::HashMap;
 
