@@ -11,7 +11,7 @@ use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Orig
 use slint::{ComponentHandle, Timer};
 
 use crate::app_context::AppContext;
-use crate::commands::{feature_commands, root_commands};
+use crate::commands::{feature_commands, root_commands, undo_redo_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
@@ -442,6 +442,12 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         return;
                     }
 
+                    let stack_id = app
+                        .global::<FeaturesTabState>()
+                        .get_features_undo_stack_id() as u64;
+
+                    undo_redo_commands::begin_composite(&ctx, Some(stack_id));
+
                     // Create a new feature with default values
                     let create_dto = direct_access::CreateFeatureDto {
                         name: "NewFeature".to_string(),
@@ -450,10 +456,7 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
 
                     match feature_commands::create_feature(
                         &ctx,
-                        Some(
-                            app.global::<FeaturesTabState>()
-                                .get_features_undo_stack_id() as u64,
-                        ),
+                        Some(stack_id),
                         &create_dto,
                     ) {
                         Ok(new_feature) => {
@@ -491,15 +494,23 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                             "Failed to add feature to root relationship: {}",
                                             e
                                         );
+                                        undo_redo_commands::cancel_composite(&ctx);
+
+                                    }
+                                    else {
+                                        log::info!("Feature added to root relationship successfully");
+                                        undo_redo_commands::end_composite(&ctx);
                                     }
                                 }
                                 Err(e) => {
                                     log::error!("Failed to get root features relationship: {}", e);
+                                    undo_redo_commands::cancel_composite(&ctx);
                                 }
                             }
                         }
                         Err(e) => {
                             log::error!("Failed to create feature: {}", e);
+                            undo_redo_commands::cancel_composite(&ctx);
                         }
                     }
                 }

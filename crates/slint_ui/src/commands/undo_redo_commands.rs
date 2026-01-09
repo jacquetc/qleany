@@ -45,6 +45,14 @@ pub fn end_composite(ctx: &AppContext) {
     undo_redo_manager.end_composite();
 }
 
+/// Cancels the current composite command group, before it is saved to the stack.
+pub fn cancel_composite(ctx: &AppContext) {
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager.set_event_hub(&ctx.event_hub);
+    undo_redo_manager.cancel_composite();
+}
+
+
 /// Clears the undo and redo stacks for a specific stack ID.
 pub fn clear_stack(ctx: &AppContext, stack_id: u64) {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
