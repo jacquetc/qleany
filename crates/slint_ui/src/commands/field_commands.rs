@@ -90,14 +90,17 @@ pub fn update_field_multi(
 /// Remove a field by ID
 pub fn remove_field(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    field_controller::remove(
+    let result = field_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting field: {:?}", e))
+    .map_err(|e| format!("Error deleting field: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple fields by IDs
@@ -107,14 +110,17 @@ pub fn remove_field_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    field_controller::remove_multi(
+    let result = field_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting fields: {:?}", e))
+    .map_err(|e| format!("Error deleting fields: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Get a field relationship

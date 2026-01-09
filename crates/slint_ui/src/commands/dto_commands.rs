@@ -83,14 +83,17 @@ pub fn update_dto_multi(
 /// Remove a DTO by ID
 pub fn remove_dto(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_controller::remove(
+    let result = dto_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting DTO: {:?}", e))
+    .map_err(|e| format!("Error deleting DTO: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple DTOs by IDs
@@ -100,14 +103,17 @@ pub fn remove_dto_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_controller::remove_multi(
+    let result = dto_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting DTOs: {:?}", e))
+    .map_err(|e| format!("Error deleting DTOs: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Get a DTO relationship

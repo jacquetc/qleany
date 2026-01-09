@@ -95,14 +95,17 @@ pub fn remove_use_case(
     id: &EntityId,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    use_case_controller::remove(
+    let result = use_case_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting use case: {:?}", e))
+    .map_err(|e| format!("Error deleting use case: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple use cases by IDs
@@ -112,14 +115,17 @@ pub fn remove_use_case_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    use_case_controller::remove_multi(
+    let result = use_case_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting use cases: {:?}", e))
+    .map_err(|e| format!("Error deleting use cases: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Get a use case relationship

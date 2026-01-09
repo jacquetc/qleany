@@ -94,14 +94,17 @@ pub fn remove_dto_field(
     id: &EntityId,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_field_controller::remove(
+    let result = dto_field_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting DTO Field: {:?}", e))
+    .map_err(|e| format!("Error deleting DTO Field: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple DTO Fields by IDs
@@ -111,12 +114,15 @@ pub fn remove_dto_field_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_field_controller::remove_multi(
+    let result = dto_field_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting DTO Fields: {:?}", e))
+    .map_err(|e| format!("Error deleting DTO Fields: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }

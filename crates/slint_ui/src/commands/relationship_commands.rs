@@ -100,14 +100,17 @@ pub fn remove_relationship(
     id: &EntityId,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    relationship_controller::remove(
+    let result = relationship_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting relationship: {:?}", e))
+    .map_err(|e| format!("Error deleting relationship: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple relationships by IDs
@@ -117,14 +120,17 @@ pub fn remove_relationship_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    relationship_controller::remove_multi(
+    let result = relationship_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting relationships: {:?}", e))
+    .map_err(|e| format!("Error deleting relationships: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Get a relationship's relationship

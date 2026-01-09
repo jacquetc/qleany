@@ -90,14 +90,17 @@ pub fn update_global_multi(
 /// Remove a global by ID
 pub fn remove_global(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::remove(
+    let result = global_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting global: {:?}", e))
+    .map_err(|e| format!("Error deleting global: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple globals by IDs
@@ -107,12 +110,15 @@ pub fn remove_global_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::remove_multi(
+    let result = global_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting globals: {:?}", e))
+    .map_err(|e| format!("Error deleting globals: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }

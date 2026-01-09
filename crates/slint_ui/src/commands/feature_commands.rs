@@ -95,14 +95,17 @@ pub fn remove_feature(
     id: &EntityId,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    feature_controller::remove(
+    let result = feature_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting feature: {:?}", e))
+    .map_err(|e| format!("Error deleting feature: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Remove multiple features by IDs
@@ -112,14 +115,17 @@ pub fn remove_feature_multi(
     ids: &[EntityId],
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    feature_controller::remove_multi(
+    let result = feature_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting features: {:?}", e))
+    .map_err(|e| format!("Error deleting features: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
 }
 
 /// Get a feature relationship
