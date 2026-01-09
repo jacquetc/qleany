@@ -4399,6 +4399,10 @@ dependencies = [
  "clap",
  "common",
  "direct_access",
+ "env_logger",
+ "handling_manifest",
+ "log",
+ "rust_file_generation",
 ]
 
 [[package]]
