@@ -86,6 +86,8 @@ export global EntitiesTabState {
     callback entity_single_model_changed(bool);
     in-out property <bool> selected_entity_undoable: true;
     callback entity_undoable_changed(bool);
+    in-out property <bool> selected_entity_allow_direct_access: false;
+    callback entity_allow_direct_access_changed(bool);
 
     // fields
     in-out property <[CRListItem]> field_cr_list: [];

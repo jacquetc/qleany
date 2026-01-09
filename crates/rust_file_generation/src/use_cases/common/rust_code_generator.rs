@@ -672,15 +672,7 @@ impl SnapshotBuilder {
                     if ent_opt.only_for_heritage {
                         continue;
                     }
-                    //TODO: commented out for now; revisit later
-                    // if file.template_name.starts_with("direct_access_")
-                    //     || file.template_name.contains("entity_")
-                    //     || file.template_name.contains("common_entity_")
-                    // {
-                    //     if !ent_opt.allow_direct_access {
-                    //         continue;
-                    //     }
-                    // }
+
                     // load fields
                     let entity_fields: Vec<Field> = uow
                         .get_field_multi(&ent_opt.fields)?

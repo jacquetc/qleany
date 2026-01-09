@@ -218,6 +218,14 @@ export component EntitiesTab inherits Rectangle {
                                         EntitiesTabState.entity_undoable_changed(self.checked);
                                     }
                                 }
+
+                                CheckBox {
+                                    text: "Allow direct access";
+                                    checked <=> EntitiesTabState.selected_entity_allow_direct_access;
+                                    toggled => {
+                                        EntitiesTabState.entity_allow_direct_access_changed(self.checked);
+                                    }
+                                }
                             }
                         }
                     }

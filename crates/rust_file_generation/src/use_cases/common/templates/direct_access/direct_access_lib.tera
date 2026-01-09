@@ -5,12 +5,16 @@
 
 // Project entities (auto-listed)
 {% for eid, ent in s.entities %}
+{%- if ent.inner.allow_direct_access %}
 // {{ ent.pascal_name }}
+{%- endif %}
 pub mod {{ ent.snake_name }};
 {% endfor %}
 
 // Re-exports for all project entities
 {% for eid, ent in s.entities %}
+{%- if ent.inner.allow_direct_access %}
 pub use {{ ent.snake_name }}::dtos::*;
 pub use {{ ent.snake_name }}::{{ ent.snake_name }}_controller;
+{%- endif %}
 {% endfor %}

@@ -292,199 +292,201 @@ impl ListRustFilesUseCase {
                 continue;
             }
 
-            // for crates/direct_access/src/
+            if entity.allow_direct_access {
+                // for crates/direct_access/src/
 
-            files.push(File {
-                id: 0,
-                name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: "crates/direct_access/src/".to_string(),
-                group: "entities".to_string(),
-                template_name: "entity_mod".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: "crates/direct_access/src/".to_string(),
+                    group: "entities".to_string(),
+                    template_name: "entity_mod".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            let relative_path = format!(
-                "crates/direct_access/src/{}/",
-                heck::AsSnakeCase(&entity.name)
-            );
+                let relative_path = format!(
+                    "crates/direct_access/src/{}/",
+                    heck::AsSnakeCase(&entity.name)
+                );
 
-            files.push(File {
-                id: 0,
-                name: "dtos.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_dtos".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: "dtos.rs".to_string(),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_dtos".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: "use_cases.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_use_cases_mod".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: "use_cases.rs".to_string(),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_use_cases_mod".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: "units_of_work.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_units_of_work".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: "units_of_work.rs".to_string(),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_units_of_work".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_controller".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_controller".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            // for crates/direct_access/src/{}/use_cases/
+                // for crates/direct_access/src/{}/use_cases/
 
-            let relative_path = format!(
-                "crates/direct_access/src/{}/use_cases/",
-                heck::AsSnakeCase(&entity.name)
-            );
+                let relative_path = format!(
+                    "crates/direct_access/src/{}/use_cases/",
+                    heck::AsSnakeCase(&entity.name)
+                );
 
-            files.push(File {
-                id: 0,
-                name: format!("get_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("get_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_get_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("get_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_multi_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("get_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_get_multi_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_create_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_create_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_create_multi_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_create_multi_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_update_multi_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_update_multi_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("update_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_update_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("update_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_update_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("remove_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_remove_multi_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("remove_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_remove_multi_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            files.push(File {
-                id: 0,
-                name: format!("remove_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_remove_use_case".to_string(),
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-            });
+                files.push(File {
+                    id: 0,
+                    name: format!("remove_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "entities".to_string(),
+                    template_name: "entity_remove_use_case".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
 
-            // only if there is a forward relationship
-            let relationships = uow.get_entity_relationship(
-                &entity.id,
-                &common::direct_access::entity::EntityRelationshipField::Relationships,
-            )?;
-            let relationships = uow.get_relationship_multi(&relationships)?;
-            let has_forward_relationship = relationships.iter().any(|r| {
-                if let Some(r) = r {
-                    r.direction == common::entities::Direction::Forward
-                } else {
-                    false
+                // only if there is a forward relationship
+                let relationships = uow.get_entity_relationship(
+                    &entity.id,
+                    &common::direct_access::entity::EntityRelationshipField::Relationships,
+                )?;
+                let relationships = uow.get_relationship_multi(&relationships)?;
+                let has_forward_relationship = relationships.iter().any(|r| {
+                    if let Some(r) = r {
+                        r.direction == common::entities::Direction::Forward
+                    } else {
+                        false
+                    }
+                });
+
+                if has_forward_relationship {
+                    files.push(File {
+                        id: 0,
+                        name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                        relative_path: relative_path.clone(),
+                        group: "entities".to_string(),
+                        template_name: "entity_get_relationship_use_case".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                    });
+
+                    files.push(File {
+                        id: 0,
+                        name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                        relative_path: relative_path.clone(),
+                        group: "entities".to_string(),
+                        template_name: "entity_set_relationship_use_case".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                    });
                 }
-            });
-
-            if has_forward_relationship {
-                files.push(File {
-                    id: 0,
-                    name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_get_relationship_use_case".to_string(),
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_set_relationship_use_case".to_string(),
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                });
             }
 
             // for crates/common/src/direct_access/
