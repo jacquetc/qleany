@@ -17,12 +17,13 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     global: &CreateGlobalDto,
 ) -> Result<GlobalDto> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = CreateGlobalUseCase::new(Box::new(uow_factory));
     let result = global_uc.execute(global.clone())?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(result)
 }
 
@@ -36,12 +37,13 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     global: &GlobalDto,
 ) -> Result<GlobalDto> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = UpdateGlobalUseCase::new(Box::new(uow_factory));
     let result = global_uc.execute(global)?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(result)
 }
 
@@ -49,13 +51,14 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     // delete global
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = RemoveGlobalUseCase::new(Box::new(uow_factory));
     global_uc.execute(id)?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(())
 }
 
@@ -63,12 +66,13 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     globals: &[CreateGlobalDto],
 ) -> Result<Vec<GlobalDto>> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = CreateGlobalMultiUseCase::new(Box::new(uow_factory));
     let result = global_uc.execute(globals)?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(result)
 }
 
@@ -82,12 +86,13 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     globals: &[GlobalDto],
 ) -> Result<Vec<GlobalDto>> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = UpdateGlobalMultiUseCase::new(Box::new(uow_factory));
     let result = global_uc.execute(globals)?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(result)
 }
 
@@ -95,12 +100,13 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = GlobalUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut global_uc = RemoveGlobalMultiUseCase::new(Box::new(uow_factory));
     global_uc.execute(ids)?;
-    undo_redo_manager.add_command(Box::new(global_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(global_uc), stack_id)?;
     Ok(())
 }
 
@@ -118,7 +124,7 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_ok());
     }
 
@@ -138,7 +144,7 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_ok());
 
         // get with valid id
@@ -160,14 +166,14 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_err());
 
         // create
         let global = CreateGlobalDto {
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_ok());
 
         // update with valid id
@@ -176,7 +182,7 @@ mod tests {
             language: "test".to_string(),
             ..Default::default()
         };
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().language, "test");
     }
@@ -188,19 +194,19 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let id = 115;
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, &id);
+        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, None, &id);
         assert!(result.is_err());
 
         // create
         let global = CreateGlobalDto {
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &global);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &global);
         assert!(result.is_ok());
 
         // remove with valid id
         let id = result.unwrap().id;
-        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, &id);
+        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, None, &id);
         assert!(result.is_ok());
     }
 
@@ -220,7 +226,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &globals);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &globals);
         assert!(result.is_ok());
     }
 
@@ -242,7 +248,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &globals);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &globals);
         assert!(result.is_ok());
 
         let ids = vec![1, 2, 3];
@@ -269,7 +275,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &globals);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &globals);
         assert!(result.is_ok());
 
         // test update_multi
@@ -284,7 +290,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, &globals);
+        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &globals);
         assert!(result.is_ok());
     }
 
@@ -306,13 +312,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &globals);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &globals);
         assert!(result.is_ok());
 
         // test remove_multi
         let ids = vec![1, 2, 3];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = remove_multi(&db_context, &event_hub, &mut undo_redo_manager, &ids);
+        let result = remove_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &ids);
         assert!(result.is_ok());
     }
 }

@@ -39,6 +39,8 @@ export global GenerateCommands {
     callback cancel_generate();
 }
 export global ProjectTabState {
+    in-out property <int> project_undo_stack_id: -1;
+
     // Project settings properties
     in-out property <string> language: "Rust";
     in-out property <string> application_name: "";
@@ -55,6 +57,8 @@ export global ProjectTabState {
 }
 
 export global EntitiesTabState {
+    in-out property <int> entities_undo_stack_id: -1;
+
     // Entity lists and selection
     in-out property <[CRListItem]> entity_cr_list: [];
     callback request_entities_reorder(int /* from_index */, int /* to_index */);
@@ -124,6 +128,8 @@ export global EntitiesTabState {
 }
 
 export global FeaturesTabState {
+    in-out property <int> features_undo_stack_id: -1;
+
     // Loading and error states
     in-out property <bool> features_is_loading: false;
     in-out property <string> features_error_message: "";

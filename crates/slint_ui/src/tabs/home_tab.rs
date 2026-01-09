@@ -84,34 +84,30 @@ fn subscribe_new_manifest_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(
-        Origin::HandlingManifest(HandlingManifestEvent::New),
-        {
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move |event| {
-                log::info!("New manifest created event received");
-                let ctx = Arc::clone(&ctx);
-                let app_weak = app_weak.clone();
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |event| {
+            log::info!("New manifest created event received");
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
 
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        // clear any previous error
-                        app.global::<AppState>()
-                            .set_error_message(slint::SharedString::from(""));
-                        // set root_id
-                        app.global::<AppState>().set_root_id(event.ids[0] as i32);
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    // clear any previous error
+                    app.global::<AppState>()
+                        .set_error_message(slint::SharedString::from(""));
+                    // set root_id
+                    app.global::<AppState>().set_root_id(event.ids[0] as i32);
 
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        app.global::<AppState>().set_is_loading(false);
-                        app.global::<AppState>().set_manifest_is_open(true);
-                    }
-                });
-            }
-        },
-    );
+                    app.global::<AppState>().set_manifest_is_saved(true);
+                    app.global::<AppState>().set_is_loading(false);
+                    app.global::<AppState>().set_manifest_is_open(true);
+                }
+            });
+        }
+    });
 }
-
 
 /// Wire up the on_new_manifest callback
 pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
@@ -148,7 +144,6 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         return;
                     }
                 }
-
             }
         }
     });
@@ -242,11 +237,13 @@ pub fn setup_save_manifest_as_callback(app: &App, app_context: &Arc<AppContext>)
                             app.global::<AppState>()
                                 .set_error_message(slint::SharedString::from(""));
                             app.global::<AppState>().set_manifest_is_saved(true);
-                            
+
                             // Show success message
-                            app.global::<AppState>().set_success_message(slint::SharedString::from("Manifest saved successfully"));
+                            app.global::<AppState>().set_success_message(
+                                slint::SharedString::from("Manifest saved successfully"),
+                            );
                             app.global::<AppState>().set_success_message_visible(true);
-                            
+
                             // Hide after 3 seconds
                             let app_weak_timer = app.as_weak();
                             Timer::single_shot(std::time::Duration::from_secs(3), move || {
@@ -318,7 +315,10 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         app.global::<AppState>().set_manifest_is_saved(true);
 
                         // Show success message
-                        app.global::<AppState>().set_success_message(slint::SharedString::from("Manifest saved successfully"));
+                        app.global::<AppState>()
+                            .set_success_message(slint::SharedString::from(
+                                "Manifest saved successfully",
+                            ));
                         app.global::<AppState>().set_success_message_visible(true);
 
                         // Hide after 3 seconds

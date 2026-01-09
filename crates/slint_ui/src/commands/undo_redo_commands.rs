@@ -2,45 +2,77 @@
 
 use crate::app_context::AppContext;
 
-/// Undoes the most recent command.
-pub fn undo(ctx: &AppContext) -> Result<(), String> {
+/// Undoes the most recent command on the specified stack.
+pub fn undo(ctx: &AppContext, stack_id: Option<u64>) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     // Inject event hub before operation
     undo_redo_manager.set_event_hub(&ctx.event_hub);
 
-    undo_redo_manager.undo().map_err(|e| e.to_string())
+    undo_redo_manager.undo(stack_id).map_err(|e| e.to_string())
 }
 
-/// Redoes the most recently undone command.
-pub fn redo(ctx: &AppContext) -> Result<(), String> {
+/// Redoes the most recently undone command on the specified stack.
+pub fn redo(ctx: &AppContext, stack_id: Option<u64>) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     undo_redo_manager.set_event_hub(&ctx.event_hub);
 
-    undo_redo_manager.redo().map_err(|e| e.to_string())
+    undo_redo_manager.redo(stack_id).map_err(|e| e.to_string())
 }
 
-/// Checks if there are commands that can be undone.
-pub fn can_undo(ctx: &AppContext) -> bool {
+/// Checks if there are commands that can be undone on the specified stack.
+pub fn can_undo(ctx: &AppContext, stack_id: Option<u64>) -> bool {
     let undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    undo_redo_manager.can_undo()
+    undo_redo_manager.can_undo(stack_id)
 }
 
-/// Checks if there are commands that can be redone.
-pub fn can_redo(ctx: &AppContext) -> bool {
+/// Checks if there are commands that can be redone on the specified stack.
+pub fn can_redo(ctx: &AppContext, stack_id: Option<u64>) -> bool {
     let undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    undo_redo_manager.can_redo()
+    undo_redo_manager.can_redo(stack_id)
 }
 
 /// Begins a composite command group.
-pub fn begin_composite(ctx: &AppContext) {
+pub fn begin_composite(ctx: &AppContext, stack_id: Option<u64>) {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     undo_redo_manager.set_event_hub(&ctx.event_hub);
-    undo_redo_manager.begin_composite();
+    undo_redo_manager.begin_composite(stack_id);
 }
 
-/// Ends the current composite command group.
+/// Ends the current composite command group and adds it to the specified stack.
 pub fn end_composite(ctx: &AppContext) {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     undo_redo_manager.set_event_hub(&ctx.event_hub);
     undo_redo_manager.end_composite();
+}
+
+/// Clears the undo and redo stacks for a specific stack ID.
+pub fn clear_stack(ctx: &AppContext, stack_id: u64) {
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager.clear_stack(stack_id);
+}
+
+/// Clears the undo and redo stacks.
+pub fn clear_all_stacks(ctx: &AppContext) {
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager.clear_all_stacks();
+}
+
+/// Gets the size of the undo stack.
+pub fn get_stack_size(ctx: &AppContext, stack_id: u64) -> usize {
+    let undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager.get_stack_size(stack_id)
+}
+
+/// Creates a new undo/redo stack and returns its ID.
+pub fn create_new_stack(ctx: &AppContext) -> u64 {
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager.create_new_stack()
+}
+
+/// Deletes an undo/redo stack by its ID.
+pub fn delete_stack(ctx: &AppContext, stack_id: u64) -> Result<(), String> {
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    undo_redo_manager
+        .delete_stack(stack_id)
+        .map_err(|e| e.to_string())
 }

@@ -5,17 +5,17 @@
 
 use std::sync::Arc;
 
+use crate::app_context::AppContext;
+use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
+use crate::event_hub_client::EventHubClient;
+use crate::tabs::features::use_case_handlers::fill_use_case_list;
+use crate::{App, AppState, FeaturesTabState, ListItem};
 use common::direct_access::dto::DtoRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::entities::DtoFieldType;
+use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use crate::app_context::AppContext;
-use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
-use crate::{App, AppState, FeaturesTabState, ListItem};
-use crate::event_hub_client::EventHubClient;
-use crate::tabs::features::use_case_handlers::fill_use_case_list;
 
 pub fn subscribe_dto_updated_event(
     event_hub_client: &EventHubClient,
@@ -170,7 +170,7 @@ pub fn fill_dto_in_field_list(app: &App, app_context: &Arc<AppContext>) {
 }
 
 /// Helper function to update a DTO with new values
-pub fn update_dto_helper<F>(app_context: &Arc<AppContext>, dto_id: i32, update_fn: F)
+pub fn update_dto_helper<F>(app: &App, app_context: &Arc<AppContext>, dto_id: i32, update_fn: F)
 where
     F: FnOnce(&mut direct_access::DtoDto),
 {
@@ -182,7 +182,14 @@ where
 
     if let Ok(Some(mut dto)) = dto_res {
         update_fn(&mut dto);
-        match dto_commands::update_dto(app_context, &dto) {
+        match dto_commands::update_dto(
+            app_context,
+            Some(
+                app.global::<FeaturesTabState>()
+                    .get_features_undo_stack_id() as u64,
+            ),
+            &dto,
+        ) {
             Ok(_) => {
                 log::info!("DTO updated successfully");
             }
@@ -194,8 +201,12 @@ where
 }
 
 /// Helper function to update a DTO field with new values
-pub fn update_dto_field_helper<F>(app_context: &Arc<AppContext>, dto_field_id: i32, update_fn: F)
-where
+pub fn update_dto_field_helper<F>(
+    app: &App,
+    app_context: &Arc<AppContext>,
+    dto_field_id: i32,
+    update_fn: F,
+) where
     F: FnOnce(&mut direct_access::DtoFieldDto),
 {
     if dto_field_id < 0 {
@@ -207,7 +218,14 @@ where
 
     if let Ok(Some(mut dto_field)) = dto_field_res {
         update_fn(&mut dto_field);
-        match dto_field_commands::update_dto_field(app_context, &dto_field) {
+        match dto_field_commands::update_dto_field(
+            app_context,
+            Some(
+                app.global::<FeaturesTabState>()
+                    .get_features_undo_stack_id() as u64,
+            ),
+            &dto_field,
+        ) {
             Ok(_) => {
                 log::info!("DTO field updated successfully");
             }
@@ -229,13 +247,17 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                     return;
                 }
 
+                let stack_id = app
+                    .global::<FeaturesTabState>()
+                    .get_features_undo_stack_id() as u64;
+
                 if enabled {
                     // Create a new DTO In for this use case
                     let create_dto = direct_access::CreateDtoDto {
                         name: "NewDtoIn".to_string(),
                         fields: vec![],
                     };
-                    match dto_commands::create_dto(&ctx, &create_dto) {
+                    match dto_commands::create_dto(&ctx, Some(stack_id), &create_dto) {
                         Ok(dto) => {
                             // Set the relationship
                             let relationship_dto = UseCaseRelationshipDto {
@@ -245,6 +267,7 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                             };
                             match use_case_commands::set_use_case_relationship(
                                 &ctx,
+                                Some(stack_id),
                                 &relationship_dto,
                             ) {
                                 Ok(()) => {
@@ -260,7 +283,7 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                 Err(e) => {
                                     log::error!("Failed to link DTO In: {}", e);
                                     // Clean up the created DTO
-                                    let _ = dto_commands::remove_dto(&ctx, &dto.id);
+                                    let _ = dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
                                     app.global::<FeaturesTabState>().set_dto_in_enabled(false);
                                 }
                             }
@@ -280,12 +303,16 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                             field: UseCaseRelationshipField::DtoIn,
                             right_ids: vec![],
                         };
-                        match use_case_commands::set_use_case_relationship(&ctx, &relationship_dto)
-                        {
+                        match use_case_commands::set_use_case_relationship(
+                            &ctx,
+                            Some(stack_id),
+                            &relationship_dto,
+                        ) {
                             Ok(()) => {
                                 // Delete the DTO
                                 let _ = dto_commands::remove_dto(
                                     &ctx,
+                                    Some(stack_id),
                                     &(dto_id as common::types::EntityId),
                                 );
                                 clear_dto_in_form(&app);
@@ -312,7 +339,7 @@ pub fn setup_dto_in_name_callback(app: &App, app_context: &Arc<AppContext>) {
         move |name| {
             if let Some(app) = app_weak.upgrade() {
                 let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
-                update_dto_helper(&ctx, dto_id, |dto| {
+                update_dto_helper(&app, &ctx, dto_id, |dto| {
                     dto.name = name.to_string();
                 });
             }
@@ -326,10 +353,8 @@ pub fn setup_dto_in_field_selected_callback(app: &App, app_context: &Arc<AppCont
         let app_weak = app.as_weak();
         move |field_id| {
             if let Some(app) = app_weak.upgrade() {
-                let field_res = dto_field_commands::get_dto_field(
-                    &ctx,
-                    &(field_id as common::types::EntityId),
-                );
+                let field_res =
+                    dto_field_commands::get_dto_field(&ctx, &(field_id as common::types::EntityId));
                 match field_res {
                     Ok(Some(field)) => {
                         fill_dto_in_field_form(&app, &field);
@@ -354,8 +379,10 @@ pub fn setup_dto_in_field_name_callback(app: &App, app_context: &Arc<AppContext>
             let app_weak = app.as_weak();
             move |name| {
                 if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<FeaturesTabState>().get_selected_dto_in_field_id();
-                    update_dto_field_helper(&ctx, field_id, |field| {
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.name = name.to_string();
                     });
                     // Refresh field list to show updated name
@@ -372,12 +399,14 @@ pub fn setup_dto_in_field_type_callback(app: &App, app_context: &Arc<AppContext>
             let app_weak = app.as_weak();
             move |_value| {
                 if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<FeaturesTabState>().get_selected_dto_in_field_id();
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
                     let type_index = app
                         .global::<FeaturesTabState>()
                         .get_selected_dto_in_field_type_index();
                     let field_type = index_to_dto_field_type(type_index);
-                    update_dto_field_helper(&ctx, field_id, |field| {
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.field_type = field_type;
                     });
                 }
@@ -392,8 +421,10 @@ pub fn setup_dto_in_field_is_nullable_callback(app: &App, app_context: &Arc<AppC
             let app_weak = app.as_weak();
             move |is_nullable| {
                 if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<FeaturesTabState>().get_selected_dto_in_field_id();
-                    update_dto_field_helper(&ctx, field_id, |field| {
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.is_nullable = is_nullable;
                     });
                 }
@@ -408,8 +439,10 @@ pub fn setup_dto_in_field_is_list_callback(app: &App, app_context: &Arc<AppConte
             let app_weak = app.as_weak();
             move |is_list| {
                 if let Some(app) = app_weak.upgrade() {
-                    let field_id = app.global::<FeaturesTabState>().get_selected_dto_in_field_id();
-                    update_dto_field_helper(&ctx, field_id, |field| {
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.is_list = is_list;
                     });
                 }
@@ -449,6 +482,10 @@ pub fn setup_dto_in_fields_reorder_callback(app: &App, app_context: &Arc<AppCont
 
                     let result = dto_commands::set_dto_relationship(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &DtoRelationshipDto {
                             id: dto_id,
                             field: DtoRelationshipField::Fields,
@@ -478,6 +515,10 @@ pub fn setup_dto_in_field_deletion_callback(app: &App, app_context: &Arc<AppCont
                 if let Some(app) = app_weak.upgrade() {
                     let result = dto_field_commands::remove_dto_field(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &(field_id as common::types::EntityId),
                     );
                     match result {
@@ -520,9 +561,19 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                         enum_values: None,
                     };
 
-                    match dto_field_commands::create_dto_field(&ctx, &create_dto) {
+                    match dto_field_commands::create_dto_field(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &create_dto,
+                    ) {
                         Ok(new_field) => {
-                            log::info!("DTO In field created successfully with id: {}", new_field.id);
+                            log::info!(
+                                "DTO In field created successfully with id: {}",
+                                new_field.id
+                            );
 
                             // Get current field ids from DTO
                             let field_ids_res = dto_commands::get_dto_relationship(
@@ -543,9 +594,15 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                                         right_ids: field_ids,
                                     };
 
-                                    if let Err(e) =
-                                        dto_commands::set_dto_relationship(&ctx, &relationship_dto)
-                                    {
+                                    if let Err(e) = dto_commands::set_dto_relationship(
+                                        &ctx,
+                                        Some(
+                                            app.global::<FeaturesTabState>()
+                                                .get_features_undo_stack_id()
+                                                as u64,
+                                        ),
+                                        &relationship_dto,
+                                    ) {
                                         log::error!(
                                             "Failed to add field to DTO In relationship: {}",
                                             e

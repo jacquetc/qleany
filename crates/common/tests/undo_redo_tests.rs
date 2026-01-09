@@ -78,8 +78,8 @@ impl UndoRedoCommand for MergeableCommand {
 #[test]
 fn test_new() {
     let manager = UndoRedoManager::new();
-    assert!(!manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 }
 
 #[test]
@@ -90,8 +90,8 @@ fn test_add_command() {
     // Add a command
     manager.add_command(Box::new(TestCommand::new(counter.clone(), 5)));
 
-    assert!(manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(manager.can_undo(None));
+    assert!(!manager.can_redo(None));
     assert_eq!(*counter.lock().unwrap(), 0); // Command should not be executed automatically
 }
 
@@ -110,11 +110,11 @@ fn test_undo() {
     assert_eq!(*counter.lock().unwrap(), 5);
 
     // Undo the command
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
 
     assert_eq!(*counter.lock().unwrap(), 0);
-    assert!(!manager.can_undo());
-    assert!(manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(manager.can_redo(None));
 }
 
 #[test]
@@ -130,14 +130,14 @@ fn test_redo() {
     }
 
     // Undo and then redo
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 0);
 
-    manager.redo().unwrap();
+    manager.redo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 5);
 
-    assert!(manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 }
 
 #[test]
@@ -159,17 +159,17 @@ fn test_undo_redo_multiple() {
     assert_eq!(*counter.lock().unwrap(), 8);
 
     // Undo both commands
-    manager.undo().unwrap(); // Undo cmd2
+    manager.undo(None).unwrap(); // Undo cmd2
     assert_eq!(*counter.lock().unwrap(), 5);
 
-    manager.undo().unwrap(); // Undo cmd1
+    manager.undo(None).unwrap(); // Undo cmd1
     assert_eq!(*counter.lock().unwrap(), 0);
 
     // Redo both commands
-    manager.redo().unwrap(); // Redo cmd1
+    manager.redo(None).unwrap(); // Redo cmd1
     assert_eq!(*counter.lock().unwrap(), 5);
 
-    manager.redo().unwrap(); // Redo cmd2
+    manager.redo(None).unwrap(); // Redo cmd2
     assert_eq!(*counter.lock().unwrap(), 8);
 }
 
@@ -179,7 +179,7 @@ fn test_composite_command() {
     let mut manager = UndoRedoManager::new();
 
     // Create a composite command
-    manager.begin_composite();
+    manager.begin_composite(None);
 
     // Add commands to the composite
     {
@@ -197,11 +197,11 @@ fn test_composite_command() {
     assert_eq!(*counter.lock().unwrap(), 8);
 
     // Undo the composite (should undo both commands at once)
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 0);
 
     // Redo the composite (should redo both commands at once)
-    manager.redo().unwrap();
+    manager.redo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 8);
 }
 
@@ -210,11 +210,11 @@ fn test_empty_composite() {
     let mut manager = UndoRedoManager::new();
 
     // Create an empty composite command
-    manager.begin_composite();
+    manager.begin_composite(None);
     manager.end_composite();
 
     // Nothing should be added to the undo stack
-    assert!(!manager.can_undo());
+    assert!(!manager.can_undo(None));
 }
 
 #[test]
@@ -223,7 +223,7 @@ fn test_nested_composite() {
     let mut manager = UndoRedoManager::new();
 
     // Start outer composite
-    manager.begin_composite();
+    manager.begin_composite(None);
 
     // Add a command
     {
@@ -233,7 +233,7 @@ fn test_nested_composite() {
     }
 
     // Start inner composite (should be ignored and continue with outer composite)
-    manager.begin_composite();
+    manager.begin_composite(None);
 
     // Add another command
     {
@@ -258,7 +258,7 @@ fn test_nested_composite() {
     assert_eq!(*counter.lock().unwrap(), 10);
 
     // Undo the composite (should undo all three commands)
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 0);
 }
 
@@ -284,11 +284,11 @@ fn test_command_merging() {
     assert_eq!(*counter.lock().unwrap(), 8);
 
     // Undo should undo both commands at once since they were merged
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 0);
 
     // Redo should redo both commands at once
-    manager.redo().unwrap();
+    manager.redo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 8);
 }
 
@@ -305,8 +305,8 @@ fn test_redo_stack_cleared_on_new_command() {
     }
 
     // Undo the command
-    manager.undo().unwrap();
-    assert!(manager.can_redo());
+    manager.undo(None).unwrap();
+    assert!(manager.can_redo(None));
 
     // Add a new command
     {
@@ -316,7 +316,7 @@ fn test_redo_stack_cleared_on_new_command() {
     }
 
     // Redo stack should be cleared
-    assert!(!manager.can_redo());
+    assert!(!manager.can_redo(None));
     assert_eq!(*counter.lock().unwrap(), 3);
 }
 
@@ -325,7 +325,7 @@ fn test_undo_with_empty_stack() {
     let mut manager = UndoRedoManager::new();
 
     // Undo with empty stack should not fail
-    let result = manager.undo();
+    let result = manager.undo(None);
     assert!(result.is_ok());
 }
 
@@ -334,7 +334,7 @@ fn test_redo_with_empty_stack() {
     let mut manager = UndoRedoManager::new();
 
     // Redo with empty stack should not fail
-    let result = manager.redo();
+    let result = manager.redo(None);
     assert!(result.is_ok());
 }
 
@@ -355,21 +355,21 @@ fn test_clear() {
     }
 
     assert_eq!(*counter.lock().unwrap(), 8);
-    assert!(manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 
     // Undo one command to populate the redo stack
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 5);
-    assert!(manager.can_undo());
-    assert!(manager.can_redo());
+    assert!(manager.can_undo(None));
+    assert!(manager.can_redo(None));
 
     // Clear the manager
-    manager.clear();
+    manager.clear_all_stacks();
 
     // Verify both stacks are empty
-    assert!(!manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 
     // Verify we can add new commands after clearing
     {
@@ -378,14 +378,14 @@ fn test_clear() {
         manager.add_command(Box::new(cmd));
     }
 
-    assert!(manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 
     // Verify undo works after clearing
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 5); // Back to the value before the new command
-    assert!(!manager.can_undo());
-    assert!(manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(manager.can_redo(None));
 }
 
 #[test]
@@ -394,7 +394,7 @@ fn test_clear_with_in_progress_composite() {
     let mut manager = UndoRedoManager::new();
 
     // Begin a composite command
-    manager.begin_composite();
+    manager.begin_composite(None);
 
     // Add commands to the composite
     {
@@ -410,11 +410,11 @@ fn test_clear_with_in_progress_composite() {
     assert_eq!(*counter.lock().unwrap(), 8);
 
     // Clear the manager without ending the composite
-    manager.clear();
+    manager.clear_all_stacks();
 
     // Verify both stacks are empty
-    assert!(!manager.can_undo());
-    assert!(!manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(!manager.can_redo(None));
 
     // Verify the composite state is reset by adding a command normally
     {
@@ -424,11 +424,11 @@ fn test_clear_with_in_progress_composite() {
     }
 
     // Command should be added directly to the undo stack, not to a composite
-    assert!(manager.can_undo());
+    assert!(manager.can_undo(None));
 
     // Verify undo works normally after clearing
-    manager.undo().unwrap();
+    manager.undo(None).unwrap();
     assert_eq!(*counter.lock().unwrap(), 8); // Back to the value before the new command
-    assert!(!manager.can_undo());
-    assert!(manager.can_redo());
+    assert!(!manager.can_undo(None));
+    assert!(manager.can_redo(None));
 }

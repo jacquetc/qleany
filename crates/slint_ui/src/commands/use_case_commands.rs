@@ -6,12 +6,17 @@ use common::types::EntityId;
 use direct_access::{CreateUseCaseDto, UseCaseDto, UseCaseRelationshipDto, use_case_controller};
 
 /// Create a new use case
-pub fn create_use_case(ctx: &AppContext, dto: &CreateUseCaseDto) -> Result<UseCaseDto, String> {
+pub fn create_use_case(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &CreateUseCaseDto,
+) -> Result<UseCaseDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     use_case_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error creating use case: {:?}", e))
@@ -20,6 +25,7 @@ pub fn create_use_case(ctx: &AppContext, dto: &CreateUseCaseDto) -> Result<UseCa
 /// Create multiple use cases
 pub fn create_use_case_multi(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dtos: &[CreateUseCaseDto],
 ) -> Result<Vec<UseCaseDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -27,6 +33,7 @@ pub fn create_use_case_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error creating use cases: {:?}", e))
@@ -48,12 +55,17 @@ pub fn get_use_case_multi(
 }
 
 /// Update a use case
-pub fn update_use_case(ctx: &AppContext, dto: &UseCaseDto) -> Result<UseCaseDto, String> {
+pub fn update_use_case(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &UseCaseDto,
+) -> Result<UseCaseDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     use_case_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error updating use case: {:?}", e))
@@ -62,6 +74,7 @@ pub fn update_use_case(ctx: &AppContext, dto: &UseCaseDto) -> Result<UseCaseDto,
 /// Update multiple use cases
 pub fn update_use_case_multi(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dtos: &[UseCaseDto],
 ) -> Result<Vec<UseCaseDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -69,25 +82,41 @@ pub fn update_use_case_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error updating use cases: {:?}", e))
 }
 
 /// Remove a use case by ID
-pub fn remove_use_case(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
+pub fn remove_use_case(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    id: &EntityId,
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    use_case_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
-        .map_err(|e| format!("Error deleting use case: {:?}", e))
+    use_case_controller::remove(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        id,
+    )
+    .map_err(|e| format!("Error deleting use case: {:?}", e))
 }
 
 /// Remove multiple use cases by IDs
-pub fn remove_use_case_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<(), String> {
+pub fn remove_use_case_multi(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    ids: &[EntityId],
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     use_case_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         ids,
     )
     .map_err(|e| format!("Error deleting use cases: {:?}", e))
@@ -106,6 +135,7 @@ pub fn get_use_case_relationship(
 /// Set a use case relationship
 pub fn set_use_case_relationship(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dto: &UseCaseRelationshipDto,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -113,6 +143,7 @@ pub fn set_use_case_relationship(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error setting use case relationship: {:?}", e))

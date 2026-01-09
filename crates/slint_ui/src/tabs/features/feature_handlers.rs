@@ -17,6 +17,40 @@ use crate::{App, AppState, FeaturesTabState, ListItem};
 
 use super::use_case_handlers::{clear_use_case_form, clear_use_case_list, fill_use_case_list};
 
+pub fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = ctx.undo_redo_manager.lock().unwrap().create_new_stack();
+        log::info!("New undo stack created with ID: {}", stack_id);
+        app.global::<FeaturesTabState>()
+            .set_features_undo_stack_id(stack_id as i32);
+    }
+}
+
+pub fn delete_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = app
+            .global::<FeaturesTabState>()
+            .get_features_undo_stack_id() as u64;
+        let result = ctx.undo_redo_manager.lock().unwrap().delete_stack(stack_id);
+        match result {
+            Ok(()) => {
+                log::info!("Undo stack with ID {} deleted", stack_id);
+                app.global::<FeaturesTabState>()
+                    .set_features_undo_stack_id(-1);
+            }
+            Err(e) => {
+                log::error!("Failed to delete undo stack {}: {}", stack_id, e);
+            }
+        }
+    }
+}
+
 pub fn subscribe_close_manifest_event(
     event_hub_client: &EventHubClient,
     app: &App,
@@ -35,6 +69,7 @@ pub fn subscribe_close_manifest_event(
                 if let Some(app) = app_weak.upgrade() {
                     clear_feature_list(&app, &ctx);
                     clear_use_case_list(&app, &ctx);
+                    delete_undo_stack(&app, &ctx);
                 }
             });
         }
@@ -59,6 +94,7 @@ pub fn subscribe_new_manifest_event(
                     if app.global::<AppState>().get_manifest_is_open() {
                         fill_feature_list(&app, &ctx);
                         fill_use_case_list(&app, &ctx);
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -87,6 +123,7 @@ pub fn subscribe_load_manifest_event(
                         fill_feature_list(&app, &ctx);
                         fill_use_case_list(&app, &ctx);
                         log::info!("Feature and Use Case lists refreshed after manifest load");
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -270,6 +307,10 @@ pub fn setup_features_reorder_callback(app: &App, app_context: &Arc<AppContext>)
 
                     let result = root_commands::set_root_relationship(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &direct_access::RootRelationshipDto {
                             id: root_id,
                             field: RootRelationshipField::Features,
@@ -299,6 +340,10 @@ pub fn setup_feature_deletion_callback(app: &App, app_context: &Arc<AppContext>)
                 if let Some(app) = app_weak.upgrade() {
                     let result = feature_commands::remove_feature(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &(feature_id as common::types::EntityId),
                     );
                     match result {
@@ -363,7 +408,14 @@ pub fn setup_feature_name_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 if let Ok(Some(mut feature)) = feature_res {
                     feature.name = name.to_string();
-                    match feature_commands::update_feature(&ctx, &feature) {
+                    match feature_commands::update_feature(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &feature,
+                    ) {
                         Ok(_) => {
                             log::info!("Feature name updated successfully");
                         }
@@ -396,7 +448,14 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         use_cases: vec![],
                     };
 
-                    match feature_commands::create_feature(&ctx, &create_dto) {
+                    match feature_commands::create_feature(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &create_dto,
+                    ) {
                         Ok(new_feature) => {
                             log::info!("Feature created successfully with id: {}", new_feature.id);
 
@@ -421,6 +480,11 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
 
                                     if let Err(e) = root_commands::set_root_relationship(
                                         &ctx,
+                                        Some(
+                                            app.global::<FeaturesTabState>()
+                                                .get_features_undo_stack_id()
+                                                as u64,
+                                        ),
                                         &relationship_dto,
                                     ) {
                                         log::error!(

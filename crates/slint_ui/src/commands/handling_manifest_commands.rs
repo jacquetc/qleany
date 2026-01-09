@@ -1,7 +1,9 @@
 //! Manifest handling commands for Slint UI
 
 use crate::app_context::AppContext;
-use handling_manifest::{LoadDto, LoadReturnDto, SaveDto, NewReturnDto, handling_manifest_controller};
+use handling_manifest::{
+    LoadDto, LoadReturnDto, NewReturnDto, SaveDto, handling_manifest_controller,
+};
 
 /// Load a manifest file
 pub fn load_manifest(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, String> {
@@ -9,7 +11,7 @@ pub fn load_manifest(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, S
         .map_err(|e| format!("Error while loading manifest: {:?}", e))?;
 
     // Clear undo/redo stacks after loading
-    ctx.undo_redo_manager.lock().unwrap().clear();
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
 
     Ok(result)
 }
@@ -20,7 +22,7 @@ pub fn save_manifest(ctx: &AppContext, dto: &SaveDto) -> Result<(), String> {
         .map_err(|e| format!("Error while saving manifest: {:?}", e))?;
 
     // Clear undo/redo stacks after saving
-    ctx.undo_redo_manager.lock().unwrap().clear();
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
 
     Ok(())
 }
@@ -29,7 +31,7 @@ pub fn save_manifest(ctx: &AppContext, dto: &SaveDto) -> Result<(), String> {
 pub fn new_manifest(ctx: &AppContext) -> Result<NewReturnDto, String> {
     let result = handling_manifest_controller::new(&ctx.db_context, &ctx.event_hub)
         .map_err(|e| format!("Error while creating new manifest: {:?}", e))?;
-    ctx.undo_redo_manager.lock().unwrap().clear();
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
     Ok(result)
 }
 
@@ -38,6 +40,6 @@ pub fn close_manifest(ctx: &AppContext) -> Result<(), String> {
     let _result = handling_manifest_controller::close(&ctx.db_context, &ctx.event_hub)
         .map_err(|e| format!("Error while closing manifest: {:?}", e))?;
 
-    ctx.undo_redo_manager.lock().unwrap().clear();
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
     Ok(())
 }

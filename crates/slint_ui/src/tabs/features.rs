@@ -16,9 +16,9 @@ mod use_case_handlers;
 
 use std::sync::Arc;
 
+use crate::App;
 use crate::app_context::AppContext;
 use crate::event_hub_client::EventHubClient;
-use crate::App;
 
 /// Initialize all features tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {

@@ -21,12 +21,13 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     root: &CreateRootDto,
 ) -> Result<RootDto> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = CreateRootUseCase::new(Box::new(uow_factory));
     let result = root_uc.execute(root.clone())?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(result)
 }
 
@@ -40,12 +41,13 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     root: &RootDto,
 ) -> Result<RootDto> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = UpdateRootUseCase::new(Box::new(uow_factory));
     let result = root_uc.execute(root)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(result)
 }
 
@@ -53,13 +55,14 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     // delete root
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = RemoveRootUseCase::new(Box::new(uow_factory));
     root_uc.execute(id)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(())
 }
 
@@ -67,12 +70,13 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     roots: &[CreateRootDto],
 ) -> Result<Vec<RootDto>> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = CreateRootMultiUseCase::new(Box::new(uow_factory));
     let result = root_uc.execute(roots)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(result)
 }
 
@@ -86,12 +90,13 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     roots: &[RootDto],
 ) -> Result<Vec<RootDto>> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = UpdateRootMultiUseCase::new(Box::new(uow_factory));
     let result = root_uc.execute(roots)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(result)
 }
 
@@ -99,12 +104,13 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = RemoveRootMultiUseCase::new(Box::new(uow_factory));
     root_uc.execute(ids)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(())
 }
 
@@ -122,12 +128,13 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     dto: &RootRelationshipDto,
 ) -> Result<()> {
     let uow_factory = RootUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut root_uc = SetRootRelationshipUseCase::new(Box::new(uow_factory));
     root_uc.execute(dto)?;
-    undo_redo_manager.add_command(Box::new(root_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(root_uc), stack_id)?;
     Ok(())
 }
 
@@ -145,7 +152,7 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_ok());
     }
 
@@ -165,7 +172,7 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_ok());
 
         // get with valid id
@@ -187,7 +194,7 @@ mod tests {
             ..Default::default()
         };
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_err());
 
         // create
@@ -195,7 +202,7 @@ mod tests {
             global: 1,
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_ok());
 
         // update with valid id
@@ -204,7 +211,7 @@ mod tests {
             global: 2,
             ..Default::default()
         };
-        let result = update(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = update(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().global, 2);
     }
@@ -216,7 +223,7 @@ mod tests {
         let event_hub = Arc::new(EventHub::new());
         let id = 115;
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, &id);
+        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, None, &id);
         assert!(result.is_err());
 
         // create
@@ -224,12 +231,12 @@ mod tests {
             global: 1,
             ..Default::default()
         };
-        let result = create(&db_context, &event_hub, &mut undo_redo_manager, &root);
+        let result = create(&db_context, &event_hub, &mut undo_redo_manager, None, &root);
         assert!(result.is_ok());
 
         // remove with valid id
         let id = result.unwrap().id;
-        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, &id);
+        let result = remove(&db_context, &event_hub, &mut undo_redo_manager, None, &id);
         assert!(result.is_ok());
     }
 
@@ -252,7 +259,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
     }
 
@@ -277,7 +284,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
 
         let ids = vec![1, 2, 3];
@@ -307,7 +314,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
 
         // test update_multi
@@ -324,7 +331,7 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = update_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
     }
 
@@ -349,13 +356,13 @@ mod tests {
             },
         ];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
 
         // test remove_multi
         let ids = vec![1, 2, 3];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = remove_multi(&db_context, &event_hub, &mut undo_redo_manager, &ids);
+        let result = remove_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &ids);
         assert!(result.is_ok());
     }
 
@@ -370,7 +377,7 @@ mod tests {
             ..Default::default()
         }];
         let mut undo_redo_manager = UndoRedoManager::new();
-        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, &roots);
+        let result = create_multi(&db_context, &event_hub, &mut undo_redo_manager, None, &roots);
         assert!(result.is_ok());
 
         let id = 1;
@@ -385,13 +392,13 @@ mod tests {
     fn test_set_relationship() {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());
-        let undo_redo_manager = &mut UndoRedoManager::new();
+        let mut undo_redo_manager = UndoRedoManager::new();
         let dto = RootRelationshipDto {
             id: 1,
             field: common::direct_access::root::RootRelationshipField::Entities,
             right_ids: vec![1, 2, 3],
         };
-        let result = set_relationship(&db_context, &event_hub, undo_redo_manager, &dto);
+        let result = set_relationship(&db_context, &event_hub, &mut undo_redo_manager, None, &dto);
         assert!(result.is_ok());
     }
 }

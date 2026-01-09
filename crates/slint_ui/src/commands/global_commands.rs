@@ -5,12 +5,17 @@ use common::types::EntityId;
 use direct_access::{CreateGlobalDto, GlobalDto, global_controller};
 
 /// Create a new global
-pub fn create_global(ctx: &AppContext, dto: &CreateGlobalDto) -> Result<GlobalDto, String> {
+pub fn create_global(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &CreateGlobalDto,
+) -> Result<GlobalDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     global_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error creating global: {:?}", e))
@@ -19,6 +24,7 @@ pub fn create_global(ctx: &AppContext, dto: &CreateGlobalDto) -> Result<GlobalDt
 /// Create multiple globals
 pub fn create_global_multi(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dtos: &[CreateGlobalDto],
 ) -> Result<Vec<GlobalDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -26,6 +32,7 @@ pub fn create_global_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error creating globals: {:?}", e))
@@ -47,43 +54,64 @@ pub fn get_global_multi(
 }
 
 /// Update a global
-pub fn update_global(ctx: &AppContext, dto: &GlobalDto) -> Result<GlobalDto, String> {
+pub fn update_global(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &GlobalDto,
+) -> Result<GlobalDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     global_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error updating global: {:?}", e))
 }
 
 /// Update multiple globals
-pub fn update_global_multi(ctx: &AppContext, dtos: &[GlobalDto]) -> Result<Vec<GlobalDto>, String> {
+pub fn update_global_multi(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dtos: &[GlobalDto],
+) -> Result<Vec<GlobalDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     global_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error updating globals: {:?}", e))
 }
 
 /// Remove a global by ID
-pub fn remove_global(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
+pub fn remove_global(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
-        .map_err(|e| format!("Error deleting global: {:?}", e))
+    global_controller::remove(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        id,
+    )
+    .map_err(|e| format!("Error deleting global: {:?}", e))
 }
 
 /// Remove multiple globals by IDs
-pub fn remove_global_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<(), String> {
+pub fn remove_global_multi(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    ids: &[EntityId],
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     global_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         ids,
     )
     .map_err(|e| format!("Error deleting globals: {:?}", e))

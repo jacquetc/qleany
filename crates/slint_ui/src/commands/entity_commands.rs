@@ -6,12 +6,17 @@ use common::types::EntityId;
 use direct_access::{CreateEntityDto, EntityDto, EntityRelationshipDto, entity_controller};
 
 /// Create a new entity
-pub fn create_entity(ctx: &AppContext, dto: &CreateEntityDto) -> Result<EntityDto, String> {
+pub fn create_entity(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &CreateEntityDto,
+) -> Result<EntityDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error creating entity: {:?}", e))
@@ -20,6 +25,7 @@ pub fn create_entity(ctx: &AppContext, dto: &CreateEntityDto) -> Result<EntityDt
 /// Create multiple entities
 pub fn create_entity_multi(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dtos: &[CreateEntityDto],
 ) -> Result<Vec<EntityDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -27,6 +33,7 @@ pub fn create_entity_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error creating entities: {:?}", e))
@@ -48,43 +55,64 @@ pub fn get_entity_multi(
 }
 
 /// Update an entity
-pub fn update_entity(ctx: &AppContext, dto: &EntityDto) -> Result<EntityDto, String> {
+pub fn update_entity(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dto: &EntityDto,
+) -> Result<EntityDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error updating entity: {:?}", e))
 }
 
 /// Update multiple entities
-pub fn update_entity_multi(ctx: &AppContext, dtos: &[EntityDto]) -> Result<Vec<EntityDto>, String> {
+pub fn update_entity_multi(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    dtos: &[EntityDto],
+) -> Result<Vec<EntityDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dtos,
     )
     .map_err(|e| format!("Error updating entities: {:?}", e))
 }
 
 /// Remove an entity by ID
-pub fn remove_entity(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
+pub fn remove_entity(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    entity_controller::remove(&ctx.db_context, &ctx.event_hub, &mut *undo_redo_manager, id)
-        .map_err(|e| format!("Error deleting entity: {:?}", e))
+    entity_controller::remove(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        id,
+    )
+    .map_err(|e| format!("Error deleting entity: {:?}", e))
 }
 
 /// Remove multiple entities by IDs
-pub fn remove_entity_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<(), String> {
+pub fn remove_entity_multi(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    ids: &[EntityId],
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     entity_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         ids,
     )
     .map_err(|e| format!("Error deleting entities: {:?}", e))
@@ -103,6 +131,7 @@ pub fn get_entity_relationship(
 /// Set an entity relationship
 pub fn set_entity_relationship(
     ctx: &AppContext,
+    stack_id: Option<u64>,
     dto: &EntityRelationshipDto,
 ) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -110,6 +139,7 @@ pub fn set_entity_relationship(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
+        stack_id,
         dto,
     )
     .map_err(|e| format!("Error setting entity relationship: {:?}", e))

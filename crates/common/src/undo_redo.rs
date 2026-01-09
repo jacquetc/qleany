@@ -1,7 +1,8 @@
 use crate::event::{Event, EventHub, Origin, UndoRedoEvent};
 use crate::types::EntityId;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::any::Any;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Trait for commands that can be undone and redone.
@@ -87,13 +88,15 @@ pub trait UndoRedoCommand: Send {
 /// ```
 pub struct CompositeCommand {
     commands: Vec<Box<dyn UndoRedoCommand>>,
+    pub stack_id: u64,
 }
 
 impl CompositeCommand {
     /// Creates a new empty composite command.
-    pub fn new() -> Self {
+    pub fn new(stack_id: Option<u64>) -> Self {
         CompositeCommand {
             commands: Vec::new(),
+            stack_id: stack_id.unwrap_or(0),
         }
     }
 
@@ -158,31 +161,42 @@ pub trait AsyncUndoRedoCommand: UndoRedoCommand {
     fn is_complete(&self) -> bool;
 }
 
+#[derive(Default)]
+struct StackData {
+    undo_stack: Vec<Box<dyn UndoRedoCommand>>,
+    redo_stack: Vec<Box<dyn UndoRedoCommand>>,
+}
+
 /// Manager for undo and redo operations.
 ///
-/// The UndoRedoManager maintains two stacks of commands:
-/// - An undo stack for commands that can be undone
-/// - A redo stack for commands that have been undone and can be redone
+/// The UndoRedoManager maintains multiple stacks of commands:
+/// - Each stack has an undo stack for commands that can be undone
+/// - Each stack has a redo stack for commands that have been undone and can be redone
 ///
 /// It also supports:
 /// - Grouping multiple commands as a single unit using begin_composite/end_composite
 /// - Merging commands of the same type when appropriate
+/// - Switching between different stacks
 pub struct UndoRedoManager {
-    undo_stack: Vec<Box<dyn UndoRedoCommand>>,
-    redo_stack: Vec<Box<dyn UndoRedoCommand>>,
+    stacks: HashMap<u64, StackData>,
+    next_stack_id: u64,
     in_progress_composite: Option<CompositeCommand>,
     composite_nesting_level: usize,
+    composite_stack_id: Option<u64>,
     event_hub: Option<Arc<EventHub>>,
 }
 
 impl UndoRedoManager {
-    /// Creates a new empty UndoRedoManager.
+    /// Creates a new empty UndoRedoManager with one default stack (ID 0).
     pub fn new() -> Self {
+        let mut stacks = HashMap::new();
+        stacks.insert(0, StackData::default());
         UndoRedoManager {
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
+            stacks,
+            next_stack_id: 1,
             in_progress_composite: None,
             composite_nesting_level: 0,
+            composite_stack_id: None,
             event_hub: None,
         }
     }
@@ -192,14 +206,21 @@ impl UndoRedoManager {
         self.event_hub = Some(Arc::clone(event_hub));
     }
 
-    /// Undoes the most recent command.
+    /// Undoes the most recent command on the specified stack.
+    /// If `stack_id` is None, the global stack (ID 0) is used.
     ///
     /// The undone command is moved to the redo stack.
     /// Returns Ok(()) if successful or if there are no commands to undo.
-    pub fn undo(&mut self) -> Result<()> {
-        if let Some(mut command) = self.undo_stack.pop() {
+    pub fn undo(&mut self, stack_id: Option<u64>) -> Result<()> {
+        let target_stack_id = stack_id.unwrap_or(0);
+        let stack = self
+            .stacks
+            .get_mut(&target_stack_id)
+            .ok_or_else(|| anyhow!("Stack with ID {} not found", target_stack_id))?;
+
+        if let Some(mut command) = stack.undo_stack.pop() {
             command.undo()?;
-            self.redo_stack.push(command);
+            stack.redo_stack.push(command);
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {
                     origin: Origin::UndoRedo(UndoRedoEvent::Undone),
@@ -211,14 +232,21 @@ impl UndoRedoManager {
         Ok(())
     }
 
-    /// Redoes the most recently undone command.
+    /// Redoes the most recently undone command on the specified stack.
+    /// If `stack_id` is None, the global stack (ID 0) is used.
     ///
     /// The redone command is moved back to the undo stack.
     /// Returns Ok(()) if successful or if there are no commands to redo.
-    pub fn redo(&mut self) -> Result<()> {
-        if let Some(mut command) = self.redo_stack.pop() {
+    pub fn redo(&mut self, stack_id: Option<u64>) -> Result<()> {
+        let target_stack_id = stack_id.unwrap_or(0);
+        let stack = self
+            .stacks
+            .get_mut(&target_stack_id)
+            .ok_or_else(|| anyhow!("Stack with ID {} not found", target_stack_id))?;
+
+        if let Some(mut command) = stack.redo_stack.pop() {
             command.redo()?;
-            self.undo_stack.push(command);
+            stack.undo_stack.push(command);
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {
                     origin: Origin::UndoRedo(UndoRedoEvent::Redone),
@@ -245,15 +273,25 @@ impl UndoRedoManager {
     /// manager.end_composite();
     /// // Now undo() will undo both commands as a single unit
     /// ```
-    pub fn begin_composite(&mut self) {
+    pub fn begin_composite(&mut self, stack_id: Option<u64>) {
+        if self.composite_stack_id.is_some() && self.composite_stack_id != stack_id {
+            panic!(
+                "Cannot begin a composite on a different stack while another composite is in progress"
+            );
+        }
+
+        // Set the target stack ID for this composite
+        self.composite_stack_id = stack_id;
+
         // Increment the nesting level
         self.composite_nesting_level += 1;
 
         // If there's no composite in progress, create one
         if self.in_progress_composite.is_none() {
-            self.in_progress_composite = Some(CompositeCommand::new());
+            self.in_progress_composite = Some(CompositeCommand::new(stack_id));
         }
 
+        // not sure if we want to send events for composites
         if let Some(event_hub) = &self.event_hub {
             event_hub.send_event(Event {
                 origin: Origin::UndoRedo(UndoRedoEvent::BeginComposite),
@@ -263,7 +301,7 @@ impl UndoRedoManager {
         }
     }
 
-    /// Ends the current composite command group and adds it to the undo stack.
+    /// Ends the current composite command group and adds it to the specified undo stack.
     ///
     /// If no commands were added to the composite, nothing is added to the undo stack.
     /// If this is a nested composite, only the outermost composite is added to the undo stack.
@@ -277,10 +315,16 @@ impl UndoRedoManager {
         if self.composite_nesting_level == 0 {
             if let Some(composite) = self.in_progress_composite.take() {
                 if !composite.is_empty() {
-                    self.undo_stack.push(Box::new(composite));
-                    self.redo_stack.clear();
+                    let target_stack_id = self.composite_stack_id.unwrap_or(0);
+                    let stack = self
+                        .stacks
+                        .get_mut(&target_stack_id)
+                        .expect("Stack must exist");
+                    stack.undo_stack.push(Box::new(composite));
+                    stack.redo_stack.clear();
                 }
             }
+            // not sure if we want to send events for composites
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {
                     origin: Origin::UndoRedo(UndoRedoEvent::EndComposite),
@@ -291,64 +335,127 @@ impl UndoRedoManager {
         }
     }
 
-    /// Adds a command to the undo stack.
+    /// Adds a command to the global undo stack (ID 0).
+    pub fn add_command(&mut self, command: Box<dyn UndoRedoCommand>) {
+        let _ = self.add_command_to_stack(command, None);
+    }
+
+    /// Adds a command to the specified undo stack.
+    /// If `stack_id` is None, the global stack (ID 0) is used.
     ///
     /// This method handles several cases:
     /// 1. If a composite command is in progress, the command is added to the composite
-    /// 2. If the command can be merged with the last command on the undo stack, they are merged
-    /// 3. Otherwise, the command is added to the undo stack as a new entry
+    /// 2. If the command can be merged with the last command on the specified undo stack, they are merged
+    /// 3. Otherwise, the command is added to the specified undo stack as a new entry
     ///
-    /// In all cases, the redo stack is cleared when a new command is added.
-    ///
-    /// # Example
-    /// ```test
-    /// use common::undo_redo::UndoRedoManager;
-    /// let mut manager = UndoRedoManager::new();
-    /// manager.add_command(Box::new(MyCommand::new("initial text")));
-    /// // Later, add another command that might be merged with the first
-    /// manager.add_command(Box::new(MyCommand::new("additional text")));
-    /// ```
-    pub fn add_command(&mut self, command: Box<dyn UndoRedoCommand>) {
+    /// In all cases, the redo stack of the stack is cleared when a new command is added.
+    pub fn add_command_to_stack(
+        &mut self,
+        command: Box<dyn UndoRedoCommand>,
+        stack_id: Option<u64>,
+    ) -> Result<()> {
         // If we have a composite in progress, add the command to it
         if let Some(composite) = &mut self.in_progress_composite {
+            // ensure that the stack_id is the same as the composite's stack
+            if composite.stack_id != stack_id.unwrap_or(0) {
+                return Err(anyhow!(
+                    "Cannot add command to composite with different stack ID"
+                ));
+            }
             composite.add_command(command);
-            return;
+            return Ok(());
         }
 
+        let target_stack_id = stack_id.unwrap_or(0);
+        let stack = self
+            .stacks
+            .get_mut(&target_stack_id)
+            .ok_or_else(|| anyhow!("Stack with ID {} does not exist", target_stack_id))?;
+
         // Try to merge with the last command if possible
-        if let Some(last_command) = self.undo_stack.last_mut() {
+        if let Some(last_command) = stack.undo_stack.last_mut() {
             if last_command.can_merge(&*command) {
                 if last_command.merge(&*command) {
                     // Successfully merged, no need to add the new command
-                    self.redo_stack.clear();
-                    return;
+                    stack.redo_stack.clear();
+                    return Ok(());
                 }
             }
         }
 
         // If we couldn't merge, just add the command normally
-        self.undo_stack.push(command);
-        self.redo_stack.clear();
+        stack.undo_stack.push(command);
+        stack.redo_stack.clear();
+        Ok(())
     }
 
-    /// Returns true if there are commands that can be undone.
-    pub fn can_undo(&self) -> bool {
-        !self.undo_stack.is_empty()
+    /// Returns true if there are commands that can be undone on the specified stack.
+    /// If `stack_id` is None, the global stack (ID 0) is used.
+    pub fn can_undo(&self, stack_id: Option<u64>) -> bool {
+        let target_stack_id = stack_id.unwrap_or(0);
+        self.stacks
+            .get(&target_stack_id)
+            .map(|s| !s.undo_stack.is_empty())
+            .unwrap_or(false)
     }
 
-    /// Returns true if there are commands that can be redone.
-    pub fn can_redo(&self) -> bool {
-        !self.redo_stack.is_empty()
+    /// Returns true if there are commands that can be redone on the specified stack.
+    /// If `stack_id` is None, the global stack (ID 0) is used.
+    pub fn can_redo(&self, stack_id: Option<u64>) -> bool {
+        let target_stack_id = stack_id.unwrap_or(0);
+        self.stacks
+            .get(&target_stack_id)
+            .map(|s| !s.redo_stack.is_empty())
+            .unwrap_or(false)
     }
 
-    /// Clears all undo and redo history.
+    /// Clears the undo and redo history for a specific stack.
     ///
-    /// This method removes all commands from both the undo and redo stacks,
-    /// and resets any in-progress composite command.
-    pub fn clear(&mut self) {
-        self.undo_stack.clear();
-        self.redo_stack.clear();
+    /// This method removes all commands from both the undo and redo stacks of the specified stack.
+    pub fn clear_stack(&mut self, stack_id: u64) {
+        if let Some(stack) = self.stacks.get_mut(&stack_id) {
+            stack.undo_stack.clear();
+            stack.redo_stack.clear();
+        }
+    }
+
+    /// Clears all undo and redo history from all stacks.
+    pub fn clear_all_stacks(&mut self) {
+        for stack in self.stacks.values_mut() {
+            stack.undo_stack.clear();
+            stack.redo_stack.clear();
+        }
         self.in_progress_composite = None;
         self.composite_nesting_level = 0;
+    }
+
+    /// Creates a new undo/redo stack and returns its ID.
+    pub fn create_new_stack(&mut self) -> u64 {
+        let id = self.next_stack_id;
+        self.stacks.insert(id, StackData::default());
+        self.next_stack_id += 1;
+        id
+    }
+
+    /// Deletes an undo/redo stack by its ID.
+    ///
+    /// The default stack (ID 0) cannot be deleted.
+    pub fn delete_stack(&mut self, stack_id: u64) -> Result<()> {
+        if stack_id == 0 {
+            return Err(anyhow!("Cannot delete the default stack"));
+        }
+        if self.stacks.remove(&stack_id).is_some() {
+            Ok(())
+        } else {
+            Err(anyhow!("Stack with ID {} does not exist", stack_id))
+        }
+    }
+
+    /// Gets the size of the undo stack for a specific stack.
+    pub fn get_stack_size(&self, stack_id: u64) -> usize {
+        self.stacks
+            .get(&stack_id)
+            .map(|s| s.undo_stack.len())
+            .unwrap_or(0)
     }
 }

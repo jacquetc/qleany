@@ -5,17 +5,51 @@
 
 use std::sync::Arc;
 
-use common::direct_access::entity::EntityRelationshipField;
-use common::direct_access::root::RootRelationshipField;
-use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
-use direct_access::EntityRelationshipDto;
-use direct_access::RootRelationshipDto;
-use slint::{ComponentHandle, Model, Timer};
-use common::entities::{FieldType, RelationshipType, FieldRelationshipType};
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, field_commands, root_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
+use common::direct_access::entity::EntityRelationshipField;
+use common::direct_access::root::RootRelationshipField;
+use common::entities::{FieldRelationshipType, FieldType, RelationshipType};
+use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use direct_access::EntityRelationshipDto;
+use direct_access::RootRelationshipDto;
+use slint::{ComponentHandle, Model, Timer};
+
+fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = ctx.undo_redo_manager.lock().unwrap().create_new_stack();
+        log::info!("New undo stack created with ID: {}", stack_id);
+        app.global::<EntitiesTabState>()
+            .set_entities_undo_stack_id(stack_id as i32);
+    }
+}
+
+fn delete_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = app
+            .global::<EntitiesTabState>()
+            .get_entities_undo_stack_id() as u64;
+        let result = ctx.undo_redo_manager.lock().unwrap().delete_stack(stack_id);
+        match result {
+            Ok(()) => {
+                log::info!("Undo stack with ID {} deleted", stack_id);
+                app.global::<EntitiesTabState>()
+                    .set_entities_undo_stack_id(-1);
+            }
+            Err(e) => {
+                log::error!("Failed to delete undo stack {}: {}", stack_id, e);
+            }
+        }
+    }
+}
 
 fn subscribe_close_manifest_event(
     event_hub_client: &EventHubClient,
@@ -33,6 +67,7 @@ fn subscribe_close_manifest_event(
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade() {
                     clear_entity_list(&app, &ctx);
+                    delete_undo_stack(&app, &ctx);
                 }
             });
         }
@@ -56,6 +91,7 @@ fn subscribe_new_manifest_event(
                 if let Some(app) = app_weak.upgrade() {
                     if app.global::<AppState>().get_manifest_is_open() {
                         fill_entity_list(&app, &ctx);
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -80,6 +116,7 @@ fn subscribe_load_manifest_event(
                 if let Some(app) = app_weak.upgrade() {
                     if app.global::<AppState>().get_manifest_is_open() {
                         fill_entity_list(&app, &ctx);
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -361,6 +398,10 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
 
                     let result = root_commands::set_root_relationship(
                         &ctx,
+                        Some(
+                            app.global::<EntitiesTabState>()
+                                .get_entities_undo_stack_id() as u64,
+                        ),
                         &RootRelationshipDto {
                             id: root_id,
                             field: RootRelationshipField::Entities,
@@ -414,6 +455,10 @@ fn setup_fields_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                 field_ids.insert(insert_at, moving_field_id);
                 let result = entity_commands::set_entity_relationship(
                     &ctx,
+                    Some(
+                        app.global::<EntitiesTabState>()
+                            .get_entities_undo_stack_id() as u64,
+                    ),
                     &EntityRelationshipDto {
                         id: entity_id,
                         field: EntityRelationshipField::Fields,
@@ -439,8 +484,14 @@ fn setup_field_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
         let app_weak = app.as_weak();
         move |field_id| {
             if let Some(app) = app_weak.upgrade() {
-                let result =
-                    field_commands::remove_field(&ctx, &(field_id as common::types::EntityId));
+                let result = field_commands::remove_field(
+                    &ctx,
+                    Some(
+                        app.global::<EntitiesTabState>()
+                            .get_entities_undo_stack_id() as u64,
+                    ),
+                    &(field_id as common::types::EntityId),
+                );
                 match result {
                     Ok(()) => {
                         log::info!("Field deleted successfully");
@@ -467,6 +518,10 @@ fn setup_entity_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
                 if let Some(app) = app_weak.upgrade() {
                     let result = entity_commands::remove_entity(
                         &ctx,
+                        Some(
+                            app.global::<EntitiesTabState>()
+                                .get_entities_undo_stack_id() as u64,
+                        ),
                         &(entity_id as common::types::EntityId),
                     );
                     match result {
@@ -561,9 +616,7 @@ fn string_to_field_type(s: &str) -> FieldType {
 }
 
 /// Helper function to convert FieldRelationshipType to string for UI
-fn field_relationship_type_to_string(
-    rel_type: &FieldRelationshipType,
-) -> &'static str {
+fn field_relationship_type_to_string(rel_type: &FieldRelationshipType) -> &'static str {
     match rel_type {
         FieldRelationshipType::OneToOne => "one_to_one",
         FieldRelationshipType::OneToMany => "one_to_many",
@@ -585,7 +638,6 @@ fn string_to_field_relationship_type(s: &str) -> FieldRelationshipType {
     }
 }
 
-
 /// Helper function to fill all field form properties from a FieldDto
 fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     let state = app.global::<EntitiesTabState>();
@@ -593,7 +645,9 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     state.set_selected_field_name(field.name.clone().into());
     state.set_selected_field_type(field_type_to_string(&field.field_type).into());
     state.set_selected_field_entity(field.entity.map(|e| e as i32).unwrap_or(-1));
-    state.set_selected_field_relationship(field_relationship_type_to_string(&field.relationship).into());
+    state.set_selected_field_relationship(
+        field_relationship_type_to_string(&field.relationship).into(),
+    );
     state.set_selected_field_required(field.required);
     state.set_selected_field_strong(field.strong);
     state.set_selected_field_list_model(field.list_model);
@@ -725,7 +779,7 @@ fn fill_inherits_from_options(
 }
 
 /// Helper function to update a field with new values
-fn update_field_helper<F>(app_context: &Arc<AppContext>, field_id: i32, update_fn: F)
+fn update_field_helper<F>(app: &App, app_context: &Arc<AppContext>, field_id: i32, update_fn: F)
 where
     F: FnOnce(&mut direct_access::FieldDto),
 {
@@ -737,7 +791,14 @@ where
 
     if let Ok(Some(mut field)) = field_res {
         update_fn(&mut field);
-        match field_commands::update_field(app_context, &field) {
+        match field_commands::update_field(
+            app_context,
+            Some(
+                app.global::<EntitiesTabState>()
+                    .get_entities_undo_stack_id() as u64,
+            ),
+            &field,
+        ) {
             Ok(_) => {
                 log::info!("Field updated successfully");
             }
@@ -749,7 +810,7 @@ where
 }
 
 /// Helper function to update a field with new values
-fn update_entity_helper<F>(app_context: &Arc<AppContext>, entity_id: i32, update_fn: F)
+fn update_entity_helper<F>(app: &App, app_context: &Arc<AppContext>, entity_id: i32, update_fn: F)
 where
     F: FnOnce(&mut direct_access::EntityDto),
 {
@@ -757,11 +818,19 @@ where
         return;
     }
 
-    let entity_res = entity_commands::get_entity(app_context, &(entity_id as common::types::EntityId));
+    let entity_res =
+        entity_commands::get_entity(app_context, &(entity_id as common::types::EntityId));
 
     if let Ok(Some(mut entity)) = entity_res {
         update_fn(&mut entity);
-        match entity_commands::update_entity(app_context, &entity) {
+        match entity_commands::update_entity(
+            app_context,
+            Some(
+                app.global::<EntitiesTabState>()
+                    .get_entities_undo_stack_id() as u64,
+            ),
+            &entity,
+        ) {
             Ok(_) => {
                 log::info!("Field updated successfully");
             }
@@ -807,7 +876,7 @@ fn setup_field_name_callback(app: &App, app_context: &Arc<AppContext>) {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 let name_str = new_name.to_string();
                 if !name_str.is_empty() {
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         field.name = name_str;
                     });
                 }
@@ -824,7 +893,7 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 let type_str = new_type.to_string();
-                update_field_helper(&ctx, field_id, |field| {
+                update_field_helper(&app, &ctx, field_id, |field| {
                     field.field_type = string_to_field_type(&type_str);
                     // Clear entity reference if not Entity type
                     if field.field_type != FieldType::Entity {
@@ -856,7 +925,7 @@ fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
                 } else {
                     None
                 };
-                update_field_helper(&ctx, field_id, |field| {
+                update_field_helper(&app, &ctx, field_id, |field| {
                     field.entity = entity_id;
                 });
             }
@@ -873,7 +942,7 @@ fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     let relationship_type = string_to_field_relationship_type(value.as_str());
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         field.relationship = relationship_type.clone();
                     });
                 }
@@ -888,7 +957,7 @@ fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
         move |value| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                update_field_helper(&ctx, field_id, |field| {
+                update_field_helper(&app, &ctx, field_id, |field| {
                     field.required = value;
                 });
             }
@@ -903,7 +972,7 @@ fn setup_field_strong_callback(app: &App, app_context: &Arc<AppContext>) {
         move |value| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                update_field_helper(&ctx, field_id, |field| {
+                update_field_helper(&app, &ctx, field_id, |field| {
                     field.strong = value;
                 });
             }
@@ -919,7 +988,7 @@ fn setup_entity_single_model_callback(app: &App, app_context: &Arc<AppContext>) 
             move |value| {
                 if let Some(app) = app_weak.upgrade() {
                     let entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
-                    update_entity_helper(&ctx, entity_id, |entity| {
+                    update_entity_helper(&app, &ctx, entity_id, |entity| {
                         entity.single_model = value;
                     });
                 }
@@ -935,7 +1004,7 @@ fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
             move |value| {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         field.list_model = value;
                     });
                 }
@@ -952,7 +1021,7 @@ fn setup_field_list_model_displayed_field_callback(app: &App, app_context: &Arc<
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     let value_str = new_value.to_string();
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         field.list_model_displayed_field = if value_str.is_empty() {
                             None
                         } else {
@@ -973,7 +1042,7 @@ fn setup_field_enum_name_callback(app: &App, app_context: &Arc<AppContext>) {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     let value_str = new_value.to_string();
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         field.enum_name = if value_str.is_empty() {
                             None
                         } else {
@@ -994,7 +1063,7 @@ fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     let value_str = new_value.to_string();
-                    update_field_helper(&ctx, field_id, |field| {
+                    update_field_helper(&app, &ctx, field_id, |field| {
                         if value_str.is_empty() {
                             field.enum_values = None;
                         } else {
@@ -1038,7 +1107,15 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
                             }
                             entity.name = new_entity_name.to_string();
 
-                            let result = entity_commands::update_entity(&ctx, &entity);
+                            let result = entity_commands::update_entity(
+                                &ctx,
+                                Some(
+                                    app.global::<EntitiesTabState>()
+                                        .get_entities_undo_stack_id()
+                                        as u64,
+                                ),
+                                &entity,
+                            );
 
                             match result {
                                 Ok(_) => {
@@ -1081,7 +1158,15 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                             }
                             entity.only_for_heritage = value;
 
-                            let result = entity_commands::update_entity(&ctx, &entity);
+                            let result = entity_commands::update_entity(
+                                &ctx,
+                                Some(
+                                    app.global::<EntitiesTabState>()
+                                        .get_entities_undo_stack_id()
+                                        as u64,
+                                ),
+                                &entity,
+                            );
 
                             match result {
                                 Ok(_) => {
@@ -1123,7 +1208,14 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         relationships: vec![],
                     };
 
-                    match entity_commands::create_entity(&ctx, &create_dto) {
+                    match entity_commands::create_entity(
+                        &ctx,
+                        Some(
+                            app.global::<EntitiesTabState>()
+                                .get_entities_undo_stack_id() as u64,
+                        ),
+                        &create_dto,
+                    ) {
                         Ok(new_entity) => {
                             log::info!("Entity created successfully with id: {}", new_entity.id);
 
@@ -1148,6 +1240,11 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
 
                                     if let Err(e) = root_commands::set_root_relationship(
                                         &ctx,
+                                        Some(
+                                            app.global::<EntitiesTabState>()
+                                                .get_entities_undo_stack_id()
+                                                as u64,
+                                        ),
                                         &relationship_dto,
                                     ) {
                                         log::error!(
@@ -1196,7 +1293,14 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     enum_values: None,
                 };
 
-                match field_commands::create_field(&ctx, &create_dto) {
+                match field_commands::create_field(
+                    &ctx,
+                    Some(
+                        app.global::<EntitiesTabState>()
+                            .get_entities_undo_stack_id() as u64,
+                    ),
+                    &create_dto,
+                ) {
                     Ok(new_field) => {
                         log::info!("Field created successfully with id: {}", new_field.id);
 
@@ -1221,6 +1325,11 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
 
                                 if let Err(e) = entity_commands::set_entity_relationship(
                                     &ctx,
+                                    Some(
+                                        app.global::<EntitiesTabState>()
+                                            .get_entities_undo_stack_id()
+                                            as u64,
+                                    ),
                                     &relationship_dto,
                                 ) {
                                     log::error!(
@@ -1290,7 +1399,15 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
                             }
                             entity.inherits_from = inherits_from_id;
 
-                            let result = entity_commands::update_entity(&ctx, &entity);
+                            let result = entity_commands::update_entity(
+                                &ctx,
+                                Some(
+                                    app.global::<EntitiesTabState>()
+                                        .get_entities_undo_stack_id()
+                                        as u64,
+                                ),
+                                &entity,
+                            );
 
                             match result {
                                 Ok(_) => {

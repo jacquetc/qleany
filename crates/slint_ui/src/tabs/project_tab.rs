@@ -12,6 +12,38 @@ use crate::{App, AppState, ProjectTabState};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use slint::ComponentHandle;
 
+fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = ctx.undo_redo_manager.lock().unwrap().create_new_stack();
+        log::info!("New undo stack created with ID: {}", stack_id);
+        app.global::<ProjectTabState>()
+            .set_project_undo_stack_id(stack_id as i32);
+    }
+}
+
+fn delete_undo_stack(app: &App, app_context: &Arc<AppContext>) {
+    let ctx = Arc::clone(app_context);
+    let app_weak = app.as_weak();
+
+    if let Some(app) = app_weak.upgrade() {
+        let stack_id = app.global::<ProjectTabState>().get_project_undo_stack_id() as u64;
+        let result = ctx.undo_redo_manager.lock().unwrap().delete_stack(stack_id);
+        match result {
+            Ok(()) => {
+                log::info!("Undo stack with ID {} deleted", stack_id);
+                app.global::<ProjectTabState>()
+                    .set_project_undo_stack_id(-1);
+            }
+            Err(e) => {
+                log::error!("Failed to delete undo stack {}: {}", stack_id, e);
+            }
+        }
+    }
+}
+
 /// Fill the ProjectTabState with data from the Global entity
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling ProjectTabState with data from Global entity");
@@ -62,13 +94,14 @@ fn subscribe_close_manifest_event(
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
-            let _ctx = Arc::clone(&ctx);
+            let ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade() {
                     if app.global::<AppState>().get_manifest_is_open() {
                         clear_project_tab(&app);
+                        delete_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -92,6 +125,7 @@ fn subscribe_new_manifest_event(
                 if let Some(app) = app_weak.upgrade() {
                     if app.global::<AppState>().get_manifest_is_open() {
                         fill_project_tab(&app, &ctx);
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -116,6 +150,7 @@ fn subscribe_load_manifest_event(
                 if let Some(app) = app_weak.upgrade() {
                     if app.global::<AppState>().get_manifest_is_open() {
                         fill_project_tab(&app, &ctx);
+                        create_new_undo_stack(&app, &ctx);
                     }
                 }
             });
@@ -204,7 +239,11 @@ where
 
         if let Ok(Some(mut global)) = global_res {
             update_fn(&mut global);
-            match global_commands::update_global(app_context, &global) {
+            match global_commands::update_global(
+                app_context,
+                Some(app.global::<ProjectTabState>().get_project_undo_stack_id() as u64),
+                &global,
+            ) {
                 Ok(_) => {
                     log::info!("Global updated successfully");
                 }

@@ -23,12 +23,13 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     use_case: &CreateUseCaseDto,
 ) -> Result<UseCaseDto> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = CreateUseCaseUseCase::new(Box::new(uow_factory));
     let result = use_case_uc.execute(use_case.clone())?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(result)
 }
 
@@ -42,12 +43,13 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     use_case: &UseCaseDto,
 ) -> Result<UseCaseDto> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = UpdateUseCaseUseCase::new(Box::new(uow_factory));
     let result = use_case_uc.execute(use_case)?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(result)
 }
 
@@ -55,13 +57,14 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     // delete use case
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case = RemoveUseCaseUseCase::new(Box::new(uow_factory));
     use_case.execute(id)?;
-    undo_redo_manager.add_command(Box::new(use_case));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case), stack_id)?;
     Ok(())
 }
 
@@ -69,12 +72,13 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     use_cases: &[CreateUseCaseDto],
 ) -> Result<Vec<UseCaseDto>> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = CreateUseCaseMultiUseCase::new(Box::new(uow_factory));
     let result = use_case_uc.execute(use_cases)?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(result)
 }
 
@@ -88,12 +92,13 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     use_cases: &[UseCaseDto],
 ) -> Result<Vec<UseCaseDto>> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = UpdateUseCaseMultiUseCase::new(Box::new(uow_factory));
     let result = use_case_uc.execute(use_cases)?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(result)
 }
 
@@ -101,12 +106,13 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = RemoveUseCaseMultiUseCase::new(Box::new(uow_factory));
     use_case_uc.execute(ids)?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(())
 }
 
@@ -124,11 +130,12 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     dto: &UseCaseRelationshipDto,
 ) -> Result<()> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut use_case_uc = SetUseCaseRelationshipUseCase::new(Box::new(uow_factory));
     use_case_uc.execute(dto)?;
-    undo_redo_manager.add_command(Box::new(use_case_uc));
+    undo_redo_manager.add_command_to_stack(Box::new(use_case_uc), stack_id)?;
     Ok(())
 }

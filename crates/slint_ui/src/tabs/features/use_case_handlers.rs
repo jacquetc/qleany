@@ -146,8 +146,12 @@ pub fn clear_use_case_form(app: &App) {
 }
 
 /// Helper function to update a use case with new values
-pub fn update_use_case_helper<F>(app_context: &Arc<AppContext>, use_case_id: i32, update_fn: F)
-where
+pub fn update_use_case_helper<F>(
+    app: &App,
+    app_context: &Arc<AppContext>,
+    use_case_id: i32,
+    update_fn: F,
+) where
     F: FnOnce(&mut direct_access::UseCaseDto),
 {
     if use_case_id < 0 {
@@ -159,7 +163,14 @@ where
 
     if let Ok(Some(mut use_case)) = use_case_res {
         update_fn(&mut use_case);
-        match use_case_commands::update_use_case(app_context, &use_case) {
+        match use_case_commands::update_use_case(
+            app_context,
+            Some(
+                app.global::<FeaturesTabState>()
+                    .get_features_undo_stack_id() as u64,
+            ),
+            &use_case,
+        ) {
             Ok(_) => {
                 log::info!("Use case updated successfully");
             }
@@ -250,8 +261,11 @@ pub fn fill_use_case_entity_list(app: &App, app_context: &Arc<AppContext>) {
 
     // Get all entity IDs from root
     let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-    let all_entity_ids_res =
-        root_commands::get_root_relationship(app_context, &root_id, &RootRelationshipField::Entities);
+    let all_entity_ids_res = root_commands::get_root_relationship(
+        app_context,
+        &root_id,
+        &RootRelationshipField::Entities,
+    );
 
     let all_entity_ids = match all_entity_ids_res {
         Ok(ids) => ids,
@@ -336,6 +350,10 @@ pub fn setup_use_cases_reorder_callback(app: &App, app_context: &Arc<AppContext>
 
                     let result = feature_commands::set_feature_relationship(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &FeatureRelationshipDto {
                             id: feature_id,
                             field: FeatureRelationshipField::UseCases,
@@ -365,6 +383,10 @@ pub fn setup_use_case_deletion_callback(app: &App, app_context: &Arc<AppContext>
                 if let Some(app) = app_weak.upgrade() {
                     let result = use_case_commands::remove_use_case(
                         &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
                         &(use_case_id as common::types::EntityId),
                     );
                     match result {
@@ -420,7 +442,7 @@ pub fn setup_use_case_name_callback(app: &App, app_context: &Arc<AppContext>) {
         move |name| {
             if let Some(app) = app_weak.upgrade() {
                 let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                update_use_case_helper(&ctx, use_case_id, |uc| {
+                update_use_case_helper(&app, &ctx, use_case_id, |uc| {
                     uc.name = name.to_string();
                 });
             }
@@ -436,7 +458,7 @@ pub fn setup_use_case_validator_callback(app: &App, app_context: &Arc<AppContext
             move |validator| {
                 if let Some(app) = app_weak.upgrade() {
                     let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                    update_use_case_helper(&ctx, use_case_id, |uc| {
+                    update_use_case_helper(&app, &ctx, use_case_id, |uc| {
                         uc.validator = validator;
                     });
                 }
@@ -452,7 +474,7 @@ pub fn setup_use_case_undoable_callback(app: &App, app_context: &Arc<AppContext>
             move |undoable| {
                 if let Some(app) = app_weak.upgrade() {
                     let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                    update_use_case_helper(&ctx, use_case_id, |uc| {
+                    update_use_case_helper(&app, &ctx, use_case_id, |uc| {
                         uc.undoable = undoable;
                     });
                 }
@@ -468,7 +490,7 @@ pub fn setup_use_case_read_only_callback(app: &App, app_context: &Arc<AppContext
             move |read_only| {
                 if let Some(app) = app_weak.upgrade() {
                     let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                    update_use_case_helper(&ctx, use_case_id, |uc| {
+                    update_use_case_helper(&app, &ctx, use_case_id, |uc| {
                         uc.read_only = read_only;
                     });
                 }
@@ -484,7 +506,7 @@ pub fn setup_use_case_long_operation_callback(app: &App, app_context: &Arc<AppCo
             move |long_operation| {
                 if let Some(app) = app_weak.upgrade() {
                     let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                    update_use_case_helper(&ctx, use_case_id, |uc| {
+                    update_use_case_helper(&app, &ctx, use_case_id, |uc| {
                         uc.long_operation = long_operation;
                     });
                 }
@@ -538,7 +560,14 @@ pub fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppCont
                         right_ids: entity_ids,
                     };
 
-                    match use_case_commands::set_use_case_relationship(&ctx, &relationship_dto) {
+                    match use_case_commands::set_use_case_relationship(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &relationship_dto,
+                    ) {
                         Ok(()) => {
                             log::info!(
                                 "Use case entity {} {}",
@@ -584,9 +613,19 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
                         entities: vec![],
                     };
 
-                    match use_case_commands::create_use_case(&ctx, &create_dto) {
+                    match use_case_commands::create_use_case(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &create_dto,
+                    ) {
                         Ok(new_use_case) => {
-                            log::info!("Use case created successfully with id: {}", new_use_case.id);
+                            log::info!(
+                                "Use case created successfully with id: {}",
+                                new_use_case.id
+                            );
 
                             // Get current use case ids from feature
                             let use_case_ids_res = feature_commands::get_feature_relationship(
@@ -609,6 +648,11 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
 
                                     if let Err(e) = feature_commands::set_feature_relationship(
                                         &ctx,
+                                        Some(
+                                            app.global::<FeaturesTabState>()
+                                                .get_features_undo_stack_id()
+                                                as u64,
+                                        ),
                                         &relationship_dto,
                                     ) {
                                         log::error!(
@@ -618,7 +662,10 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to get feature use cases relationship: {}", e);
+                                    log::error!(
+                                        "Failed to get feature use cases relationship: {}",
+                                        e
+                                    );
                                 }
                             }
                         }

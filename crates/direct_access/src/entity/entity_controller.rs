@@ -27,12 +27,13 @@ pub fn create(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     entity: &CreateEntityDto,
 ) -> Result<EntityDto> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = CreateEntityUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
 
@@ -46,12 +47,13 @@ pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     entity: &EntityDto,
 ) -> Result<EntityDto> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = UpdateEntityUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
 
@@ -59,12 +61,13 @@ pub fn remove(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = RemoveEntityUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(())
 }
 
@@ -72,12 +75,13 @@ pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     entities: &[CreateEntityDto],
 ) -> Result<Vec<EntityDto>> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = CreateEntityMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
 
@@ -91,12 +95,13 @@ pub fn update_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     entities: &[EntityDto],
 ) -> Result<Vec<EntityDto>> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = UpdateEntityMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
 
@@ -104,12 +109,13 @@ pub fn remove_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = RemoveEntityMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(())
 }
 
@@ -127,11 +133,12 @@ pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
+stack_id: Option<u64>,
     dto: &EntityRelationshipDto,
 ) -> Result<()> {
     let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = SetEntityRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(dto)?;
-    undo_redo_manager.add_command(Box::new(uc));
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(())
 }
