@@ -275,6 +275,15 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 Click **Save Manifest** in the header (or Ctrl+S).
 
+### Commit to Git
+
+Before generating, commit your current state to Git. This isn't optional advice — it's how Qleany is meant to be used. If you accidentally overwrite files you've modified, you can restore them.
+
+```bash
+git add .
+git commit -m "Before Qleany generation"
+```
+
 ### Generate Code
 
 1. Click **Generate** in the sidebar
@@ -294,31 +303,34 @@ After generation, your project contains:
 
 ```
 src/
+├── common.rs
 ├── common/
-│   ├── entities/           # Car, Customer, Sale structs
-│   ├── database/           # DbContext, transactions
-│   └── direct_access/      # Per-entity repositories, tables
+│   ├── entities.rs             # Car, Customer, Sale structs
+│   ├── database.rs             # DbContext, transactions
+│   └── direct_access.rs        # Per-entity repositories, tables
+├── direct_access.rs
 ├── direct_access/
+│   ├── car.rs
 │   ├── car/
-│   │   ├── car_controller.rs
+│   │   ├── controller.rs
 │   │   ├── dtos.rs
-│   │   ├── units_of_work.rs
-│   │   └── use_cases/      # CRUD operations
+│   │   ├── unit_of_work.rs
+│   │   └── use_cases.rs        # CRUD operations
+│   ├── customer.rs
 │   ├── customer/
 │   │   └── ...
+│   ├── sale.rs
 │   ├── sale/
 │   │   └── ...
+│   ├── root.rs
 │   └── root/
 │       └── ...
+├── inventory_management.rs
 ├── inventory_management/
-│   ├── inventory_management_controller.rs
+│   ├── controller.rs
 │   ├── dtos.rs
-│   ├── units_of_work/
-│   │   ├── import_inventory_uow.rs
-│   │   └── export_inventory_uow.rs
-│   └── use_cases/
-│       ├── import_inventory_uc.rs   # ← You implement the logic here
-│       └── export_inventory_uc.rs   # ← You implement the logic here
+│   ├── unit_of_work.rs
+│   └── use_cases.rs            # ← You implement the logic here
 └── cli/
     └── main.rs
 ```
@@ -387,3 +399,15 @@ Made a mistake? The manifest is just YAML. You can:
 4. Add more features as your application grows
 
 The generated code is yours. Modify it, extend it, or regenerate when you add new entities. Qleany gets out of your way.
+
+---
+
+## Further Reading
+
+- [README](README.md) — Overview, building and running, reference implementation
+- [Manifest Reference](docs/manifest-reference.md) — Entity options, field types, relationships, features
+- [Design Philosophy](docs/design-philosophy.md) — Clean Architecture background, package by feature
+- [Regeneration Workflow](docs/regeneration-workflow.md) — How file generation works, what gets overwritten
+- [Undo-Redo Architecture](docs/undo-redo-architecture.md) — Entity tree structure, undoable vs non-undoable
+- [QML Integration](docs/qml-integration.md) — Reactive models and mocks for C++/Qt
+- [Generated Infrastructure](docs/generated-code.md) — Database layer, event system, file organization
