@@ -80,6 +80,9 @@ fn run_slint(app_context: &Arc<AppContext>) {
     // Initialize project tab callbacks (project settings)
     tabs::project_tab::init(&event_hub_client, &app, &app_context);
 
+    // Initialize user interface tab callbacks
+    tabs::user_interface_tab::init(&event_hub_client, &app, &app_context);
+
     // Initialize generate tab callbacks (rust file generation)
     tabs::generate_tab::init(&event_hub_client, &app, &app_context);
 

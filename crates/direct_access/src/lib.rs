@@ -6,6 +6,7 @@
 // Project entities (auto-listed)
 
 // Main
+pub mod user_interface;
 pub mod workspace;
 
 // System
@@ -60,6 +61,9 @@ pub use file::file_controller;
 
 pub use use_case::dtos::*;
 pub use use_case::use_case_controller;
+
+pub use user_interface::dtos::*;
+pub use user_interface::user_interface_controller;
 
 pub use dto::dto_controller;
 pub use dto::dtos::*;

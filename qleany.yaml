@@ -65,6 +65,7 @@ entities:
     list_model_displayed_field: name
   - name: user_interface
     type: entity
+    entity: UserInterface
     relationship: one_to_one
     required: true
     strong: true

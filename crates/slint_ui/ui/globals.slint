@@ -308,3 +308,21 @@ export global AppState {
     callback select_all_files();
     callback unselect_all_files();
 }
+
+export global UserInterfaceTabState {
+    in-out property <int> user_interface_undo_stack_id: -1;
+
+    // UserInterface entity fields
+    in-out property <bool> rust_cli: false;
+    in-out property <bool> rust_slint: false;
+    in-out property <bool> cpp_qt_qtwidgets: false;
+    in-out property <bool> cpp_qt_qtquick: false;
+    in-out property <bool> cpp_qt_kirigami: false;
+
+    // Callbacks for field changes
+    callback rust_cli_changed(bool);
+    callback rust_slint_changed(bool);
+    callback cpp_qt_qtwidgets_changed(bool);
+    callback cpp_qt_qtquick_changed(bool);
+    callback cpp_qt_kirigami_changed(bool);
+}

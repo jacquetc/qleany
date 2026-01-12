@@ -8,3 +8,4 @@ pub mod features;
 pub mod generate_tab;
 pub mod home_tab;
 pub mod project_tab;
+pub mod user_interface_tab;

@@ -3,13 +3,14 @@ import { HomeTab } from "tabs/HomeTab.slint";
 import { ProjectTab } from "tabs/ProjectTab.slint";
 import { EntitiesTab } from "tabs/EntitiesTab.slint";
 import { FeaturesTab } from "tabs/FeaturesTab.slint";
+import { UserInterfaceTab } from "tabs/UserInterfaceTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
 import { StyledButton } from "components/misc.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, AppState } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, AppState }
+import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -154,12 +155,20 @@ export component App inherits Window {
                         }
 
                         NavItem {
-                            label: "Generate";
-                            icon: @image-url("icons/factory.svg");
+                            label: "User Interface";
+                            icon: @image-url("icons/user_interface.svg");
                             active: AppState.current_tab == 4 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
+                            clicked => { AppState.current_tab = 4; }
+                        }
+
+                        NavItem {
+                            label: "Generate";
+                            icon: @image-url("icons/factory.svg");
+                            active: AppState.current_tab == 5 && AppState.manifest_is_open;
+                            enable: AppState.manifest_is_open;
                             clicked => { 
-                                AppState.current_tab = 4;
+                                AppState.current_tab = 5;
                                 AppState.refresh_generate_tab();
                             }
                         }
@@ -183,7 +192,9 @@ export component App inherits Window {
 
                     if AppState.current_tab == 3 && AppState.manifest_is_open : FeaturesTab { }
 
-                    if AppState.current_tab == 4 && AppState.manifest_is_open : GenerateTab { }
+                    if AppState.current_tab == 4 && AppState.manifest_is_open : UserInterfaceTab { }
+
+                    if AppState.current_tab == 5 && AppState.manifest_is_open : GenerateTab { }
                 }
             }
 
