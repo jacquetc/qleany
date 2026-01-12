@@ -47,6 +47,7 @@ pub enum DirectAccessEntity {
     DtoField(EntityEvent),
     Global(EntityEvent),
     Relationship(EntityEvent),
+    UserInterface(EntityEvent),
     Root(EntityEvent),
     Workspace(EntityEvent),
     System(EntityEvent),
@@ -109,6 +110,9 @@ impl Event {
                 DirectAccessEntity::Global(event) => format!("direct_access_global_{:?}", event),
                 DirectAccessEntity::Relationship(event) => {
                     format!("direct_access_relationship_{:?}", event)
+                }
+                DirectAccessEntity::UserInterface(event) => {
+                    format!("direct_access_user_interface_{:?}", event)
                 }
                 DirectAccessEntity::Root(event) => format!("direct_access_root_{:?}", event),
                 DirectAccessEntity::Workspace(event) => {

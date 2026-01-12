@@ -22,6 +22,10 @@ pub mod write {
             root::{root_repository::RootRepository, root_table::RootRedbTable},
             system::{system_repository::SystemRepository, system_table::SystemRedbTable},
             use_case::{use_case_repository::UseCaseRepository, use_case_table::UseCaseRedbTable},
+            user_interface::{
+                user_interface_repository::UserInterfaceRepository,
+                user_interface_table::UserInterfaceRedbTable,
+            },
             workspace::{
                 workspace_repository::WorkspaceRepository, workspace_table::WorkspaceRedbTable,
             },
@@ -46,6 +50,11 @@ pub mod write {
     pub fn create_relationship_repository(transaction: &Transaction) -> RelationshipRepository {
         let relationship_table = RelationshipRedbTable::new(transaction.get_write_transaction());
         RelationshipRepository::new(Box::new(relationship_table), transaction)
+    }
+
+    pub fn create_user_interface_repository(transaction: &Transaction) -> UserInterfaceRepository {
+        let user_interface_table = UserInterfaceRedbTable::new(transaction.get_write_transaction());
+        UserInterfaceRepository::new(Box::new(user_interface_table), transaction)
     }
 
     pub fn create_root_repository(transaction: &Transaction) -> RootRepository {
@@ -111,6 +120,10 @@ pub mod read {
             use_case::{
                 use_case_repository::UseCaseRepositoryRO, use_case_table::UseCaseRedbTableRO,
             },
+            user_interface::{
+                user_interface_repository::UserInterfaceRepositoryRO,
+                user_interface_table::UserInterfaceRedbTableRO,
+            },
             workspace::{
                 workspace_repository::WorkspaceRepositoryRO, workspace_table::WorkspaceRedbTableRO,
             },
@@ -135,6 +148,14 @@ pub mod read {
     pub fn create_relationship_repository(transaction: &Transaction) -> RelationshipRepositoryRO {
         let relationship_table = RelationshipRedbTableRO::new(transaction.get_read_transaction());
         RelationshipRepositoryRO::new(Box::new(relationship_table))
+    }
+
+    pub fn create_user_interface_repository(
+        transaction: &Transaction,
+    ) -> UserInterfaceRepositoryRO {
+        let user_interface_table =
+            UserInterfaceRedbTableRO::new(transaction.get_read_transaction());
+        UserInterfaceRepositoryRO::new(Box::new(user_interface_table))
     }
 
     pub fn create_root_repository(transaction: &Transaction) -> RootRepositoryRO {

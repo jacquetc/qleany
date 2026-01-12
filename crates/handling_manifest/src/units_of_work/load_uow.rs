@@ -2,9 +2,8 @@ use crate::use_cases::load_uc::{LoadUnitOfWorkFactoryTrait, LoadUnitOfWorkTrait}
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::direct_access::repository_factory;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, Workspace, System,
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, Workspace, System, UserInterface,
 };
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
@@ -84,6 +83,7 @@ impl CommandUnitOfWork for LoadUnitOfWork {
 #[macros::uow_action(entity = "Dto", action = "Create")]
 #[macros::uow_action(entity = "DtoField", action = "Create")]
 #[macros::uow_action(entity = "Relationship", action = "CreateMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "Create")]
 impl LoadUnitOfWorkTrait for LoadUnitOfWork {}
 
 pub struct LoadUnitOfWorkFactory {

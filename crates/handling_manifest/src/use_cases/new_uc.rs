@@ -2,7 +2,7 @@ use crate::NewReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
 use common::direct_access::root::RootRelationshipField;
-use common::entities::{Entity, Field, FieldType, Global, Root, Workspace, System};
+use common::entities::{Entity, Field, FieldType, Global, Root, Workspace, System, UserInterface};
 use common::types::EntityId;
 
 pub trait NewUnitOfWorkFactoryTrait {
@@ -14,6 +14,7 @@ pub trait NewUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Global", action = "CreateMulti")]
 #[macros::uow_action(entity = "Entity", action = "CreateMulti")]
 #[macros::uow_action(entity = "Field", action = "CreateMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "Create")]
 pub trait NewUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct NewUseCase {
@@ -101,6 +102,7 @@ impl NewUseCase {
 
         let created_root_entity = uow.create_entity_multi(&vec![root_entity])?;
 
+        // create global
         let global = Global {
             id: 0,
             language: "rust".to_string(),
@@ -111,6 +113,16 @@ impl NewUseCase {
         };
 
         let created_global = uow.create_global_multi(&vec![global])?;
+
+        // create user interface
+        let ui = uow.create_user_interface(&UserInterface {
+            id: 0,
+            rust_cli: false,
+            rust_slint: false,
+            cpp_qt_qtwidgets: false,
+            cpp_qt_qtquick: false,
+            cpp_qt_kirigami: false,
+        })?;
         
         let workspace = Workspace {
             id: 0,
@@ -118,6 +130,7 @@ impl NewUseCase {
             global: created_global[0].id,
             entities: vec![created_entity[0].id, created_root_entity[0].id],
             features: vec![],
+            user_interface: ui.id,
         };
 
         let created_workspace = uow.create_workspace_multi(&vec![workspace])?;

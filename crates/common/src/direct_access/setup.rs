@@ -9,13 +9,19 @@ use crate::direct_access::feature::feature_table::FeatureRedbTable;
 use crate::direct_access::field::field_table::FieldRedbTable;
 use crate::direct_access::file::file_table::FileRedbTable;
 use crate::direct_access::global::global_table::GlobalRedbTable;
-use crate::direct_access::workspace::workspace_table::WorkspaceRedbTable;
 use crate::direct_access::relationship::relationship_table::RelationshipRedbTable;
 use crate::direct_access::root::root_table::RootRedbTable;
 use crate::direct_access::system::system_table::SystemRedbTable;
 use crate::direct_access::use_case::use_case_table::UseCaseRedbTable;
+use crate::direct_access::user_interface::user_interface_table::UserInterfaceRedbTable;
+use crate::direct_access::workspace::workspace_table::WorkspaceRedbTable;
 
 pub fn initialize_all_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    DtoRedbTable::init_tables(transaction)?;
+    DtoFieldRedbTable::init_tables(transaction)?;
+    GlobalRedbTable::init_tables(transaction)?;
+    RelationshipRedbTable::init_tables(transaction)?;
+    UserInterfaceRedbTable::init_tables(transaction)?;
     RootRedbTable::init_tables(transaction)?;
     WorkspaceRedbTable::init_tables(transaction)?;
     SystemRedbTable::init_tables(transaction)?;
@@ -24,9 +30,5 @@ pub fn initialize_all_tables(transaction: &WriteTransaction) -> Result<(), Error
     FeatureRedbTable::init_tables(transaction)?;
     FileRedbTable::init_tables(transaction)?;
     UseCaseRedbTable::init_tables(transaction)?;
-    DtoRedbTable::init_tables(transaction)?;
-    DtoFieldRedbTable::init_tables(transaction)?;
-    GlobalRedbTable::init_tables(transaction)?;
-    RelationshipRedbTable::init_tables(transaction)?;
     Ok(())
 }

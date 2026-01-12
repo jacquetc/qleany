@@ -125,6 +125,16 @@ impl Default for Order {
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct UserInterface {
+    pub id: EntityId,
+    pub rust_cli: bool,
+    pub rust_slint: bool,
+    pub cpp_qt_qtwidgets: bool,
+    pub cpp_qt_qtquick: bool,
+    pub cpp_qt_kirigami: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Root {
     pub id: EntityId,
     pub workspace: Option<EntityId>,
@@ -138,6 +148,7 @@ pub struct Workspace {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub user_interface: EntityId,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

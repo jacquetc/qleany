@@ -1,10 +1,7 @@
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global,
-    Relationship, RelationshipType, Root, System, UseCase, Workspace,
-};
+use common::entities::{Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global, Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -25,6 +22,7 @@ struct DummyGenerationReadOps {
     workspace_entities: HashMap<EntityId, Vec<EntityId>>,
     workspace_features: HashMap<EntityId, Vec<EntityId>>,
     system_files: HashMap<EntityId, Vec<EntityId>>,
+    user_interfaces: HashMap<EntityId, UserInterface>,
 }
 
 impl DummyGenerationReadOps {
@@ -45,6 +43,7 @@ impl DummyGenerationReadOps {
             workspace_entities: HashMap::new(),
             workspace_features: HashMap::new(),
             system_files: HashMap::new(),
+            user_interfaces: HashMap::new(),
         }
     }
 }
@@ -191,12 +190,22 @@ fn for_file_feature_without_use_cases_errors() {
         prefix_path: "".into(),
     };
     uow.globals.insert(3, global);
+    let user_interface = UserInterface {
+        id: 1,
+        rust_cli: false,
+        rust_slint: false,
+        cpp_qt_qtwidgets: false,
+        cpp_qt_qtquick: false,
+        cpp_qt_kirigami: false,
+    };
+    uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![],
         features: vec![10],
+        user_interface: 1
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![10]);
@@ -313,12 +322,22 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         prefix_path: "".into(),
     };
     uow.globals.insert(3, global);
+    let user_interface = UserInterface {
+        id: 1,
+        rust_cli: false,
+        rust_slint: false,
+        cpp_qt_qtwidgets: false,
+        cpp_qt_qtquick: false,
+        cpp_qt_kirigami: false,
+    };
+    uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![],
         features: vec![10],
+        user_interface: 1
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![10]);
@@ -413,12 +432,22 @@ fn for_file_various_combinations_generate_expected_items() {
         prefix_path: "".into(),
     };
     uow.globals.insert(3, global);
+    let user_interface = UserInterface {
+        id: 1,
+        rust_cli: false,
+        rust_slint: false,
+        cpp_qt_qtwidgets: false,
+        cpp_qt_qtquick: false,
+        cpp_qt_kirigami: false,
+    };
+    uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![1, 2],
         features: vec![200],
+        user_interface: 1
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![200]);

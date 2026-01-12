@@ -13,6 +13,7 @@ pub struct WorkspaceDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub user_interface: EntityId,
 }
 
 impl From<WorkspaceDto> for Workspace {
@@ -23,6 +24,7 @@ impl From<WorkspaceDto> for Workspace {
             global: dto.global,
             entities: dto.entities,
             features: dto.features,
+            user_interface: dto.user_interface,
         }
     }
 }
@@ -35,6 +37,7 @@ impl From<&WorkspaceDto> for Workspace {
             global: dto.global.clone(),
             entities: dto.entities.clone(),
             features: dto.features.clone(),
+            user_interface: dto.user_interface.clone(),
         }
     }
 }
@@ -47,6 +50,7 @@ impl From<Workspace> for WorkspaceDto {
             global: entity.global,
             entities: entity.entities,
             features: entity.features,
+            user_interface: entity.user_interface,
         }
     }
 }
@@ -57,6 +61,7 @@ pub struct CreateWorkspaceDto {
     pub global: EntityId,
     pub entities: Vec<EntityId>,
     pub features: Vec<EntityId>,
+    pub user_interface: EntityId,
 }
 
 impl From<CreateWorkspaceDto> for Workspace {
@@ -67,6 +72,7 @@ impl From<CreateWorkspaceDto> for Workspace {
             global: dto.global,
             entities: dto.entities,
             features: dto.features,
+            user_interface: dto.user_interface,
         }
     }
 }
@@ -79,6 +85,7 @@ impl From<&CreateWorkspaceDto> for Workspace {
             global: dto.global.clone(),
             entities: dto.entities.clone(),
             features: dto.features.clone(),
+            user_interface: dto.user_interface.clone(),
         }
     }
 }
@@ -90,6 +97,7 @@ impl From<Workspace> for CreateWorkspaceDto {
             global: entity.global,
             entities: entity.entities,
             features: entity.features,
+            user_interface: entity.user_interface,
         }
     }
 }

@@ -3,13 +3,12 @@ mod validation_schema;
 use crate::use_cases::common::model_structs;
 use crate::{LoadDto, LoadReturnDto};
 use anyhow::Result;
-use common::entities::FieldRelationshipType;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork,
     entities::{
-        Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, RelationshipType,
-        Root, UseCase, Workspace, System,
+        Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, Global,
+        Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace,
     },
 };
 
@@ -37,6 +36,7 @@ pub trait LoadUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Dto", action = "Create")]
 #[macros::uow_action(entity = "DtoField", action = "Create")]
 #[macros::uow_action(entity = "Relationship", action = "CreateMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "Create")]
 pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct LoadUseCase {
@@ -120,7 +120,7 @@ impl LoadUseCase {
         let mut uow = self.uow_factory.create();
 
         uow.begin_transaction()?;
-        
+
         let root_id = 1;
 
         // create global
@@ -134,6 +134,16 @@ impl LoadUseCase {
         })?;
         let global_id = global.id;
 
+        // create user interface
+        let ui = uow.create_user_interface(&UserInterface {
+            id: 0,
+            rust_cli: false,
+            rust_slint: false,
+            cpp_qt_qtwidgets: false,
+            cpp_qt_qtquick: false,
+            cpp_qt_kirigami: false,
+        })?;
+
         // create workspace
         let workspace = uow.create_workspace(&Workspace {
             id: 0,
@@ -141,6 +151,7 @@ impl LoadUseCase {
             global: global_id,
             entities: vec![],
             features: vec![],
+            user_interface: ui.id,
         })?;
         let workspace_id = workspace.id;
 

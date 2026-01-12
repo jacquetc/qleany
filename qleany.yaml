@@ -63,6 +63,11 @@ entities:
     strong: true
     list_model: true
     list_model_displayed_field: name
+  - name: user_interface
+    type: entity
+    relationship: one_to_one
+    required: true
+    strong: true
   undoable: true
 - name: System
   inherits_from: EntityBase
@@ -360,6 +365,31 @@ entities:
     enum_values:
     - Ordered
     - Unordered
+  undoable: true
+- name: UserInterface
+  inherits_from: EntityBase
+  allow_direct_access: true
+  fields:
+  - name: rust_cli
+    type: boolean
+    required: true
+    strong: true
+  - name: rust_slint
+    type: boolean
+    required: true
+    strong: true
+  - name: cpp_qt_qtwidgets
+    type: boolean
+    required: true
+    strong: true
+  - name: cpp_qt_qtquick
+    type: boolean
+    required: true
+    strong: true
+  - name: cpp_qt_kirigami
+    type: boolean
+    required: true
+    strong: true
   undoable: true
 features:
 - name: handling_app_lifecycle
