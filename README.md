@@ -1,25 +1,31 @@
 # Qleany
 
-**Architecture scaffolding generator for C++20/Qt6 or Rust 2024 desktop applications and CLI tools.**
+**Architecture scaffolding generator for C++20/Qt6 or Rust 2024 applications — desktop, mobile, and CLI.**
 
-Building a desktop app in Qt or Rust? Not sure how to structure it beyond "put code in files"?
+> **No framework. No runtime. No Qleany dependencies in your code.**
+> 
+> The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on.
+
+Building an app in Qt or Rust? Not sure how to structure it beyond "put code in files"?
 Qleany generates a complete architecture: controllers, repositories, DTOs, undo/redo, reactive models, GUI skeletons — organized by feature, ready to extend.
 
-Define your entities and relationships in a YAML manifest. Qleany generates several hundred repetitive files — saving you conservatively several days of tedious, error-prone work. Get a working structure that scales.
+Define your entities and relationships in a YAML manifest. Qleany generates several hundred repetitive files — saving you conservatively several days of tedious, error-prone work. Get a working structure that scales from a simple CLI tool to a full-featured application with desktop and mobile variants.
 
-Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt.
+Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt — whether you're targeting Linux desktop, Plasma Mobile, Ubuntu Touch, or all of them simultaneously.
 
 ## Documentation
 
 | Document | Purpose |
 |----------|---------|
-| [Quick Start](docs/quick_start.md) | Step-by-step tutorial building a complete application |
+| [Quick Start](Quick_start.md) | Step-by-step tutorial building a complete application |
 | [Manifest Reference](docs/manifest-reference.md) | Entity options, field types, relationships, features and use cases |
 | [Design Philosophy](docs/design-philosophy.md) | Clean Architecture background, package by feature, Rust module structure |
 | [Regeneration Workflow](docs/regeneration-workflow.md) | How file generation works, what gets overwritten, files that must stay in sync |
 | [Undo-Redo Architecture](docs/undo-redo-architecture.md) | Entity tree structure, undoable vs non-undoable, configuration patterns |
 | [QML Integration](docs/qml-integration.md) | Reactive models, mocks, and event system for C++/Qt |
+| [Mobile Development](docs/mobile-development.md) | Plasma Mobile, Ubuntu Touch, and cross-platform deployment |
 | [Generated Infrastructure](docs/generated-code.md) | Database layer, repositories, and file organization details |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and how to fix them |
 
 New to Qleany? Start with the [Quick Start Guide](Quick_start.md), then return here for reference.
 
@@ -27,21 +33,21 @@ New to Qleany? Start with the [Quick Start Guide](Quick_start.md), then return h
 
 ## Why Qleany
 
-Writing CRUD operations, DTOs, repositories, undo/redo infrastructure, and reactive UI models is tedious. The patterns are well-understood, but implementing them consistently across a codebase takes time.
+I wrote [Skribisto](https://github.com/jacquetc/skribisto), a novel-writing application in Qt. Four times. In different languages. Each time, I hit the same wall: spaghetti code and structural dead-ends that made adding features painful and eventually impossible without rewriting half the codebase.
 
-Qleany generates this scaffolding so you can focus on business logic. It targets a specific architectural style — Package by Feature with Clean Architecture principles — that works well for desktop applications and CLI tools.
+After the third rewrite, I studied architecture patterns seriously. Clean Architecture (Robert C. Martin) clicked — the separation of concerns, the dependency rules, the testability. But implementing it by hand meant writing the same boilerplate over and over: repositories, DTOs, use cases, controllers. So I wrote templates. The templates grew into a generator. The generator needed a manifest file.
 
-**Generate and disappear:** Qleany generates code, then gets out of your way. The output has no dependency on Qleany itself — no runtime, no base classes to inherit from, no framework to learn. Modify, extend, or delete the generated code freely. The generated code is yours.
+**Qleany v0** was Python/Jinja2 generating C++/Qt code following pure Clean Architecture. It worked, but the tradeoffs were hard to miss: a 17-entity project produced 1700+ files across 500 folders. Some of my early design choices were dubious in hindsight.
 
-**What Qleany is not:**
-- A framework (no runtime dependencies)
-- A solution for web services or high-throughput systems
+**Qleany v1** is a ground-up rewrite in Rust, aiming to fix those problems. Less sophisticated, more pragmatic. It adopts Package by Feature (Vertical Slice Architecture) instead of strict layer separation — same Clean Architecture principles, but organized by what the code does rather than what layer it belongs to. The same manifest now generates both C++/Qt and Rust code.
+
+This is the tool I needed when I started Skribisto. If it saves someone else from their fourth rewrite, it's done its job.
 
 ## Key Features
 
 - **Complete CRUD scaffolding** — Controllers, DTOs, use cases, repositories per entity
 - **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Kirigami, or combinations thereof
-- **Undo/redo system** — Command-based with grouping, scopes, and failure strategies
+- **Undo/redo system** (optional) — Command-based with grouping, scopes, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust
 - **Reactive QML models** — Auto-updating list models and single-entity wrappers (C++/Qt)
 - **QML mocks** — JavaScript stubs for UI development without backend (C++/Qt)
 - **Relationship management** — Junction tables with ordering, caching, cascade deletion
@@ -53,9 +59,11 @@ Qleany generates this scaffolding so you can focus on business logic. It targets
 
 ### When Qleany Makes Sense
 
-**Data-centric desktop applications** that will grow in complexity over time. Think document editors, project management tools, creative applications, or anything where users manipulate structured data and expect undo/redo to work reliably.
+**Data-centric applications** that will grow in complexity over time. Think document editors, project management tools, creative applications, or anything where users manipulate structured data and expect undo/redo to work reliably. This applies equally to desktop and mobile — a note-taking app on Plasma Mobile has the same architectural needs as one on desktop Linux.
 
 **Complex CLI tools in Rust** — tools like `git` that manage structured data, have multiple subcommands, and need consistent internal architecture. Qleany itself is built this way: type `qleany -h` to see a CLI interface backed by the same architecture that powers its Slint GUI.
+
+**Applications targeting multiple platforms** — if you're building for desktop Linux and want to support Plasma Mobile or Ubuntu Touch with the same codebase, Qleany's generated backend works identically across all of them. Write your business logic once, swap UI frontends as needed.
 
 **Applications needing multiple Qt frontends** — if you need QtQuick, QtWidgets, KDE Widgets, or Kirigami (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
 
@@ -69,7 +77,7 @@ For **simple utilities or single-purpose tools**, Qleany introduces more infrast
 
 If you're working with a **team that already has established patterns**, introducing Qleany means everyone needs to learn its conventions. The generated code is readable and follows clear patterns, but it represents a specific way of doing things.
 
-Qleany **targets desktop and CLI applications**. If you're building for the web, using Electron, or targeting mobile with Flutter, this isn't the right tool. Similarly, if you need high-throughput server-side processing, the patterns here are optimized for user interaction, not request-per-second performance.
+Qleany **targets native applications**. If you're building for the web, using Electron, or targeting Android/iOS with Flutter or React Native, this isn't the right tool. Similarly, if you need high-throughput server-side processing, the patterns here are optimized for user interaction, not request-per-second performance.
 
 ### The Practical Test
 
@@ -79,12 +87,20 @@ The "generate and disappear" philosophy means you're not locked in. If you decid
 
 ---
 
-## Target Languages
+## Target Platforms
 
-| Language | Standard | Database | Frontend |
-|----------|----------|----------|----------|
-| C++ | C++20 / Qt6 | SQLite | QtQuick, QtWidgets, Kirigami |
-| Rust | Rust 2024 | redb | CLI, Slint (reference implementation) |
+| Language | Standard | Database | Frontend Options |
+|----------|----------|----------|------------------|
+| C++ | C++20 / Qt6 | SQLite | QtQuick, QtWidgets, Kirigami, Ubuntu Touch Components |
+| Rust | Rust 2024 | redb | CLI, Slint |
+
+**Supported deployment targets for C++/Qt:**
+- Desktop Linux (KDE Plasma, GNOME, etc.)
+- Plasma Mobile
+- Ubuntu Touch
+- Windows, macOS (Qt's cross-platform support)
+
+The generated backend is platform-agnostic. Your business logic, repositories, and controllers work identically whether you're building a desktop app, a mobile app, or both from the same codebase. Only the UI layer differs.
 
 **Rust frontend examples (not generated, but working references):**
 - **Slint UI**: [qleany/crates/slint_ui](https://github.com/jacquetc/qleany/tree/generator_in_rust/crates/slint_ui)
@@ -167,7 +183,7 @@ Skribisto serves as both proof-of-concept and template source for C++/Qt generat
 
 Qleany v1 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders.
 
-v2 generates Package by Feature with pragmatic organization. The same project produces ~200 files with better discoverability.
+v2 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability.
 
 **Breaking changes:**
 - Manifest format changed (schema version 2)
