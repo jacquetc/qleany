@@ -10,9 +10,9 @@ use super::{
         update_feature_uc::UpdateFeatureUseCase,
     },
 };
-use crate::FeatureRelationshipDto;
 use crate::feature::use_cases::get_feature_relationship_uc::GetFeatureRelationshipUseCase;
 use crate::feature::use_cases::set_feature_relationship_uc::SetFeatureRelationshipUseCase;
+use crate::FeatureRelationshipDto;
 use anyhow::{Ok, Result};
 use common::direct_access::feature::FeatureRelationshipField;
 use common::undo_redo::UndoRedoManager;

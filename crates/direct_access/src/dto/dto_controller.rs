@@ -8,9 +8,9 @@ use super::{
         update_dto_multi_uc::UpdateDtoMultiUseCase, update_dto_uc::UpdateDtoUseCase,
     },
 };
-use crate::DtoRelationshipDto;
 use crate::dto::use_cases::get_dto_relationship_uc::GetDtoRelationshipUseCase;
 use crate::dto::use_cases::set_dto_relationship_uc::SetDtoRelationshipUseCase;
+use crate::DtoRelationshipDto;
 use anyhow::{Ok, Result};
 use common::direct_access::dto::DtoRelationshipField;
 use common::undo_redo::UndoRedoManager;

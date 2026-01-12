@@ -10,9 +10,9 @@ use super::{
         update_use_case_uc::UpdateUseCaseUseCase,
     },
 };
-use crate::UseCaseRelationshipDto;
 use crate::use_case::use_cases::get_use_case_relationship_uc::GetUseCaseRelationshipUseCase;
 use crate::use_case::use_cases::set_use_case_relationship_uc::SetUseCaseRelationshipUseCase;
+use crate::UseCaseRelationshipDto;
 use anyhow::{Ok, Result};
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::undo_redo::UndoRedoManager;
