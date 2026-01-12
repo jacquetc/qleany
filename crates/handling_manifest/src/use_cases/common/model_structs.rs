@@ -4,6 +4,8 @@ fn serde_true() -> bool {
     true
 }
 
+fn is_false(b: &bool) -> bool { !b }
+
 #[derive(Serialize, Deserialize)]
 pub struct Schema {
     pub version: i32,
@@ -68,7 +70,7 @@ pub struct Entity {
     #[serde(default = "serde_true")]
     pub allow_direct_access: bool,
     pub fields: Vec<Field>,
-    pub undoable: bool,
+pub undoable: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -128,7 +130,20 @@ pub struct Feature {
 
 #[derive(Serialize, Deserialize)]
 pub struct Ui {
-    pub cli: bool,
+    #[serde(default)]
+    pub rust_cli: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub rust_slint: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub cpp_qt_qtwidgets: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub cpp_qt_qtquick: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub cpp_qt_kirigami: bool,
 }
 
 #[derive(Serialize, Deserialize)]

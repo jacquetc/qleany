@@ -220,11 +220,23 @@ pub fn json_validation_schema() -> serde_json::Value {
             "ui": {
                 "type": "object",
                 "properties": {
-                    "cli": {
+                    "rust_cli": {
+                        "type": "boolean"
+                    },
+                    "rust_slint": {
+                        "type": "boolean"
+                    },
+                    "cpp_qt_qtwidgets": {
+                        "type": "boolean"
+                    },
+                    "cpp_qt_qtquick": {
+                        "type": "boolean"
+                    },
+                    "cpp_qt_kirigami": {
                         "type": "boolean"
                     }
-                },
-                "required": ["cli"]
+
+                }
             }
         },
         "required": ["schema", "global", "entities", "features", "ui"]

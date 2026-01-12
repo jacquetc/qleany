@@ -1,3 +1,4 @@
+use common::entities::UserInterface;
 use crate::SaveDto;
 use crate::use_cases::common::model_structs;
 use anyhow::Result;
@@ -17,6 +18,7 @@ pub trait SaveUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
@@ -58,6 +60,11 @@ impl SaveUseCase {
         let global = uow
             .get_global(&workspace.global)?
             .ok_or(anyhow::anyhow!("Global not found"))?;
+        
+        // Get Ui
+        let ui = uow
+            .get_user_interface(&workspace.user_interface)?
+            .ok_or(anyhow::anyhow!("User Interface not found"))?;
 
         // Get entities
         let entities = uow.get_entity_multi(&workspace.entities)?;
@@ -119,6 +126,14 @@ impl SaveUseCase {
                 domain: global.organisation_domain.clone(),
             },
             prefix_path: global.prefix_path.clone(),
+        };
+        
+        let model_ui = model_structs::Ui {
+            rust_cli: ui.rust_cli,
+            rust_slint: ui.rust_slint,
+            cpp_qt_qtwidgets: ui.cpp_qt_qtwidgets,
+            cpp_qt_qtquick: ui.cpp_qt_qtquick,
+            cpp_qt_kirigami: ui.cpp_qt_kirigami,
         };
 
         let model_entities = entities
@@ -333,7 +348,7 @@ impl SaveUseCase {
             global: model_global,
             entities: model_entities,
             features: model_features,
-            ui: model_structs::Ui { cli: true },
+            ui: model_ui,
         };
 
         // Serialize to YAML

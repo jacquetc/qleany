@@ -551,4 +551,5 @@ features:
       - name: timestamp
         type: string
 ui:
-  cli: true
+  rust_cli: true
+  rust_slint: true

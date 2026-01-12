@@ -1,3 +1,4 @@
+use common::entities::UserInterface;
 use crate::use_cases::save_uc::{SaveUnitOfWorkFactoryTrait, SaveUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
@@ -40,6 +41,7 @@ impl QueryUnitOfWork for SaveUnitOfWork {
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
