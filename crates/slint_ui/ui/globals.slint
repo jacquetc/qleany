@@ -240,7 +240,9 @@ export global FeaturesTabState {
 
 // Application-wide state
 export global AppState {
-    in-out property <int> root_id: 0;
+    in-out property <int> workspace_id: -1;
+    // system_id is always 1
+    in-out property <int> system_id: 1;
     in-out property <bool> force_exit: false;
     // Manifest save state
     in-out property <bool> manifest_is_saved: true;

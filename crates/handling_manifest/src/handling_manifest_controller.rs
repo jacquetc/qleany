@@ -32,7 +32,7 @@ pub fn load(
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(Load),
-        ids: vec![return_dto.root_id],
+        ids: vec![return_dto.workspace_id],
         data: None,
     });
     Ok(return_dto)
@@ -58,7 +58,7 @@ pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<NewRetur
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(New),
-        ids: vec![return_dto.root_id],
+        ids: vec![return_dto.workspace_id],
         data: None,
     });
     Ok(return_dto)

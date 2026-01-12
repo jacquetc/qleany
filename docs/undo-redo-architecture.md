@@ -6,11 +6,11 @@ Entities in Qleany form a tree structure based on strong (ownership) relationshi
 
 Each entity can define these properties:
 
-| Property | Type | Default | Effect                                                             |
-|----------|------|---------|--------------------------------------------------------------------|
-| `undoable` | bool | false | Adds undo/redo support to the entity's controller                  |
-| `allow_direct_access` | bool | true | Generates entity files in `direct_access/` for UI access           |
-| `single_model` | bool | false | Generates `Single{Entity}` wrapper for Qt front-ends (C++/Qt only) |
+| Property | Type | Default | Effect |
+|----------|------|---------|--------|
+| `undoable` | bool | false | Adds undo/redo support to the entity's controller |
+| `allow_direct_access` | bool | true | Generates entity files in `direct_access/` for UI access |
+| `single_model` | bool | false | Generates `Single{Entity}` wrapper for QML (C++/Qt only) |
 
 ## Undo-Redo Rules
 

@@ -6,15 +6,15 @@
 use std::sync::Arc;
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, field_commands, root_commands};
+use crate::commands::{entity_commands, field_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
 use common::direct_access::entity::EntityRelationshipField;
-use common::direct_access::root::RootRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::{FieldRelationshipType, FieldType, RelationshipType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use direct_access::EntityRelationshipDto;
-use direct_access::RootRelationshipDto;
+use direct_access::WorkspaceRelationshipDto;
 use slint::{ComponentHandle, Model, Timer};
 
 fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
@@ -124,19 +124,19 @@ fn subscribe_load_manifest_event(
     });
 }
 
-/// Subscribe to Root update events to refresh entity_cr_list
-fn subscribe_root_updated_event(
+/// Subscribe to Workspace update events to refresh entity_cr_list
+fn subscribe_workspace_updated_event(
     event_hub_client: &EventHubClient,
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(
-        Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
+        Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
         {
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |event| {
-                log::info!("Root updated event received: {:?}", event);
+                log::info!("Workspace updated event received: {:?}", event);
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
@@ -217,15 +217,15 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {
-        let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+        let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
 
-        // Only refresh if we have a valid root_id
-        if root_id > 0 {
-            // Get entities attached to the root
-            let entity_ids_res = root_commands::get_root_relationship(
+        // Only refresh if we have a valid workspace_id
+        if workspace_id > 0 {
+            // Get entities attached to the workspace
+            let entity_ids_res = workspace_commands::get_workspace_relationship(
                 &ctx,
-                &root_id,
-                &RootRelationshipField::Entities,
+                &workspace_id,
+                &WorkspaceRelationshipField::Entities
             );
 
             match entity_ids_res {
@@ -267,7 +267,7 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to get root entities: {}", e);
+                    log::error!("Failed to get workspace entities: {}", e);
                 }
             }
         }
@@ -295,9 +295,9 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
         let entity_id =
             app.global::<EntitiesTabState>().get_selected_entity_id() as common::types::EntityId;
 
-        // Only refresh if we have a valid root_id
+        // Only refresh if we have a valid workspace_id
         if entity_id > 0 {
-            // Get entities attached to the root
+            // Get entities attached to the workspace
             let field_ids_res = entity_commands::get_entity_relationship(
                 &ctx,
                 &entity_id,
@@ -343,7 +343,7 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to get root fields: {}", e);
+                    log::error!("Failed to get workspace fields: {}", e);
                 }
             }
         }
@@ -374,13 +374,13 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                 let to = to_index as usize;
 
                 if let Some(app) = app_weak.upgrade() {
-                    // 1) Get entities attached to the root
+                    // 1) Get entities attached to the workspace
 
-                    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-                    let entity_ids_res = root_commands::get_root_relationship(
+                    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+                    let entity_ids_res = workspace_commands::get_workspace_relationship(
                         &ctx,
-                        &root_id,
-                        &RootRelationshipField::Entities,
+                        &workspace_id,
+                        &WorkspaceRelationshipField::Entities,
                     );
                     let mut entity_ids = entity_ids_res.unwrap_or_default();
 
@@ -396,15 +396,15 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                     }
                     entity_ids.insert(insert_at, moving_entity_id);
 
-                    let result = root_commands::set_root_relationship(
+                    let result = workspace_commands::set_workspace_relationship(
                         &ctx,
                         Some(
                             app.global::<EntitiesTabState>()
                                 .get_entities_undo_stack_id() as u64,
                         ),
-                        &RootRelationshipDto {
-                            id: root_id,
-                            field: RootRelationshipField::Entities,
+                        &WorkspaceRelationshipDto {
+                            id: workspace_id,
+                            field: WorkspaceRelationshipField::Entities,
                             right_ids: entity_ids,
                         },
                     );
@@ -692,12 +692,12 @@ fn clear_field_form(app: &App) {
 
 /// Helper function to populate entity options for the Referenced Entity ComboBox
 fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
-    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-    if root_id > 0 {
-        let entity_ids_res = root_commands::get_root_relationship(
+    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+    if workspace_id > 0 {
+        let entity_ids_res = workspace_commands::get_workspace_relationship(
             app_context,
-            &root_id,
-            &RootRelationshipField::Entities,
+            &workspace_id,
+            &WorkspaceRelationshipField::Entities,
         );
 
         if let Ok(entity_ids) = entity_ids_res {
@@ -728,15 +728,15 @@ fn fill_inherits_from_options(
     app_context: &Arc<AppContext>,
     current_inherits_from: Option<common::types::EntityId>,
 ) {
-    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
     let mut selected_index: i32 = 0; // Default to "None"
     let mut selected_value: String = "None".to_string(); // Default to "None"
 
-    if root_id > 0 {
-        let entity_ids_res = root_commands::get_root_relationship(
+    if workspace_id > 0 {
+        let entity_ids_res = workspace_commands::get_workspace_relationship(
             app_context,
-            &root_id,
-            &RootRelationshipField::Entities,
+            &workspace_id,
+            &WorkspaceRelationshipField::Entities,
         );
 
         if let Ok(entity_ids) = entity_ids_res {
@@ -775,7 +775,7 @@ fn fill_inherits_from_options(
             }
         }
     } else {
-        // No root, set default "None" option and value
+        // No workspace, set default "None" option and value
         app.global::<EntitiesTabState>()
             .set_selected_entity_inherits_from(0);
         app.global::<EntitiesTabState>()
@@ -1228,9 +1228,9 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
             let app_weak = app.as_weak();
             move || {
                 if let Some(app) = app_weak.upgrade() {
-                    let root_id = app.global::<AppState>().get_root_id();
-                    if root_id <= 0 {
-                        log::warn!("Cannot add entity: no root loaded");
+                    let workspace_id = app.global::<AppState>().get_workspace_id();
+                    if workspace_id <= 0 {
+                        log::warn!("Cannot add entity: no workspace loaded");
                         return;
                     }
 
@@ -1257,11 +1257,11 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         Ok(new_entity) => {
                             log::info!("Entity created successfully with id: {}", new_entity.id);
 
-                            // Get current entity ids from root
-                            let entity_ids_res = root_commands::get_root_relationship(
+                            // Get current entity ids from workspace
+                            let entity_ids_res = workspace_commands::get_workspace_relationship(
                                 &ctx,
-                                &(root_id as common::types::EntityId),
-                                &RootRelationshipField::Entities,
+                                &(workspace_id as common::types::EntityId),
+                                &WorkspaceRelationshipField::Entities,
                             );
 
                             match entity_ids_res {
@@ -1269,14 +1269,14 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                                     // Add the new entity id to the list
                                     entity_ids.push(new_entity.id);
 
-                                    // Update the root relationship
-                                    let relationship_dto = RootRelationshipDto {
-                                        id: root_id as common::types::EntityId,
-                                        field: RootRelationshipField::Entities,
+                                    // Update the workspace relationship
+                                    let relationship_dto = WorkspaceRelationshipDto {
+                                        id: workspace_id as common::types::EntityId,
+                                        field: WorkspaceRelationshipField::Entities,
                                         right_ids: entity_ids,
                                     };
 
-                                    if let Err(e) = root_commands::set_root_relationship(
+                                    if let Err(e) = workspace_commands::set_workspace_relationship(
                                         &ctx,
                                         Some(
                                             app.global::<EntitiesTabState>()
@@ -1286,13 +1286,13 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                                         &relationship_dto,
                                     ) {
                                         log::error!(
-                                            "Failed to add entity to root relationship: {}",
+                                            "Failed to add entity to workspace relationship: {}",
                                             e
                                         );
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to get root entities relationship: {}", e);
+                                    log::error!("Failed to get workspace entities relationship: {}", e);
                                 }
                             }
                         }
@@ -1466,7 +1466,7 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
 /// Initialize all entities tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
-    subscribe_root_updated_event(event_hub_client, app, app_context);
+    subscribe_workspace_updated_event(event_hub_client, app, app_context);
     subscribe_new_manifest_event(event_hub_client, app, app_context);
     subscribe_close_manifest_event(event_hub_client, app, app_context);
     subscribe_load_manifest_event(event_hub_client, app, app_context);

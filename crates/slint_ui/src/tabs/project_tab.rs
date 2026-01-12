@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use crate::app_context::AppContext;
-use crate::commands::{global_commands, root_commands};
+use crate::commands::{global_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ProjectTabState};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
@@ -217,12 +217,12 @@ fn subscribe_global_updated_event(
 
 /// Helper function to get the global_id from root
 fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::types::EntityId> {
-    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-    if root_id > 0 {
-        if let Ok(Some(root)) = root_commands::get_root(app_context, &root_id) {
-            if root.global > 0 {
-                println!("Found global_id: {}", root.global);
-                return Some(root.global);
+    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+    if workspace_id > 0 {
+        if let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id) {
+            if workspace.global > 0 {
+                println!("Found global_id: {}", workspace.global);
+                return Some(workspace.global);
             }
         }
     }

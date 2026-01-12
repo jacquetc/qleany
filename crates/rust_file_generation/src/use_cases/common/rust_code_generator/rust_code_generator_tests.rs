@@ -3,7 +3,7 @@ use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global,
-    Relationship, RelationshipType, Root, UseCase,
+    Relationship, RelationshipType, Root, System, UseCase, Workspace,
 };
 use common::types::EntityId;
 use std::collections::HashMap;
@@ -11,6 +11,8 @@ use std::collections::HashMap;
 // DummyGenerationReadOps that allows setting return values
 struct DummyGenerationReadOps {
     roots: HashMap<EntityId, Root>,
+    workspaces: HashMap<EntityId, Workspace>,
+    systems: HashMap<EntityId, System>,
     files: HashMap<EntityId, File>,
     globals: HashMap<EntityId, Global>,
     features: HashMap<EntityId, Feature>,
@@ -20,13 +22,17 @@ struct DummyGenerationReadOps {
     dto_fields: HashMap<EntityId, DtoField>,
     fields: HashMap<EntityId, Field>,
     relationships: HashMap<EntityId, Relationship>,
-    root_entities: Vec<EntityId>,
+    workspace_entities: HashMap<EntityId, Vec<EntityId>>,
+    workspace_features: HashMap<EntityId, Vec<EntityId>>,
+    system_files: HashMap<EntityId, Vec<EntityId>>,
 }
 
 impl DummyGenerationReadOps {
     fn new() -> Self {
         Self {
             roots: HashMap::new(),
+            workspaces: HashMap::new(),
+            systems: HashMap::new(),
             files: HashMap::new(),
             globals: HashMap::new(),
             features: HashMap::new(),
@@ -36,7 +42,9 @@ impl DummyGenerationReadOps {
             dto_fields: HashMap::new(),
             fields: HashMap::new(),
             relationships: HashMap::new(),
-            root_entities: vec![],
+            workspace_entities: HashMap::new(),
+            workspace_features: HashMap::new(),
+            system_files: HashMap::new(),
         }
     }
 }
@@ -55,14 +63,37 @@ impl QueryUnitOfWork for DummyGenerationReadOps {
 impl GenerationReadOps for DummyGenerationReadOps {
     fn get_root_relationship(
         &self,
-        _id: &EntityId,
+        id: &EntityId,
         field: &common::direct_access::root::RootRelationshipField,
     ) -> Result<Vec<EntityId>> {
+        let root = self.roots.get(id).ok_or_else(|| anyhow::anyhow!("Root not found"))?;
         match field {
-            common::direct_access::root::RootRelationshipField::Entities => {
-                Ok(self.root_entities.clone())
+            common::direct_access::root::RootRelationshipField::Workspace => {
+                Ok(root.workspace.map(|id| vec![id]).unwrap_or_default())
             }
-            _ => Ok(vec![]),
+            common::direct_access::root::RootRelationshipField::System => {
+                Ok(root.system.map(|id| vec![id]).unwrap_or_default())
+            }
+        }
+    }
+    fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
+        Ok(self.workspaces.get(id).cloned())
+    }
+    fn get_workspace_relationship(
+        &self,
+        id: &EntityId,
+        field: &common::direct_access::workspace::WorkspaceRelationshipField,
+    ) -> Result<Vec<EntityId>> {
+        match field {
+            common::direct_access::workspace::WorkspaceRelationshipField::Entities => {
+                Ok(self.workspace_entities.get(id).cloned().unwrap_or_default())
+            }
+            common::direct_access::workspace::WorkspaceRelationshipField::Features => {
+                Ok(self.workspace_features.get(id).cloned().unwrap_or_default())
+            }
+            common::direct_access::workspace::WorkspaceRelationshipField::Global => {
+                Ok(self.workspaces.get(id).map(|w| vec![w.global]).unwrap_or_default())
+            }
         }
     }
     fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
@@ -151,13 +182,28 @@ fn for_file_feature_without_use_cases_errors() {
         use_cases: vec![],
     };
     uow.features.insert(10, feature);
+    let global = Global {
+        id: 3,
+        application_name: "App".into(),
+        language: "rust".into(),
+        organisation_name: "Org".into(),
+        organisation_domain: "org.com".into(),
+        prefix_path: "".into(),
+    };
+    uow.globals.insert(3, global);
+    let workspace = Workspace {
+        id: 2,
+        manifest_absolute_path: "".into(),
+        global: 3,
+        entities: vec![],
+        features: vec![10],
+    };
+    uow.workspaces.insert(2, workspace);
+    uow.workspace_features.insert(2, vec![10]);
     let root = Root {
         id: 1,
-        manifest_absolute_path: "".into(),
-        global: 0,
-        entities: vec![],
-        features: vec![],
-        files: vec![],
+        workspace: Some(2),
+        system: None,
     };
     uow.roots.insert(1, root);
     let res = SnapshotBuilder::for_file(&uow, 1, &Vec::new());
@@ -258,13 +304,28 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     uow.dto_fields.insert(500, df_in);
     uow.dto_fields.insert(501, df_out);
+    let global = Global {
+        id: 3,
+        application_name: "App".into(),
+        language: "rust".into(),
+        organisation_name: "Org".into(),
+        organisation_domain: "org.com".into(),
+        prefix_path: "".into(),
+    };
+    uow.globals.insert(3, global);
+    let workspace = Workspace {
+        id: 2,
+        manifest_absolute_path: "".into(),
+        global: 3,
+        entities: vec![],
+        features: vec![10],
+    };
+    uow.workspaces.insert(2, workspace);
+    uow.workspace_features.insert(2, vec![10]);
     let root = Root {
         id: 1,
-        manifest_absolute_path: "".into(),
-        global: 0,
-        entities: vec![],
-        features: vec![],
-        files: vec![],
+        workspace: Some(2),
+        system: None,
     };
     uow.roots.insert(1, root);
 
@@ -305,8 +366,8 @@ fn for_file_various_combinations_generate_expected_items() {
     };
     uow.entities.insert(1, ent_a.clone());
     uow.entities.insert(2, ent_b.clone());
-    // Root contains both entities (for entity: Some(0))
-    uow.root_entities = vec![1, 2];
+    // Workspace contains both entities (for entity: Some(0))
+    uow.workspace_entities.insert(2, vec![1, 2]);
 
     // DTOs for UC
     let dto_in = Dto {
@@ -343,13 +404,29 @@ fn for_file_various_combinations_generate_expected_items() {
         use_cases: vec![100],
     };
     uow.features.insert(200, feat.clone());
+    let global = Global {
+        id: 3,
+        application_name: "App".into(),
+        language: "rust".into(),
+        organisation_name: "Org".into(),
+        organisation_domain: "org.com".into(),
+        prefix_path: "".into(),
+    };
+    uow.globals.insert(3, global);
+    let workspace = Workspace {
+        id: 2,
+        manifest_absolute_path: "".into(),
+        global: 3,
+        entities: vec![1, 2],
+        features: vec![200],
+    };
+    uow.workspaces.insert(2, workspace);
+    uow.workspace_features.insert(2, vec![200]);
+    uow.workspace_entities.insert(2, vec![1, 2]);
     let root = Root {
         id: 1,
-        manifest_absolute_path: "".into(),
-        global: 0,
-        entities: vec![],
-        features: vec![],
-        files: vec![],
+        workspace: Some(2),
+        system: None,
     };
     uow.roots.insert(1, root);
 

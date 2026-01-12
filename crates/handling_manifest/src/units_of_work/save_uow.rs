@@ -2,7 +2,7 @@ use crate::use_cases::save_uc::{SaveUnitOfWorkFactoryTrait, SaveUnitOfWorkTrait}
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase};
+use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase, Workspace};
 use common::event::EventHub;
 use common::types::EntityId;
 use std::cell::RefCell;
@@ -37,6 +37,8 @@ impl QueryUnitOfWork for SaveUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]

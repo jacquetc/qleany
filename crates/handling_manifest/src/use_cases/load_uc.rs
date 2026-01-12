@@ -9,7 +9,7 @@ use common::{
     database::CommandUnitOfWork,
     entities::{
         Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, RelationshipType,
-        Root, UseCase,
+        Root, UseCase, Workspace, System,
     },
 };
 
@@ -20,6 +20,12 @@ pub trait LoadUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Root", action = "Create")]
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "Update")]
+#[macros::uow_action(entity = "Workspace", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "Update")]
+#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "System", action = "Get")]
+#[macros::uow_action(entity = "System", action = "Update")]
 #[macros::uow_action(entity = "Global", action = "Create")]
 #[macros::uow_action(entity = "Feature", action = "Create")]
 #[macros::uow_action(entity = "UseCase", action = "Create")]
@@ -114,6 +120,8 @@ impl LoadUseCase {
         let mut uow = self.uow_factory.create();
 
         uow.begin_transaction()?;
+        
+        let root_id = 1;
 
         // create global
         let global = uow.create_global(&Global {
@@ -126,16 +134,15 @@ impl LoadUseCase {
         })?;
         let global_id = global.id;
 
-        // create root
-        let root = uow.create_root(&Root {
+        // create workspace
+        let workspace = uow.create_workspace(&Workspace {
             id: 0,
-            manifest_absolute_path: path.to_string(),
+            manifest_absolute_path: path,
             global: global_id,
             entities: vec![],
             features: vec![],
-            files: vec![],
         })?;
-        let root_id = root.id;
+        let workspace_id = workspace.id;
 
         // create entities
         let mut entity_ids: Vec<EntityId> = vec![];
@@ -385,6 +392,19 @@ impl LoadUseCase {
             feature_ids.push(feature.id);
         }
 
+        // update workspace with all ids
+        // good practice to get the workspace again, to make sure it is not stale
+        let workspace = uow
+            .get_workspace(&workspace_id)?
+            .ok_or(anyhow::anyhow!("Workspace not found"))?;
+        let workspace = common::entities::Workspace {
+            id: workspace.id,
+            entities: entity_ids,
+            features: feature_ids.clone(),
+            ..workspace
+        };
+        uow.update_workspace(&workspace)?;
+
         // update root with all ids
         // good practice to get the root again, to make sure it is not stale
         let root = uow
@@ -392,16 +412,13 @@ impl LoadUseCase {
             .ok_or(anyhow::anyhow!("Root not found"))?;
         let root = Root {
             id: root.id,
-            manifest_absolute_path: root.manifest_absolute_path,
-            global: root.global,
-            entities: entity_ids,
-            features: feature_ids.clone(),
-            files: vec![],
+            workspace: Some(workspace_id),
+            system: root.system,
         };
         uow.update_root(&root)?;
 
         uow.commit()?;
 
-        Ok(LoadReturnDto { root_id })
+        Ok(LoadReturnDto { workspace_id })
     }
 }

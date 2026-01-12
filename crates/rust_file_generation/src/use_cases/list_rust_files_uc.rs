@@ -8,6 +8,10 @@ use common::{
     database::CommandUnitOfWork, entities::Feature, entities::File, entities::Global,
     entities::Relationship, entities::Root, entities::UseCase,
 };
+use common::direct_access::system::SystemRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
+use crate::use_cases::common::rust_code_generator::GenerationReadOps;
+use crate::use_cases::common::tools;
 
 pub trait ListRustFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn ListRustFilesUnitOfWorkTrait>;
@@ -15,7 +19,9 @@ pub trait ListRustFilesUnitOfWorkFactoryTrait {
 
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
-#[macros::uow_action(entity = "Root", action = "SetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "System", action = "GetRelationship")]
+#[macros::uow_action(entity = "System", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationship")]
@@ -45,16 +51,30 @@ impl ListRustFilesUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
-        // return if no root
-        let roots = uow.get_root_multi(&[])?;
-        if roots.is_empty() {
-            return Err(anyhow!("No root found"));
-        }
+        use anyhow::anyhow;
+        let roots = uow.get_root_multi(&vec![])?;
+        let root = roots
+            .into_iter()
+            .filter_map(|r| r)
+            .next()
+            .ok_or_else(|| anyhow!("Root entity not found"))?;
 
-        let root = roots.first().unwrap().clone().unwrap();
+        let all_workspace_ids = uow.get_root_relationship(
+            &root.id,
+            &common::direct_access::root::RootRelationshipField::Workspace
+        )?;
+
+        let workspace_id = all_workspace_ids.first().cloned().ok_or(anyhow!("No workspace found"))?;
+        
+        let all_system_ids = uow.get_root_relationship(
+            &root.id,
+            &common::direct_access::root::RootRelationshipField::System
+        )?;
+        
+        let system_id = all_system_ids.first().cloned().ok_or(anyhow!("No system found"))?;
 
         // Get global
-        let globals = uow.get_root_relationship(&root.id, &RootRelationshipField::Global)?;
+        let globals = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Global)?;
         let global_id = globals.first().ok_or(anyhow!("No global found"))?;
         let global = uow.get_global(&global_id)?;
         let global = global.ok_or(anyhow!("Global not found"))?;
@@ -62,9 +82,9 @@ impl ListRustFilesUseCase {
             return Err(anyhow!("Global language is not rust"));
         }
 
-        // remove all files from root
+        // remove all files from system
         let all_previous_files =
-            uow.get_root_relationship(&root.id, &RootRelationshipField::Files)?;
+            uow.get_system_relationship(&root.id, &SystemRelationshipField::Files)?;
         if !all_previous_files.is_empty() {
             uow.delete_file_multi(&all_previous_files)?;
         }
@@ -281,7 +301,7 @@ impl ListRustFilesUseCase {
         });
 
         // Get entities
-        let entities = uow.get_root_relationship(&root.id, &RootRelationshipField::Entities)?;
+        let entities = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
         let entities = uow.get_entity_multi(&entities)?;
 
         for entity in entities {
@@ -527,7 +547,7 @@ impl ListRustFilesUseCase {
         }
 
         // features:
-        let features = uow.get_root_relationship(&root.id, &RootRelationshipField::Features)?;
+        let features = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Features)?;
 
         let features = uow.get_feature_multi(&features)?;
 
@@ -709,9 +729,9 @@ impl ListRustFilesUseCase {
         //TODO: add files for UIs
 
         let created_files = uow.create_file_multi(&files)?;
-        uow.set_root_relationship(
-            &root.id,
-            &RootRelationshipField::Files,
+        uow.set_system_relationship(
+            &system_id,
+            &SystemRelationshipField::Files,
             &created_files
                 .iter()
                 .map(|f| f.id)

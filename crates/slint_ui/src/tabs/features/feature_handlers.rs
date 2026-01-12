@@ -6,12 +6,12 @@
 use std::sync::Arc;
 
 use common::direct_access::feature::FeatureRelationshipField;
-use common::direct_access::root::RootRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use slint::{ComponentHandle, Timer};
 
 use crate::app_context::AppContext;
-use crate::commands::{feature_commands, root_commands, undo_redo_commands};
+use crate::commands::{feature_commands, workspace_commands, undo_redo_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
@@ -131,19 +131,19 @@ pub fn subscribe_load_manifest_event(
     });
 }
 
-/// Subscribe to Root update events to refresh feature_cr_list
-pub fn subscribe_root_updated_event(
+/// Subscribe to Workspace update events to refresh feature_cr_list
+pub fn subscribe_workspace_updated_event(
     event_hub_client: &EventHubClient,
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(
-        Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
+        Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
         {
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |event| {
-                log::info!("Root updated event received (features tab): {:?}", event);
+                log::info!("Workspace updated event received (features tab): {:?}", event);
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
@@ -197,13 +197,13 @@ pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
     let app_weak = app.as_weak();
 
     if let Some(app) = app_weak.upgrade() {
-        let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
+        let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
 
-        if root_id > 0 {
-            let feature_ids_res = root_commands::get_root_relationship(
+        if workspace_id > 0 {
+            let feature_ids_res = workspace_commands::get_workspace_relationship(
                 &ctx,
-                &root_id,
-                &RootRelationshipField::Features,
+                &workspace_id,
+                &WorkspaceRelationshipField::Features,
             );
 
             match feature_ids_res {
@@ -242,7 +242,7 @@ pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to get root features: {}", e);
+                    log::error!("Failed to get workspace features: {}", e);
                 }
             }
         }
@@ -286,11 +286,11 @@ pub fn setup_features_reorder_callback(app: &App, app_context: &Arc<AppContext>)
                 let to = to_index as usize;
 
                 if let Some(app) = app_weak.upgrade() {
-                    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-                    let feature_ids_res = root_commands::get_root_relationship(
+                    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+                    let feature_ids_res = workspace_commands::get_workspace_relationship(
                         &ctx,
-                        &root_id,
-                        &RootRelationshipField::Features,
+                        &workspace_id,
+                        &WorkspaceRelationshipField::Features,
                     );
                     let mut feature_ids = feature_ids_res.unwrap_or_default();
 
@@ -305,15 +305,15 @@ pub fn setup_features_reorder_callback(app: &App, app_context: &Arc<AppContext>)
                     }
                     feature_ids.insert(insert_at, moving_feature_id);
 
-                    let result = root_commands::set_root_relationship(
+                    let result = workspace_commands::set_workspace_relationship(
                         &ctx,
                         Some(
                             app.global::<FeaturesTabState>()
                                 .get_features_undo_stack_id() as u64,
                         ),
-                        &direct_access::RootRelationshipDto {
-                            id: root_id,
-                            field: RootRelationshipField::Features,
+                        &direct_access::WorkspaceRelationshipDto {
+                            id: workspace_id,
+                            field: WorkspaceRelationshipField::Features,
                             right_ids: feature_ids,
                         },
                     );
@@ -436,9 +436,9 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
             let app_weak = app.as_weak();
             move || {
                 if let Some(app) = app_weak.upgrade() {
-                    let root_id = app.global::<AppState>().get_root_id();
-                    if root_id <= 0 {
-                        log::warn!("Cannot add feature: no root loaded");
+                    let workspace_id = app.global::<AppState>().get_workspace_id();
+                    if workspace_id <= 0 {
+                        log::warn!("Cannot add feature: no workspace loaded");
                         return;
                     }
 
@@ -458,11 +458,11 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         Ok(new_feature) => {
                             log::info!("Feature created successfully with id: {}", new_feature.id);
 
-                            // Get current feature ids from root
-                            let feature_ids_res = root_commands::get_root_relationship(
+                            // Get current feature ids from workspace
+                            let feature_ids_res = workspace_commands::get_workspace_relationship(
                                 &ctx,
-                                &(root_id as common::types::EntityId),
-                                &RootRelationshipField::Features,
+                                &(workspace_id as common::types::EntityId),
+                                &WorkspaceRelationshipField::Features,
                             );
 
                             match feature_ids_res {
@@ -470,14 +470,14 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                     // Add the new feature id to the list
                                     feature_ids.push(new_feature.id);
 
-                                    // Update the root relationship
-                                    let relationship_dto = direct_access::RootRelationshipDto {
-                                        id: root_id as common::types::EntityId,
-                                        field: RootRelationshipField::Features,
+                                    // Update the workspace relationship
+                                    let relationship_dto = direct_access::WorkspaceRelationshipDto {
+                                        id: workspace_id as common::types::EntityId,
+                                        field: WorkspaceRelationshipField::Features,
                                         right_ids: feature_ids,
                                     };
 
-                                    if let Err(e) = root_commands::set_root_relationship(
+                                    if let Err(e) = workspace_commands::set_workspace_relationship(
                                         &ctx,
                                         Some(
                                             app.global::<FeaturesTabState>()
@@ -487,19 +487,19 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                         &relationship_dto,
                                     ) {
                                         log::error!(
-                                            "Failed to add feature to root relationship: {}",
+                                            "Failed to add feature to workspace relationship: {}",
                                             e
                                         );
                                         undo_redo_commands::cancel_composite(&ctx);
                                     } else {
                                         log::info!(
-                                            "Feature added to root relationship successfully"
+                                            "Feature added to workspace relationship successfully"
                                         );
                                         undo_redo_commands::end_composite(&ctx);
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to get root features relationship: {}", e);
+                                    log::error!("Failed to get workspace features relationship: {}", e);
                                     undo_redo_commands::cancel_composite(&ctx);
                                 }
                             }

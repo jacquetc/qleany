@@ -1,8 +1,8 @@
 use super::dto_repository::DtoRelationshipField;
 use super::dto_repository::DtoTable;
 use super::dto_repository::DtoTableRO;
-use crate::database::Bincode;
 use crate::database::db_helpers;
+use crate::database::Bincode;
 use crate::entities::Dto;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

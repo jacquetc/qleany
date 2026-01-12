@@ -1,12 +1,12 @@
-use crate::database::Bincode;
 use crate::database::db_helpers;
+use crate::database::Bincode;
 use crate::entities::UseCase;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-use super::UseCaseRelationshipField;
 use super::use_case_repository::UseCaseTable;
 use super::use_case_repository::UseCaseTableRO;
+use super::UseCaseRelationshipField;
 
 const USE_CASE_TABLE: TableDefinition<EntityId, Bincode<UseCase>> =
     TableDefinition::new("use_case");

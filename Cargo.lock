@@ -2229,6 +2229,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "handling_app_lifecycle"
+version = "2.0.0"
+dependencies = [
+ "anyhow",
+ "common",
+ "macros",
+ "serde",
+]
+
+[[package]]
 name = "handling_manifest"
 version = "2.0.0"
 dependencies = [
@@ -4373,6 +4383,7 @@ dependencies = [
  "direct_access",
  "dirs",
  "env_logger",
+ "handling_app_lifecycle",
  "handling_manifest",
  "log",
  "rfd",

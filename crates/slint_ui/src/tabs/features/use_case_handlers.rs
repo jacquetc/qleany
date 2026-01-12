@@ -6,14 +6,14 @@
 use std::sync::Arc;
 
 use common::direct_access::feature::FeatureRelationshipField;
-use common::direct_access::root::RootRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{FeatureRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, feature_commands, root_commands, use_case_commands};
+use crate::commands::{entity_commands, feature_commands, workspace_commands, use_case_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
@@ -259,18 +259,18 @@ pub fn fill_use_case_entity_list(app: &App, app_context: &Arc<AppContext>) {
         return;
     }
 
-    // Get all entity IDs from root
-    let root_id = app.global::<AppState>().get_root_id() as common::types::EntityId;
-    let all_entity_ids_res = root_commands::get_root_relationship(
+    // Get all entity IDs from workspace
+    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+    let all_entity_ids_res = workspace_commands::get_workspace_relationship(
         app_context,
-        &root_id,
-        &RootRelationshipField::Entities,
+        &workspace_id,
+        &WorkspaceRelationshipField::Entities,
     );
 
     let all_entity_ids = match all_entity_ids_res {
         Ok(ids) => ids,
         Err(e) => {
-            log::error!("Failed to get all entities from root: {}", e);
+            log::error!("Failed to get all entities from workspace: {}", e);
             return;
         }
     };

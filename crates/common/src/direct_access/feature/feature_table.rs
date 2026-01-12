@@ -1,8 +1,8 @@
 use super::feature_repository::FeatureRelationshipField;
 use super::feature_repository::FeatureTable;
 use super::feature_repository::FeatureTableRO;
-use crate::database::Bincode;
 use crate::database::db_helpers;
+use crate::database::Bincode;
 use crate::entities::Feature;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

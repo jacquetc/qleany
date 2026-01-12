@@ -10,7 +10,7 @@ use handling_manifest::LoadDto;
 use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
-use crate::commands::{handling_manifest_commands, root_commands};
+use crate::commands::{handling_manifest_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ManifestCommands};
 use slint::Timer;
@@ -35,8 +35,8 @@ fn subscribe_loaded_event(
                         .set_error_message(slint::SharedString::from(""));
                     // set loading
                     app.global::<AppState>().set_is_loading(true);
-                    // set root_id
-                    app.global::<AppState>().set_root_id(event.ids[0] as i32);
+                    // set workspace_id
+                    app.global::<AppState>().set_workspace_id(event.ids[0] as i32);
 
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
@@ -67,8 +67,8 @@ fn subscribe_closed_event(
                     // clear any previous error
                     app.global::<AppState>()
                         .set_error_message(slint::SharedString::from(""));
-                    // set root_id
-                    app.global::<AppState>().set_root_id(-1);
+                    // set workspace_id
+                    app.global::<AppState>().set_workspace_id(-1);
 
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
@@ -97,8 +97,8 @@ fn subscribe_new_manifest_event(
                     // clear any previous error
                     app.global::<AppState>()
                         .set_error_message(slint::SharedString::from(""));
-                    // set root_id
-                    app.global::<AppState>().set_root_id(event.ids[0] as i32);
+                    // set workspace_id
+                    app.global::<AppState>().set_workspace_id(event.ids[0] as i32);
 
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
@@ -276,21 +276,21 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
         move || {
             log::info!("Save Manifest clicked");
 
-            let root_id = app_weak
+            let workspace_id = app_weak
                 .upgrade()
-                .map_or(0, |app| app.global::<AppState>().get_root_id() as u64);
-            if root_id < 1 {
+                .map_or(0, |app| app.global::<AppState>().get_workspace_id() as u64);
+            if workspace_id < 1 {
                 log::error!("No manifest is currently loaded, cannot save");
                 return;
             }
-            let root = root_commands::get_root(&ctx, &root_id as &common::types::EntityId)
+            let workspace = workspace_commands::get_workspace(&ctx, &workspace_id as &common::types::EntityId)
                 .ok()
                 .flatten();
-            if root.is_none() {
-                log::error!("Failed to get root entity for id {}", root_id);
+            if workspace.is_none() {
+                log::error!("Failed to get workspace entity for id {}", workspace_id);
                 return;
             }
-            let manifest_absolute_path = root.unwrap().manifest_absolute_path;
+            let manifest_absolute_path = workspace.unwrap().manifest_absolute_path;
             log::info!("Saving manifest to path: {}", manifest_absolute_path);
 
             // add "qleany.yaml" if manifest_absolute_path is a directory
@@ -387,7 +387,7 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                     }
                 }
 
-                // Load the qleany.yaml from the project root
+                // Load the qleany.yaml from the project workspace
                 let load_dto = LoadDto {
                     manifest_path: "qleany.yaml".to_string(),
                 };
@@ -398,8 +398,8 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                         app.global::<AppState>()
                             .set_error_message(slint::SharedString::from(""));
 
-                        // set root_id
-                        app.global::<AppState>().set_root_id(result.root_id as i32);
+                        // set workspace_id
+                        app.global::<AppState>().set_workspace_id(result.workspace_id as i32);
 
                         // set loading
                         app.global::<AppState>().set_is_loading(true);

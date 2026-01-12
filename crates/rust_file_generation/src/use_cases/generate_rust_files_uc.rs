@@ -9,6 +9,7 @@ use common::long_operation::LongOperation;
 use common::types::EntityId;
 use std::path::PathBuf;
 use std::sync::Arc;
+use crate::use_cases::common::tools;
 
 pub trait GenerateRustFilesUnitOfWorkFactoryTrait: Send + Sync {
     fn create(&self) -> Box<dyn GenerateRustFilesUnitOfWorkTrait>;
@@ -69,13 +70,7 @@ impl LongOperation for GenerateRustFilesUseCase {
         let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
 
         let root_path: PathBuf = if self.dto.root_path.is_empty() || self.dto.root_path == "." {
-            let manifest_absolute_path = uow_read
-                .get_root_multi(&vec![])?
-                .into_iter()
-                .filter_map(|r| r)
-                .next()
-                .ok_or_else(|| anyhow!("Root entity not found"))?
-                .manifest_absolute_path;
+            let manifest_absolute_path = tools::get_workspace(uow_read)?.manifest_absolute_path;
             PathBuf::from(manifest_absolute_path)
         } else {
             PathBuf::from(&self.dto.root_path)

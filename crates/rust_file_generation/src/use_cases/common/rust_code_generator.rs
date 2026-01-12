@@ -1,6 +1,7 @@
 mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
+use common::entities::Workspace;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
@@ -14,10 +15,14 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
+use common::entities::Strength::Weak;
+use crate::use_cases::common::tools;
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
@@ -242,16 +247,6 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
-    fn get_root_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
-        use anyhow::anyhow;
-        let roots = uow.get_root_multi(&vec![])?;
-        let root = roots
-            .into_iter()
-            .filter_map(|r| r)
-            .next()
-            .ok_or_else(|| anyhow!("Root entity not found"))?;
-        Ok(root.id)
-    }
 
     fn get_entity_vm(
         uow: &dyn GenerationReadOps,
@@ -349,14 +344,15 @@ impl SnapshotBuilder {
             relationships_map.insert(rel.id, rel);
         }
 
-        // Additionally, scan all entities from root to discover relationships that reference this
+
+        // Additionally, scan all entities from workspace to discover relationships that reference this
         // entity as the right side (backward relationships) but may not be listed on this entity.
         // This mirrors broader snapshot building behavior where backward rels are gathered from peers.
-        let root_id: EntityId = SnapshotBuilder::get_root_id(uow)?;
-        let all_entity_ids = uow.get_root_relationship(
-            &root_id,
-            &common::direct_access::root::RootRelationshipField::Entities,
+        let all_entity_ids = uow.get_workspace_relationship(
+            &tools::get_workspace_id(uow)?,
+            &common::direct_access::workspace::WorkspaceRelationshipField::Entities,
         )?;
+
         if !all_entity_ids.is_empty() {
             let all_entities = uow.get_entity_multi(&all_entity_ids)?;
             let mut extra_rel_ids: HashSet<EntityId> = HashSet::new();
@@ -464,10 +460,11 @@ impl SnapshotBuilder {
             }
         }
 
-        let root_id: EntityId = SnapshotBuilder::get_root_id(uow)?;
-        let global_ids = uow.get_root_relationship(
-            &root_id,
-            &common::direct_access::root::RootRelationshipField::Global,
+        let workspace_id = tools::get_workspace_id(uow)?;
+
+        let global_ids = uow.get_workspace_relationship(
+            &workspace_id,
+            &common::direct_access::workspace::WorkspaceRelationshipField::Global,
         )?;
 
         let global = uow
@@ -491,9 +488,9 @@ impl SnapshotBuilder {
         if let Some(feature_id) = file.feature {
             if feature_id == 0 {
                 // Load all features via Root -> Features
-                let feature_ids = uow.get_root_relationship(
-                    &root_id,
-                    &common::direct_access::root::RootRelationshipField::Features,
+                let feature_ids = uow.get_workspace_relationship(
+                    &workspace_id,
+                    &common::direct_access::workspace::WorkspaceRelationshipField::Features,
                 )?;
                 let feats = uow.get_feature_multi(&feature_ids)?;
                 for feat_opt in feats.into_iter().filter_map(|f| f) {
@@ -662,9 +659,9 @@ impl SnapshotBuilder {
         if let Some(entity_id) = file.entity {
             if entity_id == 0 {
                 // Load all entities via Root -> Entities
-                let entity_ids = uow.get_root_relationship(
-                    &root_id,
-                    &common::direct_access::root::RootRelationshipField::Entities,
+                let entity_ids = uow.get_workspace_relationship(
+                    &workspace_id,
+                    &common::direct_access::workspace::WorkspaceRelationshipField::Entities,
                 )?;
                 let ents = uow.get_entity_multi(&entity_ids)?;
                 for ent_opt in ents.into_iter().filter_map(|e| e) {

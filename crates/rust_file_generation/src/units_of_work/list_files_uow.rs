@@ -73,7 +73,9 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
-#[macros::uow_action(entity = "Root", action = "SetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "System", action = "GetRelationship")]
+#[macros::uow_action(entity = "System", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationship")]

@@ -1173,7 +1173,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => unreachable!(),
     };
 
-    // Ajoute la méthode au trait ou à l'implémentation
+    // 
     let item_impl = match item_type {
         ItemType::Trait(mut item_trait) => {
             // Ajoute la méthode au trait

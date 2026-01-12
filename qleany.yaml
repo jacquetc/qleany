@@ -21,9 +21,9 @@ entities:
   inherits_from: EntityBase
   allow_direct_access: false
   fields:
-  - name: main
+  - name: workspace
     type: entity
-    entity: Main
+    entity: Workspace
     relationship: one_to_one
     required: false
     strong: true
@@ -34,10 +34,13 @@ entities:
     required: false
     strong: true
   undoable: false
-- name: Main
+- name: Workspace
   inherits_from: EntityBase
   allow_direct_access: true
   fields:
+  - name: manifest_absolute_path
+    type: string
+    required: true
   - name: global
     type: entity
     entity: Global
@@ -126,13 +129,13 @@ entities:
     required: true
     enum_name: FieldType
     enum_values:
-    - Bool
-    - Int
-    - Uint
+    - Boolean
+    - Integer
+    - UInteger
     - Float
     - String
     - Uuid
-    - Datetime
+    - DateTime
     - Entity
     - Enum
   - name: entity
@@ -359,6 +362,18 @@ entities:
     - Unordered
   undoable: true
 features:
+- name: handling_app_lifecycle
+  use_cases:
+  - name: initialize_app
+    validator: false
+    entities:
+    - Root
+    undoable: false
+  - name: clean_up_before_exit
+    validator: false
+    entities:
+    - Root
+    undoable: false
 - name: handling_manifest
   use_cases:
   - name: load
@@ -405,7 +420,6 @@ features:
   - name: new
     validator: false
     entities:
-    - Root
     - Entity
     - Field
     - Global
@@ -413,7 +427,7 @@ features:
     dto_out:
       name: NewReturnDto
       fields:
-      - name: root_id
+      - name: workspace_id
         type: integer
   - name: close
     validator: false

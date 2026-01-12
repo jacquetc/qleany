@@ -2,10 +2,10 @@
 // as changes will be lost.
 
 use crate::types::EntityId;
-use flume::{Receiver, Sender, unbounded};
+use flume::{unbounded, Receiver, Sender};
 use serde::Serialize;
 use std::{
-    sync::{Arc, Mutex, atomic::AtomicBool},
+    sync::{atomic::AtomicBool, Arc, Mutex},
     thread,
 };
 
@@ -43,16 +43,24 @@ pub enum LongOperationEvent {
 pub enum DirectAccessEntity {
     All(AllEvent),
 
+    Dto(EntityEvent),
+    DtoField(EntityEvent),
     Global(EntityEvent),
     Relationship(EntityEvent),
     Root(EntityEvent),
+    Workspace(EntityEvent),
+    System(EntityEvent),
     Entity(EntityEvent),
     Field(EntityEvent),
     Feature(EntityEvent),
     File(EntityEvent),
     UseCase(EntityEvent),
-    Dto(EntityEvent),
-    DtoField(EntityEvent),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum HandlingAppLifecycleEvent {
+    InitializeApp,
+    CleanUpBeforeExit,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -76,6 +84,7 @@ pub enum Origin {
     UndoRedo(UndoRedoEvent),
     LongOperation(LongOperationEvent),
 
+    HandlingAppLifecycle(HandlingAppLifecycleEvent),
     HandlingManifest(HandlingManifestEvent),
     RustFileGeneration(RustFileGenerationEvent),
 }
@@ -93,24 +102,29 @@ impl Event {
             Origin::DirectAccess(entity) => match entity {
                 DirectAccessEntity::All(event) => format!("direct_access_all_{:?}", event),
                 // entities
+                DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
+                DirectAccessEntity::DtoField(event) => {
+                    format!("direct_access_dto_field_{:?}", event)
+                }
                 DirectAccessEntity::Global(event) => format!("direct_access_global_{:?}", event),
                 DirectAccessEntity::Relationship(event) => {
                     format!("direct_access_relationship_{:?}", event)
                 }
                 DirectAccessEntity::Root(event) => format!("direct_access_root_{:?}", event),
+                DirectAccessEntity::Workspace(event) => {
+                    format!("direct_access_workspace_{:?}", event)
+                }
+                DirectAccessEntity::System(event) => format!("direct_access_system_{:?}", event),
                 DirectAccessEntity::Entity(event) => format!("direct_access_entity_{:?}", event),
                 DirectAccessEntity::Field(event) => format!("direct_access_field_{:?}", event),
                 DirectAccessEntity::Feature(event) => format!("direct_access_feature_{:?}", event),
                 DirectAccessEntity::File(event) => format!("direct_access_file_{:?}", event),
                 DirectAccessEntity::UseCase(event) => format!("direct_access_use_case_{:?}", event),
-                DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
-                DirectAccessEntity::DtoField(event) => {
-                    format!("direct_access_dto_field_{:?}", event)
-                }
             },
             Origin::UndoRedo(event) => format!("undo_redo_{:?}", event),
             Origin::LongOperation(event) => format!("long_operation_{:?}", event),
             // features
+            Origin::HandlingAppLifecycle(event) => format!("handling_app_lifecycle_{:?}", event),
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
             Origin::RustFileGeneration(event) => format!("rust_file_generation_{:?}", event),
         }
@@ -141,17 +155,14 @@ impl EventHub {
     pub fn start_event_loop(&self, stop_signal: Arc<AtomicBool>) {
         let receiver = self.receiver.clone();
         let queue = self.queue.clone();
-        thread::spawn(move || {
-            loop {
-                if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
-                    break;
-                }
-
-                if let Ok(event) = receiver.recv() {
-                    let mut queue = queue.lock().unwrap();
-                    queue.push(event.clone());
-                }
+        thread::spawn(move || loop {
+            if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
             }
+
+            let event = receiver.recv().unwrap();
+            let mut queue = queue.lock().unwrap();
+            queue.push(event.clone());
         });
     }
 

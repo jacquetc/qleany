@@ -1,9 +1,9 @@
 use crate::cli::LanguageOption;
 use crate::app_context::AppContext;
-use common::direct_access::root::RootRelationshipField;
-use direct_access::{global_controller, root_controller};
+use direct_access::{global_controller, workspace_controller};
 use handling_manifest::handling_manifest_controller;
 use std::sync::Arc;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 
 pub fn execute(
     app_context: &Arc<AppContext>,
@@ -17,17 +17,18 @@ pub fn execute(
 
     // set language if provided
     if let Some(lang) = language {
-        let root_id = return_dto.root_id;
         let lang_str = match lang {
             LanguageOption::Rust => "rust",
             LanguageOption::CppQt => "cpp-qt",
         }
         .to_string();
+        
+        let workspace_id = return_dto.workspace_id;
 
-        let global_id_vec = root_controller::get_relationship(
+        let global_id_vec = workspace_controller::get_relationship(
             &app_context.db_context,
-            &root_id,
-            &RootRelationshipField::Global,
+            &workspace_id,
+            &WorkspaceRelationshipField::Global,
         )
         .map_err(|e| format!("Error while getting root relationship: {:?}", e))
         .unwrap();
@@ -35,7 +36,7 @@ pub fn execute(
         let global_id = match global_id_vec.first() {
             Some(id) => id.clone(),
             None => {
-                panic!("No global found for root id: {:?}", root_id);
+                panic!("No global found for workspace id: {:?}", workspace_id);
             }
         };
 

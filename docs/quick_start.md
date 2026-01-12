@@ -410,4 +410,6 @@ The generated code is yours. Modify it, extend it, or regenerate when you add ne
 - [Regeneration Workflow](docs/regeneration-workflow.md) — How file generation works, what gets overwritten
 - [Undo-Redo Architecture](docs/undo-redo-architecture.md) — Entity tree structure, undoable vs non-undoable
 - [QML Integration](docs/qml-integration.md) — Reactive models and mocks for C++/Qt
+- [Mobile Development](docs/mobile-development.md) — Plasma Mobile, Ubuntu Touch, cross-platform deployment
 - [Generated Infrastructure](docs/generated-code.md) — Database layer, event system, file organization
+- [Troubleshooting](docs/troubleshooting.md) — Common issues and how to fix them

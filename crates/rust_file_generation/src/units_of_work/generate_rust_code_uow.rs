@@ -5,6 +5,7 @@ use crate::use_cases::generate_rust_code_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::entities::Workspace;
 use common::entities::Dto;
 use common::entities::DtoField;
 use common::entities::Entity;
@@ -49,6 +50,8 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]

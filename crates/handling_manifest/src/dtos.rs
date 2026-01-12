@@ -7,7 +7,7 @@ pub struct LoadDto {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoadReturnDto {
-    pub root_id: u64,
+    pub workspace_id: u64,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SaveDto {
@@ -15,5 +15,5 @@ pub struct SaveDto {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NewReturnDto {
-    pub root_id: u64,
+    pub workspace_id: u64,
 }

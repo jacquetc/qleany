@@ -3,8 +3,8 @@ use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, RelationshipType, Root,
-    UseCase,
+    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root,
+    UseCase, Workspace,
 };
 use common::types::EntityId;
 
@@ -14,6 +14,8 @@ pub trait SaveUnitOfWorkFactoryTrait {
 
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]
@@ -47,18 +49,22 @@ impl SaveUseCase {
             return Err(anyhow::anyhow!("No root found"));
         }
         let root = &roots[0].as_ref().ok_or(anyhow::anyhow!("Root is None"))?;
+        // get workspace
+        let workspace = uow
+            .get_workspace(&root.workspace.ok_or(anyhow::anyhow!("Workspace ID is None"))?)?
+            .ok_or(anyhow::anyhow!("Workspace not found"))?;
 
         // Get global
         let global = uow
-            .get_global(&root.global)?
+            .get_global(&workspace.global)?
             .ok_or(anyhow::anyhow!("Global not found"))?;
 
         // Get entities
-        let entities = uow.get_entity_multi(&root.entities)?;
+        let entities = uow.get_entity_multi(&workspace.entities)?;
         let entities = entities.into_iter().flatten().collect::<Vec<Entity>>();
 
         // Get features
-        let features = uow.get_feature_multi(&root.features)?;
+        let features = uow.get_feature_multi(&workspace.features)?;
         let features = features.into_iter().flatten().collect::<Vec<Feature>>();
 
         // Get all fields

@@ -1,4 +1,4 @@
-//! Generate tab - Rust file generation UI logic
+ //! Generate tab - Rust file generation UI logic
 //!
 //! This module handles the Generate tab functionality including:
 //! - Listing rust files to be generated

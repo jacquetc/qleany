@@ -1,9 +1,8 @@
+use common::entities::{File, Workspace};
 use crate::use_cases::close_uc::{CloseUnitOfWorkFactoryTrait, CloseUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::direct_access::repository_factory;
-use common::entities::Root;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -62,8 +61,10 @@ impl CommandUnitOfWork for CloseUnitOfWork {
     }
 }
 
-#[macros::uow_action(entity = "Root", action = "Delete")]
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "System", action = "GetRelationship")]
+#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "GetMulti")]
+#[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
 impl CloseUnitOfWorkTrait for CloseUnitOfWork {}
 
 pub struct CloseUnitOfWorkFactory {

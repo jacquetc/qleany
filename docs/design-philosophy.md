@@ -81,7 +81,7 @@ src/
 **Benefits:**
 - **Discoverability** — Find all Binder code in one folder
 - **Cohesion** — Related code changes together
-- **Fewer files** — Same 17-entity project produces ~200 files
+- **Fewer files** — Same 17-entity project produces ~600 files across ~80 folders
 - **Easier onboarding** — New developers understand features, not layers
 
 ### Why Vertical Slices?

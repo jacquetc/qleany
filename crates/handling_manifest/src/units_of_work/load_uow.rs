@@ -4,7 +4,7 @@ use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::direct_access::repository_factory;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase,
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, Workspace, System,
 };
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
@@ -67,6 +67,12 @@ impl CommandUnitOfWork for LoadUnitOfWork {
 #[macros::uow_action(entity = "Root", action = "Create")]
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "Update")]
+#[macros::uow_action(entity = "Workspace", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "Update")]
+#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "System", action = "Get")]
+#[macros::uow_action(entity = "System", action = "Update")]
 #[macros::uow_action(entity = "Global", action = "Create")]
 #[macros::uow_action(entity = "Feature", action = "Create")]
 #[macros::uow_action(entity = "UseCase", action = "Create")]

@@ -1,13 +1,16 @@
 use crate::NewReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
-use common::entities::{Entity, Field, FieldType, Global, Root};
+use common::direct_access::root::RootRelationshipField;
+use common::entities::{Entity, Field, FieldType, Global, Root, Workspace, System};
 use common::types::EntityId;
 
 pub trait NewUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn NewUnitOfWorkTrait>;
 }
-#[macros::uow_action(entity = "Root", action = "CreateMulti")]
+#[macros::uow_action(entity = "Root", action = "Get")]
+#[macros::uow_action(entity = "Root", action = "SetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "CreateMulti")]
 #[macros::uow_action(entity = "Global", action = "CreateMulti")]
 #[macros::uow_action(entity = "Entity", action = "CreateMulti")]
 #[macros::uow_action(entity = "Field", action = "CreateMulti")]
@@ -108,21 +111,26 @@ impl NewUseCase {
         };
 
         let created_global = uow.create_global_multi(&vec![global])?;
-
-        let root = Root {
+        
+        let workspace = Workspace {
             id: 0,
             manifest_absolute_path: "".to_string(),
             global: created_global[0].id,
             entities: vec![created_entity[0].id, created_root_entity[0].id],
             features: vec![],
-            files: vec![],
         };
 
-        let created_root = uow.create_root_multi(&vec![root])?;
+        let created_workspace = uow.create_workspace_multi(&vec![workspace])?;
+        
+        let mut root = uow.get_root(&1)?.ok_or(anyhow!("Root entity not found"))?;
+        
+        root.workspace = Some(created_workspace[0].id);
+        
+        uow.set_root_relationship(&root.id, &RootRelationshipField::Workspace, &vec![created_workspace[0].id])?;
 
         uow.commit()?;
         Ok(NewReturnDto {
-            root_id: created_root[0].id,
+            workspace_id: created_workspace[0].id,
         })
     }
 }

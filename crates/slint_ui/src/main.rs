@@ -27,6 +27,17 @@ fn main() {
 
     // Create the application context (backend state)
     let app_context = Arc::new(AppContext::new());
+    
+    // Initialize the application (e.g. prepare database, load settings)
+    match commands::handling_app_lifecycle_commands::initialize_app(&app_context) {
+        Ok(()) => {
+            log::info!("Application initialized successfully");
+        }
+        Err(e) => {
+            log::error!("Failed to initialize application: {}", e); 
+            return;
+        }
+    }
 
     if let Some(_args) = run_cli(&app_context){
        run_slint(&app_context);
@@ -34,6 +45,14 @@ fn main() {
 
     // Cleanup on exit
     log::info!("Shutting down");
+    match commands::handling_app_lifecycle_commands::clean_up_before_exit(&app_context) {
+        Ok(()) => {
+            log::info!("Application cleaned up successfully");
+        }
+        Err(e) => {
+            log::error!("Failed to clean up application: {}", e); 
+        }
+    }
     app_context.shutdown();
 }
 
