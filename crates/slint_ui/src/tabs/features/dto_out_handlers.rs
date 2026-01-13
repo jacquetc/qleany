@@ -9,14 +9,44 @@ use common::direct_access::dto::DtoRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
-
+use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use crate::app_context::AppContext;
 use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
-use crate::{App, FeaturesTabState, ListItem};
-
+use crate::{App, AppState, FeaturesTabState, ListItem};
+use crate::event_hub_client::EventHubClient;
+use crate::tabs::features::use_case_handlers::fill_use_case_list;
 use super::dto_in_handlers::{
     dto_field_type_to_index, index_to_dto_field_type, update_dto_field_helper, update_dto_helper,
 };
+
+
+pub fn subscribe_dto_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Dto updated event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            fill_dto_out_field_list(&app, &ctx);
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+                    }
+                });
+            }
+        },
+    )
+}
 
 /// Helper function to fill DTO Out form from DtoDto
 pub fn fill_dto_out_form(app: &App, dto: &direct_access::DtoDto) {
