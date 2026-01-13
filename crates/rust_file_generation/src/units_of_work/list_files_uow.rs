@@ -1,3 +1,4 @@
+use common::entities::UserInterface;
 use crate::use_cases::list_rust_files_uc::{
     ListRustFilesUnitOfWorkFactoryTrait, ListRustFilesUnitOfWorkTrait,
 };
@@ -77,6 +78,7 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "UserInterface", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationship")]
 #[macros::uow_action(entity = "Relationship", action = "GetMulti")]

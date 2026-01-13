@@ -1,3 +1,4 @@
+use common::entities::UserInterface;
 use crate::{ListRustFilesDto, ListRustFilesReturnDto};
 use anyhow::{Result, anyhow};
 use common::direct_access::feature::FeatureRelationshipField;
@@ -23,6 +24,7 @@ pub trait ListRustFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "SetRelationship")]
 #[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "UserInterface", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationship")]
 #[macros::uow_action(entity = "Relationship", action = "GetMulti")]
@@ -81,6 +83,11 @@ impl ListRustFilesUseCase {
         if global.language != "rust" {
             return Err(anyhow!("Global language is not rust"));
         }
+
+        // ui
+        let user_interfaces = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::UserInterface)?;
+        let ui_id = user_interfaces.first().ok_or(anyhow!("No user interface found"))?;
+        let ui = uow.get_user_interface(&ui_id)?.ok_or(anyhow!("User interface not found"))?;
 
         // remove all files from system
         let all_previous_files =
@@ -704,29 +711,37 @@ impl ListRustFilesUseCase {
             use_case: None,
         });
 
-        files.push(File {
-            id: 0,
-            name: "Cargo.toml".to_string(),
-            relative_path: "crates/cli/".to_string(),
-            group: "cli".to_string(),
-            template_name: "cli_cargo".to_string(),
-            feature: None,
-            entity: None,
-            use_case: None,
-        });
+        if ui.rust_cli {
 
-        files.push(File {
-            id: 0,
-            name: "main.rs".to_string(),
-            relative_path: "crates/cli/src/".to_string(),
-            group: "cli".to_string(),
-            template_name: "cli_main".to_string(),
-            feature: None,
-            entity: None,
-            use_case: None,
-        });
+            files.push(File {
+                id: 0,
+                name: "Cargo.toml".to_string(),
+                relative_path: "crates/cli/".to_string(),
+                group: "cli".to_string(),
+                template_name: "cli_cargo".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
 
-        //TODO: add files for UIs
+            files.push(File {
+                id: 0,
+                name: "main.rs".to_string(),
+                relative_path: "crates/cli/src/".to_string(),
+                group: "cli".to_string(),
+                template_name: "cli_main".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+        }
+
+        if ui.rust_slint {
+
+
+            //TODO: add files for UIs
+
+        }
 
         let created_files = uow.create_file_multi(&files)?;
         uow.set_system_relationship(
