@@ -1,0 +1,12 @@
+name: DCO Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dco:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check DCO
+        uses: dcoapp/app@v1

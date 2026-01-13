@@ -1,7 +1,15 @@
-The files in this repository are subject to the terms of the Mozilla Public License Version 2.0 (MPL-2.0). A copy of the MPL-2.0 is available at http://mozilla.org/MPL/2.0/.
-// SPDX-License-Identifier: MPL-2.0
+Copyright (c) 2024-2025 FernTech
+SPDX-License-Identifier: MPL-2.0
 
-The generated files are NOT subject to the terms of the Mozilla Public License Version 2.0 (MPL-2.0). They are your own work and you can license them under any terms you choose.
+The files in this repository are subject to the terms of the Mozilla Public
+License Version 2.0 (MPL-2.0). A copy of the MPL-2.0 is available at
+http://mozilla.org/MPL/2.0/.
+
+The generated files are NOT subject to the terms of the Mozilla Public
+License Version 2.0 (MPL-2.0). They are your own work and you can license
+them under any terms you choose.
+
+---
 
 Mozilla Public License Version 2.0
 ==================================
