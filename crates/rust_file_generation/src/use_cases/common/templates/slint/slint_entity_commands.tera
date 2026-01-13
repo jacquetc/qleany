@@ -4,9 +4,12 @@
 //! {{ entity.pascal_name }} entity commands for Slint UI
 
 use crate::app_context::AppContext;
+{%- if entity.forward_relationships %}
 use common::direct_access::{{ entity.snake_name }}::{{ entity.pascal_name }}RelationshipField;
+use direct_access::{{ entity.pascal_name }}RelationshipDto;
+{%- endif %}
+use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.snake_name }}_controller};
 use common::types::EntityId;
-use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.pascal_name }}RelationshipDto, {{ entity.snake_name }}_controller};
 
 /// Create a new {{ entity.snake_name }} entity
 pub fn create_{{ entity.snake_name }}(
@@ -177,7 +180,7 @@ pub fn remove_{{ entity.snake_name }}_multi(
     {% endif %}
 }
 
-{% if s.entities[e].forward_relationships %}
+{% if entity.forward_relationships %}
 
 /// Get a {{ entity.snake_name }} relationship
 pub fn get_{{ entity.snake_name }}_relationship(
