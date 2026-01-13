@@ -1,7 +1,5 @@
 //! Commands module - cleanly separated command handlers for Slint UI
 //!
-//! This module structure mirrors the Tauri implementation's command organization,
-//! providing a clean separation of concerns for different entity types and operations.
 
 pub mod dto_commands;
 pub mod dto_field_commands;

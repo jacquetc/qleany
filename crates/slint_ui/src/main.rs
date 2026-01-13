@@ -1,11 +1,3 @@
-//! Qleany Slint UI Application
-//!
-//! This application adapts the Tauri+React architecture to Slint:
-//! - Clean separation of commands in dedicated modules
-//! - Event passing from backend to UI via EventHubClient
-//! - AppContext for shared state management
-//! - Global singletons for UI state and commands
-
 mod app_context;
 mod commands;
 mod event_hub_client;
@@ -64,9 +56,6 @@ fn run_slint(app_context: &Arc<AppContext>) {
 
     // Create the Slint UI
     let app = App::new().unwrap();
-
-    // Initialize global AppState (defaults are set in globals.slint, but we can override here if needed)
-    // The globals are already initialized with defaults in globals.slint
 
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&event_hub_client, &app, &app_context);

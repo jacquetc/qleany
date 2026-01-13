@@ -1,0 +1,221 @@
+{% set e = s.file.inner.entity %}
+{% if e %}
+{% set entity = s.entities[e] %}
+//! {{ entity.pascal_name }} entity commands for Slint UI
+
+use crate::app_context::AppContext;
+use common::direct_access::{{ entity.snake_name }}::{{ entity.pascal_name }}RelationshipField;
+use common::types::EntityId;
+use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.pascal_name }}RelationshipDto, {{ entity.snake_name }}_controller};
+
+/// Create a new {{ entity.snake_name }} entity
+pub fn create_{{ entity.snake_name }}(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dto: &Create{{ entity.pascal_name }}Dto,
+) -> Result<{{ entity.pascal_name }}Dto, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::create(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dto,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::create(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dto,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error creating {{ entity.snake_name }}: {:?}", e))
+}
+
+/// Create multiple {{ entity.snake_name }} entities
+pub fn create_{{ entity.snake_name }}_multi(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dtos: &[Create{{ entity.pascal_name }}Dto],
+) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::create_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dtos,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::create_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dtos,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error creating entities: {:?}", e))
+}
+
+/// Get a {{ entity.snake_name }} entity by ID
+pub fn get_{{ entity.snake_name }}(ctx: &AppContext, id: &EntityId) -> Result<Option<{{ entity.pascal_name }}Dto>, String> {
+    {{ entity.snake_name }}_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting {{ entity.snake_name }}: {:?}", e))
+}
+
+/// Get multiple {{ entity.snake_name }} entities by IDs
+pub fn get_{{ entity.snake_name }}_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<{{ entity.pascal_name }}Dto>>, String> {
+    {{ entity.snake_name }}_controller::get_multi(&ctx.db_context, ids)
+        .map_err(|e| format!("Error getting entities: {:?}", e))
+}
+
+/// Update a {{ entity.snake_name }} entity
+pub fn update_{{ entity.snake_name }}(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dto: &{{ entity.pascal_name }}Dto,
+) -> Result<{{ entity.pascal_name }}Dto, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::update(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dto,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::update(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dto,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error updating {{ entity.snake_name }}: {:?}", e))
+}
+
+/// Update multiple {{ entity.snake_name }} entities
+pub fn update_{{ entity.snake_name }}_multi(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dtos: &[{{ entity.pascal_name }}Dto],
+) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::update_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dtos,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::update_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dtos,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error updating entities: {:?}", e))
+}
+
+/// Remove a {{ entity.snake_name }} entity by ID
+pub fn remove_{{ entity.snake_name }}(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    id: &EntityId,
+) -> Result<(), String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    let result = {{ entity.snake_name }}_controller::remove(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        id,
+    )
+    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
+    {% else %}
+    {{ entity.snake_name }}_controller::remove(
+        &ctx.db_context,
+        &ctx.event_hub,
+        id,
+    )
+    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e))
+    {% endif %}
+}
+
+/// Remove multiple {{ entity.snake_name }} entities by IDs
+pub fn remove_{{ entity.snake_name }}_multi(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    ids: &[EntityId],
+) -> Result<(), String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    let result = {{ entity.snake_name }}_controller::remove_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        ids,
+    )
+    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e));
+
+    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    result
+    {% else %}
+    {{ entity.snake_name }}_controller::remove_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        ids,
+    )
+    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e))
+    {% endif %}
+}
+
+{% if s.entities[e].forward_relationships %}
+
+/// Get a {{ entity.snake_name }} relationship
+pub fn get_{{ entity.snake_name }}_relationship(
+    ctx: &AppContext,
+    id: &EntityId,
+    field: &{{ entity.pascal_name }}RelationshipField,
+) -> Result<Vec<EntityId>, String> {
+    {{ entity.snake_name }}_controller::get_relationship(&ctx.db_context, id, field)
+        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship: {:?}", e))
+}
+
+/// Set a {{ entity.snake_name }} relationship
+pub fn set_{{ entity.snake_name }}_relationship(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dto: &{{ entity.pascal_name }}RelationshipDto,
+) -> Result<(), String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::set_relationship(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dto,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::set_relationship(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dto,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error setting {{ entity.snake_name }} relationship: {:?}", e))
+}
+
+{% endif %}
+
+{% else %}
+// No entity bound to this file
+{% endif %}

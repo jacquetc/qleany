@@ -11,7 +11,7 @@ use crate::{
 use anyhow::Result;
 use common::event::RustFileGenerationEvent::ListRustFiles;
 use common::event::{Event, Origin};
-use common::long_operation::LongOperationManager;
+use common::long_operation::{LongOperationManager, OperationProgress};
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
@@ -52,6 +52,13 @@ pub fn generate_rust_files(
     let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)
+}
+
+pub fn get_generate_rust_files_progress(
+    long_operation_manager: &LongOperationManager,
+    operation_id: &str,
+) -> Option<OperationProgress> {
+    long_operation_manager.get_operation_progress(operation_id)
 }
 
 pub fn get_generate_rust_files_result(

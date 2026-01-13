@@ -1,6 +1,7 @@
 //! Rust file generation commands for Slint UI
 
 use crate::app_context::AppContext;
+use common::long_operation::OperationProgress;
 use rust_file_generation::{
     GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
     GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
@@ -34,6 +35,17 @@ pub fn generate_rust_files(ctx: &AppContext, dto: &GenerateRustFilesDto) -> Resu
         dto,
     )
     .map_err(|e| format!("Error while generating rust files: {:?}", e))
+}
+
+/// Get the progress of a generate rust files operation
+pub fn get_generate_rust_files_progress(
+    ctx: &AppContext,
+    operation_id: &str,
+) -> Result<Option<OperationProgress>, String> {
+    Ok(rust_file_generation_controller::get_generate_rust_files_progress(
+        &ctx.long_operation_manager.lock().unwrap(),
+        operation_id,
+    ))
 }
 
 /// Get the result of a generate rust files operation

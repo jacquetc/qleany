@@ -84,11 +84,10 @@ fn render_direct_access_lib_lists_entities() {
         global: GlobalVM {
             inner: global,
             application_kebab_name: "".to_string(),
+            application_snake_name: "".to_string(),
         },
         ui: UserInterfaceVM {
             inner: UserInterface::default(),
-            application_kebab_name: "".to_string(),
-            application_snake_name: "".to_string(),
         },
         entities,
         features: IndexMap::new(),

@@ -1,0 +1,26 @@
+[package]
+name = "{{ s.global.application_snake_name }}"
+version.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[dependencies]
+slint = { version = "1.14", features = ["renderer-skia"] }
+log = "0.4"
+env_logger = "0.11"
+
+# Backend crates
+common = { path = "../common" }
+direct_access = { path = "../direct_access" }
+handling_manifest = { path = "../handling_manifest" }
+rust_file_generation = { path = "../rust_file_generation" }
+handling_app_lifecycle = { path = "../handling_app_lifecycle" }
+
+[build-dependencies]
+slint-build = "1.14"
+
+[lints]
+workspace = true

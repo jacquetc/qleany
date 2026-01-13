@@ -1,0 +1,37 @@
+mod app_context;
+mod commands;
+mod event_hub_client;
+
+use app_context::AppContext;
+use event_hub_client::EventHubClient;
+use std::sync::Arc;
+
+slint::include_modules!();
+
+fn main() {
+    // Initialize logging
+    env_logger::init();
+
+    // Create the application context (backend state)
+    let app_context = Arc::new(AppContext::new());
+
+    // Run the Slint UI
+    run_slint(&app_context);
+
+    app_context.shutdown();
+}
+
+fn run_slint(app_context: &Arc<AppContext>) {
+    log::info!("Starting Qleany Slint UI");
+    // Create the event hub client for backend-to-UI event passing
+    let event_hub_client = EventHubClient::new(&app_context.event_hub);
+    event_hub_client.start(app_context.quit_signal.clone());
+
+    // Create the Slint UI
+    let app = App::new().unwrap();
+
+    // Run the application
+    log::info!("Running Slint UI");
+    app.run().unwrap();
+
+}

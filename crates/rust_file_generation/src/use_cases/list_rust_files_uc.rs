@@ -311,8 +311,8 @@ impl ListRustFilesUseCase {
         let entities = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
         let entities = uow.get_entity_multi(&entities)?;
 
-        for entity in entities {
-            let entity = entity.ok_or(anyhow!("Entity not found"))?;
+        for entity in &entities {
+            let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
 
             // continue if entity is "heritage"
             if entity.only_for_heritage {
@@ -558,8 +558,8 @@ impl ListRustFilesUseCase {
 
         let features = uow.get_feature_multi(&features)?;
 
-        for feature in features {
-            let feature = feature.ok_or(anyhow!("Feature not found"))?;
+        for feature in &features {
+            let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
 
             let relative_path = format!("crates/{}/", heck::AsSnakeCase(&feature.name));
 
@@ -738,9 +738,120 @@ impl ListRustFilesUseCase {
 
         if ui.rust_slint {
 
+            files.push(File {
+                id: 0,
+                name: "Cargo.toml".to_string(),
+                relative_path: "crates/slint_ui/".to_string(),
+                group: "slint".to_string(),
+                template_name: "slint_cargo".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
 
-            //TODO: add files for UIs
+            files.push(File {
+                id: 0,
+                name: "build.rs".to_string(),
+                relative_path: "crates/slint_ui/".to_string(),
+                group: "slint".to_string(),
+                template_name: "slint_build".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
 
+            let relative_path = "crates/slint_ui/src/".to_string();
+
+            files.push(File {
+                id: 0,
+                name: "main.rs".to_string(),
+                relative_path: relative_path.clone(),
+                group: "slint".to_string(),
+                template_name: "slint_main".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "app_context.rs".to_string(),
+                relative_path: relative_path.clone(),
+                group: "slint".to_string(),
+                template_name: "slint_app_context".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "event_hub_client.rs".to_string(),
+                relative_path: relative_path.clone(),
+                group: "slint".to_string(),
+                template_name: "slint_event_hub_client".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "app.slint".to_string(),
+                relative_path: "crates/slint_ui/ui/".to_string(),
+                group: "slint".to_string(),
+                template_name: "slint_app".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "commands.rs".to_string(),
+                relative_path: relative_path.clone(),
+                group: "slint".to_string(),
+                template_name: "slint_commands_mod".to_string(),
+                feature: Some(0),
+                entity: Some(0),
+                use_case: None,
+            });
+
+            // commands:
+            let relative_path = "crates/slint_ui/src/commands/".to_string();
+
+            for entity in &entities {
+                let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
+                if entity.only_for_heritage || !entity.allow_direct_access {
+                    continue;
+                }
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path.clone(),
+                    group: "slint".to_string(),
+                    template_name: "slint_entity_commands".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                });
+            }
+
+            for feature in &features {
+                let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
+                    relative_path: relative_path.clone(),
+                    group: "slint".to_string(),
+                    template_name: "slint_feature_commands".to_string(),
+                    feature: Some(feature.id),
+                    entity: None,
+                    use_case: None,
+                });
+            }
         }
 
         let created_files = uow.create_file_multi(&files)?;

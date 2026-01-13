@@ -10,27 +10,27 @@ members = [
 {%- for fid, feature in s.features %}
     "crates/{{ feature.snake_name }}",
 {%- endfor %}
-{%- if s.ui.rust_cli %}
+{%- if s.ui.inner.rust_cli %}
     "crates/cli",
-{%- endif %
-{%- if s.ui.rust_slint %}
+{%- endif %}
+{%- if s.ui.inner.rust_slint %}
     "crates/slint_ui",
-{%- endif %
+{%- endif %}
     ]
 
-{%- if s.ui.rust_cli and s.ui.rust_slint %}
+{%- if s.ui.inner.rust_cli and s.ui.inner.rust_slint %}
+default-members = [
+    "crates/slint_ui",
+]
+{%- elif s.ui.inner.rust_cli %}
 default-members = [
     "crates/cli",
 ]
-{%- elif s.ui.rust_cli %}
+{%- elif s.ui.inner.rust_slint %}
 default-members = [
-    "crates/cli",
+    "crates/slint_ui",
 ]
-{%- elif s.ui.rust_slint %}
-default-members = [
-    "crates/rust_slint",
-]
-{%- endif %
+{%- endif %}
 
 resolver = "2"
 

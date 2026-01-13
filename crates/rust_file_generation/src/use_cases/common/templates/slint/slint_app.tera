@@ -1,0 +1,19 @@
+
+export component App inherits Window {
+    title: "{{ s.global.inner.application_name }}";
+    min-width: 700px;
+    min-height: 700px;
+
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: #f8f9fa;
+    }
+
+    Text {
+        text: "Hello, Slint!";
+        font-size: 24px;
+        color: #212529;
+    }
+}

@@ -1,0 +1,8 @@
+//! Commands module - cleanly separated command handlers for Slint UI
+//!
+{% for e_id, e in s.entities %}
+pub mod {{ e.snake_name }}_commands;
+{% endfor %}
+{% for f_id, f in s.features %}
+pub mod {{ f.snake_name }}_commands;
+{% endfor %}

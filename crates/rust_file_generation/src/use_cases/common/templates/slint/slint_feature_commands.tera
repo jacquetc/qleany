@@ -1,0 +1,96 @@
+{% set f_id = s.file.inner.feature %}
+{% if f_id %}
+{% set feature = s.features[f_id] %}
+//! {{ feature.pascal_name }} feature commands for Slint UI
+
+use crate::app_context::AppContext;
+use {{ feature.snake_name }}::{
+    {%- set dtos = [] %}
+    {%- for uc_id, uc in feature.use_cases %}
+        {%- if uc.dto_in %}
+            {%- set_global dtos = dtos | concat(with=uc.dto_in.pascal_name) %}
+        {%- endif %}
+        {%- if uc.dto_out %}
+            {%- set_global dtos = dtos | concat(with=uc.dto_out.pascal_name) %}
+        {%- endif %}
+    {%- endfor %}
+    {%- for dto in dtos | unique | sort %}
+    {{ dto }},
+    {%- endfor %}
+    {{ feature.snake_name }}_controller,
+};
+
+{% for uc_id, uc in feature.use_cases %}
+{%- if uc.inner.long_operation %}
+
+/// {{ uc.pascal_name }} (long operation)
+pub fn {{ uc.snake_name }}(
+    ctx: &AppContext,
+    {%- if uc.dto_in %}
+    dto: &{{ uc.dto_in.pascal_name }},
+    {%- endif %}
+) -> Result<String, String> {
+    {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut ctx.long_operation_manager.lock().unwrap(),
+        {%- if uc.dto_in %}
+        dto,
+        {%- endif %}
+    )
+    .map_err(|e| format!("Error while {{ uc.pascal_name | lower }}: {:?}", e))
+}
+
+/// Get the result of a {{ uc.pascal_name }} operation
+pub fn get_{{ uc.snake_name }}_result(
+    ctx: &AppContext,
+    operation_id: &str,
+) -> Result<Option<{{ uc.dto_out.pascal_name }}>, String> {
+    {{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_result(
+        &ctx.long_operation_manager.lock().unwrap(),
+        operation_id,
+    )
+    .map_err(|e| format!("Error while getting {{ uc.pascal_name }} result: {:?}", e))
+}
+
+{%- else %}
+
+/// {{ uc.pascal_name }}
+pub fn {{ uc.snake_name }}(
+    ctx: &AppContext,
+    {%- if uc.inner.undoable %}
+    stack_id: Option<u64>,
+    {%- endif %}
+    {%- if uc.dto_in %}
+    dto: &{{ uc.dto_in.pascal_name }},
+    {%- endif %}
+) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}, String> {
+    {%- if uc.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        {%- if uc.dto_in %}
+        dto,
+        {%- endif %}
+    )
+    {%- else %}
+    {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
+        &ctx.db_context,
+        &ctx.event_hub,
+        {%- if uc.dto_in %}
+        dto,
+        {%- endif %}
+    )
+    {%- endif %}
+    .map_err(|e| format!("Error while {{ uc.pascal_name | lower }}: {:?}", e))
+}
+
+{%- endif %}
+{%- endfor %}
+
+{% else %}
+// No feature bound to this file
+{% endif %}

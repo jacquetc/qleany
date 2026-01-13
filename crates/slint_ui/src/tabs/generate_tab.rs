@@ -405,11 +405,18 @@ fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, oper
                 let app_weak_clone = app.as_weak();
                 let op_id = operation_id.clone();
 
-                // Update progress (simulate)
-                let current_progress = app.global::<AppState>().get_generate_progress();
-                if current_progress < 0.9 {
+                // Update progress from backend
+                if let Ok(Some(progress)) =
+                    rust_file_generation_commands::get_generate_rust_files_progress(
+                        &ctx,
+                        &operation_id,
+                    )
+                {
                     app.global::<AppState>()
-                        .set_generate_progress(current_progress + 0.1);
+                        .set_generate_progress(progress.percentage / 100.0);
+                    if let Some(msg) = progress.message {
+                        app.global::<AppState>().set_generate_message(SharedString::from(msg));
+                    }
                 }
 
                 slint::Timer::single_shot(std::time::Duration::from_millis(500), move || {

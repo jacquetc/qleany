@@ -59,13 +59,12 @@ struct FileVM {
 struct GlobalVM {
     pub inner: Global,
     pub application_kebab_name: String,
+    pub application_snake_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
 struct UserInterfaceVM {
     pub inner: UserInterface,
-    pub application_kebab_name: String,
-    pub application_snake_name: String,
 
 }
 
@@ -240,6 +239,16 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         // cli
         "cli_cargo" => tera.render("cli_cargo", &context)?,
         "cli_main" => tera.render("cli_main", &context)?,
+        // slint
+        "slint_cargo" => tera.render("slint_cargo", &context)?,
+        "slint_build" => tera.render("slint_build", &context)?,
+        "slint_main" => tera.render("slint_main", &context)?,
+        "slint_app" => tera.render("slint_app", &context)?,
+        "slint_app_context" => tera.render("slint_app_context", &context)?,
+        "slint_commands_mod" => tera.render("slint_commands_mod", &context)?,
+        "slint_event_hub_client" => tera.render("slint_event_hub_client", &context)?,
+        "slint_entity_commands" => tera.render("slint_entity_commands", &context)?,
+        "slint_feature_commands" => tera.render("slint_feature_commands", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown template name: {}",
@@ -483,6 +492,7 @@ impl SnapshotBuilder {
         let global_vm = GlobalVM {
             inner: global.clone(),
             application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
+            application_snake_name: heck::AsSnakeCase(&global.application_name).to_string(),
         };
 
         let ui_ids = uow.get_workspace_relationship(
@@ -495,9 +505,7 @@ impl SnapshotBuilder {
             .expect("Workspace must have a UI entity");
 
         let ui_vm = UserInterfaceVM {
-            inner: ui.clone(),
-            application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
-            application_snake_name: heck::AsSnakeCase(&global.application_name).to_string(),
+            inner: ui,
         };
 
         // Working flat maps, then wrap into VMs
@@ -1125,6 +1133,7 @@ mod tests {
                     prefix_path: "".into(),
                 },
                 application_kebab_name: "test".into(),
+                application_snake_name: "test".into(),
             },
             ui: UserInterfaceVM {
                 inner: UserInterface {
@@ -1136,8 +1145,6 @@ mod tests {
                     cpp_qt_qtquick: false,
                     cpp_qt_kirigami: false,
                 },
-                application_kebab_name: "".to_string(),
-                application_snake_name: "".to_string(),
             },
             entities: IndexMap::new(),
             features: IndexMap::new(),
@@ -1215,6 +1222,7 @@ mod tests {
             global: GlobalVM {
                 inner: global,
                 application_kebab_name: "".to_string(),
+                application_snake_name: "".to_string(),
             },
             ui: UserInterfaceVM {
                 inner: UserInterface {
@@ -1225,8 +1233,6 @@ mod tests {
                     cpp_qt_qtquick: false,
                     cpp_qt_kirigami: false,
                 },
-                application_kebab_name: "".to_string(),
-                application_snake_name: "".to_string(),
             },
             entities: {
                 let mut m = IndexMap::new();
