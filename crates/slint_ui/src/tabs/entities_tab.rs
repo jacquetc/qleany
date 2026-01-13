@@ -182,6 +182,34 @@ fn subscribe_entity_updated_event(
     )
 }
 
+/// Subscribe to Entity deletion events
+fn subscribe_entity_deleted_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Entity(EntityEvent::Removed)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Entity updated event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+                    }
+                });
+            }
+        },
+    )
+}
+
 /// Subscribe to Entity update events to refresh entity_cr_list
 fn subscribe_field_updated_event(
     event_hub_client: &EventHubClient,
@@ -202,6 +230,34 @@ fn subscribe_field_updated_event(
                     if let Some(app) = app_weak.upgrade() {
                         if app.global::<AppState>().get_manifest_is_open() {
                             fill_field_list(&app, &ctx);
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+                    }
+                });
+            }
+        },
+    )
+}
+
+/// Subscribe to Entity deletion events
+fn subscribe_field_deleted_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Removed)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Field updated event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        if app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
                     }
@@ -1478,7 +1534,9 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     subscribe_close_manifest_event(event_hub_client, app, app_context);
     subscribe_load_manifest_event(event_hub_client, app, app_context);
     subscribe_entity_updated_event(event_hub_client, app, app_context);
+    subscribe_entity_deleted_event(event_hub_client, app, app_context);
     subscribe_field_updated_event(event_hub_client, app, app_context);
+    subscribe_field_deleted_event(event_hub_client, app, app_context);
 
     // Entity callbacks
     setup_entities_reorder_callback(app, app_context);
