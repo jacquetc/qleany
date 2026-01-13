@@ -97,7 +97,7 @@ export component HomeTab inherits Rectangle {
                                 AppState.confirm_dialog_visible = true;
                             }
                         }
-                        primary: true;
+                        primary: false;
                     }
                 }
 
@@ -131,21 +131,42 @@ export component HomeTab inherits Rectangle {
                                 }
                             }
                             text: "Open Qleany Manifest";
-                            primary: true;
+                            primary: false;
                         }
                     }
                 }
             }
         }
 
-        // Spacer
-        Rectangle { vertical-stretch: 1; }
+        HorizontalLayout {
+            alignment: center;
+            spacing: 24px;
+
             AboutSlint {
-            width: 200px;
+                width: 200px;
             }
 
-    }
+            HorizontalLayout {
+                spacing: 4px;
 
+                Text {
+                    text: "Made by";
+                    color: #868e96;
+                    font-size: 12px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: "FernTech";
+                    color: #495057;
+                    font-size: 12px;
+                    font-weight: 500;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+    }
     // Loading overlay
     if AppState.is_loading : Rectangle {
         background: #ffffff80;

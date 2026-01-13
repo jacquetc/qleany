@@ -21,10 +21,14 @@ const ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, V
     TableDefinition::new("entity_from_workspace_entities_junction");
 const FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("feature_from_workspace_features_junction");
+const USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE: TableDefinition<
+    EntityId,
+    Vec<EntityId>,
+> = TableDefinition::new("user_interface_from_workspace_user_interface_junction");
 // backward relationships
 
-const WORKSPACE_FROM_ROOT_MAIN_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("workspace_from_root_main_junction");
+const WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("workspace_from_root_workspace_junction");
 
 fn get_junction_table_definition(
     field: &WorkspaceRelationshipField,
@@ -33,6 +37,9 @@ fn get_junction_table_definition(
         WorkspaceRelationshipField::Global => GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE,
         WorkspaceRelationshipField::Entities => ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE,
         WorkspaceRelationshipField::Features => FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE,
+        WorkspaceRelationshipField::UserInterface => {
+            USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE
+        }
     }
 }
 
@@ -51,8 +58,9 @@ impl<'a> WorkspaceRedbTable<'a> {
         transaction.open_table(GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        transaction.open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
-        transaction.open_table(WORKSPACE_FROM_ROOT_MAIN_JUNCTION_TABLE)?;
+        transaction.open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -93,6 +101,9 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         let mut features_junction_table = self
             .transaction
             .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let mut user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
         for entity in entities {
             let new_entity = if entity.id == EntityId::default() {
@@ -123,12 +134,30 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                 }
             }
 
+            // one-to-one constraint check: ensure user_interface is not already referenced by another workspace
+            {
+                let mut iter = user_interface_junction_table.iter()?;
+                while let Some(Ok((existing_id, right_ids))) = iter.next() {
+                    let existing_id = existing_id.value();
+
+                    if existing_id != new_entity.id
+                        && right_ids.value().contains(&new_entity.user_interface)
+                    {
+                        panic!("One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}", new_entity.user_interface, existing_id);
+                    }
+                }
+            }
+
             workspace_table.insert(new_entity.id, new_entity.clone())?;
 
             global_junction_table
                 .insert(new_entity.id, vec![new_entity.global] as Vec<EntityId>)?;
             entities_junction_table.insert(new_entity.id, new_entity.entities.clone())?;
             features_junction_table.insert(new_entity.id, new_entity.features.clone())?;
+            user_interface_junction_table.insert(
+                new_entity.id,
+                vec![new_entity.user_interface] as Vec<EntityId>,
+            )?;
             created.push(new_entity);
             if entity.id == EntityId::default() {
                 counter += 1;
@@ -151,6 +180,9 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         let features_junction_table = self
             .transaction
             .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
         if ids.is_empty() {
             let mut iter = workspace_table.iter()?;
@@ -193,6 +225,17 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
 
                 entity.features = fetched_features;
 
+                // get user_interface from junction table
+
+                let fetched_user_interface: EntityId = user_interface_junction_table
+                    .get(&id)?
+                    .map(|g| g.value().clone())
+                    .unwrap_or_default()
+                    .pop()
+                    .expect("Workspace has no user_interface");
+
+                entity.user_interface = fetched_user_interface;
+
                 list.push(Some(entity));
                 count += 1;
             }
@@ -230,6 +273,17 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
 
                     entity.features = fetched_features;
 
+                    // get user_interface from junction table
+
+                    let fetched_user_interface: EntityId = user_interface_junction_table
+                        .get(id)?
+                        .map(|g| g.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("Workspace has no user_interface");
+
+                    entity.user_interface = fetched_user_interface;
+
                     Some(entity)
                 } else {
                     None
@@ -254,6 +308,9 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         let mut features_junction_table = self
             .transaction
             .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let mut user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
         for entity in entities {
             // one-to-one constraint check: ensure global is not already referenced by another workspace
@@ -268,6 +325,20 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                 }
             }
 
+            // one-to-one constraint check: ensure user_interface is not already referenced by another workspace
+            {
+                let mut iter = user_interface_junction_table.iter()?;
+                while let Some(Ok((existing_id, right_ids))) = iter.next() {
+                    let existing_id = existing_id.value();
+
+                    if existing_id != entity.id
+                        && right_ids.value().contains(&entity.user_interface)
+                    {
+                        panic!("One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}", entity.user_interface, existing_id);
+                    }
+                }
+            }
+
             workspace_table.insert(entity.id, entity)?;
 
             global_junction_table.insert(entity.id, vec![entity.global] as Vec<EntityId>)?;
@@ -275,6 +346,9 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
             entities_junction_table.insert(entity.id, entity.entities.clone())?;
 
             features_junction_table.insert(entity.id, entity.features.clone())?;
+
+            user_interface_junction_table
+                .insert(entity.id, vec![entity.user_interface] as Vec<EntityId>)?;
 
             updated.push(entity.clone());
         }
@@ -298,11 +372,15 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
             .transaction
             .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
 
+        let mut user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
+
         // backward relationships
 
-        let mut backward_root_main_junction_table = self
+        let mut backward_root_workspace_junction_table = self
             .transaction
-            .open_table(WORKSPACE_FROM_ROOT_MAIN_JUNCTION_TABLE)?;
+            .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
 
         for id in ids {
             workspace_table.remove(id)?;
@@ -310,9 +388,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
             global_junction_table.remove(id)?;
             entities_junction_table.remove(id)?;
             features_junction_table.remove(id)?;
+            user_interface_junction_table.remove(id)?;
 
             db_helpers::delete_from_backward_junction_table(
-                &mut backward_root_main_junction_table,
+                &mut backward_root_workspace_junction_table,
                 id,
             )?;
         }
@@ -407,6 +486,9 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         let features_junction_table = self
             .transaction
             .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
         if ids.is_empty() {
             let mut iter = workspace_table.iter()?;
@@ -449,6 +531,17 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
 
                 entity.features = fetched_features;
 
+                // get user_interface from junction table
+
+                let fetched_user_interface: EntityId = user_interface_junction_table
+                    .get(&id)?
+                    .map(|g| g.value().clone())
+                    .unwrap_or_default()
+                    .pop()
+                    .expect("Workspace has no user_interface");
+
+                entity.user_interface = fetched_user_interface;
+
                 list.push(Some(entity));
                 count += 1;
             }
@@ -485,6 +578,17 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
                         .unwrap_or_default();
 
                     entity.features = fetched_features;
+
+                    // get user_interface from junction table
+
+                    let fetched_user_interface: EntityId = user_interface_junction_table
+                        .get(id)?
+                        .map(|g| g.value().clone())
+                        .unwrap_or_default()
+                        .pop()
+                        .expect("Workspace has no user_interface");
+
+                    entity.user_interface = fetched_user_interface;
 
                     Some(entity)
                 } else {

@@ -93,7 +93,13 @@ impl GenerationReadOps for DummyGenerationReadOps {
             common::direct_access::workspace::WorkspaceRelationshipField::Global => {
                 Ok(self.workspaces.get(id).map(|w| vec![w.global]).unwrap_or_default())
             }
+            common::direct_access::workspace::WorkspaceRelationshipField::UserInterface => {
+                Ok(self.workspaces.get(id).map(|w| vec![w.user_interface]).unwrap_or_default())
+            }
         }
+    }
+    fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
+        Ok(self.user_interfaces.get(id).cloned())
     }
     fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
         Ok(self.files.get(id).cloned())

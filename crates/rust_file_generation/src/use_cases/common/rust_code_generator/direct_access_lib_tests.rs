@@ -1,8 +1,8 @@
 use super::{
     DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, UseCaseVM,
-    get_rust_tera,
+    UserInterfaceVM, get_rust_tera,
 };
-use common::entities::{Entity, Field, FieldType, File, Global, Relationship};
+use common::entities::{Entity, Field, FieldType, File, Global, Relationship, UserInterface};
 use common::types::EntityId;
 use indexmap::IndexMap;
 use tera::Context;
@@ -84,6 +84,11 @@ fn render_direct_access_lib_lists_entities() {
         global: GlobalVM {
             inner: global,
             application_kebab_name: "".to_string(),
+        },
+        ui: UserInterfaceVM {
+            inner: UserInterface::default(),
+            application_kebab_name: "".to_string(),
+            application_snake_name: "".to_string(),
         },
         entities,
         features: IndexMap::new(),

@@ -1,3 +1,4 @@
+use common::entities::UserInterface;
 use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::generate_rust_code_uc::{
     GenerateRustCodeUnitOfWorkFactoryTrait, GenerateRustCodeUnitOfWorkTrait,
@@ -54,6 +55,7 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]

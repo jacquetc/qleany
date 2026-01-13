@@ -20,6 +20,7 @@ pub enum WorkspaceRelationshipField {
     Global,
     Entities,
     Features,
+    UserInterface,
 }
 
 impl Display for WorkspaceRelationshipField {
@@ -166,6 +167,8 @@ impl<'a> WorkspaceRepository<'a> {
 
         let features = entity.features.clone();
 
+        let user_interface = entity.user_interface.clone();
+
         // delete all strong relationships, initiating a cascade delete
 
         repository_factory::write::create_global_repository(self.transaction)
@@ -176,6 +179,9 @@ impl<'a> WorkspaceRepository<'a> {
 
         repository_factory::write::create_feature_repository(self.transaction)
             .delete_multi(event_hub, &features)?;
+
+        repository_factory::write::create_user_interface_repository(self.transaction)
+            .delete(event_hub, &user_interface)?;
 
         // delete entity
         self.redb_table.delete(id)?;
@@ -222,6 +228,11 @@ impl<'a> WorkspaceRepository<'a> {
         features_ids.sort();
         features_ids.dedup();
 
+        let user_interface_ids: Vec<EntityId> = entities
+            .iter()
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.user_interface.clone()))
+            .collect();
+
         // delete all strong relationships, initiating a cascade delete
 
         repository_factory::write::create_global_repository(self.transaction)
@@ -232,6 +243,9 @@ impl<'a> WorkspaceRepository<'a> {
 
         repository_factory::write::create_feature_repository(self.transaction)
             .delete_multi(event_hub, &features_ids)?;
+
+        repository_factory::write::create_user_interface_repository(self.transaction)
+            .delete_multi(event_hub, &user_interface_ids)?;
 
         self.redb_table.delete_multi(ids)?;
         event_hub.send_event(Event {

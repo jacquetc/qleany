@@ -1,12 +1,11 @@
 mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
-use common::entities::Workspace;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, RelationshipType, Root, UseCase,
+    Global, Relationship, Root, UseCase, UserInterface, Workspace
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -15,7 +14,6 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
-use common::entities::Strength::Weak;
 use crate::use_cases::common::tools;
 
 // Shared read-API for snapshot building across code and files generation
@@ -23,6 +21,7 @@ use crate::use_cases::common::tools;
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
@@ -44,6 +43,7 @@ pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
 pub(crate) struct GenerationSnapshot {
     file: FileVM,
     global: GlobalVM,
+    ui: UserInterfaceVM,
     entities: IndexMap<EntityId, EntityVM>,
     features: IndexMap<EntityId, FeatureVM>,
     use_cases: IndexMap<EntityId, UseCaseVM>,
@@ -59,6 +59,14 @@ struct FileVM {
 struct GlobalVM {
     pub inner: Global,
     pub application_kebab_name: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct UserInterfaceVM {
+    pub inner: UserInterface,
+    pub application_kebab_name: String,
+    pub application_snake_name: String,
+
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -448,6 +456,7 @@ impl SnapshotBuilder {
                 let new_snapshot = GenerationSnapshot {
                     file: new_file_vm,
                     global: cached_snapshot.global.clone(),
+                    ui: cached_snapshot.ui.clone(),
                     entities: cached_snapshot.entities.clone(),
                     features: cached_snapshot.features.clone(),
                     use_cases: cached_snapshot.use_cases.clone(),
@@ -468,12 +477,27 @@ impl SnapshotBuilder {
         )?;
 
         let global = uow
-            .get_global(&global_ids.first().expect("Root must have a global entity"))?
-            .expect("Root must have a global entity");
+            .get_global(&global_ids.first().expect("Workspace must have a global entity"))?
+            .expect("Workspace must have a global entity");
 
         let global_vm = GlobalVM {
             inner: global.clone(),
             application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
+        };
+
+        let ui_ids = uow.get_workspace_relationship(
+            &workspace_id,
+            &common::direct_access::workspace::WorkspaceRelationshipField::UserInterface,
+        )?;
+
+        let ui = uow
+            .get_user_interface(&ui_ids.first().expect("Workspace must have a UI entity"))?
+            .expect("Workspace must have a UI entity");
+
+        let ui_vm = UserInterfaceVM {
+            inner: ui.clone(),
+            application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
+            application_snake_name: heck::AsSnakeCase(&global.application_name).to_string(),
         };
 
         // Working flat maps, then wrap into VMs
@@ -1060,6 +1084,7 @@ impl SnapshotBuilder {
             GenerationSnapshot {
                 file: FileVM { inner: file },
                 global: global_vm,
+                ui: ui_vm,
                 entities: entities_vm,
                 features: features_vm,
                 use_cases: use_cases_vm,
@@ -1100,6 +1125,19 @@ mod tests {
                     prefix_path: "".into(),
                 },
                 application_kebab_name: "test".into(),
+            },
+            ui: UserInterfaceVM {
+                inner: UserInterface {
+                    id: 1,
+
+                    rust_cli: false,
+                    rust_slint: false,
+                    cpp_qt_qtwidgets: false,
+                    cpp_qt_qtquick: false,
+                    cpp_qt_kirigami: false,
+                },
+                application_kebab_name: "".to_string(),
+                application_snake_name: "".to_string(),
             },
             entities: IndexMap::new(),
             features: IndexMap::new(),
@@ -1177,6 +1215,18 @@ mod tests {
             global: GlobalVM {
                 inner: global,
                 application_kebab_name: "".to_string(),
+            },
+            ui: UserInterfaceVM {
+                inner: UserInterface {
+                    id: 1,
+                    rust_cli: false,
+                    rust_slint: false,
+                    cpp_qt_qtwidgets: false,
+                    cpp_qt_qtquick: false,
+                    cpp_qt_kirigami: false,
+                },
+                application_kebab_name: "".to_string(),
+                application_snake_name: "".to_string(),
             },
             entities: {
                 let mut m = IndexMap::new();
