@@ -104,7 +104,7 @@ pub fn remove_feature(
     )
     .map_err(|e| format!("Error deleting feature: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -124,7 +124,7 @@ pub fn remove_feature_multi(
     )
     .map_err(|e| format!("Error deleting features: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 

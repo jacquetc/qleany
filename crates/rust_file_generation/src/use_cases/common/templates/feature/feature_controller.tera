@@ -46,6 +46,13 @@ pub fn {{ uc.snake_name }}(
     Ok(operation_id)
 }
 
+pub fn get_{{ uc.snake_name }}_progress(
+    long_operation_manager: &LongOperationManager,
+    operation_id: &str,
+) -> Option<OperationProgress> {
+    long_operation_manager.get_operation_progress(operation_id)
+}
+
 pub fn get_{{ uc.snake_name }}_result(
     long_operation_manager: &LongOperationManager,
     operation_id: &str,

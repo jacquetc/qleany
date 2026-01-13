@@ -4,7 +4,7 @@
 //! including event subscriptions and callback handlers for entity management.
 
 use std::sync::Arc;
-
+use log::log;
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, field_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
@@ -516,6 +516,7 @@ fn setup_entity_deletion_callback(app: &App, app_context: &Arc<AppContext>) {
             let app_weak = app.as_weak();
             move |entity_id| {
                 if let Some(app) = app_weak.upgrade() {
+                    log::info!("Entity deletion");
                     let result = entity_commands::remove_entity(
                         &ctx,
                         Some(

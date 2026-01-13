@@ -100,7 +100,7 @@ pub fn remove_entity(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> 
     )
     .map_err(|e| format!("Error deleting entity: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -120,7 +120,7 @@ pub fn remove_entity_multi(
     )
     .map_err(|e| format!("Error deleting entities: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 

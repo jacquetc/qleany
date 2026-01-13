@@ -99,7 +99,7 @@ pub fn remove_global(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> 
     )
     .map_err(|e| format!("Error deleting global: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -119,6 +119,6 @@ pub fn remove_global_multi(
     )
     .map_err(|e| format!("Error deleting globals: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }

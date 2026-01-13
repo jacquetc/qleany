@@ -23,7 +23,7 @@ use {{ feature.snake_name }}::{
 {% for uc_id, uc in feature.use_cases %}
 {%- if uc.inner.long_operation %}
 
-/// {{ uc.pascal_name }} (long operation)
+/// {{ uc.snake_name }} (long operation)
 pub fn {{ uc.snake_name }}(
     ctx: &AppContext,
     {%- if uc.dto_in %}
@@ -38,10 +38,21 @@ pub fn {{ uc.snake_name }}(
         dto,
         {%- endif %}
     )
-    .map_err(|e| format!("Error while {{ uc.pascal_name | lower }}: {:?}", e))
+    .map_err(|e| format!("Error while {{ uc.snake_name }}: {:?}", e))
 }
 
-/// Get the result of a {{ uc.pascal_name }} operation
+/// Get the progress of a generate rust files operation
+pub fn get_{{ uc.snake_name }}_progress(
+    ctx: &AppContext,
+    operation_id: &str,
+) -> Result<Option<OperationProgress>, String> {
+    Ok({{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_progress(
+        &ctx.long_operation_manager.lock().unwrap(),
+        operation_id,
+    ))
+}
+
+/// Get the result of a {{ uc.snake_name }} operation
 pub fn get_{{ uc.snake_name }}_result(
     ctx: &AppContext,
     operation_id: &str,
@@ -50,12 +61,11 @@ pub fn get_{{ uc.snake_name }}_result(
         &ctx.long_operation_manager.lock().unwrap(),
         operation_id,
     )
-    .map_err(|e| format!("Error while getting {{ uc.pascal_name }} result: {:?}", e))
+    .map_err(|e| format!("Error while getting {{ uc.snake_name }} result: {:?}", e))
 }
 
 {%- else %}
 
-/// {{ uc.pascal_name }}
 pub fn {{ uc.snake_name }}(
     ctx: &AppContext,
     {%- if uc.inner.undoable %}
@@ -85,7 +95,7 @@ pub fn {{ uc.snake_name }}(
         {%- endif %}
     )
     {%- endif %}
-    .map_err(|e| format!("Error while {{ uc.pascal_name | lower }}: {:?}", e))
+    .map_err(|e| format!("Error while {{ uc.snake_name }}: {:?}", e))
 }
 
 {%- endif %}

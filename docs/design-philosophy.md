@@ -22,6 +22,7 @@ Clean Architecture, introduced by Robert C. Martin, organizes code into concentr
 
 **Key concepts Qleany retains:**
 - **Entities** — Domain objects with identity and business rules
+- **Features** — Groupings of related use cases and entities
 - **Use Cases** — Single-purpose operations encapsulating business logic
 - **DTOs** — Data transfer objects crossing layer boundaries
 - **Repositories** — Abstractions over data access
@@ -55,7 +56,7 @@ src/
 
 To modify "Binder," you touch four directories. For a 17-entity project, Qleany v1 generated **1700+ files across 500 folders**. Technically correct, practically unmaintainable.
 
-## Package by Feature (Vertical Slice Architecture)
+## Package by Feature (a.k.a. Vertical Slice Architecture)
 
 Package by Feature groups code by *what it does*, not *what layer it belongs to*:
 

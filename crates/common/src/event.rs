@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 use crate::types::EntityId;
-use flume::{unbounded, Receiver, Sender};
+use flume::{unbounded, Receiver, RecvError, Sender};
 use serde::Serialize;
 use std::{
     sync::{atomic::AtomicBool, Arc, Mutex},
@@ -165,10 +165,16 @@ impl EventHub {
                 break;
             }
 
-            if let Ok(event) = receiver.recv() {
-                let mut queue = queue.lock().unwrap();
-                queue.push(event.clone());
-        }
+            match receiver.recv() {
+                Ok(event) => {
+                    let mut queue = queue.lock().unwrap();
+                    queue.push(event.clone());}
+                Err(_) => {
+                    println!("EventHub receiver dropped");
+                    break;
+                }
+            };
+
     });
     }
 

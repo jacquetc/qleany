@@ -92,7 +92,7 @@ pub fn remove_dto(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Res
     )
     .map_err(|e| format!("Error deleting DTO: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -112,7 +112,7 @@ pub fn remove_dto_multi(
     )
     .map_err(|e| format!("Error deleting DTOs: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 

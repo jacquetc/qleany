@@ -109,7 +109,7 @@ pub fn remove_relationship(
     )
     .map_err(|e| format!("Error deleting relationship: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -129,7 +129,7 @@ pub fn remove_relationship_multi(
     )
     .map_err(|e| format!("Error deleting relationships: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 

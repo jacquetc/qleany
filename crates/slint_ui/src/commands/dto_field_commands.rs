@@ -103,7 +103,7 @@ pub fn remove_dto_field(
     )
     .map_err(|e| format!("Error deleting DTO Field: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
 
@@ -123,6 +123,6 @@ pub fn remove_dto_field_multi(
     )
     .map_err(|e| format!("Error deleting DTO Fields: {:?}", e));
 
-    ctx.undo_redo_manager.lock().unwrap().clear_all_stacks();
+    undo_redo_manager.clear_all_stacks();
     result
 }
