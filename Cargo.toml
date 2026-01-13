@@ -21,7 +21,7 @@ homepage = "https://github.com/jacquetc/qleany"
 repository = "https://github.com/jacquetc/qleany"
 license = "MPL-2.0"
 edition = "2024"
-version = "2.0.0"
+version = "1.0.0"
 
 [workspace.dependencies]
 thiserror = "2.0"

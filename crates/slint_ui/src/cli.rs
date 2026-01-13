@@ -1,185 +1,365 @@
 use crate::app_context::AppContext;
-use crate::cli_options;
-use clap::{Parser, Subcommand, ValueEnum};
+use crate::cli_handlers;
+use clap::{Parser, Subcommand, ValueEnum, Args};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-/// The main CLI struct that represents the command-line interface.
 #[derive(Parser)]
 #[command(author, version)]
-#[command(about = "Scaffolding generator for C++/Qt6 and Rust projects", long_about = None)]
+#[command(about = "Architecture scaffolding generator for C++/Qt6 and Rust applications")]
 #[command(propagate_version = true)]
 pub struct Cli {
-    /// Path to the Qleany manifest, defaults to current directory
-    #[arg(default_value = ".")]
-    qleany_folder: PathBuf,
-    /// Enable verbose output
-    #[arg(short, long)]
-    verbose: bool,
-
     #[command(subcommand)]
-    command: Option<Commands>,
+    pub command: Option<Commands>,
+
+    /// Path to qleany.yaml manifest (searches current directory if not specified)
+    #[arg(short, long, global = true)]
+    pub manifest: Option<PathBuf>,
+
+    /// Enable verbose output
+    #[arg(short, long, global = true)]
+    pub verbose: bool,
+
+    /// Suppress non-error output
+    #[arg(short, long, global = true)]
+    pub quiet: bool,
 }
 
-/// The available commands for the CLI.
 #[derive(Subcommand)]
 pub enum Commands {
-    ///
+    /// Create a new qleany.yaml manifest
+    New(NewArgs),
 
-    /// Commands related to New.
-    New {
-        folder_path: Option<String>,
-        #[arg(short, long, value_enum)]
-        language: Option<LanguageOption>,
-    },
-    List {
-        #[arg(short, long)]
-        already_written: bool,
-        #[command(subcommand)]
-        command: Option<ListCommands>,
-    },
-    Check {},
-    Generate {
-        /// Display the files that would be generated without actually creating them
-        #[arg(short, long)]
-        dry_run: bool,
-        /// Generate files in a temporary folder named "temp"
-        #[arg(short, long)]
-        in_temp: bool,
-        /// Select the file to be generated
-        #[arg(short, long)]
-        file: Option<PathBuf>,
+    /// Validate the manifest without generating files
+    Check,
 
-        #[command(subcommand)]
-        command: Option<GenerateCommands>,
-    },
-    /// Display the manifest
-    Show {},
+    /// List files that would be generated
+    List(ListArgs),
+
+    /// Generate scaffolding code
+    Generate(GenerateArgs),
+
+    /// Display manifest information
+    Show(ShowArgs),
+
+    /// Export entity diagram
+    Export(ExportArgs),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+// ─────────────────────────────────────────────────────────────
+// NEW
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct NewArgs {
+    /// Directory where qleany.yaml will be created
+    #[arg(default_value = ".")]
+    pub path: PathBuf,
+
+    /// Target language for the project
+    #[arg(short, long, value_enum)]
+    pub language: Option<LanguageOption>,
+
+    /// Application name
+    #[arg(short, long)]
+    pub name: Option<String>,
+
+    /// Organisation name
+    #[arg(long)]
+    pub org_name: Option<String>,
+
+    /// Organisation domain (e.g., com.example)
+    #[arg(long)]
+    pub org_domain: Option<String>,
+
+    /// Overwrite existing manifest without prompting
+    #[arg(long)]
+    pub force: bool,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum LanguageOption {
     Rust,
+    #[value(alias = "cpp")]
     CppQt,
 }
 
-/// The available subcommands for the `List` command.
-#[derive(Debug, Subcommand)]
-pub enum ListCommands {
-    All,
-    Features {
-        /// Select the feature to be listed
-        #[arg(short, long)]
-        name: Option<String>,
-    },
-    Entities {
-        /// Select the feature to which the entities belong
-        #[arg(short, long)]
-        name: Option<String>,
-    },
-    Common {},
+// ─────────────────────────────────────────────────────────────
+// LIST
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct ListArgs {
+    /// What to list
+    #[command(subcommand)]
+    pub target: Option<ListTarget>,
+
+    /// Only show files that already exist on disk
+    #[arg(long)]
+    pub existing_only: bool,
+
+    /// Output format
+    #[arg(short, long, value_enum, default_value = "plain")]
+    pub format: OutputFormat,
 }
 
-/// The available subcommands for the `Generate` command.
-#[derive(Debug, Subcommand)]
-pub enum GenerateCommands {
+#[derive(Subcommand)]
+pub enum ListTarget {
+    /// List all generated files (default)
+    Files,
+
+    /// List entities defined in manifest
+    Entities,
+
+    /// List features and their use cases
+    Features,
+
+    /// List file groups (for selective generation)
+    Groups,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
+pub enum OutputFormat {
+    Plain,
+    Json,
+    Tree,
+}
+
+// ─────────────────────────────────────────────────────────────
+// GENERATE
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct GenerateArgs {
+    /// Output directory (defaults to manifest's prefix_path)
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+
+    /// Generate to ./temp/ subdirectory (safe for comparison)
+    #[arg(long)]
+    pub temp: bool,
+
+    /// Show what would be generated without writing files
+    #[arg(long)]
+    pub dry_run: bool,
+
+    /// What to generate
+    #[command(subcommand)]
+    pub target: Option<GenerateTarget>,
+}
+
+#[derive(Subcommand)]
+pub enum GenerateTarget {
+    /// Generate all files (default)
     All,
+
+    /// Generate files for a specific feature
     Feature {
-        /// Select the feature to be generated
-        #[arg(short, long)]
-        name: Option<String>,
+        /// Feature name (as defined in manifest)
+        name: String,
     },
-    Entities {
-        /// Select the feature to which the entities belong
-        #[arg(short, long)]
-        name: Option<String>,
+
+    /// Generate entity-related files
+    Entity {
+        /// Entity name (as defined in manifest)
+        name: String,
     },
+
+    /// Generate specific file by path or ID
     File {
-        /// Select the file to be generated
-        file: PathBuf,
+        /// File path relative to output, or numeric file ID from `list files`
+        target: String,
+    },
+
+    /// Generate files matching a group
+    Group {
+        /// Group name (use `list groups` to see available groups)
+        name: String,
     },
 }
 
+// ─────────────────────────────────────────────────────────────
+// SHOW
+// ─────────────────────────────────────────────────────────────
 
-/// Run the CLI with the given application context. Returns Some(()) if the application should
-/// continue running as GUI, None otherwise.
+#[derive(Args)]
+pub struct ShowArgs {
+    /// What to display
+    #[command(subcommand)]
+    pub target: Option<ShowTarget>,
+
+    /// Output format
+    #[arg(short, long, value_enum, default_value = "plain")]
+    pub format: OutputFormat,
+}
+
+#[derive(Subcommand)]
+pub enum ShowTarget {
+    /// Show full manifest (default)
+    Manifest,
+
+    /// Show project configuration (global section)
+    Config,
+
+    /// Show details for a specific entity
+    Entity {
+        name: String,
+    },
+
+    /// Show details for a specific feature
+    Feature {
+        name: String,
+    },
+}
+
+// ─────────────────────────────────────────────────────────────
+// EXPORT
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct ExportArgs {
+    /// Export format
+    #[command(subcommand)]
+    pub format: ExportFormat,
+
+    /// Output file (stdout if not specified)
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+}
+
+#[derive(Subcommand)]
+pub enum ExportFormat {
+    /// Export entity relationships as Mermaid diagram
+    Mermaid,
+
+    /// Export manifest as JSON
+    Json,
+}
+
+/// Run the CLI with the given application context.
+/// Returns `Some(())` if the application should continue running as GUI, `None` otherwise.
 pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
     let cli = Cli::parse();
 
-    let verbose = cli.verbose;
+    // No command provided → launch GUI
+    let command = cli.command;
 
-    let qleany_path = match &cli.qleany_folder.exists() {
-        true => cli.qleany_folder.clone(),
-        false => {
-            eprintln!("The specified path does not exist: {:?}", cli.qleany_folder);
+    let command = match command {
+        Some(command) => command,
+        None => return Some(()),
+    };
 
-            std::process::exit(1);
+    // Resolve manifest path for commands that need it
+    let manifest_path = resolve_manifest_path(&cli.manifest, &command);
+
+    // Create output context for consistent messaging
+    let output = OutputContext {
+        verbose: cli.verbose,
+        quiet: cli.quiet,
+    };
+
+    let result = match command {
+        Commands::New(args) => {
+            cli_handlers::new::execute(app_context, &args, &output)
+        }
+        Commands::Check => {
+            let path = manifest_path.expect("Check requires a manifest");
+            cli_handlers::check::execute(app_context, &path, &output)
+        }
+        Commands::List(args) => {
+            let path = manifest_path.expect("List requires a manifest");
+            cli_handlers::list::execute(app_context, &path, &args, &output)
+        }
+        Commands::Generate(args) => {
+            let path = manifest_path.expect("Generate requires a manifest");
+            cli_handlers::generate::execute(app_context, &path, &args, &output)
+        }
+        Commands::Show(args) => {
+            let path = manifest_path.expect("Show requires a manifest");
+            cli_handlers::show::execute(app_context, &path, &args, &output)
+        }
+        Commands::Export(args) => {
+            let path = manifest_path.expect("Export requires a manifest");
+            cli_handlers::export::execute(app_context, &path, &args, &output)
         }
     };
-    if verbose {
-        println!("Qleany folder path: {:?}", qleany_path);
-    }
 
-    match &cli.command {
-        None => {
-            if verbose {
-                println!("No command provided. Exiting.");
-            }
-            return Some(());
+    if let Err(e) = result {
+        if !output.quiet {
+            eprintln!("Error: {}", e);
         }
-        Some(command) => match command {
-            Commands::New {
-                folder_path,
-                language,
-            } => {
-                if verbose {
-                    println!(
-                        "Creating new project in folder: {:?} with language: {:?}",
-                        folder_path, language
-                    );
-                }
-                cli_options::new::execute(&app_context, folder_path, language);
-            }
-            Commands::List {
-                already_written,
-                command,
-            } => {
-                if verbose {
-                    println!(
-                        "Listing with already_written: {:?}, command: {:?}",
-                        already_written, command
-                    );
-                }
-                // Implement the logic for listing
-            }
-            Commands::Check {} => {
-                if verbose {
-                    println!("Checking project...");
-                }
-                // Implement the logic for checking the project
-            }
-            Commands::Generate {
-                dry_run,
-                in_temp,
-                file,
-                command,
-            } => {
-                if verbose {
-                    println!(
-                        "Generating with dry_run: {:?}, in_temp: {:?}, file: {:?}, command: {:?}",
-                        dry_run, in_temp, file, command
-                    );
-                }
-                // Implement the logic for generating files
-            }
-            Commands::Show {} => {
-                if verbose {
-                    println!("Showing manifest...");
-                }
-
-                // Implement the logic for displaying the manifest
-            }
-        },
+        std::process::exit(1);
     }
+
     None
+}
+
+/// Resolves the manifest path from CLI arguments or discovers it in the current directory.
+fn resolve_manifest_path(explicit: &Option<PathBuf>, command: &Commands) -> Option<PathBuf> {
+    // New command doesn't need an existing manifest
+    if matches!(command, Commands::New(_)) {
+        return None;
+    }
+
+    // Use explicit path if provided
+    if let Some(path) = explicit {
+        if path.is_file() {
+            return Some(path.clone());
+        }
+        if path.is_dir() {
+            let manifest = path.join("qleany.yaml");
+            if manifest.exists() {
+                return Some(manifest);
+            }
+        }
+        eprintln!("Manifest not found: {}", path.display());
+        std::process::exit(1);
+    }
+
+    // Search current directory
+    let current_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let candidates = ["qleany.yaml", "qleany.yml"];
+
+    for candidate in candidates {
+        let path = current_dir.join(candidate);
+        if path.exists() {
+            return Some(path);
+        }
+    }
+
+    eprintln!("No qleany.yaml found in current directory. Use --manifest to specify location.");
+    std::process::exit(1);
+}
+
+/// Context for controlling CLI output behavior.
+#[derive(Clone, Copy)]
+pub struct OutputContext {
+    pub verbose: bool,
+    pub quiet: bool,
+}
+
+impl OutputContext {
+    pub fn info(&self, msg: &str) {
+        if !self.quiet {
+            println!("{}", msg);
+        }
+    }
+
+    pub fn verbose(&self, msg: &str) {
+        if self.verbose && !self.quiet {
+            println!("{}", msg);
+        }
+    }
+
+    pub fn success(&self, msg: &str) {
+        if !self.quiet {
+            println!("✓ {}", msg);
+        }
+    }
+
+    pub fn warn(&self, msg: &str) {
+        if !self.quiet {
+            eprintln!("⚠ {}", msg);
+        }
+    }
 }

@@ -3,7 +3,7 @@ mod commands;
 mod event_hub_client;
 mod tabs;
 mod cli;
-mod cli_options;
+mod cli_handlers;
 
 use crate::commands::handling_manifest_commands;
 use app_context::AppContext;
