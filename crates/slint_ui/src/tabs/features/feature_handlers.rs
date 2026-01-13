@@ -190,6 +190,34 @@ pub fn subscribe_feature_updated_event(
     )
 }
 
+/// Subscribe to Feature deletion events
+pub fn subscribe_feature_deletion_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::Feature(EntityEvent::Removed)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Feature updated event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        if app.global::<AppState>().get_manifest_is_open() {
+                            app.global::<AppState>().set_manifest_is_saved(false);
+                        }
+                    }
+                });
+            }
+        },
+    )
+}
+
 pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling feature list ...");
 
