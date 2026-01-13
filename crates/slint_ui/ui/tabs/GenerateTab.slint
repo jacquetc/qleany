@@ -115,12 +115,16 @@ export component GenerateTab inherits Rectangle {
                             enable-checkbox: true;
                             selected-id: AppState.selected_group_index;
                             selection-changed(id) => {
-                                AppState.selected_group_index = id;
-                                // Selection is handled by Rust controller, we just update index here
-                                AppState.group_selected(id);
+                                if (id >= 0) {
+                                    AppState.selected_group_index = id;
+                                    // Selection is handled by Rust controller, we just update index here
+                                    AppState.group_selected(id);
+                                }
                             }
                             request-check-change(id, checked) => {
-                                AppState.group_check_changed(id, checked);
+                                if (id >= 0) {
+                                    AppState.group_check_changed(id, checked);
+                                }
                             }
                         }
                     }
@@ -193,11 +197,15 @@ export component GenerateTab inherits Rectangle {
                             text-prefixes: AppState.file_text_prefixes;
                             text-bolds: AppState.file_text_bolds;
                             selection-changed(id) => {
-                                AppState.selected_file_index = id;
-                                AppState.file_selected(id);
+                                if (id >= 0) {
+                                    AppState.selected_file_index = id;
+                                    AppState.file_selected(id);
+                                }
                             }
                             request-check-change(id, checked) => {
-                                AppState.file_check_changed(id, checked);
+                                if (id >= 0) {
+                                    AppState.file_check_changed(id, checked);
+                                }
                             }
                         }
                     }

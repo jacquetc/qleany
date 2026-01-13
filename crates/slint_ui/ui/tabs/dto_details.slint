@@ -64,12 +64,12 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
-                                    error-message: FeaturesTabState.selected_dto_in_name == "" ? "DTO name is required" : "";
+                                    error-message: (FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "") ? "DTO name is required" : "";
 
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_in_name;
                                         placeholder: "Enter the DTO In name";
-                                        has-error: FeaturesTabState.selected_dto_in_name == "";
+                                        has-error: FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "";
 
                                         edited(text) => {
                                             FeaturesTabState.dto_in_name_changed(text);
@@ -148,13 +148,19 @@ export component DtoDetails inherits Rectangle {
                                 enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_in_field_id;
                                 selection-changed(id) => {
-                                    FeaturesTabState.dto_in_field_selected(id);
+                                    if (id >= 0 && FeaturesTabState.selected_dto_in_field_id != id) {
+                                        FeaturesTabState.dto_in_field_selected(id);
+                                    }
                                 }
                                 request-reorder(from_index, to_index) => {
-                                    FeaturesTabState.request_dto_in_fields_reorder(from_index, to_index)
+                                    if (from_index >= 0 && to_index >= 0) {
+                                        FeaturesTabState.request_dto_in_fields_reorder(from_index, to_index)
+                                    }
                                 }
                                 request-delete(id) => {
-                                    FeaturesTabState.request_dto_in_field_deletion(id);
+                                    if (id >= 0) {
+                                        FeaturesTabState.request_dto_in_field_deletion(id);
+                                    }
                                 }
                             }
                         }
@@ -185,12 +191,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
-                                        error-message: FeaturesTabState.selected_dto_in_field_name == "" ? "Field name is required" : "";
+                                        error-message: (FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "") ? "Field name is required" : "";
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_in_field_name;
                                             placeholder: "Enter the field name";
-                                            has-error: FeaturesTabState.selected_dto_in_field_name == "";
+                                            has-error: FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "";
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_in_field_name_changed(text);
@@ -305,12 +311,12 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
-                                    error-message: FeaturesTabState.selected_dto_out_name == "" ? "DTO name is required" : "";
+                                    error-message: (FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "") ? "DTO name is required" : "";
 
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_out_name;
                                         placeholder: "Enter the DTO Out name";
-                                        has-error: FeaturesTabState.selected_dto_out_name == "";
+                                        has-error: FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "";
 
                                         edited(text) => {
                                             FeaturesTabState.dto_out_name_changed(text);
@@ -389,13 +395,19 @@ export component DtoDetails inherits Rectangle {
                                 enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_out_field_id;
                                 selection-changed(id) => {
-                                    FeaturesTabState.dto_out_field_selected(id);
+                                    if (id >= 0 && FeaturesTabState.selected_dto_out_field_id != id) {
+                                        FeaturesTabState.dto_out_field_selected(id);
+                                    }
                                 }
                                 request-reorder(from_index, to_index) => {
-                                    FeaturesTabState.request_dto_out_fields_reorder(from_index, to_index)
+                                    if (from_index >= 0 && to_index >= 0) {
+                                        FeaturesTabState.request_dto_out_fields_reorder(from_index, to_index)
+                                    }
                                 }
                                 request-delete(id) => {
-                                    FeaturesTabState.request_dto_out_field_deletion(id);
+                                    if (id >= 0) {
+                                        FeaturesTabState.request_dto_out_field_deletion(id);
+                                    }
                                 }
                             }
                         }
@@ -426,12 +438,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
-                                        error-message: FeaturesTabState.selected_dto_out_field_name == "" ? "Field name is required" : "";
+                                        error-message: (FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "") ? "Field name is required" : "";
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_out_field_name;
                                             placeholder: "Enter the field name";
-                                            has-error: FeaturesTabState.selected_dto_out_field_name == "";
+                                            has-error: FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "";
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_out_field_name_changed(text);
@@ -522,7 +534,9 @@ export component DtoDetails inherits Rectangle {
                         enable-checkbox: true;
                         enable-delete: false;
                         request-check-change(id, checked) => {
-                            FeaturesTabState.use_case_entity_check_changed(id, checked);
+                            if (id >= 0) {
+                                FeaturesTabState.use_case_entity_check_changed(id, checked);
+                            }
                         }
                     }
                 }

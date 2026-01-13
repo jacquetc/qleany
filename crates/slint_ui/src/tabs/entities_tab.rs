@@ -547,6 +547,9 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |selected_entity_id| {
+            if selected_entity_id < 0 {
+                return;
+            }
             if let Some(app) = app_weak.upgrade() {
                 if selected_entity_id >= 0 {
                     let entity_res = entity_commands::get_entity(
@@ -851,6 +854,9 @@ fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |selected_field_id| {
+            if selected_field_id < 0 {
+                return;
+            }
             if let Some(app) = app_weak.upgrade() {
                 if selected_field_id >= 0 {
                     let field_res = field_commands::get_field(

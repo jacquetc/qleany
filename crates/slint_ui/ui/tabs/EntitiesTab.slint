@@ -128,13 +128,19 @@ export component EntitiesTab inherits Rectangle {
                             enable-delete: true;
                             selected-id: EntitiesTabState.selected_entity_id;
                             selection-changed(id) => {
-                                EntitiesTabState.entity-selected(id);
+                                if (id >= 0) {
+                                    EntitiesTabState.entity_selected(id);
+                                }
                             }
                             request-reorder(from_index, to_index) => {
-                                EntitiesTabState.request_entities_reorder(from_index, to_index)
+                                if (from_index >= 0 && to_index >= 0) {
+                                    EntitiesTabState.request_entities_reorder(from_index, to_index)
+                                }
                             }
                             request-delete(id) => {
-                                EntitiesTabState.request_entity_deletion(id);
+                                if (id >= 0) {
+                                    EntitiesTabState.request_entity_deletion(id);
+                                }
                             }
                         }
                     }
@@ -169,12 +175,12 @@ export component EntitiesTab inherits Rectangle {
                             entityNameFormField := FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: EntitiesTabState.selected_entity_name == "" ? "Entity name is required" : "";
+                                error-message: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") ? "Entity name is required" : "";
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_entity_name;
                                     placeholder: "Enter the entity name (e.g., Person)";
-                                    has-error: EntitiesTabState.selected_entity_name == "";
+                                    has-error: EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "";
                                     edited(text) => {
                                         EntitiesTabState.entity_name_changed(text);
                                     }
@@ -297,13 +303,19 @@ export component EntitiesTab inherits Rectangle {
                             enable-delete: true;
                             selected-id: EntitiesTabState.selected_field_id;
                             selection-changed(id) => {
-                                EntitiesTabState.field_selected(id);
+                                if (id >= 0) {
+                                    EntitiesTabState.field_selected(id);
+                                }
                             }
                             request-reorder(from_index, to_index) => {
-                                EntitiesTabState.request_fields_reorder(from_index, to_index)
+                                if (from_index >= 0 && to_index >= 0) {
+                                    EntitiesTabState.request_fields_reorder(from_index, to_index)
+                                }
                             }
                             request-delete(id) => {
-                                EntitiesTabState.request_field_deletion(id);
+                                if (id >= 0) {
+                                    EntitiesTabState.request_field_deletion(id);
+                                }
                             }
                         }
                     }
@@ -337,12 +349,12 @@ export component EntitiesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: EntitiesTabState.selected_field_name == "" ? "Field name is required" : "";
+                                error-message: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") ? "Field name is required" : "";
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_name;
                                     placeholder: "Enter field name";
-                                    has-error: EntitiesTabState.selected_field_name == "";
+                                    has-error: EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "";
                                     edited(text) => {
                                         EntitiesTabState.field_name_changed(text);
                                     }

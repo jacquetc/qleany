@@ -166,7 +166,7 @@ component DraggableItem inherits Rectangle {
         if enable-checkbox: CheckBox {
             checked: item.checked;
             // Forward change to the outside world
-            toggled => { request-check-change(item.id, self.checked); }
+            toggled => { if (item.id >= 0) { request-check-change(item.id, self.checked); } }
         }
 
         // Drag handle (hidden if not reorderable)
@@ -289,9 +289,20 @@ component DraggableItem inherits Rectangle {
             // Selection click when not dragging
             if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && !drag-armed) {
                 close-menu();
-                selection-changed(item.id);
-                // Give focus to the FocusScope so keyboard navigation (Alt+Up/Down) works
-                focus_scope.focus();
+                if (item.id >= 0) {
+                    // Only trigger selection change if the item is not already selected
+                    // This avoids crashes when conditional UI elements are shown/hidden
+                    if (selected-id != item.id) {
+                        selection-changed(item.id);
+                        // NOTE: Do NOT call focus_scope.focus() here!
+                        // When selection-changed triggers conditional UI rendering (e.g., showing
+                        // field details panel), the focus_scope element may be destroyed/recreated
+                        // by Slint during the same event processing, causing a crash in
+                        // enclosing_component_for_element when the weak reference becomes invalid.
+                        // Keyboard navigation (Alt+Up/Down) will still work when user explicitly
+                        // focuses an item via Tab key.
+                    }
+                }
                 return true;
             }
             return false;
@@ -358,10 +369,27 @@ export component CheckableReorderableList inherits Rectangle {
     private property <length> menu-y: 0px;
     private property <length> menu-width: 120px;
     private property <length> menu-height: 32px;
+    // Pending selection id for deferred callback (to avoid crash during UI rebuild)
+    private property <int> pending-selection-id: -1;
+    // Property to control the selection timer
+    private property <bool> selection-timer-running: false;
     
     // Emitted when the user requests a reorder. The hosting app should update
     // its data/model accordingly.
     callback request-reorder(int, int);
+    
+    // Timer to defer selection-changed callback, preventing crash when conditional UI rebuilds
+    Timer {
+        interval: 1ms;
+        running: root.selection-timer-running;
+        triggered => {
+            root.selection-timer-running = false;
+            if (root.pending-selection-id >= 0) {
+                root.selection-changed(root.pending-selection-id);
+                root.pending-selection-id = -1;
+            }
+        }
+    }
     
     // Global background catcher: closes menu when clicking on empty areas
     TouchArea {
@@ -424,10 +452,9 @@ export component CheckableReorderableList inherits Rectangle {
                     move-item(offset) => {
                          let to = idx + offset;
                          // Clamp or check bounds
-                         if (to >= 0 && to < items.length) {
+                         if (to >= 0 && to < items.length && idx >= 0 && idx < items.length) {
                              root.request-reorder(idx, to);
                          }
-                         debug("move-item called: idx=" + idx + " offset=" + offset + " to=" + to);
                     }
                     item: item;
                     is-dragging: idx == dragging-index;
@@ -446,39 +473,49 @@ export component CheckableReorderableList inherits Rectangle {
                     opacity: (idx == dragging-index && root.drag-offset != 0px) ? 0.0 : 1.0;
                     interactive: true;
                     // Wire callbacks
-                    request-delete(id) => { root.request-delete(id); }
-                    request-check-change(id, state) => { root.request-check-change(id, state); }
-                    selection-changed(id) => { root.selected-id = id; root.selection-changed(id); }
-                    open-menu(i) => { root.open-menu-index = i; }
+                    request-delete(id) => { if (id >= 0) { root.request-delete(id); } }
+                    request-check-change(id, state) => { if (id >= 0) { root.request-check-change(id, state); } }
+                    // Use deferred selection to avoid crash when conditional UI rebuilds during event processing
+                    selection-changed(id) => {
+                        if (id >= 0) {
+                            root.selected-id = id;
+                            root.pending-selection-id = id;
+                            root.selection-timer-running = true;
+                        }
+                    }
+                    open-menu(i) => { if (i >= 0) { root.open-menu-index = i; } }
                     open-menu-geo(i, id_val, bx, by, bw, bh) => {
-                        // Base position of this row within the Flickable
-                        let row_x = 4px;
-                        let row_y = idx * root.item-height + 2px;
-
-                        // Position the popup below the button, right-aligned to it, but elsewhere if it would overflow
-                        if (row_x + bx + bw + root.menu-width > parent.width && row_y + by + bh + root.menu-height > parent.height) {
-                            // Overflowing right edge and bottom edge: align left edge to button left edge, above button
-                            root.menu-x = row_x + bx;
-                            root.menu-y = row_y + by - root.menu-height - 4px;
-                        }
-
-                        else if (row_x + bx + bw + root.menu-width > parent.width) {
-                            // Overflowing right edge: align left edge to button left edge
-                            root.menu-x = row_x + bx;
-                            root.menu-y = row_y + by + bh + 4px;
-                        }
-                        else if (row_y + by + bh + root.menu-height > parent.height) {
-                            // Overflowing bottom edge: align above the button
-                            root.menu-x = row_x + bx + bw - root.menu-width;
-                            root.menu-y = row_y + by - root.menu-height - 4px;
-                        }
+                        if (i < 0 || id_val < 0) { }
                         else {
-                            // Normal case: align right edge to button right edge
-                            root.menu-x = row_x + bx + bw - root.menu-width;
-                            root.menu-y = row_y + by + bh + 4px;
+                            // Base position of this row within the Flickable
+                            let row_x = 4px;
+                            let row_y = idx * root.item-height + 2px;
+
+                            // Position the popup below the button, right-aligned to it, but elsewhere if it would overflow
+                            if (row_x + bx + bw + root.menu-width > parent.width && row_y + by + bh + root.menu-height > parent.height) {
+                                // Overflowing right edge and bottom edge: align left edge to button left edge, above button
+                                root.menu-x = row_x + bx;
+                                root.menu-y = row_y + by - root.menu-height - 4px;
+                            }
+
+                            else if (row_x + bx + bw + root.menu-width > parent.width) {
+                                // Overflowing right edge: align left edge to button left edge
+                                root.menu-x = row_x + bx;
+                                root.menu-y = row_y + by + bh + 4px;
+                            }
+                            else if (row_y + by + bh + root.menu-height > parent.height) {
+                                // Overflowing bottom edge: align above the button
+                                root.menu-x = row_x + bx + bw - root.menu-width;
+                                root.menu-y = row_y + by - root.menu-height - 4px;
+                            }
+                            else {
+                                // Normal case: align right edge to button right edge
+                                root.menu-x = row_x + bx + bw - root.menu-width;
+                                root.menu-y = row_y + by + bh + 4px;
+                            }
+                            root.open-menu-index = i;
+                            root.open-menu-id = id_val;
                         }
-                        root.open-menu-index = i;
-                        root.open-menu-id = id_val;
                     }
                     close-menu() => { root.open-menu-index = -1; root.open-menu-id = -1; }
                     
@@ -510,9 +547,9 @@ export component CheckableReorderableList inherits Rectangle {
                     }
                     
                     drag-ended() => {
-                        if (root.dragging-index >= 0 && root.drop-target-index >= 0) {
+                        if (root.dragging-index >= 0 && root.drop-target-index >= 0 && root.dragging-index < items.length && root.drop-target-index < items.length) {
                             let to_slot = root.drop-target-index + (root.drop-after ? 1 : 0);
-                            if (root.dragging-index != to_slot) {
+                            if (root.dragging-index != to_slot && to_slot >= 0 && to_slot <= items.length) {
                                 request-reorder(root.dragging-index, to_slot);
                             }
                         }
@@ -573,7 +610,7 @@ export component CheckableReorderableList inherits Rectangle {
                         text: "Delete";
                         clicked => {
                             // Invoke delete for the currently open item id
-                            if (root.open-menu-id >= 0) { root.request-delete(root.open-menu-id); }
+                            if (root.open-menu-id >= 0 && root.open-menu-index >= 0) { root.request-delete(root.open-menu-id); }
                             root.open-menu-index = -1;
                             root.open-menu-id = -1;
                         }

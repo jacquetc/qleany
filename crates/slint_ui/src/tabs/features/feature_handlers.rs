@@ -337,6 +337,9 @@ pub fn setup_feature_deletion_callback(app: &App, app_context: &Arc<AppContext>)
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |feature_id| {
+                if feature_id < 0 {
+                    return;
+                }
                 if let Some(app) = app_weak.upgrade() {
                     let result = feature_commands::remove_feature(
                         &ctx,
@@ -369,6 +372,9 @@ pub fn setup_select_feature_callbacks(app: &App, app_context: &Arc<AppContext>) 
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |feature_id| {
+            if feature_id < 0 {
+                return;
+            }
             if let Some(app) = app_weak.upgrade() {
                 let feature_res =
                     feature_commands::get_feature(&ctx, &(feature_id as common::types::EntityId));

@@ -118,14 +118,16 @@ pub fn clear_dto_in_field_form(app: &App) {
 /// Helper function to fill DTO In field list
 pub fn fill_dto_in_field_list(app: &App, app_context: &Arc<AppContext>) {
     let state = app.global::<FeaturesTabState>();
-    let dto_id = state.get_selected_dto_in_id() as common::types::EntityId;
+    let dto_id_i32 = state.get_selected_dto_in_id();
 
-    if dto_id <= 0 {
+    if dto_id_i32 < 0 {
         let empty_model: std::rc::Rc<slint::VecModel<ListItem>> =
             std::rc::Rc::new(slint::VecModel::from(vec![]));
         state.set_dto_in_field_cr_list(empty_model.into());
         return;
     }
+
+    let dto_id = dto_id_i32 as common::types::EntityId;
 
     let field_ids_res =
         dto_commands::get_dto_relationship(app_context, &dto_id, &DtoRelationshipField::Fields);
@@ -241,29 +243,85 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |enabled| {
-            if let Some(app) = app_weak.upgrade() {
-                let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                if use_case_id < 0 {
-                    return;
-                }
+            let ctx = Arc::clone(&ctx);
+            let app_weak = app_weak.clone();
+            
+            // Run the potentially heavy operation in a background thread to avoid freezing the UI
+            std::thread::spawn(move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+                    if use_case_id < 0 {
+                        return;
+                    }
 
-                let stack_id = app
-                    .global::<FeaturesTabState>()
-                    .get_features_undo_stack_id() as u64;
+                    let stack_id = app
+                        .global::<FeaturesTabState>()
+                        .get_features_undo_stack_id() as u64;
 
-                if enabled {
-                    // Create a new DTO In for this use case
-                    let create_dto = direct_access::CreateDtoDto {
-                        name: "NewDtoIn".to_string(),
-                        fields: vec![],
-                    };
-                    match dto_commands::create_dto(&ctx, Some(stack_id), &create_dto) {
-                        Ok(dto) => {
-                            // Set the relationship
+                    if enabled {
+                        // Create a new DTO In for this use case
+                        let create_dto = direct_access::CreateDtoDto {
+                            name: "NewDtoIn".to_string(),
+                            fields: vec![],
+                        };
+                        match dto_commands::create_dto(&ctx, Some(stack_id), &create_dto) {
+                            Ok(dto) => {
+                                // Set the relationship
+                                let relationship_dto = UseCaseRelationshipDto {
+                                    id: use_case_id as common::types::EntityId,
+                                    field: UseCaseRelationshipField::DtoIn,
+                                    right_ids: vec![dto.id],
+                                };
+                                match use_case_commands::set_use_case_relationship(
+                                    &ctx,
+                                    Some(stack_id),
+                                    &relationship_dto,
+                                ) {
+                                    Ok(()) => {
+                                        let app_weak2 = app_weak.clone();
+                                        let _ = slint::invoke_from_event_loop(move || {
+                                            if let Some(app) = app_weak2.upgrade() {
+                                                fill_dto_in_form(&app, &dto);
+                                                // New DTO has no fields, set empty list explicitly
+                                                let empty_model: std::rc::Rc<slint::VecModel<ListItem>> =
+                                                    std::rc::Rc::new(slint::VecModel::from(vec![]));
+                                                app.global::<FeaturesTabState>()
+                                                    .set_dto_in_field_cr_list(empty_model.into());
+                                                clear_dto_in_field_form(&app);
+                                            }
+                                        });
+                                        log::info!("DTO In created and linked successfully");
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to link DTO In: {}", e);
+                                        // Clean up the created DTO
+                                        let _ = dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
+                                        let _ = slint::invoke_from_event_loop(move || {
+                                            if let Some(app) = app_weak.upgrade() {
+                                                app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("Failed to create DTO In: {}", e);
+                                let _ = slint::invoke_from_event_loop(move || {
+                                    if let Some(app) = app_weak.upgrade() {
+                                        app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                    }
+                                });
+                            }
+                        }
+                    } else {
+                        // Remove the DTO In relationship and optionally delete the DTO
+                        let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
+                        if dto_id >= 0 {
+                            // Clear the relationship first
                             let relationship_dto = UseCaseRelationshipDto {
                                 id: use_case_id as common::types::EntityId,
                                 field: UseCaseRelationshipField::DtoIn,
-                                right_ids: vec![dto.id],
+                                right_ids: vec![],
                             };
                             match use_case_commands::set_use_case_relationship(
                                 &ctx,
@@ -271,63 +329,35 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                 &relationship_dto,
                             ) {
                                 Ok(()) => {
-                                    fill_dto_in_form(&app, &dto);
-                                    // New DTO has no fields, set empty list explicitly
-                                    let empty_model: std::rc::Rc<slint::VecModel<ListItem>> =
-                                        std::rc::Rc::new(slint::VecModel::from(vec![]));
-                                    app.global::<FeaturesTabState>()
-                                        .set_dto_in_field_cr_list(empty_model.into());
-                                    clear_dto_in_field_form(&app);
-                                    log::info!("DTO In created and linked successfully");
+                                    // Delete the DTO
+                                    let _ = dto_commands::remove_dto(
+                                        &ctx,
+                                        Some(stack_id),
+                                        &(dto_id as common::types::EntityId),
+                                    );
+                                    let app_weak2 = app_weak.clone();
+                                    let _ = slint::invoke_from_event_loop(move || {
+                                        if let Some(app) = app_weak2.upgrade() {
+                                            clear_dto_in_form(&app);
+                                            // Re-set enabled to false since clear_dto_in_form sets it
+                                            app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                        }
+                                    });
+                                    log::info!("DTO In removed successfully");
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to link DTO In: {}", e);
-                                    // Clean up the created DTO
-                                    let _ = dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
-                                    app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                    log::error!("Failed to unlink DTO In: {}", e);
+                                    let _ = slint::invoke_from_event_loop(move || {
+                                        if let Some(app) = app_weak.upgrade() {
+                                            app.global::<FeaturesTabState>().set_dto_in_enabled(true);
+                                        }
+                                    });
                                 }
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("Failed to create DTO In: {}", e);
-                            app.global::<FeaturesTabState>().set_dto_in_enabled(false);
-                        }
-                    }
-                } else {
-                    // Remove the DTO In relationship and optionally delete the DTO
-                    let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
-                    if dto_id >= 0 {
-                        // Clear the relationship first
-                        let relationship_dto = UseCaseRelationshipDto {
-                            id: use_case_id as common::types::EntityId,
-                            field: UseCaseRelationshipField::DtoIn,
-                            right_ids: vec![],
-                        };
-                        match use_case_commands::set_use_case_relationship(
-                            &ctx,
-                            Some(stack_id),
-                            &relationship_dto,
-                        ) {
-                            Ok(()) => {
-                                // Delete the DTO
-                                let _ = dto_commands::remove_dto(
-                                    &ctx,
-                                    Some(stack_id),
-                                    &(dto_id as common::types::EntityId),
-                                );
-                                clear_dto_in_form(&app);
-                                // Re-set enabled to false since clear_dto_in_form sets it
-                                app.global::<FeaturesTabState>().set_dto_in_enabled(false);
-                                log::info!("DTO In removed successfully");
-                            }
-                            Err(e) => {
-                                log::error!("Failed to unlink DTO In: {}", e);
-                                app.global::<FeaturesTabState>().set_dto_in_enabled(true);
                             }
                         }
                     }
                 }
-            }
+            });
         }
     });
 }
@@ -352,6 +382,9 @@ pub fn setup_dto_in_field_selected_callback(app: &App, app_context: &Arc<AppCont
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |field_id| {
+            if field_id < 0 {
+                return;
+            }
             if let Some(app) = app_weak.upgrade() {
                 let field_res =
                     dto_field_commands::get_dto_field(&ctx, &(field_id as common::types::EntityId));
@@ -456,12 +489,18 @@ pub fn setup_dto_in_fields_reorder_callback(app: &App, app_context: &Arc<AppCont
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |from_index, to_index| {
+                if from_index < 0 || to_index < 0 {
+                    return;
+                }
                 let from = from_index as usize;
                 let to = to_index as usize;
 
                 if let Some(app) = app_weak.upgrade() {
-                    let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id()
-                        as common::types::EntityId;
+                    let dto_id_i32 = app.global::<FeaturesTabState>().get_selected_dto_in_id();
+                    if dto_id_i32 < 0 {
+                        return;
+                    }
+                    let dto_id = dto_id_i32 as common::types::EntityId;
                     let field_ids_res = dto_commands::get_dto_relationship(
                         &ctx,
                         &dto_id,
@@ -512,6 +551,9 @@ pub fn setup_dto_in_field_deletion_callback(app: &App, app_context: &Arc<AppCont
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |field_id| {
+                if field_id < 0 {
+                    return;
+                }
                 if let Some(app) = app_weak.upgrade() {
                     let result = dto_field_commands::remove_dto_field(
                         &ctx,
@@ -544,84 +586,93 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move || {
-                if let Some(app) = app_weak.upgrade() {
-                    let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
-                    if dto_id < 0 {
-                        log::warn!("Cannot add DTO In field: no DTO In selected");
-                        return;
-                    }
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
 
-                    // Create a new DTO field with default values
-                    let create_dto = direct_access::CreateDtoFieldDto {
-                        name: "new_field".to_string(),
-                        field_type: DtoFieldType::String,
-                        is_nullable: false,
-                        is_list: false,
-                        enum_name: None,
-                        enum_values: None,
-                    };
+                std::thread::spawn(move || {
+                    if let Some(app) = app_weak.upgrade() {
+                        let dto_id = app.global::<FeaturesTabState>().get_selected_dto_in_id();
+                        if dto_id < 0 {
+                            log::warn!("Cannot add DTO In field: no DTO In selected");
+                            return;
+                        }
 
-                    match dto_field_commands::create_dto_field(
-                        &ctx,
-                        Some(
-                            app.global::<FeaturesTabState>()
-                                .get_features_undo_stack_id() as u64,
-                        ),
-                        &create_dto,
-                    ) {
-                        Ok(new_field) => {
-                            log::info!(
-                                "DTO In field created successfully with id: {}",
-                                new_field.id
-                            );
+                        // Create a new DTO field with default values
+                        let create_dto = direct_access::CreateDtoFieldDto {
+                            name: "new_field".to_string(),
+                            field_type: DtoFieldType::String,
+                            is_nullable: false,
+                            is_list: false,
+                            enum_name: None,
+                            enum_values: None,
+                        };
 
-                            // Get current field ids from DTO
-                            let field_ids_res = dto_commands::get_dto_relationship(
-                                &ctx,
-                                &(dto_id as common::types::EntityId),
-                                &DtoRelationshipField::Fields,
-                            );
+                        match dto_field_commands::create_dto_field(
+                            &ctx,
+                            Some(
+                                app.global::<FeaturesTabState>()
+                                    .get_features_undo_stack_id() as u64,
+                            ),
+                            &create_dto,
+                        ) {
+                            Ok(new_field) => {
+                                log::info!(
+                                    "DTO In field created successfully with id: {}",
+                                    new_field.id
+                                );
 
-                            match field_ids_res {
-                                Ok(mut field_ids) => {
-                                    // Add the new field id to the list
-                                    field_ids.push(new_field.id);
+                                // Get current field ids from DTO
+                                let field_ids_res = dto_commands::get_dto_relationship(
+                                    &ctx,
+                                    &(dto_id as common::types::EntityId),
+                                    &DtoRelationshipField::Fields,
+                                );
 
-                                    // Update the DTO relationship
-                                    let relationship_dto = DtoRelationshipDto {
-                                        id: dto_id as common::types::EntityId,
-                                        field: DtoRelationshipField::Fields,
-                                        right_ids: field_ids,
-                                    };
+                                match field_ids_res {
+                                    Ok(mut field_ids) => {
+                                        // Add the new field id to the list
+                                        field_ids.push(new_field.id);
 
-                                    if let Err(e) = dto_commands::set_dto_relationship(
-                                        &ctx,
-                                        Some(
-                                            app.global::<FeaturesTabState>()
-                                                .get_features_undo_stack_id()
-                                                as u64,
-                                        ),
-                                        &relationship_dto,
-                                    ) {
-                                        log::error!(
-                                            "Failed to add field to DTO In relationship: {}",
-                                            e
-                                        );
-                                    } else {
-                                        // Refresh the field list
-                                        fill_dto_in_field_list(&app, &ctx);
+                                        // Update the DTO relationship
+                                        let relationship_dto = DtoRelationshipDto {
+                                            id: dto_id as common::types::EntityId,
+                                            field: DtoRelationshipField::Fields,
+                                            right_ids: field_ids,
+                                        };
+
+                                        if let Err(e) = dto_commands::set_dto_relationship(
+                                            &ctx,
+                                            Some(
+                                                app.global::<FeaturesTabState>()
+                                                    .get_features_undo_stack_id()
+                                                    as u64,
+                                            ),
+                                            &relationship_dto,
+                                        ) {
+                                            log::error!(
+                                                "Failed to add field to DTO In relationship: {}",
+                                                e
+                                            );
+                                        } else {
+                                            // Refresh the field list
+                                            let _ = slint::invoke_from_event_loop(move || {
+                                                if let Some(app) = app_weak.upgrade() {
+                                                    fill_dto_in_field_list(&app, &ctx);
+                                                }
+                                            });
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to get DTO In fields relationship: {}", e);
                                     }
                                 }
-                                Err(e) => {
-                                    log::error!("Failed to get DTO In fields relationship: {}", e);
-                                }
+                            }
+                            Err(e) => {
+                                log::error!("Failed to create DTO In field: {}", e);
                             }
                         }
-                        Err(e) => {
-                            log::error!("Failed to create DTO In field: {}", e);
-                        }
                     }
-                }
+                });
             }
         });
 }
