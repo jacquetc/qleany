@@ -33,7 +33,7 @@ pub fn load(
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(Load),
         ids: vec![return_dto.workspace_id],
-        data: None,
+        data: Some(return_dto.manifest_path.clone()),
     });
     Ok(return_dto)
 }

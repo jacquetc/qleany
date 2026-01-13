@@ -8,6 +8,7 @@ pub struct LoadDto {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoadReturnDto {
     pub workspace_id: u64,
+    pub manifest_path: String,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SaveDto {

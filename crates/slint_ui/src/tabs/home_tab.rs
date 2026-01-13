@@ -41,6 +41,9 @@ fn subscribe_loaded_event(
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
                     app.global::<AppState>().set_manifest_is_open(true);
+                    if let Some(data) = event.data {
+                        app.global::<AppState>().set_manifest_path(slint::SharedString::from(data));
+                    }
                     log::info!("Manifest UI state updated after load");
                 }
             });
@@ -73,6 +76,7 @@ fn subscribe_closed_event(
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
                     app.global::<AppState>().set_manifest_is_open(false);
+                    app.global::<AppState>().set_manifest_path(slint::SharedString::from(""));
                 }
             });
         }
@@ -103,6 +107,7 @@ fn subscribe_new_manifest_event(
                     app.global::<AppState>().set_manifest_is_saved(true);
                     app.global::<AppState>().set_is_loading(false);
                     app.global::<AppState>().set_manifest_is_open(true);
+                    app.global::<AppState>().set_manifest_path(slint::SharedString::from("no path yet"));
                 }
             });
         }
@@ -189,6 +194,9 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                     match handling_manifest_commands::load_manifest(&ctx, &load_dto) {
                         Ok(result) => {
                             log::info!("Manifest loaded successfully: {:?}", result);
+                            if let Some(app) = app_weak.upgrade() {
+                                app.global::<AppState>().set_manifest_path(slint::SharedString::from(load_dto.manifest_path));
+                            }
                         }
 
                         Err(e) => {
@@ -237,6 +245,7 @@ pub fn setup_save_manifest_as_callback(app: &App, app_context: &Arc<AppContext>)
                             app.global::<AppState>()
                                 .set_error_message(slint::SharedString::from(""));
                             app.global::<AppState>().set_manifest_is_saved(true);
+                            app.global::<AppState>().set_manifest_path(slint::SharedString::from(save_dto.manifest_path));
 
                             // Show success message
                             app.global::<AppState>().set_success_message(
@@ -313,6 +322,7 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         app.global::<AppState>()
                             .set_error_message(slint::SharedString::from(""));
                         app.global::<AppState>().set_manifest_is_saved(true);
+                        app.global::<AppState>().set_manifest_path(slint::SharedString::from(save_dto.manifest_path));
 
                         // Show success message
                         app.global::<AppState>()
@@ -407,6 +417,7 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                             app.global::<AppState>().set_manifest_is_saved(true);
                             app.global::<AppState>().set_is_loading(false);
                             app.global::<AppState>().set_manifest_is_open(true);
+                            app.global::<AppState>().set_manifest_path(slint::SharedString::from("qleany.yaml"));
                         });
                     }
                     Err(e) => {

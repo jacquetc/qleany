@@ -50,7 +50,7 @@ component NavItem inherits Rectangle {
 }
 
 export component App inherits Window {
-    title: "Qleany";
+    title: AppState.manifest_is_open ? "Qleany - " + AppState.manifest_path : "Qleany";
     min-width: 1200px;
     min-height: 700px;
 

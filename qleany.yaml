@@ -430,6 +430,8 @@ features:
       fields:
       - name: root_id
         type: integer
+      - name: manifest_path
+        type: string
   - name: save
     validator: true
     entities:
