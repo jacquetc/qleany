@@ -7,8 +7,8 @@
 {% for eid, ent in s.entities %}
 {%- if ent.inner.allow_direct_access %}
 // {{ ent.pascal_name }}
-{%- endif %}
 pub mod {{ ent.snake_name }};
+{%- endif %}
 {% endfor %}
 
 // Re-exports for all project entities
