@@ -28,8 +28,12 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     feature_handlers::subscribe_load_manifest_event(event_hub_client, app, app_context);
     feature_handlers::subscribe_workspace_updated_event(event_hub_client, app, app_context);
     feature_handlers::subscribe_feature_updated_event(event_hub_client, app, app_context);
+    feature_handlers::subscribe_feature_deletion_event(event_hub_client, app, app_context);
     use_case_handlers::subscribe_use_case_updated_event(event_hub_client, app, app_context);
+    use_case_handlers::subscribe_use_case_deleted_event(event_hub_client, app, app_context);
     dto_in_handlers::subscribe_dto_updated_event(event_hub_client, app, app_context);
+    dto_in_handlers::subscribe_dto_deleted_event(event_hub_client, app, app_context);
+    dto_out_handlers::subscribe_dto_updated_event(event_hub_client, app, app_context);
 
     // Feature callbacks
     feature_handlers::setup_features_reorder_callback(app, app_context);

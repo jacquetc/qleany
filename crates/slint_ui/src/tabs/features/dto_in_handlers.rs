@@ -16,6 +16,7 @@ use common::entities::DtoFieldType;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
+use crate::tabs::features::dto_out_handlers::fill_dto_out_field_list;
 
 pub fn subscribe_dto_updated_event(
     event_hub_client: &EventHubClient,
