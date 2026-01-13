@@ -850,7 +850,11 @@ impl SnapshotBuilder {
                                             inner: uc.clone(),
                                             entities: {
                                                 let entities_id = uc.entities;
-                                                let entity_vm: IndexMap<EntityId, EntityVM> = uow
+                                                if entities_id.is_empty() {
+                                                    IndexMap::new()
+                                                }
+                                                else {
+                                                let entity_vms: IndexMap<EntityId, EntityVM> = uow
                                                     .get_entity_multi(&entities_id)
                                                     .unwrap_or_default()
                                                     .into_iter()
@@ -875,7 +879,8 @@ impl SnapshotBuilder {
                                                         )
                                                     })
                                                     .collect();
-                                                entity_vm
+                                                entity_vms
+                                                    }
                                             },
                                             dto_in: uc.dto_in.and_then(|dto_id| {
                                                 dtos.get(&dto_id).map(|d| DtoVM {
@@ -972,27 +977,32 @@ impl SnapshotBuilder {
                         inner: uc.clone(),
                         entities: {
                             let entities_id = uc.entities;
-                            uow.get_entity_multi(&entities_id)
-                                .unwrap_or_default()
-                                .into_iter()
-                                .filter_map(|e| e)
-                                .map(|e| {
-                                    (
-                                        e.id,
-                                        SnapshotBuilder::get_entity_vm(uow, &e.id).unwrap_or(
-                                            EntityVM {
-                                                inner: e,
-                                                relationships: Default::default(),
-                                                forward_relationships: Default::default(),
-                                                backward_relationships: Default::default(),
-                                                snake_name: "".to_string(),
-                                                pascal_name: "".to_string(),
-                                                fields: vec![],
-                                            },
-                                        ),
-                                    )
-                                })
-                                .collect()
+                            if entities_id.is_empty() {
+                                IndexMap::new()
+                            }
+                            else {
+                                uow.get_entity_multi(&entities_id)
+                                    .unwrap_or_default()
+                                    .into_iter()
+                                    .filter_map(|e| e)
+                                    .map(|e| {
+                                        (
+                                            e.id,
+                                            SnapshotBuilder::get_entity_vm(uow, &e.id).unwrap_or(
+                                                EntityVM {
+                                                    inner: e,
+                                                    relationships: Default::default(),
+                                                    forward_relationships: Default::default(),
+                                                    backward_relationships: Default::default(),
+                                                    snake_name: "".to_string(),
+                                                    pascal_name: "".to_string(),
+                                                    fields: vec![],
+                                                },
+                                            ),
+                                        )
+                                    })
+                                    .collect()
+                            }
                         },
                         dto_in: uc.dto_in.and_then(|dto_id| {
                             dtos.get(&dto_id).map(|d| DtoVM {
