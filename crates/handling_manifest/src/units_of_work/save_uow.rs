@@ -1,8 +1,8 @@
-use common::entities::UserInterface;
 use crate::use_cases::save_uc::{SaveUnitOfWorkFactoryTrait, SaveUnitOfWorkTrait};
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::entities::UserInterface;
 use common::entities::{Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase, Workspace};
 use common::event::EventHub;
 use common::types::EntityId;

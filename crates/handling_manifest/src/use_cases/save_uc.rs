@@ -1,11 +1,10 @@
-use common::entities::UserInterface;
-use crate::SaveDto;
 use crate::use_cases::common::model_structs;
+use crate::SaveDto;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
+use common::entities::UserInterface;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root,
-    UseCase, Workspace,
+    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root, UseCase, Workspace,
 };
 use common::types::EntityId;
 
@@ -53,14 +52,18 @@ impl SaveUseCase {
         let root = &roots[0].as_ref().ok_or(anyhow::anyhow!("Root is None"))?;
         // get workspace
         let workspace = uow
-            .get_workspace(&root.workspace.ok_or(anyhow::anyhow!("Workspace ID is None"))?)?
+            .get_workspace(
+                &root
+                    .workspace
+                    .ok_or(anyhow::anyhow!("Workspace ID is None"))?,
+            )?
             .ok_or(anyhow::anyhow!("Workspace not found"))?;
 
         // Get global
         let global = uow
             .get_global(&workspace.global)?
             .ok_or(anyhow::anyhow!("Global not found"))?;
-        
+
         // Get Ui
         let ui = uow
             .get_user_interface(&workspace.user_interface)?
@@ -127,7 +130,7 @@ impl SaveUseCase {
             },
             prefix_path: global.prefix_path.clone(),
         };
-        
+
         let model_ui = model_structs::Ui {
             rust_cli: ui.rust_cli,
             rust_slint: ui.rust_slint,

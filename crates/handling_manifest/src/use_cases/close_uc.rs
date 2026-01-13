@@ -1,9 +1,9 @@
-use common::entities::{Workspace, File};
+use crate::use_cases::common::model_structs;
 use anyhow::Result;
+use common::direct_access::system::SystemRelationshipField;
+use common::entities::{File, Workspace};
 use common::types::EntityId;
 use common::{database::CommandUnitOfWork, entities::Root};
-use common::direct_access::system::SystemRelationshipField;
-use crate::use_cases::common::model_structs;
 
 pub trait CloseUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn CloseUnitOfWorkTrait>;
@@ -36,14 +36,15 @@ impl CloseUseCase {
 
         // Remove the workspace
         uow.get_workspace_multi(&[])?;
-        let workspace_ids: Vec<EntityId> = workspaces.iter().filter_map(|w| w.as_ref().map(|ws| ws.id)).collect();
+        let workspace_ids: Vec<EntityId> = workspaces
+            .iter()
+            .filter_map(|w| w.as_ref().map(|ws| ws.id))
+            .collect();
         uow.delete_workspace_multi(&workspace_ids)?;
 
         // Get all files
         let file_ids = uow.get_system_relationship(&1, &SystemRelationshipField::Files)?;
         uow.delete_file_multi(&file_ids)?;
-
-
 
         uow.commit()?;
 

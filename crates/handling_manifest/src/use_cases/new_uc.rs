@@ -1,8 +1,8 @@
 use crate::NewReturnDto;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use common::database::CommandUnitOfWork;
 use common::direct_access::root::RootRelationshipField;
-use common::entities::{Entity, Field, FieldType, Global, Root, Workspace, System, UserInterface};
+use common::entities::{Entity, Field, FieldType, Global, Root, System, UserInterface, Workspace};
 use common::types::EntityId;
 
 pub trait NewUnitOfWorkFactoryTrait {
@@ -123,7 +123,7 @@ impl NewUseCase {
             cpp_qt_qtquick: false,
             cpp_qt_kirigami: false,
         })?;
-        
+
         let workspace = Workspace {
             id: 0,
             manifest_absolute_path: "".to_string(),
@@ -134,12 +134,16 @@ impl NewUseCase {
         };
 
         let created_workspace = uow.create_workspace_multi(&vec![workspace])?;
-        
+
         let mut root = uow.get_root(&1)?.ok_or(anyhow!("Root entity not found"))?;
-        
+
         root.workspace = Some(created_workspace[0].id);
-        
-        uow.set_root_relationship(&root.id, &RootRelationshipField::Workspace, &vec![created_workspace[0].id])?;
+
+        uow.set_root_relationship(
+            &root.id,
+            &RootRelationshipField::Workspace,
+            &vec![created_workspace[0].id],
+        )?;
 
         uow.commit()?;
         Ok(NewReturnDto {

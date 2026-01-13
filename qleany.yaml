@@ -428,8 +428,8 @@ features:
     dto_out:
       name: LoadReturnDto
       fields:
-      - name: root_id
-        type: integer
+      - name: workspace_id
+        type: uinteger
       - name: manifest_path
         type: string
   - name: save
@@ -461,12 +461,23 @@ features:
       name: NewReturnDto
       fields:
       - name: workspace_id
-        type: integer
+        type: uinteger
   - name: close
     validator: false
     entities:
     - Root
     undoable: false
+  - name: export_to_mermaid
+    validator: false
+    undoable: false
+    read_only: true
+    entities:
+      - Entity
+    dto_out:
+      name: ExportToMermaidReturnDto
+      fields:
+      - name: mermaid_diagram
+        type: string
 - name: rust_file_generation
   use_cases:
   - name: list_rust_files
@@ -489,7 +500,7 @@ features:
       name: ListRustFilesReturnDto
       fields:
       - name: file_ids
-        type: integer
+        type: uinteger
         is_list: true
       - name: files
         type: string

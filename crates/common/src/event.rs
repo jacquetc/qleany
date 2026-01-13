@@ -70,6 +70,7 @@ pub enum HandlingManifestEvent {
     Save,
     New,
     Close,
+    ExportToMermaid
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]

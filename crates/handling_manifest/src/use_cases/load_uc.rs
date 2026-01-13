@@ -430,6 +430,9 @@ impl LoadUseCase {
 
         uow.commit()?;
 
-        Ok(LoadReturnDto { workspace_id, manifest_path: filename } )
+        Ok(LoadReturnDto {
+            workspace_id,
+            manifest_path: filename,
+        })
     }
 }
