@@ -14,7 +14,6 @@ use crate::app_context::AppContext;
 use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
 use crate::{App, AppState, FeaturesTabState, ListItem};
 use crate::event_hub_client::EventHubClient;
-use crate::tabs::features::use_case_handlers::fill_use_case_list;
 use super::dto_in_handlers::{
     dto_field_type_to_index, index_to_dto_field_type, update_dto_field_helper, update_dto_helper,
 };

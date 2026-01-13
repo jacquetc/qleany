@@ -8,7 +8,6 @@ use std::sync::Arc;
 use crate::app_context::AppContext;
 use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
 use crate::event_hub_client::EventHubClient;
-use crate::tabs::features::use_case_handlers::fill_use_case_list;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 use common::direct_access::dto::DtoRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
@@ -16,7 +15,6 @@ use common::entities::DtoFieldType;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
-use crate::tabs::features::dto_out_handlers::fill_dto_out_field_list;
 
 pub fn subscribe_dto_updated_event(
     event_hub_client: &EventHubClient,

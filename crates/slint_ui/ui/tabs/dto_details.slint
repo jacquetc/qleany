@@ -148,7 +148,7 @@ export component DtoDetails inherits Rectangle {
                                 enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_in_field_id;
                                 selection-changed(id) => {
-                                    if (id >= 0 && FeaturesTabState.selected_dto_in_field_id != id) {
+                                    if (id >= 1 && FeaturesTabState.selected_dto_in_field_id != id) {
                                         FeaturesTabState.dto_in_field_selected(id);
                                     }
                                 }
@@ -158,7 +158,7 @@ export component DtoDetails inherits Rectangle {
                                     }
                                 }
                                 request-delete(id) => {
-                                    if (id >= 0) {
+                                    if (id >= 1) {
                                         FeaturesTabState.request_dto_in_field_deletion(id);
                                     }
                                 }
@@ -395,7 +395,7 @@ export component DtoDetails inherits Rectangle {
                                 enable-delete: true;
                                 selected-id: FeaturesTabState.selected_dto_out_field_id;
                                 selection-changed(id) => {
-                                    if (id >= 0 && FeaturesTabState.selected_dto_out_field_id != id) {
+                                    if (id >= 1 && FeaturesTabState.selected_dto_out_field_id != id) {
                                         FeaturesTabState.dto_out_field_selected(id);
                                     }
                                 }
@@ -405,7 +405,7 @@ export component DtoDetails inherits Rectangle {
                                     }
                                 }
                                 request-delete(id) => {
-                                    if (id >= 0) {
+                                    if (id >= 1) {
                                         FeaturesTabState.request_dto_out_field_deletion(id);
                                     }
                                 }
@@ -534,7 +534,7 @@ export component DtoDetails inherits Rectangle {
                         enable-checkbox: true;
                         enable-delete: false;
                         request-check-change(id, checked) => {
-                            if (id >= 0) {
+                            if (id >= 1) {
                                 FeaturesTabState.use_case_entity_check_changed(id, checked);
                             }
                         }

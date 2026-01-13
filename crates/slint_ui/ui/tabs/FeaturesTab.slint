@@ -139,7 +139,7 @@ export component FeaturesTab inherits Rectangle {
                             enable-delete: true;
                             selected-id: FeaturesTabState.selected_feature_id;
                             selection-changed(id) => {
-                                if (id >= 0) {
+                                if (id >= 1) {
                                     FeaturesTabState.feature_selected(id);
                                 }
                             }
@@ -149,7 +149,7 @@ export component FeaturesTab inherits Rectangle {
                                 }
                             }
                             request-delete(id) => {
-                                if (id >= 0) {
+                                if (id >= 1) {
                                     FeaturesTabState.request_feature_deletion(id);
                                 }
                             }
@@ -269,7 +269,7 @@ export component FeaturesTab inherits Rectangle {
                             enable-delete: true;
                             selected-id: FeaturesTabState.selected_use_case_id;
                             selection-changed(id) => {
-                                if (id >= 0) {
+                                if (id >= 1) {
                                     FeaturesTabState.use_case_selected(id);
                                 }
                             }
@@ -279,7 +279,7 @@ export component FeaturesTab inherits Rectangle {
                                 }
                             }
                             request-delete(id) => {
-                                if (id >= 0) {
+                                if (id >= 1) {
                                     FeaturesTabState.request_use_case_deletion(id);
                                 }
                             }
