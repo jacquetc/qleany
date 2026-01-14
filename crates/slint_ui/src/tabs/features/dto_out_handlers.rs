@@ -290,7 +290,9 @@ pub fn setup_dto_out_field_selected_callback(app: &App, app_context: &Arc<AppCon
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |field_id| {
-            if field_id < 0 {
+            // Ignore invalid or zero ids which may be emitted by the UI.
+            if field_id <= 0 {
+                log::warn!("Ignored invalid DTO Out field selection id: {}", field_id);
                 return;
             }
             if let Some(app) = app_weak.upgrade() {
