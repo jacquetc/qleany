@@ -196,6 +196,10 @@ export component GenerateTab inherits Rectangle {
                             text-align-right: true;
                             text-prefixes: AppState.file_text_prefixes;
                             text-bolds: AppState.file_text_bolds;
+                            elided-texts: AppState.file_elided_texts;
+                            elided-prefixes: AppState.file_elided_prefixes;
+                            elided-bolds: AppState.file_elided_bolds;
+                            max-text-length: 50;
                             selection-changed(id) => {
                                 if (id >= 0) {
                                     AppState.selected_file_index = id;

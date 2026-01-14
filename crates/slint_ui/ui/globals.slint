@@ -295,7 +295,12 @@ export global AppState {
     // Pre-computed text parts for bold filename display
     in-out property <[string]> file_text_prefixes: [];
     in-out property <[string]> file_text_bolds: [];
-    
+    // Pre-computed elided texts for long file names (left elide)
+    in-out property <[string]> file_elided_texts: [];
+    // Pre-computed elided text parts for bold display (when bold-after-slash is true)
+    in-out property <[string]> file_elided_prefixes: [];
+    in-out property <[string]> file_elided_bolds: [];
+
     // Generate tab callbacks
     callback group_selected(int);
     callback file_selected(int);

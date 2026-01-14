@@ -108,6 +108,61 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 })
                 .unzip();
 
+            // Compute elided texts for long file names (left elide)
+            let max_text_length = 50;
+            let (elided_texts, elided_prefixes, elided_bolds): (
+                Vec<SharedString>,
+                Vec<SharedString>,
+                Vec<SharedString>,
+            ) = result
+                .file_names
+                .iter()
+                .map(|file_name| {
+                    let char_count = file_name.chars().count();
+                    if char_count > max_text_length {
+                        // Left elide: show "..." + last N characters
+                        let suffix: String = file_name
+                            .chars()
+                            .skip(char_count - max_text_length)
+                            .collect();
+                        let elided_full = format!("...{}", suffix);
+
+                        // For bold display, split elided text at last slash
+                        if let Some(last_slash) = elided_full.rfind('/') {
+                            let prefix = &elided_full[..=last_slash];
+                            let bold = &elided_full[last_slash + 1..];
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::from(prefix),
+                                SharedString::from(bold),
+                            )
+                        } else {
+                            // No slash in elided text, entire text is bold
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::default(),
+                                SharedString::from(elided_full.as_str()),
+                            )
+                        }
+                    } else {
+                        // No elide needed, return empty strings
+                        (
+                            SharedString::default(),
+                            SharedString::default(),
+                            SharedString::default(),
+                        )
+                    }
+                })
+                .fold(
+                    (Vec::new(), Vec::new(), Vec::new()),
+                    |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
+                        texts.push(text);
+                        prefixes.push(prefix);
+                        bolds.push(bold);
+                        (texts, prefixes, bolds)
+                    },
+                );
+
             // Update selected files count
             let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
 
@@ -143,6 +198,19 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 .set_file_text_prefixes(text_prefixes_model.into());
             app.global::<AppState>()
                 .set_file_text_bolds(text_bolds_model.into());
+
+            // Set elided texts for long file names
+            let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
+            app.global::<AppState>()
+                .set_file_elided_texts(elided_texts_model.into());
+
+            let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+            app.global::<AppState>()
+                .set_file_elided_prefixes(elided_prefixes_model.into());
+
+            let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
+            app.global::<AppState>()
+                .set_file_elided_bolds(elided_bolds_model.into());
 
             // Set selected files count
             app.global::<AppState>()
@@ -622,6 +690,58 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                                 })
                                 .unzip();
 
+                        // Compute elided texts for long file names
+                        let max_text_length = 50;
+                        let (elided_texts, elided_prefixes, elided_bolds): (
+                            Vec<SharedString>,
+                            Vec<SharedString>,
+                            Vec<SharedString>,
+                        ) = filtered_indices
+                            .iter()
+                            .map(|&idx| {
+                                let file_name = &result.file_names[idx];
+                                let char_count = file_name.chars().count();
+                                if char_count > max_text_length {
+                                    let suffix: String = file_name
+                                        .chars()
+                                        .skip(char_count - max_text_length)
+                                        .collect();
+                                    let elided_full = format!("...{}", suffix);
+
+                                    // For bold display, split elided text at last slash
+                                    if let Some(last_slash) = elided_full.rfind('/') {
+                                        let prefix = &elided_full[..=last_slash];
+                                        let bold = &elided_full[last_slash + 1..];
+                                        (
+                                            SharedString::from(elided_full.as_str()),
+                                            SharedString::from(prefix),
+                                            SharedString::from(bold),
+                                        )
+                                    } else {
+                                        (
+                                            SharedString::from(elided_full.as_str()),
+                                            SharedString::default(),
+                                            SharedString::from(elided_full.as_str()),
+                                        )
+                                    }
+                                } else {
+                                    (
+                                        SharedString::default(),
+                                        SharedString::default(),
+                                        SharedString::default(),
+                                    )
+                                }
+                            })
+                            .fold(
+                                (Vec::new(), Vec::new(), Vec::new()),
+                                |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
+                                    texts.push(text);
+                                    prefixes.push(prefix);
+                                    bolds.push(bold);
+                                    (texts, prefixes, bolds)
+                                },
+                            );
+
                         // Update selected files count
                         let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
 
@@ -634,6 +754,19 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                             .set_file_text_prefixes(text_prefixes_model.into());
                         app.global::<AppState>()
                             .set_file_text_bolds(text_bolds_model.into());
+
+                        let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
+                        app.global::<AppState>()
+                            .set_file_elided_texts(elided_texts_model.into());
+
+                        let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+                        app.global::<AppState>()
+                            .set_file_elided_prefixes(elided_prefixes_model.into());
+
+                        let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
+                        app.global::<AppState>()
+                            .set_file_elided_bolds(elided_bolds_model.into());
+
                         app.global::<AppState>()
                             .set_selected_files_count(selected_count);
 
@@ -741,6 +874,58 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                             })
                             .unzip();
 
+                    // Compute elided texts for long file names
+                    let max_text_length = 50;
+                    let (elided_texts, elided_prefixes, elided_bolds): (
+                        Vec<SharedString>,
+                        Vec<SharedString>,
+                        Vec<SharedString>,
+                    ) = filtered_indices
+                        .iter()
+                        .map(|&idx| {
+                            let file_name = &result.file_names[idx];
+                            let char_count = file_name.chars().count();
+                            if char_count > max_text_length {
+                                let suffix: String = file_name
+                                    .chars()
+                                    .skip(char_count - max_text_length)
+                                    .collect();
+                                let elided_full = format!("...{}", suffix);
+
+                                // For bold display, split elided text at last slash
+                                if let Some(last_slash) = elided_full.rfind('/') {
+                                    let prefix = &elided_full[..=last_slash];
+                                    let bold = &elided_full[last_slash + 1..];
+                                    (
+                                        SharedString::from(elided_full.as_str()),
+                                        SharedString::from(prefix),
+                                        SharedString::from(bold),
+                                    )
+                                } else {
+                                    (
+                                        SharedString::from(elided_full.as_str()),
+                                        SharedString::default(),
+                                        SharedString::from(elided_full.as_str()),
+                                    )
+                                }
+                            } else {
+                                (
+                                    SharedString::default(),
+                                    SharedString::default(),
+                                    SharedString::default(),
+                                )
+                            }
+                        })
+                        .fold(
+                            (Vec::new(), Vec::new(), Vec::new()),
+                            |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
+                                texts.push(text);
+                                prefixes.push(prefix);
+                                bolds.push(bold);
+                                (texts, prefixes, bolds)
+                            },
+                        );
+
                     // Update selected files count (only count checked files that are visible)
                     let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
 
@@ -753,6 +938,19 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         .set_file_text_prefixes(text_prefixes_model.into());
                     app.global::<AppState>()
                         .set_file_text_bolds(text_bolds_model.into());
+
+                    let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
+                    app.global::<AppState>()
+                        .set_file_elided_texts(elided_texts_model.into());
+
+                    let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+                    app.global::<AppState>()
+                        .set_file_elided_prefixes(elided_prefixes_model.into());
+
+                    let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
+                    app.global::<AppState>()
+                        .set_file_elided_bolds(elided_bolds_model.into());
+
                     app.global::<AppState>()
                         .set_selected_files_count(selected_count);
                 }

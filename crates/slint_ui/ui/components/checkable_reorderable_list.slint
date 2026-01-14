@@ -13,6 +13,9 @@ import { StyledButton } from "misc.slint";
 //   • in-out property <bool> enable-delete – show delete option in context menu (default: false)
 //   • in-out property <bool> enable-checkbox – show checkboxes on items (default: false)
 //   • in-out property <int> selected-id – currently selected item id (default: -1)
+//   • in-out property <int> max-text-length – maximum text length before left elide (default: 50)
+//   • in-out property <[string]> elided-texts – pre-computed elided texts (parallel array to items)
+//     When a text exceeds max-text-length, populate this array with "...{suffix}" versions
 //
 // Styling Properties:
 //   • in property <length> item-height – height of each list item (default: 60px)
@@ -38,6 +41,22 @@ import { StyledButton } from "misc.slint";
 //   callbacks so the hosting application can update its data source.
 //   This is the recommended pattern with Slint models.
 // - Accessibility: supports keyboard navigation (Tab) and keyboard reordering (Alt+Up/Down)
+//
+// Example: Using left elide for long text (Rust side):
+//   let max_len = 50;
+//   let elided_texts: Vec<SharedString> = items
+//       .iter()
+//       .map(|item| {
+//           let text = item.text.as_str();
+//           if text.chars().count() > max_len {
+//               SharedString::from(format!("...{}",
+//                   text.chars().skip(text.chars().count() - max_len).collect::<String>()))
+//           } else {
+//               SharedString::default()  // Empty string means no elide
+//           }
+//       })
+//       .collect();
+//   app.set_elided_texts(VecModel::from(elided_texts).into());
 
 export struct ListItem {
     id: int,
@@ -70,6 +89,13 @@ component DraggableItem inherits Rectangle {
     in property <string> text-bold: "";
     // When true, align text to the right
     in property <bool> text-align-right: false;
+    // Maximum text length before left elide
+    in property <int> max-text-length: 50;
+    // Pre-computed elided text (set by parent when text exceeds max-text-length)
+    in property <string> elided-text: "";
+    // Pre-computed elided text parts for bold display (when bold-after-slash is true)
+    in property <string> elided-prefix: "";
+    in property <string> elided-bold: "";
 
     callback move-item(int); // Request reorder by offset
 
@@ -221,7 +247,7 @@ component DraggableItem inherits Rectangle {
 
             // Normal text display (when bold-after-slash is false)
             if !bold-after-slash: Text {
-                text: item.text;
+                text: elided-text != "" ? elided-text : item.text;
                 vertical-alignment: center;
                 horizontal-alignment: text-align-right ? right : left;
                 font-size: 14px;
@@ -232,13 +258,13 @@ component DraggableItem inherits Rectangle {
                 spacing: 0px;
                 alignment: text-align-right ? end : start;
                 Text {
-                    text: text-prefix;
+                    text: elided-prefix != "" ? elided-prefix : text-prefix;
                     vertical-alignment: center;
                     font-size: 14px;
                     color: theme-text;
                 }
                 Text {
-                    text: text-bold;
+                    text: elided-bold != "" ? elided-bold : text-bold;
                     vertical-alignment: center;
                     font-size: 14px;
                     font-weight: 700;
@@ -289,20 +315,9 @@ component DraggableItem inherits Rectangle {
             // Selection click when not dragging
             if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && !drag-armed) {
                 close-menu();
-                if (item.id >= 0) {
-                    // Only trigger selection change if the item is not already selected
-                    // This avoids crashes when conditional UI elements are shown/hidden
-                    if (selected-id != item.id) {
-                        selection-changed(item.id);
-                        // NOTE: Do NOT call focus_scope.focus() here!
-                        // When selection-changed triggers conditional UI rendering (e.g., showing
-                        // field details panel), the focus_scope element may be destroyed/recreated
-                        // by Slint during the same event processing, causing a crash in
-                        // enclosing_component_for_element when the weak reference becomes invalid.
-                        // Keyboard navigation (Alt+Up/Down) will still work when user explicitly
-                        // focuses an item via Tab key.
-                    }
-                }
+                selection-changed(item.id);
+                // Give focus to the FocusScope so keyboard navigation (Alt+Up/Down) works
+                focus_scope.focus();
                 return true;
             }
             return false;
@@ -335,6 +350,15 @@ export component CheckableReorderableList inherits Rectangle {
     in-out property <[string]> text-bolds: [];
     // When true, align text to the right
     in-out property <bool> text-align-right: false;
+    // Maximum text length before left elide (default: 50)
+    in-out property <int> max-text-length: 50;
+    // Pre-computed elided texts (parallel array, same length as items)
+    // When text length exceeds max-text-length, this should contain "...{suffix}"
+    in-out property <[string]> elided-texts: [];
+    // Pre-computed elided text parts for bold display (parallel arrays, same length as items)
+    // When bold-after-slash is true and text is elided, these contain the split parts
+    in-out property <[string]> elided-prefixes: [];
+    in-out property <[string]> elided-bolds: [];
 
     // Styling configuration
     in property <length> item-height: 50px;
@@ -447,6 +471,11 @@ export component CheckableReorderableList inherits Rectangle {
                     text-bold: root.bold-after-slash && idx < root.text-bolds.length ? root.text-bolds[idx] : "";
                     // Text alignment
                     text-align-right: root.text-align-right;
+                    // Text elide
+                    max-text-length: root.max-text-length;
+                    elided-text: idx < root.elided-texts.length ? root.elided-texts[idx] : "";
+                    elided-prefix: idx < root.elided-prefixes.length ? root.elided-prefixes[idx] : "";
+                    elided-bold: idx < root.elided-bolds.length ? root.elided-bolds[idx] : "";
 
                     // Handle keyboard reorder
                     move-item(offset) => {
