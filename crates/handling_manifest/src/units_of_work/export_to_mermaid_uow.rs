@@ -8,7 +8,7 @@ use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, System,
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root,
     UseCase, UserInterface, Workspace,
 };
 use common::types;
@@ -55,6 +55,7 @@ impl QueryUnitOfWork for ExportToMermaidUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/export_to_mermaid_uc.rs
 //
+
 #[macros::uow_action(entity = "Dto", action = "GetRO")]
 #[macros::uow_action(entity = "Dto", action = "GetMultiRO")]
 #[macros::uow_action(entity = "DtoField", action = "GetRO")]
@@ -69,16 +70,12 @@ impl QueryUnitOfWork for ExportToMermaidUnitOfWork {
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetMultiRO")]
-#[macros::uow_action(entity = "System", action = "GetRO")]
-#[macros::uow_action(entity = "System", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
-#[macros::uow_action(entity = "File", action = "GetRO")]
-#[macros::uow_action(entity = "File", action = "GetMultiRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
 impl ExportToMermaidUnitOfWorkTrait for ExportToMermaidUnitOfWork {}

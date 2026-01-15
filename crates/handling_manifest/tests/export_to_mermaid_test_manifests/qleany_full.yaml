@@ -1,0 +1,111 @@
+---
+schema:
+  version: 2
+global:
+  language: rust
+  application_name: TestApp
+  organisation:
+    name: test
+    domain: ferntech.eu
+  prefix_path: crates
+entities:
+  - name: EntityBase
+    only_for_heritage: true
+    allow_direct_access: false
+    fields:
+      - name: id
+        type: integer
+        required: true
+    undoable: false
+  - name: Root
+    inherits_from: EntityBase
+    allow_direct_access: false
+    fields:
+      - name: first
+        type: entity
+        entity: First
+        relationship: one_to_one
+        required: true
+        strong: true
+    undoable: false
+  - name: First
+    inherits_from: EntityBase
+    allow_direct_access: true
+    fields:
+      - name: test_string
+        type: string
+        required: false
+      - name: second
+        type: entity
+        entity: Second
+        relationship: one_to_one
+        required: false
+        strong: true
+    undoable: true
+  - name: Second
+    inherits_from: EntityBase
+    allow_direct_access: true
+    fields:
+      - name: test_string
+        type: string
+        required: true
+      - name: test_bool
+        type: bool
+        required: true
+      - name: thirds
+        type: entity
+        entity: Third
+        relationship: one_to_many
+        required: false
+        strong: true
+    undoable: true
+  - name: Third
+    inherits_from: EntityBase
+    allow_direct_access: true
+    fields:
+      - name: test_string
+        type: string
+        required: true
+      - name: fourths
+        type: entity
+        entity: Fourth
+        relationship: one_to_many
+        required: false
+        strong: true
+      - name: fifths
+        type: entity
+        entity: Fifth
+        relationship: ordered_one_to_many
+        required: true
+        strong: true
+    undoable: true
+  - name: Fourth
+    inherits_from: EntityBase
+    allow_direct_access: true
+    fields:
+      - name: test_string
+        type: string
+        required: true
+      - name: second_ref
+        type: entity
+        entity: Second
+        relationship: one_to_one
+        required: false
+        strong: false
+    undoable: true
+  - name: Fifth
+    inherits_from: EntityBase
+    allow_direct_access: true
+    fields:
+      - name: test_string
+        type: string
+        required: false
+      - name: third_refs
+        type: entity
+        entity: Third
+        relationship: many_to_many
+        required: false
+        strong: false
+    undoable: true
+features: []
+ui: {}

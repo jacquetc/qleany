@@ -6,6 +6,9 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+mod init;
+use init::initialize_app;
+
 #[test]
 fn test_load_yaml() -> Result<()> {
     // Arrange
@@ -14,6 +17,8 @@ fn test_load_yaml() -> Result<()> {
     let load_dto = LoadDto {
         manifest_path: "../../qleany.yaml".to_string(),
     };
+
+    initialize_app(&db_context, &event_hub)?;
 
     // Act
     handling_manifest::handling_manifest_controller::load(&db_context, &event_hub, &load_dto)?;
@@ -30,6 +35,8 @@ fn test_save_yaml() -> Result<()> {
     let event_hub = Arc::new(EventHub::new());
     let original_file_path = "../../qleany.yaml";
     let temp_file_path = "../../temp_manifest.yaml";
+
+    initialize_app(&db_context, &event_hub)?;
 
     // Load the original manifest
     let load_dto = LoadDto {
@@ -69,6 +76,8 @@ fn test_load_and_save_yaml() -> Result<()> {
     let event_hub = Arc::new(EventHub::new());
     let original_file_path = "../../qleany.yaml";
     let temp_file_path = "../../temp_manifest.yaml";
+
+    initialize_app(&db_context, &event_hub)?;
 
     // Load the original manifest
     let load_dto = LoadDto {
