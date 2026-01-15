@@ -15,7 +15,7 @@ entities:
   fields:
   - name: id
     type: integer
-    required: false
+    required: true
   undoable: false
 - name: Root
   inherits_from: EntityBase
