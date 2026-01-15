@@ -37,7 +37,7 @@ const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD: TableDefinition<
 
 fn get_junction_table_definition(
     field: &EntityRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         EntityRelationshipField::Relationships => {
             RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE

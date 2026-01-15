@@ -62,7 +62,7 @@ pub fn subscribe_use_case_deleted_event(
             let app_weak = app.as_weak();
             move |event| {
                 log::info!("UseCase updated event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
+                let _ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {

@@ -5,10 +5,9 @@
 
 use std::sync::Arc;
 
-use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
-use slint::{ComponentHandle, Timer};
+use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
 use crate::commands::{feature_commands, undo_redo_commands, workspace_commands};
@@ -206,7 +205,7 @@ pub fn subscribe_feature_deletion_event(
             let app_weak = app.as_weak();
             move |event| {
                 log::info!("Feature updated event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
+                let _ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {

@@ -5,4 +5,3 @@ pub mod handling_app_lifecycle_controller;
 mod units_of_work;
 pub(crate) mod use_cases;
 
-pub use dtos::*;

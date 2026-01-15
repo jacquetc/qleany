@@ -5,7 +5,6 @@ use super::root_repository::RootRelationshipField;
 use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
 use crate::database::Bincode;
-use crate::database::db_helpers;
 use crate::entities::Root;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
@@ -22,7 +21,7 @@ const SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Enti
 
 fn get_junction_table_definition(
     field: &RootRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         RootRelationshipField::Workspace => WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE,
         RootRelationshipField::System => SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE,

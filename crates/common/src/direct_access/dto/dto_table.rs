@@ -20,7 +20,7 @@ const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
 
 fn get_junction_table_definition(
     field: &DtoRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         DtoRelationshipField::Fields => DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE,
     }

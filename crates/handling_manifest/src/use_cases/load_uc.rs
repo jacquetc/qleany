@@ -8,7 +8,7 @@ use common::{
     database::CommandUnitOfWork,
     entities::{
         Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, Global,
-        Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace,
+        Relationship, Root, System, UseCase, UserInterface, Workspace,
     },
 };
 

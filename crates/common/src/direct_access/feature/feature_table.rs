@@ -18,7 +18,7 @@ const FEATURE_FROM_ROOT_FEATURES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<E
 
 fn get_junction_table_definition(
     field: &FeatureRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         FeatureRelationshipField::UseCases => USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE,
     }

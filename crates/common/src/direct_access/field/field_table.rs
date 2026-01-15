@@ -23,7 +23,7 @@ const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Ent
 
 fn get_junction_table_definition(
     field: &FieldRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         FieldRelationshipField::Entity => ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE,
     }

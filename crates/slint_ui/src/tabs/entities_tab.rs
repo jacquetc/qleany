@@ -9,12 +9,11 @@ use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
 use common::direct_access::entity::EntityRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
-use common::entities::{FieldRelationshipType, FieldType, RelationshipType};
+use common::entities::{FieldRelationshipType, FieldType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
-use log::log;
-use slint::{ComponentHandle, Model, Timer};
+use slint::{ComponentHandle, Model};
 use std::sync::Arc;
 
 fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
@@ -195,7 +194,7 @@ fn subscribe_entity_deleted_event(
             let app_weak = app.as_weak();
             move |event| {
                 log::info!("Entity updated event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
+                let _ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
@@ -252,7 +251,7 @@ fn subscribe_field_deleted_event(
             let app_weak = app.as_weak();
             move |event| {
                 log::info!("Field updated event received: {:?}", event);
-                let ctx = Arc::clone(&ctx);
+                let _ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {

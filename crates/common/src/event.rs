@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 use crate::types::EntityId;
-use flume::{Receiver, RecvError, Sender, unbounded};
+use flume::{Receiver, Sender, unbounded};
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, atomic::AtomicBool},

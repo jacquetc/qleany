@@ -23,7 +23,7 @@ const SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Enti
 
 fn get_junction_table_definition(
     field: &SystemRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         SystemRelationshipField::Files => FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE,
     }

@@ -60,7 +60,7 @@ pub struct SaveUnitOfWorkFactory {
 }
 
 impl SaveUnitOfWorkFactory {
-    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
+    pub fn new(db_context: &DbContext, _event_hub: &Arc<EventHub>) -> Self {
         SaveUnitOfWorkFactory {
             context: db_context.clone(),
         }

@@ -243,10 +243,14 @@ When `type: entity`, additional options define the relationship:
 
 ### Validation Rules
 
-| Flag | `one_to_one` | `many_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
-|------|--------------|---------------|---------------|----------------------|----------------|
-| `required` | ✓ | ✓ | ✗ | ✗ | ✗ |
-| `strong` | ✓ | ✗ | ✓ | ✓ | ✗ |
+| Flag | `one_to_one`   | `many_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
+|------|----------------|---------------|---------------|-----------------------|----------------|
+| `required` | ✓/✗            | N.A.          | N.A.          | N.A.                  |  N.A. |
+| `strong` | ✓/✗ (see note) | ✗             | ✓/✗           | ✓/✗                    | ✗ |
+
+N.A.: Not applicable for this relationship type. Mark them whichever way you want it to be, there will be no change in generated code, or don't use them. When you write code, an empty list will show the want to hold no relationship.
+
+Note : If one_to_one holds a weak relationship (`strong: false`), it couldn't be required (must be `required: false`). There is the risk of a dangling reference if the entity targeted by the reference is deleted.
 
 Invalid combinations are rejected at manifest parsing.
 

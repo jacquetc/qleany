@@ -2,7 +2,7 @@ use crate::NewReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
 use common::direct_access::root::RootRelationshipField;
-use common::entities::{Entity, Field, FieldType, Global, Root, System, UserInterface, Workspace};
+use common::entities::{Entity, Field, FieldType, Global, Root, UserInterface, Workspace};
 use common::types::EntityId;
 
 pub trait NewUnitOfWorkFactoryTrait {

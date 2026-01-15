@@ -24,7 +24,7 @@ const USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE: TableDefinition<EntityId, 
 
 fn get_junction_table_definition(
     field: &UseCaseRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         UseCaseRelationshipField::Entities => ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE,
         UseCaseRelationshipField::DtoIn => DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE,

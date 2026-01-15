@@ -1,9 +1,8 @@
-use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
-use common::entities::{File, Workspace};
+use common::entities::Workspace;
 use common::types::EntityId;
-use common::{database::CommandUnitOfWork, entities::Root};
+use common::database::CommandUnitOfWork;
 
 pub trait CloseUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn CloseUnitOfWorkTrait>;

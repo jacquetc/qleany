@@ -11,7 +11,6 @@ use common::entities::{
     Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, UserInterface,
     Workspace,
 };
-use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
 

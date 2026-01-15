@@ -4,7 +4,6 @@ use crate::app_context::AppContext;
 use crate::cli::{ListArgs, ListTarget, OutputContext, OutputFormat};
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
-use common::entities::Entity;
 use direct_access::{EntityDto, UseCaseDto, system_controller};
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;

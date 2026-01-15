@@ -32,7 +32,7 @@ const WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE: TableDefinition<EntityId, Ve
 
 fn get_junction_table_definition(
     field: &WorkspaceRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         WorkspaceRelationshipField::Global => GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE,
         WorkspaceRelationshipField::Entities => ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE,

@@ -317,17 +317,17 @@ impl SaveUseCase {
                             } else {
                                 Some(entity_names)
                             },
-                            undoable: if (use_case.undoable) {
+                            undoable: if use_case.undoable  {
                                 Some(true)
                             } else {
                                 Some(false)
                             },
-                            read_only: if (use_case.read_only) {
+                            read_only: if use_case.read_only  {
                                 Some(true)
                             } else {
                                 None
                             },
-                            long_operation: if (use_case.long_operation) {
+                            long_operation: if use_case.long_operation  {
                                 Some(true)
                             } else {
                                 None

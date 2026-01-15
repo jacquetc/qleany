@@ -10,7 +10,6 @@ use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{Root, System};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
-use common::types::EntityId;
 use std::sync::Arc;
 
 // Unit of work for InitializeApp

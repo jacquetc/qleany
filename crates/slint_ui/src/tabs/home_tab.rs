@@ -96,7 +96,7 @@ fn subscribe_new_manifest_event(
         let app_weak = app.as_weak();
         move |event| {
             log::info!("New manifest created event received");
-            let ctx = Arc::clone(&ctx);
+            let _ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
@@ -145,7 +145,7 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 app.global::<AppState>().set_is_loading(true);
 
                 match handling_manifest_commands::new_manifest(&ctx) {
-                    Ok(result) => {
+                    Ok(_result) => {
                         log::info!("New manifest created successfully");
                     }
                     Err(e) => {

@@ -26,7 +26,7 @@ const RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE: TableDefinition<
 
 fn get_junction_table_definition(
     field: &RelationshipRelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         RelationshipRelationshipField::LeftEntity => {
             ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE
