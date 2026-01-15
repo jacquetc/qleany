@@ -6,8 +6,8 @@ use common::types::EntityId;
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 pub fn execute(

@@ -4,8 +4,8 @@
 use super::user_interface_repository::UserInterfaceRelationshipField;
 use super::user_interface_repository::UserInterfaceTable;
 use super::user_interface_repository::UserInterfaceTableRO;
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::UserInterface;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

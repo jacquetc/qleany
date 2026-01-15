@@ -8,8 +8,8 @@ use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root,
-    UseCase, UserInterface, Workspace,
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, UserInterface,
+    Workspace,
 };
 use common::types;
 use common::types::EntityId;

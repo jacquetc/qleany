@@ -2,6 +2,7 @@ use crate::use_cases::common::rust_code_generator::{
     GenerationReadOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
 };
 use crate::use_cases::common::rust_formatter::rustfmt_files_batch;
+use crate::use_cases::common::tools;
 use crate::{GenerateRustFilesDto, GenerateRustFilesReturnDto};
 use anyhow::{Result, anyhow};
 use common::entities::{File, Global, Root};
@@ -9,7 +10,6 @@ use common::long_operation::LongOperation;
 use common::types::EntityId;
 use std::path::PathBuf;
 use std::sync::Arc;
-use crate::use_cases::common::tools;
 
 pub trait GenerateRustFilesUnitOfWorkFactoryTrait: Send + Sync {
     fn create(&self) -> Box<dyn GenerateRustFilesUnitOfWorkTrait>;

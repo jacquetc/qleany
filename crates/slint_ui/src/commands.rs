@@ -10,9 +10,9 @@ pub mod file_commands;
 pub mod global_commands;
 pub mod handling_manifest_commands;
 pub mod relationship_commands;
+pub mod system_commands;
 pub mod user_interface_commands;
 pub mod workspace_commands;
-pub mod system_commands;
 
 pub mod handling_app_lifecycle_commands;
 pub mod rust_file_generation_commands;

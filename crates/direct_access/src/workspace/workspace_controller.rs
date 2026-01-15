@@ -17,9 +17,9 @@ use super::{
 };
 use anyhow::{Ok, Result};
 
+use crate::WorkspaceRelationshipDto;
 use crate::workspace::use_cases::get_workspace_relationship_uc::GetWorkspaceRelationshipUseCase;
 use crate::workspace::use_cases::set_workspace_relationship_uc::SetWorkspaceRelationshipUseCase;
-use crate::WorkspaceRelationshipDto;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 
 use common::undo_redo::UndoRedoManager;

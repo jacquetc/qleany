@@ -14,9 +14,9 @@ use super::{
 };
 use anyhow::{Ok, Result};
 
+use crate::SystemRelationshipDto;
 use crate::system::use_cases::get_system_relationship_uc::GetSystemRelationshipUseCase;
 use crate::system::use_cases::set_system_relationship_uc::SetSystemRelationshipUseCase;
-use crate::SystemRelationshipDto;
 use common::direct_access::system::SystemRelationshipField;
 
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};

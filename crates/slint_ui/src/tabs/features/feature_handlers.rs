@@ -11,7 +11,7 @@ use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Orig
 use slint::{ComponentHandle, Timer};
 
 use crate::app_context::AppContext;
-use crate::commands::{feature_commands, workspace_commands, undo_redo_commands};
+use crate::commands::{feature_commands, undo_redo_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
@@ -143,7 +143,10 @@ pub fn subscribe_workspace_updated_event(
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
             move |event| {
-                log::info!("Workspace updated event received (features tab): {:?}", event);
+                log::info!(
+                    "Workspace updated event received (features tab): {:?}",
+                    event
+                );
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
@@ -314,7 +317,8 @@ pub fn setup_features_reorder_callback(app: &App, app_context: &Arc<AppContext>)
                 let to = to_index as usize;
 
                 if let Some(app) = app_weak.upgrade() {
-                    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+                    let workspace_id =
+                        app.global::<AppState>().get_workspace_id() as common::types::EntityId;
                     let feature_ids_res = workspace_commands::get_workspace_relationship(
                         &ctx,
                         &workspace_id,
@@ -505,11 +509,12 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                     feature_ids.push(new_feature.id);
 
                                     // Update the workspace relationship
-                                    let relationship_dto = direct_access::WorkspaceRelationshipDto {
-                                        id: workspace_id as common::types::EntityId,
-                                        field: WorkspaceRelationshipField::Features,
-                                        right_ids: feature_ids,
-                                    };
+                                    let relationship_dto =
+                                        direct_access::WorkspaceRelationshipDto {
+                                            id: workspace_id as common::types::EntityId,
+                                            field: WorkspaceRelationshipField::Features,
+                                            right_ids: feature_ids,
+                                        };
 
                                     if let Err(e) = workspace_commands::set_workspace_relationship(
                                         &ctx,
@@ -533,7 +538,10 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to get workspace features relationship: {}", e);
+                                    log::error!(
+                                        "Failed to get workspace features relationship: {}",
+                                        e
+                                    );
                                     undo_redo_commands::cancel_composite(&ctx);
                                 }
                             }

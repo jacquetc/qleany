@@ -3,7 +3,9 @@
 use crate::app_context::AppContext;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::types::EntityId;
-use direct_access::{CreateWorkspaceDto, WorkspaceDto, WorkspaceRelationshipDto, workspace_controller};
+use direct_access::{
+    CreateWorkspaceDto, WorkspaceDto, WorkspaceRelationshipDto, workspace_controller,
+};
 
 /// Create a new workspace entity
 pub fn create_workspace(
@@ -41,11 +43,15 @@ pub fn create_workspace_multi(
 
 /// Get a workspace entity by ID
 pub fn get_workspace(ctx: &AppContext, id: &EntityId) -> Result<Option<WorkspaceDto>, String> {
-    workspace_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting workspace: {:?}", e))
+    workspace_controller::get(&ctx.db_context, id)
+        .map_err(|e| format!("Error getting workspace: {:?}", e))
 }
 
 /// Get multiple workspace entities by IDs
-pub fn get_workspace_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<WorkspaceDto>>, String> {
+pub fn get_workspace_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<WorkspaceDto>>, String> {
     workspace_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting entities: {:?}", e))
 }
@@ -85,7 +91,11 @@ pub fn update_workspace_multi(
 }
 
 /// Remove a workspace entity by ID
-pub fn remove_workspace(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Result<(), String> {
+pub fn remove_workspace(
+    ctx: &AppContext,
+    stack_id: Option<u64>,
+    id: &EntityId,
+) -> Result<(), String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     let result = workspace_controller::remove(
         &ctx.db_context,

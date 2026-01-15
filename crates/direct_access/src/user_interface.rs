@@ -2,6 +2,6 @@
 // as changes will be lost.
 
 pub mod dtos;
-pub mod user_interface_controller;
 mod units_of_work;
 mod use_cases;
+pub mod user_interface_controller;

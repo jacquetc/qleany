@@ -22,7 +22,10 @@ pub fn create_user_interface(
 }
 
 /// Get a user interface by ID
-pub fn get_user_interface(ctx: &AppContext, id: &EntityId) -> Result<Option<UserInterfaceDto>, String> {
+pub fn get_user_interface(
+    ctx: &AppContext,
+    id: &EntityId,
+) -> Result<Option<UserInterfaceDto>, String> {
     user_interface_controller::get(&ctx.db_context, id)
         .map_err(|e| format!("Error getting user interface: {:?}", e))
 }

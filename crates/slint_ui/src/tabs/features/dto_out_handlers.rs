@@ -5,19 +5,18 @@
 
 use std::sync::Arc;
 
-use common::direct_access::dto::DtoRelationshipField;
-use common::direct_access::use_case::UseCaseRelationshipField;
-use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
-use slint::ComponentHandle;
-use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use crate::app_context::AppContext;
-use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
-use crate::{App, AppState, FeaturesTabState, ListItem};
-use crate::event_hub_client::EventHubClient;
 use super::dto_in_handlers::{
     dto_field_type_to_index, index_to_dto_field_type, update_dto_field_helper, update_dto_helper,
 };
-
+use crate::app_context::AppContext;
+use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
+use crate::event_hub_client::EventHubClient;
+use crate::{App, AppState, FeaturesTabState, ListItem};
+use common::direct_access::dto::DtoRelationshipField;
+use common::direct_access::use_case::UseCaseRelationshipField;
+use common::event::{DirectAccessEntity, EntityEvent, Origin};
+use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
+use slint::ComponentHandle;
 
 pub fn subscribe_dto_updated_event(
     event_hub_client: &EventHubClient,
@@ -156,14 +155,15 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                 // Run the potentially heavy operation in a background thread to avoid freezing the UI
                 std::thread::spawn(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+                        let use_case_id =
+                            app.global::<FeaturesTabState>().get_selected_use_case_id();
                         if use_case_id < 0 {
                             return;
                         }
 
-                        let stack_id = app
-                            .global::<FeaturesTabState>()
-                            .get_features_undo_stack_id() as u64;
+                        let stack_id =
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64;
 
                         if enabled {
                             // Create a new DTO Out for this use case
@@ -190,10 +190,15 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                                                 if let Some(app) = app_weak2.upgrade() {
                                                     fill_dto_out_form(&app, &dto);
                                                     // New DTO has no fields, set empty list explicitly
-                                                    let empty_model: std::rc::Rc<slint::VecModel<ListItem>> =
-                                                        std::rc::Rc::new(slint::VecModel::from(vec![]));
+                                                    let empty_model: std::rc::Rc<
+                                                        slint::VecModel<ListItem>,
+                                                    > = std::rc::Rc::new(slint::VecModel::from(
+                                                        vec![],
+                                                    ));
                                                     app.global::<FeaturesTabState>()
-                                                        .set_dto_out_field_cr_list(empty_model.into());
+                                                        .set_dto_out_field_cr_list(
+                                                            empty_model.into(),
+                                                        );
                                                     clear_dto_out_field_form(&app);
                                                 }
                                             });
@@ -202,11 +207,15 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                                         Err(e) => {
                                             log::error!("Failed to link DTO Out: {}", e);
                                             // Clean up the created DTO
-                                            let _ =
-                                                dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
+                                            let _ = dto_commands::remove_dto(
+                                                &ctx,
+                                                Some(stack_id),
+                                                &dto.id,
+                                            );
                                             let _ = slint::invoke_from_event_loop(move || {
                                                 if let Some(app) = app_weak.upgrade() {
-                                                    app.global::<FeaturesTabState>().set_dto_out_enabled(false);
+                                                    app.global::<FeaturesTabState>()
+                                                        .set_dto_out_enabled(false);
                                                 }
                                             });
                                         }
@@ -216,7 +225,8 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                                     log::error!("Failed to create DTO Out: {}", e);
                                     let _ = slint::invoke_from_event_loop(move || {
                                         if let Some(app) = app_weak.upgrade() {
-                                            app.global::<FeaturesTabState>().set_dto_out_enabled(false);
+                                            app.global::<FeaturesTabState>()
+                                                .set_dto_out_enabled(false);
                                         }
                                     });
                                 }
@@ -248,7 +258,8 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                                             if let Some(app) = app_weak2.upgrade() {
                                                 clear_dto_out_form(&app);
                                                 // Re-set enabled to false since clear_dto_out_form sets it
-                                                app.global::<FeaturesTabState>().set_dto_out_enabled(false);
+                                                app.global::<FeaturesTabState>()
+                                                    .set_dto_out_enabled(false);
                                             }
                                         });
                                         log::info!("DTO Out removed successfully");
@@ -257,7 +268,8 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                                         log::error!("Failed to unlink DTO Out: {}", e);
                                         let _ = slint::invoke_from_event_loop(move || {
                                             if let Some(app) = app_weak.upgrade() {
-                                                app.global::<FeaturesTabState>().set_dto_out_enabled(true);
+                                                app.global::<FeaturesTabState>()
+                                                    .set_dto_out_enabled(true);
                                             }
                                         });
                                     }
@@ -521,7 +533,8 @@ pub fn setup_dto_out_field_addition_callback(app: &App, app_context: &Arc<AppCon
                             &ctx,
                             Some(
                                 app.global::<FeaturesTabState>()
-                                    .get_features_undo_stack_id() as u64,
+                                    .get_features_undo_stack_id()
+                                    as u64,
                             ),
                             &create_dto,
                         ) {
@@ -573,7 +586,10 @@ pub fn setup_dto_out_field_addition_callback(app: &App, app_context: &Arc<AppCon
                                         }
                                     }
                                     Err(e) => {
-                                        log::error!("Failed to get DTO Out fields relationship: {}", e);
+                                        log::error!(
+                                            "Failed to get DTO Out fields relationship: {}",
+                                            e
+                                        );
                                     }
                                 }
                             }

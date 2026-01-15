@@ -271,7 +271,7 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
         move |enabled| {
             let ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
-            
+
             // Run the potentially heavy operation in a background thread to avoid freezing the UI
             std::thread::spawn(move || {
                 if let Some(app) = app_weak.upgrade() {
@@ -309,8 +309,9 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                             if let Some(app) = app_weak2.upgrade() {
                                                 fill_dto_in_form(&app, &dto);
                                                 // New DTO has no fields, set empty list explicitly
-                                                let empty_model: std::rc::Rc<slint::VecModel<ListItem>> =
-                                                    std::rc::Rc::new(slint::VecModel::from(vec![]));
+                                                let empty_model: std::rc::Rc<
+                                                    slint::VecModel<ListItem>,
+                                                > = std::rc::Rc::new(slint::VecModel::from(vec![]));
                                                 app.global::<FeaturesTabState>()
                                                     .set_dto_in_field_cr_list(empty_model.into());
                                                 clear_dto_in_field_form(&app);
@@ -321,10 +322,12 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                     Err(e) => {
                                         log::error!("Failed to link DTO In: {}", e);
                                         // Clean up the created DTO
-                                        let _ = dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
+                                        let _ =
+                                            dto_commands::remove_dto(&ctx, Some(stack_id), &dto.id);
                                         let _ = slint::invoke_from_event_loop(move || {
                                             if let Some(app) = app_weak.upgrade() {
-                                                app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                                app.global::<FeaturesTabState>()
+                                                    .set_dto_in_enabled(false);
                                             }
                                         });
                                     }
@@ -366,7 +369,8 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                         if let Some(app) = app_weak2.upgrade() {
                                             clear_dto_in_form(&app);
                                             // Re-set enabled to false since clear_dto_in_form sets it
-                                            app.global::<FeaturesTabState>().set_dto_in_enabled(false);
+                                            app.global::<FeaturesTabState>()
+                                                .set_dto_in_enabled(false);
                                         }
                                     });
                                     log::info!("DTO In removed successfully");
@@ -375,7 +379,8 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                                     log::error!("Failed to unlink DTO In: {}", e);
                                     let _ = slint::invoke_from_event_loop(move || {
                                         if let Some(app) = app_weak.upgrade() {
-                                            app.global::<FeaturesTabState>().set_dto_in_enabled(true);
+                                            app.global::<FeaturesTabState>()
+                                                .set_dto_in_enabled(true);
                                         }
                                     });
                                 }
@@ -639,7 +644,8 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                             &ctx,
                             Some(
                                 app.global::<FeaturesTabState>()
-                                    .get_features_undo_stack_id() as u64,
+                                    .get_features_undo_stack_id()
+                                    as u64,
                             ),
                             &create_dto,
                         ) {
@@ -691,7 +697,10 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                                         }
                                     }
                                     Err(e) => {
-                                        log::error!("Failed to get DTO In fields relationship: {}", e);
+                                        log::error!(
+                                            "Failed to get DTO In fields relationship: {}",
+                                            e
+                                        );
                                     }
                                 }
                             }

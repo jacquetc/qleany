@@ -4,8 +4,8 @@
 use super::root_repository::RootRelationshipField;
 use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Root;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
@@ -105,7 +105,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
                     if let Some(ref right_id) = new_entity.workspace {
                         if existing_id != new_entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: Workspace {} is already referenced by Root {}", right_id, existing_id);
+                            panic!(
+                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                                right_id, existing_id
+                            );
                         }
                     }
                 }
@@ -119,7 +122,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
                     if let Some(ref right_id) = new_entity.system {
                         if existing_id != new_entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: System {} is already referenced by Root {}", right_id, existing_id);
+                            panic!(
+                                "One-to-one constraint violation: System {} is already referenced by Root {}",
+                                right_id, existing_id
+                            );
                         }
                     }
                 }
@@ -254,7 +260,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
                     if let Some(ref right_id) = entity.workspace {
                         if existing_id != entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: Workspace {} is already referenced by Root {}", right_id, existing_id);
+                            panic!(
+                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                                right_id, existing_id
+                            );
                         }
                     }
                 }
@@ -268,7 +277,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
                     if let Some(ref right_id) = entity.system {
                         if existing_id != entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: System {} is already referenced by Root {}", right_id, existing_id);
+                            panic!(
+                                "One-to-one constraint violation: System {} is already referenced by Root {}",
+                                right_id, existing_id
+                            );
                         }
                     }
                 }

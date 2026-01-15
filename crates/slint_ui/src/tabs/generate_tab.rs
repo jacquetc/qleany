@@ -1,4 +1,5 @@
- //! Generate tab - Rust file generation UI logic
+
+//! Generate tab - Rust file generation UI logic
 //!
 //! This module handles the Generate tab functionality including:
 //! - Listing rust files to be generated
@@ -483,7 +484,8 @@ fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, oper
                     app.global::<AppState>()
                         .set_generate_progress(progress.percentage / 100.0);
                     if let Some(msg) = progress.message {
-                        app.global::<AppState>().set_generate_message(SharedString::from(msg));
+                        app.global::<AppState>()
+                            .set_generate_message(SharedString::from(msg));
                     }
                 }
 
@@ -759,7 +761,8 @@ fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         app.global::<AppState>()
                             .set_file_elided_texts(elided_texts_model.into());
 
-                        let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+                        let elided_prefixes_model =
+                            std::rc::Rc::new(VecModel::from(elided_prefixes));
                         app.global::<AppState>()
                             .set_file_elided_prefixes(elided_prefixes_model.into());
 

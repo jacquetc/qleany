@@ -1,12 +1,12 @@
-use std::sync::Arc;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
 use common::database::db_context::DbContext;
 use common::database::transactions::Transaction;
 use common::entities::{Root, System};
-use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::event::HandlingAppLifecycleEvent::InitializeApp;
+use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
+use std::sync::Arc;
 // Unit of work for InitializeApp
 
 struct InitializeAppUnitOfWork {
@@ -98,8 +98,6 @@ impl InitializeAppUnitOfWorkFactoryTrait for InitializeAppUnitOfWorkFactory {
     }
 }
 
-
-
 trait InitializeAppUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn InitializeAppUnitOfWorkTrait>;
 }
@@ -116,7 +114,6 @@ impl InitializeAppUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
-
         // create system
         let system = uow.create_system(&System {
             id: 0,
@@ -127,8 +124,7 @@ impl InitializeAppUseCase {
             id: 0,
             workspace: None,
             system: Some(system.id),
-        }
-        )?;
+        })?;
 
         uow.commit()?;
         Ok(())
@@ -138,8 +134,6 @@ impl InitializeAppUseCase {
 struct InitializeAppUseCase {
     uow_factory: Box<dyn InitializeAppUnitOfWorkFactoryTrait>,
 }
-
-
 
 pub fn initialize_app(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
     let uow_context = InitializeAppUnitOfWorkFactory::new(&db_context, &event_hub);
@@ -153,4 +147,3 @@ pub fn initialize_app(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Resu
     });
     Ok(return_dto)
 }
-

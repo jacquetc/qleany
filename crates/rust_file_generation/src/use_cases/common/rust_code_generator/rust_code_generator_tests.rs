@@ -1,7 +1,10 @@
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global, Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace};
+use common::entities::{
+    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global,
+    Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace,
+};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -65,7 +68,10 @@ impl GenerationReadOps for DummyGenerationReadOps {
         id: &EntityId,
         field: &common::direct_access::root::RootRelationshipField,
     ) -> Result<Vec<EntityId>> {
-        let root = self.roots.get(id).ok_or_else(|| anyhow::anyhow!("Root not found"))?;
+        let root = self
+            .roots
+            .get(id)
+            .ok_or_else(|| anyhow::anyhow!("Root not found"))?;
         match field {
             common::direct_access::root::RootRelationshipField::Workspace => {
                 Ok(root.workspace.map(|id| vec![id]).unwrap_or_default())
@@ -90,12 +96,16 @@ impl GenerationReadOps for DummyGenerationReadOps {
             common::direct_access::workspace::WorkspaceRelationshipField::Features => {
                 Ok(self.workspace_features.get(id).cloned().unwrap_or_default())
             }
-            common::direct_access::workspace::WorkspaceRelationshipField::Global => {
-                Ok(self.workspaces.get(id).map(|w| vec![w.global]).unwrap_or_default())
-            }
-            common::direct_access::workspace::WorkspaceRelationshipField::UserInterface => {
-                Ok(self.workspaces.get(id).map(|w| vec![w.user_interface]).unwrap_or_default())
-            }
+            common::direct_access::workspace::WorkspaceRelationshipField::Global => Ok(self
+                .workspaces
+                .get(id)
+                .map(|w| vec![w.global])
+                .unwrap_or_default()),
+            common::direct_access::workspace::WorkspaceRelationshipField::UserInterface => Ok(self
+                .workspaces
+                .get(id)
+                .map(|w| vec![w.user_interface])
+                .unwrap_or_default()),
         }
     }
     fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
@@ -211,7 +221,7 @@ fn for_file_feature_without_use_cases_errors() {
         global: 3,
         entities: vec![],
         features: vec![10],
-        user_interface: 1
+        user_interface: 1,
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![10]);
@@ -343,7 +353,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         global: 3,
         entities: vec![],
         features: vec![10],
-        user_interface: 1
+        user_interface: 1,
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![10]);
@@ -453,7 +463,7 @@ fn for_file_various_combinations_generate_expected_items() {
         global: 3,
         entities: vec![1, 2],
         features: vec![200],
-        user_interface: 1
+        user_interface: 1,
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![200]);

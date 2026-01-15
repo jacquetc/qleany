@@ -94,21 +94,25 @@ impl ExportToMermaidUseCase {
 
             // Add fields from inherited Entity
             if let Some(inherited_entity_id) = entity.inherits_from {
-                let inherited_entity = entities.iter()
+                let inherited_entity = entities
+                    .iter()
                     .find(|e| e.id == inherited_entity_id)
                     .ok_or(anyhow::anyhow!("Entity does not exist"))?;
 
                 let inherited_fields = inherited_entity.fields.clone();
-                let inherited_fields = fields.iter().filter(|f| inherited_fields.contains(&f.id)).cloned().collect::<Vec<Field>>();
+                let inherited_fields = fields
+                    .iter()
+                    .filter(|f| inherited_fields.contains(&f.id))
+                    .cloned()
+                    .collect::<Vec<Field>>();
                 all_entity_fields.extend(inherited_fields);
-
             }
 
             // Get fields for this entity
-                let entity_fields: Vec<Field> =
-                    fields
+            let entity_fields: Vec<Field> = fields
                 .iter()
-                .filter(|f| entity.fields.contains(&f.id)).cloned()
+                .filter(|f| entity.fields.contains(&f.id))
+                .cloned()
                 .collect();
 
             all_entity_fields.extend(entity_fields);
@@ -163,7 +167,7 @@ impl ExportToMermaidUseCase {
         };
 
         let optional_marker = if !field.required { " \"optional\"" } else { "" };
-        
+
         // exception for id field
         if field.name == "id" {
             return "EntityId id".to_string();

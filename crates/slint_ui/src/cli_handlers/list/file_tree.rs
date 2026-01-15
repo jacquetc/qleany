@@ -192,11 +192,7 @@ mod tests {
 
     #[test]
     fn test_deeply_nested() {
-        let files = vec![
-            "a/b/c/d/file.txt",
-            "a/b/c/other.txt",
-            "a/b/sibling.txt",
-        ];
+        let files = vec!["a/b/c/d/file.txt", "a/b/c/other.txt", "a/b/sibling.txt"];
         let result = render_file_tree(&files);
         let expected = "\
 └── a/
@@ -232,10 +228,7 @@ my-project
 
     #[test]
     fn test_string_slices() {
-        let files = vec![
-            String::from("src/main.rs"),
-            String::from("Cargo.toml"),
-        ];
+        let files = vec![String::from("src/main.rs"), String::from("Cargo.toml")];
         let result = render_file_tree(&files);
         assert!(result.contains("src/"));
         assert!(result.contains("main.rs"));

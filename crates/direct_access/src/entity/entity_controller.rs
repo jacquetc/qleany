@@ -14,9 +14,9 @@ use super::{
 };
 use anyhow::{Ok, Result};
 
+use crate::EntityRelationshipDto;
 use crate::entity::use_cases::get_entity_relationship_uc::GetEntityRelationshipUseCase;
 use crate::entity::use_cases::set_entity_relationship_uc::SetEntityRelationshipUseCase;
-use crate::EntityRelationshipDto;
 use common::direct_access::entity::EntityRelationshipField;
 
 use common::undo_redo::UndoRedoManager;

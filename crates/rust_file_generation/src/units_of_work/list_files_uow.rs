@@ -1,4 +1,3 @@
-use common::entities::UserInterface;
 use crate::use_cases::list_rust_files_uc::{
     ListRustFilesUnitOfWorkFactoryTrait, ListRustFilesUnitOfWorkTrait,
 };
@@ -12,6 +11,7 @@ use common::entities::Global;
 use common::entities::Relationship;
 use common::entities::Root;
 use common::entities::UseCase;
+use common::entities::UserInterface;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;

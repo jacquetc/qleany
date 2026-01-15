@@ -3,8 +3,6 @@
 //! This module contains the logic specific to the Entities tab,
 //! including event subscriptions and callback handlers for entity management.
 
-use std::sync::Arc;
-use log::log;
 use crate::app_context::AppContext;
 use crate::commands::{entity_commands, field_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
@@ -15,7 +13,9 @@ use common::entities::{FieldRelationshipType, FieldType, RelationshipType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
+use log::log;
 use slint::{ComponentHandle, Model, Timer};
+use std::sync::Arc;
 
 fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
     let ctx = Arc::clone(app_context);
@@ -281,7 +281,7 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
             let entity_ids_res = workspace_commands::get_workspace_relationship(
                 &ctx,
                 &workspace_id,
-                &WorkspaceRelationshipField::Entities
+                &WorkspaceRelationshipField::Entities,
             );
 
             match entity_ids_res {
@@ -432,7 +432,8 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                 if let Some(app) = app_weak.upgrade() {
                     // 1) Get entities attached to the workspace
 
-                    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
+                    let workspace_id =
+                        app.global::<AppState>().get_workspace_id() as common::types::EntityId;
                     let entity_ids_res = workspace_commands::get_workspace_relationship(
                         &ctx,
                         &workspace_id,
@@ -627,8 +628,9 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_undoable(entity.undoable);
                             app.global::<EntitiesTabState>()
-                                .set_selected_entity_allow_direct_access(entity.allow_direct_access);
-
+                                .set_selected_entity_allow_direct_access(
+                                    entity.allow_direct_access,
+                                );
 
                             // Fill inherits_from options and set the selected index
                             fill_inherits_from_options(&app, &ctx, entity.inherits_from);
@@ -1080,7 +1082,6 @@ fn setup_entity_undoable_callback(app: &App, app_context: &Arc<AppContext>) {
         });
 }
 
-
 fn setup_entity_allow_direct_access_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>()
         .on_entity_allow_direct_access_changed({
@@ -1355,7 +1356,10 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!("Failed to get workspace entities relationship: {}", e);
+                                    log::error!(
+                                        "Failed to get workspace entities relationship: {}",
+                                        e
+                                    );
                                 }
                             }
                         }

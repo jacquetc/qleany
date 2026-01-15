@@ -1,15 +1,15 @@
 mod app_context;
+mod cli;
+mod cli_handlers;
 mod commands;
 mod event_hub_client;
 mod tabs;
-mod cli;
-mod cli_handlers;
 
+use crate::cli::run_cli;
 use crate::commands::handling_manifest_commands;
 use app_context::AppContext;
 use event_hub_client::EventHubClient;
 use std::sync::Arc;
-use crate::cli::run_cli;
 
 slint::include_modules!();
 
@@ -19,20 +19,20 @@ fn main() {
 
     // Create the application context (backend state)
     let app_context = Arc::new(AppContext::new());
-    
+
     // Initialize the application (e.g. prepare database, load settings)
     match commands::handling_app_lifecycle_commands::initialize_app(&app_context) {
         Ok(()) => {
             log::info!("Application initialized successfully");
         }
         Err(e) => {
-            log::error!("Failed to initialize application: {}", e); 
+            log::error!("Failed to initialize application: {}", e);
             return;
         }
     }
 
-    if let Some(_args) = run_cli(&app_context){
-       run_slint(&app_context);
+    if let Some(_args) = run_cli(&app_context) {
+        run_slint(&app_context);
     }
 
     // Cleanup on exit
@@ -42,7 +42,7 @@ fn main() {
             log::info!("Application cleaned up successfully");
         }
         Err(e) => {
-            log::error!("Failed to clean up application: {}", e); 
+            log::error!("Failed to clean up application: {}", e);
         }
     }
     app_context.shutdown();
@@ -127,7 +127,7 @@ fn run_slint(app_context: &Arc<AppContext>) {
                 app.window(),
                 slint::platform::WindowEvent::CloseRequested,
             )
-                .expect("Failed to dispatch close requested event");
+            .expect("Failed to dispatch close requested event");
         }
     });
 
@@ -153,5 +153,4 @@ fn run_slint(app_context: &Arc<AppContext>) {
     // Run the application
     log::info!("Running Slint UI");
     app.run().unwrap();
-
 }

@@ -1,6 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli_handlers;
-use clap::{Parser, Subcommand, ValueEnum, Args};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -202,14 +202,10 @@ pub enum ShowTarget {
     Config,
 
     /// Show details for a specific entity
-    Entity {
-        name: String,
-    },
+    Entity { name: String },
 
     /// Show details for a specific feature
-    Feature {
-        name: String,
-    },
+    Feature { name: String },
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -259,9 +255,7 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
     };
 
     let result = match command {
-        Commands::New(args) => {
-            cli_handlers::new::execute(app_context, &args, &output)
-        }
+        Commands::New(args) => cli_handlers::new::execute(app_context, &args, &output),
         Commands::Check => {
             let path = manifest_path.expect("Check requires a manifest");
             cli_handlers::check::execute(app_context, &path, &output)

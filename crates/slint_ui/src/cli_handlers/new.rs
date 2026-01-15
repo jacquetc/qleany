@@ -1,13 +1,17 @@
 use crate::app_context::AppContext;
 use crate::cli::{LanguageOption, NewArgs, OutputContext};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::types::EntityId;
 use direct_access::{global_controller, workspace_controller};
 use handling_manifest::handling_manifest_controller;
 use std::sync::Arc;
 
-pub fn execute(app_context: &Arc<AppContext>, args: &NewArgs, output: &OutputContext) -> Result<()> {
+pub fn execute(
+    app_context: &Arc<AppContext>,
+    args: &NewArgs,
+    output: &OutputContext,
+) -> Result<()> {
     let manifest_path = args.path.join("qleany.yaml");
 
     // Check for existing manifest

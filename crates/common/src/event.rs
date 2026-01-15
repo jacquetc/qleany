@@ -2,10 +2,10 @@
 // as changes will be lost.
 
 use crate::types::EntityId;
-use flume::{unbounded, Receiver, RecvError, Sender};
+use flume::{Receiver, RecvError, Sender, unbounded};
 use serde::Serialize;
 use std::{
-    sync::{atomic::AtomicBool, Arc, Mutex},
+    sync::{Arc, Mutex, atomic::AtomicBool},
     thread,
 };
 
@@ -70,7 +70,7 @@ pub enum HandlingManifestEvent {
     Save,
     New,
     Close,
-    ExportToMermaid
+    ExportToMermaid,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -160,22 +160,24 @@ impl EventHub {
     pub fn start_event_loop(&self, stop_signal: Arc<AtomicBool>) {
         let receiver = self.receiver.clone();
         let queue = self.queue.clone();
-        thread::spawn(move || loop {
-            if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
-            }
-
-            match receiver.recv() {
-                Ok(event) => {
-                    let mut queue = queue.lock().unwrap();
-                    queue.push(event.clone());}
-                Err(_) => {
-                    println!("EventHub receiver dropped");
+        thread::spawn(move || {
+            loop {
+                if stop_signal.load(std::sync::atomic::Ordering::Relaxed) {
                     break;
                 }
-            };
 
-    });
+                match receiver.recv() {
+                    Ok(event) => {
+                        let mut queue = queue.lock().unwrap();
+                        queue.push(event.clone());
+                    }
+                    Err(_) => {
+                        println!("EventHub receiver dropped");
+                        break;
+                    }
+                };
+            }
+        });
     }
 
     /// Send an event to the queue

@@ -1,9 +1,9 @@
 //! System commands for Slint UI
 
-use common::direct_access::system::SystemRelationshipField;
 use crate::app_context::AppContext;
+use common::direct_access::system::SystemRelationshipField;
 use common::types::EntityId;
-use direct_access::{CreateSystemDto, SystemDto, system_controller, SystemRelationshipDto};
+use direct_access::{CreateSystemDto, SystemDto, SystemRelationshipDto, system_controller};
 
 /// Create a new system
 pub fn create_system(ctx: &AppContext, dto: &CreateSystemDto) -> Result<SystemDto, String> {
@@ -12,18 +12,25 @@ pub fn create_system(ctx: &AppContext, dto: &CreateSystemDto) -> Result<SystemDt
 }
 
 /// Create multiple systems
-pub fn create_system_multi(ctx: &AppContext, dtos: &[CreateSystemDto]) -> Result<Vec<SystemDto>, String> {
+pub fn create_system_multi(
+    ctx: &AppContext,
+    dtos: &[CreateSystemDto],
+) -> Result<Vec<SystemDto>, String> {
     system_controller::create_multi(&ctx.db_context, &ctx.event_hub, dtos)
         .map_err(|e| format!("Error creating systems: {:?}", e))
 }
 
 /// Get a system by ID
 pub fn get_system(ctx: &AppContext, id: &EntityId) -> Result<Option<SystemDto>, String> {
-    system_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting system: {:?}", e))
+    system_controller::get(&ctx.db_context, id)
+        .map_err(|e| format!("Error getting system: {:?}", e))
 }
 
 /// Get multiple systems by IDs
-pub fn get_system_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<SystemDto>>, String> {
+pub fn get_system_multi(
+    ctx: &AppContext,
+    ids: &[EntityId],
+) -> Result<Vec<Option<SystemDto>>, String> {
     system_controller::get_multi(&ctx.db_context, ids)
         .map_err(|e| format!("Error getting systems: {:?}", e))
 }
@@ -69,10 +76,6 @@ pub fn set_system_relationship(
     stack_id: Option<u64>,
     dto: &SystemRelationshipDto,
 ) -> Result<(), String> {
-    system_controller::set_relationship(
-        &ctx.db_context,
-        &ctx.event_hub,
-        dto,
-    )
+    system_controller::set_relationship(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error setting system relationship: {:?}", e))
 }

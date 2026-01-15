@@ -1,4 +1,3 @@
-use common::entities::UserInterface;
 use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::generate_rust_code_uc::{
     GenerateRustCodeUnitOfWorkFactoryTrait, GenerateRustCodeUnitOfWorkTrait,
@@ -6,7 +5,6 @@ use crate::use_cases::generate_rust_code_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::Workspace;
 use common::entities::Dto;
 use common::entities::DtoField;
 use common::entities::Entity;
@@ -17,6 +15,8 @@ use common::entities::Global;
 use common::entities::Relationship;
 use common::entities::Root;
 use common::entities::UseCase;
+use common::entities::UserInterface;
+use common::entities::Workspace;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
 use common::types;
 use common::types::EntityId;

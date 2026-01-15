@@ -5,7 +5,9 @@ fn main() {
     // identify that configuration during development.
     if std::env::var("SLINT_LIVE_PREVIEW").ok().as_deref() == Some("1") {
         // Cargo build scripts can emit warnings via println!("cargo:warning=...");
-        println!("cargo:warning=SLINT_LIVE_PREVIEW is set: live preview builds may emit transient ids (e.g., 0) that are not valid entity ids. Consider disabling live preview for normal runs.");
+        println!(
+            "cargo:warning=SLINT_LIVE_PREVIEW is set: live preview builds may emit transient ids (e.g., 0) that are not valid entity ids. Consider disabling live preview for normal runs."
+        );
     }
 
     slint_build::compile("ui/app.slint").unwrap();

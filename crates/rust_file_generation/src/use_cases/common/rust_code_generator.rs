@@ -1,11 +1,12 @@
 mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
+use crate::use_cases::common::tools;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, Root, UseCase, UserInterface, Workspace
+    Global, Relationship, Root, UseCase, UserInterface, Workspace,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -14,7 +15,6 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
-use crate::use_cases::common::tools;
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
@@ -65,7 +65,6 @@ struct GlobalVM {
 #[derive(Debug, Serialize, Clone)]
 struct UserInterfaceVM {
     pub inner: UserInterface,
-
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -264,7 +263,6 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
-
     fn get_entity_vm(
         uow: &dyn GenerationReadOps,
         entity_id: &EntityId,
@@ -360,7 +358,6 @@ impl SnapshotBuilder {
         {
             relationships_map.insert(rel.id, rel);
         }
-
 
         // Additionally, scan all entities from workspace to discover relationships that reference this
         // entity as the right side (backward relationships) but may not be listed on this entity.
@@ -486,7 +483,11 @@ impl SnapshotBuilder {
         )?;
 
         let global = uow
-            .get_global(&global_ids.first().expect("Workspace must have a global entity"))?
+            .get_global(
+                &global_ids
+                    .first()
+                    .expect("Workspace must have a global entity"),
+            )?
             .expect("Workspace must have a global entity");
 
         let global_vm = GlobalVM {
@@ -504,9 +505,7 @@ impl SnapshotBuilder {
             .get_user_interface(&ui_ids.first().expect("Workspace must have a UI entity"))?
             .expect("Workspace must have a UI entity");
 
-        let ui_vm = UserInterfaceVM {
-            inner: ui,
-        };
+        let ui_vm = UserInterfaceVM { inner: ui };
 
         // Working flat maps, then wrap into VMs
         let mut dto_fields: HashMap<EntityId, DtoField> = HashMap::new();
@@ -979,8 +978,7 @@ impl SnapshotBuilder {
                             let entities_id = uc.entities;
                             if entities_id.is_empty() {
                                 IndexMap::new()
-                            }
-                            else {
+                            } else {
                                 uow.get_entity_multi(&entities_id)
                                     .unwrap_or_default()
                                     .into_iter()

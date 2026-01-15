@@ -4,13 +4,13 @@ use crate::app_context::AppContext;
 use crate::cli::{ListArgs, ListTarget, OutputContext, OutputFormat};
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
-use direct_access::{system_controller, EntityDto, UseCaseDto};
+use common::entities::Entity;
+use direct_access::{EntityDto, UseCaseDto, system_controller};
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
-use common::entities::Entity;
 
 /// The root system entity ID (singleton in the database)
 const ROOT_SYSTEM_ID: u64 = 1;
@@ -97,7 +97,9 @@ fn list_entities(
     )?;
 
     let entities = entity_controller::get_multi(&app_context.db_context, entity_ids.as_slice())?
-    .into_iter().filter_map(|x| x).collect::<Vec<EntityDto>>();
+        .into_iter()
+        .filter_map(|x| x)
+        .collect::<Vec<EntityDto>>();
 
     match args.format {
         OutputFormat::Plain => {
@@ -125,7 +127,12 @@ fn list_entities(
             println!("{}", serde_json::to_string_pretty(&json)?);
         }
         OutputFormat::Tree => {
-            file_tree::print_file_tree(&entities.iter().map(|e| e.name.as_str()).collect::<Vec<&str>>());
+            file_tree::print_file_tree(
+                &entities
+                    .iter()
+                    .map(|e| e.name.as_str())
+                    .collect::<Vec<&str>>(),
+            );
         }
     }
 
@@ -185,7 +192,10 @@ fn list_features(
             output.info(&format!(
                 "\n{} features, {} use cases",
                 features_data.len(),
-                features_data.iter().map(|(_, ucs)| ucs.len()).sum::<usize>()
+                features_data
+                    .iter()
+                    .map(|(_, ucs)| ucs.len())
+                    .sum::<usize>()
             ));
         }
         OutputFormat::Json => {
@@ -205,9 +215,7 @@ fn list_features(
                 .collect();
             println!("{}", serde_json::to_string_pretty(&json)?);
         }
-        OutputFormat::Tree => {
-
-        }
+        OutputFormat::Tree => {}
     }
 
     Ok(())

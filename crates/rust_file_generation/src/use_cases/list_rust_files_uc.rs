@@ -1,18 +1,18 @@
-use common::entities::UserInterface;
+use crate::use_cases::common::rust_code_generator::GenerationReadOps;
+use crate::use_cases::common::tools;
 use crate::{ListRustFilesDto, ListRustFilesReturnDto};
 use anyhow::{Result, anyhow};
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::root::RootRelationshipField;
+use common::direct_access::system::SystemRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::Entity;
+use common::entities::UserInterface;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork, entities::Feature, entities::File, entities::Global,
     entities::Relationship, entities::Root, entities::UseCase,
 };
-use common::direct_access::system::SystemRelationshipField;
-use common::direct_access::workspace::WorkspaceRelationshipField;
-use crate::use_cases::common::rust_code_generator::GenerationReadOps;
-use crate::use_cases::common::tools;
 
 pub trait ListRustFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn ListRustFilesUnitOfWorkTrait>;
@@ -63,20 +63,27 @@ impl ListRustFilesUseCase {
 
         let all_workspace_ids = uow.get_root_relationship(
             &root.id,
-            &common::direct_access::root::RootRelationshipField::Workspace
+            &common::direct_access::root::RootRelationshipField::Workspace,
         )?;
 
-        let workspace_id = all_workspace_ids.first().cloned().ok_or(anyhow!("No workspace found"))?;
-        
+        let workspace_id = all_workspace_ids
+            .first()
+            .cloned()
+            .ok_or(anyhow!("No workspace found"))?;
+
         let all_system_ids = uow.get_root_relationship(
             &root.id,
-            &common::direct_access::root::RootRelationshipField::System
+            &common::direct_access::root::RootRelationshipField::System,
         )?;
-        
-        let system_id = all_system_ids.first().cloned().ok_or(anyhow!("No system found"))?;
+
+        let system_id = all_system_ids
+            .first()
+            .cloned()
+            .ok_or(anyhow!("No system found"))?;
 
         // Get global
-        let globals = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Global)?;
+        let globals =
+            uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Global)?;
         let global_id = globals.first().ok_or(anyhow!("No global found"))?;
         let global = uow.get_global(&global_id)?;
         let global = global.ok_or(anyhow!("Global not found"))?;
@@ -85,9 +92,16 @@ impl ListRustFilesUseCase {
         }
 
         // ui
-        let user_interfaces = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::UserInterface)?;
-        let ui_id = user_interfaces.first().ok_or(anyhow!("No user interface found"))?;
-        let ui = uow.get_user_interface(&ui_id)?.ok_or(anyhow!("User interface not found"))?;
+        let user_interfaces = uow.get_workspace_relationship(
+            &workspace_id,
+            &WorkspaceRelationshipField::UserInterface,
+        )?;
+        let ui_id = user_interfaces
+            .first()
+            .ok_or(anyhow!("No user interface found"))?;
+        let ui = uow
+            .get_user_interface(&ui_id)?
+            .ok_or(anyhow!("User interface not found"))?;
 
         // remove all files from system
         let all_previous_files =
@@ -308,7 +322,8 @@ impl ListRustFilesUseCase {
         });
 
         // Get entities
-        let entities = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
+        let entities =
+            uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
         let entities = uow.get_entity_multi(&entities)?;
 
         for entity in &entities {
@@ -554,7 +569,8 @@ impl ListRustFilesUseCase {
         }
 
         // features:
-        let features = uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Features)?;
+        let features =
+            uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Features)?;
 
         let features = uow.get_feature_multi(&features)?;
 
@@ -712,7 +728,6 @@ impl ListRustFilesUseCase {
         });
 
         if ui.rust_cli {
-
             files.push(File {
                 id: 0,
                 name: "Cargo.toml".to_string(),
@@ -737,7 +752,6 @@ impl ListRustFilesUseCase {
         }
 
         if ui.rust_slint {
-
             files.push(File {
                 id: 0,
                 name: "Cargo.toml".to_string(),

@@ -4,8 +4,8 @@
 use super::workspace_repository::WorkspaceRelationshipField;
 use super::workspace_repository::WorkspaceTable;
 use super::workspace_repository::WorkspaceTableRO;
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Workspace;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
@@ -129,7 +129,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != new_entity.id
                         && right_ids.value().contains(&new_entity.global)
                     {
-                        panic!("One-to-one constraint violation: Global {} is already referenced by Workspace {}", new_entity.global, existing_id);
+                        panic!(
+                            "One-to-one constraint violation: Global {} is already referenced by Workspace {}",
+                            new_entity.global, existing_id
+                        );
                     }
                 }
             }
@@ -143,7 +146,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != new_entity.id
                         && right_ids.value().contains(&new_entity.user_interface)
                     {
-                        panic!("One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}", new_entity.user_interface, existing_id);
+                        panic!(
+                            "One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}",
+                            new_entity.user_interface, existing_id
+                        );
                     }
                 }
             }
@@ -320,7 +326,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     let existing_id = existing_id.value();
 
                     if existing_id != entity.id && right_ids.value().contains(&entity.global) {
-                        panic!("One-to-one constraint violation: Global {} is already referenced by Workspace {}", entity.global, existing_id);
+                        panic!(
+                            "One-to-one constraint violation: Global {} is already referenced by Workspace {}",
+                            entity.global, existing_id
+                        );
                     }
                 }
             }
@@ -334,7 +343,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != entity.id
                         && right_ids.value().contains(&entity.user_interface)
                     {
-                        panic!("One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}", entity.user_interface, existing_id);
+                        panic!(
+                            "One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}",
+                            entity.user_interface, existing_id
+                        );
                     }
                 }
             }

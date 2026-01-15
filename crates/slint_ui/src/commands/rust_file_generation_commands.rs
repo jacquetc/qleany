@@ -42,10 +42,12 @@ pub fn get_generate_rust_files_progress(
     ctx: &AppContext,
     operation_id: &str,
 ) -> Result<Option<OperationProgress>, String> {
-    Ok(rust_file_generation_controller::get_generate_rust_files_progress(
-        &ctx.long_operation_manager.lock().unwrap(),
-        operation_id,
-    ))
+    Ok(
+        rust_file_generation_controller::get_generate_rust_files_progress(
+            &ctx.long_operation_manager.lock().unwrap(),
+            operation_id,
+        ),
+    )
 }
 
 /// Get the result of a generate rust files operation

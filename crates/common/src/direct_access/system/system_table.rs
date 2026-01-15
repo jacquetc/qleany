@@ -4,8 +4,8 @@
 use super::system_repository::SystemRelationshipField;
 use super::system_repository::SystemTable;
 use super::system_repository::SystemTableRO;
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::System;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

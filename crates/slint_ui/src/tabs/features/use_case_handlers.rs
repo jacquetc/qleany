@@ -6,14 +6,14 @@
 use std::sync::Arc;
 
 use common::direct_access::feature::FeatureRelationshipField;
-use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{FeatureRelationshipDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, feature_commands, workspace_commands, use_case_commands};
+use crate::commands::{entity_commands, feature_commands, use_case_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 
@@ -559,7 +559,8 @@ pub fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppCont
 
                 std::thread::spawn(move || {
                     if let Some(app) = app_weak.upgrade() {
-                        let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+                        let use_case_id =
+                            app.global::<FeaturesTabState>().get_selected_use_case_id();
                         if use_case_id < 0 {
                             return;
                         }
@@ -602,7 +603,8 @@ pub fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppCont
                             &ctx,
                             Some(
                                 app.global::<FeaturesTabState>()
-                                    .get_features_undo_stack_id() as u64,
+                                    .get_features_undo_stack_id()
+                                    as u64,
                             ),
                             &relationship_dto,
                         ) {

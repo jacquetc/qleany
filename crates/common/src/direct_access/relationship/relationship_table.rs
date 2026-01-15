@@ -1,7 +1,7 @@
 use super::relationship_repository::RelationshipTableRO;
 use super::relationship_repository::{RelationshipRelationshipField, RelationshipTable};
-use crate::database::db_helpers;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Relationship;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};

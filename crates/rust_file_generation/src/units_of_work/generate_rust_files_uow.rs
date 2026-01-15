@@ -1,5 +1,3 @@
-use common::entities::UserInterface;
-use common::entities::Workspace;
 use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::generate_rust_files_uc::{
     GenerateRustFilesUnitOfWorkFactoryTrait, GenerateRustFilesUnitOfWorkTrait,
@@ -7,6 +5,8 @@ use crate::use_cases::generate_rust_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::entities::UserInterface;
+use common::entities::Workspace;
 use common::entities::{
     Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase,
 };
