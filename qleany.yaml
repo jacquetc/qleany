@@ -469,10 +469,10 @@ features:
     undoable: false
   - name: export_to_mermaid
     validator: false
+    entities:
+    - Entity
     undoable: false
     read_only: true
-    entities:
-      - Entity
     dto_out:
       name: ExportToMermaidReturnDto
       fields:
