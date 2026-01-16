@@ -1,0 +1,170 @@
+---
+schema:
+  version: 2
+
+global:
+  language: rust
+  application_name: CarDealer
+  organisation:
+    name: FernTech
+    domain: eu.ferntech
+  prefix_path: crates
+
+entities:
+  # Base entity with common fields (id, created_at, updated_at)
+  - name: EntityBase
+    only_for_heritage: true
+    allow_direct_access: false
+    fields:
+      - name: id
+        type: uinteger
+        required: true
+      - name: created_at
+        type: datetime
+        required: true
+      - name: updated_at
+        type: datetime
+        required: true
+
+  # Root entity - entry point for the application
+  - name: Root
+    inherits_from: EntityBase
+    allow_direct_access: true
+    undoable: false
+    fields:
+      - name: cars
+        type: entity
+        entity: Car
+        relationship: ordered_one_to_many
+        strong: true
+        required: true
+      - name: customers
+        type: entity
+        entity: Customer
+        relationship: one_to_many
+        strong: true
+        required: true
+
+  # Car entity - vehicles in the dealership inventory
+  - name: Car
+    inherits_from: EntityBase
+    allow_direct_access: true
+    undoable: true
+    fields:
+      - name: make
+        type: string
+        required: true
+      - name: model
+        type: string
+        required: true
+      - name: year
+        type: integer
+        required: true
+      - name: price
+        type: float
+        required: true
+      - name: status
+        type: enum
+        enum_name: CarStatus
+        enum_values:
+          - Available
+          - Sold
+          - Reserved
+        required: true
+
+  # Customer entity - potential buyers
+  - name: Customer
+    inherits_from: EntityBase
+    allow_direct_access: true
+    undoable: true
+    fields:
+      - name: name
+        type: string
+        required: true
+      - name: email
+        type: string
+        required: true
+      - name: phone
+        type: string
+        required: false
+
+features:
+  - name: car_management
+    use_cases:
+      - name: list_cars
+        read_only: true
+        entities: [Car]
+        dto_out:
+          name: CarListDto
+          fields:
+            - name: count
+              type: integer
+
+      - name: add_car
+        undoable: true
+        entities: [Root, Car]
+        dto_in:
+          name: AddCarDto
+          fields:
+            - name: make
+              type: string
+            - name: model
+              type: string
+            - name: year
+              type: integer
+            - name: price
+              type: float
+        dto_out:
+          name: AddCarResultDto
+          fields:
+            - name: car_id
+              type: integer
+
+      - name: sell_car
+        undoable: true
+        entities: [Car, Customer]
+        dto_in:
+          name: SellCarDto
+          fields:
+            - name: car_id
+              type: integer
+            - name: customer_id
+              type: integer
+        dto_out:
+          name: SellCarResultDto
+          fields:
+            - name: success
+              type: boolean
+
+  - name: customer_management
+    use_cases:
+      - name: list_customers
+        read_only: true
+        entities: [Customer]
+        dto_out:
+          name: CustomerListDto
+          fields:
+            - name: count
+              type: integer
+
+      - name: add_customer
+        undoable: true
+        entities: [Root, Customer]
+        dto_in:
+          name: AddCustomerDto
+          fields:
+            - name: name
+              type: string
+            - name: email
+              type: string
+            - name: phone
+              type: string
+              is_nullable: true
+        dto_out:
+          name: AddCustomerResultDto
+          fields:
+            - name: customer_id
+              type: integer
+
+ui:
+  rust_cli: true
