@@ -47,3 +47,8 @@ pub fn get_workspace(uow: &dyn GenerationReadOps) -> anyhow::Result<Workspace> {
         .ok_or_else(|| anyhow!("Workspace entity not found"))?;
     Ok(workspace)
 }
+
+pub fn strip_leading_and_trailing_slashes(path: &str) -> String {
+    let trimmed = path.trim_matches(|c: char| c == '/' || c == '\\' || c.is_whitespace());
+    trimmed.to_string()
+}

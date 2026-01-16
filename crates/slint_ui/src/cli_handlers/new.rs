@@ -79,6 +79,13 @@ fn apply_language_setting(
 
     global.language = lang_str.to_string();
 
+    // set sensible defaults for prefix_path based on language
+    if lang_str == "cpp-qt" {
+        global.prefix_path = "src".to_string();
+    } else if lang_str == "rust" {
+        global.prefix_path = "crates".to_string();
+    }
+
     let mut undo_redo_manager = app_context.undo_redo_manager.lock().unwrap();
     global_controller::update(
         &app_context.db_context,

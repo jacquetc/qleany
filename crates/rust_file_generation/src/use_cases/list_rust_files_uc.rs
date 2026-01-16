@@ -89,8 +89,17 @@ impl ListRustFilesUseCase {
         let global = global.ok_or(anyhow!("Global not found"))?;
         if global.language != "rust" {
             return Err(anyhow!("Global language is not rust"));
-        }
+        };
 
+        // get prefix path
+        let prefix = global.prefix_path.clone();
+        // strip it from leading and trailing "/" or "\"
+        let prefix = if prefix.trim().is_empty() {
+            "crates".to_string()
+        } else {
+            tools::strip_leading_and_trailing_slashes(&prefix)
+        };
+            
         // ui
         let user_interfaces = uow.get_workspace_relationship(
             &workspace_id,
@@ -124,7 +133,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "Cargo.toml".to_string(),
-            relative_path: "crates/common/".to_string(),
+            relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
             template_name: "common_cargo".to_string(),
             feature: None,
@@ -135,7 +144,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "lib.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "common_lib".to_string(),
             feature: None,
@@ -146,7 +155,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "undo_redo.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "undo_redo".to_string(),
             feature: None,
@@ -157,7 +166,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "long_operation.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "long_operation".to_string(),
             feature: None,
@@ -168,7 +177,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "repository_factory.rs".to_string(),
-            relative_path: "crates/common/src/direct_access/".to_string(),
+            relative_path: format!("{}/common/src/direct_access/", prefix),
             group: "base".to_string(),
             template_name: "repository_factory".to_string(),
             feature: None,
@@ -179,7 +188,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "setup.rs".to_string(),
-            relative_path: "crates/common/src/direct_access/".to_string(),
+            relative_path: format!("{}/common/src/direct_access/", prefix),
             group: "base".to_string(),
             template_name: "common_setup".to_string(),
             feature: None,
@@ -190,7 +199,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "types.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "types".to_string(),
             feature: None,
@@ -201,7 +210,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "database.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "database".to_string(),
             feature: None,
@@ -212,7 +221,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "db_context.rs".to_string(),
-            relative_path: "crates/common/src/database/".to_string(),
+            relative_path: format!("{}/common/src/database/", prefix),
             group: "base".to_string(),
             template_name: "db_context".to_string(),
             feature: None,
@@ -223,7 +232,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "db_helpers.rs".to_string(),
-            relative_path: "crates/common/src/database/".to_string(),
+            relative_path: format!("{}/common/src/database/", prefix),
             group: "base".to_string(),
             template_name: "db_helpers".to_string(),
             feature: None,
@@ -234,7 +243,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "transactions.rs".to_string(),
-            relative_path: "crates/common/src/database/".to_string(),
+            relative_path: format!("{}/common/src/database/", prefix),
             group: "base".to_string(),
             template_name: "transactions".to_string(),
             feature: None,
@@ -245,7 +254,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "redb_tests.rs".to_string(),
-            relative_path: "crates/common/tests/".to_string(),
+            relative_path: format!("{}/common/tests/", prefix),
             group: "base".to_string(),
             template_name: "redb_tests".to_string(),
             feature: None,
@@ -256,7 +265,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "undo_redo_tests.rs".to_string(),
-            relative_path: "crates/common/tests/".to_string(),
+            relative_path: format!("{}/common/tests/", prefix),
             group: "base".to_string(),
             template_name: "undo_redo_tests".to_string(),
             feature: None,
@@ -269,7 +278,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "entities.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "entities".to_string(),
             template_name: "common_entities".to_string(),
             feature: None,
@@ -280,7 +289,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "event.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "base".to_string(),
             template_name: "common_event".to_string(),
             feature: Some(0), // 0 means all
@@ -291,7 +300,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "direct_access.rs".to_string(),
-            relative_path: "crates/common/src/".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
             group: "entities".to_string(),
             template_name: "common_direct_access_mod".to_string(),
             feature: None,
@@ -302,7 +311,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "Cargo.toml".to_string(),
-            relative_path: "crates/direct_access/".to_string(),
+            relative_path: format!("{}/direct_access/", prefix),
             group: "entities".to_string(),
             template_name: "direct_access_cargo".to_string(),
             feature: None,
@@ -313,7 +322,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "lib.rs".to_string(),
-            relative_path: "crates/direct_access/src/".to_string(),
+            relative_path: format!("{}/direct_access/src/", prefix),
             group: "entities".to_string(),
             template_name: "direct_access_lib".to_string(),
             feature: None,
@@ -340,7 +349,7 @@ impl ListRustFilesUseCase {
                 files.push(File {
                     id: 0,
                     name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: "crates/direct_access/src/".to_string(),
+                    relative_path: format!("{}/direct_access/src/", prefix),
                     group: "entities".to_string(),
                     template_name: "entity_mod".to_string(),
                     feature: None,
@@ -349,7 +358,8 @@ impl ListRustFilesUseCase {
                 });
 
                 let relative_path = format!(
-                    "crates/direct_access/src/{}/",
+                    "{}/direct_access/src/{}/",
+                    prefix,
                     heck::AsSnakeCase(&entity.name)
                 );
 
@@ -400,7 +410,8 @@ impl ListRustFilesUseCase {
                 // for crates/direct_access/src/{}/use_cases/
 
                 let relative_path = format!(
-                    "crates/direct_access/src/{}/use_cases/",
+                    "{}/direct_access/src/{}/use_cases/",
+                    prefix,
                     heck::AsSnakeCase(&entity.name)
                 );
 
@@ -532,7 +543,7 @@ impl ListRustFilesUseCase {
             }
 
             // for crates/common/src/direct_access/
-            let relative_path = "crates/common/src/direct_access/";
+            let relative_path = format!("{}/common/src/direct_access/", prefix);
 
             files.push(File {
                 id: 0,
@@ -577,7 +588,7 @@ impl ListRustFilesUseCase {
         for feature in &features {
             let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
 
-            let relative_path = format!("crates/{}/", heck::AsSnakeCase(&feature.name));
+            let relative_path = format!("{}/{}/", prefix, heck::AsSnakeCase(&feature.name));
 
             files.push(File {
                 id: 0,
@@ -590,7 +601,7 @@ impl ListRustFilesUseCase {
                 use_case: None,
             });
 
-            let relative_path = format!("crates/{}/src/", heck::AsSnakeCase(&feature.name));
+            let relative_path = format!("{}/{}/src/", prefix, heck::AsSnakeCase(&feature.name));
 
             files.push(File {
                 id: 0,
@@ -648,8 +659,11 @@ impl ListRustFilesUseCase {
             });
 
             // for crates/{}/src/use_cases/
-            let relative_path =
-                format!("crates/{}/src/use_cases/", heck::AsSnakeCase(&feature.name));
+            let relative_path = format!(
+                "{}/{}/src/use_cases/",
+                prefix,
+                heck::AsSnakeCase(&feature.name)
+            );
 
             let use_cases =
                 uow.get_feature_relationship(&feature.id, &FeatureRelationshipField::UseCases)?;
@@ -672,7 +686,8 @@ impl ListRustFilesUseCase {
 
             // for crates/{}/src/units_of_work/
             let relative_path = format!(
-                "crates/{}/src/units_of_work/",
+                "{}/{}/src/units_of_work/",
+                prefix,
                 heck::AsSnakeCase(&feature.name)
             );
 
@@ -697,7 +712,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "Cargo.toml".to_string(),
-            relative_path: "crates/macros/".to_string(),
+            relative_path: format!("{}/macros/", prefix),
             group: "base".to_string(),
             template_name: "macros_cargo".to_string(),
             feature: None,
@@ -708,7 +723,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "lib.rs".to_string(),
-            relative_path: "crates/macros/src/".to_string(),
+            relative_path: format!("{}/macros/src/", prefix),
             group: "base".to_string(),
             template_name: "macros_lib".to_string(),
             feature: None,
@@ -719,7 +734,7 @@ impl ListRustFilesUseCase {
         files.push(File {
             id: 0,
             name: "direct_access.rs".to_string(),
-            relative_path: "crates/macros/src/".to_string(),
+            relative_path: format!("{}/macros/src/", prefix),
             group: "base".to_string(),
             template_name: "macros_direct_access".to_string(),
             feature: None,
@@ -731,7 +746,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: "Cargo.toml".to_string(),
-                relative_path: "crates/cli/".to_string(),
+                relative_path: format!("{}/cli/", prefix),
                 group: "cli".to_string(),
                 template_name: "cli_cargo".to_string(),
                 feature: None,
@@ -742,7 +757,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: "main.rs".to_string(),
-                relative_path: "crates/cli/src/".to_string(),
+                relative_path: format!("{}/cli/src/", prefix),
                 group: "cli".to_string(),
                 template_name: "cli_main".to_string(),
                 feature: None,
@@ -755,7 +770,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: "Cargo.toml".to_string(),
-                relative_path: "crates/slint_ui/".to_string(),
+                relative_path: format!("{}/slint_ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_cargo".to_string(),
                 feature: None,
@@ -766,7 +781,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: "build.rs".to_string(),
-                relative_path: "crates/slint_ui/".to_string(),
+                relative_path: format!("{}/slint_ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_build".to_string(),
                 feature: None,
@@ -774,7 +789,7 @@ impl ListRustFilesUseCase {
                 use_case: None,
             });
 
-            let relative_path = "crates/slint_ui/src/".to_string();
+            let relative_path = format!("{}/slint_ui/src/", prefix);
 
             files.push(File {
                 id: 0,
@@ -812,7 +827,7 @@ impl ListRustFilesUseCase {
             files.push(File {
                 id: 0,
                 name: "app.slint".to_string(),
-                relative_path: "crates/slint_ui/ui/".to_string(),
+                relative_path: format!("{}/slint_ui/ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_app".to_string(),
                 feature: None,
@@ -832,7 +847,7 @@ impl ListRustFilesUseCase {
             });
 
             // commands:
-            let relative_path = "crates/slint_ui/src/commands/".to_string();
+            let relative_path = format!("{}/slint_ui/src/commands/", prefix);
 
             for entity in &entities {
                 let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;

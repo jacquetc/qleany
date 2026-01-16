@@ -1,3 +1,4 @@
+
 use crate::NewReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
@@ -107,8 +108,8 @@ impl NewUseCase {
             id: 0,
             language: "rust".to_string(),
             application_name: "My Application".to_string(),
-            organisation_name: "".to_string(),
-            organisation_domain: "".to_string(),
+            organisation_name: "mycompany".to_string(),
+            organisation_domain: "eu.mycompany".to_string(),
             prefix_path: "".to_string(),
         };
 

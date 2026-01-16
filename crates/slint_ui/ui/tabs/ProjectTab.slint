@@ -89,7 +89,7 @@ export component ProjectTab inherits Rectangle {
                     
                     StyledLineEdit {
                         text <=> ProjectTabState.prefix_path;
-                        placeholder: "Enter prefix path";
+                        placeholder: ProjectTabState.language == "Rust" ? "default: crates" : "default: src" ;
                         edited(text) => {
                             ProjectTabState.prefix_path_changed(text);
                         }

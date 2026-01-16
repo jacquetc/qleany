@@ -4,31 +4,31 @@
 [workspace]
 
 members = [
-    "crates/common",
-    "crates/direct_access",
-    "crates/macros",
+    "{{ s.global.prefix }}/common",
+    "{{ s.global.prefix }}/direct_access",
+    "{{ s.global.prefix }}/macros",
 {%- for fid, feature in s.features %}
-    "crates/{{ feature.snake_name }}",
+    "{{ s.global.prefix }}/{{ feature.snake_name }}",
 {%- endfor %}
 {%- if s.ui.inner.rust_cli %}
-    "crates/cli",
+    "{{ s.global.prefix }}/cli",
 {%- endif %}
 {%- if s.ui.inner.rust_slint %}
-    "crates/slint_ui",
+    "{{ s.global.prefix }}/slint_ui",
 {%- endif %}
     ]
 
 {%- if s.ui.inner.rust_cli and s.ui.inner.rust_slint %}
 default-members = [
-    "crates/slint_ui",
+    "{{ s.global.prefix }}/slint_ui",
 ]
 {%- elif s.ui.inner.rust_cli %}
 default-members = [
-    "crates/cli",
+    "{{ s.global.prefix }}/cli",
 ]
 {%- elif s.ui.inner.rust_slint %}
 default-members = [
-    "crates/slint_ui",
+    "{{ s.global.prefix }}/slint_ui",
 ]
 {%- endif %}
 

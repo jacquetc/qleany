@@ -60,6 +60,7 @@ struct GlobalVM {
     pub inner: Global,
     pub application_kebab_name: String,
     pub application_snake_name: String,
+    pub prefix: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -494,6 +495,11 @@ impl SnapshotBuilder {
             inner: global.clone(),
             application_kebab_name: heck::AsKebabCase(&global.application_name).to_string(),
             application_snake_name: heck::AsSnakeCase(&global.application_name).to_string(),
+            prefix: if global.prefix_path.trim().is_empty() {
+                "crates".to_string()
+            } else {
+                tools::strip_leading_and_trailing_slashes(&global.prefix_path)
+            },
         };
 
         let ui_ids = uow.get_workspace_relationship(
@@ -1142,6 +1148,7 @@ mod tests {
                 },
                 application_kebab_name: "test".into(),
                 application_snake_name: "test".into(),
+                prefix: "".into(),
             },
             ui: UserInterfaceVM {
                 inner: UserInterface {
@@ -1231,6 +1238,7 @@ mod tests {
                 inner: global,
                 application_kebab_name: "".to_string(),
                 application_snake_name: "".to_string(),
+                prefix: "".to_string(),
             },
             ui: UserInterfaceVM {
                 inner: UserInterface {

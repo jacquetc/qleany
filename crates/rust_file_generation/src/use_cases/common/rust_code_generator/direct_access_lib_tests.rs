@@ -85,6 +85,7 @@ fn render_direct_access_lib_lists_entities() {
             inner: global,
             application_kebab_name: "".to_string(),
             application_snake_name: "".to_string(),
+            prefix: "".to_string(),
         },
         ui: UserInterfaceVM {
             inner: UserInterface::default(),
