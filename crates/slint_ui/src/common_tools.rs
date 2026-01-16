@@ -1,6 +1,7 @@
 use crate::{App, CommonTools};
 use crate::app_context::AppContext;
 use std::sync::Arc;
+use log::log;
 use slint::ComponentHandle;
 
 /// Wire up the on_check_is_pascal_case callback
@@ -22,7 +23,18 @@ pub fn setup_check_is_snake_case_callback(app: &App, app_context: &Arc<AppContex
     });
 }
 
+pub fn init_developer_mode(app: &App, app_context: &Arc<AppContext>) {
+    // check if ../../ has a .git folder
+    let binary_path = std::env::current_exe().unwrap();
+    let git_path = binary_path.parent().unwrap().parent().unwrap().parent().unwrap().join(".git");
+    let developer_mode = git_path.try_exists().unwrap_or(false);
+    log::info!("Developer mode: {}", developer_mode);
+
+    app.global::<CommonTools>().set_developer_mode(developer_mode);
+}
+
 pub fn init(app: &App, app_context: &Arc<AppContext>) {
     setup_check_is_pascal_case_callback(app, app_context);
     setup_check_is_snake_case_callback(app, app_context);
+    init_developer_mode(app, app_context);
 }

@@ -1,5 +1,5 @@
 import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
-import { ManifestCommands, AppState } from "../globals.slint";
+import { ManifestCommands, AppState, CommonTools } from "../globals.slint";
 import { Paper, Alert, StyledButton } from "../components/misc.slint";
 
 
@@ -20,7 +20,7 @@ export component HomeTab inherits Rectangle {
 
         // Subtitle
         Text {
-            text: "Welcome to Qleany! Use the buttons below to manage your manifests.";
+            text: "Welcome to Qleany, a scaffolding generator for C++/Qt6 and Rust.";
             font-size: 16px;
             color: #495057;
         }
@@ -107,8 +107,7 @@ export component HomeTab inherits Rectangle {
                     }
                 }
 
-                // For Testing section
-                Paper {
+                if CommonTools.developer_mode : Paper {
                     bg: #f8f9fa;
                     with-border: true;
 
@@ -142,6 +141,13 @@ export component HomeTab inherits Rectangle {
                     }
                 }
             }
+        }
+
+        // Spacer
+        Rectangle {
+            height: 30%;
+            background: transparent;
+            vertical-stretch: 1;
         }
 
         HorizontalLayout {
