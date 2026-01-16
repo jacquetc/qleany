@@ -210,7 +210,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                                         "required": ["name", "fields"]
                                     }
                                 },
-                                "required": ["name", "validator", "undoable"]
+                                "required": ["name"]
                             }
                         }
                     },
