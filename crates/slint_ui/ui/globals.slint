@@ -58,6 +58,8 @@ export global ProjectTabState {
 
 export global EntitiesTabState {
     in-out property <int> entities_undo_stack_id: -1;
+    
+    callback export_to_mermaid_clipboard();
 
     // Entity lists and selection
     in-out property <[CRListItem]> entity_cr_list: [];

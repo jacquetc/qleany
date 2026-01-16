@@ -15,6 +15,7 @@ import {
     SectionHeader,
     FormField,
     StyledLineEdit,
+    StyledButton,
     Breadcrumb,
     Paper,
 } from "../components/misc.slint";
@@ -37,18 +38,36 @@ export component EntitiesTab inherits Rectangle {
             color: #212529;
         }
 
-        if EntitiesTabState.selected_entity_id >= 0: Rectangle {
-            height: 12px;
-        }
-        if EntitiesTabState.selected_entity_id >= 0: Breadcrumb {
-            path: (EntitiesTabState.selected_field_id >= 0) ? [
-                "Entities",
-                EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity",
-                EntitiesTabState.selected_field_name != "" ? EntitiesTabState.selected_field_name : "Unnamed Field"
-            ] : [
-                "Entities",
-                EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity"
-            ];
+        HorizontalLayout {
+
+            if EntitiesTabState.selected_entity_id >= 0: Rectangle {
+                height: 12px;
+            }
+            if EntitiesTabState.selected_entity_id >= 0: Breadcrumb {
+                path: (EntitiesTabState.selected_field_id >= 0) ? [
+                    "Entities",
+                    EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity",
+                    EntitiesTabState.selected_field_name != "" ? EntitiesTabState.selected_field_name : "Unnamed Field"
+                ] : [
+                    "Entities",
+                    EntitiesTabState.selected_entity_name != "" ? EntitiesTabState.selected_entity_name : "Unnamed Entity"
+                ];
+            }
+
+            // Spacer
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+
+            StyledButton {
+                text: "Mermaid Diagram";
+                enabled: !AppState.is_loading && EntitiesTabState.entity_cr_list.length > 0;
+                clicked => {
+                    EntitiesTabState.export_to_mermaid_clipboard();
+                }
+                primary: false;
+            }
+
         }
 
         Rectangle {
@@ -409,7 +428,7 @@ export component EntitiesTab inherits Rectangle {
 
                             // Enum Values (only visible when type is Enum)
                             if EntitiesTabState.selected_field_type == "Enum": FormField {
-                                label: "Enum Values (one per line)";
+                                label: "Enum Values (one per line in PascalCase)";
 
                                 TextEdit {
                                     height: 100px;

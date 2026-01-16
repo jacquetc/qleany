@@ -4,7 +4,7 @@
 //! including event subscriptions and callback handlers for entity management.
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, field_commands, workspace_commands};
+use crate::commands::{entity_commands, field_commands, handling_manifest_commands, workspace_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
 use common::direct_access::entity::EntityRelationshipField;
@@ -13,7 +13,7 @@ use common::entities::{FieldRelationshipType, FieldType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
-use slint::{ComponentHandle, Model};
+use slint::{ComponentHandle, Model, Timer};
 use std::sync::Arc;
 
 fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
@@ -1529,6 +1529,55 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
         });
 }
 
+fn setup_export_to_mermaid_clipboard_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>()
+        .on_export_to_mermaid_clipboard({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                if let Some(app) = app_weak.upgrade() {
+                    let workspace_id = app.global::<AppState>().get_workspace_id();
+                    if workspace_id <= 0 {
+                        log::warn!("Cannot export to mermaid: no workspace loaded");
+                        return;
+                    }
+
+                    match handling_manifest_commands::export_to_mermaid(&ctx) {
+                        Ok(return_dto) => {
+                            // Copy to clipboard
+                            let mut clipboard = match arboard::Clipboard::new() {
+                                Ok(cb) => cb,
+                                Err(e) => {
+                                    log::error!("Failed to access clipboard: {}", e);
+                                    return;
+                                }
+                            };
+                            clipboard.set_text(return_dto.mermaid_diagram).unwrap();
+                            log::info!("Entities exported to mermaid markdown and copied to clipboard");
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+                            // Show success message
+                            app.global::<AppState>().set_success_message(
+                                slint::SharedString::from("Entities exported to mermaid markdown and copied to clipboard"),
+                            );
+                            app.global::<AppState>().set_success_message_visible(true);
+
+                            // Hide after 3 seconds
+                            let app_weak_timer = app.as_weak();
+                            Timer::single_shot(std::time::Duration::from_secs(3), move || {
+                                if let Some(app) = app_weak_timer.upgrade() {
+                                    app.global::<AppState>().set_success_message_visible(false);
+                                }
+                            });
+                        }
+                        Err(e) => {
+                            log::error!("Failed to export entities to mermaid markdown: {}", e);
+                        }
+                    }
+                }
+            }
+        });
+}
+
 /// Initialize all entities tab related subscriptions and callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Event subscriptions
@@ -1540,6 +1589,9 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     subscribe_entity_deleted_event(event_hub_client, app, app_context);
     subscribe_field_updated_event(event_hub_client, app, app_context);
     subscribe_field_deleted_event(event_hub_client, app, app_context);
+
+    // common
+    setup_export_to_mermaid_clipboard_callback(app, app_context);
 
     // Entity callbacks
     setup_entities_reorder_callback(app, app_context);

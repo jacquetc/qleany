@@ -187,10 +187,15 @@ impl ExportToMermaidUseCase {
             .and_then(|id| entities.iter().find(|e| e.id == id))?;
 
         let label = if field.strong { "owns" } else { "refs" };
+        let line_style = if field.strong { "--" } else { ".." };
 
         let relationship_line = match field.relationship {
             FieldRelationshipType::OneToOne => {
-                let cardinality = if field.required { "||--||" } else { "||--o|" };
+                let cardinality = if field.required {
+                    format!("||{}||", line_style)
+                } else {
+                    format!("||{}o|", line_style)
+                };
                 format!(
                     "{} {} {} : {}",
                     owner_entity.name, cardinality, target_entity.name, label
@@ -198,14 +203,14 @@ impl ExportToMermaidUseCase {
             }
             FieldRelationshipType::OneToMany => {
                 format!(
-                    "{} ||--o{{ {} : {}",
-                    owner_entity.name, target_entity.name, label
+                    "{} ||{}o{{ {} : {}",
+                    owner_entity.name, line_style, target_entity.name, label
                 )
             }
             FieldRelationshipType::OrderedOneToMany => {
                 format!(
-                    "{} ||--o{{ {} : {}\\ ordered",
-                    owner_entity.name, target_entity.name, label
+                    "{} ||{}o{{ {} : \"{} ordered\"",
+                    owner_entity.name, line_style, target_entity.name, label
                 )
             }
             FieldRelationshipType::ManyToMany => {
@@ -216,8 +221,7 @@ impl ExportToMermaidUseCase {
                 )
             }
             FieldRelationshipType::ManyToOne => {
-                // Reverse cardinality
-                let cardinality = if field.required { "||--||" } else { "||--o|" };
+                let cardinality = if field.required { "||..||" } else { "||..o|" };
                 format!(
                     "{} {} {} : {}",
                     target_entity.name, cardinality, owner_entity.name, label
