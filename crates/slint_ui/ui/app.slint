@@ -50,7 +50,7 @@ component NavItem inherits Rectangle {
 }
 
 export component App inherits Window {
-    title: AppState.manifest_is_open ? "Qleany - " + AppState.manifest_path : "Qleany";
+    title: AppState.manifest_is_open ? (AppState.manifest_path == "" ? "Qleany - new manifest without path" : "Qleany - " + AppState.manifest_path) : "Qleany";
     min-width: 1200px;
     min-height: 700px;
 
@@ -102,7 +102,13 @@ export component App inherits Window {
                     StyledButton {
                         text: "Save Manifest";
                         enabled: AppState.manifest_is_open && !AppState.manifest_is_saved && !AppState.is_loading;
-                        clicked => { ManifestCommands.save_manifest(); }
+                        clicked => {
+                            if (AppState.manifest_path == "") {
+                                ManifestCommands.save_manifest_as();
+                            } else {
+                                ManifestCommands.save_manifest();
+                            }
+                        }
                         primary: true;
                     }
 

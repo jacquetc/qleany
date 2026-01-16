@@ -112,7 +112,7 @@ fn subscribe_new_manifest_event(
                     app.global::<AppState>().set_is_loading(false);
                     app.global::<AppState>().set_manifest_is_open(true);
                     app.global::<AppState>()
-                        .set_manifest_path(slint::SharedString::from("no path yet"));
+                        .set_manifest_path(slint::SharedString::from(""));
                 }
             });
         }
