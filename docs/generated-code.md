@@ -474,47 +474,83 @@ src/
 
 ### Rust Output
 
-Qleany uses the modern Rust module naming convention (no `mod.rs` files):
-
 ```
-src/
-├── common.rs                    # Module declaration
+Cargo.toml
+crates/
+├── cli/
+│   ├── src/
+│   │   ├── main.rs    
+│   └── Cargo.toml
 ├── common/
-│   ├── database.rs
-│   ├── database/
-│   │   ├── db_context.rs
-│   │   ├── transactions.rs
-│   │   └── tables.rs
-│   ├── entities.rs              # All entity exports
-│   ├── entities/
-│   │   └── workspace.rs
-│   ├── event.rs                 # Event, Origin, EntityEvent enums
-│   ├── types.rs                 # EntityId and other shared types
-│   ├── direct_access.rs         # Module exports
-│   ├── direct_access/
-│   │   ├── repository_factory.rs
-│   │   └── {entity}/
-│   │       └── repository.rs    # Table traits + Repository wrapper
-│   └── undo_redo.rs             # UndoRedoCommand trait, UndoRedoManager
-├── direct_access.rs
-├── direct_access/
-│   ├── lib.rs                   # Feature exports
-│   ├── {entity}.rs
-│   └── {entity}/
-│       ├── controller.rs        # Free functions: create, get, update, remove, etc.
-│       ├── dtos.rs              # CreateDto, Dto, RelationshipDto
-│       ├── units_of_work.rs     # UnitOfWorkFactory, UnitOfWorkTrait
-│       └── use_cases/
-│           ├── create_uc.rs
-│           ├── get_uc.rs
-│           ├── update_uc.rs     # Implements UndoRedoCommand
-│           └── remove_uc.rs
-├── {feature}.rs
-└── {feature}/
-    ├── controller.rs
-    ├── dtos.rs
-    ├── units_of_work.rs
-    └── use_cases/
-```
+│   ├── src/
+│   │   ├── entities.rs             # Car, Customer, Sale structs
+│   │   ├── database.rs
+│   │   ├── database/
+│   │   │   ├── db_context.rs
+│   │   │   ├── db_helpers.rs
+│   │   │   └── transactions.rs
+│   │   ├── direct_access.rs
+│   │   ├── direct_access/         # Holds the repository and table implementations for each entity
+│   │   │   ├── car.rs
+│   │   │   ├── car/
+│   │   │   │   ├── car_repository.rs
+│   │   │   │   └── car_table.rs
+│   │   │   ├── customer.rs
+│   │   │   ├── customer/
+│   │   │   │   ├── customer_repository.rs
+│   │   │   │   └── customer_table.rs
+│   │   │   ├── sale.rs
+│   │   │   ├── sale/
+│   │   │   │   ├── sale_repository.rs
+│   │   │   │   └── sale_table.rs
+│   │   │   ├── root.rs
+│   │   │   ├── root/
+│   │   │   │   ├── root_repository.rs
+│   │   │   │   └── root_table.rs
+│   │   │   ├── repository_factory.rs
+│   │   │   └── setup.rs
+│   │   ├── event.rs             # event system for reactive updates
+│   │   ├── lib.rs
+│   │   ├── long_operation.rs    # infrastructure for long operations
+│   │   ├── types.rs         
+│   │   └── undo_redo.rs        # undo/redo infrastructure
+│   └── Cargo.toml
+├── direct_access/                   # a direct access point for UI or CLI to interact with entities
+│   ├── src/
+│   │   ├── car.rs
+│   │   ├── car/
+│   │   │   ├── car_controller.rs   # Exposes CRUD operations to UI or CLI
+│   │   │   ├── dtos.rs
+│   │   │   ├── units_of_work.rs
+│   │   │   ├── use_cases.rs
+│   │   │   └── use_cases/          # The logic here is auto-generated
+│   │   │       ├── create_car_uc.rs
+│   │   │       ├── get_car_uc.rs
+│   │   │       ├── update_car_uc.rs
+│   │   │       ├── remove_car_uc.rs
+│   │   │       └── ...
+│   │   ├── customer.rs
+│   │   ├── customer/
+│   │   │   └── ...
+│   │   ├── sale.rs
+│   │   ├── sale/
+│   │   │   └── ...
+│   │   ├── root.rs
+│   │   ├── root/
+│   │   │   └── ...
+│   │   └── lib.rs
+│   └── Cargo.toml
+└── inventory_management/
+    ├── src/
+    │   ├── inventory_management_controller.rs
+    │   ├── dtos.rs
+    │   ├── units_of_work.rs
+    │   ├── units_of_work/          # ← adapt the macros here too
+    │   │   └── ...
+    │   ├── use_cases.rs
+    │   ├── use_cases/              # ← You implement the logic here
+    │   │   └── ...
+    │   └── lib.rs
+    └── Cargo.toml
 
-This follows Rust's recommended practice since the 2018 edition, making navigation clearer by naming modules after their folders.
+```

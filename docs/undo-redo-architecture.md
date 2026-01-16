@@ -1,6 +1,20 @@
 # Entity Tree and Undo-Redo Architecture
 
+Undo-redo systems are harder than they first appear. A robust implementation must handle complex scenarios like nested entities, cascading changes, and maintaining data integrity during undos/redos. Qleany's undo-redo architecture is designed to simplify these challenges by enforcing clear rules on how entities relate to each other in the context of undo-redo operations. It means rules to follow when designing your entity tree.
+
 Entities in Qleany form a tree structure based on strong (ownership) relationships. This tree organization directly influences how undo-redo works across your application.
+
+## My Recommendations
+
+Do not use a single, linear, undo-redo stack for the entire application (but for basic applications). It's a trap. Think about interactions from the user's perspective: they expect undo/redo to apply to specific contexts (documents, projects) rather than globally. A monolithic stack leads to confusion and unintended consequences.
+
+For example, if a user is editing a document and undoes an action, they don't expect that to also undo changes in unrelated settings or other documents. Instead, each context should have its own undo-redo stack.  Undo can be done by a dumb Ctrl-Z or a toast notification with "Undo" action after a destructive operation. Is the user expecting more granular control over what gets undone? Probably not. Keep it simple, limited to the context they are working in.
+
+Also, for destructive operations (deleting entities), Qleany supports cascading deletions, but not their undoing. If you delete a parent entity, all its strongly-owned children are also deleted.  At first, I used a database savepoint to be restored on undo, but the savepoint impacted the non-undoable data as well, leading to confusion and unexpected behavior.  Consequence: there is no undo for entity deletions, so what to do? 
+
+At least for now, no undoing of deletions. Instead, consider soft-deleting entities (marking them as inactive) if you want to allow recovery. And make it so when you "empty the trash" manually, that's a permanent action, not undoable, with all the undo redo stacks cleared.
+
+Thi seems like a limitation, but in practice, users rarely need to undo deletions if they have a way to recover deleted items through a trash or archive system.
 
 ## Entity Properties
 

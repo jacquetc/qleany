@@ -124,15 +124,15 @@ Click **Project** in the sidebar.
 
 Fill in the form:
 
-| Field | Value |
-|-------|-------|
-| Language | Rust *(or C++ / Qt)* |
-| Application Name | CarLot |
-| Organisation Name | mycompany |
-| Organisation Domain | mycompany.com |
-| Prefix Path | src |
+| Field | Value                  |
+|-------|------------------------|
+| Language | Rust *(or C++ / Qt)*   |
+| Application Name | CarLot                 |
+| Organisation Name | mycompany              |
+| Organisation Domain | mycompany.com          |
+| Prefix Path | crates *(or src for C++ / Qt)* |
 
-Changes save automatically. The header shows "Save Manifest" when there are unsaved changes.
+Changes save. The header shows "Save Manifest" when there are unsaved changes.
 
 ---
 
@@ -198,7 +198,7 @@ Select the **Root** entity. Add relationship fields:
 | customers | Entity | Referenced Entity: `Customer`, Relationship: `ordered_one_to_many`, Strong: ✓ |
 | sales | Entity | Referenced Entity: `Sale`, Relationship: `ordered_one_to_many`, Strong: ✓ |
 
-> **C++ / Qt6 only:** You can also enable **List Model** and **Single Model** checkboxes to generate reactive QML models. Set **Displayed Field** to specify which field appears in list views (e.g., `make` for cars, `name` for customers). These options are not available for Rust.
+> **C++ / Qt6 only:** You can also enable **List Model** and **Single Model** checkboxes to generate reactive QAbstractListModel and its QML wrappers. Set **Displayed Field** to specify which field appears in list views (e.g., `make` for cars, `name` for customers). These options are not available (or useless) for Rust.
 
 **Key concepts:**
 - **Strong relationship**: Deleting Root cascades to delete all Cars, Customers, Sales
@@ -219,15 +219,15 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 1. Click **+** next to "Use Cases"
 2. Configure:
 
-| Field | Value |
-|-------|-------|
-| Name | import_inventory |
-| Validator | ✓ |
-| Undoable | ✗ *(file imports typically aren't undoable)* |
-| Read Only | ✗ |
-| Long Operation | ✓ *(parsing files can take time)* |
+| Field | Value                                           |
+|-------|-------------------------------------------------|
+| Name | import_inventory                                |
+| Validator | ✓ *(useless option for now, may be deprecated)* |
+| Undoable | ✗ *(file imports typically aren't undoable)*    |
+| Read Only | ✗ *(it will update the internal database)*      |
+| Long Operation | ✓ *(parsing files can take time)*               |
 
-> **Note:** Long Operation is currently implemented for Rust only.
+> **Note:** Long Operation is currently implemented for Rust only. For now, C++ / Qt6 ignores this setting.
 
 3. Switch to the **DTO In** tab:
    - Enable the checkbox
@@ -247,13 +247,13 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 1. Click **+** next to "Use Cases"
 2. Configure:
 
-| Field | Value |
-|-------|-------|
-| Name | export_inventory |
-| Validator | ✓ |
-| Undoable | ✗ |
-| Read Only | ✓ *(just reading data)* |
-| Long Operation | ✗ |
+| Field | Value                            |
+|-------|----------------------------------|
+| Name | export_inventory                 |
+| Validator | ✓   (useless for now)                |
+| Undoable | ✗                                |
+| Read Only | ✓ *(just reading internal data)* |
+| Long Operation | ✗                                |
 
 > **Note:** Long Operation is currently implemented for Rust only.
 
@@ -302,50 +302,99 @@ The progress modal shows generation status. Files are written to your project.
 After generation, your project contains:
 
 ```
-src/
-├── common.rs
+Cargo.toml
+crates/
+├── cli/
+│   ├── src/
+│   │   ├── main.rs    
+│   └── Cargo.toml
 ├── common/
-│   ├── entities.rs             # Car, Customer, Sale structs
-│   ├── database.rs             # DbContext, transactions
-│   └── direct_access.rs        # Per-entity repositories, tables
-├── direct_access.rs
-├── direct_access/
-│   ├── car.rs
-│   ├── car/
-│   │   ├── controller.rs
-│   │   ├── dtos.rs
-│   │   ├── unit_of_work.rs
-│   │   └── use_cases.rs        # CRUD operations
-│   ├── customer.rs
-│   ├── customer/
-│   │   └── ...
-│   ├── sale.rs
-│   ├── sale/
-│   │   └── ...
-│   ├── root.rs
-│   └── root/
-│       └── ...
-├── inventory_management.rs
-├── inventory_management/
-│   ├── controller.rs
-│   ├── dtos.rs
-│   ├── unit_of_work.rs
-│   └── use_cases.rs            # ← You implement the logic here
-└── cli/
-    └── main.rs
+│   ├── src/
+│   │   ├── entities.rs             # Car, Customer, Sale structs
+│   │   ├── database.rs
+│   │   ├── database/
+│   │   │   ├── db_context.rs
+│   │   │   ├── db_helpers.rs
+│   │   │   └── transactions.rs
+│   │   ├── direct_access.rs
+│   │   ├── direct_access/         # Holds the repository and table implementations for each entity
+│   │   │   ├── car.rs
+│   │   │   ├── car/
+│   │   │   │   ├── car_repository.rs
+│   │   │   │   └── car_table.rs
+│   │   │   ├── customer.rs
+│   │   │   ├── customer/
+│   │   │   │   ├── customer_repository.rs
+│   │   │   │   └── customer_table.rs
+│   │   │   ├── sale.rs
+│   │   │   ├── sale/
+│   │   │   │   ├── sale_repository.rs
+│   │   │   │   └── sale_table.rs
+│   │   │   ├── root.rs
+│   │   │   ├── root/
+│   │   │   │   ├── root_repository.rs
+│   │   │   │   └── root_table.rs
+│   │   │   ├── repository_factory.rs
+│   │   │   └── setup.rs
+│   │   ├── event.rs             # event system for reactive updates
+│   │   ├── lib.rs
+│   │   ├── long_operation.rs    # infrastructure for long operations
+│   │   ├── types.rs         
+│   │   └── undo_redo.rs        # undo/redo infrastructure
+│   └── Cargo.toml
+├── direct_access/                   # a direct access point for UI or CLI to interact with entities
+│   ├── src/
+│   │   ├── car.rs
+│   │   ├── car/
+│   │   │   ├── car_controller.rs   # Exposes CRUD operations to UI or CLI
+│   │   │   ├── dtos.rs
+│   │   │   ├── units_of_work.rs
+│   │   │   ├── use_cases.rs
+│   │   │   └── use_cases/          # The logic here is auto-generated
+│   │   │       ├── create_car_uc.rs
+│   │   │       ├── get_car_uc.rs
+│   │   │       ├── update_car_uc.rs
+│   │   │       ├── remove_car_uc.rs
+│   │   │       └── ...
+│   │   ├── customer.rs
+│   │   ├── customer/
+│   │   │   └── ...
+│   │   ├── sale.rs
+│   │   ├── sale/
+│   │   │   └── ...
+│   │   ├── root.rs
+│   │   ├── root/
+│   │   │   └── ...
+│   │   └── lib.rs
+│   └── Cargo.toml
+└── inventory_management/
+    ├── src/
+    │   ├── inventory_management_controller.rs
+    │   ├── dtos.rs
+    │   ├── units_of_work.rs
+    │   ├── units_of_work/          # ← adapt the macros here too
+    │   │   └── ...
+    │   ├── use_cases.rs
+    │   ├── use_cases/              # ← You implement the logic here
+    │   │   └── ...
+    │   └── lib.rs
+    └── Cargo.toml
+
 ```
 
 **What's generated:**
-- Complete CRUD for all entities (create, get, update, remove)
+- Complete CRUD for all entities (create, get, update, remove, ...)
 - Controllers exposing operations
 - DTOs for data transfer
 - Repository pattern for database access
 - Undo/redo infrastructure for undoable operations
 - Event system for reactive updates
+- Basic CLI (if selected during project setup)
+- Basic empty UI (if selected during project setup)
 
 **What you implement:**
 - Your custom use case logic (import_inventory, export_inventory)
-- Your UI (or use the generated CLI)
+- Your UI or CLI on top of the controllers or their adapters
 
 ---
 
@@ -353,7 +402,7 @@ src/
 
 ### Understanding the Internal Database
 
-Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). This database is **internal** — users don't interact with it directly.
+Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). This database is **internal** — users and UI devs don't interact with it directly.
 
 **Typical pattern:**
 
@@ -362,13 +411,15 @@ Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). 
 3. User works — all changes go to the internal database
 4. User saves — your `save_project` use case serializes entities back to file
 
-The internal database is ephemeral. It enables fast operations, undo/redo, and crash recovery. The user's file is the permanent storage.
+The internal database is ephemeral. It enables fast operations, undo/redo. The user's file is the permanent storage.
 
 ### Undo/Redo
 
 Every generated CRUD operation supports undo/redo automatically. You don't have to display undo/redo controls in your UI if you don't want to — but the infrastructure is there when you need it.
 
 If you mark a use case as **Undoable**, Qleany generates the command pattern scaffolding. You fill in what "undo" means for your specific operation.
+
+For more information, see [Undo-Redo Architecture](docs/undo-redo-architecture.md).
 
 ### Relationships
 
@@ -381,6 +432,8 @@ If you mark a use case as **Undoable**, Qleany generates the command pattern sca
 | many_to_many | Shared references (Items ↔ Tags) |
 
 **Strong** means cascade delete — deleting the parent deletes children.
+
+For more details, see [Manifest Reference](docs/manifest-reference.md#field-types-and-relationships).
 
 ### Starting Fresh
 

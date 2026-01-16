@@ -2,6 +2,10 @@
 
 This document covers using Qleany-generated code for mobile platforms: Plasma Mobile, Ubuntu Touch, and other Linux-based mobile environments.
 
+Qleany's architecture is platform-agnostic. The generated backend code works identically on desktop and mobile. You write platform-specific UI code on top of the same controllers, repositories, and use cases. Of course, you can also build for mobile using QtQuick or Slint frontends.
+
+All but Slint are Qt-based (QML), so you get the full power of Qt's cross-platform capabilities. Qleany generates C++ code that integrates seamlessly with QtQuick/QML UIs.
+
 **No dependencies, no framework.** The generated code has no Qleany runtime, no base classes to inherit from, no library to link against. You own all the generated code — modify it, extend it, or delete parts you don't need. If you decide to stop using Qleany tomorrow, your application continues to work unchanged.
 
 ---
@@ -14,7 +18,9 @@ If you're building for Plasma Mobile or Ubuntu Touch, you're already using Qt. T
 
 **Ubuntu Touch** uses Lomiri (formerly Unity8) with its own QML component library. The UI layer is different from Kirigami, but the backend architecture is identical.
 
-**Slint** is positioning itself for embedded and mobile use cases. While Qleany doesn't currently generate Slint frontends for Rust (only the backend), the architecture supports building mobile UIs manually on top of the generated infrastructure.
+**Slint** is positioning itself for embedded and mobile use cases. Qleany generates Slint basic frontends for Rust and the wrapping around the backend. The architecture supports building mobile UIs manually on top of the generated infrastructure.
+
+**QtQuick** applications can also run on mobile platforms. You can build a QtQuick UI that uses the generated backend code, just like you would on desktop.
 
 ---
 
@@ -26,7 +32,7 @@ The key insight is that Qleany generates platform-agnostic backend code. Your en
 ┌─────────────────────────────────────────────────────────────┐
 │                        UI Layer                             │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  Kirigami   │  │   Lomiri    │  │  Desktop QtQuick    │  │
+│  │  Kirigami   │  │   Lomiri    │  │  QtQuick            │  │
 │  │  (Plasma)   │  │  (Ubuntu)   │  │  or QtWidgets       │  │
 │  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
 └─────────┼────────────────┼────────────────────┼─────────────┘
@@ -251,8 +257,7 @@ myapp/
 ├── src/
 │   ├── common/                    # Generated backend (shared)
 │   ├── direct_access/             # Generated CRUD (shared)
-│   └── my_feature/                # Your business logic (shared)
-├── ui/
+│   ├─── my_feature/                # Your business logic (shared)
 │   ├── desktop/                   # Desktop QtQuick UI
 │   │   └── main.qml
 │   ├── kirigami/                  # Plasma Mobile UI
@@ -292,27 +297,9 @@ The generated backend compiles once and links to whichever UI you're building.
 
 ## Slint on Mobile
 
-Slint is designed for embedded and resource-constrained environments, making it potentially suitable for mobile. While Qleany doesn't generate Slint frontends, the Rust backend architecture works the same way — you write the Slint UI manually on top of the generated controllers and repositories.
+Slint is designed for embedded and resource-constrained environments, making it potentially suitable for mobile. Q Rust backend architecture works the same way — you write the Slint UI manually on top of the generated controllers and repositories.
 
-Slint's Rust API integrates with the generated event system:
-
-```rust
-// Subscribe to entity events
-let rx = event_hub.subscribe::<NoteEvent>();
-
-// Update Slint model when events arrive
-slint::spawn_local(async move {
-    while let Ok(event) = rx.recv_async().await {
-        match event {
-            NoteEvent::Updated(id) => {
-                let note = note_controller.get(id).await;
-                ui.set_current_note(note.into());
-            }
-            // ...
-        }
-    }
-});
-```
+leany generates a basic Slint frontend and wrappers to access the frontend.
 
 As Slint's mobile story matures, Qleany may add Slint frontend generation. For now, the backend generation provides the foundation.
 
@@ -331,43 +318,3 @@ Mobile processors are less powerful than desktop CPUs. The generated architectur
 **WAL mode SQLite:** The generated database configuration uses Write-Ahead Logging, which improves concurrent read performance — important when the UI thread is reading while a background operation is writing.
 
 If you profile and find performance issues, the generated code is yours to optimize. Common improvements include adding database indices for frequently-queried fields or reducing cache expiration times to save memory at the cost of more database queries.
-
----
-
-## Testing on Mobile
-
-### Plasma Mobile
-
-Test using the Plasma Mobile emulator or a physical device:
-
-```bash
-# Build for ARM if targeting physical device
-cmake -DCMAKE_TOOLCHAIN_FILE=... -DBUILD_KIRIGAMI_UI=ON ..
-
-# Or run desktop Kirigami build with mobile form factor simulation
-QT_QUICK_CONTROLS_MOBILE=1 ./myapp
-```
-
-### Ubuntu Touch
-
-Use the Ubuntu Touch SDK or Clickable for building and deploying:
-
-```bash
-clickable build
-clickable install
-clickable logs
-```
-
-The generated QML mocks work on mobile too — you can iterate on UI without the full backend by enabling `BUILD_WITH_MOCKS`.
-
----
-
-## Summary
-
-Mobile development with Qleany follows the same patterns as desktop:
-
-1. Define your entities and features in `qleany.yaml`
-2. Generate the backend scaffolding
-3. Write your platform-specific UI on top
-
-The backend doesn't change between platforms. Your investment in business logic, use cases, and data modeling pays off across every deployment target. This is the promise of Qt's cross-platform nature, and Qleany's architecture is designed to deliver on it.

@@ -54,7 +54,7 @@ src/
         └── binder_controller.h
 ```
 
-To modify "Binder," you touch four directories. For a 17-entity project, Qleany v1 generated **1700+ files across 500 folders**. Technically correct, practically unmaintainable.
+To modify "Binder," you touch four directories. For a 17-entity project, Qleany v1 generated **1700+ c++ files across 500 folders**. Technically correct, practically unmaintainable.
 
 ## Package by Feature (a.k.a. Vertical Slice Architecture)
 
@@ -127,7 +127,6 @@ Qleany generates plain Rust structs and C++ classes. There's no:
 - Base class you must inherit from
 - Trait you must implement for Qleany
 - Runtime library to link against
-- Macro that transforms your code
 
 The generated code uses standard libraries (redb for Rust, Qt for C++) but has no Qleany-specific dependencies. If you decide to stop using Qleany, the generated code continues to work unchanged.
 

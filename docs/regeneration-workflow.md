@@ -25,15 +25,16 @@ The Generate tab shows all files that would be generated. You select which ones 
 
 ### In the CLI
 
+Inside the project folder, run:
 ```bash
 # Generate all files (dangerous if you've modified any)
-qleany generate --manifest qleany.yaml --output ./src
+qleany generate
 
 # Generate to temp folder first (safe)
-qleany generate --manifest qleany.yaml --output ./tmp/qleany-output
+qleany generate --temp
 
 # Then compare and merge manually
-diff -r ./tmp/qleany-output ./src
+diff -r ./temp/crates ./crates
 ```
 
 ## What Happens When You Regenerate
@@ -44,21 +45,22 @@ diff -r ./tmp/qleany-output ./src
 
 ## Files That Must Stay in Sync
 
-When you add, update, or remove an entity, certain files reference all entities and must be regenerated together. If you've modified one of these files, you'll need to manually merge the changes.
+When you add or remove an entity, certain files reference all entities and must be regenerated together. If you've modified one of these files, you'll need to manually merge the changes.
 
 ### Rust
 
 These files contain references to all entities:
 
-| File | Contains |
-|------|----------|
-| `common/event.rs` | Event enum variants for all entities |
-| `common/entities.rs` | Re-exports all entity structs |
+| File                                         | Contains |
+|----------------------------------------------|----------|
+| `common/event.rs`                            | Event enum variants for all entities |
+| `common/entities.rs`                         | Re-exports all entity structs |
 | `common/direct_access/repository_factory.rs` | Factory methods for all repositories |
-| `common/direct_access.rs` | Module declarations for all entity repositories |
-| `direct_access/lib.rs` | Module declarations for all entity features |
+| `common/direct_access/setup.rs`              | Factory methods for all repositories |
+| `common/direct_access.rs`                    | Module declarations for all entity repositories |
+| `direct_access/lib.rs`                       | Module declarations for all entity features |
 
-### C++/Qt
+### C++/Qt (TODO: to be completed)
 
 | File | Contains |
 |------|----------|
@@ -74,11 +76,11 @@ If you modify one of these files and later add a new entity, you'll need to eith
 
 The safest workflow when you've modified generated files:
 
-1. Check **in temp/** in the UI (or use `--output ./tmp/` in CLI)
+1. Check **in temp/** checkbox in the UI (or use `--temp` or ```--output ./whatever/` in CLI)
 2. Generate all files to the temp location
 3. Compare temp output against your current files:
    ```bash
-   diff -r ./tmp/qleany-output/src ./src
+   diff -r ./temp/crates ./crates
    ```
 4. Manually merge changes you want to keep
 5. Delete the temp folder

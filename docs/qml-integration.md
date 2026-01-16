@@ -1,6 +1,7 @@
 # QML Integration (C++/Qt)
 
-This document covers QML-based frontends: **QtQuick** and **Kirigami**. Both use QML, so the generated models and patterns apply equally to either.
+This document covers QML-based frontends: **QtQuick**, **Kirigami** or others. They use QML, so the generated models 
+and patterns apply equally to either.
 
 For **QtWidgets** and **KDE KF6 Widgets** integration, see the dedicated document (coming soon).
 
@@ -31,11 +32,13 @@ ListView {
 
 The model subscribes to two event sources:
 - **Entity events** (`RecentWorkEvents.updated`) — refreshes only affected rows
-- **Parent events** (`RootEvents.updated`) — full refresh if the relationship changed
+- **Parent events** (`RootEvents.updated`) — full refresh if the relationship changed (items added/removed or reordered)
 
 This means if another part of the application updates a RecentWork's title, the ListView updates automatically. If the Root's recentWorks list changes (item added/removed), the model detects the difference and refreshes.
 
 ## Single Entity Models
+
+Yes, I know, `Single{Entity}` sounds like a weird name. But it accurately describes the purpose: a model for a single entity instance. Quite often, UIs need to display or edit one entity at a time (detail views, editor panels). Instead of manually fetching the entity and wiring up change notifications, use `Single{Entity}`.
 
 `Single{Entity}` wraps one entity with:
 - `itemId` property to select which entity
@@ -135,12 +138,43 @@ Connections {
 }
 ```
 
+It's a common pattern to execute an action from QML, then react to the resulting event. It's a mess, avoid this. 
+Instead, let models handle updates reactively when possible.
+
+Else, use QCoro to await results directly:
+
+```qml
+import YouApp.Controllers
+
+WorkManagementController {
+    id: workManagementController
+
+}
+
+Button {
+    id: savekButton
+
+    text: "Save"
+
+    onClicked: {
+        console.log("Save button clicked");
+        let dto = workManagementController.getSaveWorkDto();
+        dto.fileName = "/tmp/mywork.skr";
+
+        workManagementController.saveWork(dto).then(function (result) {
+            console.log("Async save result :", result);
+        });
+    }
+}
+
+```
+
 ## Best Practices
 
 **Prefer list models over manual fetching.** The generated models handle caching, updates, and memory management. Fetching entity lists manually and storing them in JavaScript arrays loses reactivity.
 
-**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without managing refresh logic.
+**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without you havving to managerefresh logic.
 
-**Keep model instances alive.** Creating a new model instance on every navigation discards cached data and subscriptions. Declare models at component level, not inside functions.
+**Keep model instances alive.** Creating a new model instance on every navigation discards cached data and subscriptions. Declare models at component level.
 
 **Leverage displayed field for simple lists.** The `list_model_displayed_field` provides a sensible default for list delegates. For complex delegates, access individual roles directly.

@@ -1,6 +1,7 @@
 # Manifest Reference
 
-Everything in Qleany is defined in `qleany.yaml`. This document covers all manifest options.
+Everything in Qleany is defined in `qleany.yaml`. This document covers all manifest options. The UI is still the primary
+way to create and edit manifests, but this reference helps when you need to edit the file directly. Or if you are curious.
 
 ## Example Manifests
 
@@ -18,7 +19,7 @@ schema:
   version: 2
 
 global:
-  language: cpp          # rust, cpp
+  language: cpp-qt          # rust, cpp
   application_name: MyApp
   organisation:
     name: myorg
@@ -185,6 +186,21 @@ features:
 | `single_model` | bool | false | Generate `Single{Entity}` QML wrapper (C++/Qt only) |
 
 ---
+## Field options
+
+| Option | Type | Default | Description                                                                  |
+|--------|------|---------|------------------------------------------------------------------------------|
+| `name` | string | required | Field name (snake_case)                                                      |
+| `type` | string | required | Field type (see below)                                                       |
+| `entity` | string | none | For `entity` type, name of the entity    |
+| `relationship` | string | none | For `entity` type, relationship type (see below)  |                           
+| `required` | bool | false | For `one_to_one` and `many_to_one`, field must be explicitely set to true or false |
+| `strong` | bool | false | For `one_to_one`, `one_to_many`, and `ordered_one_to_many`, enable cascade deletion |
+| `list_model` | bool | false | For C++/Qt only, generate a C++ QAbastracctListModel and its QML wrapper for this relationship field |
+| `list_model_displayed_field` | string | none | For C++/Qt only, default display role for the generated ListModel |
+
+
+---
 
 ## Field Types
 
@@ -199,6 +215,9 @@ features:
 | `entity` | Relationship to another entity | See relationship section |
 | `enum` | Enumerated value | See enum section |
 
+
+
+
 ### Enum Fields
 
 ```yaml
@@ -211,9 +230,13 @@ features:
     - Sold
 ```
 
+Like entities, the enum name should be PascalCase. Enum values should also be PascalCase. And the name must be unique.
+
 ---
 
 ## Relationship Fields
+
+This section will seem to be a bit repetitive, but for those not familiar with database relationships, it's important to get all the details right. And some people have different ways of understanding relationships, so I want to be as clear as possible.
 
 When `type: entity`, additional options define the relationship:
 
@@ -268,6 +291,7 @@ Database relationships describe how entities connect. Two concepts matter:
 - The **parent** side holds the list of children
 - The **child** side holds a reference back to its parent
 
+The reality in Qleany is a bit more nuanced, but this mental model helps understand how to model your data.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     RELATIONSHIP TYPES                      │
@@ -301,6 +325,23 @@ Database relationships describe how entities connect. Two concepts matter:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Reality in Qleany
+
+Like said earlier, the reality is a bit more nuanced:
+- Special junction tables are used for all relationships (even the simpler ones) and "sit" between parent and child tables
+- These junction tables can be accessed by parent and child tables equally.
+- This means that for every relationship, both sides can see each other (no true "back-reference" concept)
+- The relationship type defines how the junction table behaves, and how the parent and child entities see each other.
+- In the deeper code, there is always the mentions of a left entity and a right entity (child and parent respectively in the mental model).
+
+It may be easier to understand: all relationships are defined from the perspective of the entity holding the field. This means that:
+- For `one_to_one`, the entity with the field is one side, the referenced entity is the other side.
+- For `many_to_one`, the entity with the field is the "many" side, the referenced entity is the "one" side.
+- For `one_to_many` and `ordered_one_to_many`, the entity with the field is the "one" side, the referenced entity is the "many" side.
+- For `many_to_many`, both sides are "many".
+
+Yes, database engineers might cringe at this, but this greatly simplifies the code generation and the overall mental model when designing your entities. They can cringe more when I say there is no notion of foreign keys in Qleany internal database.
+
 **When to use each:**
 
 | Relationship | Use when...                           | Example |
@@ -310,6 +351,8 @@ Database relationships describe how entities connect. Two concepts matter:
 | `one_to_many` | Parent owns a collection of children  | Binder → Items, Post → Comments |
 | `ordered_one_to_many` | Same as above, but order matters      | Book → Chapters, Playlist → Songs |
 | `many_to_many` | Entities share references both ways   | Items ↔ Tags, Students ↔ Courses |
+
+There is no `ordered_many_to_many` because I'm not mad enough to handle that complexity.
 
 ### Relationship Examples
 
@@ -357,7 +400,9 @@ Database relationships describe how entities connect. Two concepts matter:
 
 ### Weak Relationships
 
-Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true` because cascade deletion is controlled by the owning side.
+Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true` because the owning side controls cascade deletion.
+
+Dev note: theoretically, you can play with the junction table code base to support many_to_one with strong ownership, but that would be a nightmare to maintain and reason about. So no.
 
 ```yaml
 entities:
@@ -401,28 +446,31 @@ Features group related use cases together.
 
 ```yaml
 features:
-  - name: work_management
+  - name: file_management
     use_cases:
-      - name: load_work
+      - name: load_file
         # ...
-      - name: save_work
+      - name: save_file
         # ...
 ```
 
 ### Use Case Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | required | Use case name (snake_case) |
-| `validator` | bool | false | Generate input validation |
-| `undoable` | bool | false | Generate undo/redo command scaffolding |
-| `read_only` | bool | false | No data modification (affects generated code) |
-| `long_operation` | bool | false | Async execution with progress (Rust only) |
-| `entities` | list | [] | Entities this use case works with |
+| Option | Type | Default | Description                                                        |
+|--------|------|---------|--------------------------------------------------------------------|
+| `name` | string | required | Use case name (snake_case)                                         |
+| `validator` | bool | false | Generate input validation (not yet implemented, can be deprecated) |
+| `undoable` | bool | false | Generate undo/redo command scaffolding                             |
+| `read_only` | bool | false | No data modification (affects generated code)                      |
+| `long_operation` | bool | false | Async execution with progress (Rust only)                          |
+| `entities` | list | [] | Entities this use case works with                                  |
+
+
+In Rust, `entities` are doing a bit of the legwork to define which repositories are injected into the use case struct and prepare the use of a special macro `macros::uow_action` to simplify unit of work handling. These macro lines must be adapted in your use cases files, and the exact same macros must be repeated in these use cases' unit of work files. Commentary lines will be generated to help you find and adapt these lines.
 
 ### DTOs
 
-Each use case can have input and output DTOs:
+Each use case can have input and output DTOs, or only one, or none at all.
 
 ```yaml
 use_cases:
@@ -434,6 +482,12 @@ use_cases:
           type: string
         - name: skip_header
           type: boolean
+        - name: inventory_type
+          type: enum
+          enum_name: InventoryType
+          enum_values:
+            - Full
+            - Incremental
     dto_out:
       name: ImportResultDto
       fields:
@@ -441,8 +495,10 @@ use_cases:
           type: integer
         - name: error_messages
           type: string
-          list: true
+          is_list: true
 ```
+
+You can't put entities in DTOs. Only primitive types are allowed because entities are tied to the database and business logic, while DTOs are simple data carriers. DTOs 
 
 ### DTO Field Options
 
@@ -450,5 +506,8 @@ use_cases:
 |--------|------|---------|-------------|
 | `name` | string | required | Field name (snake_case) |
 | `type` | string | required | Field type (boolean, integer, float, string, uuid, datetime) |
-| `list` | bool | false | Field is a list/array |
-| `nullable` | bool | false | Field can be null/None |
+| `is_list` | bool | false | Field is a list/array |
+| `is_nullable` | bool | false | Field can be null/optional |
+| `enum_name` | string | none | For `enum` type, name of the enum |
+| `enum_values` | list | none | For `enum` type, list of possible values |
+
