@@ -5,30 +5,33 @@
 {% if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-use common::types::Savepoint;
+// use common::types::Savepoint;
 use common::{types::EntityId, undo_redo::UndoRedoCommand};
 use std::any::Any;
 use std::collections::VecDeque;
 
+/// Use case to remove multiple {{ s.entities[e].snake_name }} entities. The undo and redo operations are deactivated
+/// on purpose since restoring deleted entities using database savepoints impacts the whole database state, not only the deleted entities.
+/// See documentation for more complete explanations and ways around it.
 pub struct Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Savepoint>,
-    redo_stack: VecDeque<Vec<EntityId>>,
+    // undo_stack: VecDeque<Savepoint>,
+    // redo_stack: VecDeque<Vec<EntityId>>,
 }
 
 impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Remove{{ s.entities[e].pascal_name }}MultiUseCase {
             uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
+            // undo_stack: VecDeque::new(),
+            // redo_stack: VecDeque::new(),
         }
     }
 
     pub fn execute(&mut self, ids: &[EntityId]) -> Result<()> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let savepoint = uow.create_savepoint()?;
+        // let savepoint = uow.create_savepoint()?;
         // check if id exists
         let mut exists = true;
         for id in ids {
@@ -44,8 +47,8 @@ impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
         uow.commit()?;
 
         // store savepoint in undo stack
-        self.undo_stack.push_back(savepoint);
-        self.redo_stack.push_back(ids.to_vec());
+        // self.undo_stack.push_back(savepoint);
+        // self.redo_stack.push_back(ids.to_vec());
 
         Ok(())
     }
@@ -53,24 +56,24 @@ impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
 
 impl UndoRedoCommand for Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(savepoint) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.restore_to_savepoint(savepoint)?;
-            uow.commit()?;
-        }
+        // if let Some(savepoint) = self.undo_stack.pop_back() {
+        //    let mut uow = self.uow_factory.create();
+        //    uow.begin_transaction()?;
+        //    uow.restore_to_savepoint(savepoint)?;
+        //    uow.commit()?;
+        // }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(ids) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            let savepoint = uow.create_savepoint()?;
-            uow.delete_{{ s.entities[e].snake_name }}_multi(&ids)?;
-            uow.commit()?;
-            self.undo_stack.push_back(savepoint);
-        }
+        // if let Some(ids) = self.redo_stack.pop_back() {
+        //     let mut uow = self.uow_factory.create();
+        //     uow.begin_transaction()?;
+        //     let savepoint = uow.create_savepoint()?;
+        //     uow.delete_{{ s.entities[e].snake_name }}_multi(&ids)?;
+        //     uow.commit()?;
+        //     self.undo_stack.push_back(savepoint);
+        // }
         Ok(())
     }
     fn as_any(&self) -> &dyn Any {
