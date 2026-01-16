@@ -4353,6 +4353,7 @@ dependencies = [
  "env_logger",
  "handling_app_lifecycle",
  "handling_manifest",
+ "heck",
  "log",
  "rfd",
  "rust_file_generation",

@@ -1,7 +1,15 @@
 import { ScrollView, CheckBox, ComboBox, TabWidget } from "std-widgets.slint";
-import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit } from "../components/misc.slint";
-import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+import { AppState, CRListItem, FeaturesTabState, CommonTools } from "../globals.slint";
+import {
+    ListItem,
+    Divider,
+    SectionHeader,
+    FormField,
+    StyledLineEdit,
+} from "../components/misc.slint";
+import {
+    CheckableReorderableList,
+} from "../components/checkable_reorderable_list.slint";
 
 // DTO Details component - shows DTOs (In/Out) for a use case with separate tabs
 export component DtoDetails inherits Rectangle {
@@ -46,7 +54,7 @@ export component DtoDetails inherits Rectangle {
                 }
 
                 // DTO In Content (only show when enabled)
-                if FeaturesTabState.dto_in_enabled : Rectangle {
+                if FeaturesTabState.dto_in_enabled: Rectangle {
                     vertical-stretch: 1;
 
                     VerticalLayout {
@@ -64,12 +72,11 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
-                                    error-message: (FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "") ? "DTO name is required" : "";
-
+                                    error-message: (FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "") ? "DTO name is required" : (CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_in_name) ? "" : "DTO name must be in PascalCase");
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_in_name;
                                         placeholder: "Enter the DTO In name";
-                                        has-error: FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "";
+                                        has-error: (FeaturesTabState.selected_dto_in_id >= 0 && FeaturesTabState.selected_dto_in_name == "") || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_in_name);
 
                                         edited(text) => {
                                             FeaturesTabState.dto_in_name_changed(text);
@@ -166,12 +173,12 @@ export component DtoDetails inherits Rectangle {
                         }
 
                         // Field details (when a field is selected)
-                        if FeaturesTabState.selected_dto_in_field_id >= 0 : Rectangle {
+                        if FeaturesTabState.selected_dto_in_field_id >= 0: Rectangle {
                             height: 1px;
                             background: #dee2e6;
                         }
 
-                        if FeaturesTabState.selected_dto_in_field_id >= 0 : Rectangle {
+                        if FeaturesTabState.selected_dto_in_field_id >= 0: Rectangle {
                             min-height: 180px;
                             background: #f8f9fa;
 
@@ -245,7 +252,7 @@ export component DtoDetails inherits Rectangle {
                 }
 
                 // Placeholder when DTO In is disabled
-                if !FeaturesTabState.dto_in_enabled : Rectangle {
+                if !FeaturesTabState.dto_in_enabled: Rectangle {
                     vertical-stretch: 1;
                     background: #f8f9fa;
 
@@ -293,7 +300,7 @@ export component DtoDetails inherits Rectangle {
                 }
 
                 // DTO Out Content (only show when enabled)
-                if FeaturesTabState.dto_out_enabled : Rectangle {
+                if FeaturesTabState.dto_out_enabled: Rectangle {
                     vertical-stretch: 1;
 
                     VerticalLayout {
@@ -311,12 +318,13 @@ export component DtoDetails inherits Rectangle {
                                 FormField {
                                     label: "Name";
                                     required: true;
-                                    error-message: (FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "") ? "DTO name is required" : "";
+                                    error-message: (FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "") ? "DTO name is required" :  (CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_out_name) ? "" : "DTO name must be in PascalCase");
+
 
                                     StyledLineEdit {
                                         text <=> FeaturesTabState.selected_dto_out_name;
                                         placeholder: "Enter the DTO Out name";
-                                        has-error: FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "";
+                                        has-error: (FeaturesTabState.selected_dto_out_id >= 0 && FeaturesTabState.selected_dto_out_name == "") || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_out_name);
 
                                         edited(text) => {
                                             FeaturesTabState.dto_out_name_changed(text);
@@ -413,12 +421,12 @@ export component DtoDetails inherits Rectangle {
                         }
 
                         // Field details (when a field is selected)
-                        if FeaturesTabState.selected_dto_out_field_id >= 0 : Rectangle {
+                        if FeaturesTabState.selected_dto_out_field_id >= 0: Rectangle {
                             height: 1px;
                             background: #dee2e6;
                         }
 
-                        if FeaturesTabState.selected_dto_out_field_id >= 0 : Rectangle {
+                        if FeaturesTabState.selected_dto_out_field_id >= 0: Rectangle {
                             min-height: 180px;
                             background: #f8f9fa;
 
@@ -492,7 +500,7 @@ export component DtoDetails inherits Rectangle {
                 }
 
                 // Placeholder when DTO Out is disabled
-                if !FeaturesTabState.dto_out_enabled : Rectangle {
+                if !FeaturesTabState.dto_out_enabled: Rectangle {
                     vertical-stretch: 1;
                     background: #f8f9fa;
 

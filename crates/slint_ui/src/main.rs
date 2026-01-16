@@ -4,6 +4,7 @@ mod cli_handlers;
 mod commands;
 mod event_hub_client;
 mod tabs;
+mod common_tools;
 
 use crate::cli::run_cli;
 use crate::commands::handling_manifest_commands;
@@ -56,6 +57,9 @@ fn run_slint(app_context: &Arc<AppContext>) {
 
     // Create the Slint UI
     let app = App::new().unwrap();
+    
+    // Initialize common tools callbacks
+    common_tools::init(&app, &app_context);
 
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&event_hub_client, &app, &app_context);

@@ -1,5 +1,5 @@
 import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
-import { AppState, CRListItem, FeaturesTabState } from "../globals.slint";
+import { AppState, CRListItem, FeaturesTabState, CommonTools } from "../globals.slint";
 import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert, Breadcrumb, Paper } from "../components/misc.slint";
 import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
 import { DtoDetails } from "dto_details.slint";
@@ -187,12 +187,14 @@ export component FeaturesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") ? "Feature name is required" : "";
+                                error-message: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") ? "Feature name is required" :
+                                    (CommonTools.check_is_pascal_case(FeaturesTabState.selected_feature_name) ? "" : "Feature name must be in PascalCase");
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_feature_name;
                                     placeholder: "Enter the feature name";
-                                    has-error: FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "";
+                                    has-error: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "")
+                                        || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_feature_name);
 
                                     edited(text) => {
                                         FeaturesTabState.feature_name_changed(text);
@@ -316,12 +318,13 @@ export component FeaturesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") ? "Use case name is required" : "";
+                                error-message: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") ? "Use case name is required" :
+                                (CommonTools.check_is_snake_case(FeaturesTabState.selected_use_case_name) ? "" : "Use case name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_use_case_name;
                                     placeholder: "Enter the use case name";
-                                    has-error: FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "";
+                                    has-error: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_use_case_name);
 
                                     edited(text) => {
                                         FeaturesTabState.use_case_name_changed(text);

@@ -8,7 +8,7 @@ import {
     ComboBox,
     TextEdit,
 } from "std-widgets.slint";
-import { AppState, EntitiesTabState, CRListItem } from "../globals.slint";
+import { AppState, EntitiesTabState, CRListItem, CommonTools } from "../globals.slint";
 import {
     ListItem,
     Divider,
@@ -175,12 +175,14 @@ export component EntitiesTab inherits Rectangle {
                             entityNameFormField := FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") ? "Entity name is required" : "";
+                                error-message: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") ? "Entity name is required" :
+                                    (CommonTools.check_is_pascal_case(EntitiesTabState.selected_entity_name) ? "" : "Entity name must be in PascalCase");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_entity_name;
                                     placeholder: "Enter the entity name (e.g., Person)";
-                                    has-error: EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "";
+                                    has-error: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "")
+                                        || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
                                     edited(text) => {
                                         EntitiesTabState.entity_name_changed(text);
                                     }
@@ -349,12 +351,13 @@ export component EntitiesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") ? "Field name is required" : "";
+                                error-message: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") ? "Field name is required" :
+                                (CommonTools.check_is_snake_case(EntitiesTabState.selected_field_name) ? "" : "Field name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_name;
-                                    placeholder: "Enter field name";
-                                    has-error: EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "";
+                                    placeholder: "Enter field name (e.g., first_name)";
+                                    has-error: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
                                     edited(text) => {
                                         EntitiesTabState.field_name_changed(text);
                                     }
@@ -391,10 +394,13 @@ export component EntitiesTab inherits Rectangle {
                             // Enum Name (only visible when type is Enum)
                             if EntitiesTabState.selected_field_type == "Enum": FormField {
                                 label: "Enum Name";
+                                error-message: EntitiesTabState.selected_field_enum_name == "" ? "Entity name is required" :
+                                (CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name) ? "" : "Enum name must be in PascalCase");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_enum_name;
                                     placeholder: "Enter enum name";
+                                    has-error: EntitiesTabState.selected_field_enum_name == "" || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
                                     edited(text) => {
                                         EntitiesTabState.field_enum_name_changed(text);
                                     }

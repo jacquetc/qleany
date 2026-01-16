@@ -333,3 +333,8 @@ export global UserInterfaceTabState {
     callback cpp_qt_qtquick_changed(bool);
     callback cpp_qt_kirigami_changed(bool);
 }
+
+export global CommonTools{
+    pure callback check_is_pascal_case(string) -> bool;
+    pure callback check_is_snake_case(string) -> bool;
+}
