@@ -1,0 +1,117 @@
+name: rust-next
+on:
+  schedule:
+  - cron: '3 3 3 * *'
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      matrix:
+        build: [stable, linux, windows, mac, nightly, minimal, default, next]
+        include:
+        - build: stable
+          os: ubuntu-latest
+          rust: "stable"
+          features: "full"
+        - build: linux
+          os: ubuntu-latest
+          rust: "beta"
+          features: "full"
+        - build: windows
+          os: windows-latest
+          rust: "beta"
+          features: "full"
+        - build: mac
+          os: macos-latest
+          rust: "beta"
+          features: "full"
+        - build: nightly
+          os: ubuntu-latest
+          rust: "nightly"
+          features: "full"
+        - build: minimal
+          os: ubuntu-latest
+          rust: "stable"
+          features: "minimal"
+        - build: default
+          os: ubuntu-latest
+          rust: "stable"
+          features: "default"
+        - build: next
+          os: ubuntu-latest
+          rust: "stable"
+          features: "next"
+    continue-on-error: ${{ matrix.rust != 'stable' }}
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+    - uses: Swatinem/rust-cache@v2
+    - name: Build
+      run: make build-${{matrix.features}}
+    - name: Test
+      run: make test-${{matrix.features}}
+    - name: Test (benches)
+      run: make test-${{matrix.features}} ARGS='--workspace --benches'
+    - name: Test (ultra-minimal)
+      if: matrix.build == 'minimal'
+      run: make test-minimal ARGS='--manifest-path Cargo.toml'
+  rustfmt:
+    name: rustfmt
+    strategy:
+      matrix:
+        rust:
+        - stable
+        - beta
+    continue-on-error: ${{ matrix.rust != 'stable' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+        components: rustfmt
+    - uses: Swatinem/rust-cache@v2
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+  clippy:
+    name: clippy
+    strategy:
+      matrix:
+        rust:
+        - 1.90  # MSRV
+        - stable
+    continue-on-error: ${{ matrix.rust != '1.90' }}  # MSRV
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+        components: clippy
+    - uses: Swatinem/rust-cache@v2
+    - name: Lint (ultra-minimal)
+      run: make clippy-minimal ARGS='--manifest-path Cargo.toml'
+    - name: Lint Minimal
+      run: make clippy-minimal
+    - name: Lint All
+      run: make clippy-full
+    - name: Lint (release)
+      run: make clippy-release
