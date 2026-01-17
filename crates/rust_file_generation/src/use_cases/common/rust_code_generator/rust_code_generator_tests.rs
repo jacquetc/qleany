@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;

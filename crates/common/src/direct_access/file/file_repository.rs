@@ -27,14 +27,14 @@ pub trait FileTableRO {
 
 pub struct FileRepository<'a> {
     redb_table: Box<dyn FileTable + 'a>,
-    transaction: &'a Transaction,
+    _transaction: &'a Transaction,
 }
 
 impl<'a> FileRepository<'a> {
     pub fn new(redb_table: Box<dyn FileTable + 'a>, transaction: &'a Transaction) -> Self {
         FileRepository {
             redb_table,
-            transaction,
+            _transaction: transaction,
         }
     }
 

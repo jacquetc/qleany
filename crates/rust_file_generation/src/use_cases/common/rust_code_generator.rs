@@ -1117,6 +1117,7 @@ impl SnapshotBuilder {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

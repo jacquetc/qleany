@@ -10,7 +10,7 @@ license.workspace = true
 thiserror = { workspace = true }
 common = { path = "../common" }
 anyhow = { workspace = true }
-serde = { version = "1", features = ["derive"], workspace = true }
+serde = { features = ["derive"], workspace = true }
 macros = { path = "../macros" }
 
 [lints]

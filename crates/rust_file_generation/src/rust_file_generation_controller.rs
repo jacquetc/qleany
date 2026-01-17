@@ -44,7 +44,7 @@ pub fn generate_rust_code(
 
 pub fn generate_rust_files(
     db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
+    _event_hub: &Arc<EventHub>,
     long_operation_manager: &mut LongOperationManager,
     dto: &GenerateRustFilesDto,
 ) -> Result<String> {

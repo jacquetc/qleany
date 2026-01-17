@@ -83,30 +83,6 @@ pub fn render_file_tree(files: &[impl AsRef<str>]) -> String {
     output
 }
 
-/// Renders a list of file paths as an ASCII tree with a root label.
-///
-/// # Arguments
-///
-/// * `files` - A slice of file path strings
-/// * `root_label` - Label to display as the tree root (e.g., project name)
-///
-/// # Returns
-///
-/// A `String` containing the formatted ASCII tree with the root label.
-pub fn render_file_tree_with_root(files: &[impl AsRef<str>], root_label: &str) -> String {
-    let mut root = TreeNode::new();
-
-    for file in files {
-        root.insert(file.as_ref());
-    }
-
-    let mut output = String::new();
-    output.push_str(root_label);
-    output.push('\n');
-    render_children(&root, "", &mut output);
-    output
-}
-
 fn render_children(node: &TreeNode, prefix: &str, output: &mut String) {
     let mut children: Vec<_> = node.children.iter().collect();
     children.sort_by(|(name_a, _), (name_b, _)| {
@@ -147,11 +123,6 @@ fn render_children(node: &TreeNode, prefix: &str, output: &mut String) {
 /// Renders a file tree to stdout for convenience.
 pub fn print_file_tree(files: &[impl AsRef<str>]) {
     print!("{}", render_file_tree(files));
-}
-
-/// Renders a file tree with root label to stdout for convenience.
-pub fn print_file_tree_with_root(files: &[impl AsRef<str>], root_label: &str) {
-    print!("{}", render_file_tree_with_root(files, root_label));
 }
 
 #[cfg(test)]
@@ -211,19 +182,6 @@ mod tests {
         │   │   └── file.txt
         │   └── other.txt
         └── sibling.txt
-";
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_with_root_label() {
-        let files = vec!["src/main.rs", "Cargo.toml"];
-        let result = render_file_tree_with_root(&files, "my-project");
-        let expected = "\
-my-project
-├── Cargo.toml
-└── src/
-    └── main.rs
 ";
         assert_eq!(result, expected);
     }

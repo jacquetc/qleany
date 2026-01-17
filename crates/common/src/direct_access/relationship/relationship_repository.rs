@@ -72,14 +72,14 @@ pub trait RelationshipTableRO {
 
 pub struct RelationshipRepository<'a> {
     redb_table: Box<dyn RelationshipTable + 'a>,
-    transaction: &'a Transaction,
+    _transaction: &'a Transaction,
 }
 
 impl<'a> RelationshipRepository<'a> {
     pub fn new(redb_table: Box<dyn RelationshipTable + 'a>, transaction: &'a Transaction) -> Self {
         RelationshipRepository {
             redb_table,
-            transaction,
+            _transaction: transaction,
         }
     }
 

@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use anyhow::Result;
 use common::undo_redo::{CompositeCommand, UndoRedoCommand, UndoRedoManager};
 use std::any::Any;

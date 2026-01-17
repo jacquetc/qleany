@@ -1,3 +1,8 @@
+[![crates.io](https://img.shields.io/crates/v/qleany?style=flat-square&logo=rust)](https://crates.io/crates/qleany)
+[![API](https://docs.rs/qleany/badge.svg)](https://docs.rs/qleany)
+[![license](https://img.shields.io/badge/license-Mozilla_Publc_License--2.0-blue?style=flat-square)](#license)
+![quality](https://img.shields.io/github/actions/workflow/status/jacquetc/qleany/ci.yml)
+![Lines of code](https://img.shields.io/tokei/lines/github.com/jacquetc/qleany)
 # Qleany
 
 **Architecture scaffolding generator for C++20/Qt6 or Rust 2024 applications — desktop, mobile, and CLI.**

@@ -101,7 +101,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             // Build snapshot and generate code for the file
             let (snapshot, from_cache) =
                 SnapshotBuilder::for_file(uow_read, *file_id, &generation_snapshot_cache)?;
-            let mut code = generate_code_with_snapshot(&snapshot)?;
+            let code = generate_code_with_snapshot(&snapshot)?;
             if !from_cache {
                 generation_snapshot_cache.push(snapshot);
             }

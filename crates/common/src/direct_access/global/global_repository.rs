@@ -27,14 +27,14 @@ pub trait GlobalTableRO {
 
 pub struct GlobalRepository<'a> {
     redb_table: Box<dyn GlobalTable + 'a>,
-    transaction: &'a Transaction,
+    _transaction: &'a Transaction,
 }
 
 impl<'a> GlobalRepository<'a> {
     pub fn new(redb_table: Box<dyn GlobalTable + 'a>, transaction: &'a Transaction) -> Self {
         GlobalRepository {
             redb_table,
-            transaction,
+            _transaction: transaction,
         }
     }
 

@@ -1,9 +1,7 @@
-use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use crate::use_cases::common::tools;
 use crate::{ListRustFilesDto, ListRustFilesReturnDto};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use common::direct_access::feature::FeatureRelationshipField;
-use common::direct_access::root::RootRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::Entity;
@@ -47,7 +45,7 @@ impl ListRustFilesUseCase {
 
     pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<ListRustFilesReturnDto> {
         // TODO: implement only_existing
-        let only_existing = dto.only_list_already_existing;
+        let _only_existing = dto.only_list_already_existing;
         let mut files: Vec<File> = vec![];
 
         let mut uow = self.uow_factory.create();

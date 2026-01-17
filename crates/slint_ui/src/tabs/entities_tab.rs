@@ -1605,6 +1605,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_entity_name_callbacks(app, app_context);
     setup_entity_only_for_heritage_callback(app, app_context);
     setup_entity_single_model_callback(app, app_context);
+    setup_entity_allow_direct_access_callback(app, app_context);
     setup_entity_undoable_callback(app, app_context);
     setup_entity_inherits_from_callback(app, app_context);
     setup_entity_deletion_callback(app, app_context);

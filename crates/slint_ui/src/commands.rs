@@ -1,5 +1,6 @@
 //! Commands module - cleanly separated command handlers for Slint UI
 //!
+#![allow(dead_code)]
 
 pub mod dto_commands;
 pub mod dto_field_commands;

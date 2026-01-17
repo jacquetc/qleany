@@ -41,14 +41,14 @@ pub trait UserInterfaceTableRO {
 
 pub struct UserInterfaceRepository<'a> {
     redb_table: Box<dyn UserInterfaceTable + 'a>,
-    transaction: &'a Transaction,
+    _transaction: &'a Transaction,
 }
 
 impl<'a> UserInterfaceRepository<'a> {
     pub fn new(redb_table: Box<dyn UserInterfaceTable + 'a>, transaction: &'a Transaction) -> Self {
         UserInterfaceRepository {
             redb_table,
-            transaction,
+            _transaction: transaction,
         }
     }
 

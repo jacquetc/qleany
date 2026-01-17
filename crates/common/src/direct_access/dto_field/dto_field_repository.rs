@@ -41,14 +41,14 @@ pub trait DtoFieldTableRO {
 
 pub struct DtoFieldRepository<'a> {
     redb_table: Box<dyn DtoFieldTable + 'a>,
-    transaction: &'a Transaction,
+    _transaction: &'a Transaction,
 }
 
 impl<'a> DtoFieldRepository<'a> {
     pub fn new(redb_table: Box<dyn DtoFieldTable + 'a>, transaction: &'a Transaction) -> Self {
         DtoFieldRepository {
             redb_table,
-            transaction,
+            _transaction: transaction,
         }
     }
 

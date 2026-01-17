@@ -4,7 +4,7 @@ use crate::use_cases::common::rust_code_generator::{
 use crate::use_cases::common::rust_formatter::rustfmt_string;
 use crate::{GenerateRustCodeDto, GenerateRustCodeReturnDto};
 use anyhow::Result;
-use common::database::QueryUnitOfWork;
+
 pub trait GenerateRustCodeUnitOfWorkFactoryTrait: Send + Sync {
     fn create(&self) -> Box<dyn GenerateRustCodeUnitOfWorkTrait>;
 }

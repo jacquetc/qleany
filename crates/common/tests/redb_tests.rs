@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use anyhow::Result;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::types::Savepoint;
@@ -41,20 +45,18 @@ fn test_restore_savepoint() -> Result<()> {
     assert_eq!(read_value(db, "key2")?, Some(2));
     assert_eq!(read_value(db, "key3")?, None);
 
-    let mut savepoint: Option<Savepoint> = None;
     // Create a transaction and modify the database
-
-    let mut write_txn = db.begin_write()?;
+    let write_txn = db.begin_write()?;
 
     // Create a savepoint before modifications
-    savepoint = Some(write_txn.persistent_savepoint()?);
+    let savepoint: Option<Savepoint> = Some(write_txn.persistent_savepoint()?);
 
     // Commit the transaction
     write_txn.commit()?;
 
     // Modify the database
 
-    let mut write_txn = db.begin_write()?;
+    let write_txn = db.begin_write()?;
     let mut table = write_txn.open_table(TEST_TABLE)?;
     table.insert("key1", 100)?; // Update existing key
     table.insert("key3", 3)?; // Add new key
@@ -104,7 +106,7 @@ fn test_get_persistent_savepoint() -> Result<()> {
     // Create a savepoint
     let savepoint1: Savepoint;
     {
-        let mut write_txn = db.begin_write()?;
+        let write_txn = db.begin_write()?;
         // Create the first savepoint
         savepoint1 = write_txn.persistent_savepoint()?;
         write_txn.commit()?;
@@ -112,7 +114,7 @@ fn test_get_persistent_savepoint() -> Result<()> {
 
     // Modify the database - add key2 and key3
     {
-        let mut write_txn = db.begin_write()?;
+        let write_txn = db.begin_write()?;
         // Modify the database - add key2
         let mut table = write_txn.open_table(TEST_TABLE)?;
         table.insert("key2", 2)?;

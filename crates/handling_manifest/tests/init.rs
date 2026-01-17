@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use common::database::CommandUnitOfWork;
 use common::database::db_context::DbContext;
 use common::database::transactions::Transaction;

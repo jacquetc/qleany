@@ -20,10 +20,10 @@ use slint::Timer;
 
 /// Internal state for tracking file data
 struct FileData {
-    file_id: i32,
-    file_name: String,
-    group_name: String,
-    checked: bool,
+    _file_id: i32,
+    _file_name: String,
+    _group_name: String,
+    _checked: bool,
 }
 
 /// Refresh the file lists (groups and files)
@@ -42,10 +42,10 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 let group_name = result.file_groups[idx].clone();
 
                 let file_data = FileData {
-                    file_id,
-                    file_name: file_name.clone(),
-                    group_name: group_name.clone(),
-                    checked: true,
+                    _file_id: file_id,
+                    _file_name: file_name.clone(),
+                    _group_name: group_name.clone(),
+                    _checked: true,
                 };
 
                 groups

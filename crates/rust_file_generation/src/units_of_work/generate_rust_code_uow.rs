@@ -17,8 +17,6 @@ use common::entities::Root;
 use common::entities::UseCase;
 use common::entities::UserInterface;
 use common::entities::Workspace;
-use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
-use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
 
