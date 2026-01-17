@@ -161,13 +161,13 @@ impl<'a> WorkspaceRepository<'a> {
         };
         // get all strong forward relationship fields
 
-        let global = entity.global.clone();
+        let global = entity.global;
 
         let entities = entity.entities.clone();
 
         let features = entity.features.clone();
 
-        let user_interface = entity.user_interface.clone();
+        let user_interface = entity.user_interface;
 
         // delete all strong relationships, initiating a cascade delete
 

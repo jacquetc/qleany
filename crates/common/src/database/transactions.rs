@@ -66,7 +66,7 @@ impl Transaction {
 
     pub(crate) fn get_write_transaction(&self) -> &WriteTransaction {
         match &self.transaction {
-            TransactionType::Write(Some(transaction)) => &transaction,
+            TransactionType::Write(Some(transaction)) => transaction,
             _ => panic!("Transaction is not a write transaction"),
         }
     }

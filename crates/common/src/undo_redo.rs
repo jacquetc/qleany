@@ -319,8 +319,8 @@ impl UndoRedoManager {
 
         // Only end the composite if we're at the outermost level
         if self.composite_nesting_level == 0 {
-            if let Some(composite) = self.in_progress_composite.take() {
-                if !composite.is_empty() {
+            if let Some(composite) = self.in_progress_composite.take()
+                && !composite.is_empty() {
                     let target_stack_id = self.composite_stack_id.unwrap_or(0);
                     let stack = self
                         .stacks
@@ -329,7 +329,6 @@ impl UndoRedoManager {
                     stack.undo_stack.push(Box::new(composite));
                     stack.redo_stack.clear();
                 }
-            }
             // not sure if we want to send events for composites
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {

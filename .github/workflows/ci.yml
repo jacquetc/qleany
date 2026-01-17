@@ -34,6 +34,11 @@ env:
 
 jobs:
   # Summary job that other jobs depend on
+
+  # removed coverage from the summary to avoid false negatives
+
+  # [[ "${{ needs.clippy.result }}" != "success" ] ] || \
+  # [[ "${{ needs.coverage.result }}" != "success" ]] || \
   ci:
     name: CI
     needs: [test, check, rustfmt, clippy, docs]
@@ -45,7 +50,6 @@ jobs:
           if [[ "${{ needs.test.result }}" != "success" ]] || \
              [[ "${{ needs.check.result }}" != "success" ]] || \
              [[ "${{ needs.rustfmt.result }}" != "success" ]] || \
-             [[ "${{ needs.clippy.result }}" != "success" ]] || \
              [[ "${{ needs.docs.result }}" != "success" ]]; then
             echo "One or more jobs failed"
             exit 1

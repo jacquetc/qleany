@@ -6,7 +6,6 @@ use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
-    direct_access::repository_factory,
     entities::Global,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
     types::EntityId,
@@ -109,7 +108,7 @@ impl<'a> GlobalRepository<'a> {
     }
 
     pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
-        let entity = match self.redb_table.get(id)? {
+        let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };

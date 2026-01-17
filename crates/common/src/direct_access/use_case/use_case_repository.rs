@@ -160,9 +160,9 @@ impl<'a> UseCaseRepository<'a> {
         };
         // get all strong forward relationship fields
 
-        let dto_in = entity.dto_in.clone();
+        let dto_in = entity.dto_in;
 
-        let dto_out = entity.dto_out.clone();
+        let dto_out = entity.dto_out;
 
         // delete all strong relationships, initiating a cascade delete
 
@@ -200,12 +200,12 @@ impl<'a> UseCaseRepository<'a> {
 
         let dto_in_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.dto_in.clone()))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.dto_in))
             .collect();
 
         let dto_out_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.dto_out.clone()))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.dto_out))
             .collect();
 
         // delete all strong relationships, initiating a cascade delete
