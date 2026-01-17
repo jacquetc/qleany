@@ -10,7 +10,7 @@ license.workspace = true
 thiserror = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 redb = "3.1.0"
-bincode = { version = "1" }
+bincode = { version = "2" }
 anyhow = { workspace = true }
 flume = { workspace = true }
 serde_json = "1.0"
