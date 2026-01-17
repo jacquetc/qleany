@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 /// Represents a node in the file tree structure.
@@ -107,7 +108,15 @@ pub fn render_file_tree_with_root(files: &[impl AsRef<str>], root_label: &str) -
 }
 
 fn render_children(node: &TreeNode, prefix: &str, output: &mut String) {
-    let children: Vec<_> = node.children.iter().collect();
+    let mut children: Vec<_> = node.children.iter().collect();
+    children.sort_by(|(name_a, _), (name_b, _)| {
+        let ord = name_a.to_lowercase().cmp(&name_b.to_lowercase());
+        if ord == Ordering::Equal {
+            name_a.cmp(name_b)
+        } else {
+            ord
+        }
+    });
     let count = children.len();
 
     for (index, (name, child)) in children.into_iter().enumerate() {
