@@ -22,6 +22,14 @@ repository = "https://github.com/jacquetc/qleany"
 license = "MPL-2.0"
 edition = "2024"
 version = "1.0.0"
+authors = ["Cyril Jacquet <cyril.jacquet@ferntech.eu>"]
+documentation = "https://docs.rs/qleany/"
+readme = "README.md"
+description = """
+Scaffold code generator for Rust and C++/Qt CLI and GUI applications. Tool UI is made with Slint.
+"""
+keywords = ["scaffold", "codegen", "rust", "cpp", "qt"]
+categories = ["development-tools", "template-engine", "gui", "command-line-utilities", "data-structures"]
 
 [workspace.dependencies]
 thiserror = "2.0"

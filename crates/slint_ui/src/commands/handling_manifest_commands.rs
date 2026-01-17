@@ -1,7 +1,10 @@
 //! Manifest handling commands for Slint UI
 
 use crate::app_context::AppContext;
-use handling_manifest::{LoadDto, LoadReturnDto, NewReturnDto, SaveDto, handling_manifest_controller, ExportToMermaidReturnDto};
+use handling_manifest::{
+    ExportToMermaidReturnDto, LoadDto, LoadReturnDto, NewReturnDto, SaveDto,
+    handling_manifest_controller,
+};
 
 /// Load a manifest file
 pub fn load_manifest(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, String> {
@@ -43,10 +46,7 @@ pub fn close_manifest(ctx: &AppContext) -> Result<(), String> {
 }
 
 pub fn export_to_mermaid(ctx: &AppContext) -> Result<ExportToMermaidReturnDto, String> {
-   let result = handling_manifest_controller::export_to_mermaid(
-        &ctx.db_context,
-        &ctx.event_hub
-    )
-    .map_err(|e| format!("Error while exporting to mermaid: {:?}", e))?;
+    let result = handling_manifest_controller::export_to_mermaid(&ctx.db_context, &ctx.event_hub)
+        .map_err(|e| format!("Error while exporting to mermaid: {:?}", e))?;
     Ok(result)
 }

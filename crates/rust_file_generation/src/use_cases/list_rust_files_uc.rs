@@ -99,7 +99,7 @@ impl ListRustFilesUseCase {
         } else {
             tools::strip_leading_and_trailing_slashes(&prefix)
         };
-            
+
         // ui
         let user_interfaces = uow.get_workspace_relationship(
             &workspace_id,

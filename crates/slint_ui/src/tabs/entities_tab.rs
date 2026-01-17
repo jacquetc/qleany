@@ -4,7 +4,9 @@
 //! including event subscriptions and callback handlers for entity management.
 
 use crate::app_context::AppContext;
-use crate::commands::{entity_commands, field_commands, handling_manifest_commands, workspace_commands};
+use crate::commands::{
+    entity_commands, field_commands, handling_manifest_commands, workspace_commands,
+};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, EntitiesTabState, ListItem};
 use common::direct_access::entity::EntityRelationshipField;
@@ -1553,11 +1555,15 @@ fn setup_export_to_mermaid_clipboard_callback(app: &App, app_context: &Arc<AppCo
                                 }
                             };
                             clipboard.set_text(return_dto.mermaid_diagram).unwrap();
-                            log::info!("Entities exported to mermaid markdown and copied to clipboard");
+                            log::info!(
+                                "Entities exported to mermaid markdown and copied to clipboard"
+                            );
                             std::thread::sleep(std::time::Duration::from_millis(100));
                             // Show success message
                             app.global::<AppState>().set_success_message(
-                                slint::SharedString::from("Entities exported to mermaid markdown and copied to clipboard"),
+                                slint::SharedString::from(
+                                    "Entities exported to mermaid markdown and copied to clipboard",
+                                ),
                             );
                             app.global::<AppState>().set_success_message_visible(true);
 

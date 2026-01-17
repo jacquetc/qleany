@@ -1,8 +1,8 @@
 use anyhow::Result;
+use common::database::CommandUnitOfWork;
 use common::direct_access::system::SystemRelationshipField;
 use common::entities::Workspace;
 use common::types::EntityId;
-use common::database::CommandUnitOfWork;
 
 pub trait CloseUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn CloseUnitOfWorkTrait>;

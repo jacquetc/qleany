@@ -4,7 +4,7 @@ use crate::app_context::AppContext;
 use common::direct_access::system::SystemRelationshipField;
 use common::types::EntityId;
 use direct_access::SystemRelationshipDto;
-use direct_access::{system_controller, CreateSystemDto, SystemDto};
+use direct_access::{CreateSystemDto, SystemDto, system_controller};
 
 /// Create a new system entity
 pub fn create_system(ctx: &AppContext, dto: &CreateSystemDto) -> Result<SystemDto, String> {

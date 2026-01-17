@@ -52,7 +52,9 @@ pub mod write {
         RelationshipRepository::new(Box::new(relationship_table), transaction)
     }
 
-    pub fn create_user_interface_repository(transaction: &Transaction) -> UserInterfaceRepository<'_> {
+    pub fn create_user_interface_repository(
+        transaction: &Transaction,
+    ) -> UserInterfaceRepository<'_> {
         let user_interface_table = UserInterfaceRedbTable::new(transaction.get_write_transaction());
         UserInterfaceRepository::new(Box::new(user_interface_table), transaction)
     }
@@ -145,7 +147,9 @@ pub mod read {
         GlobalRepositoryRO::new(Box::new(global_table))
     }
 
-    pub fn create_relationship_repository(transaction: &Transaction) -> RelationshipRepositoryRO<'_> {
+    pub fn create_relationship_repository(
+        transaction: &Transaction,
+    ) -> RelationshipRepositoryRO<'_> {
         let relationship_table = RelationshipRedbTableRO::new(transaction.get_read_transaction());
         RelationshipRepositoryRO::new(Box::new(relationship_table))
     }
