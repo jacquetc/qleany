@@ -1,5 +1,0 @@
-add_subdirectory(car_cqrs)
-add_subdirectory(brand_cqrs)
-add_subdirectory(passenger_cqrs)
-add_subdirectory(client_cqrs)
-add_subdirectory(custom_cqrs)
