@@ -1,0 +1,7 @@
+files.extend-exclude = [
+  "CHANGELOG.md",
+  "tests",
+  "examples"
+]
+[default.extend-words]
+# Acronyms

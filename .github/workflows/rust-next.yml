@@ -1,0 +1,147 @@
+name: Rust Next
+
+on:
+  schedule:
+    - cron: "3 3 3 * *"
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: Test (${{ matrix.build }} - ${{ matrix.rust }})
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [stable, linux-beta, windows-beta, mac-beta, nightly, minimal, default, next]
+        include:
+          - build: stable
+            os: ubuntu-latest
+            rust: stable
+            features: full
+          - build: linux-beta
+            os: ubuntu-latest
+            rust: beta
+            features: full
+          - build: windows-beta
+            os: windows-latest
+            rust: beta
+            features: full
+          - build: mac-beta
+            os: macos-latest
+            rust: beta
+            features: full
+          - build: nightly
+            os: ubuntu-latest
+            rust: nightly
+            features: full
+          - build: minimal
+            os: ubuntu-latest
+            rust: stable
+            features: minimal
+          - build: default
+            os: ubuntu-latest
+            rust: stable
+            features: default
+          - build: next
+            os: ubuntu-latest
+            rust: stable
+            features: next
+    continue-on-error: ${{ matrix.rust != 'stable' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: next-${{ matrix.build }}
+
+      - name: Build
+        run: make build-${{ matrix.features }}
+
+      - name: Test
+        run: make test-${{ matrix.features }}
+
+      - name: Test (benches)
+        run: make test-${{ matrix.features }} ARGS='--workspace --benches'
+
+      - name: Test (ultra-minimal)
+        if: matrix.build == 'minimal'
+        run: make test-minimal ARGS='--manifest-path Cargo.toml'
+
+  rustfmt:
+    name: Format (${{ matrix.rust }})
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, beta]
+    continue-on-error: ${{ matrix.rust != 'stable' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy (${{ matrix.rust }})
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - "1.90.0"  # MSRV
+          - stable
+    continue-on-error: ${{ matrix.rust != '1.90.0' }}  # MSRV is authoritative
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: clippy-${{ matrix.rust }}
+
+      - name: Lint (ultra-minimal)
+        run: make clippy-minimal ARGS='--manifest-path Cargo.toml'
+
+      - name: Lint Minimal
+        run: make clippy-minimal
+
+      - name: Lint All
+        run: make clippy-full
+
+      - name: Lint (release)
+        run: make clippy-release
