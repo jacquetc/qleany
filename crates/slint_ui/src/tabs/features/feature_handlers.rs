@@ -90,11 +90,12 @@ pub fn subscribe_new_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_feature_list(&app, &ctx);
-                        fill_use_case_list(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_feature_list(&app, &ctx);
+                    fill_use_case_list(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -150,10 +151,11 @@ pub fn subscribe_workspace_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_feature_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_feature_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -178,11 +180,12 @@ pub fn subscribe_feature_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_feature_list(&app, &ctx);
-                            fill_use_case_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_feature_list(&app, &ctx);
+                        fill_use_case_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -207,9 +210,10 @@ pub fn subscribe_feature_deletion_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },

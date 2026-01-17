@@ -49,24 +49,25 @@ fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling ProjectTabState with data from Global entity");
 
     if let Some(global_id) = get_global_id(app, app_context)
-        && let Ok(Some(global)) = global_commands::get_global(app_context, &global_id) {
-            log::info!("Filling ProjectTabState with global data: {:?}", global);
-            let language = match global.language.to_lowercase().as_str() {
-                "rust" => "Rust",
-                "cpp-qt" => "C++ / Qt",
-                _ => "Rust",
-            };
-            app.global::<ProjectTabState>()
-                .set_language(slint::SharedString::from(language));
-            app.global::<ProjectTabState>()
-                .set_application_name(slint::SharedString::from(&global.application_name));
-            app.global::<ProjectTabState>()
-                .set_organisation_name(slint::SharedString::from(&global.organisation_name));
-            app.global::<ProjectTabState>()
-                .set_organisation_domain(slint::SharedString::from(&global.organisation_domain));
-            app.global::<ProjectTabState>()
-                .set_prefix_path(slint::SharedString::from(&global.prefix_path));
-        }
+        && let Ok(Some(global)) = global_commands::get_global(app_context, &global_id)
+    {
+        log::info!("Filling ProjectTabState with global data: {:?}", global);
+        let language = match global.language.to_lowercase().as_str() {
+            "rust" => "Rust",
+            "cpp-qt" => "C++ / Qt",
+            _ => "Rust",
+        };
+        app.global::<ProjectTabState>()
+            .set_language(slint::SharedString::from(language));
+        app.global::<ProjectTabState>()
+            .set_application_name(slint::SharedString::from(&global.application_name));
+        app.global::<ProjectTabState>()
+            .set_organisation_name(slint::SharedString::from(&global.organisation_name));
+        app.global::<ProjectTabState>()
+            .set_organisation_domain(slint::SharedString::from(&global.organisation_domain));
+        app.global::<ProjectTabState>()
+            .set_prefix_path(slint::SharedString::from(&global.prefix_path));
+    }
 }
 
 fn clear_project_tab(app: &App) {
@@ -98,10 +99,11 @@ fn subscribe_close_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        clear_project_tab(&app);
-                        delete_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    clear_project_tab(&app);
+                    delete_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -121,10 +123,11 @@ fn subscribe_new_manifest_event(
             let app_weak = app_weak.clone();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_project_tab(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_project_tab(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -145,10 +148,11 @@ fn subscribe_load_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_project_tab(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_project_tab(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -172,9 +176,10 @@ fn subscribe_global_created_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_project_tab(&app, &ctx);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_project_tab(&app, &ctx);
+                    }
                 });
             }
         },
@@ -199,10 +204,11 @@ fn subscribe_global_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                            fill_project_tab(&app, &ctx);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                        fill_project_tab(&app, &ctx);
+                    }
                 });
             }
         },
@@ -214,10 +220,11 @@ fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::typ
     let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
     if workspace_id > 0
         && let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id)
-            && workspace.global > 0 {
-                println!("Found global_id: {}", workspace.global);
-                return Some(workspace.global);
-            }
+        && workspace.global > 0
+    {
+        println!("Found global_id: {}", workspace.global);
+        return Some(workspace.global);
+    }
     None
 }
 

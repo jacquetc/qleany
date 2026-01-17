@@ -116,10 +116,11 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
     let mut found_entity = None;
     for id in &entity_ids {
         if let Some(entity) = entity_controller::get(&app_context.db_context, id)?
-            && entity.name.eq_ignore_ascii_case(name) {
-                found_entity = Some((*id, entity));
-                break;
-            }
+            && entity.name.eq_ignore_ascii_case(name)
+        {
+            found_entity = Some((*id, entity));
+            break;
+        }
     }
 
     let (entity_id, entity) =
@@ -193,10 +194,11 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
     let mut found_feature = None;
     for id in &feature_ids {
         if let Some(feature) = feature_controller::get(&app_context.db_context, id)?
-            && feature.name.eq_ignore_ascii_case(name) {
-                found_feature = Some((*id, feature));
-                break;
-            }
+            && feature.name.eq_ignore_ascii_case(name)
+        {
+            found_feature = Some((*id, feature));
+            break;
+        }
     }
 
     let (feature_id, feature) =

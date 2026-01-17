@@ -285,11 +285,7 @@ impl SnapshotBuilder {
         }
 
         // Load fields belonging to the entity
-        fields_vec.extend(
-            uow.get_field_multi(&entity.fields)?
-                .into_iter()
-                .flatten(),
-        );
+        fields_vec.extend(uow.get_field_multi(&entity.fields)?.into_iter().flatten());
 
         // Build FieldVMs with the same Rust type mapping as used elsewhere
         let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
@@ -400,15 +396,13 @@ impl SnapshotBuilder {
                     field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                     field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
                 });
-                if rel.left_entity == entity.id
-                    && fwd_seen.insert(rel.field_name.clone()) {
-                        rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
-                            inner: rel.clone(),
-                            field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
-                            field_pascal_name: heck::AsPascalCase(rel.field_name.clone())
-                                .to_string(),
-                        });
-                    }
+                if rel.left_entity == entity.id && fwd_seen.insert(rel.field_name.clone()) {
+                    rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
+                        inner: rel.clone(),
+                        field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
+                        field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
+                    });
+                }
                 if rel.right_entity == entity.id {
                     let key = (rel.left_entity, rel.field_name.clone());
                     if bwd_seen.insert(key) {
@@ -714,9 +708,10 @@ impl SnapshotBuilder {
                     for field in &entity_fields {
                         if let Some(eid) = field.entity
                             && field.field_type == FieldType::Entity
-                                && let Some(ent_dep) = uow.get_entity(&eid)? {
-                                    entities.insert(ent_dep.id, ent_dep);
-                                }
+                            && let Some(ent_dep) = uow.get_entity(&eid)?
+                        {
+                            entities.insert(ent_dep.id, ent_dep);
+                        }
                         fields.insert(field.id, field.clone());
                     }
                     entities.insert(ent_opt.id, ent_opt);
@@ -733,12 +728,13 @@ impl SnapshotBuilder {
                 // load fields ao as to list entity dependencies
                 for field in &entity_fields {
                     if let Some(eid) = field.entity
-                        && field.field_type == FieldType::Entity {
-                            let ent = uow
-                                .get_entity(&eid)?
-                                .ok_or_else(|| anyhow!("Entity not found"))?;
-                            entities.insert(ent.id, ent);
-                        }
+                        && field.field_type == FieldType::Entity
+                    {
+                        let ent = uow
+                            .get_entity(&eid)?
+                            .ok_or_else(|| anyhow!("Entity not found"))?;
+                        entities.insert(ent.id, ent);
+                    }
                     fields.insert(field.id, field.clone());
                 }
                 entities.insert(entity.id, entity);
@@ -759,13 +755,15 @@ impl SnapshotBuilder {
                 for rel_opt in rels.into_iter().flatten() {
                     // Ensure both sides entities are available for templates if referenced
                     if !entities.contains_key(&rel_opt.left_entity)
-                        && let Some(le) = uow.get_entity(&rel_opt.left_entity)? {
-                            entities.insert(le.id, le);
-                        }
+                        && let Some(le) = uow.get_entity(&rel_opt.left_entity)?
+                    {
+                        entities.insert(le.id, le);
+                    }
                     if !entities.contains_key(&rel_opt.right_entity)
-                        && let Some(re) = uow.get_entity(&rel_opt.right_entity)? {
-                            entities.insert(re.id, re);
-                        }
+                        && let Some(re) = uow.get_entity(&rel_opt.right_entity)?
+                    {
+                        entities.insert(re.id, re);
+                    }
                     relationships_map.insert(rel_opt.id, rel_opt);
                 }
             }

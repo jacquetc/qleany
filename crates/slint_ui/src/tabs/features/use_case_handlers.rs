@@ -38,10 +38,11 @@ pub fn subscribe_use_case_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_use_case_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_use_case_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -66,9 +67,10 @@ pub fn subscribe_use_case_deleted_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },

@@ -90,10 +90,11 @@ fn subscribe_new_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_entity_list(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_entity_list(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -114,10 +115,11 @@ fn subscribe_load_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_entity_list(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_entity_list(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -141,10 +143,11 @@ fn subscribe_workspace_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_entity_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_entity_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -169,10 +172,11 @@ fn subscribe_entity_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_entity_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_entity_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -197,9 +201,10 @@ fn subscribe_entity_deleted_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -224,10 +229,11 @@ fn subscribe_field_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_field_list(&app, &ctx);
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_field_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -252,9 +258,10 @@ fn subscribe_field_deleted_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
                 });
             }
         },
@@ -599,44 +606,43 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                 return;
             }
             if let Some(app) = app_weak.upgrade()
-                && selected_entity_id >= 0 {
-                    let entity_res = entity_commands::get_entity(
-                        &ctx,
-                        &(selected_entity_id as common::types::EntityId),
-                    );
-                    // Update ALL dependent properties here
-                    match entity_res {
-                        Ok(Some(entity)) => {
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_id(selected_entity_id);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_name(entity.name.into());
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_only_for_heritage(entity.only_for_heritage);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_single_model(entity.single_model);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_undoable(entity.undoable);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_allow_direct_access(
-                                    entity.allow_direct_access,
-                                );
+                && selected_entity_id >= 0
+            {
+                let entity_res = entity_commands::get_entity(
+                    &ctx,
+                    &(selected_entity_id as common::types::EntityId),
+                );
+                // Update ALL dependent properties here
+                match entity_res {
+                    Ok(Some(entity)) => {
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_id(selected_entity_id);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_name(entity.name.into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_only_for_heritage(entity.only_for_heritage);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_single_model(entity.single_model);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_undoable(entity.undoable);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_allow_direct_access(entity.allow_direct_access);
 
-                            // Fill inherits_from options and set the selected index
-                            fill_inherits_from_options(&app, &ctx, entity.inherits_from);
-                            fill_field_list(&app, &ctx);
-                        }
-                        _ => {
-                            app.global::<EntitiesTabState>().set_selected_entity_id(-1);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_name("".into());
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_only_for_heritage(false);
-                            app.global::<EntitiesTabState>()
-                                .set_selected_entity_inherits_from(-1);
-                        }
-                    };
+                        // Fill inherits_from options and set the selected index
+                        fill_inherits_from_options(&app, &ctx, entity.inherits_from);
+                        fill_field_list(&app, &ctx);
+                    }
+                    _ => {
+                        app.global::<EntitiesTabState>().set_selected_entity_id(-1);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_name("".into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_only_for_heritage(false);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_inherits_from(-1);
+                    }
                 };
+            };
         }
     });
 }
@@ -752,20 +758,21 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
         );
 
         if let Ok(entity_ids) = entity_ids_res
-            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
-                let mut names: Vec<slint::SharedString> = Vec::new();
-                let mut ids: Vec<i32> = Vec::new();
-                for e in entities_opt.into_iter().flatten() {
-                    names.push(e.name.into());
-                    ids.push(e.id as i32);
-                }
-                let names_model = std::rc::Rc::new(slint::VecModel::from(names));
-                let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
-                app.global::<EntitiesTabState>()
-                    .set_entity_options(names_model.into());
-                app.global::<EntitiesTabState>()
-                    .set_entity_option_ids(ids_model.into());
+            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids)
+        {
+            let mut names: Vec<slint::SharedString> = Vec::new();
+            let mut ids: Vec<i32> = Vec::new();
+            for e in entities_opt.into_iter().flatten() {
+                names.push(e.name.into());
+                ids.push(e.id as i32);
             }
+            let names_model = std::rc::Rc::new(slint::VecModel::from(names));
+            let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
+            app.global::<EntitiesTabState>()
+                .set_entity_options(names_model.into());
+            app.global::<EntitiesTabState>()
+                .set_entity_option_ids(ids_model.into());
+        }
     }
 }
 
@@ -788,38 +795,40 @@ fn fill_inherits_from_options(
         );
 
         if let Ok(entity_ids) = entity_ids_res
-            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
-                // Start with "None" option
-                let mut names: Vec<slint::SharedString> = vec!["None".into()];
-                let mut ids: Vec<i32> = vec![-1];
+            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids)
+        {
+            // Start with "None" option
+            let mut names: Vec<slint::SharedString> = vec!["None".into()];
+            let mut ids: Vec<i32> = vec![-1];
 
-                for maybe_entity in entities_opt.into_iter() {
-                    if let Some(e) = maybe_entity {
-                        names.push(e.name.clone().into());
-                        ids.push(e.id as i32);
+            for maybe_entity in entities_opt.into_iter() {
+                if let Some(e) = maybe_entity {
+                    names.push(e.name.clone().into());
+                    ids.push(e.id as i32);
 
-                        // Check if this is the currently selected inherits_from
-                        if let Some(inherits_id) = current_inherits_from
-                            && e.id == inherits_id {
-                                selected_index = (names.len() - 1) as i32;
-                                selected_value = e.name.clone();
-                            }
+                    // Check if this is the currently selected inherits_from
+                    if let Some(inherits_id) = current_inherits_from
+                        && e.id == inherits_id
+                    {
+                        selected_index = (names.len() - 1) as i32;
+                        selected_value = e.name.clone();
                     }
                 }
-
-                let names_model = std::rc::Rc::new(slint::VecModel::from(names));
-                let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
-                app.global::<EntitiesTabState>()
-                    .set_inherits_from_options(names_model.into());
-                app.global::<EntitiesTabState>()
-                    .set_inherits_from_option_ids(ids_model.into());
-                // Set the selected index for the callback to use
-                app.global::<EntitiesTabState>()
-                    .set_selected_entity_inherits_from(selected_index);
-                // Set the selected value for the ComboBox current-value binding
-                app.global::<EntitiesTabState>()
-                    .set_selected_entity_inherits_from_value(selected_value.into());
             }
+
+            let names_model = std::rc::Rc::new(slint::VecModel::from(names));
+            let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
+            app.global::<EntitiesTabState>()
+                .set_inherits_from_options(names_model.into());
+            app.global::<EntitiesTabState>()
+                .set_inherits_from_option_ids(ids_model.into());
+            // Set the selected index for the callback to use
+            app.global::<EntitiesTabState>()
+                .set_selected_entity_inherits_from(selected_index);
+            // Set the selected value for the ComboBox current-value binding
+            app.global::<EntitiesTabState>()
+                .set_selected_entity_inherits_from_value(selected_value.into());
+        }
     } else {
         // No workspace, set default "None" option and value
         app.global::<EntitiesTabState>()
@@ -1176,41 +1185,40 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
         let app_weak = app.as_weak();
         move |new_entity_name| {
             if let Some(app) = app_weak.upgrade()
-                && !new_entity_name.is_empty() {
-                    let current_entity_id =
-                        app.global::<EntitiesTabState>().get_selected_entity_id();
-                    let entity_res = entity_commands::get_entity(
+                && !new_entity_name.is_empty()
+            {
+                let current_entity_id = app.global::<EntitiesTabState>().get_selected_entity_id();
+                let entity_res = entity_commands::get_entity(
+                    &ctx,
+                    &(current_entity_id as common::types::EntityId),
+                );
+
+                // Update
+                if let Ok(Some(mut entity)) = entity_res {
+                    if new_entity_name == entity.name {
+                        return;
+                    }
+                    entity.name = new_entity_name.to_string();
+
+                    let result = entity_commands::update_entity(
                         &ctx,
-                        &(current_entity_id as common::types::EntityId),
+                        Some(
+                            app.global::<EntitiesTabState>()
+                                .get_entities_undo_stack_id() as u64,
+                        ),
+                        &entity,
                     );
 
-                    // Update
-                    if let Ok(Some(mut entity)) = entity_res {
-                        if new_entity_name == entity.name {
-                            return;
+                    match result {
+                        Ok(_) => {
+                            log::info!("Entity name updated successfully");
                         }
-                        entity.name = new_entity_name.to_string();
-
-                        let result = entity_commands::update_entity(
-                            &ctx,
-                            Some(
-                                app.global::<EntitiesTabState>()
-                                    .get_entities_undo_stack_id()
-                                    as u64,
-                            ),
-                            &entity,
-                        );
-
-                        match result {
-                            Ok(_) => {
-                                log::info!("Entity name updated successfully");
-                            }
-                            Err(e) => {
-                                log::error!("Failed to update entity name: {}", e);
-                            }
+                        Err(e) => {
+                            log::error!("Failed to update entity name: {}", e);
                         }
-                    };
+                    }
                 };
+            };
         }
     });
 }

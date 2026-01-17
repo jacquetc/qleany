@@ -54,15 +54,16 @@ fn fill_user_interface_tab(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling UserInterfaceTabState with data from UserInterface entity");
 
     if let Some(ui_id) = get_user_interface_id(app, app_context)
-        && let Ok(Some(ui)) = user_interface_commands::get_user_interface(app_context, &ui_id) {
-            log::info!("Filling UserInterfaceTabState with UI data: {:?}", ui);
-            let state = app.global::<UserInterfaceTabState>();
-            state.set_rust_cli(ui.rust_cli);
-            state.set_rust_slint(ui.rust_slint);
-            state.set_cpp_qt_qtwidgets(ui.cpp_qt_qtwidgets);
-            state.set_cpp_qt_qtquick(ui.cpp_qt_qtquick);
-            state.set_cpp_qt_kirigami(ui.cpp_qt_kirigami);
-        }
+        && let Ok(Some(ui)) = user_interface_commands::get_user_interface(app_context, &ui_id)
+    {
+        log::info!("Filling UserInterfaceTabState with UI data: {:?}", ui);
+        let state = app.global::<UserInterfaceTabState>();
+        state.set_rust_cli(ui.rust_cli);
+        state.set_rust_slint(ui.rust_slint);
+        state.set_cpp_qt_qtwidgets(ui.cpp_qt_qtwidgets);
+        state.set_cpp_qt_qtquick(ui.cpp_qt_qtquick);
+        state.set_cpp_qt_kirigami(ui.cpp_qt_kirigami);
+    }
 }
 
 fn clear_user_interface_tab(app: &App) {
@@ -110,10 +111,11 @@ fn subscribe_new_manifest_event(
             let app_weak = app_weak.clone();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_user_interface_tab(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_user_interface_tab(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -133,10 +135,11 @@ fn subscribe_load_manifest_event(
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = app_weak.upgrade()
-                    && app.global::<AppState>().get_manifest_is_open() {
-                        fill_user_interface_tab(&app, &ctx);
-                        create_new_undo_stack(&app, &ctx);
-                    }
+                    && app.global::<AppState>().get_manifest_is_open()
+                {
+                    fill_user_interface_tab(&app, &ctx);
+                    create_new_undo_stack(&app, &ctx);
+                }
             });
         }
     });
@@ -158,9 +161,10 @@ fn subscribe_ui_created_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            fill_user_interface_tab(&app, &ctx);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_user_interface_tab(&app, &ctx);
+                    }
                 });
             }
         },
@@ -183,10 +187,11 @@ fn subscribe_ui_updated_event(
 
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = app_weak.upgrade()
-                        && app.global::<AppState>().get_manifest_is_open() {
-                            app.global::<AppState>().set_manifest_is_saved(false);
-                            fill_user_interface_tab(&app, &ctx);
-                        }
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                        fill_user_interface_tab(&app, &ctx);
+                    }
                 });
             }
         },
@@ -201,9 +206,10 @@ fn get_user_interface_id(
     let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
     if workspace_id > 0
         && let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id)
-            && workspace.user_interface > 0 {
-                return Some(workspace.user_interface);
-            }
+        && workspace.user_interface > 0
+    {
+        return Some(workspace.user_interface);
+    }
     None
 }
 

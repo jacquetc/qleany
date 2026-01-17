@@ -29,9 +29,7 @@ impl EventHubClient {
         F: Fn(Event) + Send + 'static,
     {
         let mut subs = self.subscribers.lock().unwrap();
-        subs.entry(origin)
-            .or_default()
-            .push(Box::new(callback));
+        subs.entry(origin).or_default().push(Box::new(callback));
     }
 
     /// Start the event loop in a background thread

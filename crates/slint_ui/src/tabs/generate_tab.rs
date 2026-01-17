@@ -48,10 +48,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                     _checked: true,
                 };
 
-                groups
-                    .entry(group_name)
-                    .or_default()
-                    .push(file_data);
+                groups.entry(group_name).or_default().push(file_data);
             }
 
             // Collect unique group names and sort them
@@ -250,10 +247,11 @@ fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: 
             let app_weak = app.as_weak();
             move || {
                 if let Some(app) = app_weak.upgrade()
-                    && was_saved {
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        println!("Re-applied manifest_is_saved after refresh");
-                    }
+                    && was_saved
+                {
+                    app.global::<AppState>().set_manifest_is_saved(true);
+                    println!("Re-applied manifest_is_saved after refresh");
+                }
             }
         });
         return;
@@ -385,9 +383,10 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 for i in 0..file_list.row_count() {
                     if let Some(item) = file_list.row_data(i)
-                        && item.checked {
-                            file_ids.push(item.id as u64);
-                        }
+                        && item.checked
+                    {
+                        file_ids.push(item.id as u64);
+                    }
                 }
 
                 if file_ids.is_empty() {
@@ -532,10 +531,12 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 // Update selected group name for breadcrumb
                 let group_list = app.global::<AppState>().get_group_cr_list();
-                if group_index >= 0 && (group_index as usize) < group_list.row_count()
-                    && let Some(item) = group_list.row_data(group_index as usize) {
-                        app.global::<AppState>().set_selected_group_name(item.text);
-                    }
+                if group_index >= 0
+                    && (group_index as usize) < group_list.row_count()
+                    && let Some(item) = group_list.row_data(group_index as usize)
+                {
+                    app.global::<AppState>().set_selected_group_name(item.text);
+                }
 
                 filter_files_by_group(&app, &ctx, group_index);
 
@@ -561,10 +562,12 @@ fn setup_file_selected_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 // Update selected file name for breadcrumb
                 let file_list = app.global::<AppState>().get_file_cr_list();
-                if file_id >= 0 && (file_id as usize) < file_list.row_count()
-                    && let Some(item) = file_list.row_data(file_id as usize) {
-                        app.global::<AppState>().set_selected_file_name(item.text);
-                    }
+                if file_id >= 0
+                    && (file_id as usize) < file_list.row_count()
+                    && let Some(item) = file_list.row_data(file_id as usize)
+                {
+                    app.global::<AppState>().set_selected_file_name(item.text);
+                }
 
                 load_code_preview(&app, &ctx, file_id);
             }
@@ -811,17 +814,18 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                     let mut checked_group_name = "All".to_string();
                     for i in 0..group_list.row_count() {
                         if let Some(item) = group_list.row_data(i)
-                            && item.checked {
-                                if item.id == 0 {
-                                    checked_group_name = "All".to_string();
-                                } else if (item.id as usize) < group_names.row_count() {
-                                    checked_group_name = group_names
-                                        .row_data(item.id as usize)
-                                        .unwrap_or_default()
-                                        .to_string();
-                                }
-                                break;
+                            && item.checked
+                        {
+                            if item.id == 0 {
+                                checked_group_name = "All".to_string();
+                            } else if (item.id as usize) < group_names.row_count() {
+                                checked_group_name = group_names
+                                    .row_data(item.id as usize)
+                                    .unwrap_or_default()
+                                    .to_string();
                             }
+                            break;
+                        }
                     }
 
                     // Filter files by text and build list

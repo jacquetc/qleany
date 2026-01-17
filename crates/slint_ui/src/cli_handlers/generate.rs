@@ -104,14 +104,15 @@ pub fn execute(
 
         // Report progress if verbose
         if output.verbose
-            && let Some(progress) = long_op_manager.get_operation_progress(&operation_id) {
-                // Only report if percentage changed significantly
-                if (progress.percentage - last_percentage).abs() >= 5.0 {
-                    let msg = progress.message.as_deref().unwrap_or("");
-                    output.verbose(&format!("[{:.0}%] {}", progress.percentage, msg));
-                    last_percentage = progress.percentage;
-                }
+            && let Some(progress) = long_op_manager.get_operation_progress(&operation_id)
+        {
+            // Only report if percentage changed significantly
+            if (progress.percentage - last_percentage).abs() >= 5.0 {
+                let msg = progress.message.as_deref().unwrap_or("");
+                output.verbose(&format!("[{:.0}%] {}", progress.percentage, msg));
+                last_percentage = progress.percentage;
             }
+        }
 
         // Handle terminal states
         match status {
@@ -235,9 +236,10 @@ fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Resul
             let mut matching = Vec::new();
             for id in list_result.file_ids {
                 if let Some(file) = file_controller::get(&app_context.db_context, &id)?
-                    && file.group.eq_ignore_ascii_case(name) {
-                        matching.push(id);
-                    }
+                    && file.group.eq_ignore_ascii_case(name)
+                {
+                    matching.push(id);
+                }
             }
             Ok(matching)
         }
@@ -245,9 +247,10 @@ fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Resul
         GenerateTarget::File { target } => {
             // Try to parse as numeric ID first
             if let Ok(id) = target.parse::<EntityId>()
-                && list_result.file_ids.contains(&id) {
-                    return Ok(vec![id]);
-                }
+                && list_result.file_ids.contains(&id)
+            {
+                return Ok(vec![id]);
+            }
 
             // Otherwise match by path
             for (idx, file_path) in list_result.file_names.iter().enumerate() {
