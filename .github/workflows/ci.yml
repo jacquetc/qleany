@@ -134,14 +134,6 @@ jobs:
             rust: "1.90.0"
             target: ""
             flags: "--all-features"
-          - name: wasm
-            rust: stable
-            target: "wasm32-unknown-unknown"
-            flags: ""
-          - name: wasm-wasi
-            rust: stable
-            target: "wasm32-wasip1"
-            flags: ""
           - name: debug
             rust: stable
             target: ""

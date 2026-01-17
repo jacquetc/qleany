@@ -75,7 +75,7 @@ fn test_load_and_save_yaml() -> Result<()> {
     let db_context = DbContext::new()?;
     let event_hub = Arc::new(EventHub::new());
     let original_file_path = "../../qleany.yaml";
-    let temp_file_path = "../../temp_manifest.yaml";
+    let temp_file_path = "./temp_manifest.yaml";
 
     initialize_app(&db_context, &event_hub)?;
 
@@ -108,9 +108,9 @@ fn test_load_and_save_yaml() -> Result<()> {
         return Err(anyhow::anyhow!("Temporary file was not created"));
     }
     // Clean up
-    // if Path::new(temp_file_path).exists() {
-    //     fs::remove_file(temp_file_path)?;
-    // }
+    if Path::new(temp_file_path).exists() {
+        fs::remove_file(temp_file_path)?;
+    }
 
     Ok(())
 }
