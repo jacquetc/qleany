@@ -54,7 +54,7 @@ src/
         └── binder_controller.h
 ```
 
-To modify "Binder," you touch four directories. For a 17-entity project, Qleany v1 generated **1700+ c++ files across 500 folders**. Technically correct, practically unmaintainable.
+To modify "Binder," you touch four directories. For a 17-entity project, Qleany v0 generated **1700+ c++ files across 500 folders**. Technically correct, practically unmaintainable.
 
 ## Package by Feature (a.k.a. Vertical Slice Architecture)
 
@@ -79,8 +79,10 @@ src/
             └── remove_uc.h
 ```
 
+To modify "Binder," you only touch one folder. It's easier to find code, understand features, and make changes. For the same 17-entity project, Qleany now generates **600 files across 80 folders**. Roughly, 33 files per entity instead of 90.
+
 **Benefits:**
-- **Discoverability** — Find all Binder code in one folder
+- **Discoverability** — Find all Binder code in one place
 - **Cohesion** — Related code changes together
 - **Fewer files** — Same 17-entity project produces ~600 files across ~80 folders
 - **Easier onboarding** — New developers understand features, not layers
@@ -107,15 +109,30 @@ Each slice is relatively self-contained. You can understand, modify, and test th
 
 ## Why This Matters for Desktop Apps
 
-Web frameworks often provide architectural scaffolding (Rails, Django, Spring). Desktop frameworks like Qt provide widgets and signals, but no guidance on organizing a 50,000-line application.
+Web frameworks often provide architectural scaffolding (Rails, Django, Spring). Desktop frameworks like Qt provide widgets and signals, but few guidance on organizing a 50,000-line application.
 
 Qleany fills that gap with an architecture that:
 - Scales from small tools to large applications
 - Integrates naturally with Qt's object model
 - Supports undo/redo, a desktop-specific requirement
 - Keeps related code together for solo developers and small teams
+- Multiple UIs (Qt Widgets, QML, CLI) sharing the same core logic
 
 For the complete file organization, see [Generated Infrastructure](generated-code.md#file-organization).
+
+## Why this Matters for Mobile Apps
+
+Mobile apps share many characteristics with desktop apps (see above), but have additional constraints:
+- Rich UIs with complex interactions
+- Need for offline functionality
+- Local data storage with sync capabilities
+- Performance constraints requiring efficient architecture
+
+For the performance, since Qleany generates C++ and Rust, I think that it can be called performant enough for mobile apps. Mobile apps often require efficient memory usage and responsiveness, which C++ and Rust can provide.
+
+Possibly, a Rust backend could be plugged into a mobile app developed with native technologies (Swift for iOS, Kotlin for Android) or cross-platform frameworks (Flutter, React Native). This way, the core logic benefits from Rust's performance and safety, while the UI is built with tools optimized for mobile platforms. 
+
+> Since I don't develop for mobile platforms myself, I base my thoughts on common knowledge about mobile app development. If you have experience developing for mobile apps, please share your insights!
 
 ## Generate and Disappear
 
@@ -161,3 +178,22 @@ direct_access/
 ```
 
 This follows Rust's recommended practice since the 2018 edition, avoiding the proliferation of `mod.rs` files that makes navigation difficult.
+
+
+## Plugins
+
+I add this little section about plugins too while I'm at it. Qt plugins especially. To paraphrase Uncle Bob: "UI is a detail, database is a detail", ... and plugins are details too. They can change without affecting the core business rules. The entities, use cases, don't care whether you're using a SQLite database or a JSON file. They don't care whether the UI is QML or something else. This is the same idea with plugins. Plugin realm is **outside** the core (entities and business rules).
+
+In concrete terms, this means that the plugin system is implemented in the outermost layer (Frameworks & UI). The core application logic doesn't depend on plugins. Instead, plugins depend on the core application logic. This way, you can add, remove, or change plugins without affecting the core functionality of your application.
+
+If I had to create an application using plugins, I would design entities dedicated to managing plugins and their data, a feature dedicated to plugins. Maybe a feature by plugin type to be compartmentalized. Consider these features/use cases as the API for plugins to interact with the core application. The core application would provide services and data to the plugins through these use cases, ensuring that plugins can operate independently of the core logic.
+
+Also, I'd separate the plugins extending the UI from the plugins extending the backend logic. The UI plugins would be loaded and managed by the UI layer, while the backend plugins would exist in their own section, always in the outermost layer, separate from the UI. And all plugins can have access to the features/use cases dedicated to plugins.
+
+## User settings and Configuration
+
+This part may be obvious to most developers. Does the user settings/configuration belong to the core application logic? No, it doesn't. It belongs to the outermost layer (Frameworks & UI). The core application logic should be agnostic of how settings are stored or managed. The settings/configuration system should be implemented in the outer layer, allowing the core logic to remain unaffected by changes in how settings are handled.
+
+You don't want the window geometry to be held in entities. Its place is in the UI layer. You don't want the theme preference to be held in use cases. Its place is in the UI layer too. The core application logic should focus on business rules and data management, while settings and configuration are handled separately in the outer layer.
+
+Use cases must stay pure and repeatable. They should not depend on user-specific settings or configurations. If a use case needs to behave differently based on user settings, it should receive those settings as input parameters, rather than accessing them directly.: This keeps the use cases decoupled from the settings system, maintains their reusability, and keeps them testable.

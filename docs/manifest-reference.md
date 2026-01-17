@@ -157,7 +157,6 @@ features:
   - name: work_management
     use_cases:
       - name: load_work
-        validator: true
         undoable: false
         entities: [Root, Work, Binder, BinderItem]
         dto_in:
@@ -459,7 +458,6 @@ features:
 | Option | Type | Default | Description                                                        |
 |--------|------|---------|--------------------------------------------------------------------|
 | `name` | string | required | Use case name (snake_case)                                         |
-| `validator` | bool | false | Generate input validation (not yet implemented, can be deprecated) |
 | `undoable` | bool | false | Generate undo/redo command scaffolding                             |
 | `read_only` | bool | false | No data modification (affects generated code)                      |
 | `long_operation` | bool | false | Async execution with progress (Rust only)                          |

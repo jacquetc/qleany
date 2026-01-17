@@ -3,8 +3,6 @@
 This document covers QML-based frontends: **QtQuick**, **Kirigami** or others. They use QML, so the generated models 
 and patterns apply equally to either.
 
-For **QtWidgets** and **KDE KF6 Widgets** integration, see the dedicated document (coming soon).
-
 ---
 
 Qleany generates reactive models ready for QML binding — no manual `QAbstractListModel` boilerplate.
@@ -38,7 +36,7 @@ This means if another part of the application updates a RecentWork's title, the 
 
 ## Single Entity Models
 
-Yes, I know, `Single{Entity}` sounds like a weird name. But it accurately describes the purpose: a model for a single entity instance. Quite often, UIs need to display or edit one entity at a time (detail views, editor panels). Instead of manually fetching the entity and wiring up change notifications, use `Single{Entity}`.
+`Single{Entity}` wraps one entity instance for detail views and editor panels. The naming parallels `{Entity}ListModel`: where list models expose collections, single models expose individual entities. Instead of manually fetching the entity and wiring up change notifications, use `Single{Entity}`
 
 `Single{Entity}` wraps one entity with:
 - `itemId` property to select which entity
@@ -62,6 +60,8 @@ Column {
 ```
 
 The model subscribes to `BinderItemEvents.updated` — if any part of the application modifies this entity, the properties update automatically and QML bindings refresh.
+
+Note: Since `id` is a reserved word in QML, the property is named `itemId`. It corresponds to the entity's primary key.
 
 ## Enabling Model Generation
 
@@ -94,13 +94,20 @@ Generated JavaScript stubs in `mock_imports/` mirror the real C++ API:
 mock_imports/
 └── Skr/
     ├── Controllers/
-    │   ├── RootController.qml
+    │   ├── qmldir                                      # QML module definition
+    |   ├── QCoroQmlTask.qml                            # Mock QCoro integration helper
+    |   ├── EventRegistry.qml                           # EventRegistry
+    │   ├── RootController.qml                          #
+    │   ├── RootEvents.qml                              # Event signals for Root entity
     │   ├── BinderItemController.qml
+    │   ├── BinderItemEvents.qml
     │   ├── RecentWorkController.qml
-    │   └── EventRegistry.qml
+    │   └── RecentWorkEvents.qml
     ├── Models/
+    │   ├── qmldir
     │   └── RecentWorkListModelFromRootRecentWorks.qml
     └── Singles/
+        ├── qmldir
         └── SingleBinderItem.qml
 ```
 
@@ -112,6 +119,27 @@ option(YOUR_APP_BUILD_WITH_MOCKS "Build with QML mocks instead of real backend" 
 
 UI developers can iterate on screens with mock data. When ready, disable the flag and the real controllers take over with no QML changes required.
 
+Just to be clear: the mocks are only for UI development. They don't implement real business logic or data persistence.
+
+Here is the equivalent real C++ import structure:
+
+```
+real_imports/
+├── CMakeLists.txt
+├── controllers/
+│   ├── CMakeLists.txt
+│   ├── foreign_root_controller.h
+│   ├── foreign_binder_item_controller.h
+│   ├── foreign_recent_work_controller.h
+│   └── foreign_event_registry.h
+├── models/
+│   ├── CMakeLists.txt
+│   └── foreign_recent_work_list_model_from_root_recent_works.h
+└── singles/
+    ├── CMakeLists.txt
+    └── foreign_single_binder_item.h
+```
+
 ## Event System
 
 The EventRegistry provides decoupled communication between the backend and QML:
@@ -121,9 +149,10 @@ The EventRegistry provides decoupled communication between the backend and QML:
 class BinderItemEvents : public QObject {
     Q_OBJECT
 signals:
-    void created(int id);
-    void updated(int id);
-    void removed(int id);
+    void created(QList<int> ids);
+    void updated(QList<int> ids);
+    void removed(QList<int> ids);
+    void relationshipChanged(int id, BinderItemRelationshipField relationship, const QList<int> &relatedIds)
 };
 ```
 
@@ -131,17 +160,22 @@ Models automatically subscribe to relevant events. You can also subscribe direct
 
 ```qml
 Connections {
-    target: EventRegistry.binderItemEvents
+    target: EventRegistry.binderItem()
     function onCreated(id) {
         console.log("New BinderItem created:", id)
     }
 }
 ```
 
-It's a common pattern to execute an action from QML, then react to the resulting event. It's a mess, avoid this. 
-Instead, let models handle updates reactively when possible.
+To avoid blocking the UI, it's a common pattern to execute an action from QML, then react to the resulting event. 
+It's known that the indirection makes debugging
+difficult and can cause race conditions with multiple subscribers. It's a mess, so my recommendation is to avoid this 
+antipattern. Instead, let models handle updates reactively when possible.
 
-Else, use QCoro to await results directly:
+To access entities directly without going through models, use QCoro to await results from their dedicated entities controllers.
+
+There is no model for custom features and their use cases. Like entities, you can access them through their controllers, useing QCoro
+to await results directly instead of relying on events:
 
 ```qml
 import YouApp.Controllers
@@ -152,7 +186,7 @@ WorkManagementController {
 }
 
 Button {
-    id: savekButton
+    id: saveButton
 
     text: "Save"
 
@@ -169,12 +203,16 @@ Button {
 
 ```
 
+Note: you couldn't chain ".then(...)" with QCoro calls directly because they return `QCoroQmlTask`, not a JavaScript Promise.
+
 ## Best Practices
 
 **Prefer list models over manual fetching.** The generated models handle caching, updates, and memory management. Fetching entity lists manually and storing them in JavaScript arrays loses reactivity.
 
-**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without you havving to managerefresh logic.
+**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without you havving to manage refresh logic.
 
 **Keep model instances alive.** Creating a new model instance on every navigation discards cached data and subscriptions. Declare models at component level.
+
+**Use QCoro for direct commands.** For actions outside of models, like custom features/use cases, use QCoro to await the result instead of relying on events.
 
 **Leverage displayed field for simple lists.** The `list_model_displayed_field` provides a sensible default for list delegates. For complex delegates, access individual roles directly.

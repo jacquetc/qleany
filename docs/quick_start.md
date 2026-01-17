@@ -222,7 +222,6 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 | Field | Value                                           |
 |-------|-------------------------------------------------|
 | Name | import_inventory                                |
-| Validator | ✓ *(useless option for now, may be deprecated)* |
 | Undoable | ✗ *(file imports typically aren't undoable)*    |
 | Read Only | ✗ *(it will update the internal database)*      |
 | Long Operation | ✓ *(parsing files can take time)*               |
@@ -250,7 +249,6 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 | Field | Value                            |
 |-------|----------------------------------|
 | Name | export_inventory                 |
-| Validator | ✓   (useless for now)                |
 | Undoable | ✗                                |
 | Read Only | ✓ *(just reading internal data)* |
 | Long Operation | ✗                                |
@@ -443,6 +441,23 @@ Made a mistake? The manifest is just YAML. You can:
 - Generate to a temp folder, review, then regenerate to the real location
 
 ---
+
+## Build
+
+### Rust
+From your project root:
+
+```bash
+cargo build
+```
+
+### C++ / Qt6
+From your project root:
+```bash
+mkdir -p build && cd build
+cmake ..
+cmake --build .
+```
 
 ## Next Steps
 

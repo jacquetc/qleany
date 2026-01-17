@@ -211,10 +211,35 @@ Embedded key-value storage with ACID transactions. Qleany generates a trait-base
 // Table trait (generated) — implemented by redb storage
 pub trait WorkspaceTable {
     fn create(&mut self, entity: &Workspace) -> Result<Workspace, Error>;
+    fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error>;
     fn update(&mut self, entity: &Workspace) -> Result<Workspace, Error>;
+    fn update_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-    // ... multi variants and relationship methods
+    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+
+    fn get_relationship(
+        &self,
+        id: &EntityId,
+        field: &WorkspaceRelationshipField,
+    ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationships_from_right_ids(
+        &self,
+        field: &WorkspaceRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    fn set_relationship_multi(
+        &mut self,
+        field: &WorkspaceRelationshipField,
+        relationships: Vec<(EntityId, Vec<EntityId>)>,
+    ) -> Result<(), Error>;
+    fn set_relationship(
+        &mut self,
+        id: &EntityId,
+        field: &WorkspaceRelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<(), Error>;
 }
 
 // Repository wraps table with event emission
@@ -231,21 +256,42 @@ Read-only operations use a separate `WorkspaceTableRO` trait and `WorkspaceRepos
 Threaded execution for heavy tasks:
 
 ```rust
-let manager = LongOperationManager::new();
-let handle = manager.spawn(
-    "Importing inventory",
-    |progress| {
-        for (i, line) in lines.iter().enumerate() {
-            progress.set_percent((i * 100) / lines.len());
-            // ... process line ...
-        }
-        Ok(ImportResult { count: lines.len() })
-    }
-);
+pub fn generate_rust_files(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    long_operation_manager: &mut LongOperationManager,
+    dto: &GenerateRustFilesDto,
+) -> Result<String> {
+    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(&db_context);
+    let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
+    let operation_id = long_operation_manager.start_operation(uc);
+    Ok(operation_id)
+}
 
-// In UI
-handle.on_progress(|p| update_progress_bar(p));
-let result = handle.await?;
+pub fn get_generate_rust_files_progress(
+    long_operation_manager: &LongOperationManager,
+    operation_id: &str,
+) -> Option<OperationProgress> {
+    long_operation_manager.get_operation_progress(operation_id)
+}
+
+pub fn get_generate_rust_files_result(
+    long_operation_manager: &LongOperationManager,
+    operation_id: &str,
+) -> Result<Option<GenerateRustFilesReturnDto>> {
+    // Get the operation result as a JSON string
+    let result_json = long_operation_manager.get_operation_result(operation_id);
+
+    // If there's no result, return None
+    if result_json.is_none() {
+        return Ok(None);
+    }
+
+    // Parse the JSON string into a GenerateRustFilesResultDto
+    let result_dto: GenerateRustFilesReturnDto = serde_json::from_str(&result_json.unwrap())?;
+
+    Ok(Some(result_dto))
+}
 ```
 
 Features:
@@ -307,7 +353,7 @@ pub fn update(
 }
 ```
 
-Unlike C++/Qt's async controller layer, Rust uses fully synchronous execution throughout, which works well for CLI and desktop applications where blocking is acceptable.
+Unlike C++/Qt's async controller layer, Rust uses fully synchronous execution throughout, which works well for CLI where blocking is acceptable. I choose to avoid async/await complexity here.
 
 ### Event Hub
 
@@ -345,8 +391,6 @@ event_hub.send_event(Event {
     data: None,
 });
 ```
-
-Relationship changes include field information in the `data` field for targeted UI updates.
 
 ---
 
@@ -391,11 +435,14 @@ Relationship-specific methods:
 | `getRelationshipIdsCount(id, field)` | Count related items |
 | `getRelationshipIdsInRange(id, field, offset, limit)` | Paginated access |
 
+C++/Qt offers additional pagination and counting methods for UI scenarios. The generated QAbstractListModels aren't using these yet but can be extended to do so.
+
 ### Unit of Work
 
-Each use case receives a unit of work factory that creates transaction-scoped operations:
-
 **Rust:**
+
+Each use case receives a unit of work factory which handles the unit of work creation that allow transaction-scoped operations:
+
 ```rust
 pub trait WorkspaceUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn WorkspaceUnitOfWorkTrait>;
@@ -409,15 +456,46 @@ uow.commit()?;
 ```
 
 **C++/Qt:**
+
+No factory here, the controller creates a new unit of work per use case:
+
 ```cpp
 // Unit of work encapsulates repository access within a transaction
-class WorkUnitOfWork {
-    void beginTransaction();
-    Work createWork(const CreateWorkDto& dto);
-    Work updateWork(const WorkDto& dto);
-    void commit();
-    void rollback();
+class IWorkUnitOfWork
+{
+  public:
+    virtual ~IWorkUnitOfWork() = default;
+    virtual void beginTransaction() = 0;
+    virtual void commit() = 0;
+    virtual void endTransaction() = 0;
+    virtual void rollback() = 0;
+
+    virtual void createSavepoint() = 0;
+    virtual void rollbackToSavepoint() = 0;
+    virtual void releaseSavepoint() = 0;
+
+    virtual QList<SCE::Work> createWork(QList<SCE::Work> works) = 0;
+    virtual QList<SCE::Work> getWork(QList<int> workIds) = 0;
+    virtual QList<SCE::Work> updateWork(QList<SCE::Work> works) = 0;
+    virtual QList<int> removeWork(QList<int> workIds) = 0;
+    virtual QList<int> getWorkRelationship(int workId, SCDWork::WorkRelationshipField relationship) = 0;
+    virtual void setWorkRelationship(int workId, SCDWork::WorkRelationshipField relationship,
+                                     QList<int> relatedIds) = 0;
+    virtual QHash<int, QList<int>> getWorkRelationshipMany(const QList<int> &workIds,
+                                                           SCDWork::WorkRelationshipField relationship) = 0;
+    virtual int getWorkRelationshipCount(int workId, SCDWork::WorkRelationshipField relationship) = 0;
+    virtual QList<int> getWorkRelationshipInRange(int workId, SCDWork::WorkRelationshipField relationship, int offset, int limit) = 0;
 };
+
+// In controller :
+
+QCoro::Task<QList<WorkDto>> WorkController::create(const QList<CreateWorkDto> &works)
+{
+...
+    std::unique_ptr<IWorkUnitOfWork> uow = std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<CreateWorkUseCase>(std::move(uow));
+...
+}
 ```
 
 This keeps transaction boundaries explicit and testable, while the factory pattern enables easy mocking for unit tests.
@@ -432,8 +510,7 @@ Controller ←→ CreateCarDto ←→ UseCase ←→ Car (Entity) ←→ Reposit
 
 The separation ensures:
 - Controllers don't expose entity internals
-- Use cases receive validated, typed input
-- Entities remain persistence-agnostic
+- You control what data flows in/out of each layer
 
 ---
 

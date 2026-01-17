@@ -172,7 +172,7 @@ impl EventHub {
                         queue.push(event.clone());
                     }
                     Err(_) => {
-                        println!("EventHub receiver dropped");
+                        //println!("EventHub receiver dropped");
                         break;
                     }
                 };

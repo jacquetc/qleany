@@ -60,13 +60,14 @@ These files contain references to all entities:
 | `common/direct_access.rs`                    | Module declarations for all entity repositories |
 | `direct_access/lib.rs`                       | Module declarations for all entity features |
 
-### C++/Qt (TODO: to be completed)
+### C++/Qt
 
-| File | Contains |
-|------|----------|
-| `common/entities/entities.h` | Includes for all entity headers |
+| File                                             | Contains |
+|--------------------------------------------------|----------|
 | `common/direct_access/repository_factory.h/.cpp` | Factory methods for all repositories |
-| `common/direct_access/event_registry.h/.cpp` | Event objects for all entities |
+| `common/direct_access/event_registry.h/.cpp`     | Event objects for all entities |
+| `common/CMakeLists.txt`                          | Adds all entity source files to build |
+| `direct_access/CMakeLists.txt`                   | Adds all entity source files to build |
 
 If you modify one of these files and later add a new entity, you'll need to either:
 - Regenerate the file and re-apply your modifications, or

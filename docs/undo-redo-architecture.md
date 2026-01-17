@@ -12,9 +12,22 @@ For example, if a user is editing a document and undoes an action, they don't ex
 
 Also, for destructive operations (deleting entities), Qleany supports cascading deletions, but not their undoing. If you delete a parent entity, all its strongly-owned children are also deleted.  At first, I used a database savepoint to be restored on undo, but the savepoint impacted the non-undoable data as well, leading to confusion and unexpected behavior.  Consequence: there is no undo for entity deletions, so what to do? 
 
-At least for now, no undoing of deletions. Instead, consider soft-deleting entities (marking them as inactive) if you want to allow recovery. And make it so when you "empty the trash" manually, that's a permanent action, not undoable, with all the undo redo stacks cleared.
+At least for now, as said previously, **no undoing of deletions**. Instead, consider soft-deleting entities (marking them as inactive) if you want to allow recovery. "emptying the trash bin" manually would be a permanent action, not undoable, with all the undo redo stacks cleared. Thus, 1. Users can recover deleted items from a trash bin, and 2. Undo/redo stacks remain consistent and manageable.
 
 Thi seems like a limitation, but in practice, users rarely need to undo deletions if they have a way to recover deleted items through a trash or archive system.
+
+### Soft Deletion
+
+If you want to implement soft deletion, add a boolean field `activated` to your entities. When "deleting" an entity, set this flag to false instead of removing it from the database. Your UI can then filter out entities where `activated` is false, effectively hiding them from the user. When you want to permanently delete entities (e.g., emptying the trash), you can then remove them from the database. This will clear all the undo-redo stacks, which is acceptable since permanent deletion is a non-undoable action from the user's perspective, too. 
+
+Conretely, you can have a `TrashBin` entity that holds references to soft-deleted entities. Users can restore them from the trash bin or permanently delete them.
+
+| Id | trashed_date | entity_type | entity_id
+|----|--------------|-------------|-----------|
+| 1  | 2024-01-01   | Document    | 42
+| 2  | 2024-01-02   | Car         | 7
+
+It would typically need dedicated logic in use cases to handle restoring entities.
 
 ## Entity Properties
 
@@ -40,7 +53,7 @@ These rules ensure that when you undo an operation on a parent entity, all its s
 >
 > Follow these rules strictly. If data shouldn't participate in undo (like settings), place it in a separate non-undoable trunk — don't nest it under undoable entities.
 >
-> *A validation system to check these rules at generation time would be a nice addition in a future update.*
+> *A basic validation system checks some of these rules at generation time. It's being improved to be able to check at load time.*
 
 ## Entity Tree Configurations
 
