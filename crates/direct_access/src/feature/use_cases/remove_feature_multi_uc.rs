@@ -6,7 +6,6 @@ use anyhow::{Ok, Result};
 // use common::types::Savepoint;
 use common::{types::EntityId, undo_redo::UndoRedoCommand};
 use std::any::Any;
-use std::collections::VecDeque;
 
 /// Use case to remove multiple feature entities. The undo and redo operations are deactivated
 /// on purpose since restoring deleted entities using database savepoints impacts the whole database state, not only the deleted entities.

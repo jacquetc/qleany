@@ -124,7 +124,7 @@ pub fn get_relationship(
     id: &EntityId,
     field: &DtoRelationshipField,
 ) -> Result<Vec<EntityId>> {
-    let uow_factory = DtoUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = DtoUnitOfWorkROFactory::new(db_context);
     let uc = GetDtoRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(id, field)
 }

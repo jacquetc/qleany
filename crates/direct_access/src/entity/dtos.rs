@@ -40,13 +40,13 @@ impl From<&EntityDto> for Entity {
         Entity {
             id: dto.id,
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from.clone(),
-            only_for_heritage: dto.only_for_heritage.clone(),
+            inherits_from: dto.inherits_from,
+            only_for_heritage: dto.only_for_heritage,
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model.clone(),
-            undoable: dto.undoable.clone(),
-            allow_direct_access: dto.allow_direct_access.clone(),
+            single_model: dto.single_model,
+            undoable: dto.undoable,
+            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -100,13 +100,13 @@ impl From<&CreateEntityDto> for Entity {
         Entity {
             id: 0,
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from.clone(),
-            only_for_heritage: dto.only_for_heritage.clone(),
+            inherits_from: dto.inherits_from,
+            only_for_heritage: dto.only_for_heritage,
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model.clone(),
-            undoable: dto.undoable.clone(),
-            allow_direct_access: dto.allow_direct_access.clone(),
+            single_model: dto.single_model,
+            undoable: dto.undoable,
+            allow_direct_access: dto.allow_direct_access,
         }
     }
 }

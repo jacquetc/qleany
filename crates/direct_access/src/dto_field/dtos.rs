@@ -38,8 +38,8 @@ impl From<&DtoFieldDto> for DtoField {
             id: dto.id,
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            is_nullable: dto.is_nullable.clone(),
-            is_list: dto.is_list.clone(),
+            is_nullable: dto.is_nullable,
+            is_list: dto.is_list,
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }
@@ -90,8 +90,8 @@ impl From<&CreateDtoFieldDto> for DtoField {
             id: 0,
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            is_nullable: dto.is_nullable.clone(),
-            is_list: dto.is_list.clone(),
+            is_nullable: dto.is_nullable,
+            is_list: dto.is_list,
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }

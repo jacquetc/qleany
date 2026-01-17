@@ -101,7 +101,7 @@ pub fn get_relationship(
     id: &EntityId,
     field: &SystemRelationshipField,
 ) -> Result<Vec<EntityId>> {
-    let uow_factory = SystemUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = SystemUnitOfWorkROFactory::new(db_context);
     let uc = GetSystemRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(id, field)
 }

@@ -34,10 +34,10 @@ impl From<&WorkspaceDto> for Workspace {
         Workspace {
             id: dto.id,
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global.clone(),
+            global: dto.global,
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface.clone(),
+            user_interface: dto.user_interface,
         }
     }
 }
@@ -82,10 +82,10 @@ impl From<&CreateWorkspaceDto> for Workspace {
         Workspace {
             id: 0,
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global.clone(),
+            global: dto.global,
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface.clone(),
+            user_interface: dto.user_interface,
         }
     }
 }

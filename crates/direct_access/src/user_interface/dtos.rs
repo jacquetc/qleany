@@ -33,11 +33,11 @@ impl From<&UserInterfaceDto> for UserInterface {
     fn from(dto: &UserInterfaceDto) -> Self {
         UserInterface {
             id: dto.id,
-            rust_cli: dto.rust_cli.clone(),
-            rust_slint: dto.rust_slint.clone(),
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
-            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
-            cpp_qt_kirigami: dto.cpp_qt_kirigami.clone(),
+            rust_cli: dto.rust_cli,
+            rust_slint: dto.rust_slint,
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
+            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
@@ -81,11 +81,11 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
     fn from(dto: &CreateUserInterfaceDto) -> Self {
         UserInterface {
             id: 0,
-            rust_cli: dto.rust_cli.clone(),
-            rust_slint: dto.rust_slint.clone(),
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
-            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
-            cpp_qt_kirigami: dto.cpp_qt_kirigami.clone(),
+            rust_cli: dto.rust_cli,
+            rust_slint: dto.rust_slint,
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
+            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
