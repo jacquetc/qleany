@@ -8,7 +8,7 @@ pub fn setup_check_is_pascal_case_callback(app: &App) {
     app.global::<CommonTools>().on_check_is_pascal_case({
         move |name| {
             log::info!("Checking if naming is PascalCase");
-            heck::AsPascalCase(&name).to_string() == name.to_string()
+            name == heck::AsPascalCase(&name).to_string()
         }
     });
 }
@@ -17,7 +17,7 @@ pub fn setup_check_is_snake_case_callback(app: &App) {
     app.global::<CommonTools>().on_check_is_snake_case({
         move |name| {
             log::info!("Checking if naming is snake_case");
-            heck::AsSnakeCase(&name).to_string() == name.to_string()
+            name == heck::AsSnakeCase(&name).to_string()
         }
     });
 }

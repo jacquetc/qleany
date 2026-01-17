@@ -50,7 +50,7 @@ fn show_config(app_context: &Arc<AppContext>, args: &ShowArgs) -> Result<()> {
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{global_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()
@@ -99,7 +99,7 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{entity_controller, field_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()
@@ -115,12 +115,11 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
     // Find the entity by name
     let mut found_entity = None;
     for id in &entity_ids {
-        if let Some(entity) = entity_controller::get(&app_context.db_context, id)? {
-            if entity.name.eq_ignore_ascii_case(name) {
+        if let Some(entity) = entity_controller::get(&app_context.db_context, id)?
+            && entity.name.eq_ignore_ascii_case(name) {
                 found_entity = Some((*id, entity));
                 break;
             }
-        }
     }
 
     let (entity_id, entity) =
@@ -177,7 +176,7 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{feature_controller, use_case_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()
@@ -193,12 +192,11 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
     // Find the feature by name
     let mut found_feature = None;
     for id in &feature_ids {
-        if let Some(feature) = feature_controller::get(&app_context.db_context, id)? {
-            if feature.name.eq_ignore_ascii_case(name) {
+        if let Some(feature) = feature_controller::get(&app_context.db_context, id)?
+            && feature.name.eq_ignore_ascii_case(name) {
                 found_feature = Some((*id, feature));
                 break;
             }
-        }
     }
 
     let (feature_id, feature) =

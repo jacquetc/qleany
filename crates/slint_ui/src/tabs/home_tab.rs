@@ -21,7 +21,7 @@ fn subscribe_loaded_event(
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Load), {
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest loaded event received: {:?}", event);
@@ -59,7 +59,7 @@ fn subscribe_closed_event(
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
@@ -151,7 +151,6 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                     Err(e) => {
                         log::error!("Failed to create new manifest: {}", e);
                         app.global::<AppState>().set_is_loading(false);
-                        return;
                     }
                 }
             }

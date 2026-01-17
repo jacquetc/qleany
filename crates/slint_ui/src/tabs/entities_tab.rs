@@ -58,7 +58,7 @@ fn subscribe_close_manifest_event(
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
@@ -89,12 +89,11 @@ fn subscribe_new_manifest_event(
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         fill_entity_list(&app, &ctx);
                         create_new_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -114,12 +113,11 @@ fn subscribe_load_manifest_event(
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         fill_entity_list(&app, &ctx);
                         create_new_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -142,12 +140,11 @@ fn subscribe_workspace_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_entity_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -171,12 +168,11 @@ fn subscribe_entity_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_entity_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -200,11 +196,10 @@ fn subscribe_entity_deleted_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -228,12 +223,11 @@ fn subscribe_field_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_field_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -257,11 +251,10 @@ fn subscribe_field_deleted_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -301,15 +294,13 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                         Ok(entities_opt) => {
                             // Map to ListItem (id + text)
                             let mut list: Vec<ListItem> = Vec::new();
-                            for maybe_entity in entities_opt.into_iter() {
-                                if let Some(e) = maybe_entity {
-                                    list.push(ListItem {
-                                        id: e.id as i32,
-                                        text: slint::SharedString::from(e.name),
-                                        subtitle: slint::SharedString::from(""),
-                                        checked: false,
-                                    });
-                                }
+                            for e in entities_opt.into_iter().flatten() {
+                                list.push(ListItem {
+                                    id: e.id as i32,
+                                    text: slint::SharedString::from(e.name),
+                                    subtitle: slint::SharedString::from(""),
+                                    checked: false,
+                                });
                             }
 
                             // Apply to AppState
@@ -377,15 +368,13 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                         Ok(fields_opt) => {
                             // Map to ListItem (id + text)
                             let mut list: Vec<ListItem> = Vec::new();
-                            for maybe_field in fields_opt.into_iter() {
-                                if let Some(e) = maybe_field {
-                                    list.push(ListItem {
-                                        id: e.id as i32,
-                                        text: slint::SharedString::from(e.name),
-                                        subtitle: slint::SharedString::from(""),
-                                        checked: false,
-                                    });
-                                }
+                            for e in fields_opt.into_iter().flatten() {
+                                list.push(ListItem {
+                                    id: e.id as i32,
+                                    text: slint::SharedString::from(e.name),
+                                    subtitle: slint::SharedString::from(""),
+                                    checked: false,
+                                });
                             }
 
                             // Apply to AppState
@@ -442,15 +431,15 @@ fn setup_entities_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                     );
                     let mut entity_ids = entity_ids_res.unwrap_or_default();
 
-                    if from == to || from >= entity_ids.iter().count() {
+                    if from == to || from >= entity_ids.len() {
                         return;
                     }
 
                     let moving_entity_id = entity_ids.remove(from);
                     // Adjust target slot when moving downwards because removing shifts indices left
                     let mut insert_at = if to > from { to - 1 } else { to };
-                    if insert_at > entity_ids.iter().count() {
-                        insert_at = entity_ids.iter().count();
+                    if insert_at > entity_ids.len() {
+                        insert_at = entity_ids.len();
                     }
                     entity_ids.insert(insert_at, moving_entity_id);
 
@@ -500,15 +489,15 @@ fn setup_fields_reorder_callback(app: &App, app_context: &Arc<AppContext>) {
                 );
                 let mut field_ids = field_ids_res.unwrap_or_default();
 
-                if from == to || from >= field_ids.iter().count() {
+                if from == to || from >= field_ids.len() {
                     return;
                 }
 
                 let moving_field_id = field_ids.remove(from);
                 // Adjust target slot when moving downwards because removing shifts indices left
                 let mut insert_at = if to > from { to - 1 } else { to };
-                if insert_at > field_ids.iter().count() {
-                    insert_at = field_ids.iter().count();
+                if insert_at > field_ids.len() {
+                    insert_at = field_ids.len();
                 }
                 field_ids.insert(insert_at, moving_field_id);
                 let result = entity_commands::set_entity_relationship(
@@ -609,8 +598,8 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
             if selected_entity_id < 0 {
                 return;
             }
-            if let Some(app) = app_weak.upgrade() {
-                if selected_entity_id >= 0 {
+            if let Some(app) = app_weak.upgrade()
+                && selected_entity_id >= 0 {
                     let entity_res = entity_commands::get_entity(
                         &ctx,
                         &(selected_entity_id as common::types::EntityId),
@@ -647,8 +636,7 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                                 .set_selected_entity_inherits_from(-1);
                         }
                     };
-                }
-            };
+                };
         }
     });
 }
@@ -763,15 +751,13 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
             &WorkspaceRelationshipField::Entities,
         );
 
-        if let Ok(entity_ids) = entity_ids_res {
-            if let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
+        if let Ok(entity_ids) = entity_ids_res
+            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
                 let mut names: Vec<slint::SharedString> = Vec::new();
                 let mut ids: Vec<i32> = Vec::new();
-                for maybe_entity in entities_opt.into_iter() {
-                    if let Some(e) = maybe_entity {
-                        names.push(e.name.into());
-                        ids.push(e.id as i32);
-                    }
+                for e in entities_opt.into_iter().flatten() {
+                    names.push(e.name.into());
+                    ids.push(e.id as i32);
                 }
                 let names_model = std::rc::Rc::new(slint::VecModel::from(names));
                 let ids_model = std::rc::Rc::new(slint::VecModel::from(ids));
@@ -780,7 +766,6 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
                 app.global::<EntitiesTabState>()
                     .set_entity_option_ids(ids_model.into());
             }
-        }
     }
 }
 
@@ -802,8 +787,8 @@ fn fill_inherits_from_options(
             &WorkspaceRelationshipField::Entities,
         );
 
-        if let Ok(entity_ids) = entity_ids_res {
-            if let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
+        if let Ok(entity_ids) = entity_ids_res
+            && let Ok(entities_opt) = entity_commands::get_entity_multi(app_context, &entity_ids) {
                 // Start with "None" option
                 let mut names: Vec<slint::SharedString> = vec!["None".into()];
                 let mut ids: Vec<i32> = vec![-1];
@@ -814,12 +799,11 @@ fn fill_inherits_from_options(
                         ids.push(e.id as i32);
 
                         // Check if this is the currently selected inherits_from
-                        if let Some(inherits_id) = current_inherits_from {
-                            if e.id == inherits_id {
+                        if let Some(inherits_id) = current_inherits_from
+                            && e.id == inherits_id {
                                 selected_index = (names.len() - 1) as i32;
                                 selected_value = e.name.clone();
                             }
-                        }
                     }
                 }
 
@@ -836,7 +820,6 @@ fn fill_inherits_from_options(
                 app.global::<EntitiesTabState>()
                     .set_selected_entity_inherits_from_value(selected_value.into());
             }
-        }
     } else {
         // No workspace, set default "None" option and value
         app.global::<EntitiesTabState>()
@@ -1171,7 +1154,7 @@ fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
                         } else {
                             // Split by newlines or commas
                             let values: Vec<String> = value_str
-                                .split(|c| c == '\n' || c == ',')
+                                .split(['\n', ','])
                                 .map(|s| s.trim().to_string())
                                 .filter(|s| !s.is_empty())
                                 .collect();
@@ -1192,8 +1175,8 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |new_entity_name| {
-            if let Some(app) = app_weak.upgrade() {
-                if new_entity_name != "" {
+            if let Some(app) = app_weak.upgrade()
+                && !new_entity_name.is_empty() {
                     let current_entity_id =
                         app.global::<EntitiesTabState>().get_selected_entity_id();
                     let entity_res = entity_commands::get_entity(
@@ -1202,36 +1185,32 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
                     );
 
                     // Update
-                    match entity_res {
-                        Ok(Some(mut entity)) => {
-                            if entity.name == new_entity_name.to_string() {
-                                return;
+                    if let Ok(Some(mut entity)) = entity_res {
+                        if new_entity_name == entity.name {
+                            return;
+                        }
+                        entity.name = new_entity_name.to_string();
+
+                        let result = entity_commands::update_entity(
+                            &ctx,
+                            Some(
+                                app.global::<EntitiesTabState>()
+                                    .get_entities_undo_stack_id()
+                                    as u64,
+                            ),
+                            &entity,
+                        );
+
+                        match result {
+                            Ok(_) => {
+                                log::info!("Entity name updated successfully");
                             }
-                            entity.name = new_entity_name.to_string();
-
-                            let result = entity_commands::update_entity(
-                                &ctx,
-                                Some(
-                                    app.global::<EntitiesTabState>()
-                                        .get_entities_undo_stack_id()
-                                        as u64,
-                                ),
-                                &entity,
-                            );
-
-                            match result {
-                                Ok(_) => {
-                                    log::info!("Entity name updated successfully");
-                                }
-                                Err(e) => {
-                                    log::error!("Failed to update entity name: {}", e);
-                                }
+                            Err(e) => {
+                                log::error!("Failed to update entity name: {}", e);
                             }
                         }
-                        _ => {}
                     };
-                }
-            };
+                };
         }
     });
 }
@@ -1253,33 +1232,30 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                         &(current_entity_id as common::types::EntityId),
                     );
 
-                    match entity_res {
-                        Ok(Some(mut entity)) => {
-                            if entity.only_for_heritage == value {
-                                return;
+                    if let Ok(Some(mut entity)) = entity_res {
+                        if entity.only_for_heritage == value {
+                            return;
+                        }
+                        entity.only_for_heritage = value;
+
+                        let result = entity_commands::update_entity(
+                            &ctx,
+                            Some(
+                                app.global::<EntitiesTabState>()
+                                    .get_entities_undo_stack_id()
+                                    as u64,
+                            ),
+                            &entity,
+                        );
+
+                        match result {
+                            Ok(_) => {
+                                log::info!("Entity only_for_heritage updated successfully");
                             }
-                            entity.only_for_heritage = value;
-
-                            let result = entity_commands::update_entity(
-                                &ctx,
-                                Some(
-                                    app.global::<EntitiesTabState>()
-                                        .get_entities_undo_stack_id()
-                                        as u64,
-                                ),
-                                &entity,
-                            );
-
-                            match result {
-                                Ok(_) => {
-                                    log::info!("Entity only_for_heritage updated successfully");
-                                }
-                                Err(e) => {
-                                    log::error!("Failed to update entity only_for_heritage: {}", e);
-                                }
+                            Err(e) => {
+                                log::error!("Failed to update entity only_for_heritage: {}", e);
                             }
                         }
-                        _ => {}
                     };
                 }
             }
@@ -1498,33 +1474,30 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
                         &(current_entity_id as common::types::EntityId),
                     );
 
-                    match entity_res {
-                        Ok(Some(mut entity)) => {
-                            if entity.inherits_from == inherits_from_id {
-                                return;
+                    if let Ok(Some(mut entity)) = entity_res {
+                        if entity.inherits_from == inherits_from_id {
+                            return;
+                        }
+                        entity.inherits_from = inherits_from_id;
+
+                        let result = entity_commands::update_entity(
+                            &ctx,
+                            Some(
+                                app.global::<EntitiesTabState>()
+                                    .get_entities_undo_stack_id()
+                                    as u64,
+                            ),
+                            &entity,
+                        );
+
+                        match result {
+                            Ok(_) => {
+                                log::info!("Entity inherits_from updated successfully");
                             }
-                            entity.inherits_from = inherits_from_id;
-
-                            let result = entity_commands::update_entity(
-                                &ctx,
-                                Some(
-                                    app.global::<EntitiesTabState>()
-                                        .get_entities_undo_stack_id()
-                                        as u64,
-                                ),
-                                &entity,
-                            );
-
-                            match result {
-                                Ok(_) => {
-                                    log::info!("Entity inherits_from updated successfully");
-                                }
-                                Err(e) => {
-                                    log::error!("Failed to update entity inherits_from: {}", e);
-                                }
+                            Err(e) => {
+                                log::error!("Failed to update entity inherits_from: {}", e);
                             }
                         }
-                        _ => {}
                     };
                 }
             }

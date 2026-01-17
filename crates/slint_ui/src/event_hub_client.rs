@@ -30,7 +30,7 @@ impl EventHubClient {
     {
         let mut subs = self.subscribers.lock().unwrap();
         subs.entry(origin)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Box::new(callback));
     }
 

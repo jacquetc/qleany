@@ -37,12 +37,11 @@ pub fn subscribe_use_case_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_use_case_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -66,11 +65,10 @@ pub fn subscribe_use_case_deleted_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -106,15 +104,13 @@ pub fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
                     match use_case_commands::get_use_case_multi(&ctx, &use_case_ids) {
                         Ok(use_cases_opt) => {
                             let mut list: Vec<ListItem> = Vec::new();
-                            for maybe_use_case in use_cases_opt.into_iter() {
-                                if let Some(uc) = maybe_use_case {
-                                    list.push(ListItem {
-                                        id: uc.id as i32,
-                                        text: slint::SharedString::from(uc.name),
-                                        subtitle: slint::SharedString::from(""),
-                                        checked: false,
-                                    });
-                                }
+                            for uc in use_cases_opt.into_iter().flatten() {
+                                list.push(ListItem {
+                                    id: uc.id as i32,
+                                    text: slint::SharedString::from(uc.name),
+                                    subtitle: slint::SharedString::from(""),
+                                    checked: false,
+                                });
                             }
 
                             let model = std::rc::Rc::new(slint::VecModel::from(list));
@@ -365,14 +361,14 @@ pub fn setup_use_cases_reorder_callback(app: &App, app_context: &Arc<AppContext>
                     );
                     let mut use_case_ids = use_case_ids_res.unwrap_or_default();
 
-                    if from == to || from >= use_case_ids.iter().count() {
+                    if from == to || from >= use_case_ids.len() {
                         return;
                     }
 
                     let moving_use_case_id = use_case_ids.remove(from);
                     let mut insert_at = if to > from { to - 1 } else { to };
-                    if insert_at > use_case_ids.iter().count() {
-                        insert_at = use_case_ids.iter().count();
+                    if insert_at > use_case_ids.len() {
+                        insert_at = use_case_ids.len();
                     }
                     use_case_ids.insert(insert_at, moving_use_case_id);
 

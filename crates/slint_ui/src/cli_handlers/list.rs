@@ -82,7 +82,7 @@ fn list_entities(
     use direct_access::{entity_controller, workspace_controller};
 
     // Get workspace and entities
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()
@@ -97,7 +97,7 @@ fn list_entities(
 
     let entities = entity_controller::get_multi(&app_context.db_context, entity_ids.as_slice())?
         .into_iter()
-        .filter_map(|x| x)
+        .flatten()
         .collect::<Vec<EntityDto>>();
 
     match args.format {
@@ -147,7 +147,7 @@ fn list_features(
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{feature_controller, use_case_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()

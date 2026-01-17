@@ -90,7 +90,7 @@ fn apply_language_setting(
     global_controller::update(
         &app_context.db_context,
         &app_context.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         None,
         &global,
     )?;
@@ -127,7 +127,7 @@ fn apply_project_settings(
         global_controller::update(
             &app_context.db_context,
             &app_context.event_hub,
-            &mut *undo_redo_manager,
+            &mut undo_redo_manager,
             None,
             &global,
         )?;

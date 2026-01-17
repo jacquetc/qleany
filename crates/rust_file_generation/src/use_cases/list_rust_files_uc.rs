@@ -771,7 +771,7 @@ impl ListRustFilesUseCase {
                 relative_path: format!("{}/slint_ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_cargo".to_string(),
-                feature: None,
+                feature: Some(0),
                 entity: None,
                 use_case: None,
             });

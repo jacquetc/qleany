@@ -59,29 +59,29 @@ fn run_slint(app_context: &Arc<AppContext>) {
     let app = App::new().unwrap();
 
     // Initialize common tools callbacks
-    common_tools::init(&app, &app_context);
+    common_tools::init(&app, app_context);
 
     // Initialize home tab callbacks (manifest operations)
-    tabs::home_tab::init(&event_hub_client, &app, &app_context);
+    tabs::home_tab::init(&event_hub_client, &app, app_context);
 
     // Initialize entities tab subscriptions and callbacks
-    tabs::entities_tab::init(&event_hub_client, &app, &app_context);
+    tabs::entities_tab::init(&event_hub_client, &app, app_context);
 
     // Initialize features tab subscriptions and callbacks
-    tabs::features::init(&event_hub_client, &app, &app_context);
+    tabs::features::init(&event_hub_client, &app, app_context);
 
     // Initialize project tab callbacks (project settings)
-    tabs::project_tab::init(&event_hub_client, &app, &app_context);
+    tabs::project_tab::init(&event_hub_client, &app, app_context);
 
     // Initialize user interface tab callbacks
-    tabs::user_interface_tab::init(&event_hub_client, &app, &app_context);
+    tabs::user_interface_tab::init(&event_hub_client, &app, app_context);
 
     // Initialize generate tab callbacks (rust file generation)
-    tabs::generate_tab::init(&event_hub_client, &app, &app_context);
+    tabs::generate_tab::init(&event_hub_client, &app, app_context);
 
     app.window().on_close_requested({
         let app_weak = app.as_weak();
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
 
         move || {
             log::info!("Window close requested");
@@ -137,7 +137,7 @@ fn run_slint(app_context: &Arc<AppContext>) {
 
     // Wire up UndoRedoCommands callbacks
     app.global::<UndoRedoCommands>().on_undo({
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         move || {
             log::info!("Undo clicked");
             // TODO: Implement undo using undo_redo_commands
@@ -146,7 +146,7 @@ fn run_slint(app_context: &Arc<AppContext>) {
     });
 
     app.global::<UndoRedoCommands>().on_redo({
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         move || {
             log::info!("Redo clicked");
             // TODO: Implement redo using undo_redo_commands

@@ -15,7 +15,7 @@ pub fn create_dto(
     dto_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -32,7 +32,7 @@ pub fn create_dto_multi(
     dto_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -56,7 +56,7 @@ pub fn update_dto(ctx: &AppContext, stack_id: Option<u64>, dto: &DtoDto) -> Resu
     dto_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -73,7 +73,7 @@ pub fn update_dto_multi(
     dto_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -86,7 +86,7 @@ pub fn remove_dto(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> Res
     let result = dto_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -106,7 +106,7 @@ pub fn remove_dto_multi(
     let result = dto_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )
@@ -136,7 +136,7 @@ pub fn set_dto_relationship(
     dto_controller::set_relationship(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )

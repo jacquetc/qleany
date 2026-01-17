@@ -48,8 +48,8 @@ fn delete_undo_stack(app: &App, app_context: &Arc<AppContext>) {
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling ProjectTabState with data from Global entity");
 
-    if let Some(global_id) = get_global_id(app, app_context) {
-        if let Ok(Some(global)) = global_commands::get_global(app_context, &global_id) {
+    if let Some(global_id) = get_global_id(app, app_context)
+        && let Ok(Some(global)) = global_commands::get_global(app_context, &global_id) {
             log::info!("Filling ProjectTabState with global data: {:?}", global);
             let language = match global.language.to_lowercase().as_str() {
                 "rust" => "Rust",
@@ -67,7 +67,6 @@ fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
             app.global::<ProjectTabState>()
                 .set_prefix_path(slint::SharedString::from(&global.prefix_path));
         }
-    }
 }
 
 fn clear_project_tab(app: &App) {
@@ -90,7 +89,7 @@ fn subscribe_close_manifest_event(
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
@@ -98,12 +97,11 @@ fn subscribe_close_manifest_event(
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         clear_project_tab(&app);
                         delete_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -122,12 +120,11 @@ fn subscribe_new_manifest_event(
             let ctx = Arc::clone(&ctx);
             let app_weak = app_weak.clone();
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         fill_project_tab(&app, &ctx);
                         create_new_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -147,12 +144,11 @@ fn subscribe_load_manifest_event(
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         fill_project_tab(&app, &ctx);
                         create_new_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -175,11 +171,10 @@ fn subscribe_global_created_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_project_tab(&app, &ctx);
                         }
-                    }
                 });
             }
         },
@@ -203,12 +198,11 @@ fn subscribe_global_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                             fill_project_tab(&app, &ctx);
                         }
-                    }
                 });
             }
         },
@@ -218,14 +212,12 @@ fn subscribe_global_updated_event(
 /// Helper function to get the global_id from root
 fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::types::EntityId> {
     let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
-    if workspace_id > 0 {
-        if let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id) {
-            if workspace.global > 0 {
+    if workspace_id > 0
+        && let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id)
+            && workspace.global > 0 {
                 println!("Found global_id: {}", workspace.global);
                 return Some(workspace.global);
             }
-        }
-    }
     None
 }
 

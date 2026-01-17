@@ -59,7 +59,7 @@ pub fn execute(
         rust_file_generation_controller::generate_rust_files(
             &app_context.db_context,
             &app_context.event_hub,
-            &mut *long_op_manager,
+            &mut long_op_manager,
             &dto,
         )?
     };
@@ -103,8 +103,8 @@ pub fn execute(
         };
 
         // Report progress if verbose
-        if output.verbose {
-            if let Some(progress) = long_op_manager.get_operation_progress(&operation_id) {
+        if output.verbose
+            && let Some(progress) = long_op_manager.get_operation_progress(&operation_id) {
                 // Only report if percentage changed significantly
                 if (progress.percentage - last_percentage).abs() >= 5.0 {
                     let msg = progress.message.as_deref().unwrap_or("");
@@ -112,7 +112,6 @@ pub fn execute(
                     last_percentage = progress.percentage;
                 }
             }
-        }
 
         // Handle terminal states
         match status {
@@ -184,7 +183,7 @@ fn get_prefix_path(app_context: &Arc<AppContext>) -> Result<String> {
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{global_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &vec![])?;
+    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
     let workspace = workspaces
         .into_iter()
         .next()
@@ -235,22 +234,20 @@ fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Resul
         GenerateTarget::Group { name } => {
             let mut matching = Vec::new();
             for id in list_result.file_ids {
-                if let Some(file) = file_controller::get(&app_context.db_context, &id)? {
-                    if file.group.eq_ignore_ascii_case(name) {
+                if let Some(file) = file_controller::get(&app_context.db_context, &id)?
+                    && file.group.eq_ignore_ascii_case(name) {
                         matching.push(id);
                     }
-                }
             }
             Ok(matching)
         }
 
         GenerateTarget::File { target } => {
             // Try to parse as numeric ID first
-            if let Ok(id) = target.parse::<EntityId>() {
-                if list_result.file_ids.contains(&id) {
+            if let Ok(id) = target.parse::<EntityId>()
+                && list_result.file_ids.contains(&id) {
                     return Ok(vec![id]);
                 }
-            }
 
             // Otherwise match by path
             for (idx, file_path) in list_result.file_names.iter().enumerate() {

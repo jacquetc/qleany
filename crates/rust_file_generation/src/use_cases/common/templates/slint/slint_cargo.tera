@@ -15,9 +15,9 @@ env_logger = "0.11"
 # Backend crates
 common = { path = "../common" }
 direct_access = { path = "../direct_access" }
-handling_manifest = { path = "../handling_manifest" }
-rust_file_generation = { path = "../rust_file_generation" }
-handling_app_lifecycle = { path = "../handling_app_lifecycle" }
+{%- for fid, feature in s.features %}
+{{ feature.snake_name }} = { path = "../{{ feature.snake_name }}" }
+{%- endfor %}
 
 [build-dependencies]
 slint-build = "1.14"

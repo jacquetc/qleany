@@ -56,7 +56,7 @@ pub fn subscribe_close_manifest_event(
     app_context: &Arc<AppContext>,
 ) {
     event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Close), {
-        let ctx = Arc::clone(&app_context);
+        let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
             log::info!("Manifest closed event received: {:?}", event);
@@ -89,13 +89,12 @@ pub fn subscribe_new_manifest_event(
             let app_weak = app_weak.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
-                if let Some(app) = app_weak.upgrade() {
-                    if app.global::<AppState>().get_manifest_is_open() {
+                if let Some(app) = app_weak.upgrade()
+                    && app.global::<AppState>().get_manifest_is_open() {
                         fill_feature_list(&app, &ctx);
                         fill_use_case_list(&app, &ctx);
                         create_new_undo_stack(&app, &ctx);
                     }
-                }
             });
         }
     });
@@ -150,12 +149,11 @@ pub fn subscribe_workspace_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_feature_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -179,13 +177,12 @@ pub fn subscribe_feature_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_feature_list(&app, &ctx);
                             fill_use_case_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -209,11 +206,10 @@ pub fn subscribe_feature_deletion_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -250,15 +246,13 @@ pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
                     match feature_commands::get_feature_multi(&ctx, &feature_ids) {
                         Ok(features_opt) => {
                             let mut list: Vec<ListItem> = Vec::new();
-                            for maybe_feature in features_opt.into_iter() {
-                                if let Some(f) = maybe_feature {
-                                    list.push(ListItem {
-                                        id: f.id as i32,
-                                        text: slint::SharedString::from(f.name),
-                                        subtitle: slint::SharedString::from(""),
-                                        checked: false,
-                                    });
-                                }
+                            for f in features_opt.into_iter().flatten() {
+                                list.push(ListItem {
+                                    id: f.id as i32,
+                                    text: slint::SharedString::from(f.name),
+                                    subtitle: slint::SharedString::from(""),
+                                    checked: false,
+                                });
                             }
 
                             let model = std::rc::Rc::new(slint::VecModel::from(list));
@@ -325,14 +319,14 @@ pub fn setup_features_reorder_callback(app: &App, app_context: &Arc<AppContext>)
                     );
                     let mut feature_ids = feature_ids_res.unwrap_or_default();
 
-                    if from == to || from >= feature_ids.iter().count() {
+                    if from == to || from >= feature_ids.len() {
                         return;
                     }
 
                     let moving_feature_id = feature_ids.remove(from);
                     let mut insert_at = if to > from { to - 1 } else { to };
-                    if insert_at > feature_ids.iter().count() {
-                        insert_at = feature_ids.iter().count();
+                    if insert_at > feature_ids.len() {
+                        insert_at = feature_ids.len();
                     }
                     feature_ids.insert(insert_at, moving_feature_id);
 

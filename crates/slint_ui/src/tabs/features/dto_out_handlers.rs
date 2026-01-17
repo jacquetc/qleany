@@ -34,12 +34,11 @@ pub fn subscribe_dto_updated_event(
                 let app_weak = app_weak.clone();
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        if app.global::<AppState>().get_manifest_is_open() {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open() {
                             fill_dto_out_field_list(&app, &ctx);
                             app.global::<AppState>().set_manifest_is_saved(false);
                         }
-                    }
                 });
             }
         },
@@ -118,15 +117,13 @@ pub fn fill_dto_out_field_list(app: &App, app_context: &Arc<AppContext>) {
             match dto_field_commands::get_dto_field_multi(app_context, &field_ids) {
                 Ok(fields_opt) => {
                     let mut list: Vec<ListItem> = Vec::new();
-                    for maybe_field in fields_opt.into_iter() {
-                        if let Some(f) = maybe_field {
-                            list.push(ListItem {
-                                id: f.id as i32,
-                                text: slint::SharedString::from(f.name),
-                                subtitle: slint::SharedString::from(""),
-                                checked: false,
-                            });
-                        }
+                    for f in fields_opt.into_iter().flatten() {
+                        list.push(ListItem {
+                            id: f.id as i32,
+                            text: slint::SharedString::from(f.name),
+                            subtitle: slint::SharedString::from(""),
+                            checked: false,
+                        });
                     }
                     let model = std::rc::Rc::new(slint::VecModel::from(list));
                     state.set_dto_out_field_cr_list(model.into());
@@ -430,14 +427,14 @@ pub fn setup_dto_out_fields_reorder_callback(app: &App, app_context: &Arc<AppCon
                     );
                     let mut field_ids = field_ids_res.unwrap_or_default();
 
-                    if from == to || from >= field_ids.iter().count() {
+                    if from == to || from >= field_ids.len() {
                         return;
                     }
 
                     let moving_field_id = field_ids.remove(from);
                     let mut insert_at = if to > from { to - 1 } else { to };
-                    if insert_at > field_ids.iter().count() {
-                        insert_at = field_ids.iter().count();
+                    if insert_at > field_ids.len() {
+                        insert_at = field_ids.len();
                     }
                     field_ids.insert(insert_at, moving_field_id);
 
