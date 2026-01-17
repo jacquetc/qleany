@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
+    direct_access::repository_factory,
     entities::DtoField,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
     types::EntityId,
@@ -41,14 +42,14 @@ pub trait DtoFieldTableRO {
 
 pub struct DtoFieldRepository<'a> {
     redb_table: Box<dyn DtoFieldTable + 'a>,
-    _transaction: &'a Transaction,
+    transaction: &'a Transaction,
 }
 
 impl<'a> DtoFieldRepository<'a> {
     pub fn new(redb_table: Box<dyn DtoFieldTable + 'a>, transaction: &'a Transaction) -> Self {
         DtoFieldRepository {
             redb_table,
-            _transaction: transaction,
+            transaction,
         }
     }
 
@@ -60,7 +61,7 @@ impl<'a> DtoFieldRepository<'a> {
         let new = self.redb_table.create(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Created)),
-            ids: vec![new.id.clone()],
+            ids: vec![new.id],
             data: None,
         });
         Ok(new)
@@ -74,7 +75,7 @@ impl<'a> DtoFieldRepository<'a> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Created)),
-            ids: new_entities.iter().map(|e| e.id.clone()).collect(),
+            ids: new_entities.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(new_entities)
@@ -95,7 +96,7 @@ impl<'a> DtoFieldRepository<'a> {
         let updated = self.redb_table.update(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Updated)),
-            ids: vec![updated.id.clone()],
+            ids: vec![updated.id],
             data: None,
         });
         Ok(updated)
@@ -109,14 +110,14 @@ impl<'a> DtoFieldRepository<'a> {
         let updated = self.redb_table.update_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Updated)),
-            ids: updated.iter().map(|e| e.id.clone()).collect(),
+            ids: updated.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(updated)
     }
 
     pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
-        let _entity = match self.redb_table.get(id)? {
+        let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };
@@ -128,7 +129,7 @@ impl<'a> DtoFieldRepository<'a> {
         self.redb_table.delete(id)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Removed)),
-            ids: vec![id.clone()],
+            ids: vec![*id],
             data: None,
         });
         Ok(())

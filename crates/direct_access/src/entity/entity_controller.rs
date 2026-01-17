@@ -30,7 +30,7 @@ pub fn create(
     stack_id: Option<u64>,
     entity: &CreateEntityDto,
 ) -> Result<EntityDto> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateEntityUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -38,7 +38,7 @@ pub fn create(
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<EntityDto>> {
-    let uow_factory = EntityUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = EntityUnitOfWorkROFactory::new(db_context);
     let uc = GetEntityUseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -50,7 +50,7 @@ pub fn update(
     stack_id: Option<u64>,
     entity: &EntityDto,
 ) -> Result<EntityDto> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateEntityUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -64,7 +64,7 @@ pub fn remove(
     stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveEntityUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -78,7 +78,7 @@ pub fn create_multi(
     stack_id: Option<u64>,
     entities: &[CreateEntityDto],
 ) -> Result<Vec<EntityDto>> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateEntityMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -86,7 +86,7 @@ pub fn create_multi(
 }
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<EntityDto>>> {
-    let uow_factory = EntityUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = EntityUnitOfWorkROFactory::new(db_context);
     let uc = GetEntityMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -98,7 +98,7 @@ pub fn update_multi(
     stack_id: Option<u64>,
     entities: &[EntityDto],
 ) -> Result<Vec<EntityDto>> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateEntityMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -112,7 +112,7 @@ pub fn remove_multi(
     stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveEntityMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -136,7 +136,7 @@ pub fn set_relationship(
     stack_id: Option<u64>,
     dto: &EntityRelationshipDto,
 ) -> Result<()> {
-    let uow_factory = EntityUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = EntityUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = SetEntityRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(dto)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;

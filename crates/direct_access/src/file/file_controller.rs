@@ -22,14 +22,14 @@ pub fn create(
     event_hub: &Arc<EventHub>,
     entity: &CreateFileDto,
 ) -> Result<FileDto> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateFileUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     Ok(result)
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FileDto>> {
-    let uow_factory = FileUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = FileUnitOfWorkROFactory::new(db_context);
     let uc = GetFileUseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -39,14 +39,14 @@ pub fn update(
     event_hub: &Arc<EventHub>,
     entity: &FileDto,
 ) -> Result<FileDto> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateFileUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     Ok(result)
 }
 
 pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<()> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveFileUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     Ok(())
@@ -57,14 +57,14 @@ pub fn create_multi(
     event_hub: &Arc<EventHub>,
     entities: &[CreateFileDto],
 ) -> Result<Vec<FileDto>> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateFileMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
 }
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<FileDto>>> {
-    let uow_factory = FileUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = FileUnitOfWorkROFactory::new(db_context);
     let uc = GetFileMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -74,7 +74,7 @@ pub fn update_multi(
     event_hub: &Arc<EventHub>,
     entities: &[FileDto],
 ) -> Result<Vec<FileDto>> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateFileMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
@@ -85,7 +85,7 @@ pub fn remove_multi(
     event_hub: &Arc<EventHub>,
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = FileUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveFileMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     Ok(())

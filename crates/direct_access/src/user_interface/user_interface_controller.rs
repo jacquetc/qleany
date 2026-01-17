@@ -29,7 +29,7 @@ pub fn create(
     stack_id: Option<u64>,
     entity: &CreateUserInterfaceDto,
 ) -> Result<UserInterfaceDto> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateUserInterfaceUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -37,7 +37,7 @@ pub fn create(
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<UserInterfaceDto>> {
-    let uow_factory = UserInterfaceUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = UserInterfaceUnitOfWorkROFactory::new(db_context);
     let uc = GetUserInterfaceUseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -49,7 +49,7 @@ pub fn update(
     stack_id: Option<u64>,
     entity: &UserInterfaceDto,
 ) -> Result<UserInterfaceDto> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateUserInterfaceUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -63,7 +63,7 @@ pub fn remove(
     stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveUserInterfaceUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -77,7 +77,7 @@ pub fn create_multi(
     stack_id: Option<u64>,
     entities: &[CreateUserInterfaceDto],
 ) -> Result<Vec<UserInterfaceDto>> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateUserInterfaceMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -88,7 +88,7 @@ pub fn get_multi(
     db_context: &DbContext,
     ids: &[EntityId],
 ) -> Result<Vec<Option<UserInterfaceDto>>> {
-    let uow_factory = UserInterfaceUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = UserInterfaceUnitOfWorkROFactory::new(db_context);
     let uc = GetUserInterfaceMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -100,7 +100,7 @@ pub fn update_multi(
     stack_id: Option<u64>,
     entities: &[UserInterfaceDto],
 ) -> Result<Vec<UserInterfaceDto>> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateUserInterfaceMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -114,7 +114,7 @@ pub fn remove_multi(
     stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = UserInterfaceUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveUserInterfaceMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;

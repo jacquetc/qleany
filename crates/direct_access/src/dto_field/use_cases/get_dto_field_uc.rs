@@ -18,7 +18,7 @@ impl GetDtoFieldUseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<DtoFieldDto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_dto_field(&id)?;
+        let entity_option = uow.get_dto_field(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

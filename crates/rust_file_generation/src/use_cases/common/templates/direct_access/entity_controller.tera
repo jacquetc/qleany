@@ -38,7 +38,7 @@ pub fn create(
     {%- endif %}
     entity: &Create{{ s.entities[e].pascal_name }}Dto,
 ) -> Result<{{ s.entities[e].pascal_name }}Dto> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Create{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     {%- if s.entities[e].inner.undoable %}
@@ -48,7 +48,7 @@ pub fn create(
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(&db_context);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
     let uc = Get{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -62,7 +62,7 @@ pub fn update(
     {%- endif %}
     entity: &{{ s.entities[e].pascal_name }}Dto,
 ) -> Result<{{ s.entities[e].pascal_name }}Dto> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Update{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     {%- if s.entities[e].inner.undoable %}
@@ -80,7 +80,7 @@ pub fn remove(
     {%- endif %}
     id: &EntityId,
 ) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Remove{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     {%- if s.entities[e].inner.undoable %}
@@ -98,7 +98,7 @@ pub fn create_multi(
     {%- endif %}
     entities: &[Create{{ s.entities[e].pascal_name }}Dto],
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Create{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     {%- if s.entities[e].inner.undoable %}
@@ -108,7 +108,7 @@ pub fn create_multi(
 }
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}Dto>>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(&db_context);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
     let uc = Get{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -122,7 +122,7 @@ pub fn update_multi(
     {%- endif %}
     entities: &[{{ s.entities[e].pascal_name }}Dto],
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Update{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     {%- if s.entities[e].inner.undoable %}
@@ -140,7 +140,7 @@ pub fn remove_multi(
     {%- endif %}
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Remove{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     {%- if s.entities[e].inner.undoable %}
@@ -156,7 +156,7 @@ pub fn get_relationship(
     id: &EntityId,
     field: &{{ s.entities[e].pascal_name }}RelationshipField,
 ) -> Result<Vec<EntityId>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(&db_context);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
     let uc = Get{{ s.entities[e].pascal_name }}RelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(id, field)
 }
@@ -170,7 +170,7 @@ pub fn set_relationship(
     {%- endif %}
     dto: &{{ s.entities[e].pascal_name }}RelationshipDto,
 ) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = Set{{ s.entities[e].pascal_name }}RelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(dto)?;
     {%- if s.entities[e].inner.undoable %}

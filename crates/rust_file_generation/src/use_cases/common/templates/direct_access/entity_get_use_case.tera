@@ -20,7 +20,7 @@ impl Get{{ s.entities[e].pascal_name }}UseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}Dto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_{{ s.entities[e].snake_name }}(&id)?;
+        let entity_option = uow.get_{{ s.entities[e].snake_name }}(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

@@ -22,7 +22,7 @@ const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Ent
     TableDefinition::new("field_from_entity_fields_junction");
 
 fn get_junction_table_definition(
-    field: &FieldRelationshipField,
+    field: &'_ FieldRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         FieldRelationshipField::Entity => ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE,
@@ -50,19 +50,19 @@ impl<'a> FieldRedbTable<'a> {
 
 impl<'a> FieldTable for FieldRedbTable<'a> {
     fn create(&mut self, entity: &Field) -> Result<Field, Error> {
-        let v = self.create_multi(&[entity.clone()])?;
+        let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn get(&self, id: &EntityId) -> Result<Option<Field>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn update(&mut self, entity: &Field) -> Result<Field, Error> {
-        let v = self.update_multi(&[entity.clone()])?;
+        let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        self.delete_multi(&[id.clone()])
+        self.delete_multi(std::slice::from_ref(id))
     }
 
     fn create_multi(&mut self, entities: &[Field]) -> Result<Vec<Field>, Error> {
@@ -98,11 +98,7 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
 
             entity_junction_table.insert(
                 new_entity.id,
-                new_entity
-                    .entity
-                    .clone()
-                    .into_iter()
-                    .collect::<Vec<EntityId>>(),
+                new_entity.entity.into_iter().collect::<Vec<EntityId>>(),
             )?;
             created.push(new_entity);
             if entity.id == EntityId::default() {
@@ -183,9 +179,10 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         for entity in entities {
             field_table.insert(entity.id, entity)?;
 
-            entity_junction_table.insert(entity.id, {
-                entity.entity.clone().into_iter().collect::<Vec<EntityId>>()
-            })?;
+            entity_junction_table.insert(
+                entity.id,
+                entity.entity.into_iter().collect::<Vec<EntityId>>(),
+            )?;
             updated.push(entity.clone());
         }
         Ok(updated)
@@ -274,7 +271,7 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
-        table.insert(id.clone(), right_ids.to_vec())?;
+        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 }
@@ -290,7 +287,7 @@ impl<'a> FieldRedbTableRO<'a> {
 
 impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Field>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 

@@ -40,7 +40,7 @@ pub fn {{ uc.snake_name }}(
     dto: &{{ uc.dto_in.pascal_name }},
 {%- endif %}
 ) -> Result<String> {
-    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context);
+    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context);
     let uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context) {% if uc.dto_in %} , dto {% endif %} );
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)
@@ -81,9 +81,9 @@ pub fn {{ uc.snake_name }} (
 {%- endif %}
 ) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
 {%- if uc.inner.read_only %}
-    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context);
+    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context);
 {%- else %}{# read_only #}
-    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
 {%- endif %}{# read_only #}
     let mut uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context));
     let return_dto = uc.execute({% if uc.dto_in %} dto {% endif %})?;

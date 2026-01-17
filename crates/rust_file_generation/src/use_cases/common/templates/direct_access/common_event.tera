@@ -103,6 +103,12 @@ pub struct EventHub {
     queue: Queue,
 }
 
+impl Default for EventHub {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EventHub {
     /// Create a new event hub
     pub fn new() -> Self {

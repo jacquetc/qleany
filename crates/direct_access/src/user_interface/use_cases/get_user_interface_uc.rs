@@ -18,7 +18,7 @@ impl GetUserInterfaceUseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<UserInterfaceDto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_user_interface(&id)?;
+        let entity_option = uow.get_user_interface(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

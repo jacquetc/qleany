@@ -68,13 +68,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
     pub fn create(&mut self, event_hub: &Arc<EventHub>, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> {
         let new = self.redb_table.create(entity)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: vec![new.id.clone()], data: None });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: vec![new.id], data: None });
         Ok(new)
     }
 
     pub fn create_multi(&mut self, event_hub: &Arc<EventHub>, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: new_entities.iter().map(|e| e.id.clone()).collect(), data: None });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: new_entities.iter().map(|e| e.id).collect(), data: None });
         Ok(new_entities)
     }
 
@@ -83,13 +83,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
     pub fn update(&mut self, event_hub: &Arc<EventHub>, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> {
         let updated = self.redb_table.update(entity)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![updated.id.clone()], data: None });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![updated.id], data: None });
         Ok(updated)
     }
 
     pub fn update_multi(&mut self, event_hub: &Arc<EventHub>, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let updated = self.redb_table.update_multi(entities)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id.clone()).collect(), data: None });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id).collect(), data: None });
         Ok(updated)
     }
 
@@ -97,15 +97,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         let entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
-        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         let {{ f.snake_name }} = entity.{{ f.snake_name }}.clone();
         {%- endif %}
         {%- endfor %}
 
         // delete all strong relationships, initiating a cascade delete
         {% for f in s.entities[e].fields %}
-        {% if f.inner.field_type == "Entity" and f.inner.strong %}
-        {% if f.inner.relationship == "OneToOne" %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
+        {%- if f.inner.relationship == "OneToOne" %}
             {% if f.required %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete(event_hub, &{{ f.snake_name }})?;
@@ -115,7 +115,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
                 .delete(event_hub, &{{ f.snake_name }}_id)?;
             }
             {%- endif %}
-        {% else %}
+        {%- else %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete_multi(event_hub, &{{ f.snake_name }})?;
         {%- endif %}
@@ -124,7 +124,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
         // delete entity
         self.redb_table.delete(id)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![id.clone()], data: None });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![*id], data: None });
         Ok(())
     }
 
@@ -139,7 +139,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
             {% if f.required %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}.clone()))
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}))
             .collect();
             {% else %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
@@ -187,7 +187,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
     pub fn set_relationship(&mut self, event_hub: &Arc<EventHub>, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error> {
         self.redb_table.set_relationship(id, field, right_ids)?;
-        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![id.clone()], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
+        event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(())
     }
 {% endif %}

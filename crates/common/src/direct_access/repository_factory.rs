@@ -32,69 +32,71 @@ pub mod write {
         },
     };
 
-    pub fn create_dto_repository(transaction: &Transaction) -> DtoRepository<'_> {
+    pub fn create_dto_repository(transaction: &'_ Transaction) -> DtoRepository<'_> {
         let dto_table = DtoRedbTable::new(transaction.get_write_transaction());
         DtoRepository::new(Box::new(dto_table), transaction)
     }
 
-    pub fn create_dto_field_repository(transaction: &Transaction) -> DtoFieldRepository<'_> {
+    pub fn create_dto_field_repository(transaction: &'_ Transaction) -> DtoFieldRepository<'_> {
         let dto_field_table = DtoFieldRedbTable::new(transaction.get_write_transaction());
         DtoFieldRepository::new(Box::new(dto_field_table), transaction)
     }
 
-    pub fn create_global_repository(transaction: &Transaction) -> GlobalRepository<'_> {
+    pub fn create_global_repository(transaction: &'_ Transaction) -> GlobalRepository<'_> {
         let global_table = GlobalRedbTable::new(transaction.get_write_transaction());
         GlobalRepository::new(Box::new(global_table), transaction)
     }
 
-    pub fn create_relationship_repository(transaction: &Transaction) -> RelationshipRepository<'_> {
+    pub fn create_relationship_repository(
+        transaction: &'_ Transaction,
+    ) -> RelationshipRepository<'_> {
         let relationship_table = RelationshipRedbTable::new(transaction.get_write_transaction());
         RelationshipRepository::new(Box::new(relationship_table), transaction)
     }
 
     pub fn create_user_interface_repository(
-        transaction: &Transaction,
+        transaction: &'_ Transaction,
     ) -> UserInterfaceRepository<'_> {
         let user_interface_table = UserInterfaceRedbTable::new(transaction.get_write_transaction());
         UserInterfaceRepository::new(Box::new(user_interface_table), transaction)
     }
 
-    pub fn create_root_repository(transaction: &Transaction) -> RootRepository<'_> {
+    pub fn create_root_repository(transaction: &'_ Transaction) -> RootRepository<'_> {
         let root_table = RootRedbTable::new(transaction.get_write_transaction());
         RootRepository::new(Box::new(root_table), transaction)
     }
 
-    pub fn create_workspace_repository(transaction: &Transaction) -> WorkspaceRepository<'_> {
+    pub fn create_workspace_repository(transaction: &'_ Transaction) -> WorkspaceRepository<'_> {
         let workspace_table = WorkspaceRedbTable::new(transaction.get_write_transaction());
         WorkspaceRepository::new(Box::new(workspace_table), transaction)
     }
 
-    pub fn create_system_repository(transaction: &Transaction) -> SystemRepository<'_> {
+    pub fn create_system_repository(transaction: &'_ Transaction) -> SystemRepository<'_> {
         let system_table = SystemRedbTable::new(transaction.get_write_transaction());
         SystemRepository::new(Box::new(system_table), transaction)
     }
 
-    pub fn create_entity_repository(transaction: &Transaction) -> EntityRepository<'_> {
+    pub fn create_entity_repository(transaction: &'_ Transaction) -> EntityRepository<'_> {
         let entity_table = EntityRedbTable::new(transaction.get_write_transaction());
         EntityRepository::new(Box::new(entity_table), transaction)
     }
 
-    pub fn create_field_repository(transaction: &Transaction) -> FieldRepository<'_> {
+    pub fn create_field_repository(transaction: &'_ Transaction) -> FieldRepository<'_> {
         let field_table = FieldRedbTable::new(transaction.get_write_transaction());
         FieldRepository::new(Box::new(field_table), transaction)
     }
 
-    pub fn create_feature_repository(transaction: &Transaction) -> FeatureRepository<'_> {
+    pub fn create_feature_repository(transaction: &'_ Transaction) -> FeatureRepository<'_> {
         let feature_table = FeatureRedbTable::new(transaction.get_write_transaction());
         FeatureRepository::new(Box::new(feature_table), transaction)
     }
 
-    pub fn create_file_repository(transaction: &Transaction) -> FileRepository<'_> {
+    pub fn create_file_repository(transaction: &'_ Transaction) -> FileRepository<'_> {
         let file_table = FileRedbTable::new(transaction.get_write_transaction());
         FileRepository::new(Box::new(file_table), transaction)
     }
 
-    pub fn create_use_case_repository(transaction: &Transaction) -> UseCaseRepository<'_> {
+    pub fn create_use_case_repository(transaction: &'_ Transaction) -> UseCaseRepository<'_> {
         let use_case_table = UseCaseRedbTable::new(transaction.get_write_transaction());
         UseCaseRepository::new(Box::new(use_case_table), transaction)
     }
@@ -132,72 +134,72 @@ pub mod read {
         },
     };
 
-    pub fn create_dto_repository(transaction: &Transaction) -> DtoRepositoryRO<'_> {
+    pub fn create_dto_repository(transaction: &'_ Transaction) -> DtoRepositoryRO<'_> {
         let dto_table = DtoRedbTableRO::new(transaction.get_read_transaction());
         DtoRepositoryRO::new(Box::new(dto_table))
     }
 
-    pub fn create_dto_field_repository(transaction: &Transaction) -> DtoFieldRepositoryRO<'_> {
+    pub fn create_dto_field_repository(transaction: &'_ Transaction) -> DtoFieldRepositoryRO<'_> {
         let dto_field_table = DtoFieldRedbTableRO::new(transaction.get_read_transaction());
         DtoFieldRepositoryRO::new(Box::new(dto_field_table))
     }
 
-    pub fn create_global_repository(transaction: &Transaction) -> GlobalRepositoryRO<'_> {
+    pub fn create_global_repository(transaction: &'_ Transaction) -> GlobalRepositoryRO<'_> {
         let global_table = GlobalRedbTableRO::new(transaction.get_read_transaction());
         GlobalRepositoryRO::new(Box::new(global_table))
     }
 
     pub fn create_relationship_repository(
-        transaction: &Transaction,
+        transaction: &'_ Transaction,
     ) -> RelationshipRepositoryRO<'_> {
         let relationship_table = RelationshipRedbTableRO::new(transaction.get_read_transaction());
         RelationshipRepositoryRO::new(Box::new(relationship_table))
     }
 
     pub fn create_user_interface_repository(
-        transaction: &Transaction,
+        transaction: &'_ Transaction,
     ) -> UserInterfaceRepositoryRO<'_> {
         let user_interface_table =
             UserInterfaceRedbTableRO::new(transaction.get_read_transaction());
         UserInterfaceRepositoryRO::new(Box::new(user_interface_table))
     }
 
-    pub fn create_root_repository(transaction: &Transaction) -> RootRepositoryRO<'_> {
+    pub fn create_root_repository(transaction: &'_ Transaction) -> RootRepositoryRO<'_> {
         let root_table = RootRedbTableRO::new(transaction.get_read_transaction());
         RootRepositoryRO::new(Box::new(root_table))
     }
 
-    pub fn create_workspace_repository(transaction: &Transaction) -> WorkspaceRepositoryRO<'_> {
+    pub fn create_workspace_repository(transaction: &'_ Transaction) -> WorkspaceRepositoryRO<'_> {
         let workspace_table = WorkspaceRedbTableRO::new(transaction.get_read_transaction());
         WorkspaceRepositoryRO::new(Box::new(workspace_table))
     }
 
-    pub fn create_system_repository(transaction: &Transaction) -> SystemRepositoryRO<'_> {
+    pub fn create_system_repository(transaction: &'_ Transaction) -> SystemRepositoryRO<'_> {
         let system_table = SystemRedbTableRO::new(transaction.get_read_transaction());
         SystemRepositoryRO::new(Box::new(system_table))
     }
 
-    pub fn create_entity_repository(transaction: &Transaction) -> EntityRepositoryRO<'_> {
+    pub fn create_entity_repository(transaction: &'_ Transaction) -> EntityRepositoryRO<'_> {
         let entity_table = EntityRedbTableRO::new(transaction.get_read_transaction());
         EntityRepositoryRO::new(Box::new(entity_table))
     }
 
-    pub fn create_field_repository(transaction: &Transaction) -> FieldRepositoryRO<'_> {
+    pub fn create_field_repository(transaction: &'_ Transaction) -> FieldRepositoryRO<'_> {
         let field_table = FieldRedbTableRO::new(transaction.get_read_transaction());
         FieldRepositoryRO::new(Box::new(field_table))
     }
 
-    pub fn create_feature_repository(transaction: &Transaction) -> FeatureRepositoryRO<'_> {
+    pub fn create_feature_repository(transaction: &'_ Transaction) -> FeatureRepositoryRO<'_> {
         let feature_table = FeatureRedbTableRO::new(transaction.get_read_transaction());
         FeatureRepositoryRO::new(Box::new(feature_table))
     }
 
-    pub fn create_file_repository(transaction: &Transaction) -> FileRepositoryRO<'_> {
+    pub fn create_file_repository(transaction: &'_ Transaction) -> FileRepositoryRO<'_> {
         let file_table = FileRedbTableRO::new(transaction.get_read_transaction());
         FileRepositoryRO::new(Box::new(file_table))
     }
 
-    pub fn create_use_case_repository(transaction: &Transaction) -> UseCaseRepositoryRO<'_> {
+    pub fn create_use_case_repository(transaction: &'_ Transaction) -> UseCaseRepositoryRO<'_> {
         let use_case_table = UseCaseRedbTableRO::new(transaction.get_read_transaction());
         UseCaseRepositoryRO::new(Box::new(use_case_table))
     }

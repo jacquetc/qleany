@@ -46,7 +46,7 @@ impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}MultiUseCase {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
             uow.delete_{{ s.entities[e].snake_name }}_multi(
-                &last_entities.iter().map(|entity| entity.id.clone()).collect::<Vec<_>>(),
+                &last_entities.iter().map(|entity| entity.id).collect::<Vec<_>>(),
             )?;
             uow.commit()?;
             self.redo_stack.push_back(last_entities);

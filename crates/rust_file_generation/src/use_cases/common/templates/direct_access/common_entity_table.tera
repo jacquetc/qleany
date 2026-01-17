@@ -29,8 +29,8 @@ const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_ent
 
 {% if s.entities[e].forward_relationships | length > 0 %}
 fn get_junction_table_definition(
-    field: &{{ s.entities[e].pascal_name }}RelationshipField,
-) -> TableDefinition<EntityId, Vec<EntityId>> {
+    field: &'_ {{ s.entities[e].pascal_name }}RelationshipField,
+) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         {% for rid, r in s.entities[e].forward_relationships %}
         {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE,
@@ -61,10 +61,10 @@ impl<'a> {{ s.entities[e].pascal_name }}RedbTable<'a> {
 }
 
 impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }}RedbTable<'a> {
-    fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.create_multi(&[entity.clone()])?; Ok(v.into_iter().next().unwrap()) }
-    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { let v = self.get_multi(&[id.clone()])?; Ok(v.into_iter().next().unwrap()) }
-    fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.update_multi(&[entity.clone()])?; Ok(v.into_iter().next().unwrap()) }
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error> { self.delete_multi(&[id.clone()]) }
+    fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.create_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
+    fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.update_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
+    fn delete(&mut self, id: &EntityId) -> Result<(), Error> { self.delete_multi(std::slice::from_ref(id)) }
 
     fn create_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let mut created = Vec::new();
@@ -98,10 +98,10 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                         panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id);
                     }
                     {% else %}
-                    if let Some(ref right_id) = new_entity.{{ f.snake_name }} {
-                        if existing_id != new_entity.id && right_ids.value().contains(right_id) {
+                    if let Some(ref right_id) = new_entity.{{ f.snake_name }}
+                        && existing_id != new_entity.id && right_ids.value().contains(right_id) {
                             panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
-                        }
+
                     }
                     {% endif %}
                 }
@@ -116,7 +116,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 {%- elif r.inner.cardinality == "One" %}
                 vec![new_entity.{{ r.field_snake_name }}] as Vec<EntityId>)?;
                 {%- elif r.inner.cardinality == "ZeroOrOne" %}
-                new_entity.{{ r.field_snake_name }}.clone().into_iter().collect::<Vec<EntityId>>())?;
+                new_entity.{{ r.field_snake_name }}.into_iter().collect::<Vec<EntityId>>())?;
                 {%- endif %}
 
             {%- endfor %}
@@ -211,10 +211,10 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                         panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id);
                     }
                     {% else %}
-                    if let Some(ref right_id) = entity.{{ f.snake_name }} {
-                        if existing_id != entity.id && right_ids.value().contains(right_id) {
+                    if let Some(ref right_id) = entity.{{ f.snake_name }}
+                         && existing_id != entity.id && right_ids.value().contains(right_id) {
                             panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
-                        }
+
                     }
                     {% endif %}
                 }
@@ -229,7 +229,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 {% elif f.required %}
             {{ f.snake_name }}_junction_table.insert(entity.id, vec![entity.{{ f.snake_name }}] as Vec<EntityId>)?;
                 {% else %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, { entity.{{ f.snake_name }}.clone().into_iter().collect::<Vec<EntityId>>()})?;
+            {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.into_iter().collect::<Vec<EntityId>>())?;
             {%- endif %}
             {%- endif %}
             {%- endfor %}
@@ -300,7 +300,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
     fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error> {
         let mut table = self.transaction.open_table(get_junction_table_definition(field))?;
-        table.insert(id.clone(), right_ids.to_vec())?;
+        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 {% endif %}
@@ -310,7 +310,7 @@ pub struct {{ s.entities[e].pascal_name }}RedbTableRO<'a> { transaction: &'a Rea
 impl<'a> {{ s.entities[e].pascal_name }}RedbTableRO<'a> { pub fn new(transaction: &'a ReadTransaction) -> Self { {{ s.entities[e].pascal_name }}RedbTableRO { transaction } } }
 
 impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name }}RedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { let v = self.get_multi(&[id.clone()])?; Ok(v.into_iter().next().unwrap()) }
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, Error> {
         let mut list = Vec::new();

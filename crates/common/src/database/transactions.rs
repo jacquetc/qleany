@@ -5,8 +5,8 @@ use redb::{ReadTransaction, ReadableDatabase, WriteTransaction};
 use crate::types;
 
 enum TransactionType {
-    Read(Option<ReadTransaction>),
-    Write(Option<WriteTransaction>),
+    Read(Option<Box<ReadTransaction>>),
+    Write(Option<Box<WriteTransaction>>),
 }
 
 pub struct Transaction {
@@ -17,14 +17,14 @@ impl Transaction {
     pub fn begin_write_transaction(db_context: &DbContext) -> Result<Transaction> {
         let transaction = db_context.get_database().begin_write()?;
         Ok(Transaction {
-            transaction: TransactionType::Write(Some(transaction)),
+            transaction: TransactionType::Write(Some(Box::from(transaction))),
         })
     }
 
     pub fn begin_read_transaction(db_context: &DbContext) -> Result<Transaction> {
         let transaction = db_context.get_database().begin_read()?;
         Ok(Transaction {
-            transaction: TransactionType::Read(Some(transaction)),
+            transaction: TransactionType::Read(Some(Box::from(transaction))),
         })
     }
     pub fn commit(&mut self) -> Result<()> {

@@ -47,7 +47,7 @@ impl UndoRedoCommand for CreateUserInterfaceMultiUseCase {
             uow.delete_user_interface_multi(
                 &last_entities
                     .iter()
-                    .map(|entity| entity.id.clone())
+                    .map(|entity| entity.id)
                     .collect::<Vec<_>>(),
             )?;
             uow.commit()?;

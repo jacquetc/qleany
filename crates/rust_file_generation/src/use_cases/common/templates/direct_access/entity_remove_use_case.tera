@@ -33,7 +33,7 @@ impl Remove{{ s.entities[e].pascal_name }}UseCase {
         uow.begin_transaction()?;
         // let savepoint = uow.create_savepoint()?;
         // check if id exists
-        if uow.get_{{ s.entities[e].snake_name }}(&id)?.is_none() {
+        if uow.get_{{ s.entities[e].snake_name }}(id)?.is_none() {
             return Err(anyhow::anyhow!("{{ s.entities[e].pascal_name }} with id {} does not exist", id));
         }
         uow.delete_{{ s.entities[e].snake_name }}(id)?;
@@ -41,7 +41,7 @@ impl Remove{{ s.entities[e].pascal_name }}UseCase {
 
         // store savepoint in undo stack
         // self.undo_stack.push_back(savepoint);
-        // self.redo_stack.push_back(id.clone());
+        // self.redo_stack.push_back(id);
 
         Ok(())
     }

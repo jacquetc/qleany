@@ -186,6 +186,12 @@ pub struct UndoRedoManager {
     event_hub: Option<Arc<EventHub>>,
 }
 
+impl Default for UndoRedoManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UndoRedoManager {
     /// Creates a new empty UndoRedoManager with one default stack (ID 0).
     pub fn new() -> Self {
@@ -392,14 +398,12 @@ impl UndoRedoManager {
             .ok_or_else(|| anyhow!("Stack with ID {} does not exist", target_stack_id))?;
 
         // Try to merge with the last command if possible
-        if let Some(last_command) = stack.undo_stack.last_mut() {
-            if last_command.can_merge(&*command) {
-                if last_command.merge(&*command) {
+        if let Some(last_command) = stack.undo_stack.last_mut()
+            && last_command.can_merge(&*command) && last_command.merge(&*command) {
                     // Successfully merged, no need to add the new command
                     stack.redo_stack.clear();
                     return Ok(());
-                }
-            }
+            
         }
 
         // If we couldn't merge, just add the command normally

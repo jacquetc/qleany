@@ -18,7 +18,7 @@ impl GetEntityUseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<EntityDto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_entity(&id)?;
+        let entity_option = uow.get_entity(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

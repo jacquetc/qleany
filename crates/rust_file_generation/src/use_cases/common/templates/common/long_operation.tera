@@ -102,7 +102,7 @@
 //!     - `file_path`: Path of the file to process.
 //!     - `total_files`: Number of files to process.
 //! - **Behavior**:
-//! Simulates file processing with periodic progress updates. Supports cancellation.
+//!   Simulates file processing with periodic progress updates. Supports cancellation.
 //!
 //!
 

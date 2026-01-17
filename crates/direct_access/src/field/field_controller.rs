@@ -30,7 +30,7 @@ pub fn create(
     stack_id: Option<u64>,
     entity: &CreateFieldDto,
 ) -> Result<FieldDto> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateFieldUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -38,7 +38,7 @@ pub fn create(
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FieldDto>> {
-    let uow_factory = FieldUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = FieldUnitOfWorkROFactory::new(db_context);
     let uc = GetFieldUseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -50,7 +50,7 @@ pub fn update(
     stack_id: Option<u64>,
     entity: &FieldDto,
 ) -> Result<FieldDto> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateFieldUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -64,7 +64,7 @@ pub fn remove(
     stack_id: Option<u64>,
     id: &EntityId,
 ) -> Result<()> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveFieldUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -78,7 +78,7 @@ pub fn create_multi(
     stack_id: Option<u64>,
     entities: &[CreateFieldDto],
 ) -> Result<Vec<FieldDto>> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateFieldMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -86,7 +86,7 @@ pub fn create_multi(
 }
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<FieldDto>>> {
-    let uow_factory = FieldUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = FieldUnitOfWorkROFactory::new(db_context);
     let uc = GetFieldMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -98,7 +98,7 @@ pub fn update_multi(
     stack_id: Option<u64>,
     entities: &[FieldDto],
 ) -> Result<Vec<FieldDto>> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateFieldMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -112,7 +112,7 @@ pub fn remove_multi(
     stack_id: Option<u64>,
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveFieldMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
@@ -136,7 +136,7 @@ pub fn set_relationship(
     stack_id: Option<u64>,
     dto: &FieldRelationshipDto,
 ) -> Result<()> {
-    let uow_factory = FieldUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = SetFieldRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(dto)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;

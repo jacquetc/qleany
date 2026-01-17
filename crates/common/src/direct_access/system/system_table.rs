@@ -22,7 +22,7 @@ const SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Enti
     TableDefinition::new("system_from_root_system_junction");
 
 fn get_junction_table_definition(
-    field: &SystemRelationshipField,
+    field: &'_ SystemRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         SystemRelationshipField::Files => FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE,
@@ -50,19 +50,19 @@ impl<'a> SystemRedbTable<'a> {
 
 impl<'a> SystemTable for SystemRedbTable<'a> {
     fn create(&mut self, entity: &System) -> Result<System, Error> {
-        let v = self.create_multi(&[entity.clone()])?;
+        let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn get(&self, id: &EntityId) -> Result<Option<System>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn update(&mut self, entity: &System) -> Result<System, Error> {
-        let v = self.update_multi(&[entity.clone()])?;
+        let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        self.delete_multi(&[id.clone()])
+        self.delete_multi(std::slice::from_ref(id))
     }
 
     fn create_multi(&mut self, entities: &[System]) -> Result<Vec<System>, Error> {
@@ -264,7 +264,7 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
-        table.insert(id.clone(), right_ids.to_vec())?;
+        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 }
@@ -280,7 +280,7 @@ impl<'a> SystemRedbTableRO<'a> {
 
 impl<'a> SystemTableRO for SystemRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<System>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 

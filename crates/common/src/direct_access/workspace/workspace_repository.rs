@@ -99,7 +99,7 @@ impl<'a> WorkspaceRepository<'a> {
         let new = self.redb_table.create(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Created)),
-            ids: vec![new.id.clone()],
+            ids: vec![new.id],
             data: None,
         });
         Ok(new)
@@ -113,7 +113,7 @@ impl<'a> WorkspaceRepository<'a> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Created)),
-            ids: new_entities.iter().map(|e| e.id.clone()).collect(),
+            ids: new_entities.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(new_entities)
@@ -134,7 +134,7 @@ impl<'a> WorkspaceRepository<'a> {
         let updated = self.redb_table.update(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
-            ids: vec![updated.id.clone()],
+            ids: vec![updated.id],
             data: None,
         });
         Ok(updated)
@@ -148,7 +148,7 @@ impl<'a> WorkspaceRepository<'a> {
         let updated = self.redb_table.update_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
-            ids: updated.iter().map(|e| e.id.clone()).collect(),
+            ids: updated.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(updated)
@@ -187,7 +187,7 @@ impl<'a> WorkspaceRepository<'a> {
         self.redb_table.delete(id)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Removed)),
-            ids: vec![id.clone()],
+            ids: vec![*id],
             data: None,
         });
         Ok(())
@@ -207,7 +207,7 @@ impl<'a> WorkspaceRepository<'a> {
 
         let global_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().map(|entity| entity.global.clone()))
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.global))
             .collect();
 
         let mut entities_ids: Vec<EntityId> = entities
@@ -230,7 +230,7 @@ impl<'a> WorkspaceRepository<'a> {
 
         let user_interface_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().map(|entity| entity.user_interface.clone()))
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.user_interface))
             .collect();
 
         // delete all strong relationships, initiating a cascade delete
@@ -308,7 +308,7 @@ impl<'a> WorkspaceRepository<'a> {
         self.redb_table.set_relationship(id, field, right_ids)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
-            ids: vec![id.clone()],
+            ids: vec![*id],
             data: Some(format!(
                 "{}:{}",
                 field,

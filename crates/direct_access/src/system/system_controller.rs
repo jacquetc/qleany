@@ -27,14 +27,14 @@ pub fn create(
     event_hub: &Arc<EventHub>,
     entity: &CreateSystemDto,
 ) -> Result<SystemDto> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateSystemUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     Ok(result)
 }
 
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<SystemDto>> {
-    let uow_factory = SystemUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = SystemUnitOfWorkROFactory::new(db_context);
     let uc = GetSystemUseCase::new(Box::new(uow_factory));
     uc.execute(id)
 }
@@ -44,14 +44,14 @@ pub fn update(
     event_hub: &Arc<EventHub>,
     entity: &SystemDto,
 ) -> Result<SystemDto> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateSystemUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity)?;
     Ok(result)
 }
 
 pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<()> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveSystemUseCase::new(Box::new(uow_factory));
     uc.execute(id)?;
     Ok(())
@@ -62,14 +62,14 @@ pub fn create_multi(
     event_hub: &Arc<EventHub>,
     entities: &[CreateSystemDto],
 ) -> Result<Vec<SystemDto>> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CreateSystemMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
 }
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<SystemDto>>> {
-    let uow_factory = SystemUnitOfWorkROFactory::new(&db_context);
+    let uow_factory = SystemUnitOfWorkROFactory::new(db_context);
     let uc = GetSystemMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)
 }
@@ -79,7 +79,7 @@ pub fn update_multi(
     event_hub: &Arc<EventHub>,
     entities: &[SystemDto],
 ) -> Result<Vec<SystemDto>> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = UpdateSystemMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
@@ -90,7 +90,7 @@ pub fn remove_multi(
     event_hub: &Arc<EventHub>,
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveSystemMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
     Ok(())
@@ -111,7 +111,7 @@ pub fn set_relationship(
     event_hub: &Arc<EventHub>,
     dto: &SystemRelationshipDto,
 ) -> Result<()> {
-    let uow_factory = SystemUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = SetSystemRelationshipUseCase::new(Box::new(uow_factory));
     uc.execute(dto)?;
     Ok(())

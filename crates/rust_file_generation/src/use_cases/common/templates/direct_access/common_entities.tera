@@ -16,8 +16,9 @@ pub struct {{ ent.pascal_name }} {
 
 {%- for f in ent.fields %}
 {%- if f.inner.field_type == "Enum" %}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ f.inner.enum_name }} {
+    #[default]
     {%- for ev in f.inner.enum_values %}
     {{ ev }},
     {%- endfor %}

@@ -5,8 +5,8 @@ global:
   language: rust
   application_name: Qleany
   organisation:
-    name: qleany
-    domain: qleany.eu
+    name: FernTech
+    domain: eu.ferntech
   prefix_path: crates
 entities:
 - name: EntityBase
@@ -317,12 +317,12 @@ entities:
   - name: left_entity
     type: entity
     entity: Entity
-    relationship: one_to_one
+    relationship: many_to_one
     required: true
   - name: right_entity
     type: entity
     entity: Entity
-    relationship: one_to_one
+    relationship: many_to_one
     required: true
   - name: field_name
     type: string

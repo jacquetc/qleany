@@ -23,8 +23,9 @@ pub struct DtoField {
     pub enum_name: Option<String>,
     pub enum_values: Option<Vec<String>>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum DtoFieldType {
+    #[default]
     Boolean,
     Integer,
     UInteger,
@@ -33,12 +34,6 @@ pub enum DtoFieldType {
     Uuid,
     DateTime,
     Enum,
-}
-
-impl Default for DtoFieldType {
-    fn default() -> Self {
-        DtoFieldType::Boolean
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -63,8 +58,9 @@ pub struct Relationship {
     pub cardinality: Cardinality,
     pub order: Option<Order>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum RelationshipType {
+    #[default]
     OneToOne,
     ManyToOne,
     OneToMany,
@@ -72,56 +68,34 @@ pub enum RelationshipType {
     ManyToMany,
 }
 
-impl Default for RelationshipType {
-    fn default() -> Self {
-        RelationshipType::OneToOne
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum Strength {
+    #[default]
     Weak,
     Strong,
 }
 
-impl Default for Strength {
-    fn default() -> Self {
-        Strength::Weak
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum Direction {
+    #[default]
     Forward,
     Backward,
 }
 
-impl Default for Direction {
-    fn default() -> Self {
-        Direction::Forward
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum Cardinality {
+    #[default]
     ZeroOrOne,
     One,
     ZeroOrMore,
     OneOrMore,
 }
 
-impl Default for Cardinality {
-    fn default() -> Self {
-        Cardinality::ZeroOrOne
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum Order {
+    #[default]
     Ordered,
     Unordered,
-}
-
-impl Default for Order {
-    fn default() -> Self {
-        Order::Ordered
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -184,8 +158,9 @@ pub struct Field {
     pub enum_name: Option<String>,
     pub enum_values: Option<Vec<String>>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum FieldType {
+    #[default]
     Boolean,
     Integer,
     UInteger,
@@ -197,24 +172,14 @@ pub enum FieldType {
     Enum,
 }
 
-impl Default for FieldType {
-    fn default() -> Self {
-        FieldType::Boolean
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum FieldRelationshipType {
+    #[default]
     OneToOne,
     ManyToOne,
     OneToMany,
     OrderedOneToMany,
     ManyToMany,
-}
-
-impl Default for FieldRelationshipType {
-    fn default() -> Self {
-        FieldRelationshipType::OneToOne
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

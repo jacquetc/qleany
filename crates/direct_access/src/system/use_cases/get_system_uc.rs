@@ -18,7 +18,7 @@ impl GetSystemUseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<SystemDto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_system(&id)?;
+        let entity_option = uow.get_system(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

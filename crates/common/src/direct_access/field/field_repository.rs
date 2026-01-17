@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
+    direct_access::repository_factory,
     entities::Field,
     event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
     types::EntityId,
@@ -76,14 +77,14 @@ pub trait FieldTableRO {
 
 pub struct FieldRepository<'a> {
     redb_table: Box<dyn FieldTable + 'a>,
-    _transaction: &'a Transaction,
+    transaction: &'a Transaction,
 }
 
 impl<'a> FieldRepository<'a> {
     pub fn new(redb_table: Box<dyn FieldTable + 'a>, transaction: &'a Transaction) -> Self {
         FieldRepository {
             redb_table,
-            _transaction: transaction,
+            transaction,
         }
     }
 
@@ -91,7 +92,7 @@ impl<'a> FieldRepository<'a> {
         let new = self.redb_table.create(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Created)),
-            ids: vec![new.id.clone()],
+            ids: vec![new.id],
             data: None,
         });
         Ok(new)
@@ -105,7 +106,7 @@ impl<'a> FieldRepository<'a> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Created)),
-            ids: new_entities.iter().map(|e| e.id.clone()).collect(),
+            ids: new_entities.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(new_entities)
@@ -122,7 +123,7 @@ impl<'a> FieldRepository<'a> {
         let updated = self.redb_table.update(entity)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
-            ids: vec![updated.id.clone()],
+            ids: vec![updated.id],
             data: None,
         });
         Ok(updated)
@@ -136,14 +137,14 @@ impl<'a> FieldRepository<'a> {
         let updated = self.redb_table.update_multi(entities)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
-            ids: updated.iter().map(|e| e.id.clone()).collect(),
+            ids: updated.iter().map(|e| e.id).collect(),
             data: None,
         });
         Ok(updated)
     }
 
     pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
-        let _entity = match self.redb_table.get(id)? {
+        let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };
@@ -155,7 +156,7 @@ impl<'a> FieldRepository<'a> {
         self.redb_table.delete(id)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Removed)),
-            ids: vec![id.clone()],
+            ids: vec![*id],
             data: None,
         });
         Ok(())
@@ -236,7 +237,7 @@ impl<'a> FieldRepository<'a> {
         self.redb_table.set_relationship(id, field, right_ids)?;
         event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Field(EntityEvent::Updated)),
-            ids: vec![id.clone()],
+            ids: vec![*id],
             data: Some(format!(
                 "{}:{}",
                 field,

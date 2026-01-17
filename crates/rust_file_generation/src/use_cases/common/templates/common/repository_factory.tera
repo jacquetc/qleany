@@ -13,7 +13,7 @@ pub mod write {
     };
 
 {% for eid, ent in s.entities %}
-    pub fn create_{{ ent.snake_name }}_repository(transaction: &Transaction) -> {{ ent.pascal_name }}Repository {
+    pub fn create_{{ ent.snake_name }}_repository(transaction: &'_ Transaction) -> {{ ent.pascal_name }}Repository<'_> {
         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}RedbTable::new(transaction.get_write_transaction());
         {{ ent.pascal_name }}Repository::new(Box::new({{ ent.snake_name }}_table), transaction)
     }
@@ -31,7 +31,7 @@ pub mod read {
     };
 
 {% for eid, ent in s.entities %}
-    pub fn create_{{ ent.snake_name }}_repository(transaction: &Transaction) -> {{ ent.pascal_name }}RepositoryRO {
+    pub fn create_{{ ent.snake_name }}_repository(transaction: &'_ Transaction) -> {{ ent.pascal_name }}RepositoryRO<'_> {
         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}RedbTableRO::new(transaction.get_read_transaction());
         {{ ent.pascal_name }}RepositoryRO::new(Box::new({{ ent.snake_name }}_table))
     }

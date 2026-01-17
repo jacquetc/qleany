@@ -5,6 +5,7 @@ use super::root_repository::RootRelationshipField;
 use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Root;
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
@@ -20,7 +21,7 @@ const SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Enti
 // backward relationships
 
 fn get_junction_table_definition(
-    field: &RootRelationshipField,
+    field: &'_ RootRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         RootRelationshipField::Workspace => WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE,
@@ -49,19 +50,19 @@ impl<'a> RootRedbTable<'a> {
 
 impl<'a> RootTable for RootRedbTable<'a> {
     fn create(&mut self, entity: &Root) -> Result<Root, Error> {
-        let v = self.create_multi(&[entity.clone()])?;
+        let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn update(&mut self, entity: &Root) -> Result<Root, Error> {
-        let v = self.update_multi(&[entity.clone()])?;
+        let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        self.delete_multi(&[id.clone()])
+        self.delete_multi(std::slice::from_ref(id))
     }
 
     fn create_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error> {
@@ -102,13 +103,14 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
 
-                    if let Some(ref right_id) = new_entity.workspace {
-                        if existing_id != new_entity.id && right_ids.value().contains(right_id) {
-                            panic!(
-                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
-                                right_id, existing_id
-                            );
-                        }
+                    if let Some(ref right_id) = new_entity.workspace
+                        && existing_id != new_entity.id
+                        && right_ids.value().contains(right_id)
+                    {
+                        panic!(
+                            "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                            right_id, existing_id
+                        );
                     }
                 }
             }
@@ -119,13 +121,14 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
 
-                    if let Some(ref right_id) = new_entity.system {
-                        if existing_id != new_entity.id && right_ids.value().contains(right_id) {
-                            panic!(
-                                "One-to-one constraint violation: System {} is already referenced by Root {}",
-                                right_id, existing_id
-                            );
-                        }
+                    if let Some(ref right_id) = new_entity.system
+                        && existing_id != new_entity.id
+                        && right_ids.value().contains(right_id)
+                    {
+                        panic!(
+                            "One-to-one constraint violation: System {} is already referenced by Root {}",
+                            right_id, existing_id
+                        );
                     }
                 }
             }
@@ -134,19 +137,11 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
             workspace_junction_table.insert(
                 new_entity.id,
-                new_entity
-                    .workspace
-                    .clone()
-                    .into_iter()
-                    .collect::<Vec<EntityId>>(),
+                new_entity.workspace.into_iter().collect::<Vec<EntityId>>(),
             )?;
             system_junction_table.insert(
                 new_entity.id,
-                new_entity
-                    .system
-                    .clone()
-                    .into_iter()
-                    .collect::<Vec<EntityId>>(),
+                new_entity.system.into_iter().collect::<Vec<EntityId>>(),
             )?;
             created.push(new_entity);
             if entity.id == EntityId::default() {
@@ -257,13 +252,14 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
 
-                    if let Some(ref right_id) = entity.workspace {
-                        if existing_id != entity.id && right_ids.value().contains(right_id) {
-                            panic!(
-                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
-                                right_id, existing_id
-                            );
-                        }
+                    if let Some(ref right_id) = entity.workspace
+                        && existing_id != entity.id
+                        && right_ids.value().contains(right_id)
+                    {
+                        panic!(
+                            "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                            right_id, existing_id
+                        );
                     }
                 }
             }
@@ -274,30 +270,29 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
 
-                    if let Some(ref right_id) = entity.system {
-                        if existing_id != entity.id && right_ids.value().contains(right_id) {
-                            panic!(
-                                "One-to-one constraint violation: System {} is already referenced by Root {}",
-                                right_id, existing_id
-                            );
-                        }
+                    if let Some(ref right_id) = entity.system
+                        && existing_id != entity.id
+                        && right_ids.value().contains(right_id)
+                    {
+                        panic!(
+                            "One-to-one constraint violation: System {} is already referenced by Root {}",
+                            right_id, existing_id
+                        );
                     }
                 }
             }
 
             root_table.insert(entity.id, entity)?;
 
-            workspace_junction_table.insert(entity.id, {
-                entity
-                    .workspace
-                    .clone()
-                    .into_iter()
-                    .collect::<Vec<EntityId>>()
-            })?;
+            workspace_junction_table.insert(
+                entity.id,
+                entity.workspace.into_iter().collect::<Vec<EntityId>>(),
+            )?;
 
-            system_junction_table.insert(entity.id, {
-                entity.system.clone().into_iter().collect::<Vec<EntityId>>()
-            })?;
+            system_junction_table.insert(
+                entity.id,
+                entity.system.into_iter().collect::<Vec<EntityId>>(),
+            )?;
             updated.push(entity.clone());
         }
         Ok(updated)
@@ -382,7 +377,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
-        table.insert(id.clone(), right_ids.to_vec())?;
+        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 }
@@ -398,7 +393,7 @@ impl<'a> RootRedbTableRO<'a> {
 
 impl<'a> RootTableRO for RootRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 

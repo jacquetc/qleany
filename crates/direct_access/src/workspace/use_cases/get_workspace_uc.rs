@@ -18,7 +18,7 @@ impl GetWorkspaceUseCase {
     pub fn execute(&self, id: &EntityId) -> Result<Option<WorkspaceDto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity_option = uow.get_workspace(&id)?;
+        let entity_option = uow.get_workspace(id)?;
         uow.end_transaction()?;
 
         Ok(entity_option.map(|entity| entity.into()))

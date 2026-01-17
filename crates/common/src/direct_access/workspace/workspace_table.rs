@@ -31,7 +31,7 @@ const WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE: TableDefinition<EntityId, Ve
     TableDefinition::new("workspace_from_root_workspace_junction");
 
 fn get_junction_table_definition(
-    field: &WorkspaceRelationshipField,
+    field: &'_ WorkspaceRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
     match field {
         WorkspaceRelationshipField::Global => GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE,
@@ -67,19 +67,19 @@ impl<'a> WorkspaceRedbTable<'a> {
 
 impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
     fn create(&mut self, entity: &Workspace) -> Result<Workspace, Error> {
-        let v = self.create_multi(&[entity.clone()])?;
+        let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn update(&mut self, entity: &Workspace) -> Result<Workspace, Error> {
-        let v = self.update_multi(&[entity.clone()])?;
+        let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
     fn delete(&mut self, id: &EntityId) -> Result<(), Error> {
-        self.delete_multi(&[id.clone()])
+        self.delete_multi(std::slice::from_ref(id))
     }
 
     fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error> {
@@ -465,7 +465,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
-        table.insert(id.clone(), right_ids.to_vec())?;
+        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 }
@@ -481,7 +481,7 @@ impl<'a> WorkspaceRedbTableRO<'a> {
 
 impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
     fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error> {
-        let v = self.get_multi(&[id.clone()])?;
+        let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 

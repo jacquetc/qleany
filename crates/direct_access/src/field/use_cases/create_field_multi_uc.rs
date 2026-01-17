@@ -47,7 +47,7 @@ impl UndoRedoCommand for CreateFieldMultiUseCase {
             uow.delete_field_multi(
                 &last_entities
                     .iter()
-                    .map(|entity| entity.id.clone())
+                    .map(|entity| entity.id)
                     .collect::<Vec<_>>(),
             )?;
             uow.commit()?;
