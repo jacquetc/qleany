@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto  # auto compares coverage to the previous base commit
+        # adjust accordingly based on how flaky your tests are
+        # this allows a 10% drop from the previous base commit coverage
+        threshold: 10%
+        #target: 80%    # the required coverage value
+        #threshold: 1%  # the leniency in hitting the target
+    patch:
+      default:
+        target: 80%

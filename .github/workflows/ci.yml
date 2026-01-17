@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - "**"
+      - "!/*.md"
+      - "!/docs/**"
+      - "!/LICENSE"
+      - "!/README*"
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "**"
+      - "!/*.md"
+      - "!/docs/**"
+      - "!/LICENSE"
+      - "!/README*"
+  schedule:
+    - cron: "3 3 3 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Summary job that other jobs depend on
+  ci:
+    name: CI
+    needs: [test, check, rustfmt, clippy, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.check.result }}" != "success" ]] || \
+             [[ "${{ needs.rustfmt.result }}" != "success" ]] || \
+             [[ "${{ needs.clippy.result }}" != "success" ]] || \
+             [[ "${{ needs.docs.result }}" != "success" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          echo "All jobs passed"
+
+  test:
+    name: Test (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+            rust: stable
+            flags: "--all-features"
+          - name: windows
+            os: windows-latest
+            rust: stable
+            flags: "--all-features"
+          - name: mac
+            os: macos-latest
+            rust: stable
+            flags: "--all-features"
+          - name: minimal
+            os: ubuntu-latest
+            rust: stable
+            flags: "--no-default-features"
+          - name: default
+            os: ubuntu-latest
+            rust: stable
+            flags: ""
+          - name: next
+            os: ubuntu-latest
+            rust: stable
+            flags: "--all-features"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ matrix.name }}
+
+      - name: Build
+        run: cargo build --workspace --all-targets ${{ matrix.flags }}
+
+      - name: Test
+        run: cargo test --workspace ${{ matrix.flags }}
+
+      - name: Test (benches)
+        run: cargo test --workspace --benches ${{ matrix.flags }}
+
+      - name: Test (ultra-minimal)
+        if: matrix.name == 'minimal'
+        run: cargo test --manifest-path Cargo.toml --no-default-features
+
+  check:
+    name: Check (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: msrv
+            rust: "1.90.0"
+            target: ""
+            flags: "--all-features"
+          - name: wasm
+            rust: stable
+            target: "wasm32-unknown-unknown"
+            flags: ""
+          - name: wasm-wasi
+            rust: stable
+            target: "wasm32-wasip1"
+            flags: ""
+          - name: debug
+            rust: stable
+            target: ""
+            flags: "--all-features"
+          - name: release
+            rust: stable
+            target: ""
+            flags: "--all-features --release"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: check-${{ matrix.name }}
+
+      - name: Check
+        run: cargo check --workspace --all-targets ${{ matrix.flags }} ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --all-features --no-deps --document-private-items
+
+  rustfmt:
+    name: Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.90.0"  # MSRV
+          components: clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Lint (ultra-minimal)
+        run: cargo clippy --manifest-path Cargo.toml --no-default-features --all-targets -- -D warnings -A deprecated
+
+      - name: Lint (minimal)
+        run: cargo clippy --workspace --no-default-features --all-targets -- -D warnings -A deprecated
+
+      - name: Lint (full)
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings -A deprecated
+
+      - name: Lint (release)
+        run: cargo clippy --workspace --all-features --release --all-targets -- -D warnings -A deprecated
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Collect coverage data
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          verbose: true

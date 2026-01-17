@@ -122,7 +122,7 @@ Third {
     Fifth fifths
 }
 Third ||--o{ Fourth : owns
-Third ||--o{ Fifth : owns\ ordered
+Third ||--o{ Fifth : "owns ordered"
 
 Fourth {
     EntityId id

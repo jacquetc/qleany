@@ -1,0 +1,61 @@
+name: Spelling
+
+on:
+  pull_request:
+    paths:
+      - "**.rs"
+      - "**.md"
+      - "**.txt"
+      - "**.toml"
+      - "**.yml"
+      - "**.yaml"
+      - ".typos.toml"
+      - "_typos.toml"
+  push:
+    branches:
+      - main
+    paths:
+      - "**.rs"
+      - "**.md"
+      - "**.txt"
+      - "**.toml"
+      - "**.yml"
+      - "**.yaml"
+      - ".typos.toml"
+      - "_typos.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spelling:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check spelling with typos
+        uses: crate-ci/typos@v1.28.4  # Pin to specific version for reproducibility
+        with:
+          # Optional: specify config file location
+          # config: .typos.toml
+          
+          # Optional: only check changed files in PRs
+          # This is faster but may miss errors in unchanged files
+          # files: ${{ github.event_name == 'pull_request' && '' || '.' }}
+          pass: ''  # Empty means check all files
+
+      # Alternative: use files input to check specific paths
+      # - name: Check spelling with typos
+      #   uses: crate-ci/typos@v1.28.4
+      #   with:
+      #     files: |
+      #       src/
+      #       docs/
+      #       README.md
