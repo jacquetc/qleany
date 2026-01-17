@@ -129,7 +129,7 @@ Fourth {
     string test_string
     Second second_ref "optional"
 }
-Fourth ||--o| Second : refs
+Fourth ||..o| Second : refs
 
 Fifth {
     EntityId id
