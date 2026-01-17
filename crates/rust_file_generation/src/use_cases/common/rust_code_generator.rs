@@ -288,7 +288,7 @@ impl SnapshotBuilder {
         fields_vec.extend(
             uow.get_field_multi(&entity.fields)?
                 .into_iter()
-                .filter_map(|f| f),
+                .flatten(),
         );
 
         // Build FieldVMs with the same Rust type mapping as used elsewhere
@@ -310,8 +310,7 @@ impl SnapshotBuilder {
                 FieldType::Enum => f
                     .enum_name
                     .clone()
-                    .or(Some("enum_name not set".to_string()))
-                    .unwrap(),
+                    .unwrap_or("enum_name not set".to_string()),
             };
             //
             let relationship = match f.relationship {
@@ -355,7 +354,7 @@ impl SnapshotBuilder {
         for rel in uow
             .get_relationship_multi(&rel_ids_direct)?
             .into_iter()
-            .filter_map(|r| r)
+            .flatten()
         {
             relationships_map.insert(rel.id, rel);
         }
@@ -371,7 +370,7 @@ impl SnapshotBuilder {
         if !all_entity_ids.is_empty() {
             let all_entities = uow.get_entity_multi(&all_entity_ids)?;
             let mut extra_rel_ids: HashSet<EntityId> = HashSet::new();
-            for e_opt in all_entities.into_iter().filter_map(|e| e) {
+            for e_opt in all_entities.into_iter().flatten() {
                 for rid in e_opt.relationships {
                     extra_rel_ids.insert(rid);
                 }
@@ -379,7 +378,7 @@ impl SnapshotBuilder {
             if !extra_rel_ids.is_empty() {
                 let extra_rels =
                     uow.get_relationship_multi(&extra_rel_ids.iter().copied().collect::<Vec<_>>())?;
-                for rel_opt in extra_rels.into_iter().filter_map(|r| r) {
+                for rel_opt in extra_rels.into_iter().flatten() {
                     if rel_opt.left_entity == entity.id || rel_opt.right_entity == entity.id {
                         relationships_map.entry(rel_opt.id).or_insert(rel_opt);
                     }
@@ -401,8 +400,8 @@ impl SnapshotBuilder {
                     field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                     field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
                 });
-                if rel.left_entity == entity.id {
-                    if fwd_seen.insert(rel.field_name.clone()) {
+                if rel.left_entity == entity.id
+                    && fwd_seen.insert(rel.field_name.clone()) {
                         rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
                             inner: rel.clone(),
                             field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
@@ -410,7 +409,6 @@ impl SnapshotBuilder {
                                 .to_string(),
                         });
                     }
-                }
                 if rel.right_entity == entity.id {
                     let key = (rel.left_entity, rel.field_name.clone());
                     if bwd_seen.insert(key) {
@@ -485,7 +483,7 @@ impl SnapshotBuilder {
 
         let global = uow
             .get_global(
-                &global_ids
+                global_ids
                     .first()
                     .expect("Workspace must have a global entity"),
             )?
@@ -508,7 +506,7 @@ impl SnapshotBuilder {
         )?;
 
         let ui = uow
-            .get_user_interface(&ui_ids.first().expect("Workspace must have a UI entity"))?
+            .get_user_interface(ui_ids.first().expect("Workspace must have a UI entity"))?
             .expect("Workspace must have a UI entity");
 
         let ui_vm = UserInterfaceVM { inner: ui };
@@ -530,14 +528,14 @@ impl SnapshotBuilder {
                     &common::direct_access::workspace::WorkspaceRelationshipField::Features,
                 )?;
                 let feats = uow.get_feature_multi(&feature_ids)?;
-                for feat_opt in feats.into_iter().filter_map(|f| f) {
+                for feat_opt in feats.into_iter().flatten() {
                     if feat_opt.use_cases.is_empty() {
                         continue;
                     }
                     let feature_use_cases: Vec<UseCase> = uow
                         .get_use_case_multi(&feat_opt.use_cases)?
                         .into_iter()
-                        .filter_map(|uc| uc)
+                        .flatten()
                         .collect();
 
                     features.insert(feat_opt.id, feat_opt);
@@ -547,7 +545,7 @@ impl SnapshotBuilder {
                         let use_case_entities: Vec<Entity> = uow
                             .get_entity_multi(&use_case.entities)?
                             .into_iter()
-                            .filter_map(|e| e)
+                            .flatten()
                             .collect();
                         for e in use_case_entities {
                             entities.insert(e.id, e);
@@ -561,7 +559,7 @@ impl SnapshotBuilder {
                             let fields_vec: Vec<DtoField> = uow
                                 .get_dto_field_multi(&dto.fields)?
                                 .into_iter()
-                                .filter_map(|f| f)
+                                .flatten()
                                 .collect();
                             for f in fields_vec {
                                 dto_fields.insert(f.id, f);
@@ -575,7 +573,7 @@ impl SnapshotBuilder {
                             let fields_vec: Vec<DtoField> = uow
                                 .get_dto_field_multi(&dto.fields)?
                                 .into_iter()
-                                .filter_map(|f| f)
+                                .flatten()
                                 .collect();
                             for f in fields_vec {
                                 dto_fields.insert(f.id, f);
@@ -596,7 +594,7 @@ impl SnapshotBuilder {
                 let feature_use_cases: Vec<UseCase> = uow
                     .get_use_case_multi(&feature.use_cases)?
                     .into_iter()
-                    .filter_map(|uc| uc)
+                    .flatten()
                     .collect();
 
                 features.insert(feature.id, feature);
@@ -606,7 +604,7 @@ impl SnapshotBuilder {
                     let use_case_entities: Vec<Entity> = uow
                         .get_entity_multi(&use_case.entities)?
                         .into_iter()
-                        .filter_map(|e| e)
+                        .flatten()
                         .collect();
                     for e in use_case_entities {
                         entities.insert(e.id, e);
@@ -620,7 +618,7 @@ impl SnapshotBuilder {
                         let fields_vec: Vec<DtoField> = uow
                             .get_dto_field_multi(&dto.fields)?
                             .into_iter()
-                            .filter_map(|f| f)
+                            .flatten()
                             .collect();
                         for f in fields_vec {
                             dto_fields.insert(f.id, f);
@@ -634,7 +632,7 @@ impl SnapshotBuilder {
                         let fields_vec: Vec<DtoField> = uow
                             .get_dto_field_multi(&dto.fields)?
                             .into_iter()
-                            .filter_map(|f| f)
+                            .flatten()
                             .collect();
                         for f in fields_vec {
                             dto_fields.insert(f.id, f);
@@ -655,7 +653,7 @@ impl SnapshotBuilder {
             let use_case_entities: Vec<Entity> = uow
                 .get_entity_multi(&use_case.entities)?
                 .into_iter()
-                .filter_map(|e| e)
+                .flatten()
                 .collect();
             for e in use_case_entities {
                 entities.insert(e.id, e);
@@ -668,7 +666,7 @@ impl SnapshotBuilder {
                 let fields_vec: Vec<DtoField> = uow
                     .get_dto_field_multi(&dto.fields)?
                     .into_iter()
-                    .filter_map(|f| f)
+                    .flatten()
                     .collect();
                 for f in fields_vec {
                     dto_fields.insert(f.id, f);
@@ -682,7 +680,7 @@ impl SnapshotBuilder {
                 let fields_vec: Vec<DtoField> = uow
                     .get_dto_field_multi(&dto.fields)?
                     .into_iter()
-                    .filter_map(|f| f)
+                    .flatten()
                     .collect();
                 for f in fields_vec {
                     dto_fields.insert(f.id, f);
@@ -701,7 +699,7 @@ impl SnapshotBuilder {
                     &common::direct_access::workspace::WorkspaceRelationshipField::Entities,
                 )?;
                 let ents = uow.get_entity_multi(&entity_ids)?;
-                for ent_opt in ents.into_iter().filter_map(|e| e) {
+                for ent_opt in ents.into_iter().flatten() {
                     // skip heritage entities; include only those allowed for direct access when generating direct access code
                     if ent_opt.only_for_heritage {
                         continue;
@@ -711,16 +709,14 @@ impl SnapshotBuilder {
                     let entity_fields: Vec<Field> = uow
                         .get_field_multi(&ent_opt.fields)?
                         .into_iter()
-                        .filter_map(|f| f)
+                        .flatten()
                         .collect();
                     for field in &entity_fields {
-                        if let Some(eid) = field.entity {
-                            if field.field_type == FieldType::Entity {
-                                if let Some(ent_dep) = uow.get_entity(&eid)? {
+                        if let Some(eid) = field.entity
+                            && field.field_type == FieldType::Entity
+                                && let Some(ent_dep) = uow.get_entity(&eid)? {
                                     entities.insert(ent_dep.id, ent_dep);
                                 }
-                            }
-                        }
                         fields.insert(field.id, field.clone());
                     }
                     entities.insert(ent_opt.id, ent_opt);
@@ -732,18 +728,17 @@ impl SnapshotBuilder {
                 let entity_fields: Vec<Field> = uow
                     .get_field_multi(&entity.fields)?
                     .into_iter()
-                    .filter_map(|f| f)
+                    .flatten()
                     .collect();
                 // load fields ao as to list entity dependencies
                 for field in &entity_fields {
-                    if let Some(eid) = field.entity {
-                        if field.field_type == FieldType::Entity {
+                    if let Some(eid) = field.entity
+                        && field.field_type == FieldType::Entity {
                             let ent = uow
                                 .get_entity(&eid)?
                                 .ok_or_else(|| anyhow!("Entity not found"))?;
                             entities.insert(ent.id, ent);
                         }
-                    }
                     fields.insert(field.id, field.clone());
                 }
                 entities.insert(entity.id, entity);
@@ -761,18 +756,16 @@ impl SnapshotBuilder {
             rel_ids.dedup();
             if !rel_ids.is_empty() {
                 let rels = uow.get_relationship_multi(&rel_ids)?;
-                for rel_opt in rels.into_iter().filter_map(|r| r) {
+                for rel_opt in rels.into_iter().flatten() {
                     // Ensure both sides entities are available for templates if referenced
-                    if !entities.contains_key(&rel_opt.left_entity) {
-                        if let Some(le) = uow.get_entity(&rel_opt.left_entity)? {
+                    if !entities.contains_key(&rel_opt.left_entity)
+                        && let Some(le) = uow.get_entity(&rel_opt.left_entity)? {
                             entities.insert(le.id, le);
                         }
-                    }
-                    if !entities.contains_key(&rel_opt.right_entity) {
-                        if let Some(re) = uow.get_entity(&rel_opt.right_entity)? {
+                    if !entities.contains_key(&rel_opt.right_entity)
+                        && let Some(re) = uow.get_entity(&rel_opt.right_entity)? {
                             entities.insert(re.id, re);
                         }
-                    }
                     relationships_map.insert(rel_opt.id, rel_opt);
                 }
             }
@@ -780,7 +773,7 @@ impl SnapshotBuilder {
 
         // Now wrap into snapshot similarly to adapter
         let mut entities_vm: IndexMap<EntityId, EntityVM> = IndexMap::new();
-        for (eid, _e) in &entities {
+        for eid in entities.keys() {
             // Use the unified entity view model builder
             let evm = SnapshotBuilder::get_entity_vm(uow, eid)?;
             entities_vm.insert(*eid, evm);
@@ -802,8 +795,7 @@ impl SnapshotBuilder {
                         DtoFieldType::Enum => df
                             .enum_name
                             .clone()
-                            .or(Some("enum_name not set".to_string()))
-                            .unwrap(),
+                            .unwrap_or("enum_name not set".to_string()),
                     };
                     let rust_type = if df.is_list {
                         format!("Vec<{}>", &rust_base_type)
@@ -842,7 +834,7 @@ impl SnapshotBuilder {
                                 .get_use_case_multi(&use_cases_ids)
                                 .unwrap_or_default()
                                 .into_iter()
-                                .filter_map(|uc| uc)
+                                .flatten()
                                 .map(|uc| (uc.id, uc))
                                 .collect();
 
@@ -863,7 +855,7 @@ impl SnapshotBuilder {
                                                     .get_entity_multi(&entities_id)
                                                     .unwrap_or_default()
                                                     .into_iter()
-                                                    .filter_map(|e| e)
+                                                    .flatten()
                                                     .map(|e| {
                                                         (
                                                             e.id,
@@ -901,7 +893,7 @@ impl SnapshotBuilder {
                                                                 DtoFieldType::String => "String".to_string(),
                                                                 DtoFieldType::Uuid => "uuid::Uuid".to_string(),
                                                                 DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => df.enum_name.clone().or(Some("enum_name not set".to_string())).unwrap(),
+                                                                DtoFieldType::Enum => df.enum_name.clone().unwrap_or("enum_name not set".to_string()),
                                                             };
                                                                 let rust_type = if df.is_list {
                                                                     format!("Vec<{}>", &rust_base_type)
@@ -937,7 +929,7 @@ impl SnapshotBuilder {
                                                                 DtoFieldType::String => "String".to_string(),
                                                                 DtoFieldType::Uuid => "uuid::Uuid".to_string(),
                                                                 DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => df.enum_name.clone().or(Some("enum_name not set".to_string())).unwrap(),
+                                                                DtoFieldType::Enum => df.enum_name.clone().unwrap_or("enum_name not set".to_string()),
                                                             };
                                                                 let rust_type = if df.is_list {
                                                                     format!("Vec<{}>", &rust_base_type)
@@ -988,7 +980,7 @@ impl SnapshotBuilder {
                                 uow.get_entity_multi(&entities_id)
                                     .unwrap_or_default()
                                     .into_iter()
-                                    .filter_map(|e| e)
+                                    .flatten()
                                     .map(|e| {
                                         (
                                             e.id,
@@ -1028,8 +1020,7 @@ impl SnapshotBuilder {
                                                 DtoFieldType::Enum => df
                                                     .enum_name
                                                     .clone()
-                                                    .or(Some("enum_name not set".to_string()))
-                                                    .unwrap(),
+                                                    .unwrap_or("enum_name not set".to_string()),
                                             };
                                             let rust_type = if df.is_list {
                                                 format!("Vec<{}>", &rust_base_type)
@@ -1071,8 +1062,7 @@ impl SnapshotBuilder {
                                                 DtoFieldType::Enum => df
                                                     .enum_name
                                                     .clone()
-                                                    .or(Some("enum_name not set".to_string()))
-                                                    .unwrap(),
+                                                    .unwrap_or("enum_name not set".to_string()),
                                             };
                                             let rust_type = if df.is_list {
                                                 format!("Vec<{}>", &rust_base_type)

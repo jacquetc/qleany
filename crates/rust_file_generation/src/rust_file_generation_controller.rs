@@ -20,7 +20,7 @@ pub fn list_rust_files(
     event_hub: &Arc<EventHub>,
     dto: &ListRustFilesDto,
 ) -> Result<ListRustFilesReturnDto> {
-    let uow_context = ListRustFilesUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = ListRustFilesUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = ListRustFilesUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
@@ -36,7 +36,7 @@ pub fn generate_rust_code(
     db_context: &DbContext,
     dto: &GenerateRustCodeDto,
 ) -> Result<GenerateRustCodeReturnDto> {
-    let uow_context = GenerateRustCodeUnitOfWorkFactory::new(&db_context);
+    let uow_context = GenerateRustCodeUnitOfWorkFactory::new(db_context);
     let uc = GenerateRustCodeUseCase::new(Box::new(uow_context));
     let result = uc.execute(dto)?;
     Ok(result)
@@ -48,7 +48,7 @@ pub fn generate_rust_files(
     long_operation_manager: &mut LongOperationManager,
     dto: &GenerateRustFilesDto,
 ) -> Result<String> {
-    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(&db_context);
+    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(db_context);
     let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)

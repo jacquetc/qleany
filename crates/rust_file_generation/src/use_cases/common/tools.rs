@@ -4,10 +4,10 @@ use common::types::EntityId;
 
 pub fn get_workspace_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
     use anyhow::anyhow;
-    let roots = uow.get_root_multi(&vec![])?;
+    let roots = uow.get_root_multi(&[])?;
     let root = roots
         .into_iter()
-        .filter_map(|r| r)
+        .flatten()
         .next()
         .ok_or_else(|| anyhow!("Root entity not found"))?;
 
@@ -25,10 +25,10 @@ pub fn get_workspace_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId>
 
 pub fn get_workspace(uow: &dyn GenerationReadOps) -> anyhow::Result<Workspace> {
     use anyhow::anyhow;
-    let roots = uow.get_root_multi(&vec![])?;
+    let roots = uow.get_root_multi(&[])?;
     let root = roots
         .into_iter()
-        .filter_map(|r| r)
+        .flatten()
         .next()
         .ok_or_else(|| anyhow!("Root entity not found"))?;
 

@@ -107,7 +107,7 @@ impl LongOperation for GenerateRustFilesUseCase {
             }
 
             let file_name = &file_meta.name;
-            println!("Generated code for file {}:\n{}", file_name, "code omitted");
+            println!("Generated code for file {}:\ncode omitted", file_name);
 
             // Compute destination path: root_path/prefix/relative_path/name
             let mut out_dir = root_path.clone();

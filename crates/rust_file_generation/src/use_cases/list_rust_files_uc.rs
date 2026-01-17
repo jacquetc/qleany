@@ -52,10 +52,10 @@ impl ListRustFilesUseCase {
         uow.begin_transaction()?;
 
         use anyhow::anyhow;
-        let roots = uow.get_root_multi(&vec![])?;
+        let roots = uow.get_root_multi(&[])?;
         let root = roots
             .into_iter()
-            .filter_map(|r| r)
+            .flatten()
             .next()
             .ok_or_else(|| anyhow!("Root entity not found"))?;
 
@@ -83,7 +83,7 @@ impl ListRustFilesUseCase {
         let globals =
             uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Global)?;
         let global_id = globals.first().ok_or(anyhow!("No global found"))?;
-        let global = uow.get_global(&global_id)?;
+        let global = uow.get_global(global_id)?;
         let global = global.ok_or(anyhow!("Global not found"))?;
         if global.language != "rust" {
             return Err(anyhow!("Global language is not rust"));
@@ -107,7 +107,7 @@ impl ListRustFilesUseCase {
             .first()
             .ok_or(anyhow!("No user interface found"))?;
         let ui = uow
-            .get_user_interface(&ui_id)?
+            .get_user_interface(ui_id)?
             .ok_or(anyhow!("User interface not found"))?;
 
         // remove all files from system
