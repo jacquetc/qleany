@@ -1,37 +1,65 @@
 # Entity Tree and Undo-Redo Architecture
 
-Undo-redo systems are harder than they first appear. A robust implementation must handle complex scenarios like nested entities, cascading changes, and maintaining data integrity during undos/redos. Qleany's undo-redo architecture is designed to simplify these challenges by enforcing clear rules on how entities relate to each other in the context of undo-redo operations. It means rules to follow when designing your entity tree.
+Undo-redo systems are harder than they first appear. A robust implementation must handle complex scenarios like nested entities, cascading changes, and maintaining data integrity during undos and redos. Qleany's undo-redo architecture is designed to simplify these challenges by enforcing clear rules on how entities relate to each other in the context of undo-redo operations.
 
 Entities in Qleany form a tree structure based on strong (ownership) relationships. This tree organization directly influences how undo-redo works across your application.
 
+## Quick Reference
+
+Before diving into the details, here is a summary of the two approaches Qleany supports:
+
+| Aspect | Approach A: Document-Scoped | Approach B: Panel-Scoped |
+|--------|----------------------------|--------------------------|
+| Stack lifecycle | Created when document opens, destroyed when it closes | Created when panel gains focus, cleared on focus loss or after undo |
+| History depth | Unlimited | One command |
+| Redo behavior | Full redo history until new action | Single-use, lost on focus change |
+| Deletion handling | Optional stack-based or soft-delete with toast | Soft-delete with timed toast |
+| User expectation | "Undo my last change to this document" | "Undo my immediate mistake" |
+| Best for | IDEs, creative suites, document editors | Form-based apps, simple tools |
+
+Qleany itself uses Approach B. Skribisto uses Approach A.
+
 ## My Recommendations
 
-Do not use a single, linear, undo-redo stack for the entire application (but for basic applications). It's a trap. Think about interactions from the user's perspective: they expect undo/redo to apply to specific contexts (documents, projects) rather than globally. A monolithic stack leads to confusion and unintended consequences.
+Do not use a single, linear undo-redo stack for the entire application except in the most basic cases. Think about interactions from the user's perspective: they expect undo and redo to apply to specific contexts rather than globally. A monolithic stack leads to confusion and unintended consequences. If a user is editing a document and undoes an action, they do not expect that to also undo changes in unrelated settings or other documents.
 
-For example, if a user is editing a document and undoes an action, they don't expect that to also undo changes in unrelated settings or other documents. Instead, each context should have its own undo-redo stack.  Undo can be done by a dumb Ctrl-Z or a toast notification with "Undo" action after a destructive operation. Is the user expecting more granular control over what gets undone? Probably not. Keep it simple, limited to the context they are working in.
+Instead, each context should have its own undo-redo stack. The question is how to define "context." Qleany supports two approaches, described below, suited to different application types. Both use the same generated infrastructure; they differ only in when and where stacks are created and destroyed.
 
-Also, for destructive operations (deleting entities), Qleany supports cascading deletions, but not their undoing. If you delete a parent entity, all its strongly-owned children are also deleted.  At first, I used a database savepoint to be restored on undo, but the savepoint impacted the non-undoable data as well, leading to confusion and unexpected behavior.  Consequence: there is no undo for entity deletions, so what to do? 
+For destructive operations such as deleting entities, Qleany supports cascading deletions but not their undoing. If you delete a parent entity, all its strongly-owned children are also deleted. At first, I used a database savepoint to be restored on undo, but the savepoint impacted non-undoable data as well, leading to confusion and unexpected behavior. As a consequence, there is no undo for entity deletions through the stack. Instead, use soft-deletion with timed recovery, described in the Soft Deletion section below.
 
-At least for now, as said previously, **no undoing of deletions**. Instead, consider soft-deleting entities (marking them as inactive) if you want to allow recovery. "emptying the trash bin" manually would be a permanent action, not undoable, with all the undo redo stacks cleared. Thus, 1. Users can recover deleted items from a trash bin, and 2. Undo/redo stacks remain consistent and manageable.
+## Two Approaches to Undo-Redo
 
-Thi seems like a limitation, but in practice, users rarely need to undo deletions if they have a way to recover deleted items through a trash or archive system.
+### Approach A: Document-Scoped Stack
 
-### Soft Deletion
+The stack is created when a document, workspace, or undoable trunk is loaded and destroyed when it closes. All UI panels editing entities within that trunk share the same stack.
 
-If you want to implement soft deletion, add a boolean field `activated` to your entities. When "deleting" an entity, set this flag to false instead of removing it from the database. Your UI can then filter out entities where `activated` is false, effectively hiding them from the user. When you want to permanently delete entities (e.g., emptying the trash), you can then remove them from the database. This will clear all the undo-redo stacks, which is acceptable since permanent deletion is a non-undoable action from the user's perspective, too. 
+This approach provides full undo history across the entire document. When the user presses Ctrl+Z, the application undoes the most recent change to the document regardless of which panel made it. This matches the behavior of professional tools like Qt Creator, Blender, and Adobe applications.
 
-Conretely, you can have a `TrashBin` entity that holds references to soft-deleted entities. Users can restore them from the trash bin or permanently delete them.
+Redo works symmetrically: the user can redo any undone action until they perform a new action, which clears the redo stack.
 
-| Id | trashed_date | entity_type | entity_id
-|----|--------------|-------------|-----------|
-| 1  | 2024-01-01   | Document    | 42
-| 2  | 2024-01-02   | Car         | 7
+**Lifecycle.** Create the stack when the document opens. Destroy it when the document closes. All panels resolve the same `stack_id` by looking up the document they are editing.
 
-It would typically need dedicated logic in use cases to handle restoring entities.
+**User expectation.** "Undo my last change to this document."
+
+**Best suited for.** Complex applications, professional tools, creative suites, IDEs, and any application where users expect deep undo history and work on persistent documents over extended sessions.
+
+### Approach B: Panel-Scoped Stack, Length 1
+
+The stack is created when a panel becomes active and cleared or destroyed when the panel loses focus or after a single undo executes. Each panel manages its own short-lived stack holding at most one command.
+
+This approach provides immediate mistake recovery without maintaining history. When the user presses Ctrl+Z, the application undoes only their most recent action in that panel. After one undo, the stack is empty. This matches modern application patterns where undo is an "oops" button rather than a time-travel mechanism.
+
+Redo is effectively single-use in this approach. After undoing, the user can redo immediately, but switching focus or performing any new action clears the redo slot. This is an acceptable trade-off for the simplicity gained.
+
+**Lifecycle.** Create the stack when the panel gains focus. Clear or destroy it when the panel loses focus or after undo executes.
+
+**User expectation.** "Undo my immediate mistake."
+
+**Best suited for.** Simpler applications, form-based interfaces, and applications where deep undo history would cause more confusion than benefit.
 
 ## Entity Properties
 
-Each entity can define these properties:
+With the approach chosen, configure your entities using these properties relevant to undo-redo:
 
 | Property | Type | Default | Effect |
 |----------|------|---------|--------|
@@ -49,19 +77,19 @@ The undo-redo system follows strict inheritance rules through the entity tree:
 
 These rules ensure that when you undo an operation on a parent entity, all its strongly-owned children can be consistently rolled back.
 
-> **What happens if you violate these rules?** The code will generate, compile, and run — Qleany doesn't enforce these rules at generation time. However, undo/redo stacks will become inconsistent. For example, if you place non-undoable persistent settings as a child of an undoable entity, those settings could be unexpectedly undone by cascade when the user undoes the parent. You don't want app settings disappearing because the user undid an unrelated action.
+> **What happens if you violate these rules?** The code will generate, compile, and run — Qleany does not enforce these rules at generation time. However, undo/redo stacks will become inconsistent. For example, if you place non-undoable persistent settings as a child of an undoable entity, those settings could be unexpectedly undone by cascade when the user undoes the parent. You do not want application settings disappearing because the user undid an unrelated action.
 >
-> Follow these rules strictly. If data shouldn't participate in undo (like settings), place it in a separate non-undoable trunk — don't nest it under undoable entities.
+> Follow these rules strictly. If data should not participate in undo (like settings), place it in a separate non-undoable trunk — do not nest it under undoable entities.
 >
-> *A basic validation system checks some of these rules at generation time. It's being improved to be able to check at load time.*
+> *A basic validation system checks some of these rules at generation time. It is being improved to perform checks at load time as well.*
 
 ## Entity Tree Configurations
 
-Depending on your application's complexity, you can organize your entity tree in three ways:
+Depending on your application's complexity, you can organize your entity tree in three ways.
 
 ### Configuration 1: No Undo-Redo
 
-For simple applications where undo-redo is not needed. All entities are non-undoable.
+For simple applications where undo-redo is not needed, all entities are non-undoable.
 
 ```
 Root (undoable: false)
@@ -90,11 +118,11 @@ entities:
         strong: true
 ```
 
-> **Note:** Even without user-facing undo-redo, the undo system must be initialized internally as it's used for transaction management.
+Even without user-facing undo-redo, the undo system must be initialized internally as it is used for transaction management.
 
-### Configuration 2: Simple App with Undo-Redo
+### Configuration 2: Single Undoable Trunk
 
-For applications where all user data should support undo-redo. Root is non-undoable, with a single undoable trunk.
+For applications where all user data should support undo-redo, the root is non-undoable with a single undoable trunk beneath it.
 
 ```
 Root (undoable: false)
@@ -143,9 +171,13 @@ entities:
         strong: true
 ```
 
-### Configuration 3: Complex App with Undo-Redo
+With Approach A, create one stack when the Workspace loads. All panels share this stack, and the user has full undo history across the entire workspace.
 
-For applications that need both undoable user data and non-undoable system data (configurations, search results, temporary state). Root has two trunks: one undoable, one non-undoable.
+With Approach B, each panel creates and manages its own stack independently. The user has immediate undo within each panel, with deletions handled via toast notifications.
+
+### Configuration 3: Multiple Trunks
+
+For applications that need both undoable user data and non-undoable system data, or for multi-document applications where each document should have independent undo history, the root has multiple trunks.
 
 ```
 Root (undoable: false)
@@ -158,6 +190,16 @@ Root (undoable: false)
     ├── Event (undoable: true)
     │   └── Attendee (undoable: true)
     └── Calendar (undoable: true)
+```
+
+For multi-document applications:
+
+```
+Root (undoable: false)
+├── System (undoable: false)
+├── Document A (undoable: true)    ← Stack A
+├── Document B (undoable: true)    ← Stack B
+└── Document C (undoable: true)    ← Stack C
 ```
 
 ```yaml
@@ -177,7 +219,6 @@ entities:
         relationship: one_to_one
         strong: true
 
-  # Non-undoable trunk
   - name: System
     inherits_from: EntityBase
     undoable: false
@@ -211,16 +252,15 @@ entities:
   - name: SearchResult
     inherits_from: EntityBase
     undoable: false
-    allow_direct_access: false   # Temporary, no UI access needed
+    allow_direct_access: false
     fields:
       - name: query
         type: string
       - name: matchedItem
         type: entity
         entity: Event
-        relationship: many_to_one  # Weak reference to undoable entity
+        relationship: many_to_one
 
-  # Undoable trunk
   - name: Workspace
     inherits_from: EntityBase
     undoable: true
@@ -251,9 +291,13 @@ entities:
         list_model: true
 ```
 
+With Approach A, each document gets its own stack. Ctrl+Z in Document A's editor undoes only Document A's changes. This provides natural contextual undo at the document level.
+
+With Approach B, the multi-document structure is less relevant since each panel manages its own immediate-undo stack regardless of which document it edits.
+
 ## Cross-Trunk References
 
-Non-undoable entities can hold **weak references** (many_to_one, many_to_many) to undoable entities. This is useful for search results, recent items, or bookmarks that point to user data without owning it.
+Non-undoable entities can hold weak references (many_to_one, many_to_many) to undoable entities. This is useful for search results, recent items, or bookmarks that point to user data without owning it.
 
 ```yaml
 - name: SearchResult
@@ -261,29 +305,49 @@ Non-undoable entities can hold **weak references** (many_to_one, many_to_many) t
   fields:
     - name: matchedEvent
       type: entity
-      entity: Event           # Event is undoable
-      relationship: many_to_one  # Weak reference — allowed
+      entity: Event
+      relationship: many_to_one
 ```
 
-The reverse is also true: undoable entities can reference non-undoable entities (like referencing a Settings entity for default values).
+The reverse is also true: undoable entities can reference non-undoable entities, such as referencing a Settings entity for default values.
 
-## Choosing Your Configuration
+## Soft Deletion
 
-| Application Type | Configuration | Example |
-|------------------|---------------|---------|
-| Simple utility | No undo-redo | File converter, system tool |
-| Document editor | Single undoable trunk | Text editor, drawing app |
-| Complex workspace | Two trunks | IDE, creative suite, calendar app |
+Deletions are handled outside the undo stack using soft-deletion with timed hard-deletion. This applies to both approaches but is essential for Approach B where the stack cannot hold complex cascade-reversal logic.
 
-The key question: **Do you have data that shouldn't participate in undo?**
+To implement soft deletion, add an `activated` boolean field to your entities. When "deleting" an entity, set this flag to false instead of removing it from the database. Your UI filters out entities where `activated` is false, effectively hiding them from the user.
 
-- Settings and preferences → Non-undoable
-- Search results and caches → Non-undoable
-- User-created content → Undoable
-- Temporary UI state → Non-undoable
+For immediate recovery, display a toast notification with an "Undo" action for a few seconds after deletion, typically three seconds. Maintain a timer for each soft-deleted entity. If the user clicks "Undo" within the timeout window, restore the entity by setting `activated` back to true and cancel the timer. If the timeout expires, perform the hard-delete.
 
-If everything is user content, use a single undoable trunk. If you have a mix, split into two trunks.
+This pattern is time-bounded rather than focus-bounded. The user can switch panels, notice the toast still visible, and click "Undo" within the window. It matches user expectations from applications like Gmail, Slack, and Notion.
+
+For longer-term recovery, you can implement a trash bin with a dedicated entity that holds references to soft-deleted items:
+
+| Id | trashed_date | entity_type | entity_id |
+|----|--------------|-------------|-----------|
+| 1  | 2024-01-01   | Document    | 42        |
+| 2  | 2024-01-02   | Car         | 7         |
+
+Users can then restore items from the trash bin or permanently delete them. Permanently emptying the trash clears all undo-redo stacks, which is acceptable since permanent deletion is a non-undoable action from the user's perspective as well.
+
+For Approach A, you may alternatively implement deletion undo through the stack if your application requires full undo history for deletions, but the soft-deletion pattern remains simpler and avoids cascade-reversal complexity.
+
+> Note : Soft deletion isn't baked-in to Qleany's generated code. You must implement the `activated` field, filtering logic, toast UI, and timer management yourself. I only provide this pattern as a recommended best practice. To only display non-deleted entities, you can use QAbstractProxyModel in C++/Qt or filter models in QML.
+
+## Choosing Your Approach
+
+The key questions to ask are: Do you have data that should not participate in undo? Do users expect deep history or just immediate mistake recovery? Will users work on multiple independent documents simultaneously?
+
+| Application Type | Entity Configuration | Recommended Approach |
+|------------------|---------------------|----------------------|
+| Simple utility | No undo-redo | Neither |
+| Form-based app | Single undoable trunk | Approach B |
+| Document editor | Single undoable trunk | Approach A |
+| Multi-document IDE | Multiple undoable trunks | Approach A |
+| Creative suite | Multiple undoable trunks | Approach A |
+
+Settings, preferences, search results, and caches belong in non-undoable trunks. User-created content belongs in undoable trunks. Temporary UI state belongs outside the entity tree entirely or in non-undoable trunks.
 
 ---
 
-For implementation details of the undo/redo system (command infrastructure, async execution, scoped stacks), see [Generated Infrastructure](generated-code.md).
+For implementation details of the undo/redo system including command infrastructure, async execution, and composite commands, see [Generated Infrastructure](generated-code.md).

@@ -38,7 +38,7 @@ When you add a new entity, several aggregate files need to be regenerated togeth
 
 For Rust, regenerate these files together: `common/event.rs`, `common/entities.rs`, `common/direct_access/repository_factory.rs`, `common/direct_access/setup.rs`, `common/direct_access.rs`, and `direct_access/lib.rs`.
 
-For C++/Qt, regenerate: `common/direct_access/repository_factory.h/.cpp`, `common/direct_access/event_registry.h/.cpp`, `common/CMakeLists.txt` and `direct_access/CMakeLists.txt`.
+For C++/Qt, regenerate: `common/database/db_builder.h`, `common/direct_access/repository_factory.h/.cpp`, `common/direct_access/event_registry.h/.cpp`, `common/CMakeLists.txt` and `direct_access/CMakeLists.txt`.
 
 See [Regeneration Workflow](regeneration-workflow.md) for the complete list.
 

@@ -44,7 +44,6 @@ impl ListRustFilesUseCase {
     }
 
     pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<ListRustFilesReturnDto> {
-
         let mut files: Vec<File> = vec![];
 
         let mut uow = self.uow_factory.create();
@@ -881,14 +880,17 @@ impl ListRustFilesUseCase {
         }
 
         // Keep only the files already existing
-        let files = files.into_iter().filter(|file|    {
-            if dto.only_list_already_existing {
-                let full_path = format!("{}{}", file.relative_path, file.name);
-                std::path::Path::new(&full_path).exists()
-            } else {
-                true
-            }
-        }).collect::<Vec<File>>();
+        let files = files
+            .into_iter()
+            .filter(|file| {
+                if dto.only_list_already_existing {
+                    let full_path = format!("{}{}", file.relative_path, file.name);
+                    std::path::Path::new(&full_path).exists()
+                } else {
+                    true
+                }
+            })
+            .collect::<Vec<File>>();
 
         // create files in db
         let created_files = uow.create_file_multi(&files)?;

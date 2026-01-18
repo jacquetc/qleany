@@ -521,30 +521,35 @@ The separation ensures:
 ```
 src/
 ├── common/
-│   ├── database/
-│   │   ├── db_context.h/.cpp
-│   │   ├── db_sub_context.h/.cpp
-│   │   └── repository_factory.h/.cpp
+│   ├── service_locator.h/.cpp
+│   ├── database/                           # database infrastructure
+│   │   ├── junction_table_ops/...
+│   │   ├── db_builder.h
+│   │   ├── db_context.h
+│   │   └── table_cache.h
 │   ├── entities/
-│   │   ├── work.h/.cpp
+│   │   ├── my_entity.h
 │   │   └── ...
-│   ├── direct_access/
+│   ├── features/
+│   │   ├── feature_event_registry.h   # Event registry for feature events
+│   │   └── ...
+│   ├── direct_access/                     # Holds the repositoryies and tables
+│   │   ├── repository_factory.h/.cpp
+│   │   ├── event_registry.h
 │   │   └── {entity}/
 │   │       ├── i_{entity}_repository.h   # Interface with relationship enum
+│   │       ├── table_definitions.h       #  Table schema definitions
 │   │       ├── {entity}_repository.h/.cpp
-│   │       ├── i_{entity}_table.h        # Table interface
 │   │       ├── {entity}_table.h/.cpp
-│   │       └── {entity}_events.h/.cpp
-│   └── undo_redo/
-│       ├── undo_redo_system.h/.cpp
-│       └── command.h
-├── direct_access/
+│   │       └── {entity}_events.h
+│   └── undo_redo/ ...                      # undo/redo infrastructure
+├── direct_access/                          # Direct access to entity controllers and use cases
 │   └── {entity}/
 │       ├── {entity}_controller.h/.cpp
 │       ├── dtos.h
 │       ├── unit_of_work.h/.cpp
 │       └── use_cases/
-└── {feature}/
+└── {feature}/                              # Custom controllers and use cases
     ├── {feature}_controller.h/.cpp
     └── use_cases/
 ```

@@ -51,23 +51,24 @@ When you add or remove an entity, certain files reference all entities and must 
 
 These files contain references to all entities:
 
-| File                                         | Contains |
-|----------------------------------------------|----------|
-| `common/event.rs`                            | Event enum variants for all entities |
-| `common/entities.rs`                         | Re-exports all entity structs |
-| `common/direct_access/repository_factory.rs` | Factory methods for all repositories |
-| `common/direct_access/setup.rs`              | Factory methods for all repositories |
+| File                                         | Contains                                        |
+|----------------------------------------------|-------------------------------------------------|
+| `common/event.rs`                            | Event enum variants for all entities            |
+| `common/entities.rs`                         | Re-exports all entity structs                   |
+| `common/direct_access/repository_factory.rs` | Factory methods for all repositories            |
+| `common/direct_access/setup.rs`              | Factory methods for all repositories            |
 | `common/direct_access.rs`                    | Module declarations for all entity repositories |
-| `direct_access/lib.rs`                       | Module declarations for all entity features |
+| `direct_access/lib.rs`                       | Module declarations for all entity features     |
 
 ### C++/Qt
 
-| File                                             | Contains |
-|--------------------------------------------------|----------|
-| `common/direct_access/repository_factory.h/.cpp` | Factory methods for all repositories |
-| `common/direct_access/event_registry.h/.cpp`     | Event objects for all entities |
-| `common/CMakeLists.txt`                          | Adds all entity source files to build |
-| `direct_access/CMakeLists.txt`                   | Adds all entity source files to build |
+| File                                             | Contains                                |
+|--------------------------------------------------|-----------------------------------------|
+| `common/database/db_builder.h`                   | Database table builder for all entities |
+| `common/direct_access/repository_factory.h/.cpp` | Factory methods for all repositories    |
+| `common/direct_access/event_registry.h/.cpp`     | Event objects for all entities          |
+| `common/CMakeLists.txt`                          | Adds all entity source files to build   |
+| `direct_access/CMakeLists.txt`                   | Adds all entity source files to build   |
 
 If you modify one of these files and later add a new entity, you'll need to either:
 - Regenerate the file and re-apply your modifications, or
