@@ -7,7 +7,7 @@ use std::sync::Arc;
 pub fn setup_check_is_pascal_case_callback(app: &App) {
     app.global::<CommonTools>().on_check_is_pascal_case({
         move |name| {
-            log::info!("Checking if naming is PascalCase");
+            log::trace!("Checking if naming is PascalCase");
             name == heck::AsPascalCase(&name).to_string()
         }
     });
@@ -16,7 +16,7 @@ pub fn setup_check_is_pascal_case_callback(app: &App) {
 pub fn setup_check_is_snake_case_callback(app: &App) {
     app.global::<CommonTools>().on_check_is_snake_case({
         move |name| {
-            log::info!("Checking if naming is snake_case");
+            log::trace!("Checking if naming is snake_case");
             name == heck::AsSnakeCase(&name).to_string()
         }
     });

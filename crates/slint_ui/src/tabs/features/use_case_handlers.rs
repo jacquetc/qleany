@@ -555,82 +555,78 @@ pub fn setup_use_case_entity_check_callback(app: &App, app_context: &Arc<AppCont
                 let ctx = Arc::clone(&ctx);
                 let app_weak = app_weak.clone();
 
-                std::thread::spawn(move || {
-                    if let Some(app) = app_weak.upgrade() {
-                        let use_case_id =
-                            app.global::<FeaturesTabState>().get_selected_use_case_id();
-                        if use_case_id < 0 {
+                if let Some(app) = app_weak.upgrade() {
+                    let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
+                    if use_case_id < 0 {
+                        return;
+                    }
+
+                    // Get current entity IDs for this use case
+                    let entity_ids_res = use_case_commands::get_use_case_relationship(
+                        &ctx,
+                        &(use_case_id as common::types::EntityId),
+                        &UseCaseRelationshipField::Entities,
+                    );
+
+                    let mut entity_ids = match entity_ids_res {
+                        Ok(ids) => ids,
+                        Err(e) => {
+                            log::error!("Failed to get use case entities: {}", e);
                             return;
                         }
+                    };
 
-                        // Get current entity IDs for this use case
-                        let entity_ids_res = use_case_commands::get_use_case_relationship(
-                            &ctx,
-                            &(use_case_id as common::types::EntityId),
-                            &UseCaseRelationshipField::Entities,
-                        );
+                    let entity_id_u64 = entity_id as common::types::EntityId;
 
-                        let mut entity_ids = match entity_ids_res {
-                            Ok(ids) => ids,
-                            Err(e) => {
-                                log::error!("Failed to get use case entities: {}", e);
-                                return;
-                            }
-                        };
-
-                        let entity_id_u64 = entity_id as common::types::EntityId;
-
-                        if checked {
-                            // Add entity if not already present
-                            if !entity_ids.contains(&entity_id_u64) {
-                                entity_ids.push(entity_id_u64);
-                            }
-                        } else {
-                            // Remove entity
-                            entity_ids.retain(|&id| id != entity_id_u64);
+                    if checked {
+                        // Add entity if not already present
+                        if !entity_ids.contains(&entity_id_u64) {
+                            entity_ids.push(entity_id_u64);
                         }
+                    } else {
+                        // Remove entity
+                        entity_ids.retain(|&id| id != entity_id_u64);
+                    }
 
-                        // Update the relationship
-                        let relationship_dto = UseCaseRelationshipDto {
-                            id: use_case_id as common::types::EntityId,
-                            field: UseCaseRelationshipField::Entities,
-                            right_ids: entity_ids,
-                        };
+                    // Update the relationship
+                    let relationship_dto = UseCaseRelationshipDto {
+                        id: use_case_id as common::types::EntityId,
+                        field: UseCaseRelationshipField::Entities,
+                        right_ids: entity_ids,
+                    };
 
-                        match use_case_commands::set_use_case_relationship(
-                            &ctx,
-                            Some(
-                                app.global::<FeaturesTabState>()
-                                    .get_features_undo_stack_id()
-                                    as u64,
-                            ),
-                            &relationship_dto,
-                        ) {
-                            Ok(()) => {
-                                log::info!(
-                                    "Use case entity {} {}",
-                                    entity_id,
-                                    if checked { "added" } else { "removed" }
-                                );
-                                // Refresh the entity list to reflect the change
-                                let _ = slint::invoke_from_event_loop(move || {
-                                    if let Some(app) = app_weak.upgrade() {
-                                        fill_use_case_entity_list(&app, &ctx);
-                                    }
-                                });
-                            }
-                            Err(e) => {
-                                log::error!("Failed to update use case entities: {}", e);
-                                // Refresh to revert UI state
-                                let _ = slint::invoke_from_event_loop(move || {
-                                    if let Some(app) = app_weak.upgrade() {
-                                        fill_use_case_entity_list(&app, &ctx);
-                                    }
-                                });
-                            }
+                    match use_case_commands::set_use_case_relationship(
+                        &ctx,
+                        Some(
+                            app.global::<FeaturesTabState>()
+                                .get_features_undo_stack_id() as u64,
+                        ),
+                        &relationship_dto,
+                    ) {
+                        Ok(()) => {
+                            log::info!(
+                                "Use case entity {} {}",
+                                entity_id,
+                                if checked { "added" } else { "removed" }
+                            );
+                            // Refresh the entity list to reflect the change
+                            let _ = slint::invoke_from_event_loop(move || {
+                                if let Some(app) = app_weak.upgrade() {
+                                    fill_use_case_entity_list(&app, &ctx);
+                                }
+                            });
+                        }
+                        Err(e) => {
+                            log::error!("Failed to update use case entities: {}", e);
+                            // Refresh to revert UI state
+                            let _ = slint::invoke_from_event_loop(move || {
+                                if let Some(app) = app_weak.upgrade() {
+                                    fill_use_case_entity_list(&app, &ctx);
+                                }
+                            });
                         }
                     }
-                });
+                }
             }
         });
 }

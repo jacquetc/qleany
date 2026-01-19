@@ -287,7 +287,7 @@ export component DtoDetails inherits Rectangle {
                             text: "Enable DTO Out";
                             checked <=> FeaturesTabState.dto_out_enabled;
 
-                            toggled => {
+                            toggled() => {
                                 FeaturesTabState.dto_out_enabled_changed(self.checked);
                             }
                         }
