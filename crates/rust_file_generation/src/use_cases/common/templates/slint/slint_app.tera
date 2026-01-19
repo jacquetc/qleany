@@ -1,9 +1,13 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+// Import and export globals for Rust access
+import { AppState } from "globals.slint";
+export { AppState }
 
 export component App inherits Window {
-    title: "{{ s.global.inner.application_name }}";
+    title: "Qleany";
     min-width: 700px;
     min-height: 700px;
-
 
     Rectangle {
         width: parent.width;
@@ -11,9 +15,23 @@ export component App inherits Window {
         background: #f8f9fa;
     }
 
-    Text {
-        text: "Hello, Slint!";
-        font-size: 24px;
-        color: #212529;
+    VerticalBox {
+
+        spacing: 20px;
+        padding: 20px;
+        alignment: center;
+
+        Text {
+            text: "Hello, Slint + Qleany!";
+            font-size: 24px;
+            color: #212529;
+        }
+
+        Button {
+            text: AppState.number == 0 ? "Click Me" : AppState.number;
+            clicked => {
+                AppState.add_one_clicked();
+            }
+        }
     }
 }

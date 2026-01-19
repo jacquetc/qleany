@@ -244,6 +244,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "slint_build" => tera.render("slint_build", &context)?,
         "slint_main" => tera.render("slint_main", &context)?,
         "slint_app" => tera.render("slint_app", &context)?,
+        "slint_globals" => tera.render("slint_globals", &context)?,
         "slint_app_context" => tera.render("slint_app_context", &context)?,
         "slint_commands_mod" => tera.render("slint_commands_mod", &context)?,
         "slint_event_hub_client" => tera.render("slint_event_hub_client", &context)?,

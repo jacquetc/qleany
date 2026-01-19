@@ -5,6 +5,9 @@ mod event_hub_client;
 use app_context::AppContext;
 use event_hub_client::EventHubClient;
 use std::sync::Arc;
+use anyhow::Result;
+use common::types::EntityId;
+//use crate::commands::system_commands;
 
 slint::include_modules!();
 
@@ -22,7 +25,7 @@ fn main() {
 }
 
 fn run_slint(app_context: &Arc<AppContext>) {
-    log::info!("Starting Qleany Slint UI");
+    log::info!("Starting {{ s.global.inner.application_name }} Slint UI");
     // Create the event hub client for backend-to-UI event passing
     let event_hub_client = EventHubClient::new(&app_context.event_hub);
     event_hub_client.start(app_context.quit_signal.clone());
@@ -30,8 +33,51 @@ fn run_slint(app_context: &Arc<AppContext>) {
     // Create the Slint UI
     let app = App::new().unwrap();
 
+    // Setup callbacks
+    setup_add_one_callbacks(&app, &app_context);
+
+    app.window().on_close_requested({
+                                        let ctx = Arc::clone(app_context);
+
+                                        move || {
+                                            log::info!("Window close requested");
+                                            ctx.shutdown();
+                                            return slint::CloseRequestResponse::HideWindow;
+                                        }
+                                    });
+
     // Run the application
     log::info!("Running Slint UI");
     app.run().unwrap();
 
+}
+
+// Example callback setup function
+fn setup_add_one_callbacks(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_add_one_clicked({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move || {
+
+            if let Some(app) = app_weak.upgrade()
+            {
+                // This is an example, adapt to your actual command and parameters
+                //let system_result = system_commands::get_system(
+                //    &ctx,
+                //    &1,
+                //);
+                let system_result: Result<Option<EntityId>> = Ok(Some(1)); // Placeholder for actual system retrieval
+
+                match system_result {
+                    Ok(Some(entity_id)) => {
+                        app.global::<AppState>()
+                            .set_number(app.global::<AppState>().get_number() + 1);
+                    }
+                    _ => {
+                        log::error!("Error retrieving selected entity");
+                    }
+                };
+            };
+        }
+    });
 }

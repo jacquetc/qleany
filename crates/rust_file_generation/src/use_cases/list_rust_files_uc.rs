@@ -833,6 +833,17 @@ impl ListRustFilesUseCase {
 
             files.push(File {
                 id: 0,
+                name: "globals.slint".to_string(),
+                relative_path: format!("{}/slint_ui/ui/", prefix),
+                group: "slint".to_string(),
+                template_name: "slint_globals".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+            });
+
+            files.push(File {
+                id: 0,
                 name: "commands.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),

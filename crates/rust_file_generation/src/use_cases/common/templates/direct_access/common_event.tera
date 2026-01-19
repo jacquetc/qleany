@@ -130,9 +130,16 @@ impl EventHub {
                     break;
                 }
 
-                let event = receiver.recv().unwrap();
-                let mut queue = queue.lock().unwrap();
-                queue.push(event.clone());
+                match receiver.recv() {
+                    Ok(event) => {
+                        let mut queue = queue.lock().unwrap();
+                        queue.push(event.clone());
+                    }
+                    Err(_) => {
+                        //println!("EventHub receiver dropped");
+                        break;
+                    }
+                };
             }
         });
     }

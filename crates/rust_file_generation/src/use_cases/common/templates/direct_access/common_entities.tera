@@ -24,14 +24,6 @@ pub enum {{ f.inner.enum_name }} {
     {%- endfor %}
 }
 
-impl Default for {{ f.inner.enum_name }} {
-    fn default() -> Self {
-    {%- for ev in f.inner.enum_values %}
-    {{ f.inner.enum_name }}::{{ ev }}
-    {% break %}
-    {%- endfor %}
-    }
-}
 {%- endif %}
 {%- endfor %}
 {% endfor %}

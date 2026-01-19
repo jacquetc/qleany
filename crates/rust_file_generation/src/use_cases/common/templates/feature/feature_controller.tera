@@ -21,7 +21,7 @@ use common::event::{{ f.pascal_name }}Event::{{ uc.pascal_name }};
 {%- endfor %}
 {% for uc_id, uc in f.use_cases %}
 {%- if uc.inner.long_operation %}
-use common::long_operation::LongOperationManager;
+use common::long_operation::{LongOperationManager, OperationProgress};
 {%- break %}
 {%- endif %}
 {%- endfor %}

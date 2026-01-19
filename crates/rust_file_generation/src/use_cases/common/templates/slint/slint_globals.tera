@@ -1,0 +1,8 @@
+
+// Application-wide state
+export global AppState {
+    in-out property <int> workspace_id: -1;
+    in-out property <int> system_id: -1;
+    in-out property <int> number;
+    callback add_one_clicked();
+}
