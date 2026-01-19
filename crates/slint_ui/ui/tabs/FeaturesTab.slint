@@ -188,13 +188,13 @@ export component FeaturesTab inherits Rectangle {
                                 label: "Name";
                                 required: true;
                                 error-message: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") ? "Feature name is required" :
-                                    (CommonTools.check_is_pascal_case(FeaturesTabState.selected_feature_name) ? "" : "Feature name must be in PascalCase");
+                                    (CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name) ? "" : "Feature name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_feature_name;
                                     placeholder: "Enter the feature name";
                                     has-error: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "")
-                                        || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_feature_name);
+                                        || !CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name);
 
                                     edited(text) => {
                                         FeaturesTabState.feature_name_changed(text);
@@ -324,7 +324,7 @@ export component FeaturesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_use_case_name;
                                     placeholder: "Enter the use case name";
-                                    has-error: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_use_case_name);
+                                    has-error: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") || !CommonTools.check_is_snake_case(FeaturesTabState.selected_use_case_name);
 
                                     edited(text) => {
                                         FeaturesTabState.use_case_name_changed(text);
