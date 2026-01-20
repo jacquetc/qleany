@@ -853,6 +853,17 @@ impl ListRustFilesUseCase {
                 use_case: None,
             });
 
+            files.push(File {
+                id: 0,
+                name: "slint_undo_redo_commands.rs".to_string(),
+                relative_path: format!("{}/slint_ui/src/commands/", prefix),
+                group: "slint".to_string(),
+                template_name: "slint_undo_redo_commands".to_string(),
+                feature: Some(0),
+                entity: Some(0),
+                use_case: None,
+            });
+
             // commands:
             let relative_path = format!("{}/slint_ui/src/commands/", prefix);
 

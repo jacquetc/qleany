@@ -250,6 +250,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
         "slint_event_hub_client" => tera.render("slint_event_hub_client", &context)?,
         "slint_entity_commands" => tera.render("slint_entity_commands", &context)?,
         "slint_feature_commands" => tera.render("slint_feature_commands", &context)?,
+        "slint_undo_redo_commands" => tera.render("slint_undo_redo_commands", &context)?,
         _ => {
             return Err(anyhow::anyhow!(
                 "Unknown template name: {}",

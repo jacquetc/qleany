@@ -13,3 +13,4 @@ pub mod {{ e.snake_name }}_commands;
 pub mod {{ f.snake_name }}_commands;
     {%- endif %}
 {% endfor %}
+pub mod undo_redo_commands;
