@@ -13,7 +13,7 @@ pub fn undo(ctx: &AppContext, stack_id: Option<u64>) -> Result<(), String> {
 
 /// Redoes the most recently undone command on the specified stack.
 pub fn redo(ctx: &AppContext, stack_id: Option<u64>) -> Result<(), String> {
-    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();±±
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     undo_redo_manager.set_event_hub(&ctx.event_hub);
 
     undo_redo_manager.redo(stack_id).map_err(|e| e.to_string())

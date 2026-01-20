@@ -1,0 +1,71 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "qleany"
+version = "1.0.0"
+description = "Clean Architecture scaffold code generator for Rust and C++/Qt applications"
+readme = "README.md"
+license = { text = "MPL-2.0" }
+authors = [{ name = "Cyril Jacquet", email = "cyril.jacquet@ferntech.eu" }]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Build Tools",
+]
+keywords = [
+    "clean-architecture",
+    "code-generator",
+    "scaffold",
+    "rust",
+    "cpp",
+    "qt",
+    "slint",
+    "vertical-slice",
+]
+
+[project.urls]
+Homepage = "https://github.com/jacquetc/qleany"
+Repository = "https://github.com/jacquetc/qleany"
+Documentation = "https://github.com/jacquetc/qleany#readme"
+Issues = "https://github.com/jacquetc/qleany/issues"
+
+[project.scripts]
+# This creates the `qleany` command that invokes the Rust binary
+# maturin handles this automatically for bindings = "bin"
+
+[tool.maturin]
+# Build as a standalone binary, not a Python extension module
+bindings = "bin"
+
+# Path to the crate containing the binary (relative to pyproject.toml)
+manifest-path = "crates/slint_ui/Cargo.toml"
+
+# Strip symbols for smaller binary size
+strip = true
+
+# Linux compatibility level
+compatibility = "manylinux2014"
+
+# Exclude unnecessary files from the wheel
+exclude = [
+    "**/.git/**",
+    "**/.github/**",
+    "**/target/**",
+    "**/*.md",
+    "**/tests/**",
+    "**/docs/**",
+    "**/.devcontainer/**",
+]
+
+# Include the binary with its original name
+# The binary name comes from [[bin]] in Cargo.toml
+# If not specified there, it defaults to the package name ("qleany")

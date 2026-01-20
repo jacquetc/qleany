@@ -95,7 +95,6 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd target/${{ matrix.target }}/release
-          # Replace 'qleany' with your actual binary name
           tar czvf ../../../qleany-${{ matrix.target }}.tar.gz qleany
           cd ../../..
 
@@ -104,7 +103,6 @@ jobs:
         shell: pwsh
         run: |
           cd target/${{ matrix.target }}/release
-          # Replace 'qleany.exe' with your actual binary name
           Compress-Archive -Path qleany.exe -DestinationPath ../../../qleany-${{ matrix.target }}.zip
 
       - name: Upload artifact
