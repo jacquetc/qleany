@@ -485,7 +485,7 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
 
                     // Create a new feature with default values
                     let create_dto = direct_access::CreateFeatureDto {
-                        name: "NewFeature".to_string(),
+                        name: "new_feature".to_string(),
                         use_cases: vec![],
                     };
 

@@ -340,15 +340,6 @@ export component FeaturesTab inherits Rectangle {
                                     spacing: 8px;
 
                                     CheckBox {
-                                        text: "Validator";
-                                        checked <=> FeaturesTabState.selected_use_case_validator;
-
-                                        toggled => {
-                                            FeaturesTabState.use_case_validator_changed(self.checked);
-                                        }
-                                    }
-
-                                    CheckBox {
                                         text: "Undoable";
                                         checked <=> FeaturesTabState.selected_use_case_undoable;
 

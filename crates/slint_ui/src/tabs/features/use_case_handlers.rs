@@ -646,7 +646,7 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
 
                     // Create a new use case with default values
                     let create_dto = direct_access::CreateUseCaseDto {
-                        name: "NewUseCase".to_string(),
+                        name: "new_use_case".to_string(),
                         validator: false,
                         undoable: false,
                         read_only: false,
