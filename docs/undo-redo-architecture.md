@@ -21,7 +21,9 @@ Qleany itself uses Approach B. Skribisto uses Approach A.
 
 ## My Recommendations
 
-Do not use a single, linear undo-redo stack for the entire application except in the most basic cases. Think about interactions from the user's perspective: they expect undo and redo to apply to specific contexts rather than globally. A monolithic stack leads to confusion and unintended consequences. If a user is editing a document and undoes an action, they do not expect that to also undo changes in unrelated settings or other documents.
+Do not use a single, linear undo-redo stack for the entire application except in the most basic cases. Like an admiral said : "It's a trap!" 
+
+Think about interactions from the user's perspective: they expect undo and redo to apply to specific contexts rather than globally. A monolithic stack leads to confusion and unintended consequences. If a user is editing a document and undoes an action, they do not expect that to also undo changes in unrelated settings or other documents.
 
 Instead, each context should have its own undo-redo stack. The question is how to define "context." Qleany supports two approaches, described below, suited to different application types. Both use the same generated infrastructure; they differ only in when and where stacks are created and destroyed.
 
