@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use crate::SaveDto;
 use crate::use_cases::common::model_structs;
 use anyhow::Result;
-use common::database::QueryUnitOfWork;
+use common::database::CommandUnitOfWork;
 use common::entities::UserInterface;
 use common::entities::{
     Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root, UseCase, Workspace,
@@ -12,24 +14,25 @@ pub trait SaveUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn SaveUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Workspace", action = "GetRO")]
-#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Global", action = "GetRO")]
-#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
-#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
-#[macros::uow_action(entity = "UseCase", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Entity", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Field", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Dto", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Dto", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
-pub trait SaveUnitOfWorkTrait: QueryUnitOfWork {}
+#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "Update")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "UserInterface", action = "Get")]
+#[macros::uow_action(entity = "Feature", action = "GetMulti")]
+#[macros::uow_action(entity = "Feature", action = "GetRelationship")]
+#[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "UseCase", action = "GetRelationship")]
+#[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetRelationship")]
+#[macros::uow_action(entity = "Field", action = "GetMulti")]
+#[macros::uow_action(entity = "Field", action = "GetRelationship")]
+#[macros::uow_action(entity = "Dto", action = "GetMulti")]
+#[macros::uow_action(entity = "Dto", action = "GetRelationship")]
+#[macros::uow_action(entity = "DtoField", action = "GetMulti")]
+pub trait SaveUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct SaveUseCase {
     uow_factory: Box<dyn SaveUnitOfWorkFactoryTrait>,
@@ -41,7 +44,7 @@ impl SaveUseCase {
     }
 
     pub fn execute(&mut self, dto: &SaveDto) -> Result<()> {
-        let uow = self.uow_factory.create();
+        let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
         // Get all roots
@@ -51,7 +54,7 @@ impl SaveUseCase {
         }
         let root = &roots[0].as_ref().ok_or(anyhow::anyhow!("Root is None"))?;
         // get workspace
-        let workspace = uow
+        let mut workspace = uow
             .get_workspace(
                 &root
                     .workspace
@@ -118,7 +121,15 @@ impl SaveUseCase {
         let dto_fields = uow.get_dto_field_multi(&dto_field_ids)?;
         let dto_fields = dto_fields.into_iter().flatten().collect::<Vec<DtoField>>();
 
-        uow.end_transaction()?;
+        // update manifest path in workspace
+        workspace.manifest_absolute_path = PathBuf::from(dto.manifest_path.clone()).parent()
+            .ok_or(anyhow::anyhow!("Failed to get manifest parent path"))?
+            .to_str()
+            .ok_or(anyhow::anyhow!("Failed to convert path to string"))?
+            .to_string();
+        uow.update_workspace(&workspace)?;
+
+        uow.commit()?;
 
         // Create model structs
         let model_global = model_structs::Global {

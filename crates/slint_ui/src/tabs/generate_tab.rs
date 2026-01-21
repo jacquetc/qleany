@@ -12,7 +12,7 @@ use std::sync::Arc;
 use slint::{ComponentHandle, Model, SharedString, VecModel};
 
 use crate::app_context::AppContext;
-use crate::commands::rust_file_generation_commands;
+use crate::commands::{handling_manifest_commands, rust_file_generation_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, ListRustFilesDto};
