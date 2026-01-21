@@ -1,8 +1,8 @@
-[![crates.io](https://img.shields.io/crates/v/qleany?style=flat-square&logo=rust)](https://crates.io/crates/qleany)
-[![API](https://docs.rs/qleany/badge.svg)](https://docs.rs/qleany)
+![PyPI - Version](https://img.shields.io/pypi/v/qleany)
 [![license](https://img.shields.io/badge/license-Mozilla_Publc_License--2.0-blue?style=flat-square)](#license)
 ![quality](https://img.shields.io/github/actions/workflow/status/jacquetc/qleany/ci.yml)
-![Lines of code](https://img.shields.io/tokei/lines/github.com/jacquetc/qleany)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/jacquetc/qleany)
+
 # Qleany
 
 **Architecture scaffolding generator for C++20/Qt6 or Rust 2024 applications — desktop, mobile, and CLI.**
@@ -125,11 +125,11 @@ I'm no web developer, and Tauri/React is not my forte. But if you want to build 
 
 | Source | Status |
 |--------|--------|
-| GitHub Releases | *Coming soon* |
-| crates.io | *Coming soon* |
-| PyPI (pip) | *Coming soon* |
+| GitHub Releases | [See here](https://github.com/jacquetc/qleany/releases/latest) |
+| Cargo | `cargo install --git https://github.com/jacquetc/qleany` or `cargo binstall qleany` |
+| PyPI (pip) with pipx | `pipx install qleany`  from [Pypi](https://pypi.org/project/qleany/) |
 
-For now, build from source (see below).
+Or build from source (see below).
 
 ---
 

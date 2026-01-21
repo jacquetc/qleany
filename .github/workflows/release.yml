@@ -168,28 +168,3 @@ jobs:
             release/*
           generate_release_notes: true
           fail_on_unmatched_files: true
-
-  # Optional: Publish to crates.io
-  publish:
-    name: Publish to crates.io
-    needs: release
-    runs-on: ubuntu-latest
-    environment:
-      name: release
-    timeout-minutes: 15
-    # Only publish on non-prerelease versions
-    if: ${{ !contains(github.ref_name, '-') }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Publish to crates.io
-        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
