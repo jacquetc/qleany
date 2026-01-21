@@ -122,7 +122,8 @@ impl SaveUseCase {
         let dto_fields = dto_fields.into_iter().flatten().collect::<Vec<DtoField>>();
 
         // update manifest path in workspace
-        workspace.manifest_absolute_path = PathBuf::from(dto.manifest_path.clone()).parent()
+        workspace.manifest_absolute_path = PathBuf::from(dto.manifest_path.clone())
+            .parent()
             .ok_or(anyhow::anyhow!("Failed to get manifest parent path"))?
             .to_str()
             .ok_or(anyhow::anyhow!("Failed to convert path to string"))?
