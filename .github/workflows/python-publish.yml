@@ -41,6 +41,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $version = "$env:GITHUB_REF_NAME" -replace '^v', ''
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Update Cargo.toml version
+        shell: pwsh
+        run: |
+          (Get-Content Cargo.toml) -replace '^version = ".*"', 'version = "${{ steps.version.outputs.VERSION }}"' | Set-Content Cargo.toml
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
