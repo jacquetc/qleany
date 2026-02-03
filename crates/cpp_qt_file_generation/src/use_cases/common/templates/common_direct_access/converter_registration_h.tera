@@ -1,0 +1,34 @@
+
+#include <QVariant>
+#include <QString>
+#include <QUuid>
+#include <QDateTime>
+#include <optional>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess
+{
+template <typename T, typename Convert>
+void registerOptionalConverters(Convert toValue)
+{
+    QMetaType::registerConverter<QVariant, std::optional<T>>(
+        [toValue](const QVariant &var) -> std::optional<T> {
+            return (var.isNull() || !var.isValid()) ? std::nullopt : std::optional<T>{toValue(var)};
+        });
+    QMetaType::registerConverter<std::optional<T>, QVariant>(
+        [](const std::optional<T> &opt) -> QVariant {
+            return opt ? QVariant(*opt) : QVariant();
+        });
+}
+
+inline void registerConverters()
+{
+    registerOptionalConverters<QString>([](const QVariant &v) { return v.toString(); });
+    registerOptionalConverters<int>([](const QVariant &v) { return v.toInt(); });
+    registerOptionalConverters<float>([](const QVariant &v) { return v.toFloat(); });
+    registerOptionalConverters<uint>([](const QVariant &v) { return v.toUInt(); });
+    registerOptionalConverters<QUuid>([](const QVariant &v) { return v.toUuid(); });
+    registerOptionalConverters<QDateTime>([](const QVariant &v) { return v.toDateTime(); });
+    registerOptionalConverters<bool>([](const QVariant &v) { return v.toBool(); });
+}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::RepositoryFactory

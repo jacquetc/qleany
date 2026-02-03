@@ -1,0 +1,418 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "{{ ent.snake_name }}_controller.h"
+
+#include "{{ ent.snake_name }}_unit_of_work.h"
+#include "service_locator.h"
+#include "use_cases/common/dto_mapper.h"
+#include "use_cases/create_uc.h"
+#include "use_cases/get_uc.h"
+#include "use_cases/remove_uc.h"
+#include "use_cases/update_uc.h"
+#include <QCoro/QCoroTask>
+#include <QCoro/QCoroTimer>
+{%- if ent.forward_relationships %}
+#include "use_cases/get_relationship_ids_count_uc.h"
+#include "use_cases/get_relationship_ids_in_range_uc.h"
+#include "use_cases/get_relationship_ids_many_uc.h"
+#include "use_cases/get_relationship_ids_uc.h"
+#include "use_cases/set_relationship_ids_uc.h"
+{%- endif %}
+
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+
+{{ ent.pascal_name }}Controller::{{ ent.pascal_name }}Controller(QObject *parent) : QObject(parent)
+{
+    resolveDependencies();
+}
+void {{ ent.pascal_name }}Controller::resolveDependencies()
+{
+    auto *locator = Common::ServiceLocator::instance(); // set by provider
+    if (!locator)
+    {
+        qCritical() << "ServiceLocator not initialized";
+        return;
+    }
+    m_dbContext = locator->dbContext();
+    m_eventRegistry = locator->eventRegistry();
+    m_undoRedoSystem = locator->undoRedoSystem();
+}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    // Create use case that will be owned by the command
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Create{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    // Create command that owns the use case
+    auto command = std::make_shared<Common::UndoRedo::UndoRedoCommand>("Create {{ ent.camel_plural_name }} Command"_L1);
+    QList<{{ ent.pascal_name }}Dto> result;
+
+    // Create weak_ptr to break circular reference
+    std::weak_ptr<Create{{ ent.pascal_name }}UseCase> weakUseCase = useCase;
+
+    // Prepare lambda for execute - use weak_ptr to avoid circular reference
+    command->setExecuteFunction([weakUseCase, {{ ent.camel_plural_name }}, &result](auto &) {
+        if (auto useCase = weakUseCase.lock())
+        {
+            result = useCase->execute({{ ent.camel_plural_name }});
+        }
+    });
+
+    // Prepare lambda for redo - use weak_ptr to avoid circular reference
+    command->setRedoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->redo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Prepare lambda for undo - use weak_ptr to avoid circular reference
+    command->setUndoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->undo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Store the useCase in the command to maintain ownership
+    // This ensures the useCase stays alive as long as the command exists
+    command->setProperty("useCase", QVariant::fromValue(useCase));
+
+    // Execute command asynchronously using QCoro integration
+    std::optional<bool> success = co_await m_undoRedoSystem->executeCommandAsync(command, 500, 0);
+
+    if (!success.has_value())
+    {
+        qWarning() << "Create {{ ent.pascal_name }} command execution timed out";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    if (!success.value())
+    {
+        qWarning() << "Failed to execute create {{ ent.pascal_name }} command";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    co_return result;
+}
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::get(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    // Use undo/redo query system with QCoro integration
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    auto query = m_undoRedoSystem->createQuery<QList<{{ ent.pascal_name }}Dto>>("Get {{ ent.camel_plural_name }} Query"_L1);
+    query->setQueryFunction([this, {{ ent.camel_name }}Ids]() -> QList<{{ ent.pascal_name }}Dto> {
+        std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<Get{{ ent.pascal_name }}UseCase>(std::move(uow));
+        return useCase->execute({{ ent.camel_name }}Ids);
+    });
+
+    // Execute query asynchronously using QCoro integration
+    auto result = co_await m_undoRedoSystem->executeQueryAsync(query);
+    co_return result;
+}
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    // Create use case that will be owned by the command
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Update{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    // Create command that owns the use case
+    auto command = std::make_shared<Common::UndoRedo::UndoRedoCommand>("Update {{ ent.camel_plural_name }} Command"_L1);
+    QList<{{ ent.pascal_name }}Dto> result;
+
+    // Create weak_ptr to break circular reference
+    std::weak_ptr<Update{{ ent.pascal_name }}UseCase> weakUseCase = useCase;
+
+    // Prepare lambda for execute - use weak_ptr to avoid circular reference
+    command->setExecuteFunction([weakUseCase, {{ ent.camel_plural_name }}, &result](auto &) {
+        if (auto useCase = weakUseCase.lock())
+        {
+            result = useCase->execute({{ ent.camel_plural_name }});
+        }
+    });
+
+    // Prepare lambda for redo - use weak_ptr to avoid circular reference
+    command->setRedoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->redo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Prepare lambda for undo - use weak_ptr to avoid circular reference
+    command->setUndoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->undo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Store the useCase in the command to maintain ownership
+    // This ensures the useCase stays alive as long as the command exists
+    command->setProperty("useCase", QVariant::fromValue(useCase));
+
+    // Execute command asynchronously using QCoro integration
+    std::optional<bool> success = co_await m_undoRedoSystem->executeCommandAsync(command, 500, 0);
+
+    if (!success.has_value())
+    {
+        qWarning() << "Update {{ ent.pascal_name }} command execution timed out";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    if (!success.value())
+    {
+        qWarning() << "Failed to execute update {{ ent.pascal_name }} command";
+        co_return QList<{{ ent.pascal_name }}Dto>();
+    }
+
+    co_return result;
+}
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<int>();
+    }
+
+    // Create use case that will be owned by the command
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Remove{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    // Create command that owns the use case
+    auto command = std::make_shared<Common::UndoRedo::UndoRedoCommand>("Remove {{ ent.camel_plural_name }} Command"_L1);
+    QList<int> result;
+
+    // Create weak_ptr to break circular reference
+    std::weak_ptr<Remove{{ ent.pascal_name }}UseCase> weakUseCase = useCase;
+
+    // Prepare lambda for execute - use weak_ptr to avoid circular reference
+    command->setExecuteFunction([weakUseCase, {{ ent.camel_name }}Ids, &result](auto &) {
+        if (auto useCase = weakUseCase.lock())
+        {
+            result = useCase->execute({{ ent.camel_name }}Ids);
+        }
+    });
+
+    // Prepare lambda for redo - use weak_ptr to avoid circular reference
+    command->setRedoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->redo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Prepare lambda for undo - use weak_ptr to avoid circular reference
+    command->setUndoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->undo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Store the useCase in the command to maintain ownership
+    // This ensures the useCase stays alive as long as the command exists
+    command->setProperty("useCase", QVariant::fromValue(useCase));
+
+    // Execute command asynchronously using QCoro integration
+    std::optional<bool> success = co_await m_undoRedoSystem->executeCommandAsync(command, 500, 0);
+
+    if (!success.has_value())
+    {
+        qWarning() << "Remove {{ ent.pascal_name }} command execution timed out";
+        co_return QList<int>();
+    }
+
+    if (!success.value())
+    {
+        qWarning() << "Failed to execute remove {{ ent.pascal_name }} command";
+        co_return QList<int>();
+    }
+
+    co_return result;
+}
+
+{%- if ent.forward_relationships %}
+
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<int>();
+    }
+
+    auto query = m_undoRedoSystem->createQuery<QList<int>>("Get {{ ent.pascal_name }} Relationship IDs Query"_L1);
+    query->setQueryFunction([this, {{ ent.camel_name }}Id, relationship]() -> QList<int> {
+        std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<GetRelationshipIdsUseCase>(std::move(uow));
+        return useCase->execute({{ ent.camel_name }}Id, relationship);
+    });
+
+    auto result = co_await m_undoRedoSystem->executeQueryAsync(query);
+    co_return result;
+}
+
+QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                                       QList<int> relatedIds)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return;
+    }
+
+    // Create use case that will be owned by the command
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<SetRelationshipIdsUseCase>(std::move(uow));
+
+    // Create command that owns the use case
+    auto command = std::make_shared<Common::UndoRedo::UndoRedoCommand>("Set {{ ent.pascal_name }} Relationship IDs Command"_L1);
+
+    // Create weak_ptr to break circular reference
+    std::weak_ptr<SetRelationshipIdsUseCase> weakUseCase = useCase;
+
+    // Prepare lambda for execute - use weak_ptr to avoid circular reference
+    command->setExecuteFunction([weakUseCase, {{ ent.camel_name }}Id, relationship, relatedIds](auto &) {
+        if (auto useCase = weakUseCase.lock())
+        {
+            useCase->execute({{ ent.camel_name }}Id, relationship, relatedIds);
+        }
+    });
+
+    // Prepare lambda for redo - use weak_ptr to avoid circular reference
+    command->setRedoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->redo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Prepare lambda for undo - use weak_ptr to avoid circular reference
+    command->setUndoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->undo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
+    });
+
+    // Store the useCase in the command to maintain ownership
+    // This ensures the useCase stays alive as long as the command exists
+    command->setProperty("useCase", QVariant::fromValue(useCase));
+
+    std::optional<bool> success = co_await m_undoRedoSystem->executeCommandAsync(command, 500, 0);
+
+    if (!success.has_value())
+    {
+        qWarning() << "Set {{ ent.pascal_name }} relationship command execution timed out";
+        co_return;
+    }
+
+    if (!success.value())
+    {
+        qWarning() << "Failed to execute set {{ ent.pascal_name }} relationship command";
+        co_return;
+    }
+}
+
+QCoro::Task<QHash<int, QList<int>>> {{ ent.pascal_name }}Controller::getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
+                                                                             {{ ent.pascal_name }}RelationshipField relationship)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QHash<int, QList<int>>();
+    }
+
+    auto query = m_undoRedoSystem->createQuery<QHash<int, QList<int>>>("Get {{ ent.pascal_name }} Relationship IDs Many Query"_L1);
+    query->setQueryFunction([this, {{ ent.camel_name }}Ids, relationship]() -> QHash<int, QList<int>> {
+        std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<GetRelationshipIdsManyUseCase>(std::move(uow));
+        return useCase->execute({{ ent.camel_name }}Ids, relationship);
+    });
+
+    auto result = co_await m_undoRedoSystem->executeQueryAsync(query);
+    co_return result;
+}
+
+QCoro::Task<int> {{ ent.pascal_name }}Controller::getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return 0;
+    }
+
+    auto query = m_undoRedoSystem->createQuery<int>("Get {{ ent.pascal_name }} Relationship IDs Count Query"_L1);
+    query->setQueryFunction([this, {{ ent.camel_name }}Id, relationship]() -> int {
+        std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<GetRelationshipIdsCountUseCase>(std::move(uow));
+        return useCase->execute({{ ent.camel_name }}Id, relationship);
+    });
+
+    auto result = co_await m_undoRedoSystem->executeQueryAsync(query);
+    co_return result;
+}
+
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                                                    int offset, int limit)
+{
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<int>();
+    }
+
+    auto query = m_undoRedoSystem->createQuery<QList<int>>("Get {{ ent.pascal_name }} Relationship IDs In Range Query"_L1);
+    query->setQueryFunction([this, {{ ent.camel_name }}Id, relationship, offset, limit]() -> QList<int> {
+        std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<GetRelationshipIdsInRangeUseCase>(std::move(uow));
+        return useCase->execute({{ ent.camel_name }}Id, relationship, offset, limit);
+    });
+
+    auto result = co_await m_undoRedoSystem->executeQueryAsync(query);
+    co_return result;
+}
+
+{%- endif %}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

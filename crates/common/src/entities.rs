@@ -199,6 +199,7 @@ pub struct File {
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
+    pub field: Option<EntityId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

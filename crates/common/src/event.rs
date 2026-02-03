@@ -81,6 +81,13 @@ pub enum RustFileGenerationEvent {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum CppQtFileGenerationEvent {
+    ListCppQtFiles,
+    GenerateCppQtCode,
+    GenerateCppQtFiles,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Origin {
     DirectAccess(DirectAccessEntity),
     UndoRedo(UndoRedoEvent),
@@ -89,6 +96,7 @@ pub enum Origin {
     HandlingAppLifecycle(HandlingAppLifecycleEvent),
     HandlingManifest(HandlingManifestEvent),
     RustFileGeneration(RustFileGenerationEvent),
+    CppQtFileGeneration(CppQtFileGenerationEvent),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -132,6 +140,9 @@ impl Event {
             Origin::HandlingAppLifecycle(event) => format!("handling_app_lifecycle_{:?}", event),
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
             Origin::RustFileGeneration(event) => format!("rust_file_generation_{:?}", event),
+            Origin::CppQtFileGeneration(event) => {
+                format!("cpp_qt_file_generation_{:?}", event)
+            }
         }
         .to_lowercase()
     }

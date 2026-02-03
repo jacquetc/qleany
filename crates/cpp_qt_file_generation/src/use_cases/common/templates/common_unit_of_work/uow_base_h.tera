@@ -1,0 +1,93 @@
+/******************************************************************************
+ * Unit of Work Base - Transaction Management
+ *
+ * This file provides:
+ * - Transaction interface (ITransactional)
+ * - Base implementation class (UnitOfWorkBase)
+ ******************************************************************************/
+
+#pragma once
+
+#include "database/db_context.h"
+#include "direct_access/event_registry.h"
+
+#include <QHash>
+#include <QList>
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::Common::UnitOfWork
+{
+
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
+namespace SCD = {{ s.global.application_pascal_name }}::Common::DirectAccess;
+
+/**
+ * @brief Interface for transaction operations
+ *
+ * All UoW interfaces should inherit from this to get standard transaction methods.
+ */
+class ITransactional
+{
+  public:
+    virtual ~ITransactional() = default;
+    virtual void beginTransaction() = 0;
+    virtual void commit() = 0;
+    virtual void endTransaction() = 0;
+    virtual void rollback() = 0;
+    virtual void createSavepoint() = 0;
+    virtual void rollbackToSavepoint() = 0;
+    virtual void releaseSavepoint() = 0;
+};
+
+/**
+ * @brief Base class providing transaction management for Unit of Work implementations
+ *
+ * Inherit from this class to get automatic transaction method implementations.
+ * The DbSubContext is managed internally and provides connection lifecycle management.
+ */
+class UnitOfWorkBase
+{
+  public:
+    UnitOfWorkBase(SCDatabase::DbContext &dbContext, QPointer<SCD::EventRegistry> eventRegistry)
+        : m_dbSubContext(SCDatabase::DbSubContext(dbContext)), m_eventRegistry(std::move(eventRegistry))
+    {
+    }
+
+    virtual ~UnitOfWorkBase() = default;
+
+    // Transaction management - these implement ITransactional
+    virtual void beginTransaction()
+    {
+        m_dbSubContext.beginTransaction();
+    }
+    virtual void commit()
+    {
+        m_dbSubContext.commit();
+    }
+    virtual void endTransaction()
+    {
+        m_dbSubContext.endTransaction();
+    }
+    virtual void rollback()
+    {
+        m_dbSubContext.rollback();
+    }
+    virtual void createSavepoint()
+    {
+        m_dbSubContext.createSavepoint();
+    }
+    virtual void rollbackToSavepoint()
+    {
+        m_dbSubContext.rollbackToSavepoint();
+    }
+    virtual void releaseSavepoint()
+    {
+        m_dbSubContext.releaseSavepoint();
+    }
+
+  protected:
+    SCDatabase::DbSubContext m_dbSubContext;
+    QPointer<SCD::EventRegistry> m_eventRegistry;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::UnitOfWork

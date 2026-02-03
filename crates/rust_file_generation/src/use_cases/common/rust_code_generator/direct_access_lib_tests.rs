@@ -22,6 +22,7 @@ fn render_direct_access_lib_lists_entities() {
         feature: None,
         entity: Some(0),
         use_case: None,
+        field: None,
     };
 
     let global = Global {

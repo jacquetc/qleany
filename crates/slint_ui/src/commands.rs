@@ -17,5 +17,6 @@ pub mod workspace_commands;
 
 pub mod handling_app_lifecycle_commands;
 pub mod rust_file_generation_commands;
+pub mod cpp_qt_file_generation_commands;
 pub mod undo_redo_commands;
 pub mod use_case_commands;

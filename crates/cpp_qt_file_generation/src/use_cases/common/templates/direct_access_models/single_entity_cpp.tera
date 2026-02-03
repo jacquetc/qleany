@@ -1,0 +1,98 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "single_{{ ent.snake_name }}.h"
+
+#include "service_locator.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+Single{{ ent.pascal_name }}::Single{{ ent.pascal_name }}(QObject *parent) : QObject(parent)
+{
+    resolveDependencies();
+}
+
+void Single{{ ent.pascal_name }}::resolveDependencies()
+{
+    auto *locator = Common::ServiceLocator::instance();
+    if (!locator)
+    {
+        qCritical() << "ServiceLocator not initialized";
+        return;
+    }
+
+    m_eventRegistry = locator->eventRegistry();
+
+    // Create controllers
+    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}::{{ ent.pascal_name }}Controller(this);
+
+    // Connect to events
+    if (m_eventRegistry)
+    {
+        auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}();
+        if ({{ ent.camel_name }}Events)
+        {
+            connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this,
+                    SLOT(onUpdatedEvent(QList<int>)));
+        }
+    }
+}
+
+void Single{{ ent.pascal_name }}::onUpdatedEvent(const QList<int> &ids)
+{
+    if (m_id > 0 && ids.contains(m_id))
+    {
+        refreshData();
+    }
+}
+
+void Single{{ ent.pascal_name }}::refreshData()
+{
+    if (m_id <= 0)
+        return;
+
+    auto get{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_id});
+
+    QCoro::connect(std::move(get{{ ent.pascal_name }}Task), this, [this](const QList<{{ ent.pascal_name }}Dto> &&items) {
+        if (!m_{{ ent.camel_name }}Controller)
+            return;
+
+        if (items.isEmpty())
+            return;
+
+        const auto &item = items.first();
+        setId(item.id);
+    {%- for f in ent.fields %}
+        set{{ f.pascal_name }}(item.{{ f.camel_name }});
+    {%- endfor %}
+    });
+}
+
+int Single{{ ent.pascal_name }}::id() const
+{
+    return m_id;
+}
+void Single{{ ent.pascal_name }}::setId(int id)
+{
+    if (m_id != id)
+    {
+        m_id = id;
+        refreshData();
+        Q_EMIT itemIdChanged();
+    }
+}
+    {%- for f in ent.fields %}
+{{ f.cpp_qt_type }} Single{{ ent.pascal_name }}::{{ f.camel_name }}() const
+{
+    return m_{{ f.camel_name }};
+}
+void Single{{ ent.pascal_name }}::setCreatedAt(const {{ f.cpp_qt_type }} &{{ f.camel_name }})
+{
+    if (m_{{ f.camel_name }} != {{ f.camel_name }})
+    {
+        m_{{ f.camel_name }} = {{ f.camel_name }};
+        Q_EMIT {{ f.camel_name }}Changed();
+    }
+}
+    {%- endfor %}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

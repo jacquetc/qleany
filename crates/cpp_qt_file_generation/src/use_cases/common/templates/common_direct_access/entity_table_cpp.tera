@@ -1,0 +1,671 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "{{ ent.snake_name }}_table.h"
+#include "database/db_context.h"
+#include "database/junction_table_ops/ordered_one_to_many.h"
+#include "database/junction_table_ops/unordered_one_to_many.h"
+#include "database/junction_table_ops/unordered_many_to_many.h"
+#include "database/junction_table_ops/one_to_one.h"
+#include "database/junction_table_ops/many_to_one.h"
+#include "database/table_cache.h"
+#include "entities/{{ ent.snake_name }}.h"
+
+#include <QDateTime>
+#include <QList>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+using namespace {{ s.global.application_pascal_name }}::Common::Database;
+namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
+
+// forward relationship junction tables
+{% for rid, r in ent.forward_relationships %}
+const QString {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ ent.camel_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction"_L1;
+{%- endfor %}
+//  backward relationship junction tables
+{% for rid, r in s.entities[e].backward_relationships %}
+{%- if r.inner.left_entity == e %}
+const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.camel_name }}_junction"_L1;
+{%- else %}
+const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.camel_name }}_junction"_L1;
+{%- endif %}
+{%- endfor %}
+
+SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::{{ ent.pascal_name }}Table(DbSubContext &dbSubContext) : m_dbSubContext(dbSubContext)
+{
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::createMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    QList<SCE::{{ ent.pascal_name }}> created;
+    created.reserve({{ ent.camel_plural_name }}.size());
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    QSqlQuery q(db);
+    for (SCE::{{ ent.pascal_name }} r : {{ ent.camel_plural_name }})
+    {
+        QStringList columnNames;
+        QStringList valuePlaceholders;
+
+        // Conditionally include id only if > 0
+        if (r.id > 0)
+        {
+            columnNames << "id"_L1;
+            valuePlaceholders << ":id"_L1;
+        }
+
+        columnNames
+    {%- for f in ent.normal_fields %}
+                    << "{{ f.sql_safe_snake_name }}"_L1
+    {%- endfor %};
+
+        valuePlaceholders
+    {%- for f in ent.normal_fields %}
+        << ":{{ f.snake_name }}"_L1
+    {%- endfor %};
+        ;
+        QString sqlString =
+            "INSERT INTO {{ ent.snake_name }} (%1) VALUES (%2)"_L1.arg(columnNames.join(","_L1), valuePlaceholders.join(","_L1));
+
+        q.prepare(sqlString);
+
+        // Set timestamps if not provided
+        if (r.createdAt.isNull())
+            r.createdAt = QDateTime::currentDateTimeUtc();
+        if (r.updatedAt.isNull())
+            r.updatedAt = r.createdAt;
+
+        if (r.id > 0)
+            q.bindValue(":id"_L1, r.id);
+    {%- for f in ent.normal_fields %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            {%- if f.cpp_qt_type == "QDateTime" %}
+        r.{{ f.camel_name }}.toString(Qt::ISODate));
+            {%- elif  f.cpp_qt_type == "QUuid" %}
+        r.{{ f.camel_name }}.toString());
+            {%- elif f.inner.field_type == "Enum" and f.required == false %}
+        r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
+            {%- elif f.inner.field_type == "Enum" %}
+        static_cast<int>(r.{{ f.camel_name }}));
+            {%- elif f.required == false %}
+        r.{{ f.camel_name }}.has_value() ? r.{{ f.camel_name }}.value() : QVariant());
+            {%- else %}
+        r.{{ f.camel_name }});
+            {%- endif %}
+    {%- endfor %}
+
+        if (!q.exec())
+        {
+            qCritical() << "Failed to insert {{ ent.pascal_name }}:" << q.lastError().text() << " SQL:" << sqlString;
+            // If insert fails, skip this row
+            continue;
+        }
+        // Retrieve the auto-generated id
+        QSqlQuery idq(db);
+        if (idq.exec("SELECT last_insert_rowid()"_L1) && idq.next())
+        {
+            r.id = idq.value(0).toInt();
+
+            // Handle junction table relationships
+            {% for f in ent.fields %}
+            {% if f.inner.field_type == "Entity" and f.relationship == "OrderedOneToMany" %}
+            if (!r.{{ f.camel_name }}.isEmpty())
+            {
+                JunctionTableOps::OrderedOneToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+            }
+            {% elif f.inner.field_type == "Entity" and f.relationship == "OneToMany" %}
+            if (!r.{{ f.camel_name }}.isEmpty())
+            {
+                JunctionTableOps::UnorderedOneToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+            }
+            {% elif f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+                 JunctionTableOps::OneToOne::upsertRightId(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {% elif f.inner.field_type == "Entity" and f.relationship == "ManyToOne" %}
+                JunctionTableOps::ManyToOne::upsertRightId(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {% elif f.inner.field_type == "Entity" and f.relationship == "ManyToMany" %}
+            if (!r.{{ f.camel_name }}.isEmpty())
+            {
+                JunctionTableOps::UnorderedManyToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+            }
+            {% endif %}
+            {% endfor %}
+
+
+            created.append(r);
+        }
+    }
+
+    // Invalidate cache for created entities
+    if (!created.isEmpty())
+    {
+        QList<int> createdIds;
+        createdIds.reserve(created.size());
+        for (const auto &{{ ent.camel_name }} : created)
+            createdIds.append({{ ent.camel_name }}.id);
+
+        using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+        {{ ent.pascal_name }}Cache::instance().invalidateEntities(createdIds);
+    }
+
+    return created;
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::updateMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    QList<SCE::{{ ent.pascal_name }}> updated;
+    updated.reserve({{ ent.camel_plural_name }}.size());
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    QSqlQuery q(db);
+
+    QStringList columnNames;
+    columnNames << "id = :id"_L1
+    {%- for f in ent.normal_fields %}
+             << "{{ f.sql_safe_snake_name }} = :{{ f.snake_name }}"_L1
+    {%- endfor %}
+    ;
+
+    QString sqlString = "UPDATE {{ ent.snake_name }} SET %1 WHERE id = :id"_L1.arg(columnNames.join(","_L1));
+
+    for (const SCE::{{ ent.pascal_name }} &r : {{ ent.camel_plural_name }})
+    {
+        q.prepare(sqlString);
+        q.bindValue(":id"_L1, r.id);
+    {%- for f in ent.normal_fields %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            {%- if f.cpp_qt_type == "QDateTime" %}
+        r.{{ f.camel_name }}.toString(Qt::ISODate));
+            {%- elif  f.cpp_qt_type == "QUuid" %}
+        r.{{ f.camel_name }}.toString());
+            {%- elif f.inner.field_type == "Enum" and f.required == false %}
+        r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
+            {%- elif f.inner.field_type == "Enum" %}
+        static_cast<int>(r.{{ f.camel_name }}));
+            {%- elif f.required == false %}
+        r.{{ f.camel_name }}.has_value() ? r.{{ f.camel_name }}.value() : QVariant());
+            {%- else %}
+        r.{{ f.camel_name }});
+            {%- endif %}
+    {%- endfor %}
+
+        if (q.exec() && q.numRowsAffected() > 0)
+        {
+            // Handle junction table relationships
+            {%- for f in ent.fields %}
+            {%- if f.inner.field_type == "Entity" and f.relationship == "OrderedOneToMany" %}
+
+                JunctionTableOps::OrderedOneToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToMany" %}
+
+                JunctionTableOps::UnorderedOneToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+
+                JunctionTableOps::OneToOne::upsertRightId(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToOne" %}
+
+                JunctionTableOps::ManyToOne::upsertRightId(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToMany" %}
+
+                JunctionTableOps::UnorderedManyToMany::upsertRightIds(db, r.id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, r.{{ f.camel_name }});
+
+            {%- endif %}
+            {%- endfor %}
+
+            updated.append(r);
+        }
+    }
+
+    // Invalidate cache for updated entities
+    if (!updated.isEmpty())
+    {
+        QList<int> updatedIds;
+        updatedIds.reserve(updated.size());
+        for (const auto &{{ ent.camel_name }} : updated)
+            updatedIds.append({{ ent.camel_name }}.id);
+
+        using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+        {{ ent.pascal_name }}Cache::instance().invalidateEntities(updatedIds);
+        {{ ent.pascal_name }}Cache::instance().invalidateRelationships(updatedIds);
+    }
+
+    return updated;
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::findMany(const QList<int> &ids) const
+{
+    QList<SCE::{{ ent.pascal_name }}> result;
+    result.reserve(ids.size());
+
+    if (ids.isEmpty())
+        return result;
+
+    // Try cache first
+    using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+    if ({{ ent.pascal_name }}Cache::instance().getCachedEntities(ids, result))
+    {
+        return result;
+    }
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    // Build placeholder for SELECT fields
+    QStringList selectPlaceholders;
+    selectPlaceholders << "id"_L1
+        {%- for f in ent.normal_fields %}
+                   << "{{ f.sql_safe_snake_name }}"_L1
+        {%- endfor %}
+            ;
+
+    // Build a dynamic IN clause
+    QStringList inPlaceholders;
+    inPlaceholders.fill("?"_L1, ids.size());
+    const QString sql = QStringLiteral("SELECT %1 FROM {{ ent.snake_name }} WHERE id IN (%2)")
+                            .arg(selectPlaceholders.join(","_L1), inPlaceholders.join(","_L1));
+
+    QSqlQuery q(db);
+    q.prepare(sql);
+    for (int id : ids)
+        q.addBindValue(id);
+
+    if (q.exec())
+    {
+        QList<int> foundIds;
+        while (q.next())
+        {
+            foundIds.append(q.value(0).toInt());
+            SCE::{{ ent.pascal_name }} {{ ent.camel_name }};
+            {{ ent.camel_name }}.id = q.value(0).toInt();
+        {%- for f in ent.normal_fields %}
+
+            {%- if f.cpp_qt_base_type == "QDateTime" and f.required == false %}
+            {
+                QString dateTimeStr = q.value({{ loop.index }}).toString();
+                if (dateTimeStr.isEmpty())
+                    {{ ent.camel_name }}.{{ f.camel_name }} = std::nullopt;
+                else
+                    {{ ent.camel_name }}.{{ f.camel_name }} = QDateTime::fromString(dateTimeStr, Qt::ISODate);
+            }
+            {%- elif f.cpp_qt_type == "QDateTime" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = QDateTime::fromString(q.value({{ loop.index }}).toString(), Qt::ISODate);
+
+            {%- elif f.cpp_qt_base_type == "QUuid" and f.required == false %}
+            {
+                QString uuidStr = q.value({{ loop.index }}).toString();
+                if (uuidStr.isEmpty())
+                    {{ ent.camel_name }}.{{ f.camel_name }} = std::nullopt;
+                else
+                    {{ ent.camel_name }}.{{ f.camel_name }} = QUuid::fromString(uuidStr);
+            }
+            {%- elif f.cpp_qt_type == "QUuid" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = QUuid::fromString(q.value({{ loop.index }}).toString());
+
+            {%- elif f.inner.field_type == "Enum" and f.required == false %}
+            {
+                int enumVal = q.value({{ loop.index }}).toInt();
+                if (enumVal >= 0)
+                    {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_base_type }}>(enumVal);
+                else
+                    {{ ent.camel_name }}.{{ f.camel_name }} = std::nullopt;
+            }
+            {%- elif f.inner.field_type == "Enum" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_type }}>(q.value({{ loop.index }}).toInt());
+
+            {%- elif f.cpp_qt_base_type == "QString" and f.required == false %}
+            {
+            auto v = q.value({{ loop.index }});
+            {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.toString());
+            }
+
+            {%- elif f.cpp_qt_type == "QString" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toString();
+
+            {%- elif f.cpp_qt_base_type == "int" and f.required == false %}
+            {
+            auto v = q.value({{ loop.index }});
+            {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.toInt());
+            }
+
+            {%- elif f.cpp_qt_type == "int" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toInt();
+
+            {%- elif f.cpp_qt_base_type == "uint" and f.required == false %}
+            {
+            auto v = q.value({{ loop.index }});
+            {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.toUInt());
+            }
+
+            {%- elif f.cpp_qt_type == "uint" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toUInt();
+
+            {%- elif f.cpp_qt_base_type == "float" and f.required == false %}
+            {
+            auto v = q.value({{ loop.index }});
+            {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.toFloat());
+            }
+
+            {%- elif f.cpp_qt_type == "float" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toFloat();
+
+            {%- elif f.cpp_qt_base_type == "bool" and f.required == false %}
+            {
+            auto v = q.value({{ loop.index }});
+            {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.toBool());
+            }
+
+            {%- elif f.cpp_qt_type == "bool" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toBool();
+
+            {%- else %}
+            //TODO: check this type conversion
+            // The "else" of the template. Generic handling for other types, may be very wrong depending on type
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).value<{{ f.cpp_qt_type }}>();
+
+            {%- endif %}
+        {%- endfor %}
+
+            result.append({{ ent.camel_name }});
+        }
+
+        // Get relationship data for all found IDs
+
+            {% for f in ent.fields %}
+            {%- if f.inner.field_type == "Entity" and f.relationship == "OrderedOneToMany" %}
+
+        const QHash<int, QList<int>> {{ f.camel_name }}Map = JunctionTableOps::OrderedOneToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToMany" %}
+        const QHash<int, QList<int>> {{ f.camel_name }}Map = JunctionTableOps::UnorderedOneToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+        const QHash<int, std::optional<int>> {{ f.camel_name }}Map = JunctionTableOps::OneToOne::getRightIdMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToOne" %}
+        const QHash<int, std::optional<int>> {{ f.camel_name }}Map = JunctionTableOps::ManyToOne::getRightIdMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToMany" %}
+        const QHash<int, QList<int>> {{ f.camel_name }}Map = JunctionTableOps::UnorderedManyToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- endif %}
+            {%- endfor %}
+
+
+        // Build result with relationships populated
+        for (auto &{{ ent.camel_name }} : result)
+        {
+            {% for f in ent.fields %}
+            {%- if f.inner.field_type == "Entity" %}
+                {%- if f.relationship == "OneToOne" or f.relationship == "ManyToOne" %}
+                    {%- if f.required == false %}
+                {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id);
+                    {%- else %}
+                if ({{ f.camel_name }}Map.contains({{ ent.camel_name }}.id) && {{ f.camel_name }}Map.value({{ ent.camel_name }}.id).has_value()){
+                    {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id).value();
+                    }
+                else {
+                    // Handle missing required relationship as needed
+                    qCritical() << "Missing required relationship {{ f.camel_name }} for {{ ent.pascal_name }} with ID" << {{ ent.camel_name }}.id;
+                }
+                    {%- endif %}
+                {%- else %}
+                {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id);
+                {%- endif %}
+            {%- endif %}
+            {%- endfor %}
+        }
+
+        // Cache the result
+        {{ ent.pascal_name }}Cache::instance().setCachedEntities(ids, result);
+    }
+    return result;
+}
+
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::removeMany(const QList<int> &ids)
+{
+    QList<int> removed;
+    removed.reserve(ids.size());
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    QSqlQuery q(db);
+
+      // Clean up forward junction table relationships first
+          {% for f in ent.fields %}
+            {%- if f.inner.field_type == "Entity" and f.relationship == "OrderedOneToMany" %}
+    JunctionTableOps::OrderedOneToMany::removeWithLeftIdsMany(db, ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToMany" %}
+    JunctionTableOps::UnorderedOneToMany::removeWithLeftIdsMany(db, ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+    JunctionTableOps::OneToOne::removeWithLeftIdMany(db, ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToOne" %}
+    JunctionTableOps::ManyToOne::removeWithLeftIdMany(db, ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToMany" %}
+    JunctionTableOps::UnorderedManyToMany::removeWithLeftIdsMany(db, ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            {%- endif %}
+         {%- endfor %}
+
+    // Clean up backward junction table relationships
+{% for rid, r in s.entities[e].backward_relationships %}
+    {%- if r.inner.left_entity == e and r.inner.relationship_type == "OrderedOneToMany" %}
+    JunctionTableOps::OrderedOneToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "OneToMany" %}
+    JunctionTableOps::UnorderedOneToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "OneToOne" %}
+    JunctionTableOps::OneToOne::removeWithRightIdMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "ManyToOne" %}
+    JunctionTableOps::ManyToOne::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "ManyToMany" %}
+    JunctionTableOps::UnorderedManyToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- endif %}
+{%- endfor %}
+
+    for (int id : ids)
+    {
+        q.prepare("DELETE FROM {{ ent.snake_name }} WHERE id = :id"_L1);
+        q.bindValue(":id"_L1, id);
+        if (q.exec() && q.numRowsAffected() > 0)
+            removed.append(id);
+    }
+
+    // Invalidate cache for removed entities
+    if (!removed.isEmpty())
+    {
+        using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+        {{ ent.pascal_name }}Cache::instance().invalidateEntities(removed);
+        {{ ent.pascal_name }}Cache::instance().invalidateRelationships(removed);
+    }
+
+    return removed;
+}
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedIds)
+{
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    switch (relationship)
+    {
+    {% for f in ent.fields %}
+    {%- if f.inner.field_type == "Entity" %}
+    case {{ ent.pascal_name }}RelationshipField::{{ f.pascal_name }}:
+        {%- if f.relationship == "OrderedOneToMany" %}
+        JunctionTableOps::OrderedOneToMany::upsertRightIds(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, relatedIds);
+        {%- elif f.relationship == "OneToMany" %}
+            JunctionTableOps::UnorderedOneToMany::upsertRightIds(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, relatedIds);
+        {%- elif f.relationship == "OneToOne" %}
+            {%- if f.required %}
+        if (relatedIds.isEmpty())
+        {
+            qCritical() << "Related IDs for required OneToOne relationship cannot be empty";
+        }
+        {
+            int {{ f.camel_name }}RelatedId = relatedIds.first();
+            {%- else %}
+        {
+            std::optional<int> {{ f.camel_name }}RelatedId;
+            if (!relatedIds.isEmpty())
+            {
+                {{ f.camel_name }}RelatedId = relatedIds.first();
+            }
+            {%- endif %}
+            JunctionTableOps::OneToOne::upsertRightId(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, {{ f.camel_name }}RelatedId);
+        }
+        {%- elif f.relationship == "ManyToOne" %}
+            {%- if f.required %}
+        if (relatedIds.isEmpty())
+        {
+            qCritical() << "Related IDs for required ManyToOne relationship cannot be empty";
+        }
+        {
+            int {{ f.camel_name }}RelatedId = relatedIds.first();
+            {%- else %}
+        {
+            std::optional<int> {{ f.camel_name }}RelatedId;
+            if (!relatedIds.isEmpty())
+            {
+                {{ f.camel_name }}RelatedId = relatedIds.first();
+            }
+            {%- endif %}
+            JunctionTableOps::ManyToOne::upsertRightId(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, {{ f.camel_name }}RelatedId);
+        }
+        {%- elif f.relationship == "ManyToMany" %}
+        JunctionTableOps::UnorderedManyToMany::upsertRightIds(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, relatedIds);
+        {%- endif %}
+        break;
+    {%- endif %}
+    {%- endfor %}        
+    }
+    
+
+    // Invalidate cache for relationship changes
+    using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+    {{ ent.pascal_name }}Cache::instance().invalidateEntity({{ ent.camel_name }}Id);
+    {{ ent.pascal_name }}Cache::instance().invalidateRelationships({{ ent.camel_name }}Id);
+}
+
+QHash<int, QList<int>> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
+                                                                  {{ ent.pascal_name }}RelationshipField relationship) const
+{
+    // Try cache first
+    using {{ ent.pascal_name }}Cache = Database::TableCache<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}RelationshipField>;
+    QHash<int, QList<int>> result;
+    if ({{ ent.pascal_name }}Cache::instance().getCachedRelationshipData({{ ent.camel_name }}Ids, relationship, result))
+    {
+        return result;
+    }
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    switch (relationship)
+    {
+    {% for f in ent.fields %}
+    {%- if f.inner.field_type == "Entity" %}
+    case {{ ent.pascal_name }}RelationshipField::{{ f.pascal_name }}:
+        {%- if f.relationship == "OrderedOneToMany" %}
+        result = JunctionTableOps::OrderedOneToMany::getRightIdsMany(db, {{ ent.camel_name }}Ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "OneToMany" %}
+        result = JunctionTableOps::UnorderedOneToMany::getRightIdsMany(db, {{ ent.camel_name }}Ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "OneToOne" %}
+        {
+            QHash<int, std::optional<int>> temp = JunctionTableOps::OneToOne::getRightIdMany(db, {{ ent.camel_name }}Ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            // Convert to QList<int>
+            for (int key : temp.keys())
+            {
+                if (temp.value(key).has_value())
+                    result[key] = { temp.value(key).value() };
+                else
+                    result[key] = {};
+            }
+        }
+        {%- elif f.relationship == "ManyToOne" %}
+        {
+            QHash<int, std::optional<int>> temp = JunctionTableOps::ManyToOne::getRightIdMany(db, {{ ent.camel_name }}Ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+            // Convert to QList<int>
+            for (const auto keys = temp.keys(); int key : keys)
+            {
+                if (temp.value(key).has_value())
+                    result[key] = { temp.value(key).value() };
+                else
+                    result[key] = {};
+            }
+        }
+        {%- elif f.relationship == "ManyToMany" %}
+        result = JunctionTableOps::UnorderedManyToMany::getRightIdsMany(db, {{ ent.camel_name }}Ids, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- endif %}
+        break;
+    {%- endif %}
+    {%- endfor %}
+
+    default:
+
+        throw std::invalid_argument("Unhandled relationship type");
+    }
+
+    // Cache the result
+    {{ ent.pascal_name }}Cache::instance().setCachedRelationshipData({{ ent.camel_name }}Ids, relationship, result);
+
+    return result;
+}
+
+int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    int result;
+
+    switch (relationship)
+    {
+    {% for f in ent.fields %}
+    {%- if f.inner.field_type == "Entity" %}
+    case {{ ent.pascal_name }}RelationshipField::{{ f.pascal_name }}:
+        {%- if f.relationship == "OrderedOneToMany" %}
+        result = JunctionTableOps::OrderedOneToMany::getRightIdsCount(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "OneToMany" %}
+        result = JunctionTableOps::UnorderedOneToMany::getRightIdsCount(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "OneToOne" %}
+        result = JunctionTableOps::OneToOne::getRightIdCount(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "ManyToOne" %}
+        result = JunctionTableOps::ManyToOne::getRightIdCount(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.relationship == "ManyToMany" %}
+        result = JunctionTableOps::UnorderedManyToMany::getRightIdsCount(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- endif %}
+        break;
+    {%- endif %}
+    {%- endfor %}
+
+    default:
+
+        throw std::invalid_argument("Unhandled relationship type");
+    }
+    return result;
+}
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset,
+                                                         int limit)
+{
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    QList<int> result;
+
+    switch (relationship)
+    {
+    {% for f in ent.fields %}
+    {%- if f.inner.field_type == "Entity" %}
+    case {{ ent.pascal_name }}RelationshipField::{{ f.pascal_name }}:
+        {%- if f.relationship == "OrderedOneToMany" %}
+        result = JunctionTableOps::OrderedOneToMany::getRightIdsInRange(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, offset, limit);
+        {%- elif f.relationship == "OneToMany" %}
+        result = JunctionTableOps::UnorderedOneToMany::getRightIdsInRange(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, offset, limit);
+        {%- elif f.relationship == "OneToOne" %}
+        result = JunctionTableOps::OneToOne::getRightIdInRange(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, offset, limit);
+        {%- elif f.relationship == "ManyToOne" %}
+        result = JunctionTableOps::ManyToOne::getRightIdInRange(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, offset, limit);
+        {%- elif f.relationship == "ManyToMany" %}
+        result = JunctionTableOps::UnorderedManyToMany::getRightIdsInRange(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, offset, limit);
+        {%- endif %}
+        break;
+    {%- endif %}
+    {%- endfor %}
+
+    default:
+        throw std::invalid_argument("Unhandled relationship type");
+    }
+
+    return result;
+}

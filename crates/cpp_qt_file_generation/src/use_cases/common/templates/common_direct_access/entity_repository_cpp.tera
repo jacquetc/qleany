@@ -1,0 +1,159 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_repository.h"
+#include "direct_access/repository_factory.h"
+#include <QSet>
+#include <utility>
+
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
+
+// Original constructor for backward compatibility
+SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::{{ ent.pascal_name }}Repository(std::unique_ptr<I{{ ent.pascal_name }}Table> table, Database::DbSubContext &dbSubContext,
+                                        QPointer<EventRegistry> eventRegistry)
+    : m_table(std::move(table)), m_eventRegistry(std::move(eventRegistry)), m_dbSubContext(dbSubContext)
+{
+    m_events = m_eventRegistry ? m_eventRegistry->{{ ent.camel_name }}Events() : nullptr;
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    auto created = m_table->createMany({{ ent.camel_plural_name }});
+    QList<int> ids;
+    ids.reserve(created.size());
+    for (const auto &r : created)
+        ids.append(r.id);
+    emitCreated(ids);
+    return created;
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::get(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    return m_table->findMany({{ ent.camel_name }}Ids);
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::update(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    // Only update existing entries
+    QList<int> ids;
+    ids.reserve({{ ent.camel_plural_name }}.size());
+    for (const auto &r : {{ ent.camel_plural_name }})
+        ids.append(r.id);
+    auto existing = m_table->findMany(ids);
+    QSet<int> existingIds;
+    existingIds.reserve(existing.size());
+    for (const auto &e : existing)
+        existingIds.insert(e.id);
+
+    QList<SCE::{{ ent.pascal_name }}> toUpdate;
+    toUpdate.reserve({{ ent.camel_plural_name }}.size());
+    for (const auto &r : {{ ent.camel_plural_name }})
+        if (existingIds.contains(r.id))
+            toUpdate.append(r);
+
+    auto updated = m_table->updateMany(toUpdate);
+    QList<int> updatedIds;
+    updatedIds.reserve(updated.size());
+    for (const auto &r : updated)
+        updatedIds.append(r.id);
+    emitUpdated(updatedIds);
+    return updated;
+}
+
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::remove(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    {% for rid, r in ent.forward_relationships %}
+    {
+        // cascade deletion on {{ r.field_camel_name }}
+        QHash<int, QList<int>> leftIdTo{{ ent.pascal_name }}IdsHash = getRelationshipIdsMany({{ ent.camel_name }}Ids, {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }});
+        // concatenate all rightIds
+        QSet<int> {{ s.entities[r.inner.right_entity].camel_name }}Ids; // renamed to avoid shadowing
+        {{ s.entities[r.inner.right_entity].camel_name }}Ids.reserve(leftIdTo{{ ent.pascal_name }}IdsHash.size());
+        for (const auto &ids : leftIdTo{{ ent.pascal_name }}IdsHash)
+        {
+            QSet<int> idsSet(ids.begin(), ids.end());
+            {{ s.entities[r.inner.right_entity].camel_name }}Ids.unite(idsSet); // use unite to combine sets
+        }
+
+        if (!{{ s.entities[r.inner.right_entity].camel_name }}Ids.isEmpty())
+        {
+            auto {{ s.entities[r.inner.right_entity].camel_name }}Repository = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            {{ s.entities[r.inner.right_entity].camel_name }}Repository->remove({{ s.entities[r.inner.right_entity].camel_name }}Ids.values());
+        }
+    }
+    {% endfor %}
+
+    // Remove {{ ent.camel_plural_name }} and emit events only for the explicitly removed {{ ent.camel_plural_name }}
+    auto removed = m_table->removeMany({{ ent.camel_name }}Ids);
+    emitRemoved(removed);
+    return removed;
+}
+
+{%- if ent.forward_relationships %}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedIds)
+{
+    m_table->setRelationshipIds({{ ent.camel_name }}Id, relationship, relatedIds);
+
+    emitRelationshipChanged({{ ent.camel_name }}Id, relationship, relatedIds);
+    emitUpdated(QList<int>{ {{ ent.camel_name }}Id});
+}
+
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    auto rels = getRelationshipIdsMany(QList<int>{ {{ ent.camel_name }}Id}, relationship);
+    return rels.value({{ ent.camel_name }}Id, QList<int>{});
+}
+
+QHash<int, QList<int>> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
+                                                                       {{ ent.pascal_name }}RelationshipField relationship)
+{
+    return m_table->getRelationshipIdsMany({{ ent.camel_name }}Ids, relationship);
+}
+
+int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    return m_table->getRelationshipIdsCount(rootId, relationship);
+}
+
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship,
+                                                              int offset, int limit)
+{
+    return m_table->getRelationshipIdsInRange(rootId, relationship, offset, limit);
+}
+
+{%- endif %}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitCreated(const QList<int> &ids) const
+{
+    if (!m_events || ids.isEmpty())
+        return;
+    QMetaObject::invokeMethod(m_events, "publishCreated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitUpdated(const QList<int> &ids) const
+{
+    if (!m_events || ids.isEmpty())
+        return;
+    QMetaObject::invokeMethod(m_events, "publishUpdated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitRemoved(const QList<int> &ids) const
+{
+    if (!m_events || ids.isEmpty())
+        return;
+    QMetaObject::invokeMethod(m_events, "publishRemoved", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+}
+
+{%- if ent.forward_relationships %}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitRelationshipChanged(const int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField rel,
+                                                      const QList<int> &relatedIds) const
+{
+    if (!m_events)
+        return;
+    QMetaObject::invokeMethod(m_events, "publishRelationshipChanged", Qt::QueuedConnection, Q_ARG(int, {{ ent.camel_name }}Id),
+                              Q_ARG({{ ent.pascal_name }}RelationshipField, rel), Q_ARG(QList<int>, relatedIds));
+}
+
+{%- endif %}

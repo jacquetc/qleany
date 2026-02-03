@@ -1,0 +1,28 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "common/dto_mapper.h"
+#include "entities/{{ ent.snake_name }}.h"
+#include "i_{{ ent.snake_name }}_unit_of_work.h"
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+
+class Get{{ ent.pascal_name }}UseCase
+{
+  public:
+    explicit Get{{ ent.pascal_name }}UseCase(std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow) : m_uow(std::move(uow))
+    {
+    }
+    ~Get{{ ent.pascal_name }}UseCase() = default;
+
+    QList<{{ ent.pascal_name }}Dto> execute(const QList<int> &{{ ent.camel_name }}Ids);
+
+  private:
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

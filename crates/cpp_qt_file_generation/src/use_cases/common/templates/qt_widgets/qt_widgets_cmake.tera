@@ -1,0 +1,28 @@
+# This file was generated automatically by Qleany's generator, edit at your own risk!
+# If you do, be careful to not overwrite it when you run the generator again.
+
+set(APP_NAME {{ s.global.application_pascal_name }})
+
+find_package(Qt6 ${QT_MIN_VERSION} COMPONENTS Widgets REQUIRED)
+
+qt_add_executable(${APP_NAME}
+        main.cpp
+        main_window.cpp
+        main_window.h
+)
+
+target_link_libraries(${APP_NAME} PRIVATE project_options)
+
+target_link_libraries(
+        ${APP_NAME}
+        PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets
+        Qt6::Concurrent Qt6::Sql)
+
+target_link_libraries(${APP_NAME} PRIVATE QCoro::Core)
+target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common)
+target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-direct-access)
+  {%- for fid, feature in s.features %}
+target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-{{ feature.kebab_name }})
+  {%- endfor %}
+
+{{ s.global.application_short_name | lower }}_install_target(${APP_NAME})

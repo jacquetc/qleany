@@ -1,0 +1,49 @@
+set(LIBRARY_NAME {{ s.global.application_kebab_name }}-direct-access)
+
+option(BUILD_SHARED_LIBS "Build libraries as shared libraries" ON)
+
+if (BUILD_SHARED_LIBS)
+    set(LIB_TYPE SHARED)
+else ()
+    set(LIB_TYPE STATIC)
+endif ()
+
+# Set necessary compiler flags to enable coroutine support
+qcoro_enable_coroutines()
+
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE})
+target_link_libraries(${LIBRARY_NAME} PRIVATE project_options)
+
+{%- for eid, ent in s.entities %}
+{%- if ent.inner.allow_direct_access %}
+add_subdirectory({{ ent.snake_name }})
+{%- endif %}
+{%- endfor %}
+
+target_compile_definitions(${LIBRARY_NAME} PRIVATE
+        QT_NO_KEYWORDS
+        QT_NO_CAST_TO_ASCII
+        QT_NO_CAST_FROM_ASCII
+        QT_NO_CAST_FROM_BYTEARRAY
+        QT_STRICT_ITERATORS
+        QT_USE_QSTRINGBUILDER
+        QT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+        QT_NO_URL_CAST_FROM_STRING)
+
+include(GenerateExportHeader)
+generate_export_header(${LIBRARY_NAME}
+        BASE_NAME {{ s.global.application_snake_name }}_direct_access
+)
+
+target_include_directories(${LIBRARY_NAME} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
+
+target_link_libraries(${LIBRARY_NAME} PUBLIC {{ s.global.application_kebab_name }}-common)
+
+target_link_libraries(${LIBRARY_NAME}
+        PRIVATE Qt6::Core QCoro::Core
+)
+
+{{ s.global.application_short_name | lower }}_install_target(${LIBRARY_NAME})

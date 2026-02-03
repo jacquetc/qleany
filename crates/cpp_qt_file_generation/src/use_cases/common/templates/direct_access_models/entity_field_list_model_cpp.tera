@@ -1,0 +1,359 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+{%- set field_id = s.file.inner.field %}
+{%- for f in ent.fields %}
+    {%- if f.inner.id == field_id %}
+        {%- set_global field = f %}
+        {%- set_global target_ent = s.entities[field.inner.entity] %}
+    {%- endif %}
+{%- endfor %}
+#include "{{ ent.snake_name }}_{{ field.snake_name }}_list_model.h"
+#include "{{ target_ent.snake_name }}/{{ target_ent.snake_name }}_controller.h"
+#include "{{ target_ent.snake_name }}/dtos.h"
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_controller.h"
+#include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_events.h"
+#include "direct_access/{{ target_ent.snake_name }}/{{ target_ent.snake_name }}_events.h"
+#include "direct_access/event_registry.h"
+#include "{{ ent.snake_name }}/dtos.h"
+#include "service_locator.h"
+#include "direct_access/operators.h"
+#include <QCoro/QCoroTask>
+#include <QTimer>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+
+    using namespace Common::DirectAccess; // to access operators.h
+
+{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::{{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+    resolveDependencies();
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies()
+{
+    auto *locator = Common::ServiceLocator::instance();
+    if (!locator)
+    {
+        qCritical() << "ServiceLocator not initialized";
+        return;
+    }
+
+    m_eventRegistry = locator->eventRegistry();
+
+    // Create controllers
+    m_{{ target_ent.camel_name }}Controller = new {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Controller(this);
+    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}Controller(this);
+
+    // Connect to events
+    if (m_eventRegistry)
+    {
+        const auto {{ target_ent.camel_name }}Events = m_eventRegistry->{{ target_ent.camel_name }}Events();
+        if ({{ target_ent.camel_name }}Events)
+        {
+            connect({{ target_ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this,
+                    SLOT(on{{ target_ent.pascal_name }}Updated(QList<int>)));
+        }
+
+        const auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}Events();
+        if ({{ ent.camel_name }}Events)
+        {
+            connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this, SLOT(on{{ ent.pascal_name }}Updated(QList<int>)));
+        }
+    }
+}
+
+int {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+        return 0;
+
+    return m_{{ target_ent.camel_plural_name }}.size();
+}
+
+QVariant {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.row() >= m_{{ target_ent.camel_plural_name }}.size())
+        return {};
+
+    const auto &{{ target_ent.camel_name }} = m_{{ target_ent.camel_plural_name }}.at(index.row());
+
+    switch (role)
+    {
+    case IdRole:
+        return {{ target_ent.camel_name }}.id;
+        {%- for f in target_ent.fields %}
+    case {{ f.pascal_name }}Role: {
+            {%- if f.cpp_qt_type is starting_with("QList<") %}
+        return toVariantList({{ target_ent.camel_name }}.{{ f.camel_name }});
+            {%- elif f.inner.field_type == "Enum" %}
+        return static_cast<int>({{ target_ent.camel_name }}.{{ f.camel_name }});
+            {%- elif f.cpp_qt_type is starting_with( "std::optional<") %}
+        return toVariant({{ target_ent.camel_name }}.{{ f.camel_name }});
+            {% else %}
+        return {{ target_ent.camel_name }}.{{ f.camel_name }};
+            {%- endif %}
+    }
+        {%- endfor %}
+    default:;
+    }
+
+    return {};
+}
+
+bool {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid() || index.row() >= m_{{ target_ent.camel_plural_name }}.size())
+        return false;
+
+    auto &{{ target_ent.camel_name }} = m_{{ target_ent.camel_plural_name }}[index.row()];
+    bool changed = false;
+
+    switch (role)
+    {
+    {%- for f in target_ent.fields %}
+
+        {%- if f.cpp_qt_type == "QString" %}
+            {% set value_str_eq = "value.toString()" %}
+            {% set value_str_copy = "value.toString()" %}
+        {%- elif f.cpp_qt_type == "int" %}
+            {% set value_str_eq = "value.toInt()" %}
+            {% set value_str_copy = "value.toInt()" %}
+        {%- elif f.cpp_qt_type == "uint" %}
+            {% set value_str_eq = "value.toUInt()" %}
+            {% set value_str_copy = "value.toUInt()" %}
+        {%- elif f.cpp_qt_type == "bool" %}
+            {% set value_str_eq = "value.toBool()" %}
+            {% set value_str_copy = "value.toBool()" %}
+        {%- elif f.cpp_qt_type == "float" %}
+            {% set value_str_eq = "value.toFloat()" %}
+            {% set value_str_copy = "value.toFloat()" %}
+        {%- elif f.cpp_qt_type == "QDateTime" %}
+            {% set value_str_eq = "value.toDateTime()" %}
+            {% set value_str_copy = "value.toDateTime()" %}
+        {%- elif f.cpp_qt_type == "QUuid" %}
+            {% set value_str_eq = "value.toUuid()" %}
+            {% set value_str_copy = "value.toUuid()" %}
+
+        {%- elif f.cpp_qt_type == "QList<int>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toIntList(value.toList())" %}
+        {%- elif f.cpp_qt_type == "QList<QString>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toStringList(value.toList())" %}
+        {%- elif f.cpp_qt_type == "QList<uint>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toUIntList(value.toList())" %}
+        {%- elif f.cpp_qt_type == "QList<float>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toFloatList(value.toList())" %}
+        {%- elif f.cpp_qt_type == "QList<bool>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toBoolList(value.toList())" %}
+         {%- elif f.cpp_qt_type == "QList<QDateTime>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toDateTimeList(value.toList())" %}
+         {%- elif f.cpp_qt_type == "QList<QUuid>" %}
+            {% set value_str_eq = "value.toList()" %}
+            {% set value_str_copy = "toUuidList(value.toList())" %}
+
+        {%- elif f.inner.field_type == "Enum" %}
+            {% set value_str_eq = "static_cast<" ~ target_ent.pascal_name ~ "::" ~ f.cpp_qt_type ~ ">(value.toInt())" %}
+            {% set value_str_copy = "static_cast<" ~ target_ent.pascal_name ~ "::" ~ f.cpp_qt_type ~ ">(value.toInt())" %}
+
+        {%- elif f.cpp_qt_type == "std::optional<bool>" %}
+            {% set value_str_eq = "value" %}
+            {% set value_str_copy = "toOptionalBool(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<int>" %}
+            {% set value_str_eq = "value" %}
+            {% set value_str_copy = "toOptionalInt(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<float>" %}
+             {% set value_str_eq = "value" %}
+             {% set value_str_copy = "toOptionalFloat(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<QString>" %}
+             {% set value_str_eq = "value" %}
+             {% set value_str_copy = "toOptionalString(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<uint>" %}
+             {% set value_str_eq = "value" %}
+             {% set value_str_copy = "toOptionalUInt(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<QDateTime>" %}
+           {% set value_str_eq = "value" %}
+           {% set value_str_copy = "toOptionalQDateTime(value)" %}
+        {%- elif f.cpp_qt_type == "std::optional<QUuid>" %}
+           {% set value_str_eq = "value" %}
+           {% set value_str_copy = "toOptionalQUuid(value)" %}
+
+        {%- else %}
+            {% set value_str_eq = "value" %}
+            {% set value_str_copy = "value" %}
+        {%- endif %}
+
+
+    case {{ f.pascal_name }}Role:
+        if ({{ target_ent.camel_name }}.{{ f.camel_name }} != {{ value_str_eq }})
+        {
+            {{ target_ent.camel_name }}.{{ f.camel_name }} = {{ value_str_copy }};
+            changed = true;
+        }
+        break;
+    {%- endfor %}
+    default:;
+    }
+
+    if (changed)
+    {
+        // Update via controller
+        if (m_{{ target_ent.camel_name }}Controller)
+        {
+            auto dto = {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto({{ target_ent.camel_name }});
+            // Use QTimer::singleShot for async update without coroutine in this context
+            QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> updateTask = m_{{ target_ent.camel_name }}Controller->update({dto});
+
+            QCoro::connect(std::move(updateTask), this, [this, index, role](auto &&result) {
+                if (!result.isEmpty())
+                {
+                    // Update local items with returned data (in case of any changes from backend)
+                    m_{{ target_ent.camel_plural_name }}[index.row()] = result.first();
+                    Q_EMIT dataChanged(index, index, {role});
+                }
+            });
+        }
+        else
+        {
+            qWarning() << "{{ target_ent.pascal_name }}Controller not available for update";
+        }
+    }
+    return changed;
+}
+
+Qt::ItemFlags {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::NoItemFlags;
+
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
+}
+
+QHash<int, QByteArray> {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::roleNames() const
+{
+    QHash<int, QByteArray> names;
+    names[IdRole] = "itemId";
+    {%- for f in target_ent.fields %}
+    names[ {{ f.pascal_name }}Role] = "{{ f.camel_name }}";
+    {%- endfor %}
+
+    return names;
+}
+
+int {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::{{ ent.camel_name }}Id() const
+{
+    return m_{{ ent.camel_name }}Id;
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::set{{ ent.pascal_name }}Id(int {{ ent.camel_name }}Id)
+{
+    if (m_{{ ent.camel_name }}Id != {{ ent.camel_name }}Id)
+    {
+        m_{{ ent.camel_name }}Id = {{ ent.camel_name }}Id;
+        refreshData();
+        Q_EMIT {{ ent.camel_name }}IdChanged();
+    }
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::refreshData()
+{
+    if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller || m_{{ ent.camel_name }}Id <= 0)
+        return;
+
+
+    // Use QTimer::singleShot to handle async operations without coroutines in this context
+    QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetch{{ target_ent.pascal_name }}sTask =
+        m_{{ ent.camel_name }}Controller->getRelationshipIds(m_{{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField::{{ field.pascal_name }})
+            .then([this](auto &&{{ target_ent.camel_name }}Ids) -> QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> {
+                return m_{{ target_ent.camel_name }}Controller->get({{ target_ent.camel_name }}Ids);
+            });
+
+    QCoro::connect(std::move(fetch{{ target_ent.pascal_name }}sTask), this, [this](auto &&result) {
+        if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller)
+            return;
+
+        beginResetModel();
+        m_{{ target_ent.camel_plural_name }}.clear();
+        for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : result)
+        {
+           m_{{ target_ent.camel_plural_name }}.append(dto);
+        }
+        endResetModel();
+
+        qDebug() << "Refresh requested for {{ ent.camel_name }} ID:" << m_{{ ent.camel_name }}Id;
+    });
+
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Updated(const QList<int> &ids)
+{
+    QList<int> relevantIds;
+    for (const auto &item : m_{{ target_ent.camel_plural_name }})
+    {
+        if (ids.contains(item.id))
+        {
+            relevantIds.append(item.id);
+        }
+    }
+
+    QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetch{{ target_ent.pascal_name }}sTask = m_{{ target_ent.camel_name }}Controller->get(relevantIds);
+
+    QCoro::connect(std::move(fetch{{ target_ent.pascal_name }}sTask), this, [this](auto &&result) {
+        if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller)
+            return;
+
+        // Update existing items
+        for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : result)
+        {
+            for (int i = 0; i < m_{{ target_ent.camel_plural_name }}.size(); ++i)
+            {
+                if (m_{{ target_ent.camel_plural_name }}[i].id == dto.id)
+                {
+                    m_{{ target_ent.camel_plural_name }}[i] = dto;
+                    const QModelIndex idx = index(i);
+                    Q_EMIT dataChanged(idx, idx);
+                    break;
+                }
+            }
+        }
+    });
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated(const QList<int> &ids)
+{
+    // Check if our {{ ent.camel_name }} was updated
+    if (ids.contains(m_{{ ent.camel_name }}Id))
+    {
+        QCoro::Task<QList<{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto>> fetch{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_{{ ent.camel_name }}Id});
+
+        QCoro::connect(std::move(fetch{{ ent.pascal_name }}Task), this, [this](auto &&result) {
+            if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller)
+                return;
+
+            if (result.isEmpty())
+                return;
+
+            const auto &{{ ent.camel_name }} = result.first();
+
+            QList<int> currentItemIds;
+            for (const auto &item : m_{{ target_ent.camel_plural_name }})
+            {
+                currentItemIds.append(item.id);
+            }
+
+            // If {{ ent.camel_name }} items changed, refresh data
+            if ({{ ent.camel_name }}.{{ field.camel_name }} != currentItemIds)
+            {
+                refreshData();
+            }
+        });
+    }
+}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

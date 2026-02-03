@@ -1,0 +1,18 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "get_uc.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+
+QList<{{ ent.pascal_name }}Dto> Get{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    m_uow->beginTransaction();
+    auto getEntities = m_uow->get{{ ent.pascal_name }}({{ ent.camel_name }}Ids);
+    m_uow->endTransaction();
+
+    return DtoMapper::toDtoList(getEntities);
+}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

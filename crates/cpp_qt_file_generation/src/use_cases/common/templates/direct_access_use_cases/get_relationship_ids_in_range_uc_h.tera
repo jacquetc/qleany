@@ -1,0 +1,27 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "../dtos.h"
+#include "common/dto_mapper.h"
+#include "i_{{ ent.snake_name }}_unit_of_work.h"
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+
+class GetRelationshipIdsInRangeUseCase
+{
+  public:
+    explicit GetRelationshipIdsInRangeUseCase(std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow) : m_uow(std::move(uow))
+    {
+    }
+    ~GetRelationshipIdsInRangeUseCase() = default;
+
+    QList<int> execute(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset, int limit);
+
+  private:
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

@@ -1,0 +1,36 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "common/dto_mapper.h"
+#include "entities/{{ ent.snake_name }}.h"
+#include "i_{{ ent.snake_name }}_unit_of_work.h"
+#include "undo_redo/undo_redo_command.h"
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+namespace SCU = Common::UndoRedo;
+
+class Remove{{ ent.pascal_name }}UseCase
+{
+  public:
+    explicit Remove{{ ent.pascal_name }}UseCase(std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow) : m_uow(std::move(uow))
+    {
+    }
+    ~Remove{{ ent.pascal_name }}UseCase() = default;
+
+    QList<int> execute(const QList<int> &{{ ent.camel_name }}Ids);
+    SCU::Result<void> undo();
+    SCU::Result<void> redo();
+
+  private:
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+    QList<int> m_original{{ ent.pascal_name }}Ids;
+    QList<{{ ent.pascal_name }}Dto> m_removed{{ ent.pascal_name }}s;
+    QList<int> m_removedIds;
+    bool m_hasExecuted = false;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

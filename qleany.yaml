@@ -16,6 +16,12 @@ entities:
   - name: id
     type: integer
     required: true
+  - name: created_at
+    type: datetime
+    required: true
+  - name: updated_at
+    type: datetime
+    required: true
   undoable: false
 - name: Root
   inherits_from: EntityBase

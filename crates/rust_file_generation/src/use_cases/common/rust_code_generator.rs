@@ -1126,6 +1126,7 @@ mod tests {
                     feature: None,
                     entity: None,
                     use_case: None,
+                    field: None,
                 },
             },
             global: GlobalVM {
@@ -1176,6 +1177,7 @@ mod tests {
             feature: None,
             entity: Some(entity_id),
             use_case: None,
+            field: None,
         };
         let global = Global {
             id: 50,

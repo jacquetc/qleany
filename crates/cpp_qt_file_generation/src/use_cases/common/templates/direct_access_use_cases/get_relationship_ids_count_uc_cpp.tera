@@ -1,0 +1,17 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "get_relationship_ids_count_uc.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+
+int GetRelationshipIdsCountUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    m_uow->beginTransaction();
+    auto result = m_uow->get{{ ent.pascal_name }}RelationshipCount({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(relationship));
+    m_uow->endTransaction();
+
+    return result;
+}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

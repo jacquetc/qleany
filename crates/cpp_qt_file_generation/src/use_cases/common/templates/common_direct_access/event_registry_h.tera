@@ -1,0 +1,55 @@
+#pragma once
+
+{%- for eid, ent in s.entities %}
+#include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_events.h"
+{%- endfor %}
+
+// #include "undo_redo/undo_redo_events.h"
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess
+{
+
+// Composite events structure that holds all event instances
+class EventRegistry : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit EventRegistry(QObject *parent = nullptr)
+        : QObject(parent),
+        {%- for eid, ent in s.entities %}
+  m_{{ ent.camel_name }}Events(new {{ ent.pascal_name }}::{{ ent.pascal_name }}Events(parent)) {%- if not loop.last %},{% endif %}
+        {%- endfor %}
+
+
+    //    , m_undoRedoEvents(new UndoRedo::UndoRedoEvents(parent))
+    {
+    }
+
+    // Helper to get appropriate events by type
+        {%- for eid, ent in s.entities %}
+    [[nodiscard]] QPointer<{{ ent.pascal_name }}::{{ ent.pascal_name }}Events> {{ ent.camel_name }}Events() const;
+        {%- endfor %}
+
+  private:
+        {%- for eid, ent in s.entities %}
+    QPointer<{{ ent.pascal_name }}::{{ ent.pascal_name }}Events> m_{{ ent.camel_name }}Events;
+        {%- endfor %}
+
+    // QPointer<UndoRedo::UndoRedoEvents> m_undoRedoEvents;
+};
+
+        {%- for eid, ent in s.entities %}
+inline QPointer<{{ ent.pascal_name }}::{{ ent.pascal_name }}Events> EventRegistry::{{ ent.camel_name }}Events() const
+{
+    return m_{{ ent.camel_name }}Events;
+}
+        {%- endfor %}
+
+
+//inline QPointer<UndoRedo::UndoRedoEvents> EventRegistry::undoRedo() const
+// {
+//     return m_undoRedoEvents;
+// }
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess

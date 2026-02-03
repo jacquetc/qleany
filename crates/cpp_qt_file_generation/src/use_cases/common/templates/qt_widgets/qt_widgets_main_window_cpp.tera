@@ -1,0 +1,9 @@
+
+#include "main_window.h"
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+{
+    setWindowTitle("{{ s.global.application_pascal_name }}");
+    resize(800, 600);
+}

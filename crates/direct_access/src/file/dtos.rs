@@ -14,6 +14,7 @@ pub struct FileDto {
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
+    pub field: Option<EntityId>,
 }
 
 impl From<FileDto> for File {
@@ -27,6 +28,7 @@ impl From<FileDto> for File {
             feature: file_dto.feature,
             entity: file_dto.entity,
             use_case: file_dto.use_case,
+            field: file_dto.field,
         }
     }
 }
@@ -42,6 +44,7 @@ impl From<&FileDto> for File {
             feature: file_dto.feature,
             entity: file_dto.entity,
             use_case: file_dto.use_case,
+            field: file_dto.field,
         }
     }
 }
@@ -57,6 +60,7 @@ impl From<File> for FileDto {
             feature: file.feature,
             entity: file.entity,
             use_case: file.use_case,
+            field: file.field,
         }
     }
 }
@@ -70,6 +74,7 @@ pub struct CreateFileDto {
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
+    pub field: Option<EntityId>,
 }
 
 impl From<CreateFileDto> for File {
@@ -83,6 +88,7 @@ impl From<CreateFileDto> for File {
             feature: create_file_dto.feature,
             entity: create_file_dto.entity,
             use_case: create_file_dto.use_case,
+            field: create_file_dto.field,
         }
     }
 }
@@ -92,12 +98,13 @@ impl From<&CreateFileDto> for File {
         File {
             id: 0,
             name: create_file_dto.name.clone(),
-            relative_path: create_file_dto.relative_path.to_string(),
+            relative_path: create_file_dto.relative_path.clone(),
             group: create_file_dto.group.clone(),
             template_name: create_file_dto.template_name.clone(),
             feature: create_file_dto.feature,
             entity: create_file_dto.entity,
             use_case: create_file_dto.use_case,
+            field: create_file_dto.field,
         }
     }
 }
@@ -105,13 +112,14 @@ impl From<&CreateFileDto> for File {
 impl From<File> for CreateFileDto {
     fn from(file: File) -> Self {
         CreateFileDto {
-            name: file.name,
-            relative_path: file.relative_path,
-            group: file.group,
-            template_name: file.template_name,
+            name: file.name.clone(),
+            relative_path: file.relative_path.clone(),
+            group: file.group.clone(),
+            template_name: file.template_name.clone(),
             feature: file.feature,
             entity: file.entity,
             use_case: file.use_case,
+            field: file.field,
         }
     }
 }

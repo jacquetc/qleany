@@ -52,3 +52,32 @@ pub fn strip_leading_and_trailing_slashes(path: &str) -> String {
     let trimmed = path.trim_matches(|c: char| c == '/' || c == '\\' || c.is_whitespace());
     trimmed.to_string()
 }
+/// Transforms an English word to its plural form following English language rules.
+pub fn to_plural(word: &str) -> String {
+    if word.is_empty() {
+        return String::new();
+    }
+
+    // Special cases and irregular plurals could be added here
+
+    // Words ending in 'y' preceded by a consonant: change 'y' to 'ies'
+    if word.ends_with('y') && word.len() > 1 {
+        let second_last = word.chars().nth(word.len() - 2).unwrap();
+        if !"aeiou".contains(second_last) {
+            return format!("{}ies", &word[..word.len() - 1]);
+        }
+    }
+
+    // Words ending in 's', 'x', 'z', 'ch', 'sh': add 'es'
+    if word.ends_with('s')
+        || word.ends_with('x')
+        || word.ends_with('z')
+        || word.ends_with("ch")
+        || word.ends_with("sh")
+    {
+        return format!("{}es", word);
+    }
+
+    // Default case: add 's'
+    format!("{}s", word)
+}

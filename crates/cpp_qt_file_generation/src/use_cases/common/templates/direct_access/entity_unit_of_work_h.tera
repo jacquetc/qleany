@@ -1,0 +1,39 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "database/db_context.h"
+#include "direct_access/repository_factory.h"
+#include "direct_access/event_registry.h"
+#include "unit_of_work/unit_of_work.h"
+#include "use_cases/i_{{ ent.snake_name }}_unit_of_work.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+namespace SCD = {{ s.global.application_pascal_name }}::Common::DirectAccess;
+
+class {{ ent.pascal_name }}UnitOfWork final : public SCUoW::UnitOfWorkBase, public I{{ ent.pascal_name }}UnitOfWork
+{
+
+  public:
+    {{ ent.pascal_name }}UnitOfWork(SCDatabase::DbContext &dbContext, const QPointer<SCD::EventRegistry> &eventRegistry)
+        : UnitOfWorkBase(dbContext, eventRegistry)
+    {
+    }
+    ~{{ ent.pascal_name }}UnitOfWork() override = default;
+
+    // Transaction interface delegation
+    UOW_TRANSACTION_INTERFACE
+
+{%- if ent.forward_relationships %}
+    // Full CRUD + Relationship operations for {{ ent.pascal_name }}
+    UOW_ENTITY_FULL({{ ent.pascal_name }}, SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField)
+{%- else %}
+    // Full CRUD operations for {{ ent.pascal_name }}
+    UOW_ENTITY_CRUD({{ ent.pascal_name }})
+{%- endif %}
+};
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

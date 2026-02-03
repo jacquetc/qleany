@@ -193,6 +193,7 @@ fn for_file_feature_without_use_cases_errors() {
         feature: Some(10),
         entity: None,
         use_case: None,
+        field: None,
     };
     uow.files.insert(1, file);
     let feature = Feature {
@@ -252,6 +253,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         feature: Some(10),
         entity: None,
         use_case: None,
+        field: None,
     };
     uow.files.insert(1, file);
     // Feature with use case 100
@@ -489,6 +491,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: Some(200),
         entity: None,
         use_case: None,
+        field: None,
     };
     uow.files.insert(1000, file_feature_only);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1000, &Vec::new()).expect("snapshot");
@@ -507,6 +510,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: None,
         entity: None,
         use_case: Some(100),
+        field: None,
     };
     uow.files.insert(1001, file_uc_only);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1001, &Vec::new()).expect("snapshot");
@@ -525,6 +529,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: None,
         entity: Some(1),
         use_case: None,
+        field: None,
     };
     uow.files.insert(1002, file_ent_only);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1002, &Vec::new()).expect("snapshot");
@@ -542,6 +547,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: None,
         entity: Some(0),
         use_case: None,
+        field: None,
     };
     uow.files.insert(1003, file_all_ent);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1003, &Vec::new()).expect("snapshot");
@@ -557,6 +563,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: Some(200),
         entity: Some(1),
         use_case: None,
+        field: None,
     };
     uow.files.insert(1004, file_feat_ent);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1004, &Vec::new()).expect("snapshot");
@@ -575,6 +582,7 @@ fn for_file_various_combinations_generate_expected_items() {
         feature: None,
         entity: Some(2),
         use_case: Some(100),
+        field: None,
     };
     uow.files.insert(1005, file_uc_ent);
     let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1005, &Vec::new()).expect("snapshot");

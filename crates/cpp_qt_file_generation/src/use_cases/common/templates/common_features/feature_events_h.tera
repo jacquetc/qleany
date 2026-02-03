@@ -1,0 +1,39 @@
+{%- set f = s.file.inner.feature %}
+{%- set feat = s.features[f] %}
+#pragma once
+
+#include <QList>
+#include <QMetaObject>
+#include <QObject>
+
+namespace {{ s.global.application_pascal_name }}::Common::Features
+{
+class {{ feat.pascal_name }}Events : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit {{ feat.pascal_name }}Events(QObject *parent = nullptr) : QObject(parent)
+    {
+        // Register metatypes for cross-thread signal delivery
+        qRegisterMetaType<QList<int>>("QList<int>");
+    }
+
+  public Q_SLOTS:
+    // These methods can be invoked from any thread; they will emit signals in this object's thread
+{% for uid, use_case in feat.use_cases %}
+    void publish{{ use_case.pascal_name }}Signal()
+    {
+        Q_EMIT {{ use_case.camel_name }}Signal();
+    }
+{% endfor %}
+
+  Q_SIGNALS:
+    // Do not hesitate to give arguments if needed. If you do, make sure they are registered metatypes
+    // for cross-thread signal deliver. Also, modify the corresponding "unit of work" file. And, if existing, 
+    // the QML mock file.
+{% for uid, use_case in feat.use_cases %}
+    void {{ use_case.camel_name }}Signal();
+{% endfor %}
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::Features
