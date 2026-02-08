@@ -226,11 +226,11 @@ Skribisto serves as both proof-of-concept and template source for C++/Qt generat
 
 ---
 
-## Migration from v1
+## Migration from v0
 
-Qleany v1 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders.
+Qleany v0 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders. Yes, version "zero" is the first version, the prototype. Sue me.
 
-v2 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability.
+v1 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability. Its manifest version begins with version 2.
 
 **Breaking changes:**
 - Manifest format changed (schema version 2)
@@ -238,6 +238,8 @@ v2 generates Package by Feature with pragmatic organization. The same project pr
 - Reactive models are new (list models, singles)
 
 Bottom line: from v0 to v1, there is no automated migration path. You must regenerate from your manifest and manually port any custom code.
+
+Starting from the newer version 2 of the manifest (so from Qleany v1, are you following ?), the new architecture will allow a smoother transition to future versions.
 
 ---
 
@@ -257,7 +259,22 @@ Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 **GitHub Issues** is the only support channel: [github.com/jacquetc/qleany/issues](https://github.com/jacquetc/qleany/issues)
 
-Qleany is a personal project licensed under MPL-2.0. It is actively used in Skribisto's development, so improvements flow from real-world needs. Bug reports and contributions are welcome, though response times vary as this is maintained alongside other projects.
+Qleany is a project licensed under MPL-2.0. It is actively used in Skribisto's development, among other projects from FernTech, so improvements flow from real-world needs. Bug reports and contributions are welcome.
+
+FernTech offers professional support for Qleany. 
+
+## AI use
+
+Qleany is not an AI tool. It is a human-driven tool using templates and smart (I can hope) algorithms.
+
+In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a clutch. [Ranting mode: off]
+
+In Qleany, AI was used in only three cases:
+- basic auto-completion, thanks to the LLM integrated into JetBrains IDEs (especially in very repetitive patterns), less "magical" than GitHub Copilot, but still helpful.
+- English sentences in the documentation were smoothed with the AI, nothin more. And it helped to create tables with all these asterisks. I wrote this documentation.
+- The AI added some comments and inline documentation, especially in the C++ undo redo system. It was fun.
+
+That's it. I honestly feel that Qleany is the work of a human being (me), not a machine.
 
 ## About
 

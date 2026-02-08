@@ -49,19 +49,23 @@ Sketch your entities and relationships before using Qleany. Use paper, whiteboar
 ```mermaid
 erDiagram
     EntityBase {
-        int id
+        EntityId id
         datetime created_at
         datetime updated_at
     }
 
     Root {
-        int id
+        EntityId id
         datetime created_at
         datetime updated_at
+        # relationships:
+        QList<EntityId> cars
+        QList<EntityId> customers
+        QList<EntityId> sales
     }
     
     Car {
-        int id
+        EntityId id
         datetime created_at
         datetime updated_at
         string make
@@ -72,7 +76,7 @@ erDiagram
     }
     
     Customer {
-        int id
+        EntityId id
         datetime created_at
         datetime updated_at
         string name
@@ -81,13 +85,16 @@ erDiagram
     }
     
     Sale {
-        int id
+        EntityId id
         datetime created_at
         datetime updated_at
         datetime sale_date
         float final_price
         int car_id
         int customer_id
+        # relationships:
+        EntityId car
+        EntityId customer
     }
 
     EntityBase ||--o{ Root : "inherits"
@@ -97,11 +104,19 @@ erDiagram
     Root ||--o{ Car : "owns (strong)"
     Root ||--o{ Customer : "owns (strong)"
     Root ||--o{ Sale : "owns (strong)"
-    Sale }o--|| Car : "references"
-    Sale }o--|| Customer : "references"
+    Sale }o--|| Car : "optionally references"  # Many-to-One (a sale may exist without a car, e.g., if the car was deleted)
+    Sale }o--|| Customer : "optionally references" # Many-to-One 
 ```
 
 **Why draw first?** Changing a diagram is free. Changing generated code is work. Get the model right before generating.
+
+`EntityBase` is a common pattern: it provides shared fields like `id`, `created_at`, and `updated_at`, like an inheritance. Other entities can explicitly inherit from it. This is not an entity. It will never be generated. All your entities can inherit from it to avoid repetition.
+
+> Note: You can note the relationships on the diagram too. Qleany supports various relationship types (one-to-one, one-to-many, many-to-many) and cascade delete (strong relationships). Defining these upfront helps you configure them correctly in the manifest. Unlike typical ER diagrams, the relationships appear as fields. Qleany's relationships are directional and can be configured with additional options (e.g., ordered vs unordered, strong vs weak, optional or not (only for some relationship types)). Plan these carefully to ensure the generated code matches your intended data model.
+
+**WRONG**: I only need a few entities without any "owner" relationships. I can just create them in Qleany and skip the Root entity.
+
+**RIGHT**: I want a clear ownership structure. Root owns all Cars, Customers, and Sales. This makes it easy to manage the lifecycle of entities. It avoids orphan entities and simplifies the generated code. Even if Root has few fields, it provides a clear parent-child structure. Think like a tree: Root is the trunk, Cars/Customers/Sales are branches. This is a common pattern in Qleany projects.
 
 ---
 
@@ -124,13 +139,17 @@ Click **Project** in the sidebar.
 
 Fill in the form:
 
-| Field | Value                  |
-|-------|------------------------|
-| Language | Rust *(or C++ / Qt)*   |
-| Application Name | CarLot                 |
-| Organisation Name | mycompany              |
-| Organisation Domain | mycompany.com          |
+| Field | Value                          |
+|-------|--------------------------------|
+| Language | Rust *(or C++ / Qt)*           |
+| Application Name | CarLot                         |
+| Organisation Name | mycompany                      |
+| Organisation Domain | com.mycompany                  |
 | Prefix Path | crates *(or src for C++ / Qt)* |
+
+Organisation Domain is used for some installed file names, like the icon name.
+
+You can also choose to generate C++/Qt6 code. Some options will change, but the workflow is the same.
 
 Changes save. The header shows "Save Manifest" when there are unsaved changes.
 
@@ -265,6 +284,18 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 5. **Entities**: Check `Root`, `Car`
 
+### 5.4 Choose your UI
+
+For Rust, choose between CLI, UI, or both. For C++ / Qt6, more GUI are available. These options scaffold basic UI or CLI code that interacts with the generated controllers. You can skip this and build your own UI later if you prefer.
+
+### 5.5 Take a break, drink a coffee, sleep a bit
+
+I mean it. A fresher mind sees things more clearly. You already saved a lot of time by using Qleany instead of writing all the boilerplate yourself. Don't rush the design phase, it's where you get the most value from Qleany.
+
+Designing your domain and use cases is the most important part. The generated code is just scaffolding. If the model is wrong, the code won't help much. Take your time to get it right before generating. 
+
+Yes, you can change the manifest and regenerate later. But it's better to get a solid design upfront. The more you change the model after generating, the more work you create for yourself. It's not a problem to evolve your design, but try to avoid major changes that require rewriting large parts of the generated code.
+
 ---
 
 ## Step 6: Save and Generate
@@ -297,7 +328,7 @@ The progress modal shows generation status. Files are written to your project.
 
 ## Step 7: What You Get
 
-After generation, your project contains:
+After a generation, your project contains:
 
 ```
 Cargo.toml
@@ -370,10 +401,10 @@ crates/
     │   ├── inventory_management_controller.rs
     │   ├── dtos.rs
     │   ├── units_of_work.rs
-    │   ├── units_of_work/          # ← adapt the macros here too
+    │   ├── units_of_work/          # adapt the macros here 
     │   │   └── ...
     │   ├── use_cases.rs
-    │   ├── use_cases/              # ← You implement the logic here
+    │   ├── use_cases/              # You implement the logic here
     │   │   └── ...
     │   └── lib.rs
     └── Cargo.toml
@@ -392,7 +423,7 @@ crates/
 
 **What you implement:**
 - Your custom use case logic (import_inventory, export_inventory)
-- Your UI or CLI on top of the controllers or their adapters
+- Your UI or CLI on top of the controllers or their adapters.
 
 ---
 
@@ -400,7 +431,7 @@ crates/
 
 ### Understanding the Internal Database
 
-Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). This database is **internal** — users and UI devs don't interact with it directly.
+Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). This database is **internal**, users and UI devs don't interact with it directly.
 
 **Typical pattern:**
 
@@ -413,7 +444,7 @@ The internal database is ephemeral. It enables fast operations, undo/redo. The u
 
 ### Undo/Redo
 
-Every generated CRUD operation supports undo/redo automatically. You don't have to display undo/redo controls in your UI if you don't want to — but the infrastructure is there when you need it.
+Every generated CRUD operation supports undo/redo automatically. You don't have to display undo/redo controls in your UI if you don't want to, but the infrastructure is there when you need it.
 
 If you mark a use case as **Undoable**, Qleany generates the command pattern scaffolding. You fill in what "undo" means for your specific operation.
 

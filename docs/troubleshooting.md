@@ -184,4 +184,4 @@ Include in your issue:
 - Error messages or unexpected output
 - Qleany version and target language (Rust or C++/Qt)
 
-Remember that Qleany is a personal project maintained in spare time. Response times may vary, but thoughtful, well-documented issues are more likely to get attention.
+Response times may vary, but thoughtful, well-documented issues are more likely to get attention. If you're a FernTech customer, please contact support for priority assistance.

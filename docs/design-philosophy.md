@@ -179,6 +179,34 @@ direct_access/
 
 This follows Rust's recommended practice since the 2018 edition, avoiding the proliferation of `mod.rs` files that makes navigation difficult.
 
+## Code quality and "purity"
+
+Some advanced developers may argue that the code is not very efficient, not “state-of-the-art”, be it in Rust or C++. Like someone called Steve said: “It’s not a bug, it’s a feature.” I choose to avoid writing anything too hard to wrap your head around. A developer with only a few years of experience in C++ or Rust would be able to understand the generated code.
+
+It means for Rust:
+- lifetimes only where the compiler requires them (no complex multi-lifetime scenarios), mostly deep inside the infrastructure
+- no async/await
+- generics only from standard library types (Result, Option, Vec) — no custom generic abstractions
+- no unsafe code
+- there is a bit too much of cloning around
+- generated traits stay simple
+- the only macro exists to help the developer with custom units of work
+
+For C++/Qt:
+- some C++20 aggregates and std::optional
+- exceptions used for error handling
+- async operations handled through QCoro where the event loop requires it
+- no raw pointers, only smart pointers
+- no multi-level inheritance, be it virtual or polymorphic
+- a bit too much of copying around, but std::move is used deeper inside the infrastructure
+
+I know how to use complex lifetimes, generics, async Rust, diamond inheritance with virtual, etc. I did it in professional projects, and I saw younger developers struggling with it. The borrow checker is brilliant, but watching someone spend three hours fighting lifetime annotations on code that just needs to clone a string taught me something.
+
+It’s a trade-off between code approachability and performance. Qleany prioritizes code that intermediate developers can confidently modify over code that squeezes every last microsecond from the CPU. The generated code is clean, readable, and maintainable. Yes, there’s cloning where a senior developer would use borrowing.
+
+And be real: you are writing C++ and Rust, which are among the fastest languages in the world. And you are not writing a game engine. Your application spends most of its time waiting for the user to click something or fetching from the database. The few microseconds lost to cloning a DTO are not your bottleneck. Your bottleneck is the junior developer who can’t figure out how to add a field to an entity because the code is too clever.
+
+If you need every optimization, write your hot paths by hand. Profile first, then optimize what matters. The generator gives you a solid baseline that works and that your team can maintain. That’s the deal.
 
 ## Plugins
 

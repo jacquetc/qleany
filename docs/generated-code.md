@@ -1,25 +1,12 @@
 # Generated Infrastructure
 
-This document details the infrastructure Qleany generates for each target language. It's reference material — read it when you need to understand, extend, or debug the generated code, not as a getting-started guide.
+This document details the infrastructure Qleany generates for each target language. It's a reference material — read it when you need to understand, extend, or debug the generated code, not as a getting-started guide.
 
 ## C++/Qt Infrastructure
 
 ### Database Layer
 
 **DbContext / DbSubContext**: Connection pool with scoped transactions. Each unit of work owns a `DbSubContext` providing `beginTransaction`, `commit`, `rollback`, and savepoint support.
-
-```cpp
-// Usage in a use case
-auto subContext = m_dbContext->createSubContext();
-subContext->beginTransaction();
-try {
-    // ... operations ...
-    subContext->commit();
-} catch (...) {
-    subContext->rollback();
-    throw;
-}
-```
 
 **Repository Factory**: Creates repositories bound to a specific `DbSubContext` and `EventRegistry`. Returns owned instances (`std::unique_ptr`) — no cross-thread sharing.
 
@@ -32,7 +19,7 @@ auto works = repo->get(QList<int>{workId});
 
 ### SQLite Configuration
 
-SQLite with WAL mode, optimized for desktop writing applications:
+SQLite with WAL mode, optimized for desktop applications:
 
 ```sql
 PRAGMA journal_mode=WAL;
@@ -56,45 +43,71 @@ This pattern separates the user's file format from internal data structures. You
 Controllers use C++20 coroutines via QCoro for non-blocking command execution:
 
 ```cpp
-QCoro::Task<QList<WorkDto>> WorkController::update(const QList<WorkDto> &works)
+QCoro::Task<QList<WorkDto>> WorkController::update(const QList<WorkDto> &works, int stackId)
 {
-    // Create use case owned by the command
-    std::unique_ptr<IWorkUnitOfWork> uow = 
-        std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
+    if (!m_undoRedoSystem)
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return QList<WorkDto>();
+    }
+
+    // Create use case that will be owned by the command
+    std::unique_ptr<IWorkUnitOfWork> uow = std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<UpdateWorkUseCase>(std::move(uow));
 
-    // Create command with execute/undo/redo lambdas
-    auto command = std::make_shared<UndoRedoCommand>("Update Works Command"_L1);
+    // Create command that owns the use case
+    auto command = std::make_shared<Common::UndoRedo::UndoRedoCommand>("Update Works Command"_L1);
     QList<WorkDto> result;
 
+    // Create weak_ptr to break circular reference
     std::weak_ptr<UpdateWorkUseCase> weakUseCase = useCase;
 
+    // Prepare lambda for execute - use weak_ptr to avoid circular reference
     command->setExecuteFunction([weakUseCase, works, &result](auto &) {
-        if (auto uc = weakUseCase.lock())
-            result = uc->execute(works);
+        if (auto useCase = weakUseCase.lock())
+        {
+            result = useCase->execute(works);
+        }
     });
 
-    command->setUndoFunction([weakUseCase]() -> Result<void> {
-        if (auto uc = weakUseCase.lock())
-            return uc->undo();
-        return Result<void>("UseCase no longer available"_L1);
+    // Prepare lambda for redo - use weak_ptr to avoid circular reference
+    command->setRedoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->redo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
     });
 
-    command->setRedoFunction([weakUseCase]() -> Result<void> {
-        if (auto uc = weakUseCase.lock())
-            return uc->redo();
-        return Result<void>("UseCase no longer available"_L1);
+    // Prepare lambda for undo - use weak_ptr to avoid circular reference
+    command->setUndoFunction([weakUseCase]() -> Common::UndoRedo::Result<void> {
+        if (auto useCase = weakUseCase.lock())
+        {
+            return useCase->undo();
+        }
+        return Common::UndoRedo::Result<void>("UseCase no longer available"_L1,
+                                              Common::UndoRedo::ErrorCategory::ExecutionError);
     });
 
-    // Store useCase in command to maintain ownership
+    // Store the useCase in the command to maintain ownership
+    // This ensures the useCase stays alive as long as the command exists
     command->setProperty("useCase", QVariant::fromValue(useCase));
 
-    // Execute asynchronously with timeout
-    std::optional<bool> success = 
-        co_await m_undoRedoSystem->executeCommandAsync(command, 500, "work_update"_L1);
+    // Execute command asynchronously using QCoro integration
+    std::optional<bool> success = co_await m_undoRedoSystem->executeCommandAsync(command, 500, stackId);
 
-    if (!success.has_value() || !success.value())
+    if (!success.has_value())
+    {
+        qWarning() << "Update work command execution timed out";
         co_return QList<WorkDto>();
+    }
+
+    if (!success.value())
+    {
+        qWarning() << "Failed to execute update work command";
+        co_return QList<WorkDto>();
+    }
 
     co_return result;
 }
@@ -142,7 +155,7 @@ QCoro::Task<QList<WorkDto>> WorkController::get(const QList<int> &workIds)
 ```
 
 Features:
-- Scoped stacks (per-document undo)
+- Undo stacks (per-document undo)
 - Command grouping (multiple operations as one undo step)
 - Timeout handling for long operations
 - Weak pointer pattern to avoid circular references
@@ -383,8 +396,9 @@ pub enum EntityEvent {
     Updated,
     Removed,
 }
+...
 
-// Publishing (in repository)
+// Publishing (from the repositories)
 event_hub.send_event(Event {
     origin: Origin::DirectAccess(DirectAccessEntity::Workspace(EntityEvent::Updated)),
     ids: vec![entity.id.clone()],
@@ -439,52 +453,70 @@ C++/Qt offers additional pagination and counting methods for UI scenarios. The g
 
 ### Unit of Work
 
+In C++//Qt and Rust, the unit of works are helped by macros to generate all the boilerplate for transaction management and repository access. This can be a debatable design choice, since all is already generated by Qleany. The reality is : not all can be generated. The user (developer) have the responsability to adapt the units of work for each custom use case. The macros are here to ease this task.
+
+I repeat : the user is to adapt the macros in custom use cases.
+
 **Rust:**
 
 Each use case receives a unit of work factory which handles the unit of work creation that allow transaction-scoped operations:
 
 ```rust
-pub trait WorkspaceUnitOfWorkFactoryTrait {
-    fn create(&self) -> Box<dyn WorkspaceUnitOfWorkTrait>;
+// In the controller, we create the use case with a factory for the unit of work
+
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateWorkspaceDto,
+) -> Result<WorkspaceDto> {
+    let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateWorkspaceUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone())?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
 }
 
-// Use case creates UoW per operation
-let mut uow = self.uow_factory.create();
-uow.begin_transaction()?;
-let entity = uow.update_workspace(&dto.into())?;
-uow.commit()?;
+// In the unit of work, you see a bit of macro magic to generate all the boilerplate:
+
+#[macros::uow_action(entity = "Workspace", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "CreateMulti")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "GetMulti")]
+#[macros::uow_action(entity = "Workspace", action = "Update")]
+#[macros::uow_action(entity = "Workspace", action = "UpdateMulti")]
+#[macros::uow_action(entity = "Workspace", action = "Delete")]
+#[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIds")]
+#[macros::uow_action(entity = "Workspace", action = "SetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "SetRelationshipMulti")]
+impl WorkspaceUnitOfWorkTrait for WorkspaceUnitOfWork {}
 ```
 
 **C++/Qt:**
 
-No factory here, the controller creates a new unit of work per use case:
+No factory for the unit of work here, the controller creates a new unit of work per use case.
+
+Yet 
 
 ```cpp
-// Unit of work encapsulates repository access within a transaction
-class IWorkUnitOfWork
+// Unit of work encapsulates repository access 
+class GlobalUnitOfWork final : public SCUoW::UnitOfWorkBase, public IGlobalUnitOfWork
 {
+
   public:
-    virtual ~IWorkUnitOfWork() = default;
-    virtual void beginTransaction() = 0;
-    virtual void commit() = 0;
-    virtual void endTransaction() = 0;
-    virtual void rollback() = 0;
+    GlobalUnitOfWork(SCDatabase::DbContext &dbContext, const QPointer<SCD::EventRegistry> &eventRegistry)
+        : UnitOfWorkBase(dbContext, eventRegistry)
+    {
+    }
+    ~GlobalUnitOfWork() override = default;
 
-    virtual void createSavepoint() = 0;
-    virtual void rollbackToSavepoint() = 0;
-    virtual void releaseSavepoint() = 0;
-
-    virtual QList<SCE::Work> createWork(QList<SCE::Work> works) = 0;
-    virtual QList<SCE::Work> getWork(QList<int> workIds) = 0;
-    virtual QList<SCE::Work> updateWork(QList<SCE::Work> works) = 0;
-    virtual QList<int> removeWork(QList<int> workIds) = 0;
-    virtual QList<int> getWorkRelationship(int workId, SCDWork::WorkRelationshipField relationship) = 0;
-    virtual void setWorkRelationship(int workId, SCDWork::WorkRelationshipField relationship,
-                                     QList<int> relatedIds) = 0;
-    virtual QHash<int, QList<int>> getWorkRelationshipMany(const QList<int> &workIds,
-                                                           SCDWork::WorkRelationshipField relationship) = 0;
-    virtual int getWorkRelationshipCount(int workId, SCDWork::WorkRelationshipField relationship) = 0;
-    virtual QList<int> getWorkRelationshipInRange(int workId, SCDWork::WorkRelationshipField relationship, int offset, int limit) = 0;
+    // Transaction interface delegation
+    UOW_TRANSACTION_INTERFACE
+    // Full CRUD operations for Global
+    UOW_ENTITY_CRUD(Global)
 };
 
 // In controller :
@@ -527,8 +559,12 @@ src/
 │   │   ├── db_builder.h
 │   │   ├── db_context.h
 │   │   └── table_cache.h
-│   ├── entities/
+│   ├── entities/                      # Generated entities
 │   │   ├── my_entity.h
+│   │   └── ...
+│   ├── unit_of_work/                  # unit of work macros and base class
+│   │   ├── unit_of_work.h
+│   │   ├── uow_macros.h 
 │   │   └── ...
 │   ├── features/
 │   │   ├── feature_event_registry.h   # Event registry for feature events
@@ -547,11 +583,15 @@ src/
 │   └── {entity}/
 │       ├── {entity}_controller.h/.cpp
 │       ├── dtos.h
-│       ├── unit_of_work.h/.cpp
+│       ├── unit_of_work.h
 │       └── use_cases/
 └── {feature}/                              # Custom controllers and use cases
     ├── {feature}_controller.h/.cpp
-    └── use_cases/
+    ├── {feature}_dtos.h
+    ├── units_of_work/                  # ← adapt the macros here
+    │   └── ...
+    └── use_cases/                      # ← You implement the logic here
+        └── ...
 ```
 
 ### Rust Output
@@ -565,7 +605,7 @@ crates/
 │   └── Cargo.toml
 ├── common/
 │   ├── src/
-│   │   ├── entities.rs             # Car, Customer, Sale structs
+│   │   ├── entities.rs             # Generated entities
 │   │   ├── database.rs
 │   │   ├── database/
 │   │   │   ├── db_context.rs
@@ -627,7 +667,7 @@ crates/
     │   ├── inventory_management_controller.rs
     │   ├── dtos.rs
     │   ├── units_of_work.rs
-    │   ├── units_of_work/          # ← adapt the macros here too
+    │   ├── units_of_work/          # ← adapt the macros here
     │   │   └── ...
     │   ├── use_cases.rs
     │   ├── use_cases/              # ← You implement the logic here
