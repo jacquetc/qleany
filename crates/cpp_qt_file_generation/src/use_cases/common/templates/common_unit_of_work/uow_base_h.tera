@@ -4,6 +4,10 @@
  * This file provides:
  * - Transaction interface (ITransactional)
  * - Base implementation class (UnitOfWorkBase)
+ *
+ * UnitOfWorkBase inherits ITransactional virtually so that concrete UoW
+ * classes automatically satisfy the ITransactional requirement without
+ * explicit delegation macros.
  ******************************************************************************/
 
 #pragma once
@@ -24,7 +28,8 @@ namespace SCD = {{ s.global.application_pascal_name }}::Common::DirectAccess;
 /**
  * @brief Interface for transaction operations
  *
- * All UoW interfaces should inherit from this to get standard transaction methods.
+ * All UoW interfaces should inherit from this (virtually) to get standard
+ * transaction methods.
  */
 class ITransactional
 {
@@ -42,10 +47,13 @@ class ITransactional
 /**
  * @brief Base class providing transaction management for Unit of Work implementations
  *
- * Inherit from this class to get automatic transaction method implementations.
+ * Inherits ITransactional virtually and provides all transaction overrides.
+ * Concrete UoW classes inherit from this and from their entity-specific interface;
+ * virtual inheritance ensures a single ITransactional vtable entry.
+ *
  * The DbSubContext is managed internally and provides connection lifecycle management.
  */
-class UnitOfWorkBase
+class UnitOfWorkBase : public virtual ITransactional
 {
   public:
     UnitOfWorkBase(SCDatabase::DbContext &dbContext, QPointer<SCD::EventRegistry> eventRegistry)
@@ -53,37 +61,16 @@ class UnitOfWorkBase
     {
     }
 
-    virtual ~UnitOfWorkBase() = default;
+    ~UnitOfWorkBase() override = default;
 
-    // Transaction management - these implement ITransactional
-    virtual void beginTransaction()
-    {
-        m_dbSubContext.beginTransaction();
-    }
-    virtual void commit()
-    {
-        m_dbSubContext.commit();
-    }
-    virtual void endTransaction()
-    {
-        m_dbSubContext.endTransaction();
-    }
-    virtual void rollback()
-    {
-        m_dbSubContext.rollback();
-    }
-    virtual void createSavepoint()
-    {
-        m_dbSubContext.createSavepoint();
-    }
-    virtual void rollbackToSavepoint()
-    {
-        m_dbSubContext.rollbackToSavepoint();
-    }
-    virtual void releaseSavepoint()
-    {
-        m_dbSubContext.releaseSavepoint();
-    }
+    // ITransactional overrides — all forwarded to DbSubContext
+    void beginTransaction() override { m_dbSubContext.beginTransaction(); }
+    void commit() override { m_dbSubContext.commit(); }
+    void endTransaction() override { m_dbSubContext.endTransaction(); }
+    void rollback() override { m_dbSubContext.rollback(); }
+    void createSavepoint() override { m_dbSubContext.createSavepoint(); }
+    void rollbackToSavepoint() override { m_dbSubContext.rollbackToSavepoint(); }
+    void releaseSavepoint() override { m_dbSubContext.releaseSavepoint(); }
 
   protected:
     SCDatabase::DbSubContext m_dbSubContext;
