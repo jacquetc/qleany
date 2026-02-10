@@ -121,7 +121,7 @@ struct FieldVM {
     pub snake_name: String,
     pub sql_safe_snake_name: String,
     pub relationship: String,
-    pub required: bool,
+    pub optional: bool,
     pub cpp_qt_base_type: String,
     pub cpp_qt_type: String,
     pub cpp_default_init: String,
@@ -261,17 +261,17 @@ impl SnapshotBuilder {
 
             let cpp_qt_type = match f.relationship {
                 FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne => {
-                    if f.required {
-                        cpp_qt_base_type.clone()
-                    } else {
+                    if f.optional {
                         format!("std::optional<{}>", &cpp_qt_base_type)
+                    } else {
+                        cpp_qt_base_type.clone()
                     }
                 }
                 FieldRelationshipType::OrderedOneToMany
                 | FieldRelationshipType::OneToMany
                 | FieldRelationshipType::ManyToMany => format!("QList<{}>", cpp_qt_base_type),
             };
-            let cpp_default_init = if !f.required
+            let cpp_default_init = if f.optional
                 && matches!(
                     f.relationship,
                     FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne
@@ -304,7 +304,7 @@ impl SnapshotBuilder {
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
                 sql_safe_snake_name: tools::to_sql_safe_identifier(&heck::AsSnakeCase(&f.name).to_string()),
                 relationship,
-                required: f.required,
+                optional: f.optional,
                 cpp_qt_base_type,
                 cpp_qt_type,
                 cpp_default_init,
@@ -1266,7 +1266,7 @@ mod tests {
             field_type: FieldType::Entity,
             entity: Some(entity_id),
             relationship: FieldRelationshipType::OneToOne,
-            required: false, // nullable
+            optional: true, // nullable
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1279,7 +1279,7 @@ mod tests {
             field_type: FieldType::String,
             entity: None,
             relationship: FieldRelationshipType::OneToMany,
-            required: false,
+            optional: true,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1319,7 +1319,7 @@ mod tests {
                         sql_safe_snake_name: heck::AsSnakeCase(&field_relationship.name)
                             .to_string(),
                         relationship: "OneToOne".to_string(),
-                        required: false,
+                        optional: true,
                         cpp_qt_base_type: "String".to_string(),
                         cpp_qt_type: "String".to_string(),
                         cpp_default_init: "".to_string(),
@@ -1331,7 +1331,7 @@ mod tests {
                         snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         sql_safe_snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         relationship: "OneToMany".to_string(),
-                        required: false,
+                        optional: true,
                         cpp_qt_base_type: "String".to_string(),
                         cpp_qt_type: "Vec<String>".to_string(),
                         cpp_default_init: "".to_string(),

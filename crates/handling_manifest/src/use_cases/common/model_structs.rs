@@ -39,7 +39,7 @@ pub struct Field {
     pub relationship: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub required: Option<bool>,
+    pub optional: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub strong: Option<bool>,
@@ -82,7 +82,7 @@ pub struct DtoField {
     pub r#type: String,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_nullable: Option<bool>,
+    pub optional: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_list: Option<bool>,

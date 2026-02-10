@@ -89,14 +89,11 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "list_model": {
                                         "type": "boolean"
                                     },
-                                    "required": {
+                                    "optional": {
                                         "type": "boolean"
                                     },
                                     "list_model_displayed_field": {
                                         "type": "string"
-                                    },
-                                    "is_nullable": {
-                                        "type": "boolean"
                                     },
                                     "enum_values": {
                                         "type": "array",
@@ -105,7 +102,7 @@ pub fn json_validation_schema() -> serde_json::Value {
                                         }
                                     },
                                 },
-                                "required": ["name", "type", "required"]
+                                "required": ["name", "type"]
                             }
                         }
                     },

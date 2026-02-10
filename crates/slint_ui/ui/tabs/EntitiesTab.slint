@@ -441,10 +441,10 @@ export component EntitiesTab inherits Rectangle {
 
                             // Required checkbox (only visible when relationship is one_to_one or type is NOT Entity)
                             if EntitiesTabState.selected_field_relationship == "one_to_one" || EntitiesTabState.selected_field_type != "Entity" : CheckBox {
-                                text: "Required (not nullable)";
-                                checked <=> EntitiesTabState.selected_field_required;
+                                text: "Optional";
+                                checked <=> EntitiesTabState.selected_field_optional;
                                 toggled => {
-                                    EntitiesTabState.field_required_changed(self.checked);
+                                    EntitiesTabState.field_optional_changed(self.checked);
                                 }
                             }
 

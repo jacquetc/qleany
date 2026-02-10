@@ -29,10 +29,10 @@ class DtoMapper final
             .id = 0,
         {%- for f in ent.fields %}
             {%- if f.inner.field_type == "Enum" %}
-                {%- if f.required %}
-            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
-                {%- else %}
+                {%- if f.optional %}
             .{{ f.camel_name }} = CD::mapOptionalEnum<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
                 {%- endif %}
             {%- else %}
             .{{ f.camel_name }} = dto.{{ f.camel_name }},
@@ -47,10 +47,10 @@ class DtoMapper final
             .id = dto.id,
         {%- for f in ent.fields %}
             {%- if f.inner.field_type == "Enum" %}
-                {%- if f.required %}
-            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
-                {%- else %}
+                {%- if f.optional %}
             .{{ f.camel_name }} = CD::mapOptionalEnum<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
                 {%- endif %}
             {%- else %}
             .{{ f.camel_name }} = dto.{{ f.camel_name }},
@@ -65,10 +65,10 @@ class DtoMapper final
             .id = entity.id,
         {%- for f in ent.fields %}
             {%- if f.inner.field_type == "Enum" %}
-                {%- if f.required %}
-            .{{ f.camel_name }} = static_cast<{{ f.inner.enum_name }}>(entity.{{ f.camel_name }}),
-                {%- else %}
+                {%- if f.optional %}
             .{{ f.camel_name }} = CD::mapOptionalEnum<{{ f.inner.enum_name }}>(entity.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<{{ f.inner.enum_name }}>(entity.{{ f.camel_name }}),
                 {%- endif %}
             {%- else %}
             .{{ f.camel_name }} = entity.{{ f.camel_name }},

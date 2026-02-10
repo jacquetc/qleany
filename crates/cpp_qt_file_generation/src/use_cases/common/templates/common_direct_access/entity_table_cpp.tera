@@ -131,11 +131,11 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             r.{{ f.camel_name }}.toString(Qt::ISODate));
         {%- elif f.cpp_qt_type == "QUuid" %}
             r.{{ f.camel_name }}.toString());
-        {%- elif f.inner.field_type == "Enum" and f.required == false %}
+        {%- elif f.inner.field_type == "Enum" and f.optional == true %}
             r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
         {%- elif f.inner.field_type == "Enum" %}
             static_cast<int>(r.{{ f.camel_name }}));
-        {%- elif f.required == false %}
+        {%- elif f.optional == true %}
             r.{{ f.camel_name }}.has_value() ? QVariant(r.{{ f.camel_name }}.value()) : QVariant());
         {%- else %}
             r.{{ f.camel_name }});
@@ -206,11 +206,11 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             r.{{ f.camel_name }}.toString(Qt::ISODate));
         {%- elif f.cpp_qt_type == "QUuid" %}
             r.{{ f.camel_name }}.toString());
-        {%- elif f.inner.field_type == "Enum" and f.required == false %}
+        {%- elif f.inner.field_type == "Enum" and f.optional == true %}
             r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
         {%- elif f.inner.field_type == "Enum" %}
             static_cast<int>(r.{{ f.camel_name }}));
-        {%- elif f.required == false %}
+        {%- elif f.optional == true %}
             r.{{ f.camel_name }}.has_value() ? QVariant(r.{{ f.camel_name }}.value()) : QVariant());
         {%- else %}
             r.{{ f.camel_name }});
@@ -286,7 +286,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {{ ent.camel_name }}.id = rowId;
         {%- for f in ent.normal_fields %}
 
-            {%- if f.cpp_qt_base_type == "QDateTime" and f.required == false %}
+            {%- if f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
             {
                 const QString dateTimeStr = q.value({{ loop.index }}).toString();
                 {{ ent.camel_name }}.{{ f.camel_name }} = dateTimeStr.isEmpty() ? std::nullopt
@@ -295,7 +295,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {%- elif f.cpp_qt_type == "QDateTime" %}
             {{ ent.camel_name }}.{{ f.camel_name }} = QDateTime::fromString(q.value({{ loop.index }}).toString(), Qt::ISODate);
 
-            {%- elif f.cpp_qt_base_type == "QUuid" and f.required == false %}
+            {%- elif f.cpp_qt_base_type == "QUuid" and f.optional == true %}
             {
                 const QString uuidStr = q.value({{ loop.index }}).toString();
                 {{ ent.camel_name }}.{{ f.camel_name }} = uuidStr.isEmpty() ? std::nullopt
@@ -304,7 +304,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {%- elif f.cpp_qt_type == "QUuid" %}
             {{ ent.camel_name }}.{{ f.camel_name }} = QUuid::fromString(q.value({{ loop.index }}).toString());
 
-            {%- elif f.inner.field_type == "Enum" and f.required == false %}
+            {%- elif f.inner.field_type == "Enum" and f.optional == true %}
             {
                 const int enumVal = q.value({{ loop.index }}).toInt();
                 {{ ent.camel_name }}.{{ f.camel_name }} = (enumVal >= 0)
@@ -314,7 +314,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {%- elif f.inner.field_type == "Enum" %}
             {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_type }}>(q.value({{ loop.index }}).toInt());
 
-            {%- elif f.required == false %}
+            {%- elif f.optional == true %}
             {
                 const auto v = q.value({{ loop.index }});
                 {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.value<{{ f.cpp_qt_base_type }}>());
@@ -366,7 +366,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {% for f in ent.fields %}
             {%- if f.inner.field_type == "Entity" %}
                 {%- if f.relationship == "OneToOne" or f.relationship == "ManyToOne" %}
-                    {%- if f.required == false %}
+                    {%- if f.optional == true %}
             {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id);
                     {%- else %}
             if (auto it = {{ f.camel_name }}Map.find({{ ent.camel_name }}.id); it != {{ f.camel_name }}Map.end() && it->has_value())
@@ -485,34 +485,34 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::setRelationshipIds(in
         {%- elif f.relationship == "OneToMany" %}
         JunctionTableOps::UnorderedOneToMany::upsertRightIds(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, relatedIds);
         {%- elif f.relationship == "OneToOne" %}
-            {%- if f.required %}
+            {%- if f.optional %}
+        {
+            std::optional<int> {{ f.camel_name }}RelatedId;
+            if (!relatedIds.isEmpty())
+                {{ f.camel_name }}RelatedId = relatedIds.first();
+            {%- else %}
         if (relatedIds.isEmpty())
         {
             qCritical() << "Related IDs for required OneToOne relationship cannot be empty";
         }
         {
             int {{ f.camel_name }}RelatedId = relatedIds.first();
-            {%- else %}
-        {
-            std::optional<int> {{ f.camel_name }}RelatedId;
-            if (!relatedIds.isEmpty())
-                {{ f.camel_name }}RelatedId = relatedIds.first();
             {%- endif %}
             JunctionTableOps::OneToOne::upsertRightId(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, {{ f.camel_name }}RelatedId);
         }
         {%- elif f.relationship == "ManyToOne" %}
-            {%- if f.required %}
+            {%- if f.optional %}
+        {
+            std::optional<int> {{ f.camel_name }}RelatedId;
+            if (!relatedIds.isEmpty())
+                {{ f.camel_name }}RelatedId = relatedIds.first();
+            {%- else %}
         if (relatedIds.isEmpty())
         {
             qCritical() << "Related IDs for required ManyToOne relationship cannot be empty";
         }
         {
             int {{ f.camel_name }}RelatedId = relatedIds.first();
-            {%- else %}
-        {
-            std::optional<int> {{ f.camel_name }}RelatedId;
-            if (!relatedIds.isEmpty())
-                {{ f.camel_name }}RelatedId = relatedIds.first();
             {%- endif %}
             JunctionTableOps::ManyToOne::upsertRightId(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, {{ f.camel_name }}RelatedId);
         }

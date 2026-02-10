@@ -166,7 +166,7 @@ impl ExportToMermaidUseCase {
                 .unwrap_or_else(|| "enum".to_string()),
         };
 
-        let optional_marker = if !field.required { " \"optional\"" } else { "" };
+        let optional_marker = if field.optional { " \"optional\"" } else { "" };
 
         // exception for id field
         if field.name == "id" {
@@ -191,10 +191,10 @@ impl ExportToMermaidUseCase {
 
         let relationship_line = match field.relationship {
             FieldRelationshipType::OneToOne => {
-                let cardinality = if field.required {
-                    format!("||{}||", line_style)
-                } else {
+                let cardinality = if field.optional {
                     format!("||{}o|", line_style)
+                } else {
+                    format!("||{}||", line_style)
                 };
                 format!(
                     "{} {} {} : {}",
@@ -221,7 +221,7 @@ impl ExportToMermaidUseCase {
                 )
             }
             FieldRelationshipType::ManyToOne => {
-                let cardinality = if field.required { "||..||" } else { "||..o|" };
+                let cardinality = if field.optional { "||..o|" } else { "||..||" };
                 format!(
                     "{} {} {} : {}",
                     target_entity.name, cardinality, owner_entity.name, label

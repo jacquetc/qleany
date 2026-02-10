@@ -166,7 +166,7 @@ pub fn fill_dto_in_field_form(app: &App, dto_field: &direct_access::DtoFieldDto)
     state.set_selected_dto_in_field_id(dto_field.id as i32);
     state.set_selected_dto_in_field_name(dto_field.name.clone().into());
     state.set_selected_dto_in_field_type_index(dto_field_type_to_index(&dto_field.field_type));
-    state.set_selected_dto_in_field_is_nullable(dto_field.is_nullable);
+    state.set_selected_dto_in_field_optional(dto_field.optional);
     state.set_selected_dto_in_field_is_list(dto_field.is_list);
 }
 
@@ -176,7 +176,7 @@ pub fn clear_dto_in_field_form(app: &App) {
     state.set_selected_dto_in_field_id(-1);
     state.set_selected_dto_in_field_name("".into());
     state.set_selected_dto_in_field_type_index(4); // Default to String
-    state.set_selected_dto_in_field_is_nullable(false);
+    state.set_selected_dto_in_field_optional(false);
     state.set_selected_dto_in_field_is_list(false);
 }
 
@@ -511,18 +511,18 @@ pub fn setup_dto_in_field_type_callback(app: &App, app_context: &Arc<AppContext>
         });
 }
 
-pub fn setup_dto_in_field_is_nullable_callback(app: &App, app_context: &Arc<AppContext>) {
+pub fn setup_dto_in_field_optional_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<FeaturesTabState>()
-        .on_dto_in_field_is_nullable_changed({
+        .on_dto_in_field_optional_changed({
             let ctx = Arc::clone(app_context);
             let app_weak = app.as_weak();
-            move |is_nullable| {
+            move |optional| {
                 if let Some(app) = app_weak.upgrade() {
                     let field_id = app
                         .global::<FeaturesTabState>()
                         .get_selected_dto_in_field_id();
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
-                        field.is_nullable = is_nullable;
+                        field.optional = optional;
                     });
                 }
             }
@@ -664,7 +664,7 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                     let create_dto = direct_access::CreateDtoFieldDto {
                         name: "new_field".to_string(),
                         field_type: DtoFieldType::String,
-                        is_nullable: false,
+                        optional: false,
                         is_list: false,
                         enum_name: None,
                         enum_values: None,
