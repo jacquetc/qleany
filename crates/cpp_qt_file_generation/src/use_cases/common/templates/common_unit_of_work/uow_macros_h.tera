@@ -1,45 +1,40 @@
 /******************************************************************************
- * UoW Macros - Declarative Interface & Implementation Generation
+ * UoW Macros - Atomic Building Blocks for CUSTOM Unit of Work Classes
  *
- * These macros provide a clean, declarative way to:
- * 1. DECLARE interfaces (I{Entity}UnitOfWork)
- * 2. IMPLEMENT entity operations in UoW classes
+ * These macros exist for HAND-WRITTEN multi-entity UoW classes where you
+ * need per-entity named methods (e.g. createRoot(), createContent()).
  *
- * No EntityTraits needed - uses naming conventions:
- * - Repository: SCD::RepositoryFactory::create{Entity}Repository(...)
- * - Entity type: SCE::{Entity}
+ * For GENERATED per-entity UoWs, prefer the type-safe template interfaces
+ * and CRTP implementations in uow_ops.h instead.
  *
- * Usage for INTERFACES:
+ * Usage example (custom multi-entity UoW):
  *
- *   // Full CRUD + relationships (pass relationship enum type)
- *   DECLARE_UOW_INTERFACE_FULL(Binder, SCDBinder::BinderRelationshipField)
- *
- *   // CRUD only (no relationships)
- *   DECLARE_UOW_INTERFACE_CRUD(Content)
- *
- *   // Custom interface with multiple entities
- *   class ILoadWorkUnitOfWork : public ITransactional {
+ *   // Interface
+ *   class ILoadWorkUnitOfWork : public virtual SCUoW::ITransactional {
  *   public:
+ *       ~ILoadWorkUnitOfWork() override = default;
  *       DECLARE_UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField);
  *       DECLARE_UOW_ENTITY_CREATE(Content);
  *       virtual void publishWorkLoaded(int workId) = 0;
  *   };
  *
- * Usage for IMPLEMENTATIONS:
- *
- *   class BinderUnitOfWork : public UnitOfWorkBase, public IBinderUnitOfWork
+ *   // Implementation
+ *   class LoadWorkUnitOfWork : public SCUoW::UnitOfWorkBase,
+ *                              public ILoadWorkUnitOfWork
  *   {
  *   public:
- *       UOW_TRANSACTION_INTERFACE
- *       UOW_ENTITY_FULL(Binder, SCDBinder::BinderRelationshipField)
+ *       LoadWorkUnitOfWork(SCDatabase::DbContext &db,
+ *                          QPointer<SCD::EventRegistry> er)
+ *           : UnitOfWorkBase(db, er) {}
+ *
+ *       // Transaction methods are inherited from UnitOfWorkBase (no macro)
+ *       UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField)
+ *       UOW_ENTITY_CREATE(Content)
+ *       void publishWorkLoaded(int workId) override { ... }
  *   };
  *
- *   class ContentUnitOfWork : public UnitOfWorkBase, public IContentUnitOfWork
- *   {
- *   public:
- *       UOW_TRANSACTION_INTERFACE
- *       UOW_ENTITY_CRUD(Content)
- *   };
+ * Naming convention required:
+ *   SCD::RepositoryFactory::create{Name}Repository(m_dbSubContext, m_eventRegistry)
  ******************************************************************************/
 
 #pragma once
@@ -48,304 +43,131 @@
 #include <QList>
 
 // #############################################################################
-// INTERFACE DECLARATION MACROS
+// INTERFACE DECLARATION MACROS (pure virtual signatures)
 // #############################################################################
 
-// =============================================================================
-// Complete Interface Macros
-// =============================================================================
+// -- CRUD fragments --
 
-/**
- * @brief Declare a complete UoW interface for entity WITH relationships
- *
- * Generates: I{Name}UnitOfWork with ITransactional + CRUD + relationships
- *
- * @param Name Entity name (e.g., Binder)
- * @param RelFieldEnum Fully qualified relationship field enum type
- */
-#define DECLARE_UOW_INTERFACE_FULL(Name, RelFieldEnum)                                                                 \
-    class I##Name##UnitOfWork : public virtual SCUoW::ITransactional                                                   \
-    {                                                                                                                  \
-      public:                                                                                                          \
-        ~I##Name##UnitOfWork() override = default;                                                                     \
-        /* CRUD */                                                                                                     \
-        virtual QList<SCE::Name> create##Name(QList<SCE::Name> items) = 0;                                             \
-        virtual QList<SCE::Name> get##Name(QList<int> ids) = 0;                                                        \
-        virtual QList<SCE::Name> update##Name(QList<SCE::Name> items) = 0;                                             \
-        virtual QList<int> remove##Name(QList<int> ids) = 0;                                                           \
-        /* Relationships */                                                                                            \
-        virtual QList<int> get##Name##Relationship(int id, RelFieldEnum rel) = 0;                                      \
-        virtual void set##Name##Relationship(int id, RelFieldEnum rel, QList<int> relatedIds) = 0;                     \
-        virtual QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;       \
-        virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                                        \
-        virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;        \
-    };
+#define DECLARE_UOW_ENTITY_CREATE(Name) \
+    [[nodiscard]] virtual QList<SCE::Name> create##Name(const QList<SCE::Name> &items) = 0
 
-/**
- * @brief Declare a complete UoW interface for entity WITHOUT relationships
- *
- * Generates: I{Name}UnitOfWork with ITransactional + CRUD only
- *
- * @param Name Entity name (e.g., Content)
- */
-#define DECLARE_UOW_INTERFACE_CRUD(Name)                                                                               \
-    class I##Name##UnitOfWork : public virtual SCUoW::ITransactional                                                   \
-    {                                                                                                                  \
-      public:                                                                                                          \
-        ~I##Name##UnitOfWork() override = default;                                                                     \
-        virtual QList<SCE::Name> create##Name(QList<SCE::Name> items) = 0;                                             \
-        virtual QList<SCE::Name> get##Name(QList<int> ids) = 0;                                                        \
-        virtual QList<SCE::Name> update##Name(QList<SCE::Name> items) = 0;                                             \
-        virtual QList<int> remove##Name(QList<int> ids) = 0;                                                           \
-    };
+#define DECLARE_UOW_ENTITY_GET(Name) \
+    [[nodiscard]] virtual QList<SCE::Name> get##Name(const QList<int> &ids) = 0
 
-// =============================================================================
-// Interface Fragment Macros (for custom multi-entity interfaces)
-// =============================================================================
+#define DECLARE_UOW_ENTITY_UPDATE(Name) \
+    [[nodiscard]] virtual QList<SCE::Name> update##Name(const QList<SCE::Name> &items) = 0
 
-/**
- * @brief Declare CRUD method signatures for an entity
- */
-#define DECLARE_UOW_ENTITY_CRUD(Name)                                                                                  \
-    virtual QList<SCE::Name> create##Name(QList<SCE::Name> items) = 0;                                                 \
-    virtual QList<SCE::Name> get##Name(QList<int> ids) = 0;                                                            \
-    virtual QList<SCE::Name> update##Name(QList<SCE::Name> items) = 0;                                                 \
-    virtual QList<int> remove##Name(QList<int> ids) = 0
+#define DECLARE_UOW_ENTITY_REMOVE(Name) \
+    [[nodiscard]] virtual QList<int> remove##Name(const QList<int> &ids) = 0
 
-/**
- * @brief Declare Create-only method signature
- */
-#define DECLARE_UOW_ENTITY_CREATE(Name) virtual QList<SCE::Name> create##Name(QList<SCE::Name> items) = 0
+#define DECLARE_UOW_ENTITY_CRUD(Name)                                                                                 \
+    DECLARE_UOW_ENTITY_CREATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
+    DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_REMOVE(Name)
 
-/**
- * @brief Declare Create + SetRelationship method signatures
- */
-#define DECLARE_UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                         \
-    virtual QList<SCE::Name> create##Name(QList<SCE::Name> items) = 0;                                                 \
-    virtual void set##Name##Relationship(int id, RelFieldEnum rel, QList<int> relatedIds) = 0
+// -- Relationship fragments --
 
-/**
- * @brief Declare Get-only method signature
- */
-#define DECLARE_UOW_ENTITY_GET(Name) virtual QList<SCE::Name> get##Name(QList<int> ids) = 0
+#define DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)                                                          \
+    [[nodiscard]] virtual QList<int> get##Name##Relationship(int id, RelFieldEnum rel) = 0;                           \
+    virtual void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) = 0;                 \
+    [[nodiscard]] virtual QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids,                   \
+                                                                             RelFieldEnum rel) = 0;                   \
+    [[nodiscard]] virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                             \
+    [[nodiscard]] virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                         \
+                                                                     int offset, int limit) = 0
 
-/**
- * @brief Declare Update-only method signature
- */
-#define DECLARE_UOW_ENTITY_UPDATE(Name) virtual QList<SCE::Name> update##Name(QList<SCE::Name> items) = 0
+// -- Composite fragments --
 
-/**
- * @brief Declare Remove-only method signature
- */
-#define DECLARE_UOW_ENTITY_REMOVE(Name) virtual QList<int> remove##Name(QList<int> ids) = 0
-
-/**
- * @brief Declare full relationship method signatures
- */
-#define DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)                                                           \
-    virtual QList<int> get##Name##Relationship(int id, RelFieldEnum rel) = 0;                                          \
-    virtual void set##Name##Relationship(int id, RelFieldEnum rel, QList<int> relatedIds) = 0;                         \
-    virtual QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;           \
-    virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                                            \
-    virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0
+#define DECLARE_UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                        \
+    DECLARE_UOW_ENTITY_CREATE(Name);                                                                                  \
+    virtual void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) = 0
 
 // #############################################################################
-// IMPLEMENTATION MACROS
+// IMPLEMENTATION MACROS (override implementations)
 // #############################################################################
 
-// =============================================================================
-// Transaction Macro
-// =============================================================================
+// -- Individual operations --
 
-/**
- * @brief Delegate transaction methods to UnitOfWorkBase
- */
-#define UOW_TRANSACTION_INTERFACE                                                                                      \
-  public:                                                                                                              \
-    void beginTransaction() override                                                                                   \
-    {                                                                                                                  \
-        UnitOfWorkBase::beginTransaction();                                                                            \
-    }                                                                                                                  \
-    void commit() override                                                                                             \
-    {                                                                                                                  \
-        UnitOfWorkBase::commit();                                                                                      \
-    }                                                                                                                  \
-    void endTransaction() override                                                                                     \
-    {                                                                                                                  \
-        UnitOfWorkBase::endTransaction();                                                                              \
-    }                                                                                                                  \
-    void rollback() override                                                                                           \
-    {                                                                                                                  \
-        UnitOfWorkBase::rollback();                                                                                    \
-    }                                                                                                                  \
-    void createSavepoint() override                                                                                    \
-    {                                                                                                                  \
-        UnitOfWorkBase::createSavepoint();                                                                             \
-    }                                                                                                                  \
-    void rollbackToSavepoint() override                                                                                \
-    {                                                                                                                  \
-        UnitOfWorkBase::rollbackToSavepoint();                                                                         \
-    }                                                                                                                  \
-    void releaseSavepoint() override                                                                                   \
-    {                                                                                                                  \
-        UnitOfWorkBase::releaseSavepoint();                                                                            \
+#define UOW_ENTITY_CREATE(Name)                                                                                       \
+  public:                                                                                                             \
+    [[nodiscard]] QList<SCE::Name> create##Name(const QList<SCE::Name> &items) override                               \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->create(items);                                                                                   \
     }
 
-// =============================================================================
-// Full Entity Implementation (CRUD + Relationships)
-// =============================================================================
-
-/**
- * @brief Implement full CRUD + relationship operations for an entity
- *
- * Uses naming convention: RepositoryFactory::create{Name}Repository(...)
- *
- * @param Name Entity name (e.g., Binder)
- * @param RelFieldEnum Fully qualified relationship field enum type
- */
-#define UOW_ENTITY_FULL(Name, RelFieldEnum)                                                                            \
-  public:                                                                                                              \
-    QList<SCE::Name> create##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->create(items);                                                                                    \
-    }                                                                                                                  \
-    QList<SCE::Name> get##Name(QList<int> ids) override                                                                \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->get(ids);                                                                                         \
-    }                                                                                                                  \
-    QList<SCE::Name> update##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->update(items);                                                                                    \
-    }                                                                                                                  \
-    QList<int> remove##Name(QList<int> ids) override                                                                   \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->remove(ids);                                                                                      \
-    }                                                                                                                  \
-    QList<int> get##Name##Relationship(int id, RelFieldEnum rel) override                                              \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->getRelationshipIds(id, rel);                                                                      \
-    }                                                                                                                  \
-    void set##Name##Relationship(int id, RelFieldEnum rel, QList<int> relatedIds) override                             \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        repo->setRelationshipIds(id, rel, relatedIds);                                                                 \
-    }                                                                                                                  \
-    QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids, RelFieldEnum rel) override               \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->getRelationshipIdsMany(ids, rel);                                                                 \
-    }                                                                                                                  \
-    int get##Name##RelationshipCount(int id, RelFieldEnum rel) override                                                \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->getRelationshipIdsCount(id, rel);                                                                 \
-    }                                                                                                                  \
-    QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) override                \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                                \
+#define UOW_ENTITY_GET(Name)                                                                                          \
+  public:                                                                                                             \
+    [[nodiscard]] QList<SCE::Name> get##Name(const QList<int> &ids) override                                          \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->get(ids);                                                                                        \
     }
 
-// =============================================================================
-// CRUD-Only Entity Implementation
-// =============================================================================
-
-/**
- * @brief Implement CRUD operations for an entity (no relationships)
- *
- * @param Name Entity name (e.g., Content)
- */
-#define UOW_ENTITY_CRUD(Name)                                                                                          \
-  public:                                                                                                              \
-    QList<SCE::Name> create##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->create(items);                                                                                    \
-    }                                                                                                                  \
-    QList<SCE::Name> get##Name(QList<int> ids) override                                                                \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->get(ids);                                                                                         \
-    }                                                                                                                  \
-    QList<SCE::Name> update##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->update(items);                                                                                    \
-    }                                                                                                                  \
-    QList<int> remove##Name(QList<int> ids) override                                                                   \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->remove(ids);                                                                                      \
+#define UOW_ENTITY_UPDATE(Name)                                                                                       \
+  public:                                                                                                             \
+    [[nodiscard]] QList<SCE::Name> update##Name(const QList<SCE::Name> &items) override                               \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->update(items);                                                                                   \
     }
 
-// =============================================================================
-// Individual Operation Macros
-// =============================================================================
-
-/**
- * @brief Implement only create operation
- */
-#define UOW_ENTITY_CREATE(Name)                                                                                        \
-  public:                                                                                                              \
-    QList<SCE::Name> create##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->create(items);                                                                                    \
+#define UOW_ENTITY_REMOVE(Name)                                                                                       \
+  public:                                                                                                             \
+    [[nodiscard]] QList<int> remove##Name(const QList<int> &ids) override                                             \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->remove(ids);                                                                                     \
     }
 
-/**
- * @brief Implement only get operation
- */
-#define UOW_ENTITY_GET(Name)                                                                                           \
-  public:                                                                                                              \
-    QList<SCE::Name> get##Name(QList<int> ids) override                                                                \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->get(ids);                                                                                         \
+// -- CRUD composite --
+
+#define UOW_ENTITY_CRUD(Name)                                                                                         \
+    UOW_ENTITY_CREATE(Name)                                                                                           \
+    UOW_ENTITY_GET(Name)                                                                                              \
+    UOW_ENTITY_UPDATE(Name)                                                                                           \
+    UOW_ENTITY_REMOVE(Name)
+
+// -- Relationship operations --
+
+#define UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)                                                                  \
+  public:                                                                                                             \
+    [[nodiscard]] QList<int> get##Name##Relationship(int id, RelFieldEnum rel) override                               \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->getRelationshipIds(id, rel);                                                                     \
+    }                                                                                                                 \
+    void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) override                     \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        repo->setRelationshipIds(id, rel, relatedIds);                                                                \
+    }                                                                                                                 \
+    [[nodiscard]] QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids,                           \
+                                                                      RelFieldEnum rel) override                      \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->getRelationshipIdsMany(ids, rel);                                                                \
+    }                                                                                                                 \
+    [[nodiscard]] int get##Name##RelationshipCount(int id, RelFieldEnum rel) override                                 \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->getRelationshipIdsCount(id, rel);                                                                \
+    }                                                                                                                 \
+    [[nodiscard]] QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                                 \
+                                                             int offset, int limit) override                          \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
     }
 
-/**
- * @brief Implement only update operation
- */
-#define UOW_ENTITY_UPDATE(Name)                                                                                        \
-  public:                                                                                                              \
-    QList<SCE::Name> update##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->update(items);                                                                                    \
-    }
+// -- Composite: Create + SetRelationship (common for load operations) --
 
-/**
- * @brief Implement only remove operation
- */
-#define UOW_ENTITY_REMOVE(Name)                                                                                        \
-  public:                                                                                                              \
-    QList<int> remove##Name(QList<int> ids) override                                                                   \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->remove(ids);                                                                                      \
-    }
-
-/**
- * @brief Implement create + set relationship (common for load operations)
- *
- * @param Name Entity name
- * @param RelFieldEnum Fully qualified relationship field enum type
- */
-#define UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                                 \
-  public:                                                                                                              \
-    QList<SCE::Name> create##Name(QList<SCE::Name> items) override                                                     \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        return repo->create(items);                                                                                    \
-    }                                                                                                                  \
-    void set##Name##Relationship(int id, RelFieldEnum rel, QList<int> relatedIds) override                             \
-    {                                                                                                                  \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                 \
-        repo->setRelationshipIds(id, rel, relatedIds);                                                                 \
+#define UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                                \
+    UOW_ENTITY_CREATE(Name)                                                                                           \
+  public:                                                                                                             \
+    void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) override                     \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        repo->setRelationshipIds(id, rel, relatedIds);                                                                \
     }
