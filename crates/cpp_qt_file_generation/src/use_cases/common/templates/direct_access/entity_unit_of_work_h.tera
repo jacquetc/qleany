@@ -12,11 +12,27 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 {
 namespace SCE = Common::Entities;
 namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
-namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
 namespace SCD = {{ s.global.application_pascal_name }}::Common::DirectAccess;
+namespace SCUoW = {{ s.global.application_pascal_name }}::Common::UnitOfWork;
+{%- if ent.forward_relationships %}
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+{%- endif %}
 
-class {{ ent.pascal_name }}UnitOfWork final : public SCUoW::UnitOfWorkBase, public I{{ ent.pascal_name }}UnitOfWork
+class {{ ent.pascal_name }}UnitOfWork final
+    : public SCUoW::UnitOfWorkBase,
+{%- if ent.forward_relationships %}
+      public SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+                                    SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>
+{%- else %}
+      public SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>
+{%- endif %}
 {
+{%- if ent.forward_relationships %}
+    friend class SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+                                        SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>;
+{%- else %}
+    friend class SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>;
+{%- endif %}
 
   public:
     {{ ent.pascal_name }}UnitOfWork(SCDatabase::DbContext &dbContext, const QPointer<SCD::EventRegistry> &eventRegistry)
@@ -25,15 +41,11 @@ class {{ ent.pascal_name }}UnitOfWork final : public SCUoW::UnitOfWorkBase, publ
     }
     ~{{ ent.pascal_name }}UnitOfWork() override = default;
 
-    // Transaction interface delegation
-    UOW_TRANSACTION_INTERFACE
-
-{%- if ent.forward_relationships %}
-    // Full CRUD + Relationship operations for {{ ent.pascal_name }}
-    UOW_ENTITY_FULL({{ ent.pascal_name }}, SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField)
-{%- else %}
-    // Full CRUD operations for {{ ent.pascal_name }}
-    UOW_ENTITY_CRUD({{ ent.pascal_name }})
-{%- endif %}
+    /// Called by CRTP base to get a repository for {{ ent.pascal_name }}.
+    [[nodiscard]] auto makeRepository()
+    {
+        return SCD::RepositoryFactory::create{{ ent.pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+    }
 };
+
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
