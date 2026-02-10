@@ -188,6 +188,19 @@ impl ListCppQtFilesUseCase {
             field: None,
         });
 
+
+        files.push(File {
+            id: 0,
+            name: "controller_command_helpers.h".to_string(),
+            relative_path: format!("{}/common/", prefix),
+            group: "base".to_string(),
+            template_name: "controller_command_helpers_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
         // database
 
         files.push(File {

@@ -4,15 +4,11 @@
 
 #include "database/db_context.h"
 #include "direct_access/event_registry.h"
+#include "undo_redo/undo_redo_system.h"
 #include "dtos.h"
 #include <QCoro/QCoroTask>
 
 #include <QPointer>
-
-namespace {{ s.global.application_pascal_name }}::Common::UndoRedo
-{
-class UndoRedoSystem;
-}
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
@@ -39,7 +35,7 @@ class {{ ent.pascal_name }}Controller : public QObject
 {%- if ent.forward_relationships %}
 
     QCoro::Task<QList<int>> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship);
-    QCoro::Task<void> setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedIds);
+    QCoro::Task<void> setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, const QList<int> &relatedIds);
     QCoro::Task<QHash<int, QList<int>>> getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
                                                                {{ ent.pascal_name }}RelationshipField relationship);
     QCoro::Task<int> getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship);

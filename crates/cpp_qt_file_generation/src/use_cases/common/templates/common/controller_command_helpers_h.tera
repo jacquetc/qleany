@@ -1,0 +1,215 @@
+/******************************************************************************
+ * Controller Command Helpers
+ *
+ * Template helpers that encapsulate the repetitive command/query wiring
+ * found in every entity controller. Each controller method collapses from
+ * ~40 lines to ~5 by calling one of these helpers.
+ *
+ * Features:
+ * - Configurable timeout per call
+ * - UseCase lifetime managed by direct shared_ptr capture (no QVariant hack)
+ * - Type-safe, debuggable, IDE-navigable
+ *
+ * Usage (in a generated controller):
+ *
+ *   QCoro::Task<QList<PersonDto>> PersonController::create(
+ *       const QList<CreatePersonDto> &persons)
+ *   {
+ *       auto uow = std::make_unique<PersonUnitOfWork>(*m_dbContext, m_eventRegistry);
+ *       auto useCase = std::make_shared<CreatePersonUseCase>(std::move(uow));
+ *
+ *       co_return co_await executeUndoableCommand<QList<PersonDto>>(
+ *           m_undoRedoSystem,
+ *           u"Create persons Command"_s,
+ *           useCase,
+ *           500,                              // timeout ms
+ *           &CreatePersonUseCase::execute,
+ *           persons);
+ *   }
+ ******************************************************************************/
+
+#pragma once
+
+#include "undo_redo/undo_redo_command.h"
+
+#include <QCoro/QCoroTask>
+#include <QDebug>
+#include <QString>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <type_traits>
+
+using namespace Qt::StringLiterals;
+
+namespace {{ s.global.application_pascal_name }}::Common::ControllerHelpers
+{
+
+namespace SCUndoRedo = {{ s.global.application_pascal_name }}::Common::UndoRedo;
+
+// =============================================================================
+// Undoable Command — returns a result from execute()
+// =============================================================================
+
+/**
+ * @brief Execute an undoable command, returning the use-case result.
+ *
+ * Constructs the UndoRedoCommand, wires execute/undo/redo, and co_awaits
+ * the undo-redo system. The UseCase is kept alive by shared_ptr capture
+ * inside the lambdas.
+ *
+ * @tparam ResultT       Return type of the use-case execute method
+ * @tparam UseCaseT      UseCase type (must have execute(...), undo(), redo())
+ * @tparam ExecArgs      Argument types forwarded to useCase->execute(...)
+ *
+ * @param undoRedoSystem The undo-redo system to execute on
+ * @param commandName    Human-readable name for the command
+ * @param useCase        Shared ownership of the use case
+ * @param timeoutMs      Timeout in milliseconds for async execution
+ * @param execArgs       Arguments forwarded to useCase->execute(...)
+ *
+ * @return The result of useCase->execute(), or a default-constructed ResultT on failure.
+ */
+template <typename ResultT, typename UseCaseT, typename... ExecArgs>
+[[nodiscard]] QCoro::Task<ResultT> executeUndoableCommand(
+    SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    const QString &commandName,
+    std::shared_ptr<UseCaseT> useCase,
+    int timeoutMs,
+    ExecArgs... execArgs)
+{
+    if (!undoRedoSystem) [[unlikely]]
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return ResultT{};
+    }
+
+    auto command = std::make_shared<SCUndoRedo::UndoRedoCommand>(commandName);
+    ResultT result{};
+
+    // Capture useCase by shared_ptr value — it stays alive as long as the
+    // command's lambdas exist. No weak_ptr dance, no QVariant::fromValue.
+    command->setExecuteFunction(
+        [useCase, ...args = std::move(execArgs), &result](auto & /*promise*/) {
+            result = useCase->execute(args...);
+        });
+
+    command->setRedoFunction([useCase]() -> SCUndoRedo::Result<void> {
+        return useCase->redo();
+    });
+
+    command->setUndoFunction([useCase]() -> SCUndoRedo::Result<void> {
+        return useCase->undo();
+    });
+
+    std::optional<bool> success =
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+
+    if (!success.has_value()) [[unlikely]]
+    {
+        qWarning() << commandName << "timed out";
+        co_return ResultT{};
+    }
+
+    if (!success.value()) [[unlikely]]
+    {
+        qWarning() << "Failed to execute" << commandName;
+        co_return ResultT{};
+    }
+
+    co_return result;
+}
+
+// =============================================================================
+// Undoable Command — void execute (no return value)
+// =============================================================================
+
+/**
+ * @brief Execute an undoable command whose execute() returns void.
+ *
+ * Same pattern as the result-returning variant but returns a boolean
+ * indicating success/failure.
+ */
+template <typename UseCaseT, typename... ExecArgs>
+[[nodiscard]] QCoro::Task<bool> executeUndoableCommandVoid(
+    SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    const QString &commandName,
+    std::shared_ptr<UseCaseT> useCase,
+    int timeoutMs,
+    ExecArgs... execArgs)
+{
+    if (!undoRedoSystem) [[unlikely]]
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return false;
+    }
+
+    auto command = std::make_shared<SCUndoRedo::UndoRedoCommand>(commandName);
+
+    command->setExecuteFunction(
+        [useCase, ...args = std::move(execArgs)](auto & /*promise*/) {
+            useCase->execute(args...);
+        });
+
+    command->setRedoFunction([useCase]() -> SCUndoRedo::Result<void> {
+        return useCase->redo();
+    });
+
+    command->setUndoFunction([useCase]() -> SCUndoRedo::Result<void> {
+        return useCase->undo();
+    });
+
+    std::optional<bool> success =
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+
+    if (!success.has_value()) [[unlikely]]
+    {
+        qWarning() << commandName << "timed out";
+        co_return false;
+    }
+
+    if (!success.value()) [[unlikely]]
+    {
+        qWarning() << "Failed to execute" << commandName;
+        co_return false;
+    }
+
+    co_return true;
+}
+
+// =============================================================================
+// Read-only Query
+// =============================================================================
+
+/**
+ * @brief Execute a read-only query through the undo-redo system.
+ *
+ * @tparam ResultT  Return type of the query
+ * @tparam QueryFn  Callable returning ResultT (typically a lambda that
+ *                  constructs UoW + UseCase and calls execute)
+ *
+ * @param undoRedoSystem The undo-redo system to execute on
+ * @param queryName      Human-readable name for the query
+ * @param queryFn        Callable invoked to produce the result
+ *
+ * @return The query result, or a default-constructed ResultT on failure.
+ */
+template <typename ResultT, typename QueryFn>
+[[nodiscard]] QCoro::Task<ResultT> executeReadQuery(
+    SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    const QString &queryName,
+    QueryFn &&queryFn)
+{
+    if (!undoRedoSystem) [[unlikely]]
+    {
+        qCritical() << "UndoRedo system not available";
+        co_return ResultT{};
+    }
+
+    auto query = undoRedoSystem->template createQuery<ResultT>(queryName);
+    query->setQueryFunction(std::forward<QueryFn>(queryFn));
+
+    co_return co_await undoRedoSystem->executeQueryAsync(query);
+}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::ControllerHelpers
