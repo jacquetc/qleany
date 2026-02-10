@@ -57,6 +57,7 @@ set(UNIT_OF_WORK_LIST
         unit_of_work/unit_of_work.h
         unit_of_work/uow_base.h
         unit_of_work/uow_macros.h
+        unit_of_work/uow_ops.h
 )
 
 
