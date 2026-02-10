@@ -131,9 +131,11 @@ struct FieldVM {
 struct DtoFieldVM {
     pub inner: DtoField,
     pub pascal_name: String,
+    pub camel_name: String,
     pub snake_name: String,
     pub cpp_qt_base_type: String,
     pub cpp_qt_type: String,
+    pub cpp_default_init: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -193,7 +195,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
     let code = if tera.get_template(template_name).is_ok() {
         tera.render(template_name, &context)?
     } else {
-         return Err(anyhow::anyhow!(
+        return Err(anyhow::anyhow!(
             "Unknown template name: {}",
             snapshot.file.inner.template_name
         ));
@@ -291,10 +293,9 @@ impl SnapshotBuilder {
                         " = 0".to_string()
                     }
                     FieldType::Float => " = 0.0".to_string(),
-                    FieldType::String
-                    | FieldType::Uuid
-                    | FieldType::DateTime
-                    | FieldType::Enum => "{}".to_string(),
+                    FieldType::String | FieldType::Uuid | FieldType::DateTime | FieldType::Enum => {
+                        "{}".to_string()
+                    }
                 }
             };
             fields_vm_vec.push(FieldVM {
@@ -302,7 +303,9 @@ impl SnapshotBuilder {
                 pascal_name: heck::AsPascalCase(&f.name).to_string(),
                 camel_name: heck::AsLowerCamelCase(&f.name).to_string(),
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
-                sql_safe_snake_name: tools::to_sql_safe_identifier(&heck::AsSnakeCase(&f.name).to_string()),
+                sql_safe_snake_name: tools::to_sql_safe_identifier(
+                    &heck::AsSnakeCase(&f.name).to_string(),
+                ),
                 relationship,
                 optional: f.optional,
                 cpp_qt_base_type,
@@ -403,13 +406,64 @@ impl SnapshotBuilder {
             pascal_name: heck::AsPascalCase(&entity.name).to_string(),
             camel_name: heck::AsLowerCamelCase(&entity.name).to_string(),
             camel_plural_name: heck::AsLowerCamelCase(&tools::to_plural(&entity.name)).to_string(),
-            sql_safe_snake_name: tools::to_sql_safe_identifier(&heck::AsSnakeCase(&entity.name).to_string()),
+            sql_safe_snake_name: tools::to_sql_safe_identifier(
+                &heck::AsSnakeCase(&entity.name).to_string(),
+            ),
             normal_fields: fields_vm_vec
                 .iter()
                 .filter(|f| f.inner.field_type != FieldType::Entity)
                 .cloned()
                 .collect(),
         })
+    }
+
+    fn get_dto_field_cpp_default_init(dto_field: &DtoField) -> String {
+        if dto_field.optional {
+            " = std::nullopt".to_string()
+        } else {
+            match dto_field.field_type {
+                DtoFieldType::Boolean => " = false".to_string(),
+                DtoFieldType::Integer | DtoFieldType::UInteger => " = 0".to_string(),
+                DtoFieldType::Float => " = 0.0".to_string(),
+                DtoFieldType::String
+                | DtoFieldType::Uuid
+                | DtoFieldType::DateTime
+                | DtoFieldType::Enum => "{}".to_string(),
+            }
+        }
+    }
+
+    fn get_dto_field_cpp_qt_type(dto_field: &DtoField) -> String {
+            match dto_field.field_type {
+                DtoFieldType::Boolean => {
+                    "bool".to_string()
+                }
+                DtoFieldType::Integer => {
+                    "int".to_string()
+                }
+                DtoFieldType::UInteger => {
+                    "uint".to_string()
+                }
+                DtoFieldType::Float => {
+                    "float".to_string()
+                }
+                DtoFieldType::String => {
+                    "QString".to_string()
+                }
+                DtoFieldType::Uuid => {
+                    "QUuid".to_string()
+                }
+                DtoFieldType::DateTime => {
+                    "QDateTime".to_string()
+                }
+                DtoFieldType::Enum => dto_field
+                    .enum_name
+                    .clone()
+                    .unwrap_or(
+                        "enum_name not set"
+                            .to_string(),
+                    ),
+            }
     }
 
     pub(crate) fn for_file(
@@ -773,19 +827,7 @@ impl SnapshotBuilder {
             let mut df_vec: Vec<DtoFieldVM> = Vec::new();
             for (dfid, df) in &dto_fields {
                 if d.fields.contains(dfid) {
-                    let cpp_qt_base_type = match df.field_type {
-                        DtoFieldType::Boolean => "bool".to_string(),
-                        DtoFieldType::Integer => "int".to_string(),
-                        DtoFieldType::UInteger => "uint".to_string(),
-                        DtoFieldType::Float => "float".to_string(),
-                        DtoFieldType::String => "QString".to_string(),
-                        DtoFieldType::Uuid => "QUuid".to_string(),
-                        DtoFieldType::DateTime => "QDateTime".to_string(),
-                        DtoFieldType::Enum => df
-                            .enum_name
-                            .clone()
-                            .unwrap_or("enum_name not set".to_string()),
-                    };
+                    let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                     let cpp_qt_type = if df.is_list {
                         format!("QList<{}>", &cpp_qt_base_type)
                     } else {
@@ -794,9 +836,11 @@ impl SnapshotBuilder {
                     df_vec.push(DtoFieldVM {
                         inner: df.clone(),
                         pascal_name: heck::AsPascalCase(&df.name).to_string(),
+                        camel_name: heck::AsLowerCamelCase(&df.name).to_string(),
                         snake_name: heck::AsSnakeCase(&df.name).to_string(),
                         cpp_qt_base_type,
                         cpp_qt_type,
+                        cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(&df),
                     });
                 }
             }
@@ -881,37 +925,7 @@ impl SnapshotBuilder {
                                                             Vec::new();
                                                         for (dfid, df) in &dto_fields {
                                                             if d.fields.contains(dfid) {
-                                                                let cpp_qt_base_type =
-                                                                    match df.field_type {
-                                                                        DtoFieldType::Boolean => {
-                                                                            "bool".to_string()
-                                                                        }
-                                                                        DtoFieldType::Integer => {
-                                                                            "int".to_string()
-                                                                        }
-                                                                        DtoFieldType::UInteger => {
-                                                                            "uint".to_string()
-                                                                        }
-                                                                        DtoFieldType::Float => {
-                                                                            "float".to_string()
-                                                                        }
-                                                                        DtoFieldType::String => {
-                                                                            "QString".to_string()
-                                                                        }
-                                                                        DtoFieldType::Uuid => {
-                                                                            "QUuid".to_string()
-                                                                        }
-                                                                        DtoFieldType::DateTime => {
-                                                                            "QDateTime".to_string()
-                                                                        }
-                                                                        DtoFieldType::Enum => df
-                                                                            .enum_name
-                                                                            .clone()
-                                                                            .unwrap_or(
-                                                                                "enum_name not set"
-                                                                                    .to_string(),
-                                                                            ),
-                                                                    };
+                                                                let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                                                 let cpp_qt_type = if df.is_list {
                                                                     format!(
                                                                         "QList<{}>",
@@ -925,12 +939,16 @@ impl SnapshotBuilder {
                                                                     pascal_name:
                                                                         heck::AsPascalCase(&df.name)
                                                                             .to_string(),
+                                                                    camel_name:
+                                                                        heck::AsLowerCamelCase(&df.name)
+                                                                            .to_string(),
                                                                     snake_name: heck::AsSnakeCase(
                                                                         &df.name,
                                                                     )
                                                                     .to_string(),
                                                                     cpp_qt_base_type,
                                                                     cpp_qt_type,
+                                                                    cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
                                                                 });
                                                             }
                                                         }
@@ -948,40 +966,10 @@ impl SnapshotBuilder {
                                                             Vec::new();
                                                         for (dfid, df) in &dto_fields {
                                                             if d.fields.contains(dfid) {
-                                                                let cpp_qt_base_type =
-                                                                    match df.field_type {
-                                                                        DtoFieldType::Boolean => {
-                                                                            "bool".to_string()
-                                                                        }
-                                                                        DtoFieldType::Integer => {
-                                                                            "int".to_string()
-                                                                        }
-                                                                        DtoFieldType::UInteger => {
-                                                                            "uint".to_string()
-                                                                        }
-                                                                        DtoFieldType::Float => {
-                                                                            "float".to_string()
-                                                                        }
-                                                                        DtoFieldType::String => {
-                                                                            "QString".to_string()
-                                                                        }
-                                                                        DtoFieldType::Uuid => {
-                                                                            "QUuid".to_string()
-                                                                        }
-                                                                        DtoFieldType::DateTime => {
-                                                                            "QDateTime".to_string()
-                                                                        }
-                                                                        DtoFieldType::Enum => df
-                                                                            .enum_name
-                                                                            .clone()
-                                                                            .unwrap_or(
-                                                                                "enum_name not set"
-                                                                                    .to_string(),
-                                                                            ),
-                                                                    };
+                                                                let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                                                 let cpp_qt_type = if df.is_list {
                                                                     format!(
-                                                                        "Vec<{}>",
+                                                                        "QList<{}>",
                                                                         &cpp_qt_base_type
                                                                     )
                                                                 } else {
@@ -992,12 +980,16 @@ impl SnapshotBuilder {
                                                                     pascal_name:
                                                                         heck::AsPascalCase(&df.name)
                                                                             .to_string(),
+                                                                    camel_name:
+                                                                        heck::AsLowerCamelCase(&df.name)
+                                                                            .to_string(),
                                                                     snake_name: heck::AsSnakeCase(
                                                                         &df.name,
                                                                     )
                                                                     .to_string(),
                                                                     cpp_qt_base_type,
                                                                     cpp_qt_type,
+                                                                    cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
                                                                 });
                                                             }
                                                         }
@@ -1070,21 +1062,9 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type = match df.field_type {
-                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                DtoFieldType::Integer => "int".to_string(),
-                                                DtoFieldType::UInteger => "uint".to_string(),
-                                                DtoFieldType::Float => "float".to_string(),
-                                                DtoFieldType::String => "QString".to_string(),
-                                                DtoFieldType::Uuid => "QUuid".to_string(),
-                                                DtoFieldType::DateTime => "QDateTime".to_string(),
-                                                DtoFieldType::Enum => df
-                                                    .enum_name
-                                                    .clone()
-                                                    .unwrap_or("enum_name not set".to_string()),
-                                            };
+                                            let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                             let cpp_qt_type = if df.is_list {
-                                                format!("Vec<{}>", &cpp_qt_base_type)
+                                                format!("QList<{}>", &cpp_qt_base_type)
                                             } else {
                                                 cpp_qt_base_type.clone()
                                             };
@@ -1092,9 +1072,15 @@ impl SnapshotBuilder {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
+                                                camel_name: heck::AsLowerCamelCase(&df.name)
+                                                    .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
                                                 cpp_qt_base_type,
                                                 cpp_qt_type,
+                                                cpp_default_init:
+                                                    SnapshotBuilder::get_dto_field_cpp_default_init(
+                                                        df,
+                                                    ),
                                             });
                                         }
                                     }
@@ -1110,21 +1096,9 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type = match df.field_type {
-                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                DtoFieldType::Integer => "int".to_string(),
-                                                DtoFieldType::UInteger => "uint".to_string(),
-                                                DtoFieldType::Float => "float".to_string(),
-                                                DtoFieldType::String => "QString".to_string(),
-                                                DtoFieldType::Uuid => "QUuid".to_string(),
-                                                DtoFieldType::DateTime => "QDateTime".to_string(),
-                                                DtoFieldType::Enum => df
-                                                    .enum_name
-                                                    .clone()
-                                                    .unwrap_or("enum_name not set".to_string()),
-                                            };
+                                            let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                             let cpp_qt_type = if df.is_list {
-                                                format!("Vec<{}>", &cpp_qt_base_type)
+                                                format!("QList<{}>", &cpp_qt_base_type)
                                             } else {
                                                 cpp_qt_base_type.clone()
                                             };
@@ -1132,9 +1106,15 @@ impl SnapshotBuilder {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
+                                                camel_name: heck::AsLowerCamelCase(&df.name)
+                                                    .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
                                                 cpp_qt_base_type,
                                                 cpp_qt_type,
+                                                cpp_default_init:
+                                                    SnapshotBuilder::get_dto_field_cpp_default_init(
+                                                        df,
+                                                    ),
                                             });
                                         }
                                     }
@@ -1320,8 +1300,8 @@ mod tests {
                             .to_string(),
                         relationship: "OneToOne".to_string(),
                         optional: true,
-                        cpp_qt_base_type: "String".to_string(),
-                        cpp_qt_type: "String".to_string(),
+                        cpp_qt_base_type: "QString".to_string(),
+                        cpp_qt_type: "QStringS".to_string(),
                         cpp_default_init: "".to_string(),
                     },
                     FieldVM {
@@ -1332,8 +1312,8 @@ mod tests {
                         sql_safe_snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         relationship: "OneToMany".to_string(),
                         optional: true,
-                        cpp_qt_base_type: "String".to_string(),
-                        cpp_qt_type: "Vec<String>".to_string(),
+                        cpp_qt_base_type: "QString".to_string(),
+                        cpp_qt_type: "QList<QString>".to_string(),
                         cpp_default_init: "".to_string(),
                     },
                 ];

@@ -12,7 +12,7 @@
   {%- if f.inner.field_type == "Uuid" %}{% set_global needs_quuid = true %}{% endif %}
   {%- if f.inner.field_type == "Enum" %}{% set_global needs_qstring = true %}{% endif %}
   {%- if f.is_list %}{% set_global needs_qlist = true %}{% endif %}
-  {%- if f.is_optional %}{% set_global needs_optional = true %}{% endif %}
+  {%- if f.optional %}{% set_global needs_optional = true %}{% endif %}
 {%- endfor %}
 #pragma once
 
