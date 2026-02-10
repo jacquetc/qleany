@@ -564,6 +564,19 @@ impl ListCppQtFilesUseCase {
             field: None,
         });
 
+
+        files.push(File {
+            id: 0,
+            name: "uow_ops.h".to_string(),
+            relative_path: format!("{}/common/unit_of_work/", prefix),
+            group: "common_unit_of_work".to_string(),
+            template_name: "uow_ops_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
         // direct access
 
         files.push(File {
