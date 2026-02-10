@@ -9,7 +9,7 @@ QHash<int, QList<int>> GetRelationshipIdsManyUseCase::execute(const QList<int> &
                                                               {{ ent.pascal_name }}RelationshipField relationship)
 {
     m_uow->beginTransaction();
-    auto result = m_uow->get{{ ent.pascal_name }}RelationshipMany({{ ent.camel_name }}Ids, DtoMapper::toCommonRelationshipField(relationship));
+    auto result = m_uow->getRelationshipMany({{ ent.camel_name }}Ids, DtoMapper::toCommonRelationshipField(relationship));
     m_uow->endTransaction();
 
     return result;

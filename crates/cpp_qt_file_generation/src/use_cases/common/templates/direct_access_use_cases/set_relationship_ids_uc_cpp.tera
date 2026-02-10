@@ -23,16 +23,16 @@ void SetRelationshipIdsUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pasca
     m_uow->beginTransaction();
 
     // Get original relationship IDs for undo functionality
-    m_originalRelatedIds = m_uow->get{{ ent.pascal_name }}Relationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(entityRelationship));
+    m_originalRelatedIds = m_uow->getRelationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(entityRelationship));
 
     // Set the new relationship IDs
-    m_uow->set{{ ent.pascal_name }}Relationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(entityRelationship), relatedIds);
+    m_uow->setRelationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(entityRelationship), relatedIds);
 
     // update date
 
-    auto {{ ent.camel_name }} = m_uow->get{{ ent.pascal_name }}({ {{ ent.camel_name }}Id}).at(0); // we are sure that it exists
+    auto {{ ent.camel_name }} = m_uow->get({ {{ ent.camel_name }}Id}).at(0); // we are sure that it exists
     {{ ent.camel_name }}.updatedAt = QDateTime::currentDateTimeUtc();
-    m_uow->update{{ ent.pascal_name }}({ {{ ent.camel_name }} });
+    m_uow->update({ {{ ent.camel_name }} });
 
     m_uow->commit();
 
@@ -51,7 +51,7 @@ SCU::Result<void> SetRelationshipIdsUseCase::undo()
         m_uow->beginTransaction();
 
         // Restore original relationship IDs
-        m_uow->set{{ ent.pascal_name }}Relationship(m_{{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(m_relationship),
+        m_uow->setRelationship(m_{{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(m_relationship),
                                      m_originalRelatedIds);
 
         m_uow->commit();
@@ -77,7 +77,7 @@ SCU::Result<void> SetRelationshipIdsUseCase::redo()
         m_uow->beginTransaction();
 
         // Re-apply the new relationship IDs
-        m_uow->set{{ ent.pascal_name }}Relationship(m_{{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(m_relationship), m_newRelatedIds);
+        m_uow->setRelationship(m_{{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(m_relationship), m_newRelatedIds);
 
         m_uow->commit();
 

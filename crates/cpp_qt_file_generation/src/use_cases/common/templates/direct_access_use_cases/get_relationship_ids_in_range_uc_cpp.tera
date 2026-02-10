@@ -9,7 +9,7 @@ QList<int> GetRelationshipIdsInRangeUseCase::execute(int {{ ent.camel_name }}Id,
                                                      int limit)
 {
     m_uow->beginTransaction();
-    auto result = m_uow->get{{ ent.pascal_name }}RelationshipInRange({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(relationship),
+    auto result = m_uow->getRelationshipInRange({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(relationship),
                                                       offset, limit);
     m_uow->endTransaction();
 

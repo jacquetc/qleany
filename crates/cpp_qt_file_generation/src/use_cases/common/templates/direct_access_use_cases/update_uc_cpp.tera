@@ -22,7 +22,7 @@ QList<{{ ent.pascal_name }}Dto> Update{{ ent.pascal_name }}UseCase::execute(cons
     }
 
     m_uow->beginTransaction();
-    auto originalEntities = m_uow->get{{ ent.pascal_name }}({{ ent.camel_name }}Ids);
+    auto originalEntities = m_uow->get({{ ent.camel_name }}Ids);
     m_original{{ ent.pascal_name }}s = DtoMapper::toDtoList(originalEntities);
 
     // Perform the update
@@ -33,7 +33,7 @@ QList<{{ ent.pascal_name }}Dto> Update{{ ent.pascal_name }}UseCase::execute(cons
     for (auto &entity : mappedEntities)
         entity.updatedAt = currentTime;
 
-    auto updatedEntities = m_uow->update{{ ent.pascal_name }}(mappedEntities);
+    auto updatedEntities = m_uow->update(mappedEntities);
     m_uow->commit();
 
     m_updated{{ ent.pascal_name }}s = DtoMapper::toDtoList(updatedEntities);
@@ -55,7 +55,7 @@ SCU::Result<void> Update{{ ent.pascal_name }}UseCase::undo()
 
         // Restore the original {{ ent.camel_plural_name }}
         auto mappedEntities = DtoMapper::toEntityList(m_original{{ ent.pascal_name }}s);
-        m_uow->update{{ ent.pascal_name }}(mappedEntities);
+        m_uow->update(mappedEntities);
         m_uow->commit();
 
         return {};
@@ -78,7 +78,7 @@ SCU::Result<void> Update{{ ent.pascal_name }}UseCase::redo()
     {
         m_uow->beginTransaction();
         auto mappedEntities = DtoMapper::toEntityList(m_updated{{ ent.pascal_name }}s);
-        m_uow->update{{ ent.pascal_name }}(mappedEntities);
+        m_uow->update(mappedEntities);
         m_uow->commit();
 
         return {};
