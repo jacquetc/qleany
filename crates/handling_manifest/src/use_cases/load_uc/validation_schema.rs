@@ -13,7 +13,8 @@ pub fn json_validation_schema() -> serde_json::Value {
                         "maximum": 2
                     }
                 },
-                "required": ["version"]
+                "required": ["version"],
+                "additionalProperties": false
             },
             "global": {
                 "type": "object",
@@ -35,13 +36,15 @@ pub fn json_validation_schema() -> serde_json::Value {
                                 "type": "string"
                             }
                         },
-                        "required": ["name", "domain"]
+                        "required": ["name", "domain"],
+                        "additionalProperties": false
                     },
                     "prefix_path": {
                         "type": "string"
                     }
                 },
-                "required": ["language", "application_name", "organisation", "prefix_path"]
+                "required": ["language", "application_name", "organisation", "prefix_path"],
+                "additionalProperties": false
             },
             "entities": {
                 "type": "array",
@@ -95,6 +98,9 @@ pub fn json_validation_schema() -> serde_json::Value {
                                     "list_model_displayed_field": {
                                         "type": "string"
                                     },
+                                    "enum_name": {
+                                        "type": "string"
+                                    },
                                     "enum_values": {
                                         "type": "array",
                                         "items": {
@@ -102,11 +108,13 @@ pub fn json_validation_schema() -> serde_json::Value {
                                         }
                                     },
                                 },
-                                "required": ["name", "type"]
+                                "required": ["name", "type"],
+                                "additionalProperties": false
                             }
                         }
                     },
-                    "required": ["name", "fields"]
+                    "required": ["name", "fields"],
+                    "additionalProperties": false
                 }
             },
             "features": {
@@ -160,6 +168,15 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                         "type": {
                                                             "type": "string"
                                                         },
+                                                        "optional": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_list": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "enum_name": {
+                                                            "type": "string"
+                                                        },
                                                         "enum_values": {
                                                             "type": "array",
                                                             "items": {
@@ -167,11 +184,13 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                             }
                                                         },
                                                     },
-                                                    "required": ["name", "type"]
+                                                    "required": ["name", "type"],
+                                                    "additionalProperties": false
                                                 }
                                             }
                                         },
-                                        "required": ["name", "fields"]
+                                        "required": ["name", "fields"],
+                                        "additionalProperties": false
                                     },
                                     "dto_out": {
                                         "type": "object",
@@ -200,18 +219,22 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                             }
                                                         },
                                                     },
-                                                    "required": ["name", "type"]
+                                                    "required": ["name", "type"],
+                                                    "additionalProperties": false
                                                 }
                                             }
                                         },
-                                        "required": ["name", "fields"]
+                                        "required": ["name", "fields"],
+                                        "additionalProperties": false
                                     }
                                 },
-                                "required": ["name"]
+                                "required": ["name"],
+                                "additionalProperties": false
                             }
                         }
                     },
-                    "required": ["name", "use_cases"]
+                    "required": ["name", "use_cases"],
+                    "additionalProperties": false
                 }
             },
             "ui": {
@@ -233,9 +256,11 @@ pub fn json_validation_schema() -> serde_json::Value {
                         "type": "boolean"
                     }
 
-                }
+                },
+                "additionalProperties": false
             }
         },
-        "required": ["schema", "global", "entities", "features", "ui"]
+        "required": ["schema", "global", "entities", "features", "ui"],
+        "additionalProperties": false
     })
 }
