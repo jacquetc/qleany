@@ -65,10 +65,9 @@
  * Available Atomic Macros (uow_macros.h — for custom UoWs):
  *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
  *                 DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)
- *                 DECLARE_UOW_ENTITY_CREATE_WITH_REL(Name, Rel)
  *   Implementation: UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
  *                   UOW_ENTITY_RELATIONSHIPS(Name, Rel)
- *                   UOW_ENTITY_CREATE_WITH_REL(Name, Rel)
+ *                   UOW_ENTITY_CREATE_WITH_REL(Name, Rel) (not sure about this one)
  ******************************************************************************/
 
 #pragma once

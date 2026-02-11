@@ -1,47 +1,125 @@
 {%- set f_id = s.file.inner.feature %}
 {%- set feat = s.features[f_id] %}
-{%- set uc_id = s.file.inner.use_case %}
-{%- set uc = s.use_cases[uc_id] %}
+{#- Determine which headers are actually needed -#}
+{%- set needs_qdatetime = false %}
+{%- set needs_qstring = false %}
+{%- set needs_quuid = false %}
+{%- set needs_qlist = false %}
+{%- set needs_optional = false %}
+{%- for uc_id, uc in feat.use_cases %}
+  {%- if uc.dto_in %}
+    {%- for field in uc.dto_in.fields %}
+  {%- if field.inner.field_type == "DateTime" %}{% set_global needs_qdatetime = true %}{% endif %}
+  {%- if field.inner.field_type == "String" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if field.inner.field_type == "Uuid" %}{% set_global needs_quuid = true %}{% endif %}
+  {%- if field.inner.field_type == "Enum" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if field.inner.is_list %}{% set_global needs_qlist = true %}{% endif %}
+  {%- if field.inner.optional %}{% set_global needs_optional = true %}{% endif %}
+    {%- endfor %}
+  {% endif %}
+  {%- if uc.dto_out %}
+    {%- for field in uc.dto_out.fields %}
+  {%- if field.inner.field_type == "DateTime" %}{% set_global needs_qdatetime = true %}{% endif %}
+  {%- if field.inner.field_type == "String" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if field.inner.field_type == "Uuid" %}{% set_global needs_quuid = true %}{% endif %}
+  {%- if field.inner.field_type == "Enum" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if field.inner.is_list %}{% set_global needs_qlist = true %}{% endif %}
+  {%- if field.inner.optional %}{% set_global needs_optional = true %}{% endif %}
+    {%- endfor %}
+  {% endif %}
+{%- endfor %}
 #pragma once
+
+{% if needs_qdatetime -%}
+#include <QDateTime>
+{% endif -%}
+{% if needs_qlist -%}
+#include <QList>
+{% endif -%}
+#include <QObject>
+{% if needs_qstring -%}
 #include <QString>
+{% endif -%}
+{% if needs_quuid -%}
+#include <QUuid>
+{% endif -%}
+{% if needs_optional -%}
+#include <optional>
+{% endif -%}
+
 #include <qobjectdefs.h>
 
-namespace Skribisto::WorkManagement
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
+Q_NAMESPACE
+{%- for uc_id, uc in feat.use_cases %}
 
-struct LoadWorkDto
+  {%- if uc.dto_in %}
+    {%- for field in uc.dto_in.fields %}
+      {%- if field.inner.field_type == "Enum" %}
+enum class {{ field.inner.enum_name }}
+{
+        {%- for ev in field.inner.enum_values %}
+        {{ ev }}{% if not loop.last %},{% endif %}
+        {%- endfor %}
+};
+Q_ENUM_NS({{ field.inner.enum_name }})
+       {%- endif %}
+    {%- endfor %}
+
+struct {{ uc.dto_in.pascal_name }}
 {
     Q_GADGET
-    Q_PROPERTY(QString fileName MEMBER fileName)
+    {%- for field in uc.dto_in.fields %}
+    Q_PROPERTY({{ field.cpp_qt_type }} {{ field.camel_name }} MEMBER {{ field.camel_name }})
+    {%- endfor %}
 
   public:
-    QString fileName;
-    LoadWorkDto() = default;
-    ~LoadWorkDto() = default;
-    LoadWorkDto(const LoadWorkDto &) = default;
-    LoadWorkDto &operator=(const LoadWorkDto &) = default;
-    explicit LoadWorkDto(const QString &fileName) : fileName(fileName)
-    {
-    }
+    int id = 0;
+    {%- for field in uc.dto_in.fields %}
+    {{ field.cpp_qt_type }} {{ field.camel_name }}{{ field.cpp_default_init }};
+    {%- endfor %}
 };
+  {%- endif %}
 
-struct SaveWorkDto
+  {%- if uc.dto_out %}
+    {%- for field in uc.dto_out.fields %}
+      {%- if field.inner.field_type == "Enum" %}
+enum class {{ field.inner.enum_name }}
+{
+        {%- for ev in field.inner.enum_values %}
+        {{ ev }}{% if not loop.last %},{% endif %}
+        {%- endfor %}
+};
+Q_ENUM_NS({{ field.inner.enum_name }})
+       {%- endif %}
+    {%- endfor %}
+
+struct {{ uc.dto_out.pascal_name }}
 {
     Q_GADGET
-    Q_PROPERTY(QString fileName MEMBER fileName)
-    Q_PROPERTY(bool overwrite MEMBER overwrite)
+    {%- for field in uc.dto_out.fields %}
+    Q_PROPERTY({{ field.cpp_qt_type }} {{ field.camel_name }} MEMBER {{ field.camel_name }})
+    {%- endfor %}
 
   public:
-    QString fileName;
-    bool overwrite = false;
-    SaveWorkDto() = default;
-    ~SaveWorkDto() = default;
-    SaveWorkDto(const SaveWorkDto &) = default;
-    SaveWorkDto &operator=(const SaveWorkDto &) = default;
-    SaveWorkDto(const QString &fileName, bool overwrite = false) : fileName(fileName), overwrite(overwrite)
-    {
-    }
+    int id = 0;
+    {%- for field in uc.dto_out.fields %}
+    {{ field.cpp_qt_type }} {{ field.camel_name }}{{ field.cpp_default_init }};
+    {%- endfor %}
 };
-} // namespace Skribisto::WorkManagement
-Q_DECLARE_METATYPE(Skribisto::WorkManagement::LoadWorkDto)
-Q_DECLARE_METATYPE(Skribisto::WorkManagement::SaveWorkDto)
+  {%- endif %}
+
+{%- endfor %}
+
+
+} // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+
+{%- for uc_id, uc in feat.use_cases %}
+  {%- if uc.dto_in %}
+Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_in.pascal_name }})
+  {%- endif %}
+  {%- if uc.dto_out %}
+Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_out.pascal_name }})
+  {%- endif %}
+{%- endfor %}

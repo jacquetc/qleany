@@ -1,1 +1,55 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+#pragma once
 
+#include "database/db_context.h"
+#include "direct_access/event_registry.h"
+#include "features/feature_event_registry.h"
+#include "undo_redo/undo_redo_system.h"
+#include "{{ feat.snake_name }}_dtos.h"
+
+#include <QCoro/QCoroTask>
+
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+{
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
+
+class {{ feat.pascal_name }}Controller : public QObject
+{
+    Q_OBJECT
+  public:
+    {{ feat.pascal_name }}Controller(const {{ feat.pascal_name }}Controller &) = delete;
+    {{ feat.pascal_name }}Controller &operator=(const {{ feat.pascal_name }}Controller &) = delete;
+    {{ feat.pascal_name }}Controller({{ feat.pascal_name }}Controller &&) = delete;
+    {{ feat.pascal_name }}Controller &operator=({{ feat.pascal_name }}Controller &&) = delete;
+    explicit {{ feat.pascal_name }}Controller(QObject *parent = nullptr);
+
+{%- for uc_id, uc in feat.use_cases %}
+  {%- if uc.dto_out %}
+       {% set dto_out_str = uc.dto_out.pascal_name %}
+  {%- else %}
+       {% set dto_out_str = "bool" %}
+  {%- endif %}
+
+  {%- if uc.dto_in %}
+    static {{ uc.dto_in.pascal_name }} get{{ uc.dto_in.pascal_name }}()
+    {
+        return {};
+    }
+    QCoro::Task<{{ dto_out_str }}> {{ uc.camel_name }}(const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }});
+  {%- else %}
+    QCoro::Task<{{ dto_out_str }}> {{ uc.camel_name }}();
+  {%- endif %}
+
+{%- endfor %}
+
+  private:
+    void resolveDependencies();
+    SCDatabase::DbContext *m_dbContext = nullptr;
+    QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
+    QPointer<Common::Features::FeatureEventRegistry> m_featureEventRegistry;
+    QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;
+};
+} // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

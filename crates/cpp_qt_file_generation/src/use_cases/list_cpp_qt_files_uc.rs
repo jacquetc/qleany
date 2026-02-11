@@ -1288,7 +1288,7 @@ impl ListCppQtFilesUseCase {
                 id: 0,
                 name: format!("{}_events.h", feature_snake_name),
                 relative_path: relative_path.clone(),
-                group: format!("features: {}", feature_pascal_name),
+                group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_events_h".to_string(),
                 feature: Some(feature.id),
                 entity: None,
@@ -1368,20 +1368,8 @@ impl ListCppQtFilesUseCase {
                     field: None,
                 });
 
-                files.push(File {
-                    id: 0,
-                    name: format!("{}_uow.cpp", use_case_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("feature: {}", feature_pascal_name),
-                    template_name: "feature_uow_cpp".to_string(),
-                    feature: Some(feature.id),
-                    entity: None,
-                    use_case: Some(use_case.id),
-                    field: None,
-                });
-
                 let relative_path = format!(
-                    "{}/{}/use_cases/{}/",
+                    "{}/{}/use_cases/{}_uc/",
                     prefix, feature_snake_name, use_case_snake_name
                 );
 

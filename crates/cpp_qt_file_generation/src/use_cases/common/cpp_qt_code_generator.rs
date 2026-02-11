@@ -111,6 +111,7 @@ struct DtoVM {
     pub inner: Dto,
     pub fields: Vec<DtoFieldVM>,
     pub pascal_name: String,
+    pub camel_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -420,6 +421,8 @@ impl SnapshotBuilder {
     fn get_dto_field_cpp_default_init(dto_field: &DtoField) -> String {
         if dto_field.optional {
             " = std::nullopt".to_string()
+        } else if dto_field.is_list {
+            "{}".to_string()
         } else {
             match dto_field.field_type {
                 DtoFieldType::Boolean => " = false".to_string(),
@@ -850,6 +853,7 @@ impl SnapshotBuilder {
                     inner: d.clone(),
                     fields: df_vec,
                     pascal_name: heck::AsPascalCase(&d.name).to_string(),
+                    camel_name: heck::AsLowerCamelCase(&d.name).to_string(),
                 },
             );
         }
@@ -956,6 +960,8 @@ impl SnapshotBuilder {
                                                     },
                                                     pascal_name: heck::AsPascalCase(&d.name)
                                                         .to_string(),
+                                                    camel_name: heck::AsLowerCamelCase(&d.name)
+                                                        .to_string(),
                                                 })
                                             }),
                                             dto_out: uc.dto_out.and_then(|dto_id| {
@@ -996,6 +1002,8 @@ impl SnapshotBuilder {
                                                         df_vec
                                                     },
                                                     pascal_name: heck::AsPascalCase(&d.name)
+                                                        .to_string(),
+                                                    camel_name: heck::AsLowerCamelCase(&d.name)
                                                         .to_string(),
                                                 })
                                             }),
@@ -1087,6 +1095,7 @@ impl SnapshotBuilder {
                                     df_vec
                                 },
                                 pascal_name: heck::AsPascalCase(&d.name).to_string(),
+                                camel_name: heck::AsLowerCamelCase(&d.name).to_string(),
                             })
                         }),
                         dto_out: uc.dto_out.and_then(|dto_id| {
@@ -1121,6 +1130,7 @@ impl SnapshotBuilder {
                                     df_vec
                                 },
                                 pascal_name: heck::AsPascalCase(&d.name).to_string(),
+                                camel_name: heck::AsLowerCamelCase(&d.name).to_string(),
                             })
                         }),
                         pascal_name: heck::AsPascalCase(&uc.name).to_string(),

@@ -1,0 +1,38 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+
+#pragma once
+
+#include "unit_of_work/unit_of_work.h"
+{%- for e_id, entity in uc.entities  %}
+#include "entities/{{ entity.snake_name }}.h"
+{%- endfor %}
+
+
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+{
+    namespace SCE = Common::Entities;
+
+class I{{ uc.pascal_name }}UnitOfWork : public virtual Common::UnitOfWork::ITransactional
+{
+  public:
+    ~I{{ uc.pascal_name }}UnitOfWork() override = default;
+
+/* TODO: adapt entities to real use :
+ * Available Atomic Macros (uow_macros.h — for custom UoWs):
+ *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *                 DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)
+ *
+ * The equivalent macros (without the DECLARE_ prefix) must be set in the use case's unit of work file
+ * in units_of_work/{{ uc.snake_name }}_uow.h
+ */
+{%- for e_id, entity in uc.entities  %}
+    DECLARE_UOW_ENTITY_UPDATE({{ entity.pascal_name }});
+{%- endfor %}
+
+    virtual void publish{{ uc.pascal_name }}Signal() = 0;
+
+};
+} // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

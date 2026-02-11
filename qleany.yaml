@@ -408,7 +408,7 @@ features:
       fields:
       - name: manifest_path
         type: string
-  - name: new
+  - name: create
     validator: false
     entities:
     - Entity
@@ -528,94 +528,94 @@ features:
         type: string
 - name: cpp_qt_file_generation
   use_cases:
-    - name: list_cpp_qt_files
-      validator: true
-      entities:
-        - Root
-        - Entity
-        - Feature
-        - File
-        - UseCase
-        - Global
-        - Relationship
-      undoable: false
-      dto_in:
-        name: ListCppQtFilesDto
-        fields:
-          - name: only_list_already_existing
-            type: boolean
-      dto_out:
-        name: ListCppQtFilesReturnDto
-        fields:
-          - name: file_ids
-            type: uinteger
-            is_list: true
-          - name: file_names
-            type: string
-            is_list: true
-          - name: file_groups
-            type: string
-            is_list: true
-    - name: generate_cpp_qt_code
-      validator: true
-      entities:
-        - Root
-        - Entity
-        - Feature
-        - File
-        - UseCase
-        - Global
-        - Relationship
-      undoable: false
-      read_only: true
-      dto_in:
-        name: GenerateCppQtCodeDto
-        fields:
-          - name: file_id
-            type: uinteger
-      dto_out:
-        name: GenerateCppQtCodeReturnDto
-        fields:
-          - name: generated_code
-            type: string
-          - name: timestamp
-            type: string
-    - name: generate_cpp_qt_files
-      validator: true
-      entities:
-        - Root
-        - Entity
-        - Field
-        - Feature
-        - File
-        - UseCase
-        - Dto
-        - DtoField
-        - Global
-        - Relationship
-      undoable: false
-      read_only: true
-      long_operation: true
-      dto_in:
-        name: GenerateCppQtFilesDto
-        fields:
-          - name: file_ids
-            type: uinteger
-            is_list: true
-          - name: root_path
-            type: string
-          - name: prefix
-            type: string
-      dto_out:
-        name: GenerateCppQtFilesReturnDto
-        fields:
-          - name: files
-            type: string
-            is_list: true
-          - name: timestamp
-            type: string
-          - name: duration
-            type: string
+  - name: list_cpp_qt_files
+    validator: true
+    entities:
+    - Root
+    - Entity
+    - Feature
+    - File
+    - UseCase
+    - Global
+    - Relationship
+    undoable: false
+    dto_in:
+      name: ListCppQtFilesDto
+      fields:
+      - name: only_list_already_existing
+        type: boolean
+    dto_out:
+      name: ListCppQtFilesReturnDto
+      fields:
+      - name: file_ids
+        type: uinteger
+        is_list: true
+      - name: file_names
+        type: string
+        is_list: true
+      - name: file_groups
+        type: string
+        is_list: true
+  - name: generate_cpp_qt_code
+    validator: true
+    entities:
+    - Root
+    - Entity
+    - Feature
+    - File
+    - UseCase
+    - Global
+    - Relationship
+    undoable: false
+    read_only: true
+    dto_in:
+      name: GenerateCppQtCodeDto
+      fields:
+      - name: file_id
+        type: uinteger
+    dto_out:
+      name: GenerateCppQtCodeReturnDto
+      fields:
+      - name: generated_code
+        type: string
+      - name: timestamp
+        type: string
+  - name: generate_cpp_qt_files
+    validator: true
+    entities:
+    - Root
+    - Entity
+    - Field
+    - Feature
+    - File
+    - UseCase
+    - Dto
+    - DtoField
+    - Global
+    - Relationship
+    undoable: false
+    read_only: true
+    long_operation: true
+    dto_in:
+      name: GenerateCppQtFilesDto
+      fields:
+      - name: file_ids
+        type: uinteger
+        is_list: true
+      - name: root_path
+        type: string
+      - name: prefix
+        type: string
+    dto_out:
+      name: GenerateCppQtFilesReturnDto
+      fields:
+      - name: files
+        type: string
+        is_list: true
+      - name: timestamp
+        type: string
+      - name: duration
+        type: string
 ui:
   rust_cli: true
   rust_slint: true

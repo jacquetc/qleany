@@ -1,1 +1,113 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+#include "{{ feat.snake_name }}_controller.h"
+#include "service_locator.h"
+#include "controller_command_helpers.h"
+{%- for uc_id, uc in feat.use_cases %}
+#include "units_of_work/{{ uc.snake_name }}_uow.h"
+#include "use_cases/{{ uc.snake_name }}_uc.h"
+{%- endfor %}
+#include <QCoro/QCoroTask>
+#include <memory>
 
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+{
+
+// Default timeout for async command/query execution (ms)
+static constexpr int kDefaultCommandTimeoutMs = 500;
+
+
+{{ feat.pascal_name }}Controller::{{ feat.pascal_name }}Controller(QObject *parent) : QObject(parent)
+{
+    resolveDependencies();
+}
+void {{ feat.pascal_name }}Controller::resolveDependencies()
+{
+    auto *locator = Common::ServiceLocator::instance(); // set by provider
+    if (!locator)
+    {
+        qCritical() << "ServiceLocator not initialized";
+        return;
+    }
+    m_dbContext = locator->dbContext();
+    m_eventRegistry = locator->eventRegistry();
+    m_undoRedoSystem = locator->undoRedoSystem();
+    m_featureEventRegistry = locator->featureEventRegistry();
+}
+
+{%- for uc_id, uc in feat.use_cases %}
+
+  {%- if uc.dto_in %}
+       {% set dto_in_arg_str = "const " ~ uc.dto_in.pascal_name ~ "&" ~ uc.dto_in.camel_name %}
+  {%- else %}
+       {% set dto_in_arg_str = "" %}
+  {%- endif %}
+  {%- if uc.dto_out %}
+       {% set dto_out_str = uc.dto_out.pascal_name %}
+  {%- else %}
+       {% set dto_out_str = "bool" %}
+  {%- endif %}
+
+
+QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_name }}({{ dto_in_arg_str }})
+{
+
+    {%- if uc.inner.read_only %}
+
+    co_return co_await Common::ControllerHelpers::executeReadQuery<{{ uc.dto_out.pascal_name }}>(
+        m_undoRedoSystem,
+        u"{{ uc.snake_name }} Query"_s,
+        [this {% if uc.dto_in %}, {{ uc.dto_in.camel_name }}{% endif %}]() -> {{ uc.dto_out.pascal_name }} {
+        // Create use case that will be owned by the command
+        auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
+        auto useCase = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow));
+            return useCase->execute({% if uc.dto_in %}{{ uc.dto_in.camel_name }}{% endif %});
+        });
+
+    {%- elif uc.inner.undoable %}
+        // Create use case that will be owned by the command
+        auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
+        auto useCase = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow));
+
+       {%- if uc.dto_out %}
+        co_return co_await Common::ControllerHelpers::executeUndoableCommand<{{ uc.dto_out.pascal_name }}>(
+       {%- else %}
+       co_return co_await Common::ControllerHelpers::executeUndoableCommandVoid(
+       {%- endif %}
+          m_undoRedoSystem,
+            u"{{ uc.snake_name }} Command"_s,
+            std::move(useCase),
+            kDefaultCommandTimeoutMs
+            {%- if uc.dto_in %}
+            ,{{  uc.dto_in.camel_name }});
+            {%- else %}
+            );
+            {%- endif %}
+
+    {%- else %}
+
+        // Create use case that will be owned by the command
+        auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
+        auto useCase = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow));
+
+       {%- if uc.dto_out %}
+        co_return co_await Common::ControllerHelpers::executeNotUndoableCommand<{{ uc.dto_out.pascal_name }}>(
+       {%- else %}
+       co_return co_await Common::ControllerHelpers::executeNotUndoableCommandVoid(
+       {%- endif %}
+          m_undoRedoSystem,
+            u"{{ uc.snake_name }} Command"_s,
+            std::move(useCase),
+            kDefaultCommandTimeoutMs
+            {%- if uc.dto_in %}
+            ,{{  uc.dto_in.camel_name }});
+            {%- else %}
+            );
+            {%- endif %}
+
+    {%- endif %}
+
+}
+{%- endfor %}
+
+} // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

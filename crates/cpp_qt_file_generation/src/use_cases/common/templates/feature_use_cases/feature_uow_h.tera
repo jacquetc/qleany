@@ -1,0 +1,53 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+
+#pragma once
+
+#include "unit_of_work/unit_of_work.h"
+#include "use_cases/{{ uc.snake_name }}_uc/i_{{ uc.snake_name }}_uow.h"
+{%- for e_id, entity in uc.entities  %}
+#include "entities/{{ entity.snake_name }}.h"
+{%- endfor %}
+#include "direct_access/repository_factory.h"
+
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+{
+    namespace SCE = Common::Entities;
+    namespace SCD = Common::DirectAccess;
+    namespace SCF = Common::Features;
+
+
+class {{ uc.pascal_name }}UnitOfWork : public Common::UnitOfWork::UnitOfWorkBase,
+                               public I{{ uc.pascal_name }}UnitOfWork
+{
+public:
+    {{ uc.pascal_name }}UnitOfWork(SCDatabase::DbContext &db, QPointer<SCD::EventRegistry> eventRegistry, QPointer<SCF::FeatureEventRegistry> featureEventRegistry)
+        : UnitOfWorkBase(db, eventRegistry), m_featureEventRegistry(featureEventRegistry) {}
+
+/* TODO: adapt entities to real use :
+ * Available Atomic Macros (uow_macros.h — for custom UoWs):
+ *   Interface:    UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *                 UOW_ENTITY_RELATIONSHIPS(Name, Rel)
+ *
+ * The equivalent macros (with the DECLARE_ prefix) must be set in the use case's unit of work interface file
+ * in use_cases/i_{{ uc.snake_name }}_uow.h
+ */
+{%- for e_id, entity in uc.entities  %}
+    UOW_ENTITY_UPDATE({{ entity.pascal_name }});
+{%- endfor %}
+
+    void publish{{ uc.pascal_name }}Signal() override;
+
+   private:
+   QPointer<SCF::FeatureEventRegistry> m_featureEventRegistry;
+};
+
+
+inline void {{ uc.pascal_name }}UnitOfWork::publish{{ uc.pascal_name }}Signal()
+{
+       m_featureEventRegistry->{{ feat.camel_name }}Events()->publish{{ uc.pascal_name }}Signal();
+}
+
+} // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

@@ -27,7 +27,7 @@ class FeatureEventRegistry : public QObject
 
     // Helper to get appropriate events by type
     {%- for fid, feat in s.features %}
-    [[nodiscard]] QPointer<{{ feat.pascal_name }}Events> {{ feat.camel_name }}() const;
+    [[nodiscard]] QPointer<{{ feat.pascal_name }}Events> {{ feat.camel_name }}Events() const;
     {%- endfor %}
 
   private:
@@ -37,7 +37,7 @@ class FeatureEventRegistry : public QObject
 };
 
     {%- for fid, feat in s.features %}
-inline QPointer<{{ feat.pascal_name }}Events> FeatureEventRegistry::{{ feat.camel_name }}() const
+inline QPointer<{{ feat.pascal_name }}Events> FeatureEventRegistry::{{ feat.camel_name }}Events() const
 {
     return m_{{ feat.camel_name }}Events;
 }

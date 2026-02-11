@@ -20,7 +20,6 @@ set(SRCS
 
 {%- for uid, use_case in feat.use_cases %}
         # {{ use_case.snake_name }}
-        units_of_work/{{ use_case.snake_name }}_uow.cpp
         units_of_work/{{ use_case.snake_name }}_uow.h
         use_cases/{{ use_case.snake_name }}_uc/i_{{ use_case.snake_name }}_uow.h
         use_cases/{{ use_case.snake_name }}_uc.cpp
