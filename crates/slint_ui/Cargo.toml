@@ -14,7 +14,7 @@ categories.workspace = true
 build = "build.rs"
 
 [dependencies]
-slint = { version = "1.13.1" }
+slint = { version = "1.15" }
 log = "0.4"
 env_logger = "0.11"
 rfd = "0.17.2"
@@ -36,7 +36,7 @@ heck = "0.5"
 arboard = "3.6"
 
 [build-dependencies]
-slint-build = "1.13.1"
+slint-build = "1.15"
 
 [lints]
 workspace =true

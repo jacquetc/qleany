@@ -631,6 +631,9 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                         // Fill inherits_from options and set the selected index
                         fill_inherits_from_options(&app, &ctx, entity.inherits_from);
                         fill_field_list(&app, &ctx);
+
+                        // clear other forms when an entity is selected
+                        clear_field_form(&app);
                     }
                     _ => {
                         app.global::<EntitiesTabState>().set_selected_entity_id(-1);
