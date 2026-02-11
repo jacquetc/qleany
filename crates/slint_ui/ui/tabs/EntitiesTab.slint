@@ -403,6 +403,7 @@ export component EntitiesTab inherits Rectangle {
 
                                 entity-combo := ComboBox {
                                     model: EntitiesTabState.entity_options;
+                                    current-index <=> EntitiesTabState.selected_field_entity_index;
                                     selected(value) => {
                                         // Pass the selected index to the callback
                                         EntitiesTabState.field_entity_changed(entity-combo.current-index);
