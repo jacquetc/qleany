@@ -13,11 +13,11 @@ use common::direct_access::entity::EntityRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::{FieldRelationshipType, FieldType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use common::types::EntityId;
 use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
 use slint::{ComponentHandle, Model, Timer};
 use std::sync::Arc;
-use common::types::EntityId;
 
 fn create_new_undo_stack(app: &App, app_context: &Arc<AppContext>) {
     let ctx = Arc::clone(app_context);
@@ -718,7 +718,10 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     // get entity index
     let field_entity_id = field.entity.map(|e| e as i32).unwrap_or(-1);
     let field_entity_index: i32 = if field_entity_id > 0 {
-        get_option_index_from_entity_id(app, field_entity_id).unwrap_or(0).try_into().unwrap_or(0)
+        get_option_index_from_entity_id(app, field_entity_id)
+            .unwrap_or(0)
+            .try_into()
+            .unwrap_or(0)
     } else {
         -1
     };
@@ -782,7 +785,6 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
             let mut names: Vec<slint::SharedString> = Vec::new();
             let mut ids: Vec<i32> = Vec::new();
             for e in entities_opt.into_iter().flatten() {
-
                 if e.only_for_heritage {
                     continue;
                 }
@@ -799,8 +801,10 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
     }
 }
 
-fn get_entity_id_from_option_index(app: &App) -> Option<EntityId>{
-    let index = app.global::<EntitiesTabState>().get_selected_field_entity_index();
+fn get_entity_id_from_option_index(app: &App) -> Option<EntityId> {
+    let index = app
+        .global::<EntitiesTabState>()
+        .get_selected_field_entity_index();
     if index == -1 {
         return None;
     }
@@ -813,7 +817,6 @@ fn get_option_index_from_entity_id(app: &App, entity_id: i32) -> Option<usize> {
     let slint_ids: slint::ModelRc<i32> = app.global::<EntitiesTabState>().get_entity_option_ids();
     let ids: Vec<i32> = slint_ids.iter().collect();
     ids.iter().position(|&id| id == entity_id)
-
 }
 
 /// Helper function to populate inherits_from options for the Inherits From ComboBox
@@ -842,7 +845,9 @@ fn fill_inherits_from_options(
             let mut ids: Vec<i32> = vec![-1];
 
             for maybe_entity in entities_opt.into_iter() {
-                if let Some(e) = maybe_entity && e.only_for_heritage {
+                if let Some(e) = maybe_entity
+                    && e.only_for_heritage
+                {
                     names.push(e.name.clone().into());
                     ids.push(e.id as i32);
 
@@ -1000,6 +1005,17 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                     // Clear entity reference if not Entity type
                     if field.field_type != FieldType::Entity {
                         field.entity = None;
+                        field.relationship = FieldRelationshipType::OneToOne;
+                        field.strong = false;
+                        app.global::<EntitiesTabState>().set_selected_field_entity_index(-1);
+                        app.global::<EntitiesTabState>().set_selected_field_strong(false);
+                        app.global::<EntitiesTabState>().set_selected_field_relationship("one_to_one".into());
+                    }
+                    if field.field_type != FieldType::Enum {
+                        field.enum_values = None;
+                        field.enum_name = None;
+                        app.global::<EntitiesTabState>().set_selected_field_enum_name("".into());
+                        app.global::<EntitiesTabState>().set_selected_field_enum_values("".into());
                     }
                 });
             }
@@ -1036,6 +1052,27 @@ fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
                     let relationship_type = string_to_field_relationship_type(value.as_str());
                     update_field_helper(&app, &ctx, field_id, |field| {
                         field.relationship = relationship_type.clone();
+                        if field.relationship == FieldRelationshipType::ManyToOne
+                            || field.relationship == FieldRelationshipType::ManyToMany
+                        {
+                            field.strong = false;
+                            app.global::<EntitiesTabState>().set_selected_field_strong(false);
+                        }
+                        if field.relationship == FieldRelationshipType::OrderedOneToMany
+                            || field.relationship == FieldRelationshipType::OneToMany
+                            || field.relationship == FieldRelationshipType::ManyToMany
+                        {
+                            field.optional = false;
+                            app.global::<EntitiesTabState>().set_selected_field_optional(false);
+                        }
+                        if field.relationship == FieldRelationshipType::OneToOne
+                            || field.relationship == FieldRelationshipType::ManyToOne
+                        {
+                            field.list_model = false;
+                            field.list_model_displayed_field = None;
+                            app.global::<EntitiesTabState>().set_selected_field_list_model(false);
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                        }
                     });
                 }
             }
@@ -1129,6 +1166,13 @@ fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     update_field_helper(&app, &ctx, field_id, |field| {
                         field.list_model = value;
+                        if field.list_model {
+                            field.list_model_displayed_field = Some("name".into());
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("name".into());
+                        } else {
+                            field.list_model_displayed_field = None;
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                        }
                     });
                 }
             }
@@ -1274,6 +1318,17 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                             return;
                         }
                         entity.only_for_heritage = value;
+                        if value {
+                            entity.undoable = false;
+                            entity.single_model = false;
+                            entity.inherits_from = None;
+                            app.global::<EntitiesTabState>().set_selected_entity_undoable(false);
+                            app.global::<EntitiesTabState>().set_selected_entity_single_model(false);
+                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from(-1);
+                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from_value("None".into());
+                        }
+                        entity.allow_direct_access = !value;
+                        app.global::<EntitiesTabState>().set_selected_entity_allow_direct_access(!value);
 
                         let result = entity_commands::update_entity(
                             &ctx,
