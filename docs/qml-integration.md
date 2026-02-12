@@ -1,7 +1,6 @@
 # QML Integration (C++/Qt)
 
-This document covers QML-based frontends: **QtQuick**, **Kirigami** or others. They use QML, so the generated models 
-and patterns apply equally to either.
+This document covers QML-based frontends: **QtQuick**, **Kirigami**, **Lomiri**. They use QML, so the generated models and patterns apply equally to each.
 
 ---
 
@@ -9,7 +8,7 @@ Qleany generates reactive models ready for QML binding — no manual `QAbstractL
 
 ## List Models
 
-`{Entity}ListModelFrom{Parent}{Relationship}` provides a standard `QAbstractListModel` that:
+`{Parent}{Relationship}ListModel` provides a standard `QAbstractListModel` that:
 - Auto-updates when entities change (via EventRegistry subscription)
 - Refreshes only affected rows, not the entire model
 - Supports inline editing through `setData` with async persistence
@@ -17,7 +16,7 @@ Qleany generates reactive models ready for QML binding — no manual `QAbstractL
 
 ```qml
 ListView {
-    model: RecentWorkListModelFromRootRecentWorks {
+    model: RootRecentWorksListModel {
         rootId: 1
     }
     delegate: ItemDelegate {
@@ -42,7 +41,7 @@ This means if another part of the application updates a RecentWork's title, the 
 - `itemId` property to select which entity
 - Auto-fetch on ID change
 - Reactive updates when the entity changes elsewhere in the application
-- All fields exposed as Q_PROPERTYs with change signals
+- All fields are exposed as Q_PROPERTYs with change signals
 - Relationship IDs available for further queries
 
 ```qml
@@ -95,8 +94,8 @@ mock_imports/
 └── Skr/
     ├── Controllers/
     │   ├── qmldir                                      # QML module definition
-    |   ├── QCoroQmlTask.qml                            # Mock QCoro integration helper
-    |   ├── EventRegistry.qml                           # EventRegistry
+    │   ├── QCoroQmlTask.qml                            # Mock QCoro integration helper
+    │   ├── EventRegistry.qml                           # EventRegistry
     │   ├── RootController.qml                          #
     │   ├── RootEvents.qml                              # Event signals for Root entity
     │   ├── BinderItemController.qml
@@ -174,7 +173,9 @@ antipattern. Instead, let models handle updates reactively when possible.
 
 To access entities directly without going through models, use QCoro to await results from their dedicated entities controllers.
 
-There is no model for custom features and their use cases. Like entities, you can access them through their controllers, useing QCoro
+Note: you can't chain ".then(...)" with QCoro calls directly because they return `QCoroQmlTask`, not a JavaScript Promise.
+
+There is no model for custom features and their use cases. Like entities, you can access them through their controllers, using QCoro
 to await results directly instead of relying on events:
 
 ```qml
@@ -203,13 +204,12 @@ Button {
 
 ```
 
-Note: you couldn't chain ".then(...)" with QCoro calls directly because they return `QCoroQmlTask`, not a JavaScript Promise.
 
 ## Best Practices
 
 **Prefer list models over manual fetching.** The generated models handle caching, updates, and memory management. Fetching entity lists manually and storing them in JavaScript arrays loses reactivity.
 
-**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without you havving to manage refresh logic.
+**Use Single models for detail views.** When displaying one entity's details (an editor panel, a detail page), `Single{Entity}` gives you reactive properties without you having to manage refresh logic.
 
 **Keep model instances alive.** Creating a new model instance on every navigation discards cached data and subscriptions. Declare models at component level.
 

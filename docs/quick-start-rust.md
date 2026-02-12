@@ -1,8 +1,10 @@
-# Qleany Quick Start
+# Qleany Quick Start - Rust
 
 This guide walks you through creating a complete desktop application for a car dealership using Qleany. By the end, you'll have generated architecture scaffolding with entities, repositories, controllers, and undo/redo infrastructure.
 
-> **Note:** This guide demonstrates Rust generation. The workflow for C++ / Qt6 is nearly identical — only the generated output differs. Language-specific differences are noted where relevant.
+For C++ / Qt, see [Qleany Quick Start - C++/Qt](quick-start-cpp-qt.md). The differences are minor.
+
+The qleany.yaml of this example is available [here](../examples/rust/quick_start_carlot/qleany.yaml).
 
 ---
 
@@ -19,13 +21,13 @@ Before touching any tool, grab paper or open a diagramming tool. This is the mos
 
 **Entities** (the nouns):
 
-| Entity | Purpose | Key Fields |
-|--------|---------|------------|
-| EntityBase | Base class for all entities | id, created_at, updated_at |
-| Root | Application entry point, owns everything | cars, customers, sales |
-| Car | Vehicle in inventory | make, model, year, price, status |
-| Customer | Potential or actual buyer | name, email, phone |
-| Sale | Completed transaction | sale_date, final_price, car, customer |
+| Entity     | Purpose                                  | Key Fields                            |
+|------------|------------------------------------------|---------------------------------------|
+| EntityBase | Base class for all entities              | id, created_at, updated_at            |
+| Root       | Application entry point, owns everything | cars, customers, sales                |
+| Car        | Vehicle in inventory                     | make, model, year, price, status      |
+| Customer   | Potential or actual buyer                | name, email, phone                    |
+| Sale       | Completed transaction                    | sale_date, final_price, car, customer |
 
 **Relationships:**
 
@@ -37,14 +39,16 @@ Before touching any tool, grab paper or open a diagramming tool. This is the mos
 
 **Features and Use Cases** (the verbs):
 
-| Feature | Use Case | What it does |
-|---------|----------|--------------|
+| Feature              | Use Case         | What it does                          |
+|----------------------|------------------|---------------------------------------|
 | inventory_management | import_inventory | Parse CSV file, populate Car entities |
-| inventory_management | export_inventory | Generate CSV from current inventory |
+| inventory_management | export_inventory | Generate CSV from current inventory   |
 
 ### Draw It First
 
-Sketch your entities and relationships before using Qleany. Use paper, whiteboard, or Mermaid:
+Sketch your entities and relationships before using Qleany. Use paper, whiteboard, or Mermaid.
+
+Deeper explanations about relationships are available in the [Manifest Reference](manifest-reference.md#understanding-relationships).
 
 ```mermaid
 erDiagram
@@ -59,9 +63,9 @@ erDiagram
         datetime created_at
         datetime updated_at
         # relationships:
-        QList<EntityId> cars
-        QList<EntityId> customers
-        QList<EntityId> sales
+        Vec<EntityId> cars
+        Vec<EntityId> customers
+        Vec<EntityId> sales
     }
     
     Car {
@@ -112,7 +116,7 @@ erDiagram
 
 `EntityBase` is a common pattern: it provides shared fields like `id`, `created_at`, and `updated_at`, like an inheritance. Other entities can explicitly inherit from it. This is not an entity. It will never be generated. All your entities can inherit from it to avoid repetition.
 
-> Note: You can note the relationships on the diagram too. Qleany supports various relationship types (one-to-one, one-to-many, many-to-many) and cascade delete (strong relationships). Defining these upfront helps you configure them correctly in the manifest. Unlike typical ER diagrams, the relationships appear as fields. Qleany's relationships are directional and can be configured with additional options (e.g., ordered vs unordered, strong vs weak, optional or not (only for some relationship types)). Plan these carefully to ensure the generated code matches your intended data model.
+> Note: You can note the relationships on the diagram too. Qleany supports various relationship types (one-to-one, one-to-many, many-to-one, many-to-many) and cascade delete (strong relationships). Defining these upfront helps you configure them correctly in the manifest. Unlike typical ER diagrams, the relationships appear as fields. Forget the notion of foreign keys here. Qleany's relationships are directional and can be configured with additional options (e.g., ordered vs unordered, strong vs weak, optional or not (only for some relationship types)). Plan these carefully to ensure the generated code matches your intended data model.
 
 **WRONG**: I only need a few entities without any "owner" relationships. I can just create them in Qleany and skip the Root entity.
 
@@ -139,17 +143,15 @@ Click **Project** in the sidebar.
 
 Fill in the form:
 
-| Field | Value                          |
-|-------|--------------------------------|
-| Language | Rust *(or C++ / Qt)*           |
-| Application Name | CarLot                         |
-| Organisation Name | mycompany                      |
-| Organisation Domain | com.mycompany                  |
-| Prefix Path | crates *(or src for C++ / Qt)* |
+| Field               | Value         |
+|---------------------|---------------|
+| Language            | Rust          |
+| Application Name    | CarLot        |
+| Organisation Name   | MyCompany     |
+| Organisation Domain | com.mycompany |
+| Prefix Path         | crates        |
 
 Organisation Domain is used for some installed file names, like the icon name.
-
-You can also choose to generate C++/Qt6 code. Some options will change, but the workflow is the same.
 
 Changes save. The header shows "Save Manifest" when there are unsaved changes.
 
@@ -172,13 +174,13 @@ Now add fields. In the "Fields" section:
 1. Click **+** to add a field
 2. Select the new field, then configure:
 
-| Name | Type | Notes |
-|------|------|-------|
-| make | String | — |
-| model | String | — |
-| year | Integer | — |
-| price | Float | — |
-| status | Enum | Enum Name: `CarStatus`, Values: `Available`, `Reserved`, `Sold` (one per line) |
+| Name   | Type    | Notes                                                                          |
+|--------|---------|--------------------------------------------------------------------------------|
+| make   | String  | —                                                                              |
+| model  | String  | —                                                                              |
+| year   | Integer | —                                                                              |
+| price  | Float   | —                                                                              |
+| status | Enum    | Enum Name: `CarStatus`, Values: `Available`, `Reserved`, `Sold` (one per line) |
 
 ### 4.2 Create the Customer Entity
 
@@ -187,9 +189,9 @@ Now add fields. In the "Fields" section:
 3. **Inherits from**: `EntityBase`
 4. Add fields:
 
-| Name | Type |
-|------|------|
-| name | String |
+| Name  | Type   |
+|-------|--------|
+| name  | String |
 | email | String |
 | phone | String |
 
@@ -200,24 +202,22 @@ Now add fields. In the "Fields" section:
 3. **Inherits from**: `EntityBase`
 4. Add fields:
 
-| Name | Type | Configuration |
-|------|------|---------------|
-| sale_date | DateTime | — |
-| final_price | Float | — |
-| car | Entity | Referenced Entity: `Car`, Relationship: `many_to_one` |
-| customer | Entity | Referenced Entity: `Customer`, Relationship: `many_to_one` |
+| Name        | Type     | Configuration                                              |
+|-------------|----------|------------------------------------------------------------|
+| sale_date   | DateTime | —                                                          |
+| final_price | Float    | —                                                          |
+| car         | Entity   | Referenced Entity: `Car`, Relationship: `many_to_one`      |
+| customer    | Entity   | Referenced Entity: `Customer`, Relationship: `many_to_one` |
 
 ### 4.4 Configure Root Relationships
 
 Select the **Root** entity. Add relationship fields:
 
-| Name | Type | Configuration |
-|------|------|---------------|
-| cars | Entity | Referenced Entity: `Car`, Relationship: `ordered_one_to_many`, Strong: ✓ |
+| Name      | Type   | Configuration                                                                 |
+|-----------|--------|-------------------------------------------------------------------------------|
+| cars      | Entity | Referenced Entity: `Car`, Relationship: `ordered_one_to_many`, Strong: ✓      |
 | customers | Entity | Referenced Entity: `Customer`, Relationship: `ordered_one_to_many`, Strong: ✓ |
-| sales | Entity | Referenced Entity: `Sale`, Relationship: `ordered_one_to_many`, Strong: ✓ |
-
-> **C++ / Qt6 only:** You can also enable **List Model** and **Single Model** checkboxes to generate reactive QAbstractListModel and its QML wrappers. Set **Displayed Field** to specify which field appears in list views (e.g., `make` for cars, `name` for customers). These options are not available (or useless) for Rust.
+| sales     | Entity | Referenced Entity: `Sale`, Relationship: `ordered_one_to_many`, Strong: ✓     |
 
 **Key concepts:**
 - **Strong relationship**: Deleting Root cascades to delete all Cars, Customers, Sales
@@ -238,14 +238,12 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 1. Click **+** next to "Use Cases"
 2. Configure:
 
-| Field | Value                                           |
-|-------|-------------------------------------------------|
-| Name | import_inventory                                |
-| Undoable | ✗ *(file imports typically aren't undoable)*    |
-| Read Only | ✗ *(it will update the internal database)*      |
-| Long Operation | ✓ *(parsing files can take time)*               |
-
-> **Note:** Long Operation is currently implemented for Rust only. For now, C++ / Qt6 ignores this setting.
+| Field          | Value                                        |
+|----------------|----------------------------------------------|
+| Name           | import_inventory                             |
+| Undoable       | ✗ *(file imports typically aren't undoable)* |
+| Read Only      | ✗ *(it will update the internal database)*   |
+| Long Operation | ✓ *(parsing files can take time)*            |
 
 3. Switch to the **DTO In** tab:
    - Enable the checkbox
@@ -265,14 +263,12 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 1. Click **+** next to "Use Cases"
 2. Configure:
 
-| Field | Value                            |
-|-------|----------------------------------|
-| Name | export_inventory                 |
-| Undoable | ✗                                |
-| Read Only | ✓ *(just reading internal data)* |
+| Field          | Value                            |
+|----------------|----------------------------------|
+| Name           | export_inventory                 |
+| Undoable       | ✗                                |
+| Read Only      | ✓ *(just reading internal data)* |
 | Long Operation | ✗                                |
-
-> **Note:** Long Operation is currently implemented for Rust only.
 
 3. **DTO In**:
    - **Name**: `ExportInventoryDto`
@@ -286,9 +282,17 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 ### 5.4 Choose your UI
 
-For Rust, choose between CLI, UI, or both. For C++ / Qt6, more GUI are available. These options scaffold basic UI or CLI code that interacts with the generated controllers. You can skip this and build your own UI later if you prefer.
+For Rust, choose between CLI, Slint UI, or both. These options scaffold basic UI or CLI code that interacts with the generated controllers. You can skip this and build your own UI later if you prefer.
 
-### 5.5 Take a break, drink a coffee, sleep a bit
+For Slint, Qleany generates a basic Slint UI, event system integration and generates command files to bind the UI to the generated controllers.
+
+CLI uses clap for you to build a command line interface.
+
+### 5.5 Save the Manifest
+
+Click **Save Manifest** in the header (or Ctrl+S).
+
+### 5.6 Take a break, drink a coffee, sleep a bit
 
 I mean it. A fresher mind sees things more clearly. You already saved a lot of time by using Qleany instead of writing all the boilerplate yourself. Don't rush the design phase, it's where you get the most value from Qleany.
 
@@ -299,10 +303,6 @@ Yes, you can change the manifest and regenerate later. But it's better to get a 
 ---
 
 ## Step 6: Save and Generate
-
-### Save the Manifest
-
-Click **Save Manifest** in the header (or Ctrl+S).
 
 ### Commit to Git
 
@@ -316,13 +316,14 @@ git commit -m "Before Qleany generation"
 ### Generate Code
 
 1. Click **Generate** in the sidebar
-2. Click **List Rust Files** to populate the file list
-3. Review the groups and files
-4. (Optional) Check **in temp/** to generate to a temporary folder first
-5. Click a file to preview the generated code
-6. Click **Generate (N)** where N is the number of selected files
+2. Review the groups and files
+3. (Optional) Check **in temp/** to generate to a temporary folder first
+4. Click a file to preview the generated code
+5. Click **Generate (N)** where N is the number of selected files
 
 The progress modal shows generation status. Files are written to your project.
+
+The files are formatted with cargo fmt.
 
 ---
 
@@ -398,7 +399,7 @@ crates/
 │   └── Cargo.toml
 └── inventory_management/
     ├── src/
-    │   ├── inventory_management_controller.rs
+    │   ├── inventory_management_controller.rs     # Exposes operations to UI or CLI
     │   ├── dtos.rs
     │   ├── units_of_work.rs
     │   ├── units_of_work/          # adapt the macros here 
@@ -419,7 +420,7 @@ crates/
 - Undo/redo infrastructure for undoable operations
 - Event system for reactive updates
 - Basic CLI (if selected during project setup)
-- Basic empty UI (if selected during project setup)
+- Basic empty Slint UI (if selected during project setup)
 
 **What you implement:**
 - Your custom use case logic (import_inventory, export_inventory)
@@ -427,11 +428,31 @@ crates/
 
 ---
 
+## Step 8: Run the Generated Code
+
+Let's assume that you have Rust installed.
+
+In a terminal,
+```bash
+cargo run
+```
+
+---
+
+## Next Steps
+
+1. Run the generated code — it compiles and provides working CRUD
+2. Implement your custom use cases (`import_inventory`, `export_inventory`)
+3. Build your UI on top of the controllers
+4. Add more features as your application grows
+
+The generated code is yours. Modify it, extend it, or regenerate when you add new entities. Qleany gets out of your way.
+
 ## Tips
 
 ### Understanding the Internal Database
 
-Entities are stored in an internal database (redb for Rust, SQLite for C++/Qt). This database is **internal**, users and UI devs don't interact with it directly.
+Entities are stored in an internal database (redb for Rust). This database is **internal**, users and UI devs don't interact with it directly.
 
 **Typical pattern:**
 
@@ -448,7 +469,7 @@ Every generated CRUD operation supports undo/redo automatically. You don't have 
 
 If you mark a use case as **Undoable**, Qleany generates the command pattern scaffolding. You fill in what "undo" means for your specific operation.
 
-For more information, see [Undo-Redo Architecture](docs/undo-redo-architecture.md).
+For more information, see [Undo-Redo Architecture](undo-redo-architecture.md).
 
 ### Relationships
 
@@ -462,40 +483,18 @@ For more information, see [Undo-Redo Architecture](docs/undo-redo-architecture.m
 
 **Strong** means cascade delete — deleting the parent deletes children.
 
-For more details, see [Manifest Reference](docs/manifest-reference.md#field-types-and-relationships).
+For more details, see [Manifest Reference](manifest-reference.md#relationship-fields).
 
-### Starting Fresh
+### Regenerating
 
 Made a mistake? The manifest is just YAML. You can:
-- Edit it directly in a text editor
+- Edit it directly in a text editor or from the GUI tool
 - Delete entities/features in the UI and recreate them
 - Generate to a temp folder, review, then regenerate to the real location
 
+For more details, see [Regeneration Workflow](regeneration-workflow.md).
+
 ---
-
-## Build
-
-### Rust
-From your project root:
-
-```bash
-cargo build
-```
-
-### C++ / Qt6
-From your project root:
-```bash
-mkdir -p build && cd build
-cmake ..
-cmake --build .
-```
-
-## Next Steps
-
-1. Run the generated code — it compiles and provides working CRUD
-2. Implement your custom use cases (`import_inventory`, `export_inventory`)
-3. Build your UI on top of the controllers
-4. Add more features as your application grows
 
 The generated code is yours. Modify it, extend it, or regenerate when you add new entities. Qleany gets out of your way.
 
@@ -503,12 +502,12 @@ The generated code is yours. Modify it, extend it, or regenerate when you add ne
 
 ## Further Reading
 
-- [README](README.md) — Overview, building and running, reference implementation
-- [Manifest Reference](docs/manifest-reference.md) — Entity options, field types, relationships, features
-- [Design Philosophy](docs/design-philosophy.md) — Clean Architecture background, package by feature
-- [Regeneration Workflow](docs/regeneration-workflow.md) — How file generation works, what gets overwritten
-- [Undo-Redo Architecture](docs/undo-redo-architecture.md) — Entity tree structure, undoable vs non-undoable
-- [QML Integration](docs/qml-integration.md) — Reactive models and mocks for C++/Qt
-- [Mobile Development](docs/mobile-development.md) — Plasma Mobile, Ubuntu Touch, cross-platform deployment
-- [Generated Infrastructure](docs/generated-code.md) — Database layer, event system, file organization
-- [Troubleshooting](docs/troubleshooting.md) — Common issues and how to fix them
+- [README](../README.md) — Overview, building and running, reference implementation
+- [Manifest Reference](manifest-reference.md) — Entity options, field types, relationships, features
+- [Design Philosophy](design-philosophy.md) — Clean Architecture background, package by feature
+- [Regeneration Workflow](regeneration-workflow.md) — How file generation works, what gets overwritten
+- [Undo-Redo Architecture](undo-redo-architecture.md) — Entity tree structure, undoable vs non-undoable
+- [QML Integration](qml-integration.md) — Reactive models and mocks for C++/Qt
+- [Generated Infrastructure - C++/Qt](generated-code-cpp-qt.md) — Database layer, event system, file organization
+- [Generated Infrastructure - Rust](generated-code-rust.md) — Database layer, event system, file organization
+- [Troubleshooting](troubleshooting.md) — Common issues and how to fix them

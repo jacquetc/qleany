@@ -54,7 +54,7 @@ src/
         └── binder_controller.h
 ```
 
-To modify "Binder," you touch four directories. For a 17-entity project, Qleany v0 generated **1700+ c++ files across 500 folders**. Technically correct, practically unmaintainable.
+To modify "Binder," you touch four directories. For a 17-entity project, Qleany v0 generated **1700+ C++ files across 500 folders**. Technically correct, practically unmaintainable.
 
 ## Package by Feature (a.k.a. Vertical Slice Architecture)
 
@@ -109,16 +109,16 @@ Each slice is relatively self-contained. You can understand, modify, and test th
 
 ## Why This Matters for Desktop Apps
 
-Web frameworks often provide architectural scaffolding (Rails, Django, Spring). Desktop frameworks like Qt provide widgets and signals, but few guidance on organizing a 50,000-line application.
+Web frameworks often provide architectural scaffolding (Rails, Django, Spring). Desktop frameworks like Qt provide widgets and signals, but little guidance on organizing a 50,000-line application.
 
 Qleany fills that gap with an architecture that:
 - Scales from small tools to large applications
 - Integrates naturally with Qt's object model
 - Supports undo/redo, a desktop-specific requirement
 - Keeps related code together for solo developers and small teams
-- Multiple UIs (Qt Widgets, QML, CLI) sharing the same core logic
+- Supports multiple UIs (Qt Widgets, QML, CLI) sharing the same core logic
 
-For the complete file organization, see [Generated Infrastructure](generated-code.md#file-organization).
+For the complete file organization, see [Generated Infrastructure - C++/Qt](generated-code-cpp-qt.md#file-organization) or [Generated Infrastructure - Rust](generated-code-rust.md#file-organization).
 
 ## Why this Matters for Mobile Apps
 
@@ -128,11 +128,9 @@ Mobile apps share many characteristics with desktop apps (see above), but have a
 - Local data storage with sync capabilities
 - Performance constraints requiring efficient architecture
 
-For the performance, since Qleany generates C++ and Rust, I think that it can be called performant enough for mobile apps. Mobile apps often require efficient memory usage and responsiveness, which C++ and Rust can provide.
+For the performance, since Qleany generates C++ and Rust, it can be called performant enough for mobile apps. Mobile apps often require efficient memory usage and responsiveness, which C++ and Rust can provide.
 
-Possibly, a Rust backend could be plugged into a mobile app developed with native technologies (Swift for iOS, Kotlin for Android) or cross-platform frameworks (Flutter, React Native). This way, the core logic benefits from Rust's performance and safety, while the UI is built with tools optimized for mobile platforms. 
-
-> Since I don't develop for mobile platforms myself, I base my thoughts on common knowledge about mobile app development. If you have experience developing for mobile apps, please share your insights!
+A Rust backend could be plugged into a mobile app developed with native technologies (Swift for iOS, Kotlin for Android) or cross-platform frameworks (Flutter, React Native). This way, the core logic benefits from Rust's performance and safety, while the UI is built with tools optimized for mobile platforms.
 
 ## Generate and Disappear
 
@@ -181,14 +179,14 @@ This follows Rust's recommended practice since the 2018 edition, avoiding the pr
 
 ## Code quality and "purity"
 
-Some advanced developers may argue that the code is not very efficient, not “state-of-the-art”, be it in Rust or C++. Like someone called Steve said: “It’s not a bug, it’s a feature.” I choose to avoid writing anything too hard to wrap your head around. A developer with only a few years of experience in C++ or Rust would be able to understand the generated code.
+Qleany deliberately generates straightforward code. A developer with only a few years of experience in C++ or Rust should be able to understand and modify it.
 
-It means for Rust:
+In practice, for Rust this means:
 - lifetimes only where the compiler requires them (no complex multi-lifetime scenarios), mostly deep inside the infrastructure
 - no async/await
 - generics only from standard library types (Result, Option, Vec) — no custom generic abstractions
 - no unsafe code
-- there is a bit too much of cloning around
+- more cloning than strictly necessary
 - generated traits stay simple
 - the only macro exists to help the developer with custom units of work
 
@@ -198,15 +196,13 @@ For C++/Qt:
 - async operations handled through QCoro where the event loop requires it
 - no raw pointers, only smart pointers
 - no multi-level inheritance, be it virtual or polymorphic
-- a bit too much of copying around, but std::move is used deeper inside the infrastructure
+- more copying than strictly necessary, though std::move is used deeper inside the infrastructure
 
-I know how to use complex lifetimes, generics, async Rust, diamond inheritance with virtual, etc. I did it in professional projects, and I saw younger developers struggling with it. The borrow checker is brilliant, but watching someone spend three hours fighting lifetime annotations on code that just needs to clone a string taught me something.
+This is a deliberate trade-off between approachability and performance. Qleany prioritizes code that intermediate developers can confidently modify over code that squeezes every last microsecond from the CPU. The generated code is clean, readable, and maintainable. You are using Rust or C++, two fast languages, and you are not writing a game engine.
 
-It’s a trade-off between code approachability and performance. Qleany prioritizes code that intermediate developers can confidently modify over code that squeezes every last microsecond from the CPU. The generated code is clean, readable, and maintainable. Yes, there’s cloning where a senior developer would use borrowing.
+In most desktop and mobile applications, the time spent waiting for user input or database access dwarfs any overhead from an extra clone. The few microseconds lost to cloning a DTO are rarely the bottleneck, but code that's too clever for the team to maintain can be.
 
-And be real: you are writing C++ and Rust, which are among the fastest languages in the world. And you are not writing a game engine. Your application spends most of its time waiting for the user to click something or fetching from the database. The few microseconds lost to cloning a DTO are not your bottleneck. Your bottleneck is the junior developer who can’t figure out how to add a field to an entity because the code is too clever.
-
-If you need every optimization, write your hot paths by hand. Profile first, then optimize what matters. The generator gives you a solid baseline that works and that your team can maintain. That’s the deal.
+If you need every optimization, write your hot paths by hand. Profile first, then optimize what matters. The generator gives you a solid, maintainable baseline to build on.
 
 ## Plugins
 
@@ -224,4 +220,4 @@ This part may be obvious to most developers. Does the user settings/configuratio
 
 You don't want the window geometry to be held in entities. Its place is in the UI layer. You don't want the theme preference to be held in use cases. Its place is in the UI layer too. The core application logic should focus on business rules and data management, while settings and configuration are handled separately in the outer layer.
 
-Use cases must stay pure and repeatable. They should not depend on user-specific settings or configurations. If a use case needs to behave differently based on user settings, it should receive those settings as input parameters, rather than accessing them directly.: This keeps the use cases decoupled from the settings system, maintains their reusability, and keeps them testable.
+Use cases must stay pure and repeatable. They should not depend on user-specific settings or configurations. If a use case needs to behave differently based on user settings, it should receive those settings as input parameters, rather than accessing them directly. This keeps the use cases decoupled from the settings system, maintains their reusability, and keeps them testable.

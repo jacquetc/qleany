@@ -19,7 +19,7 @@ schema:
   version: 2
 
 global:
-  language: cpp-qt          # rust, cpp
+  language: cpp-qt          # rust, cpp-qt
   application_name: MyApp
   organisation:
     name: myorg
@@ -73,7 +73,7 @@ schema:
   version: 2
 
 global:
-  language: cpp
+  language: cpp-qt
   application_name: MyApp
   organisation:
     name: myorg
@@ -175,44 +175,46 @@ features:
 
 ## Entity Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | required | Entity name (PascalCase) |
-| `inherits_from` | string | none | Parent entity for inheritance |
-| `only_for_heritage` | bool | false | Entity used only as base class |
-| `undoable` | bool | false | Enable undo/redo for this entity's controller |
-| `allow_direct_access` | bool | true | Generate files in `direct_access/` for UI access |
-| `single_model` | bool | false | Generate `Single{Entity}` QML wrapper (C++/Qt only) |
+| Option                | Type   | Default  | Description                                         |
+|-----------------------|--------|----------|-----------------------------------------------------|
+| `name`                | string | required | Entity name (PascalCase)                            |
+| `inherits_from`       | string | none     | Parent entity for inheritance                       |
+| `only_for_heritage`   | bool   | false    | Entity used only as base class                      |
+| `undoable`            | bool   | false    | Enable undo/redo for this entity's controller       |
+| `allow_direct_access` | bool   | true     | Generate files in `direct_access/` for UI access    |
+| `single_model`        | bool   | false    | Generate `Single{Entity}` QML wrapper (C++/Qt only) |
 
 ---
 ## Field options
 
-| Option | Type | Default | Description                                                                  |
-|--------|------|---------|------------------------------------------------------------------------------|
-| `name` | string | required | Field name (snake_case)                                                      |
-| `type` | string | required | Field type (see below)                                                       |
-| `entity` | string | none | For `entity` type, name of the entity    |
-| `relationship` | string | none | For `entity` type, relationship type (see below)  |                           
-| `required` | bool | false | For `one_to_one` and `many_to_one`, field must be explicitely set to true or false |
-| `strong` | bool | false | For `one_to_one`, `one_to_many`, and `ordered_one_to_many`, enable cascade deletion |
-| `list_model` | bool | false | For C++/Qt only, generate a C++ QAbastracctListModel and its QML wrapper for this relationship field |
-| `list_model_displayed_field` | string | none | For C++/Qt only, default display role for the generated ListModel |
+| Option                       | Type   | Default  | Description                                                                                        |
+|------------------------------|--------|----------|----------------------------------------------------------------------------------------------------|
+| `name`                       | string | required | Field name (snake_case)                                                                            |
+| `type`                       | string | required | Field type (see below)                                                                             |
+| `entity`                     | string | none     | For `entity` type, name of the entity                                                              |
+| `relationship`               | string | none     | For `entity` type, relationship type (see below)                                                   |                           
+| `optional`                   | bool   | false    | For `one_to_one` and `many_to_one`                                                                 |
+| `strong`                     | bool   | false    | For `one_to_one`, `one_to_many`, and `ordered_one_to_many`, enable cascade deletion                |
+| `list_model`                 | bool   | false    | For C++/Qt only, generate a C++ QAbstractListModel and its QML wrapper for this relationship field |
+| `list_model_displayed_field` | string | none     | For C++/Qt only, default display role for the generated ListModel                                  |
+| `enum_name`                  | string | none     | For `enum` type, name of the enum (PascalCase)                                                     |
+| `enum_values`                | array  | none     | For `enum` type, list of enum values (PascalCase)                                                  |
 
 
 ---
 
 ## Field Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `boolean` | True/false value | `is_active: true` |
-| `integer` | Whole number | `count: 42` |
-| `float` | Decimal number | `price: 19.99` |
-| `string` | Text | `name: "Alice"` |
-| `uuid` | Unique identifier | `id: "550e8400-..."` |
-| `datetime` | Date and time | `created_at: "2024-01-15T10:30:00"` |
-| `entity` | Relationship to another entity | See relationship section |
-| `enum` | Enumerated value | See enum section |
+| Type       | Description                    | Example                             |
+|------------|--------------------------------|-------------------------------------|
+| `boolean`  | True/false value               | `is_active: true`                   |
+| `integer`  | Whole number                   | `count: 42`                         |
+| `float`    | Decimal number                 | `price: 19.99`                      |
+| `string`   | Text                           | `name: "Alice"`                     |
+| `uuid`     | Unique identifier              | `id: "550e8400-..."`                |
+| `datetime` | Date and time                  | `created_at: "2024-01-15T10:30:00"` |
+| `entity`   | Relationship to another entity | See relationship section            |
+| `enum`     | Enumerated value               | See enum section                    |
 
 
 
@@ -235,46 +237,46 @@ Like entities, the enum name should be PascalCase. Enum values should also be Pa
 
 ## Relationship Fields
 
-This section will seem to be a bit repetitive, but for those not familiar with database relationships, it's important to get all the details right. And some people have different ways of understanding relationships, so I want to be as clear as possible.
+This section will seem to be a bit repetitive, but for those not familiar with database relationships, it's important to get all the details right. And some people have different ways of understanding relationships, so I want to be as clear as possible. Bear with me.
 
 When `type: entity`, additional options define the relationship:
 
 ### Relationship Types
 
-| Relationship | Junction Type | Return Type |
-|--------------|---------------|-------------|
-| `one_to_one` | OneToOne | `std::optional<int>` / `Option<i64>` |
-| `many_to_one` | ManyToOne | `std::optional<int>` / `Option<i64>` |
-| `one_to_many` | UnorderedOneToMany | `QList<int>` / `Vec<i64>` |
-| `ordered_one_to_many` | OrderedOneToMany | `QList<int>` / `Vec<i64>` |
-| `many_to_many` | UnorderedManyToMany | `QList<int>` / `Vec<i64>` |
+| Relationship          | Junction Type       | Return Type (C++ / Rust)             |
+|-----------------------|---------------------|--------------------------------------|
+| `one_to_one`          | OneToOne            | `std::optional<int>` / `Option<i64>` |
+| `many_to_one`         | ManyToOne           | `std::optional<int>` / `Option<i64>` |
+| `one_to_many`         | UnorderedOneToMany  | `QList<int>` / `Vec<i64>`            |
+| `ordered_one_to_many` | OrderedOneToMany    | `QList<int>` / `Vec<i64>`            |
+| `many_to_many`        | UnorderedManyToMany | `QList<int>` / `Vec<i64>`            |
 
 ### Relationship Flags
 
-| Flag | Valid for | Effect |
-|------|-----------|--------|
-| `required` | `one_to_one`, `many_to_one` | Validated on create/update (1..1 instead of 0..1) |
-| `strong` | `one_to_one`, `one_to_many`, `ordered_one_to_many` | Cascade deletion — removing parent removes children |
+| Flag       | Valid for                                          | Effect                                              |
+|------------|----------------------------------------------------|-----------------------------------------------------|
+| `optional` | `one_to_one`, `many_to_one`                        | Validated on create/update (0..1 instead of 1..1)   |
+| `strong`   | `one_to_one`, `one_to_many`, `ordered_one_to_many` | Cascade deletion — removing parent removes children |
 
 ### QML Generation Flags (C++/Qt only)
 
-| Flag | Effect |
-|------|--------|
-| `list_model` | Generate `{Entity}ListModelFrom{Parent}{Relationship}` |
-| `list_model_displayed_field` | Default display role for the list model |
+| Flag                         | Effect                                                 |
+|------------------------------|--------------------------------------------------------|
+| `list_model`                 | Generate `{Entity}ListModelFrom{Parent}{Relationship}` |
+| `list_model_displayed_field` | Default display role for the list model                |
 
 ### Validation Rules
 
-| Flag | `one_to_one`   | `many_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
-|------|----------------|---------------|---------------|-----------------------|----------------|
-| `required` | ✓/✗            | N.A.          | N.A.          | N.A.                  |  N.A. |
-| `strong` | ✓/✗ (see note) | ✗             | ✓/✗           | ✓/✗                    | ✗ |
+| Flag       | `one_to_one`   | `many_to_one` | `one_to_many` | `ordered_one_to_many` | `many_to_many` |
+|------------|----------------|---------------|---------------|-----------------------|----------------|
+| `optional` | ✓/✗            | ✓/✗           | N.A.          | N.A.                  | N.A.           |
+| `strong`   | ✓/✗ (see note) | N.A.          | ✓/✗           | ✓/✗                   | N.A.           |
 
-N.A.: Not applicable for this relationship type. Mark them whichever way you want it to be, there will be no change in generated code, or don't use them. When you write code, an empty list will show the want to hold no relationship.
+N.A.: Not applicable for this relationship type. There will be no change in generated code, or don't use them. When you write code, an empty list expresses the intent to hold no relationship.
 
-Note : If one_to_one holds a weak relationship (`strong: false`), it couldn't be required (must be `required: false`). There is the risk of a dangling reference if the entity targeted by the reference is deleted.
+Note: If one_to_one holds a weak relationship (`strong: false`), it couldn't be required (so, it must be `optional: true`). There is the risk of a dangling reference if the entity targeted by the reference is deleted.
 
-Invalid combinations are rejected at manifest parsing.
+Some invalid combinations are rejected at manifest parsing. This validation step is still in the works.
 
 ---
 
@@ -288,7 +290,7 @@ Database relationships describe how entities connect. Two concepts matter:
 
 **Direction** — Which side "owns" the relationship?
 - The **parent** side holds the list of children
-- The **child** side holds a reference back to its parent
+- The **child** side holds a reference back to its parent (in Qleany case, this reference is hidden from the user)
 
 The reality in Qleany is a bit more nuanced, but this mental model helps understand how to model your data.
 ```
@@ -331,37 +333,38 @@ Like said earlier, the reality is a bit more nuanced:
 - These junction tables can be accessed by parent and child tables equally.
 - This means that for every relationship, both sides can see each other (no true "back-reference" concept)
 - The relationship type defines how the junction table behaves, and how the parent and child entities see each other.
-- In the deeper code, there is always the mentions of a left entity and a right entity (child and parent respectively in the mental model).
+- In the deeper code, there is always the mentions of a left entity and a right entity (parent and child respectively in the mental model).
 
-It may be easier to understand: all relationships are defined from the perspective of the entity holding the field. This means that:
-- For `one_to_one`, the entity with the field is one side, the referenced entity is the other side.
-- For `many_to_one`, the entity with the field is the "many" side, the referenced entity is the "one" side.
-- For `one_to_many` and `ordered_one_to_many`, the entity with the field is the "one" side, the referenced entity is the "many" side.
-- For `many_to_many`, both sides are "many".
+This may be easier to understand: all relationships are defined from the perspective of the entity holding the field. This means that:
+- For `one_to_one`, the entity with the field is one side, the referenced entity is the other side. `Car.brand: EntityId`
+- For `many_to_one`, the entity with the field is the "many" side (several entities of the same type), the referenced entity is the "one" side. `Car.brand: EntityId`
+- For `one_to_many` and `ordered_one_to_many`, the entity with the field is the "one" side, the referenced entity is the "many" side. `Car.brand: Vec<EntityId>`
+- For `many_to_many`, both sides are "many". `Car.brand: Vec<EntityId>`
 
 Yes, database engineers might cringe at this, but this greatly simplifies the code generation and the overall mental model when designing your entities. They can cringe more when I say there is no notion of foreign keys in Qleany internal database.
 
 **When to use each:**
 
-| Relationship | Use when...                           | Example |
-|--------------|---------------------------------------|---------|
-| `one_to_one` | Exactly one related entity, exclusive | User → Profile |
-| `many_to_one` | Many entities reference one child     | Car → Brand, Comment → Post |
-| `one_to_many` | Parent owns a collection of children  | Binder → Items, Post → Comments |
+| Relationship          | Use when...                           | Example                           |
+|-----------------------|---------------------------------------|-----------------------------------|
+| `one_to_one`          | Exactly one related entity, exclusive | User → Profile                    |
+| `many_to_one`         | Many entities reference one child     | Car → Brand, Comment → Post       |
+| `one_to_many`         | Parent owns a collection of children  | Binder → Items, Post → Comments   |
 | `ordered_one_to_many` | Same as above, but order matters      | Book → Chapters, Playlist → Songs |
-| `many_to_many` | Entities share references both ways   | Items ↔ Tags, Students ↔ Courses |
+| `many_to_many`        | Entities share references both ways   | Items ↔ Tags, Students ↔ Courses  |
 
 There is no `ordered_many_to_many` because I'm not mad enough to handle that complexity.
 
 ### Relationship Examples
 
 ```yaml
-# Exclusive single reference (0..1) — each side has at most one
+# Exclusive single reference (0..1) — each side has at most one. UserProfile is owned.
 - name: profile
   type: entity
   entity: UserProfile
   relationship: one_to_one
   strong: true
+  optional: true
 
 # Back-reference to parent (N:1) — many children point to one parent
 - name: parentItem
@@ -374,7 +377,8 @@ There is no `ordered_many_to_many` because I'm not mad enough to handle that com
   type: entity
   entity: Binder
   relationship: many_to_one
-  required: true
+  # implied:
+  optional: false
 
 # Unordered children with cascade delete (1:N)
 - name: tags
@@ -399,9 +403,9 @@ There is no `ordered_many_to_many` because I'm not mad enough to handle that com
 
 ### Weak Relationships
 
-Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true` because the owning side controls cascade deletion.
+Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true`. In Qleany, the owning side (with a `strong` relationship) controls cascade deletion. For `many_to_one` and `many_to_many`, theorically, it would mean that a child would be deleted only if there was no parent left to "own" it. Too difficult to implement, so no.
 
-Dev note: theoretically, you can play with the junction table code base to support many_to_one with strong ownership, but that would be a nightmare to maintain and reason about. So no.
+Dev note: theoretically, you can play with the junction table code base to support many_to_one with strong ownership, but that would be a nightmare to maintain and reason about.
 
 ```yaml
 entities:
@@ -427,7 +431,6 @@ entities:
         type: entity
         entity: Binder
         relationship: many_to_one
-        required: true
 
       - name: tags                        # Shared reference (weak many-to-many)
         type: entity
@@ -455,16 +458,20 @@ features:
 
 ### Use Case Options
 
-| Option | Type | Default | Description                                                        |
-|--------|------|---------|--------------------------------------------------------------------|
-| `name` | string | required | Use case name (snake_case)                                         |
-| `undoable` | bool | false | Generate undo/redo command scaffolding                             |
-| `read_only` | bool | false | No data modification (affects generated code)                      |
-| `long_operation` | bool | false | Async execution with progress (Rust only)                          |
-| `entities` | list | [] | Entities this use case works with                                  |
+| Option           | Type   | Default  | Description                                   |
+|------------------|--------|----------|-----------------------------------------------|
+| `name`           | string | required | Use case name (snake_case)                    |
+| `undoable`       | bool   | false    | Generate undo/redo command scaffolding        |
+| `read_only`      | bool   | false    | No data modification (affects generated code) |
+| `long_operation` | bool   | false    | Async execution with progress (Rust only)     |
+| `entities`       | list   | []       | Entities this use case works with             |
+| `dto_in`         | object | none     | Input DTO for this use case                   |
+| `dto_out`        | object | none     | Output DTO for this use case                  |
 
 
-In Rust, `entities` are doing a bit of the legwork to define which repositories are injected into the use case struct and prepare the use of a special macro `macros::uow_action` to simplify unit of work handling. These macro lines must be adapted in your use cases files, and the exact same macros must be repeated in these use cases' unit of work files. Commentary lines will be generated to help you find and adapt these lines.
+In Rust, `entities` are doing a bit of the legwork for you to define which repositories are injected into the use case struct and prepare the use of a special macro `macros::uow_action` to simplify unit of work handling. These macro lines must be adapted in your use cases files, and the exact same macros must be repeated in these use cases' unit of work files. Commentary lines will be generated to help you find and adapt these lines.
+
+Similar macros are offered on the C++/Qt side.
 
 ### DTOs
 
@@ -487,7 +494,7 @@ use_cases:
             - Full
             - Incremental
     dto_out:
-      name: ImportResultDto
+      name: ImportReturnDto
       fields:
         - name: imported_count
           type: integer
@@ -496,16 +503,35 @@ use_cases:
           is_list: true
 ```
 
-You can't put entities in DTOs. Only primitive types are allowed because entities are tied to the database and business logic, while DTOs are simple data carriers. DTOs 
+You can't put entities in DTOs. Only primitive types are allowed because entities are tied to the database and business logic, while DTOs are simple data carriers. Think of it as a way to control the data flow between the UI and the business logic. You don't want to expose a password to the user UI just because it's in an entity.
 
 ### DTO Field Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | required | Field name (snake_case) |
-| `type` | string | required | Field type (boolean, integer, float, string, uuid, datetime) |
-| `is_list` | bool | false | Field is a list/array |
-| `is_nullable` | bool | false | Field can be null/optional |
-| `enum_name` | string | none | For `enum` type, name of the enum |
-| `enum_values` | list | none | For `enum` type, list of possible values |
+| Option        | Type   | Default  | Description                                                  |
+|---------------|--------|----------|--------------------------------------------------------------|
+| `name`        | string | required | Field name (snake_case)                                      |
+| `type`        | string | required | Field type (boolean, integer, float, string, uuid, datetime) |
+| `is_list`     | bool   | false    | Field is a list/array                                        |
+| `optional`    | bool   | false    | Field can be Option<>/std::optional                          |
+| `enum_name`   | string | none     | For `enum` type, name of the enum                            |
+| `enum_values` | list   | none     | For `enum` type, list of possible values                     |
 
+
+### User Interface Options
+
+```yaml
+
+  user_interface:
+    rust_cli: true
+    rust_slint: true
+    cpp_qt_qtwidgets: false
+    cpp_qt_qtquick: false
+    cpp_qt_lomiri: false
+    cpp_qt_kirigami: false
+
+
+```
+
+These options allow the generation of scaffolding for the UI. They will each live in their own separate folders, also separate from the common backend code.
+
+One backend, many frontends.

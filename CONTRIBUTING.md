@@ -44,7 +44,7 @@ This adds a `Signed-off-by: Your Name <your.email@example.com>` line to your com
 
 ### Setting up automatic sign-off
 
-You can configure Git to always sign off your commits for this repository:
+You can configure Git to always set your identity for your commits for this repository:
 
 ```bash
 git config user.name "Your Name"

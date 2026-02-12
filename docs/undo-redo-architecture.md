@@ -8,20 +8,20 @@ Entities in Qleany form a tree structure based on strong (ownership) relationshi
 
 Before diving into the details, here is a summary of the two approaches Qleany supports:
 
-| Aspect | Approach A: Document-Scoped | Approach B: Panel-Scoped |
-|--------|----------------------------|--------------------------|
-| Stack lifecycle | Created when document opens, destroyed when it closes | Created when panel gains focus, cleared on focus loss or after undo |
-| History depth | Unlimited | One command |
-| Redo behavior | Full redo history until new action | Single-use, lost on focus change |
-| Deletion handling | Optional stack-based or soft-delete with toast | Soft-delete with timed toast |
-| User expectation | "Undo my last change to this document" | "Undo my immediate mistake" |
-| Best for | IDEs, creative suites, document editors | Form-based apps, simple tools |
+| Aspect            | Approach A: Document-Scoped                           | Approach B: Panel-Scoped                                            |
+|-------------------|-------------------------------------------------------|---------------------------------------------------------------------|
+| Stack lifecycle   | Created when document opens, destroyed when it closes | Created when panel gains focus, cleared on focus loss or after undo |
+| History depth     | Unlimited                                             | One command                                                         |
+| Redo behavior     | Full redo history until new action                    | Single-use, lost on focus change                                    |
+| Deletion handling | Optional stack-based or soft-delete with toast        | Soft-delete with timed toast                                        |
+| User expectation  | "Undo my last change to this document"                | "Undo my immediate mistake"                                         |
+| Best for          | IDEs, creative suites, document editors               | Form-based apps, simple tools                                       |
 
 Qleany itself uses Approach B. Skribisto uses Approach A.
 
 ## My Recommendations
 
-Do not use a single, linear undo-redo stack for the entire application except in the most basic cases. Like an admiral said : "It's a trap!" 
+Do not use a single, linear undo-redo stack for the entire application except in the most basic cases. As Admiral Ackbar said: "It's a trap!" 
 
 Think about interactions from the user's perspective: they expect undo and redo to apply to specific contexts rather than globally. A monolithic stack leads to confusion and unintended consequences. If a user is editing a document and undoes an action, they do not expect that to also undo changes in unrelated settings or other documents.
 
@@ -63,11 +63,11 @@ Redo is effectively single-use in this approach. After undoing, the user can red
 
 With the approach chosen, configure your entities using these properties relevant to undo-redo:
 
-| Property | Type | Default | Effect |
-|----------|------|---------|--------|
-| `undoable` | bool | false | Adds undo/redo support to the entity's controller |
-| `allow_direct_access` | bool | true | Generates entity files in `direct_access/` for UI access |
-| `single_model` | bool | false | Generates `Single{Entity}` wrapper for QML (C++/Qt only) |
+| Property              | Type | Default | Effect                                                   |
+|-----------------------|------|---------|----------------------------------------------------------|
+| `undoable`            | bool | false   | Adds undo/redo support to the entity's controller        |
+| `allow_direct_access` | bool | true    | Generates entity files in `direct_access/` for UI access |
+| `single_model`        | bool | false   | Generates `Single{Entity}` wrapper for QML (C++/Qt only) |
 
 ## Undo-Redo Rules
 
@@ -340,16 +340,16 @@ For Approach A, you may alternatively implement deletion undo through the stack 
 
 The key questions to ask are: Do you have data that should not participate in undo? Do users expect deep history or just immediate mistake recovery? Will users work on multiple independent documents simultaneously?
 
-| Application Type | Entity Configuration | Recommended Approach |
-|------------------|---------------------|----------------------|
-| Simple utility | No undo-redo | Neither |
-| Form-based app | Single undoable trunk | Approach B |
-| Document editor | Single undoable trunk | Approach A |
-| Multi-document IDE | Multiple undoable trunks | Approach A |
-| Creative suite | Multiple undoable trunks | Approach A |
+| Application Type   | Entity Configuration     | Recommended Approach |
+|--------------------|--------------------------|----------------------|
+| Simple utility     | No undo-redo             | Neither              |
+| Form-based app     | Single undoable trunk    | Approach B           |
+| Document editor    | Single undoable trunk    | Approach A           |
+| Multi-document IDE | Multiple undoable trunks | Approach A           |
+| Creative suite     | Multiple undoable trunks | Approach A           |
 
 Settings, preferences, search results, and caches belong in non-undoable trunks. User-created content belongs in undoable trunks. Temporary UI state belongs outside the entity tree entirely or in non-undoable trunks.
 
 ---
 
-For implementation details of the undo/redo system including command infrastructure, async execution, and composite commands, see [Generated Infrastructure](generated-code.md).
+For implementation details of the undo/redo system including command infrastructure, async execution, and composite commands, see [Generated Infrastructure - C++/Qt](generated-code-cpp-qt.md) or [Generated Infrastructure - Rust](generated-code-rust.md).
