@@ -331,38 +331,125 @@ fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: 
     // Get all files and filter by group
 
     match list_files_helper(app, app_context) {
-        Ok(return_dto) => {
-            // If "All" is selected (index 0), show all files
-            let filtered_files: Vec<ListItem> = if selected_group_str == "All" {
-                return_dto
-                    .file_names
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, file_name)| ListItem {
-                        id: return_dto.file_ids[idx] as i32,
-                        text: SharedString::from(file_name.as_str()),
-                        subtitle: SharedString::default(),
-                        checked: true,
-                    })
-                    .collect()
+        Ok(file_list) => {
+            let filtered_indices: Vec<usize> = if selected_group_str == "All" {
+                (0..file_list.file_names.len()).collect()
             } else {
-                // Filter by group using file_groups from DTO
-                return_dto
+                file_list
                     .file_names
                     .iter()
                     .enumerate()
-                    .filter(|(idx, _)| return_dto.file_groups[*idx] == selected_group_str)
-                    .map(|(idx, file_name)| ListItem {
-                        id: return_dto.file_ids[idx] as i32,
-                        text: SharedString::from(file_name.as_str()),
-                        subtitle: SharedString::default(),
-                        checked: true,
-                    })
+                    .filter(|(idx, _)| file_list.file_groups[*idx] == selected_group_str)
+                    .map(|(idx, _)| idx)
                     .collect()
             };
 
-            let file_model = std::rc::Rc::new(VecModel::from(filtered_files));
+            let file_items: Vec<ListItem> = filtered_indices
+                .iter()
+                .map(|&idx| ListItem {
+                    id: file_list.file_ids[idx] as i32,
+                    text: SharedString::from(file_list.file_names[idx].as_str()),
+                    subtitle: SharedString::default(),
+                    checked: true,
+                })
+                .collect();
+
+            // Compute text prefixes and bolds for filtered files
+            let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
+                filtered_indices
+                    .iter()
+                    .map(|&idx| {
+                        let file_name = &file_list.file_names[idx];
+                        if let Some(last_slash) = file_name.rfind('/') {
+                            let prefix = &file_name[..=last_slash];
+                            let bold = &file_name[last_slash + 1..];
+                            (SharedString::from(prefix), SharedString::from(bold))
+                        } else {
+                            (
+                                SharedString::default(),
+                                SharedString::from(file_name.as_str()),
+                            )
+                        }
+                    })
+                    .unzip();
+
+            // Compute elided texts for long file names
+            let max_text_length = 50;
+            let (elided_texts, elided_prefixes, elided_bolds): (
+                Vec<SharedString>,
+                Vec<SharedString>,
+                Vec<SharedString>,
+            ) = filtered_indices
+                .iter()
+                .map(|&idx| {
+                    let file_name = &file_list.file_names[idx];
+                    let char_count = file_name.chars().count();
+                    if char_count > max_text_length {
+                        let suffix: String = file_name
+                            .chars()
+                            .skip(char_count - max_text_length)
+                            .collect();
+                        let elided_full = format!("...{}", suffix);
+
+                        if let Some(last_slash) = elided_full.rfind('/') {
+                            let prefix = &elided_full[..=last_slash];
+                            let bold = &elided_full[last_slash + 1..];
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::from(prefix),
+                                SharedString::from(bold),
+                            )
+                        } else {
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::default(),
+                                SharedString::from(elided_full.as_str()),
+                            )
+                        }
+                    } else {
+                        (
+                            SharedString::default(),
+                            SharedString::default(),
+                            SharedString::default(),
+                        )
+                    }
+                })
+                .fold(
+                    (Vec::new(), Vec::new(), Vec::new()),
+                    |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
+                        texts.push(text);
+                        prefixes.push(prefix);
+                        bolds.push(bold);
+                        (texts, prefixes, bolds)
+                    },
+                );
+
+            let selected_count = file_items.len() as i32;
+
+            let file_model = std::rc::Rc::new(VecModel::from(file_items));
             app.global::<AppState>().set_file_cr_list(file_model.into());
+
+            let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
+            let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
+            app.global::<AppState>()
+                .set_file_text_prefixes(text_prefixes_model.into());
+            app.global::<AppState>()
+                .set_file_text_bolds(text_bolds_model.into());
+
+            let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
+            app.global::<AppState>()
+                .set_file_elided_texts(elided_texts_model.into());
+
+            let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+            app.global::<AppState>()
+                .set_file_elided_prefixes(elided_prefixes_model.into());
+
+            let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
+            app.global::<AppState>()
+                .set_file_elided_bolds(elided_bolds_model.into());
+
+            app.global::<AppState>()
+                .set_selected_files_count(selected_count);
 
             // Reset file selection
             app.global::<AppState>().set_selected_file_index(-1);
@@ -705,9 +792,8 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
 
-                // When a group is checked, uncheck all other groups and display only files in this group
+                    // When a group is checked, uncheck all other groups and display only files in this group
                 let group_list = app.global::<AppState>().get_group_cr_list();
-                let group_names = app.global::<AppState>().get_group_list();
 
                 // Update group checkboxes: only the selected group is checked
                 let mut updated_groups: Vec<ListItem> = Vec::new();
@@ -721,157 +807,16 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
                 app.global::<AppState>()
                     .set_group_cr_list(group_model.into());
 
-                // Get the selected group name
-                let selected_group_name = if group_id == 0 {
-                    "All".to_string()
-                } else if (group_id as usize) < group_names.row_count() {
-                    group_names
-                        .row_data(group_id as usize)
-                        .unwrap_or_default()
-                        .to_string()
-                } else {
-                    return;
-                };
+                // Use filter_files_by_group to update all models
+                filter_files_by_group(&app, &ctx, group_id);
 
-                // Get all files and filter to show only files from the selected group (like clicking on the group)
-
-                if let Ok(file_list) = list_files_helper(&app, &ctx) {
-                    // Filter files by group (like clicking on the group item)
-                    let filtered_indices: Vec<usize> = file_list
-                        .file_names
-                        .iter()
-                        .enumerate()
-                        .filter(|(idx, _)| {
-                            selected_group_name == "All"
-                                || file_list.file_groups[*idx] == selected_group_name
-                        })
-                        .map(|(idx, _)| idx)
-                        .collect();
-
-                    let file_items: Vec<ListItem> = filtered_indices
-                        .iter()
-                        .map(|&idx| {
-                            ListItem {
-                                id: file_list.file_ids[idx] as i32,
-                                text: SharedString::from(file_list.file_names[idx].as_str()),
-                                subtitle: SharedString::default(),
-                                checked: true, // All displayed files are checked
-                            }
-                        })
-                        .collect();
-
-                    // Compute text prefixes and bolds for filtered files
-                    let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
-                        filtered_indices
-                            .iter()
-                            .map(|&idx| {
-                                let file_name = &file_list.file_names[idx];
-                                if let Some(last_slash) = file_name.rfind('/') {
-                                    let prefix = &file_name[..=last_slash];
-                                    let bold = &file_name[last_slash + 1..];
-                                    (SharedString::from(prefix), SharedString::from(bold))
-                                } else {
-                                    (
-                                        SharedString::default(),
-                                        SharedString::from(file_name.as_str()),
-                                    )
-                                }
-                            })
-                            .unzip();
-
-                    // Compute elided texts for long file names
-                    let max_text_length = 50;
-                    let (elided_texts, elided_prefixes, elided_bolds): (
-                        Vec<SharedString>,
-                        Vec<SharedString>,
-                        Vec<SharedString>,
-                    ) = filtered_indices
-                        .iter()
-                        .map(|&idx| {
-                            let file_name = &file_list.file_names[idx];
-                            let char_count = file_name.chars().count();
-                            if char_count > max_text_length {
-                                let suffix: String = file_name
-                                    .chars()
-                                    .skip(char_count - max_text_length)
-                                    .collect();
-                                let elided_full = format!("...{}", suffix);
-
-                                // For bold display, split elided text at last slash
-                                if let Some(last_slash) = elided_full.rfind('/') {
-                                    let prefix = &elided_full[..=last_slash];
-                                    let bold = &elided_full[last_slash + 1..];
-                                    (
-                                        SharedString::from(elided_full.as_str()),
-                                        SharedString::from(prefix),
-                                        SharedString::from(bold),
-                                    )
-                                } else {
-                                    (
-                                        SharedString::from(elided_full.as_str()),
-                                        SharedString::default(),
-                                        SharedString::from(elided_full.as_str()),
-                                    )
-                                }
-                            } else {
-                                (
-                                    SharedString::default(),
-                                    SharedString::default(),
-                                    SharedString::default(),
-                                )
-                            }
-                        })
-                        .fold(
-                            (Vec::new(), Vec::new(), Vec::new()),
-                            |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
-                                texts.push(text);
-                                prefixes.push(prefix);
-                                bolds.push(bold);
-                                (texts, prefixes, bolds)
-                            },
-                        );
-
-                    // Update selected files count
-                    let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
-
-                    let file_model = std::rc::Rc::new(VecModel::from(file_items));
-                    app.global::<AppState>().set_file_cr_list(file_model.into());
-
-                    let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
-                    let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
-                    app.global::<AppState>()
-                        .set_file_text_prefixes(text_prefixes_model.into());
-                    app.global::<AppState>()
-                        .set_file_text_bolds(text_bolds_model.into());
-
-                    let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
-                    app.global::<AppState>()
-                        .set_file_elided_texts(elided_texts_model.into());
-
-                    let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
-                    app.global::<AppState>()
-                        .set_file_elided_prefixes(elided_prefixes_model.into());
-
-                    let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
-                    app.global::<AppState>()
-                        .set_file_elided_bolds(elided_bolds_model.into());
-
-                    app.global::<AppState>()
-                        .set_selected_files_count(selected_count);
-
-                    // Reset file selection and code preview
-                    app.global::<AppState>().set_selected_file_index(-1);
-                    app.global::<AppState>()
-                        .set_code_preview(SharedString::from(""));
-
-                    // Re-apply manifest_is_saved after a short delay
-                    Timer::single_shot(std::time::Duration::from_millis(800), move || {
-                        if was_saved {
-                            app.global::<AppState>().set_manifest_is_saved(true);
-                            println!("Re-applied manifest_is_saved after refresh");
-                        }
-                    });
-                }
+                // Re-apply manifest_is_saved after a short delay
+                Timer::single_shot(std::time::Duration::from_millis(800), move || {
+                    if was_saved {
+                        app.global::<AppState>().set_manifest_is_saved(true);
+                        println!("Re-applied manifest_is_saved after refresh");
+                    }
+                });
             }
         }
     });
