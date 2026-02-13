@@ -792,7 +792,7 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
 
-                    // When a group is checked, uncheck all other groups and display only files in this group
+                // When a group is checked, uncheck all other groups and display only files in this group
                 let group_list = app.global::<AppState>().get_group_cr_list();
 
                 // Update group checkboxes: only the selected group is checked
@@ -923,8 +923,7 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         .map(|&idx| {
                             let file_name = &file_list.file_names[idx];
                             let file_group = &file_list.file_groups[idx];
-                            let is_checked =
-                                group_name == "All" || file_group == &group_name;
+                            let is_checked = group_name == "All" || file_group == &group_name;
                             ListItem {
                                 id: file_list.file_ids[idx] as i32,
                                 text: SharedString::from(file_name.as_str()),

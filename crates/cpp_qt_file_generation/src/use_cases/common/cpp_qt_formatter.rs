@@ -54,7 +54,10 @@ pub(crate) fn find_clang_format() -> io::Result<PathBuf> {
 
 /// Run clang-format on the provided source and return the formatted code.
 /// If clang-format is not available or fails, returns the original source.
-pub(crate) fn clang_format_string<'a>(source: &'a str, _config_path: Option<&'a str>) -> Cow<'a, str> {
+pub(crate) fn clang_format_string<'a>(
+    source: &'a str,
+    _config_path: Option<&'a str>,
+) -> Cow<'a, str> {
     // Best-effort: if we can't find clang-format, just return the original
     let clang_format_path = match find_clang_format() {
         Ok(p) => p,

@@ -27,7 +27,10 @@ pub fn generate_cpp_qt_code(
 }
 
 /// Start generating c++/qt files (long operation)
-pub fn generate_cpp_qt_files(ctx: &AppContext, dto: &GenerateCppQtFilesDto) -> Result<String, String> {
+pub fn generate_cpp_qt_files(
+    ctx: &AppContext,
+    dto: &GenerateCppQtFilesDto,
+) -> Result<String, String> {
     cpp_qt_file_generation_controller::generate_cpp_qt_files(
         &ctx.db_context,
         &ctx.event_hub,
@@ -59,5 +62,10 @@ pub fn get_generate_cpp_qt_files_result(
         &ctx.long_operation_manager.lock().unwrap(),
         operation_id,
     )
-    .map_err(|e| format!("Error while getting c++/qt files generation result: {:?}", e))
+    .map_err(|e| {
+        format!(
+            "Error while getting c++/qt files generation result: {:?}",
+            e
+        )
+    })
 }

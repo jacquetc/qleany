@@ -1007,15 +1007,20 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                         field.entity = None;
                         field.relationship = FieldRelationshipType::OneToOne;
                         field.strong = false;
-                        app.global::<EntitiesTabState>().set_selected_field_entity_index(-1);
-                        app.global::<EntitiesTabState>().set_selected_field_strong(false);
-                        app.global::<EntitiesTabState>().set_selected_field_relationship("one_to_one".into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_entity_index(-1);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_strong(false);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_relationship("one_to_one".into());
                     }
                     if field.field_type != FieldType::Enum {
                         field.enum_values = None;
                         field.enum_name = None;
-                        app.global::<EntitiesTabState>().set_selected_field_enum_name("".into());
-                        app.global::<EntitiesTabState>().set_selected_field_enum_values("".into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_enum_name("".into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_enum_values("".into());
                     }
                 });
             }
@@ -1056,22 +1061,26 @@ fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
                             || field.relationship == FieldRelationshipType::ManyToMany
                         {
                             field.strong = false;
-                            app.global::<EntitiesTabState>().set_selected_field_strong(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_strong(false);
                         }
                         if field.relationship == FieldRelationshipType::OrderedOneToMany
                             || field.relationship == FieldRelationshipType::OneToMany
                             || field.relationship == FieldRelationshipType::ManyToMany
                         {
                             field.optional = false;
-                            app.global::<EntitiesTabState>().set_selected_field_optional(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_optional(false);
                         }
                         if field.relationship == FieldRelationshipType::OneToOne
                             || field.relationship == FieldRelationshipType::ManyToOne
                         {
                             field.list_model = false;
                             field.list_model_displayed_field = None;
-                            app.global::<EntitiesTabState>().set_selected_field_list_model(false);
-                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_list_model(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_list_model_displayed_field("".into());
                         }
                     });
                 }
@@ -1168,10 +1177,12 @@ fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
                         field.list_model = value;
                         if field.list_model {
                             field.list_model_displayed_field = Some("name".into());
-                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("name".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_list_model_displayed_field("name".into());
                         } else {
                             field.list_model_displayed_field = None;
-                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_field_list_model_displayed_field("".into());
                         }
                     });
                 }
@@ -1322,13 +1333,18 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                             entity.undoable = false;
                             entity.single_model = false;
                             entity.inherits_from = None;
-                            app.global::<EntitiesTabState>().set_selected_entity_undoable(false);
-                            app.global::<EntitiesTabState>().set_selected_entity_single_model(false);
-                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from(-1);
-                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from_value("None".into());
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_undoable(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_single_model(false);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_inherits_from(-1);
+                            app.global::<EntitiesTabState>()
+                                .set_selected_entity_inherits_from_value("None".into());
                         }
                         entity.allow_direct_access = !value;
-                        app.global::<EntitiesTabState>().set_selected_entity_allow_direct_access(!value);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_entity_allow_direct_access(!value);
 
                         let result = entity_commands::update_entity(
                             &ctx,

@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use common::types::EntityId;
 use crate::app_context::AppContext;
 use crate::commands::workspace_commands;
 use crate::{App, AppState};
+use common::types::EntityId;
 use slint::ComponentHandle;
+use std::sync::Arc;
 
 /// Helper function to get the global_id from root
 pub fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<EntityId> {

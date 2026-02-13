@@ -188,7 +188,6 @@ impl ListCppQtFilesUseCase {
             field: None,
         });
 
-
         files.push(File {
             id: 0,
             name: "controller_command_helpers.h".to_string(),
@@ -576,7 +575,6 @@ impl ListCppQtFilesUseCase {
             use_case: None,
             field: None,
         });
-
 
         files.push(File {
             id: 0,
@@ -1385,11 +1383,7 @@ impl ListCppQtFilesUseCase {
                     field: None,
                 });
 
-
-                let relative_path = format!(
-                    "{}/{}/use_cases/",
-                    prefix, feature_snake_name
-                );
+                let relative_path = format!("{}/{}/use_cases/", prefix, feature_snake_name);
 
                 files.push(File {
                     id: 0,

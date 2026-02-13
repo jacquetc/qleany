@@ -437,36 +437,19 @@ impl SnapshotBuilder {
     }
 
     fn get_dto_field_cpp_qt_type(dto_field: &DtoField) -> String {
-            match dto_field.field_type {
-                DtoFieldType::Boolean => {
-                    "bool".to_string()
-                }
-                DtoFieldType::Integer => {
-                    "int".to_string()
-                }
-                DtoFieldType::UInteger => {
-                    "uint".to_string()
-                }
-                DtoFieldType::Float => {
-                    "float".to_string()
-                }
-                DtoFieldType::String => {
-                    "QString".to_string()
-                }
-                DtoFieldType::Uuid => {
-                    "QUuid".to_string()
-                }
-                DtoFieldType::DateTime => {
-                    "QDateTime".to_string()
-                }
-                DtoFieldType::Enum => dto_field
-                    .enum_name
-                    .clone()
-                    .unwrap_or(
-                        "enum_name not set"
-                            .to_string(),
-                    ),
-            }
+        match dto_field.field_type {
+            DtoFieldType::Boolean => "bool".to_string(),
+            DtoFieldType::Integer => "int".to_string(),
+            DtoFieldType::UInteger => "uint".to_string(),
+            DtoFieldType::Float => "float".to_string(),
+            DtoFieldType::String => "QString".to_string(),
+            DtoFieldType::Uuid => "QUuid".to_string(),
+            DtoFieldType::DateTime => "QDateTime".to_string(),
+            DtoFieldType::Enum => dto_field
+                .enum_name
+                .clone()
+                .unwrap_or("enum_name not set".to_string()),
+        }
     }
 
     pub(crate) fn for_file(
@@ -1070,7 +1053,8 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
+                                            let cpp_qt_base_type =
+                                                SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                             let cpp_qt_type = if df.is_list {
                                                 format!("QList<{}>", &cpp_qt_base_type)
                                             } else {
@@ -1105,7 +1089,8 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
+                                            let cpp_qt_base_type =
+                                                SnapshotBuilder::get_dto_field_cpp_qt_type(df);
                                             let cpp_qt_type = if df.is_list {
                                                 format!("QList<{}>", &cpp_qt_base_type)
                                             } else {
@@ -1169,10 +1154,10 @@ mod tests {
             file: FileVM {
                 inner: File {
                     id: 1,
-                    name: "Cargo.toml".into(),
+                    name: "CMakeLists.txt".into(),
                     relative_path: "".into(),
                     group: "root".into(),
-                    template_name: "root_cargo".into(),
+                    template_name: "root_cmake".into(),
                     feature: None,
                     entity: None,
                     use_case: None,
@@ -1211,8 +1196,8 @@ mod tests {
             dtos: IndexMap::new(),
         };
         context.insert("s", &snapshot);
-        let code = tera.render("root_cargo", &context).unwrap();
-        println!("{}", code);
+        let code = tera.render("root_cmake", &context).unwrap();
+        assert!(code.contains("cmake_minimum_required"));
     }
 
     #[test]
@@ -1225,7 +1210,7 @@ mod tests {
             name: "User DTOs".to_string(),
             relative_path: "src/user_dtos.rs".to_string(),
             group: "entities".to_string(),
-            template_name: "entity_dtos".to_string(),
+            template_name: "dtos_h".to_string(),
             feature: None,
             entity: Some(entity_id),
             use_case: None,
@@ -1361,11 +1346,11 @@ mod tests {
         // Workaround: the template compares against `null`, which Tera treats as an identifier; provide it explicitly
         context.insert("null", &serde_json::Value::Null);
         let code = tera
-            .render("entity_dtos", &context)
+            .render("dtos_h", &context)
             .expect("rendering entity_dtos");
         println!("{}", code);
 
         // Basic assertion: when file has no bound entity, template emits a clear comment
-        assert!(!code.contains("No entity bound to this file"));
+        assert!(code.contains("#include"));
     }
 }
