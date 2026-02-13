@@ -20,26 +20,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install mdBook
         run: |
           mkdir -p "$HOME/.local/bin"
-          curl -sSL https://github.com/rust-lang/mdBook/releases/latest/download/mdbook-v0.4.44-x86_64-unknown-linux-gnu.tar.gz \
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz \
             | tar -xz -C "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Copy root-level docs into mdBook source
         run: |
           cp README.md docs/introduction.md
+          sed -i 's|(docs/|(|g' docs/introduction.md
           cp CONTRIBUTING.md docs/contributing.md
           cp DCO.md docs/dco.md
 
       - name: Build documentation
         run: mdbook build
 
+      - name: Generate sitemap.xml
+        run: |
+          BASE_URL="https://jacquetc.github.io/qleany"
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > book/sitemap.xml
+          echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> book/sitemap.xml
+          find book -name '*.html' -not -name 'print.html' -not -name '404.html' | sort | while read -r file; do
+            path="${file#book/}"
+            echo "  <url><loc>${BASE_URL}/${path}</loc></url>" >> book/sitemap.xml
+          done
+          echo '</urlset>' >> book/sitemap.xml
+
+      - name: Add Google Search Console verification
+        run: cp .github/google5d0f63f0638b11c8.html book/
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: book  # default mdBook output directory
 
