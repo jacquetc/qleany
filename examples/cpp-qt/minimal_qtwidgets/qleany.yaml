@@ -6,8 +6,8 @@ global:
   language: cpp-qt
   application_name: CarLot
   organisation:
-    name: MyCompany
-    domain: com.mycompany
+    name: FernTech
+    domain: eu.ferntech
   prefix_path: src
 
 entities:
@@ -37,11 +37,6 @@ entities:
       - name: customers
         type: entity
         entity: Customer
-        relationship: one_to_many
-        strong: true
-      - name: sales
-        type: entity
-        entity: Sale
         relationship: one_to_many
         strong: true
 
@@ -81,47 +76,83 @@ entities:
         type: string
         optional: true
 
-  # Sale entity - transactions between customers and cars
-  - name: Sale
-    inherits_from: EntityBase
-    allow_direct_access: true
-    undoable: true
-    fields:
-      - name: car
-        type: entity
-        entity: Car
-        relationship: many_to_one
-        optional: true
-      - name: customer
-        type: entity
-        entity: Customer
-        relationship: many_to_one
-        optional: true
-      - name: sale_date
-        type: datetime
-      - name: price
-        type: float
-
 features:
-  - name: inventory_management
+  - name: car_management
     use_cases:
-      - name: import_inventory
+      - name: list_cars
         read_only: true
-        entities: [Root, Car]
-        dto_in:
-          name: ImportInventoryDto
+        entities: [Car]
+        dto_out:
+          name: CarListDto
           fields:
-            - name: file_path
-              type: string
+            - name: count
+              type: integer
 
-      - name: export_inventory
-        read_only: true
+      - name: add_car
+        undoable: true
         entities: [Root, Car]
         dto_in:
-          name: ExportInventoryDto
+          name: AddCarDto
           fields:
-            - name: export_file_path
+            - name: make
               type: string
+            - name: model
+              type: string
+            - name: year
+              type: integer
+            - name: price
+              type: float
+        dto_out:
+          name: AddCarReturnDto
+          fields:
+            - name: car_id
+              type: integer
+
+      - name: sell_car
+        undoable: true
+        entities: [Car, Customer]
+        dto_in:
+          name: SellCarDto
+          fields:
+            - name: car_id
+              type: integer
+            - name: customer_id
+              type: integer
+        dto_out:
+          name: SellCarReturnDto
+          fields:
+            - name: success
+              type: boolean
+
+  - name: customer_management
+    use_cases:
+      - name: list_customers
+        read_only: true
+        entities: [Customer]
+        dto_out:
+          name: CustomerListDto
+          fields:
+            - name: count
+              type: integer
+
+      - name: add_customer
+        undoable: true
+        entities: [Root, Customer]
+        dto_in:
+          name: AddCustomerDto
+          fields:
+            - name: name
+              type: string
+            - name: email
+              type: string
+            - name: phone
+              type: string
+              optional: true
+        dto_out:
+          name: AddCustomerReturnDto
+          fields:
+            - name: customer_id
+              type: integer
 
 ui:
   cpp_qt_qtwidgets: true

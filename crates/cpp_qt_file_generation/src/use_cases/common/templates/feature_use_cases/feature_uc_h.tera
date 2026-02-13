@@ -23,7 +23,7 @@ class {{ uc.pascal_name }}UseCase
   {%- if uc.dto_out %}
        {% set dto_out_str = uc.dto_out.pascal_name %}
   {%- else %}
-       {% set dto_out_str = "void" %}
+       {% set dto_out_str = "bool" %}
   {%- endif %}
 
 

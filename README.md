@@ -274,7 +274,7 @@ FernTech offers professional support for Qleany.
 
 Qleany is not an AI tool. It is a human-driven tool using templates and smart (I can hope) algorithms.
 
-In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a clutch. [Ranting mode: off]
+In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a crutch. [Ranting mode: off]
 
 In Qleany, AI was used in only three cases:
 - basic auto-completion, thanks to the LLM integrated into JetBrains IDEs (especially in very repetitive patterns), less "magical" than GitHub Copilot, but still helpful.

@@ -54,10 +54,10 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
 
     {%- if uc.inner.read_only %}
 
-    co_return co_await Common::ControllerHelpers::executeReadQuery<{{ uc.dto_out.pascal_name }}>(
+    co_return co_await Common::ControllerHelpers::executeReadQuery<{{ dto_out_str }}>(
         m_undoRedoSystem,
         u"{{ uc.snake_name }} Query"_s,
-        [this {% if uc.dto_in %}, {{ uc.dto_in.camel_name }}{% endif %}]() -> {{ uc.dto_out.pascal_name }} {
+        [this {% if uc.dto_in %}, {{ uc.dto_in.camel_name }}{% endif %}]() -> {{ dto_out_str }} {
         // Create use case that will be owned by the command
         auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
         auto useCase = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow));
