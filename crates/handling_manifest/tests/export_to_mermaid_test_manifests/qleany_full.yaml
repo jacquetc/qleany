@@ -15,7 +15,6 @@ entities:
     fields:
       - name: id
         type: integer
-        required: true
     undoable: false
   - name: Root
     inherits_from: EntityBase
@@ -25,7 +24,6 @@ entities:
         type: entity
         entity: First
         relationship: one_to_one
-        required: true
         strong: true
     undoable: false
   - name: First
@@ -34,12 +32,12 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: false
+        optional: true
       - name: second
         type: entity
         entity: Second
         relationship: one_to_one
-        required: false
+        optional: true
         strong: true
     undoable: true
   - name: Second
@@ -48,15 +46,13 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: true
       - name: test_bool
         type: bool
-        required: true
       - name: thirds
         type: entity
         entity: Third
         relationship: one_to_many
-        required: false
+        optional: true
         strong: true
     undoable: true
   - name: Third
@@ -65,18 +61,16 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: true
       - name: fourths
         type: entity
         entity: Fourth
         relationship: one_to_many
-        required: false
+        optional: true
         strong: true
       - name: fifths
         type: entity
         entity: Fifth
         relationship: ordered_one_to_many
-        required: true
         strong: true
     undoable: true
   - name: Fourth
@@ -85,12 +79,11 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: true
       - name: second_ref
         type: entity
         entity: Second
         relationship: one_to_one
-        required: false
+        optional: true
         strong: false
     undoable: true
   - name: Fifth
@@ -99,12 +92,12 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: false
+        optional: true
       - name: third_refs
         type: entity
         entity: Third
         relationship: many_to_many
-        required: false
+        optional: true
         strong: false
     undoable: true
 features: []

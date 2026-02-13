@@ -15,7 +15,7 @@ entities:
   fields:
   - name: id
     type: integer
-    required: false
+    optional: true
   undoable: false
 - name: Root
   inherits_from: EntityBase
@@ -25,13 +25,13 @@ entities:
     type: entity
     entity: Workspace
     relationship: one_to_one
-    required: false
+    optional: true
     strong: true
   - name: system
     type: entity
     entity: System
     relationship: one_to_one
-    required: false
+    optional: true
     strong: true
   undoable: false
 - name: Workspace
@@ -40,18 +40,16 @@ entities:
   fields:
   - name: manifest_absolute_path
     type: string
-    required: true
   - name: global
     type: entity
     entity: Global
     relationship: one_to_one
-    required: true
     strong: true
   - name: entities
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -59,7 +57,7 @@ entities:
     type: entity
     entity: Feature
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -67,7 +65,6 @@ entities:
     type: entity
     entity: UserInterface
     relationship: one_to_one
-    required: true
     strong: true
   undoable: true
 - name: System
@@ -78,7 +75,7 @@ entities:
     type: entity
     entity: File
     relationship: one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -89,20 +86,18 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: inherits_from
     type: entity
     entity: Entity
     relationship: many_to_one
-    required: false
+    optional: true
   - name: only_for_heritage
     type: boolean
-    required: true
   - name: fields
     type: entity
     entity: Field
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -110,18 +105,15 @@ entities:
     type: entity
     entity: Relationship
     relationship: one_to_many
-    required: false
+    optional: true
     strong: true
   - name: single_model
     type: boolean
-    required: true
     strong: true
   - name: undoable
     type: boolean
-    required: true
   - name: allow_direct_access
     type: boolean
-    required: true
   undoable: true
 - name: Field
   inherits_from: EntityBase
@@ -129,10 +121,8 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: field_type
     type: enum
-    required: true
     enum_name: FieldType
     enum_values:
     - Boolean
@@ -148,10 +138,9 @@ entities:
     type: entity
     entity: Entity
     relationship: many_to_one
-    required: false
+    optional: true
   - name: relationship
     type: enum
-    required: true
     enum_name: FieldRelationshipType
     enum_values:
     - OneToOne
@@ -161,16 +150,13 @@ entities:
     - ManyToMany
   - name: required
     type: boolean
-    required: true
   - name: strong
     type: boolean
-    required: true
   - name: list_model
     type: boolean
-    required: true
   - name: list_model_displayed_field
     type: string
-    required: false
+    optional: true
   undoable: true
 - name: Feature
   inherits_from: EntityBase
@@ -178,12 +164,11 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: use_cases
     type: entity
     entity: UseCase
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -194,13 +179,10 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: path
     type: string
-    required: true
   - name: group
     type: string
-    required: true
   undoable: false
 - name: UseCase
   inherits_from: EntityBase
@@ -208,37 +190,32 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: validator
     type: boolean
-    required: true
   - name: entities
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     list_model: true
     list_model_displayed_field: name
   - name: undoable
     type: boolean
-    required: true
   - name: read_only
     type: boolean
-    required: true
   - name: long_operation
     type: boolean
-    required: true
   - name: dto_in
     type: entity
     entity: Dto
     relationship: one_to_one
-    required: false
+    optional: true
     strong: true
   - name: dto_out
     type: entity
     entity: Dto
     relationship: one_to_one
-    required: false
+    optional: true
     strong: true
   undoable: true
 - name: Dto
@@ -247,12 +224,11 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: fields
     type: entity
     entity: DtoField
     relationship: ordered_one_to_many
-    required: false
+    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -263,10 +239,8 @@ entities:
   fields:
   - name: name
     type: string
-    required: true
   - name: field_type
     type: enum
-    required: true
     enum_name: DtoFieldType
     enum_values:
     - Boolean
@@ -279,16 +253,14 @@ entities:
     - Enum
   - name: is_nullable
     type: boolean
-    required: true
   - name: is_list
     type: boolean
-    required: true
   - name: enum_name
     type: string
-    required: false
+    optional: true
   - name: enum_values
     type: string
-    required: false
+    optional: true
   undoable: true
 - name: Global
   inherits_from: EntityBase
@@ -296,19 +268,14 @@ entities:
   fields:
   - name: language
     type: string
-    required: true
   - name: application_name
     type: string
-    required: true
   - name: organisation_name
     type: string
-    required: true
   - name: organisation_domain
     type: string
-    required: true
   - name: prefix_path
     type: string
-    required: true
   undoable: true
 - name: Relationship
   inherits_from: EntityBase
@@ -318,18 +285,14 @@ entities:
     type: entity
     entity: Entity
     relationship: one_to_one
-    required: true
   - name: right_entity
     type: entity
     entity: Entity
     relationship: one_to_one
-    required: true
   - name: field_name
     type: string
-    required: true
   - name: relationship_type
     type: enum
-    required: true
     enum_name: RelationshipType
     enum_values:
     - OneToOne
@@ -338,21 +301,18 @@ entities:
     - ManyToMany
   - name: strength
     type: enum
-    required: true
     enum_name: Strength
     enum_values:
     - Weak
     - Strong
   - name: direction
     type: enum
-    required: true
     enum_name: Direction
     enum_values:
     - Forward
     - Backward
   - name: cardinality
     type: enum
-    required: true
     enum_name: Cardinality
     enum_values:
     - ZeroOrOne
@@ -361,7 +321,7 @@ entities:
     - OneOrMore
   - name: order
     type: enum
-    required: false
+    optional: true
     enum_name: Order
     enum_values:
     - Ordered
@@ -373,23 +333,18 @@ entities:
   fields:
   - name: rust_cli
     type: boolean
-    required: true
     strong: true
   - name: rust_slint
     type: boolean
-    required: true
     strong: true
   - name: cpp_qt_qtwidgets
     type: boolean
-    required: true
     strong: true
   - name: cpp_qt_qtquick
     type: boolean
-    required: true
     strong: true
   - name: cpp_qt_kirigami
     type: boolean
-    required: true
     strong: true
   undoable: true
 features:

@@ -15,7 +15,6 @@ entities:
     fields:
       - name: id
         type: integer
-        required: true
     undoable: false
   - name: Root
     inherits_from: EntityBase
@@ -25,7 +24,7 @@ entities:
         type: entity
         entity: First
         relationship: one_to_one
-        required: false
+        optional: true
         strong: true
     undoable: false
   - name: First
@@ -34,12 +33,12 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: false
+        optional: true
       - name: second
         type: entity
         entity: Second
         relationship: one_to_one
-        required: false
+        optional: true
         strong: true
     undoable: true
   - name: Second
@@ -48,10 +47,8 @@ entities:
     fields:
       - name: test_string
         type: string
-        required: true
       - name: test_bool
         type: bool
-        required: true
     undoable: true
 features: []
 ui: {}
