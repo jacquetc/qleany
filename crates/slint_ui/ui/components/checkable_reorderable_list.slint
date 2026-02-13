@@ -192,7 +192,7 @@ component DraggableItem inherits Rectangle {
         if enable-checkbox: CheckBox {
             checked: item.checked;
             // Forward change to the outside world
-            toggled => { if (item.id >= 1) { request-check-change(item.id, self.checked); } }
+            toggled => { if (item.id >= 0) { request-check-change(item.id, self.checked); } }
         }
 
         // Drag handle (hidden if not reorderable)
@@ -329,7 +329,7 @@ component DraggableItem inherits Rectangle {
 }
 
 export component CheckableReorderableList inherits Rectangle {
-    // Reusable list container (not a Window). Intended to be embedded in any Window.
+    // Reusable list container.
     width: 100%;
     height: 100%;
     background: transparent;
@@ -408,8 +408,7 @@ export component CheckableReorderableList inherits Rectangle {
         running: root.selection-timer-running;
         triggered => {
             root.selection-timer-running = false;
-            // Only propagate positive ids (>=1). Live preview may emit 0 which is not a valid entity id.
-            if (root.pending-selection-id >= 1) {
+            if (root.pending-selection-id >= 0) {
                 root.selection-changed(root.pending-selection-id);
                 root.pending-selection-id = -1;
             }
@@ -504,14 +503,11 @@ export component CheckableReorderableList inherits Rectangle {
                     interactive: true;
                     // Wire callbacks
                     // Only forward positive ids as valid entity ids
-                    request-delete(id) => { if (id >= 1) { root.request-delete(id); } }
-                    request-check-change(id, state) => { if (id >= 1) { root.request-check-change(id, state); } }
+                    request-delete(id) => { if (id >= 0) { root.request-delete(id); } }
+                    request-check-change(id, state) => { if (id >= 0) { root.request-check-change(id, state); } }
                     // Use deferred selection to avoid crash when conditional UI rebuilds during event processing
                     selection-changed(id) => {
-                        // Treat id == 0 as invalid: only accept positive ids (>=1).
-                        // This prevents 0 from being propagated to the rest of the app where
-                        // it may be interpreted as a valid entity id and cause crashes.
-                        if (id >= 1) {
+                        if (id >= 0) {
                             root.selected-id = id;
                             root.pending-selection-id = id;
                             root.selection-timer-running = true;
@@ -522,8 +518,8 @@ export component CheckableReorderableList inherits Rectangle {
                     }
                     open-menu(i) => { if (i >= 0) { root.open-menu-index = i; } }
                     open-menu-geo(i, id_val, bx, by, bw, bh) => {
-                        // i is a row index (0-based) but id_val is an entity id: require id_val >= 1
-                        if (i < 0 || id_val < 1) { }
+                        // i is a row index (0-based) but id_val is an entity id: require id_val >= 0
+                        if (i < 0 || id_val < 0) { }
                         else {
                             // Base position of this row within the Flickable
                             let row_x = 4px;
@@ -648,7 +644,7 @@ export component CheckableReorderableList inherits Rectangle {
                         text: "Delete";
                         clicked => {
                             // Invoke delete for the currently open item id
-                            if (root.open-menu-id >= 1 && root.open-menu-index >= 0) { root.request-delete(root.open-menu-id); }
+                            if (root.open-menu-id >= 0 && root.open-menu-index >= 0) { root.request-delete(root.open-menu-id); }
                             root.open-menu-index = -1;
                             root.open-menu-id = -1;
                         }

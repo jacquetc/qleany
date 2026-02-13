@@ -1,0 +1,5 @@
+target_sources(${LIBRARY_NAME} PRIVATE
+{%- for eid, ent in s.entities %}
+{{ ent.snake_name }}.h
+{%- endfor %}
+)

@@ -48,7 +48,7 @@ fn delete_undo_stack(app: &App, app_context: &Arc<AppContext>) {
 fn fill_project_tab(app: &App, app_context: &Arc<AppContext>) {
     log::info!("Filling ProjectTabState with data from Global entity");
 
-    if let Some(global_id) = get_global_id(app, app_context)
+    if let Some(global_id) = crate::tabs::common::get_global_id(app, app_context)
         && let Ok(Some(global)) = global_commands::get_global(app_context, &global_id)
     {
         log::info!("Filling ProjectTabState with global data: {:?}", global);
@@ -215,25 +215,12 @@ fn subscribe_global_updated_event(
     );
 }
 
-/// Helper function to get the global_id from root
-fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<common::types::EntityId> {
-    let workspace_id = app.global::<AppState>().get_workspace_id() as common::types::EntityId;
-    if workspace_id > 0
-        && let Ok(Some(workspace)) = workspace_commands::get_workspace(app_context, &workspace_id)
-        && workspace.global > 0
-    {
-        println!("Found global_id: {}", workspace.global);
-        return Some(workspace.global);
-    }
-    None
-}
-
 /// Helper function to update a global field with new value
 fn update_global_helper<F>(app: &App, app_context: &Arc<AppContext>, update_fn: F)
 where
     F: FnOnce(&mut direct_access::GlobalDto),
 {
-    if let Some(global_id) = get_global_id(app, app_context) {
+    if let Some(global_id) = crate::tabs::common::get_global_id(app, app_context) {
         let global_res = global_commands::get_global(app_context, &global_id);
 
         if let Ok(Some(mut global)) = global_res {

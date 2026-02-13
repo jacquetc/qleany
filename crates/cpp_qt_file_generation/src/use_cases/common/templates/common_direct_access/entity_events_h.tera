@@ -1,0 +1,60 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "direct_access/{{ ent.snake_name }}/i_{{ ent.snake_name }}_repository.h"
+#include "entities/{{ ent.snake_name }}.h"
+#include <QList>
+#include <QMetaObject>
+#include <QObject>
+
+// Ensure metatypes are declared for queued connections
+Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::Common::Entities::{{ ent.pascal_name }})
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}
+{
+
+class {{ ent.pascal_name }}Events : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit {{ ent.pascal_name }}Events(QObject *parent = nullptr) : QObject(parent)
+    {
+        // Register metatypes for cross-thread signal delivery
+        qRegisterMetaType<Entities::{{ ent.pascal_name }}>("{{ ent.pascal_name }}");
+        qRegisterMetaType<QList<Entities::{{ ent.pascal_name }}>>("QList<{{ ent.pascal_name }}>");
+        qRegisterMetaType<QList<int>>("QList<int>");
+        qRegisterMetaType<{{ ent.pascal_name }}RelationshipField>("{{ ent.pascal_name }}RelationshipField");
+    }
+
+  public Q_SLOTS:
+    // These methods can be invoked from any thread; they will emit signals in this object's thread
+    void publishCreated(const QList<int> &ids)
+    {
+        Q_EMIT created(ids);
+    }
+    void publishUpdated(const QList<int> &ids)
+    {
+        Q_EMIT updated(ids);
+    }
+    void publishRemoved(const QList<int> &ids)
+    {
+        Q_EMIT removed(ids);
+    }
+    {%- if ent.forward_relationships %}
+    void publishRelationshipChanged(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, const QList<int> &relatedIds)
+    {
+        Q_EMIT relationshipChanged({{ ent.camel_name }}Id, relationship, relatedIds);
+    }
+    {%- endif %}
+
+  Q_SIGNALS:
+    void created(const QList<int> &ids);
+    void updated(const QList<int> &ids);
+    void removed(const QList<int> &ids);
+    {%- if ent.forward_relationships %}
+    void relationshipChanged(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, const QList<int> &relatedIds);
+    {%- endif %}
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.snake_name }}

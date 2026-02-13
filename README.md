@@ -1,5 +1,5 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/qleany)
-[![license](https://img.shields.io/badge/license-Mozilla_Publc_License--2.0-blue?style=flat-square)](#license)
+[![license](https://img.shields.io/badge/license-Mozilla_Public_License--2.0-blue?style=flat-square)](#license)
 ![quality](https://img.shields.io/github/actions/workflow/status/jacquetc/qleany/ci.yml)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/jacquetc/qleany)
 
@@ -18,22 +18,24 @@ Define your entities and relationships in a YAML manifest or in its dedicated UI
 
 Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt with baking-in (empty) UIs. The generated code aims to be readable, idiomatic, and easy to modify, more than sophisticated and abstract.
 
-Qleany's own Slint-based UI is built using the same patterns it generates.
+Qleany's own Slint-based tool is built using the same patterns it generates.
 
 ## Documentation
 
-| Document                                                 | Purpose |
-|----------------------------------------------------------|---------|
-| [Quick Start](docs/quick_start.md)                       | Step-by-step tutorial building a complete application |
-| [Manifest Reference](docs/manifest-reference.md)         | Entity options, field types, relationships, features and use cases |
-| [Design Philosophy](docs/design-philosophy.md)           | Clean Architecture background, package by feature, Rust module structure |
-| [Regeneration Workflow](docs/regeneration-workflow.md)   | How file generation works, what gets overwritten, files that must stay in sync |
-| [Undo-Redo Architecture](docs/undo-redo-architecture.md) | Entity tree structure, undoable vs non-undoable, configuration patterns |
-| [QML Integration](docs/qml-integration.md)               | Reactive models, mocks, and event system for C++/Qt |
-| [Generated Infrastructure](docs/generated-code.md)       | Database layer, repositories, and file organization details |
-| [Troubleshooting](docs/troubleshooting.md)               | Common issues and how to fix them |
+| Document                                                           | Purpose                                                                        |
+|--------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [Quick Start - Rust](docs/quick-start-rust.md)                     | Step-by-step tutorial building a complete application                          |
+| [Quick Start - C++/Qt](docs/quick-start-cpp-qt.md)                 | Step-by-step tutorial building a complete application                          |
+| [Manifest Reference](docs/manifest-reference.md)                   | Entity options, field types, relationships, features and use cases             |
+| [Design Philosophy](docs/design-philosophy.md)                     | Clean Architecture background, package by feature, Rust module structure       |
+| [Regeneration Workflow](docs/regeneration-workflow.md)             | How file generation works, what gets overwritten, files that must stay in sync |
+| [Undo-Redo Architecture](docs/undo-redo-architecture.md)           | Entity tree structure, undoable vs non-undoable, configuration patterns        |
+| [QML Integration](docs/qml-integration.md)                         | Reactive models, mocks, and event system for C++/Qt                            |
+| [Generated Infrastructure - C++/Qt](docs/generated-code-cpp-qt.md) | Database layer, repositories, and file organization details                    |
+| [Generated Infrastructure - Rust](docs/generated-code-rust.md)     | Database layer, repositories, and file organization details                    |
+| [Troubleshooting](docs/troubleshooting.md)                         | Common issues and how to fix them                                              |
 
-New to Qleany? Start with the [Quick Start Guide](docs/quick_start.md), then return here for reference.
+New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md). Then return here for reference.
 
 ![Screenshot](docs/screenshot_1.png)
 
@@ -69,9 +71,15 @@ New to Qleany? Start with the [Quick Start Guide](docs/quick_start.md), then ret
 
 For **simple utilities or single-purpose tools**, Qleany introduces more infrastructure than you need. If your application doesn't have complex entity relationships, doesn't need undo/redo, and won't grow significantly, a hand-written architecture may serve you better.
 
-If you're working with a **team that already has established patterns**, introducing Qleany means everyone needs to learn its conventions. The generated code is readable and follows clear patterns, but it represents a specific way of doing things. Discuss with your team before adopting it. Do not antagonize existing workflows. A better, professional, approach may be to present Qleany's patterns with some open-minded senior devs of your team. Even if they don't want to use Qleany - **which is fairly expected** - they may appreciate some of its ideas and adapt them to their existing architecture. They may even want to use Qleany for prototyping or side projects, or scaffold new subsystems of an existing project without disrupting the main architecture.
+If you're working with a **team that already has established patterns**, introducing Qleany means everyone needs to learn its conventions. The generated code is readable and follows clear patterns, but it represents a specific way of doing things. Discuss with your team before adopting it. Do not antagonize existing workflows. A more professional approach may be to present Qleany's patterns with some open-minded senior devs of your team. Even if they don't want to use Qleany - **which is fairly expected** - they may appreciate some of its ideas and adapt them to their existing architecture. They may even want to use Qleany for prototyping or side projects, or scaffold new subsystems of an existing project without disrupting the main architecture.
 
-Qleany **targets native applications**. If you're building for the web, using Electron, this isn't the right tool. Similarly, if you need high-throughput server-side processing, the patterns here are optimized for user interaction, not request-per-second performance. If you are targeting Android/iOS with Flutter or React Native, maybe the Rust as a backend option is an interesting choice, but the C++/Qt generation is not.
+Qleany **targets native applications**. If you're building for the web, using Electron, this isn't the right tool. Similarly, if you need high-throughput server-side processing, the patterns here are optimized for user interaction, not request-per-second performance. 
+
+### Special Considerations
+
+If you are targeting Android/iOS with Flutter or React Native, the Rust as a backend option can be an interesting choice, but the C++/Qt generation is not. Any Rust backend can use UniFFI or other means to call Rust from nearly any frontend accepting FFI (SwiftUI, Kotlin, etc...)
+
+You can also have a Rust backend and a C++/Qt frontend in the same codebase, using cxx-qt as a bridge.
 
 ### The Practical Test
 
@@ -173,7 +181,7 @@ The Slint-based UI provides:
 - Selective file generation
 - Code preview before writing
 
-For more details, see the [Quick Start Guide](docs/quick_start.md).
+For more details, see the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md).
 
 ### CLI Usage
 
@@ -226,11 +234,11 @@ Skribisto serves as both proof-of-concept and template source for C++/Qt generat
 
 ---
 
-## Migration from v1
+## Migration from v0
 
-Qleany v1 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders.
+Qleany v0 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders. Yes, version "zero" is the first version, the prototype. 
 
-v2 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability.
+v1 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability. Its manifest version begins with version 2.
 
 **Breaking changes:**
 - Manifest format changed (schema version 2)
@@ -238,6 +246,8 @@ v2 generates Package by Feature with pragmatic organization. The same project pr
 - Reactive models are new (list models, singles)
 
 Bottom line: from v0 to v1, there is no automated migration path. You must regenerate from your manifest and manually port any custom code.
+
+Starting from the newer version 2 of the manifest (i.e., Qleany v1), the new architecture will allow a smoother transition to future versions.
 
 ---
 
@@ -247,9 +257,8 @@ Qleany is developed alongside Skribisto. The architecture is stable, but templat
 
 To contribute:
 1. Open an issue to discuss changes
-2. Reference Skribisto (c++/Qt) or Qleany (Rust) patterns where applicable
-3. Ensure changes work for both Rust and C++/Qt
-4. Don't forget to sign off your commits (`commit -s`)
+2. Ensure changes work for both Rust and C++/Qt
+3. Remember to sign off your commits (`commit -s`)
 
 Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
@@ -257,13 +266,26 @@ Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 **GitHub Issues** is the only support channel: [github.com/jacquetc/qleany/issues](https://github.com/jacquetc/qleany/issues)
 
-Qleany is a personal project licensed under MPL-2.0. It is actively used in Skribisto's development, so improvements flow from real-world needs. Bug reports and contributions are welcome, though response times vary as this is maintained alongside other projects.
+Qleany is a project licensed under MPL-2.0. It is actively used in Skribisto's development, among other projects from FernTech, so improvements flow from real-world needs. Bug reports and contributions are welcome.
+
+FernTech offers professional support for Qleany. 
+
+## AI use
+
+Qleany is not an AI tool. It is a human-driven tool using templates and smart (I can hope) algorithms.
+
+In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a crutch. [Ranting mode: off]
+
+In Qleany, AI was used in only three cases:
+- basic auto-completion, thanks to the LLM integrated into JetBrains IDEs (especially in very repetitive patterns), less "magical" than GitHub Copilot, but still helpful.
+- English sentences in the documentation were smoothed with the AI, nothing more. And it helped to create tables with all these asterisks. I wrote this documentation.
+- The AI added some comments and inline documentation, especially in the C++ undo redo system. It was fun.
+
+That's it. I honestly feel that Qleany is the work of a human being (me), not a machine.
 
 ## About
 
 Qleany is developed and maintained by FernTech.
-
-## License
 
 Copyright (c) 2025-2026 FernTech
 Licensed under [MPL-2.0](LICENSE)

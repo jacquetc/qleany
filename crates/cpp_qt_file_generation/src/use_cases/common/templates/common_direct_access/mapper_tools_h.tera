@@ -1,0 +1,15 @@
+#pragma once
+#include <optional>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess
+{
+
+template <typename TargetEnum, typename SourceEnum>
+static std::optional<TargetEnum> mapOptionalEnum(const std::optional<SourceEnum>& source) {
+    if (source) {
+        return static_cast<TargetEnum>(*source);
+    }
+    return std::nullopt;
+}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess

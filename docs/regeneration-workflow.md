@@ -2,15 +2,19 @@
 
 This document explains how Qleany handles file generation and what happens when you regenerate code.
 
+The GUI is a convenient way to generate files selectively.
+
 ## The Golden Rule
 
 **Generated files are overwritten when you regenerate them.** Qleany does not merge changes or preserve modifications.
 
 This is intentional. The workflow assumes you control what gets regenerated.
 
+The GUI is helping you by checking the "in temp" checkbox by default to avoid accidental overwrites.
+
 ## Before You Generate
 
-**Commit to Git first.** This isn't optional advice — it's how the tool is meant to be used. If something goes wrong, you can recover. If you accidentally overwrite modified files, you can restore them.
+**Commit to Git first.** This isn't optional advice. It's how the tool is meant to be used. If something goes wrong, you can recover. If you accidentally overwrite modified files, you can restore them. Yes, it happened to me, and it was painful.
 
 ## Controlling What Gets Generated
 
@@ -35,6 +39,9 @@ qleany generate --temp
 
 # Then compare and merge manually
 diff -r ./temp/crates ./crates
+
+# or for VS Code users:
+code --diff ./temp/file ./file
 ```
 
 ## What Happens When You Regenerate
@@ -42,6 +49,8 @@ diff -r ./temp/crates ./crates
 - **Selected files are overwritten** — Your modifications are lost
 - **Unselected files are untouched** — Even if the manifest changed
 - **No files are deleted** — If you rename an entity, the old files remain; clean them up manually
+
+From the GUI (recommended), the "in temp" checkbox is checked by default to avoid accidental overwrites.
 
 ## Files That Must Stay in Sync
 
@@ -54,7 +63,7 @@ These files contain references to all entities:
 | File                                         | Contains                                        |
 |----------------------------------------------|-------------------------------------------------|
 | `common/event.rs`                            | Event enum variants for all entities            |
-| `common/entities.rs`                         | Re-exports all entity structs                   |
+| `common/entities.rs`                         | All entity structs                              |
 | `common/direct_access/repository_factory.rs` | Factory methods for all repositories            |
 | `common/direct_access/setup.rs`              | Factory methods for all repositories            |
 | `common/direct_access.rs`                    | Module declarations for all entity repositories |
@@ -66,8 +75,8 @@ These files contain references to all entities:
 |--------------------------------------------------|-----------------------------------------|
 | `common/database/db_builder.h`                   | Database table builder for all entities |
 | `common/direct_access/repository_factory.h/.cpp` | Factory methods for all repositories    |
-| `common/direct_access/event_registry.h/.cpp`     | Event objects for all entities          |
-| `common/CMakeLists.txt`                          | Adds all entity source files to build   |
+| `common/direct_access/event_registry.h`          | Event objects for all entities          |
+| `common/entities/CMakeLists.txt`                 | Adds all entity source files to build   |
 | `direct_access/CMakeLists.txt`                   | Adds all entity source files to build   |
 
 If you modify one of these files and later add a new entity, you'll need to either:
@@ -76,13 +85,18 @@ If you modify one of these files and later add a new entity, you'll need to eith
 
 ## Using the Temp Folder
 
+It's recommended to add the "temp/" folder to your .gitignore.
+
 The safest workflow when you've modified generated files:
 
-1. Check **in temp/** checkbox in the UI (or use `--temp` or ```--output ./whatever/` in CLI)
+1. Check **in temp/** checkbox in the UI (or use `--temp` or `--output ./whatever/` in CLI)
 2. Generate all files to the temp location
 3. Compare temp output against your current files:
    ```bash
    diff -r ./temp/crates ./crates
+
+   # or for VS Code users:
+   code --diff ./temp/file ./file
    ```
 4. Manually merge changes you want to keep
 5. Delete the temp folder

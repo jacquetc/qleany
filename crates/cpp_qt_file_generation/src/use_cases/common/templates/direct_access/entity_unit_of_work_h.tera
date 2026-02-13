@@ -1,0 +1,51 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "database/db_context.h"
+#include "direct_access/repository_factory.h"
+#include "direct_access/event_registry.h"
+#include "unit_of_work/unit_of_work.h"
+#include "use_cases/i_{{ ent.snake_name }}_unit_of_work.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
+namespace SCD = {{ s.global.application_pascal_name }}::Common::DirectAccess;
+namespace SCUoW = {{ s.global.application_pascal_name }}::Common::UnitOfWork;
+{%- if ent.forward_relationships %}
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+{%- endif %}
+
+class {{ ent.pascal_name }}UnitOfWork final
+    : public SCUoW::UnitOfWorkBase,
+{%- if ent.forward_relationships %}
+      public SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+                                    SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>
+{%- else %}
+      public SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>
+{%- endif %}
+{
+{%- if ent.forward_relationships %}
+    friend class SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+                                        SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>;
+{%- else %}
+    friend class SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>;
+{%- endif %}
+
+  public:
+    {{ ent.pascal_name }}UnitOfWork(SCDatabase::DbContext &dbContext, const QPointer<SCD::EventRegistry> &eventRegistry)
+        : UnitOfWorkBase(dbContext, eventRegistry)
+    {
+    }
+    ~{{ ent.pascal_name }}UnitOfWork() override = default;
+
+    /// Called by CRTP base to get a repository for {{ ent.pascal_name }}.
+    [[nodiscard]] auto makeRepository()
+    {
+        return SCD::RepositoryFactory::create{{ ent.pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+    }
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

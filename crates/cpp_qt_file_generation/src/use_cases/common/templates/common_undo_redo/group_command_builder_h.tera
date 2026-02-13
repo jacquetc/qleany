@@ -1,0 +1,34 @@
+#pragma once
+
+#include "group_command.h"
+#include "undo_redo_command.h"
+#include <QString>
+#include <memory>
+
+using namespace Qt::StringLiterals;
+
+namespace {{ s.global.application_pascal_name }}::Common::UndoRedo
+{
+
+class GroupCommandBuilder
+{
+public:
+    explicit GroupCommandBuilder(const QString &text);
+    
+    // Fluent API methods
+    GroupCommandBuilder& addCommand(std::shared_ptr<UndoRedoCommand> command);
+    GroupCommandBuilder& insertCommand(int index, std::shared_ptr<UndoRedoCommand> command);
+    GroupCommandBuilder& onFailure(FailureStrategy strategy);
+    GroupCommandBuilder& setParent(QObject *parent);
+    
+    // Build method
+    std::shared_ptr<GroupCommand> build();
+    
+private:
+    QString m_text;
+    QList<std::shared_ptr<UndoRedoCommand>> m_commands;
+    FailureStrategy m_failureStrategy = FailureStrategy::StopOnFailure;
+    QObject *m_parent = nullptr;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::UndoRedo

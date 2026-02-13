@@ -1,0 +1,39 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+
+
+#pragma once
+#include "database/db_context.h"
+#include "{{ uc.snake_name }}_uc/i_{{ uc.snake_name }}_uow.h"
+#include "{{ feat.snake_name }}_dtos.h"
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
+{
+
+class {{ uc.pascal_name }}UseCase
+{
+  {%- if uc.dto_in %}
+       {% set dto_in_arg_str = "const " ~ uc.dto_in.pascal_name ~ "&" ~ uc.dto_in.camel_name %}
+  {%- else %}
+       {% set dto_in_arg_str = "" %}
+  {%- endif %}
+  {%- if uc.dto_out %}
+       {% set dto_out_str = uc.dto_out.pascal_name %}
+  {%- else %}
+       {% set dto_out_str = "bool" %}
+  {%- endif %}
+
+
+
+  public:
+    explicit {{ uc.pascal_name }}UseCase(std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> uow);
+    {% if uc.dto_out %}[[nodiscard]]{% endif %} {{ dto_out_str }} execute({{ dto_in_arg_str }}) const;
+
+  private:
+    std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> m_uow;
+};
+
+} // {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

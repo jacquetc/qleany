@@ -124,6 +124,7 @@ impl ListRustFilesUseCase {
             feature: Some(0),
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -135,6 +136,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -146,6 +148,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -157,6 +160,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -168,6 +172,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -179,6 +184,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: Some(0),
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -190,6 +196,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: Some(0),
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -201,6 +208,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -212,6 +220,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -223,6 +232,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -234,6 +244,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -245,6 +256,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -256,6 +268,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -267,6 +280,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         // direct access entities
@@ -280,6 +294,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: Some(0), // 0 means all
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -291,6 +306,7 @@ impl ListRustFilesUseCase {
             feature: Some(0), // 0 means all
             entity: Some(0),  // 0 means all
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -302,6 +318,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: Some(0), // 0 means all
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -313,6 +330,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -324,6 +342,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: Some(0), // 0 means all
             use_case: None,
+            field: None,
         });
 
         // Get entities
@@ -351,6 +370,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 let relative_path = format!(
@@ -368,6 +388,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -379,6 +400,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -390,6 +412,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -401,6 +424,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 // for crates/direct_access/src/{}/use_cases/
@@ -420,6 +444,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -431,6 +456,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -442,6 +468,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -453,6 +480,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -464,6 +492,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -475,6 +504,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -486,6 +516,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 files.push(File {
@@ -497,6 +528,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
 
                 // only if there is a forward relationship
@@ -523,6 +555,7 @@ impl ListRustFilesUseCase {
                         feature: None,
                         entity: Some(entity.id),
                         use_case: None,
+                        field: None,
                     });
 
                     files.push(File {
@@ -534,6 +567,7 @@ impl ListRustFilesUseCase {
                         feature: None,
                         entity: Some(entity.id),
                         use_case: None,
+                        field: None,
                     });
                 }
             }
@@ -550,6 +584,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: Some(entity.id),
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -561,6 +596,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: Some(entity.id),
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -572,6 +608,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: Some(entity.id),
                 use_case: None,
+                field: None,
             })
         }
 
@@ -595,6 +632,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             let relative_path = format!("{}/{}/src/", prefix, heck::AsSnakeCase(&feature.name));
@@ -608,6 +646,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -619,6 +658,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -630,6 +670,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -641,6 +682,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -652,6 +694,7 @@ impl ListRustFilesUseCase {
                 feature: Some(feature.id),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             // for crates/{}/src/use_cases/
@@ -677,6 +720,7 @@ impl ListRustFilesUseCase {
                     feature: Some(feature.id),
                     entity: None,
                     use_case: Some(use_case.id),
+                    field: None,
                 });
             }
 
@@ -699,6 +743,7 @@ impl ListRustFilesUseCase {
                     feature: Some(feature.id),
                     entity: None,
                     use_case: Some(use_case.id),
+                    field: None,
                 });
             }
         }
@@ -714,6 +759,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -725,6 +771,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         files.push(File {
@@ -736,6 +783,7 @@ impl ListRustFilesUseCase {
             feature: None,
             entity: None,
             use_case: None,
+            field: None,
         });
 
         if ui.rust_cli {
@@ -748,6 +796,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -759,6 +808,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
         }
 
@@ -772,6 +822,7 @@ impl ListRustFilesUseCase {
                 feature: Some(0),
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -783,6 +834,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             let relative_path = format!("{}/slint_ui/src/", prefix);
@@ -796,6 +848,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -807,6 +860,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -818,6 +872,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -829,6 +884,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -840,6 +896,7 @@ impl ListRustFilesUseCase {
                 feature: None,
                 entity: None,
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -851,6 +908,7 @@ impl ListRustFilesUseCase {
                 feature: Some(0),
                 entity: Some(0),
                 use_case: None,
+                field: None,
             });
 
             files.push(File {
@@ -862,6 +920,7 @@ impl ListRustFilesUseCase {
                 feature: Some(0),
                 entity: Some(0),
                 use_case: None,
+                field: None,
             });
 
             // commands:
@@ -882,6 +941,7 @@ impl ListRustFilesUseCase {
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
+                    field: None,
                 });
             }
 
@@ -897,6 +957,7 @@ impl ListRustFilesUseCase {
                     feature: Some(feature.id),
                     entity: None,
                     use_case: None,
+                    field: None,
                 });
             }
         }

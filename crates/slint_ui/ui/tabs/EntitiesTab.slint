@@ -8,7 +8,12 @@ import {
     ComboBox,
     TextEdit,
 } from "std-widgets.slint";
-import { AppState, EntitiesTabState, CRListItem, CommonTools } from "../globals.slint";
+import {
+    AppState,
+    EntitiesTabState,
+    CRListItem,
+    CommonTools,
+} from "../globals.slint";
 import {
     ListItem,
     Divider,
@@ -27,18 +32,19 @@ export component EntitiesTab inherits Rectangle {
     background: #ffffff;
 
     VerticalLayout {
-        padding: 10px;
+        padding: 5px;
         spacing: 0px;
 
         // Title
         Text {
             text: "Entities";
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: #212529;
         }
 
         HorizontalLayout {
+            height: 30px;
 
             if EntitiesTabState.selected_entity_id >= 0: Rectangle {
                 height: 12px;
@@ -67,7 +73,6 @@ export component EntitiesTab inherits Rectangle {
                 }
                 primary: false;
             }
-
         }
 
         Rectangle {
@@ -194,14 +199,12 @@ export component EntitiesTab inherits Rectangle {
                             entityNameFormField := FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") ? "Entity name is required" :
-                                    (CommonTools.check_is_pascal_case(EntitiesTabState.selected_entity_name) ? "" : "Entity name must be in PascalCase");
+                                error-message: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") ? "Entity name is required" : (CommonTools.check_is_pascal_case(EntitiesTabState.selected_entity_name) ? "" : "Entity name must be in PascalCase");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_entity_name;
                                     placeholder: "Enter the entity name (e.g., Person)";
-                                    has-error: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "")
-                                        || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
+                                    has-error: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
                                     edited(text) => {
                                         EntitiesTabState.entity_name_changed(text);
                                     }
@@ -228,9 +231,9 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-                            if !EntitiesTabState.selected_entity_only_for_heritage : HorizontalLayout {
+                            if !EntitiesTabState.selected_entity_only_for_heritage: HorizontalLayout {
                                 spacing: 16px;
-                                CheckBox{
+                                CheckBox {
                                     text: "Single Model";
                                     checked <=> EntitiesTabState.selected_entity_single_model;
                                     toggled => {
@@ -370,8 +373,7 @@ export component EntitiesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") ? "Field name is required" :
-                                (CommonTools.check_is_snake_case(EntitiesTabState.selected_field_name) ? "" : "Field name must be in snake_case");
+                                error-message: (EntitiesTabState.selected_field_id >= 0 && EntitiesTabState.selected_field_name == "") ? "Field name is required" : (CommonTools.check_is_snake_case(EntitiesTabState.selected_field_name) ? "" : "Field name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_name;
@@ -403,6 +405,7 @@ export component EntitiesTab inherits Rectangle {
 
                                 entity-combo := ComboBox {
                                     model: EntitiesTabState.entity_options;
+                                    current-index <=> EntitiesTabState.selected_field_entity_index;
                                     selected(value) => {
                                         // Pass the selected index to the callback
                                         EntitiesTabState.field_entity_changed(entity-combo.current-index);
@@ -413,8 +416,7 @@ export component EntitiesTab inherits Rectangle {
                             // Enum Name (only visible when type is Enum)
                             if EntitiesTabState.selected_field_type == "Enum": FormField {
                                 label: "Enum Name";
-                                error-message: EntitiesTabState.selected_field_enum_name == "" ? "Entity name is required" :
-                                (CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name) ? "" : "Enum name must be in PascalCase");
+                                error-message: EntitiesTabState.selected_field_enum_name == "" ? "Entity name is required" : (CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name) ? "" : "Enum name must be in PascalCase");
 
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_field_enum_name;
@@ -439,12 +441,12 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
-                            // Required checkbox (only visible when relationship is one_to_one or type is NOT Entity)
-                            if EntitiesTabState.selected_field_relationship == "one_to_one" || EntitiesTabState.selected_field_type != "Entity" : CheckBox {
-                                text: "Required (not nullable)";
-                                checked <=> EntitiesTabState.selected_field_required;
+                            // Required checkbox (only visible when relationship is one_to_one or many_to_one or type is NOT Entity)
+                            if EntitiesTabState.selected_field_relationship == "one_to_one" || EntitiesTabState.selected_field_relationship == "many_to_one" || EntitiesTabState.selected_field_type != "Entity": CheckBox {
+                                text: "Optional";
+                                checked <=> EntitiesTabState.selected_field_optional;
                                 toggled => {
-                                    EntitiesTabState.field_required_changed(self.checked);
+                                    EntitiesTabState.field_optional_changed(self.checked);
                                 }
                             }
 
@@ -462,7 +464,10 @@ export component EntitiesTab inherits Rectangle {
                                     }
                                 }
 
-                                FormField {
+                            // if one_tomany or many_to_many entity
+                            if (EntitiesTabState.selected_field_relationship == "one_to_many" || EntitiesTabState.selected_field_relationship == "ordered_one_to_many" || EntitiesTabState.selected_field_relationship == "many_to_many")
+                            && EntitiesTabState.selected_field_type == "Entity":
+                              FormField {
                                     label: "Model Options";
                                     HorizontalLayout {
                                         spacing: 16px;
@@ -491,8 +496,7 @@ export component EntitiesTab inherits Rectangle {
                                     spacing: 16px;
 
                                     // Strong checkbox (only visible when relationship is NOT many_to_many or many_to_one)
-                                    if EntitiesTabState.selected_field_relationship != "many_to_many" &&
-                                    EntitiesTabState.selected_field_relationship != "many_to_one" : CheckBox {
+                                    if EntitiesTabState.selected_field_type == "Entity" && EntitiesTabState.selected_field_relationship != "many_to_many" && EntitiesTabState.selected_field_relationship != "many_to_one": CheckBox {
                                         text: "Strong (cascade delete)";
                                         checked <=> EntitiesTabState.selected_field_strong;
                                         toggled => {

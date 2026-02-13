@@ -18,7 +18,7 @@ pub struct DtoField {
     pub id: EntityId,
     pub name: String,
     pub field_type: DtoFieldType,
-    pub is_nullable: bool,
+    pub optional: bool,
     pub is_list: bool,
     pub enum_name: Option<String>,
     pub enum_values: Option<Vec<String>>,
@@ -151,7 +151,7 @@ pub struct Field {
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
     pub relationship: FieldRelationshipType,
-    pub required: bool,
+    pub optional: bool,
     pub strong: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
@@ -199,6 +199,7 @@ pub struct File {
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
+    pub field: Option<EntityId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

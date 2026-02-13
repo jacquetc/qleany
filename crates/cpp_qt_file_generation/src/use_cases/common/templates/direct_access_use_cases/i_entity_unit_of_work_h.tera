@@ -1,0 +1,27 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "entities/{{ ent.snake_name }}.h"
+{%- if ent.forward_relationships %}
+#include "direct_access/{{ ent.snake_name }}/i_{{ ent.snake_name }}_repository.h"
+{%- endif %}
+#include "unit_of_work/unit_of_work.h"
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = Common::Entities;
+namespace SCUoW = Common::UnitOfWork;
+{%- if ent.forward_relationships %}
+namespace SCD{{ ent.pascal_name }} = Common::DirectAccess::{{ ent.pascal_name }};
+
+// a bit of magic to share interface definitions between all the units of work interfaces
+using I{{ ent.pascal_name }}UnitOfWork = SCUoW::IEntityWithRelationships<SCE::{{ ent.pascal_name }},
+                                                                         SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>;
+{%- else %}
+
+// a bit of magic to share interface definitions between all the units of work interfaces
+using I{{ ent.pascal_name }}UnitOfWork = SCUoW::IEntityCrud<SCE::{{ ent.pascal_name }}>;
+{%- endif %}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

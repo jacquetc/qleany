@@ -1,0 +1,95 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+#include <QList>
+#include <QString>
+#include <QStringLiteral>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}
+{
+
+inline QString getSqlTableDefinition()
+{
+    return QStringLiteral(
+        "CREATE TABLE IF NOT EXISTS {{ ent.sql_safe_snake_name }} ("
+        "    id INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE ON CONFLICT ROLLBACK NOT NULL,"
+    {%- for f in ent.fields %}
+        {%- if f.cpp_qt_type == "QDateTime" %}
+        "    {{ f.sql_safe_snake_name }} TEXT NOT NULL{% if not loop.last %},{% endif %}"
+        {%- elif  f.cpp_qt_type == "QUuid" %}
+        "    {{ f.sql_safe_snake_name }} TEXT NOT NULL{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_type == "QString" %}
+        "    {{ f.sql_safe_snake_name }} TEXT NOT NULL DEFAULT ''{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_type == "bool" %}
+        "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_type == "float" %}
+        "    {{ f.sql_safe_snake_name }} REAL NOT NULL DEFAULT 0.0{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_type != "int" %}
+        "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_type == "uint" %}
+        "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
+        {%- else %}
+        "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
+        {%- endif %}
+    {%- endfor %}
+        ");");
+}
+
+inline QList<QString> getSqlJunctionTableDefinitions()
+{
+    QList<QString> definitions;
+
+    {% for rid, r in ent.forward_relationships %}
+        {%- if r.inner.relationship_type == "OrderedOneToMany" %}
+
+    // ordered one-to-many junction table for {{ r.field_snake_name }}
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
+                                  "    left_id INTEGER NOT NULL,"
+                                  "    right_id INTEGER NOT NULL,"
+                                  "    order_ INTEGER NOT NULL,"
+                                  "    PRIMARY KEY (left_id, right_id)"
+                                  ");");
+
+        {%- elif r.inner.relationship_type == "OneToMany" %}
+
+    // unordered one-to-many junction table for {{ r.field_snake_name }}
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+                                  "    left_id INTEGER NOT NULL,"
+                                  "    right_id INTEGER NOT NULL,"
+                                  "    PRIMARY KEY (left_id, right_id)"
+                                  ");");
+
+        {%- elif r.inner.relationship_type == "OneToOne" %}
+
+    // one-to-one junction table for {{ r.field_snake_name }}
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+                                  "    left_id INTEGER NOT NULL,"
+                                  "    right_id INTEGER NOT NULL,"
+                                  "    PRIMARY KEY (left_id, right_id)"
+                                  ");");
+
+        {%- elif r.inner.relationship_type == "ManyToOne" %}
+
+    // many-to-one junction table for {{ r.field_snake_name }}
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+                                  "    left_id INTEGER NOT NULL,"
+                                  "    right_id INTEGER NOT NULL,"
+                                  "    PRIMARY KEY (left_id, right_id)"
+                                  ");");
+
+        {%- elif r.inner.relationship_type == "ManyToMany" %}
+
+    // many-to-many junction table for {{ r.field_snake_name }}
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
+                                  "    left_id INTEGER NOT NULL,"
+                                  "    right_id INTEGER NOT NULL,"
+                                  "    PRIMARY KEY (left_id, right_id)"
+                                  ");");
+
+        {%- endif %}
+    {% endfor %}
+
+    return definitions;
+}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}

@@ -65,7 +65,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     dto_in_handlers::setup_dto_in_field_selected_callback(app, app_context);
     dto_in_handlers::setup_dto_in_field_name_callback(app, app_context);
     dto_in_handlers::setup_dto_in_field_type_callback(app, app_context);
-    dto_in_handlers::setup_dto_in_field_is_nullable_callback(app, app_context);
+    dto_in_handlers::setup_dto_in_field_optional_callback(app, app_context);
     dto_in_handlers::setup_dto_in_field_is_list_callback(app, app_context);
     dto_in_handlers::setup_dto_in_fields_reorder_callback(app, app_context);
     dto_in_handlers::setup_dto_in_field_deletion_callback(app, app_context);
@@ -77,7 +77,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     dto_out_handlers::setup_dto_out_field_selected_callback(app, app_context);
     dto_out_handlers::setup_dto_out_field_name_callback(app, app_context);
     dto_out_handlers::setup_dto_out_field_type_callback(app, app_context);
-    dto_out_handlers::setup_dto_out_field_is_nullable_callback(app, app_context);
+    dto_out_handlers::setup_dto_out_field_optional_callback(app, app_context);
     dto_out_handlers::setup_dto_out_field_is_list_callback(app, app_context);
     dto_out_handlers::setup_dto_out_fields_reorder_callback(app, app_context);
     dto_out_handlers::setup_dto_out_field_deletion_callback(app, app_context);

@@ -1,0 +1,105 @@
+#pragma once
+
+{%- for eid, ent in s.entities %}
+#include "direct_access/{{ ent.snake_name }}/table_definitions.h"
+{%- endfor %}
+#include <QDir>
+#include <QString>
+#include <QUuid>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+
+namespace {{ s.global.application_pascal_name }}::Common::Database
+{
+using namespace Qt::StringLiterals;
+class DbBuilder
+{
+  public:
+    // Creates an SQLite database file in the temp folder and builds schema.
+    // Returns the absolute file path used as databaseName for QSqlDatabase.
+    static QString buildDatabase()
+    {
+        // Create a unique database file path in the temp dir
+        const QString dbPath =
+            QDir::tempPath() + QDir::separator() +
+            QStringLiteral("{{ s.global.application_snake_name }}_%1.sqlite").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+
+        // Use a temporary connection just to build the schema
+        const QString builderConn =
+            QStringLiteral("builder_%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE"_L1, builderConn);
+        db.setDatabaseName(dbPath);
+        if (!db.open())
+        {
+            // Return path even if open fails; callers will report errors when opening
+            return dbPath;
+        }
+
+        // Build entity tables first
+        {
+            QSqlQuery query(db);
+            QList<QString> tableDefs;
+{%- for eid, ent in s.entities %}
+            tableDefs << {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}::getSqlTableDefinition();
+{%- endfor %}
+            for (const auto &sql : tableDefs)
+            {
+                query.exec(sql);
+                // check for errors
+                if (query.lastError().isValid())
+                    qCritical() << "Error creating table:" << query.lastError().text();
+            }
+        }
+
+        // Then build junction tables
+        {
+            QSqlQuery query(db);
+            QList<QString> defs;
+{%- for eid, ent in s.entities %}
+            defs << {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}::getSqlJunctionTableDefinitions();
+{%- endfor %}
+            for (const auto &sql : defs)
+            {
+                query.exec(sql);
+                // check for errors
+                if (query.lastError().isValid())
+                    qCritical() << "Error creating table:" << query.lastError().text();
+            }
+        }
+
+        // WAL-optimized database settings for writing IDE
+        QStringList optimization;
+        optimization << QStringLiteral("PRAGMA journal_mode=WAL")        // Enable WAL mode
+                     << QStringLiteral("PRAGMA synchronous=NORMAL")      // Balance safety/performance
+                     << QStringLiteral("PRAGMA cache_size=20000")        // 20MB cache for better performance
+                     << QStringLiteral("PRAGMA temp_store=MEMORY")       // Store temp data in memory
+                     << QStringLiteral("PRAGMA wal_autocheckpoint=1000") // Auto-checkpoint every 1000 pages
+                     << QStringLiteral("PRAGMA busy_timeout=30000")      // 30s timeout for operations
+                     << QStringLiteral("PRAGMA mmap_size=268435456")     // 256MB memory mapping
+                     << QStringLiteral("PRAGMA case_sensitive_like=true")
+                     << QStringLiteral("PRAGMA recursive_triggers=ON") << QStringLiteral("PRAGMA foreign_keys=ON");
+
+        // execute each optimization option as a single query within the transaction
+        {
+            QSqlQuery query(db);
+            for (const QString &string : std::as_const(optimization))
+            {
+                query.prepare(string);
+                query.exec();
+                // check for errors
+                if (query.lastError().isValid())
+                    qCritical() << "Error creating table:" << query.lastError().text();
+            }
+        }
+        db.commit();
+        // Properly close and remove the connection:
+        db.close();
+        // Drop the last reference to the connection before removeDatabase
+        db = QSqlDatabase();
+        QSqlDatabase::removeDatabase(builderConn);
+
+        return dbPath;
+    }
+};
+} // namespace {{ s.global.application_pascal_name }}::Common::Database

@@ -1,0 +1,80 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+{%- set field_id = s.file.inner.field %}
+{%- for f in ent.fields %}
+    {%- if f.inner.id == field_id %}
+        {%- set_global field = f %}
+        {%- set_global target_ent = s.entities[field.inner.entity] %}
+    {%- endif %}
+{%- endfor %}
+
+#pragma once
+#include "{{ target_ent.snake_name }}/dtos.h"
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_controller.h"
+#include "{{ target_ent.snake_name }}/{{ target_ent.snake_name }}_controller.h"
+#include "direct_access/event_registry.h"
+
+#include <QAbstractListModel>
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+
+class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
+    Q_PROPERTY(int {{ ent.camel_name }}Id READ {{ ent.camel_name }}Id WRITE set{{ ent.pascal_name }}Id NOTIFY {{ ent.camel_name }}IdChanged)
+
+  public:
+    enum Roles
+    {
+        IdRole = Qt::UserRole + 1,
+        {%- for f in target_ent.fields %}
+        {{ f.pascal_name }}Role,
+        {%- endfor %}
+    };
+    Q_ENUM(Roles)
+
+    explicit {{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent = nullptr, int undoRedoStackId = 0);
+
+    int undoRedoStackId() const;
+    void setUndoRedoStackId(int undoRedoStackId);
+
+    // Basic functionality:
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+    // Add data:
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    QHash<int, QByteArray> roleNames() const override;
+
+    int {{ ent.camel_name }}Id() const;
+    void set{{ ent.pascal_name }}Id(int {{ ent.camel_name }}Id);
+
+  Q_SIGNALS:
+    void {{ ent.camel_name }}IdChanged();
+    void undoRedoStackIdChanged();
+
+  private Q_SLOTS:
+    void on{{ target_ent.pascal_name }}Updated(const QList<int> &ids);
+    void on{{ ent.pascal_name }}Updated(const QList<int> &ids);
+
+  private:
+    void resolveDependencies();
+    void refreshData();
+
+    int m_{{ ent.camel_name }}Id = -1;
+    int m_undoRedoStackId = 0;
+    QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> m_{{ target_ent.camel_plural_name }};
+
+    QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
+    QPointer<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Controller> m_{{ target_ent.camel_name }}Controller;
+    QPointer<{{ ent.pascal_name }}Controller> m_{{ ent.camel_name }}Controller;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

@@ -1,0 +1,46 @@
+
+#pragma once
+
+    {%- for fid, feat in s.features %}
+#include "features/{{ feat.snake_name }}_events.h"
+    {%- endfor %}
+
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::Common::Features
+{
+
+// Composite events structure that holds all event instances
+class FeatureEventRegistry : public QObject
+{
+    Q_OBJECT
+  public:
+    explicit FeatureEventRegistry(QObject *parent = nullptr)
+        : QObject(parent),
+        {%- for fid, feat in s.features %}
+        m_{{ feat.camel_name }}Events(new {{ feat.pascal_name }}Events(parent)){%- if not loop.last %},{% endif %}
+        {%- endfor %}
+
+    //    , m_undoRedoEvents(new UndoRedo::UndoRedoEvents(parent))
+    {
+    }
+
+    // Helper to get appropriate events by type
+    {%- for fid, feat in s.features %}
+    [[nodiscard]] QPointer<{{ feat.pascal_name }}Events> {{ feat.camel_name }}Events() const;
+    {%- endfor %}
+
+  private:
+    {%- for fid, feat in s.features %}
+    QPointer<{{ feat.pascal_name }}Events> m_{{ feat.camel_name }}Events;
+    {%- endfor %}
+};
+
+    {%- for fid, feat in s.features %}
+inline QPointer<{{ feat.pascal_name }}Events> FeatureEventRegistry::{{ feat.camel_name }}Events() const
+{
+    return m_{{ feat.camel_name }}Events;
+}
+    {%- endfor %}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::Features

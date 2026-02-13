@@ -1,0 +1,128 @@
+---
+schema:
+  version: 2
+global:
+  language: cpp-qt
+  application_name: CarLot
+  organisation:
+    name: MyCompany
+    domain: com.mycompany
+  prefix_path: src
+entities:
+- name: EntityBase
+  only_for_heritage: true
+  allow_direct_access: false
+  fields:
+  - name: id
+    type: uinteger
+  - name: created_at
+    type: datetime
+  - name: updated_at
+    type: datetime
+  undoable: true
+- name: Root
+  single_model: true
+  inherits_from: EntityBase
+  allow_direct_access: true
+  fields:
+  - name: cars
+    type: entity
+    entity: Car
+    relationship: ordered_one_to_many
+    strong: true
+  - name: customers
+    type: entity
+    entity: Customer
+    relationship: one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: name
+  - name: sales
+    type: entity
+    entity: Sale
+    relationship: one_to_many
+    strong: true
+  undoable: false
+- name: Car
+  single_model: true
+  inherits_from: EntityBase
+  allow_direct_access: true
+  fields:
+  - name: make
+    type: string
+  - name: model
+    type: string
+  - name: year
+    type: integer
+  - name: price
+    type: float
+  - name: status
+    type: enum
+    enum_name: CarStatus
+    enum_values:
+    - Available
+    - Sold
+    - Reserved
+  undoable: true
+- name: Customer
+  single_model: true
+  inherits_from: EntityBase
+  allow_direct_access: true
+  fields:
+  - name: name
+    type: string
+  - name: email
+    type: string
+  - name: phone
+    type: string
+    optional: true
+  undoable: true
+- name: Sale
+  single_model: true
+  inherits_from: EntityBase
+  allow_direct_access: true
+  fields:
+  - name: car
+    type: entity
+    entity: Car
+    relationship: many_to_one
+    optional: true
+  - name: customer
+    type: entity
+    entity: Customer
+    relationship: many_to_one
+    optional: true
+  - name: sale_date
+    type: datetime
+  - name: price
+    type: float
+  undoable: true
+features:
+- name: inventory_management
+  use_cases:
+  - name: import_inventory
+    validator: false
+    entities:
+    - Root
+    - Car
+    undoable: false
+    dto_in:
+      name: ImportInventoryDto
+      fields:
+      - name: file_path
+        type: string
+  - name: export_inventory
+    validator: false
+    entities:
+    - Root
+    - Car
+    undoable: false
+    read_only: true
+    dto_in:
+      name: ExportInventoryDto
+      fields:
+      - name: export_file_path
+        type: string
+ui:
+  rust_cli: false
+  cpp_qt_qtwidgets: true

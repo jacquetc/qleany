@@ -196,11 +196,7 @@ impl SaveUseCase {
                             r#type: field_type,
                             entity,
                             relationship,
-                            required: if field.required {
-                                Some(true)
-                            } else {
-                                Some(false)
-                            },
+                            optional: if field.optional { Some(true) } else { None },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),
@@ -265,7 +261,7 @@ impl SaveUseCase {
                                         model_structs::DtoField {
                                             name: field.name.clone(),
                                             r#type: field_type,
-                                            is_nullable: if field.is_nullable {
+                                            optional: if field.optional {
                                                 Some(true)
                                             } else {
                                                 None
@@ -298,7 +294,7 @@ impl SaveUseCase {
                                         model_structs::DtoField {
                                             name: field.name.clone(),
                                             r#type: field_type,
-                                            is_nullable: if field.is_nullable {
+                                            optional: if field.optional {
                                                 Some(true)
                                             } else {
                                                 None

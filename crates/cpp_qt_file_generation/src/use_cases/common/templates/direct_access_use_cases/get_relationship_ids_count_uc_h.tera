@@ -1,0 +1,27 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "../dtos.h"
+#include "common/dto_mapper.h"
+#include "i_{{ ent.snake_name }}_unit_of_work.h"
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+
+class GetRelationshipIdsCountUseCase
+{
+  public:
+    explicit GetRelationshipIdsCountUseCase(std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> uow) : m_uow(std::move(uow))
+    {
+    }
+    ~GetRelationshipIdsCountUseCase() = default;
+
+    int execute(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship);
+
+  private:
+    std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

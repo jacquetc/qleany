@@ -162,7 +162,7 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
                 "fields": fields.iter().map(|f| serde_json::json!({
                     "name": f.name,
                     "field_type": format!("{:?}", f.field_type),
-                    "required": f.required,
+                    "optional": f.optional,
                 })).collect::<Vec<_>>()
             });
             println!("{}", serde_json::to_string_pretty(&json)?);

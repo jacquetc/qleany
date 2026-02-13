@@ -110,7 +110,7 @@ struct FieldVM {
     pub pascal_name: String,
     pub snake_name: String,
     pub relationship: String,
-    pub required: bool,
+    pub optional: bool,
     pub rust_base_type: String,
     pub rust_type: String,
 }
@@ -321,10 +321,10 @@ impl SnapshotBuilder {
 
             let rust_type = match f.relationship {
                 FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne => {
-                    if f.required {
-                        rust_base_type.clone()
-                    } else {
+                    if f.optional {
                         format!("Option<{}>", &rust_base_type)
+                    } else {
+                        rust_base_type.clone()
                     }
                 }
                 FieldRelationshipType::OrderedOneToMany
@@ -336,7 +336,7 @@ impl SnapshotBuilder {
                 pascal_name: heck::AsPascalCase(&f.name).to_string(),
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
                 relationship,
-                required: f.required,
+                optional: f.optional,
                 rust_base_type,
                 rust_type,
             });
@@ -1126,6 +1126,7 @@ mod tests {
                     feature: None,
                     entity: None,
                     use_case: None,
+                    field: None,
                 },
             },
             global: GlobalVM {
@@ -1176,6 +1177,7 @@ mod tests {
             feature: None,
             entity: Some(entity_id),
             use_case: None,
+            field: None,
         };
         let global = Global {
             id: 50,
@@ -1202,7 +1204,7 @@ mod tests {
             field_type: FieldType::Entity,
             entity: Some(entity_id),
             relationship: FieldRelationshipType::OneToOne,
-            required: false, // nullable
+            optional: true, // nullable
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1215,7 +1217,7 @@ mod tests {
             field_type: FieldType::String,
             entity: None,
             relationship: FieldRelationshipType::OneToMany,
-            required: false,
+            optional: true,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1250,7 +1252,7 @@ mod tests {
                         pascal_name: heck::AsPascalCase(&field_relationship.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_relationship.name).to_string(),
                         relationship: "OneToOne".to_string(),
-                        required: false,
+                        optional: true,
                         rust_base_type: "String".to_string(),
                         rust_type: "String".to_string(),
                     },
@@ -1259,7 +1261,7 @@ mod tests {
                         pascal_name: heck::AsPascalCase(&field_tags.name).to_string(),
                         snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         relationship: "OneToMany".to_string(),
-                        required: false,
+                        optional: true,
                         rust_base_type: "String".to_string(),
                         rust_type: "Vec<String>".to_string(),
                     },

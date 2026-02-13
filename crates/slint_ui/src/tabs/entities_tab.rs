@@ -13,6 +13,7 @@ use common::direct_access::entity::EntityRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::{FieldRelationshipType, FieldType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use common::types::EntityId;
 use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
 use slint::{ComponentHandle, Model, Timer};
@@ -146,6 +147,7 @@ fn subscribe_workspace_updated_event(
                         && app.global::<AppState>().get_manifest_is_open()
                     {
                         fill_entity_list(&app, &ctx);
+                        fill_entity_options(&app, &ctx);
                         app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
@@ -175,6 +177,7 @@ fn subscribe_entity_updated_event(
                         && app.global::<AppState>().get_manifest_is_open()
                     {
                         fill_entity_list(&app, &ctx);
+                        fill_entity_options(&app, &ctx);
                         app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
@@ -631,6 +634,11 @@ fn setup_select_entity_callbacks(app: &App, app_context: &Arc<AppContext>) {
                         // Fill inherits_from options and set the selected index
                         fill_inherits_from_options(&app, &ctx, entity.inherits_from);
                         fill_field_list(&app, &ctx);
+
+                        fill_entity_options(&app, &ctx);
+
+                        // clear other forms when an entity is selected
+                        clear_field_form(&app);
                     }
                     _ => {
                         app.global::<EntitiesTabState>().set_selected_entity_id(-1);
@@ -706,11 +714,25 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
     state.set_selected_field_id(field.id as i32);
     state.set_selected_field_name(field.name.clone().into());
     state.set_selected_field_type(field_type_to_string(&field.field_type).into());
-    state.set_selected_field_entity(field.entity.map(|e| e as i32).unwrap_or(-1));
+
+    // get entity index
+    let field_entity_id = field.entity.map(|e| e as i32).unwrap_or(-1);
+    let field_entity_index: i32 = if field_entity_id > 0 {
+        get_option_index_from_entity_id(app, field_entity_id)
+            .unwrap_or(0)
+            .try_into()
+            .unwrap_or(0)
+    } else {
+        -1
+    };
+
+    log::debug!("Field entity index: {}", &field_entity_index);
+
+    state.set_selected_field_entity_index(field_entity_index);
     state.set_selected_field_relationship(
         field_relationship_type_to_string(&field.relationship).into(),
     );
-    state.set_selected_field_required(field.required);
+    state.set_selected_field_optional(field.optional);
     state.set_selected_field_strong(field.strong);
     state.set_selected_field_list_model(field.list_model);
     state.set_selected_field_list_model_displayed_field(
@@ -737,9 +759,9 @@ fn clear_field_form(app: &App) {
     state.set_selected_field_id(-1);
     state.set_selected_field_name("".into());
     state.set_selected_field_type("String".into());
-    state.set_selected_field_entity(-1);
+    state.set_selected_field_entity_index(-1);
     state.set_selected_field_relationship("one_to_one".into());
-    state.set_selected_field_required(false);
+    state.set_selected_field_optional(false);
     state.set_selected_field_strong(true);
     state.set_selected_field_list_model(false);
     state.set_selected_field_list_model_displayed_field("".into());
@@ -763,6 +785,9 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
             let mut names: Vec<slint::SharedString> = Vec::new();
             let mut ids: Vec<i32> = Vec::new();
             for e in entities_opt.into_iter().flatten() {
+                if e.only_for_heritage {
+                    continue;
+                }
                 names.push(e.name.into());
                 ids.push(e.id as i32);
             }
@@ -774,6 +799,24 @@ fn fill_entity_options(app: &App, app_context: &Arc<AppContext>) {
                 .set_entity_option_ids(ids_model.into());
         }
     }
+}
+
+fn get_entity_id_from_option_index(app: &App) -> Option<EntityId> {
+    let index = app
+        .global::<EntitiesTabState>()
+        .get_selected_field_entity_index();
+    if index == -1 {
+        return None;
+    }
+    let slint_ids: slint::ModelRc<i32> = app.global::<EntitiesTabState>().get_entity_option_ids();
+    let ids: Vec<i32> = slint_ids.iter().collect();
+    ids.get(index as usize).copied().map(|id| id as EntityId)
+}
+
+fn get_option_index_from_entity_id(app: &App, entity_id: i32) -> Option<usize> {
+    let slint_ids: slint::ModelRc<i32> = app.global::<EntitiesTabState>().get_entity_option_ids();
+    let ids: Vec<i32> = slint_ids.iter().collect();
+    ids.iter().position(|&id| id == entity_id)
 }
 
 /// Helper function to populate inherits_from options for the Inherits From ComboBox
@@ -802,7 +845,9 @@ fn fill_inherits_from_options(
             let mut ids: Vec<i32> = vec![-1];
 
             for maybe_entity in entities_opt.into_iter() {
-                if let Some(e) = maybe_entity {
+                if let Some(e) = maybe_entity
+                    && e.only_for_heritage
+                {
                     names.push(e.name.clone().into());
                     ids.push(e.id as i32);
 
@@ -918,7 +963,6 @@ fn setup_select_field_callbacks(app: &App, app_context: &Arc<AppContext>) {
 
                     if let Ok(Some(field)) = field_res {
                         fill_field_form(&app, &field);
-                        fill_entity_options(&app, &ctx);
                     } else {
                         clear_field_form(&app);
                     }
@@ -961,6 +1005,17 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                     // Clear entity reference if not Entity type
                     if field.field_type != FieldType::Entity {
                         field.entity = None;
+                        field.relationship = FieldRelationshipType::OneToOne;
+                        field.strong = false;
+                        app.global::<EntitiesTabState>().set_selected_field_entity_index(-1);
+                        app.global::<EntitiesTabState>().set_selected_field_strong(false);
+                        app.global::<EntitiesTabState>().set_selected_field_relationship("one_to_one".into());
+                    }
+                    if field.field_type != FieldType::Enum {
+                        field.enum_values = None;
+                        field.enum_name = None;
+                        app.global::<EntitiesTabState>().set_selected_field_enum_name("".into());
+                        app.global::<EntitiesTabState>().set_selected_field_enum_values("".into());
                     }
                 });
             }
@@ -972,22 +1027,12 @@ fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_entity_changed({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
-        move |entity_index| {
+        move |field_entity_index| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 // Get the entity id from the index
-                let entity_option_ids = app.global::<EntitiesTabState>().get_entity_option_ids();
-                let entity_id = if entity_index >= 0
-                    && (entity_index as usize) < entity_option_ids.row_count()
-                {
-                    Some(
-                        entity_option_ids
-                            .row_data(entity_index as usize)
-                            .unwrap_or(-1) as common::types::EntityId,
-                    )
-                } else {
-                    None
-                };
+                let entity_id = get_entity_id_from_option_index(&app);
+
                 update_field_helper(&app, &ctx, field_id, |field| {
                     field.entity = entity_id;
                 });
@@ -1007,21 +1052,42 @@ fn setup_field_relationship_callback(app: &App, app_context: &Arc<AppContext>) {
                     let relationship_type = string_to_field_relationship_type(value.as_str());
                     update_field_helper(&app, &ctx, field_id, |field| {
                         field.relationship = relationship_type.clone();
+                        if field.relationship == FieldRelationshipType::ManyToOne
+                            || field.relationship == FieldRelationshipType::ManyToMany
+                        {
+                            field.strong = false;
+                            app.global::<EntitiesTabState>().set_selected_field_strong(false);
+                        }
+                        if field.relationship == FieldRelationshipType::OrderedOneToMany
+                            || field.relationship == FieldRelationshipType::OneToMany
+                            || field.relationship == FieldRelationshipType::ManyToMany
+                        {
+                            field.optional = false;
+                            app.global::<EntitiesTabState>().set_selected_field_optional(false);
+                        }
+                        if field.relationship == FieldRelationshipType::OneToOne
+                            || field.relationship == FieldRelationshipType::ManyToOne
+                        {
+                            field.list_model = false;
+                            field.list_model_displayed_field = None;
+                            app.global::<EntitiesTabState>().set_selected_field_list_model(false);
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                        }
                     });
                 }
             }
         });
 }
 
-fn setup_field_required_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<EntitiesTabState>().on_field_required_changed({
+fn setup_field_optional_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_optional_changed({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |value| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 update_field_helper(&app, &ctx, field_id, |field| {
-                    field.required = value;
+                    field.optional = value;
                 });
             }
         }
@@ -1100,6 +1166,13 @@ fn setup_field_list_model_callback(app: &App, app_context: &Arc<AppContext>) {
                     let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                     update_field_helper(&app, &ctx, field_id, |field| {
                         field.list_model = value;
+                        if field.list_model {
+                            field.list_model_displayed_field = Some("name".into());
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("name".into());
+                        } else {
+                            field.list_model_displayed_field = None;
+                            app.global::<EntitiesTabState>().set_selected_field_list_model_displayed_field("".into());
+                        }
                     });
                 }
             }
@@ -1245,6 +1318,17 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                             return;
                         }
                         entity.only_for_heritage = value;
+                        if value {
+                            entity.undoable = false;
+                            entity.single_model = false;
+                            entity.inherits_from = None;
+                            app.global::<EntitiesTabState>().set_selected_entity_undoable(false);
+                            app.global::<EntitiesTabState>().set_selected_entity_single_model(false);
+                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from(-1);
+                            app.global::<EntitiesTabState>().set_selected_entity_inherits_from_value("None".into());
+                        }
+                        entity.allow_direct_access = !value;
+                        app.global::<EntitiesTabState>().set_selected_entity_allow_direct_access(!value);
 
                         let result = entity_commands::update_entity(
                             &ctx,
@@ -1375,7 +1459,7 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     field_type: FieldType::String,
                     entity: None,
                     relationship: FieldRelationshipType::OneToOne,
-                    required: false,
+                    optional: false,
                     strong: true,
                     list_model: false,
                     list_model_displayed_field: None,
@@ -1603,7 +1687,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_field_type_callback(app, app_context);
     setup_field_entity_callback(app, app_context);
     setup_field_relationship_callback(app, app_context);
-    setup_field_required_callback(app, app_context);
+    setup_field_optional_callback(app, app_context);
     setup_field_strong_callback(app, app_context);
     setup_field_list_model_callback(app, app_context);
     setup_field_list_model_displayed_field_callback(app, app_context);

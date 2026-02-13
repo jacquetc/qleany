@@ -1,0 +1,124 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "{{ ent.snake_name }}/dtos.h"
+#include "direct_access/{{ ent.snake_name }}/i_{{ ent.snake_name }}_repository.h"
+#include "direct_access/mapper_tools.h"
+#include "entities/{{ ent.snake_name }}.h"
+
+#include <QList>
+#include <algorithm>
+#include <iterator>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+namespace CD = Common::DirectAccess;
+
+/// @brief Static-only mapper between {{ ent.pascal_name }} entities and DTOs.
+class DtoMapper final
+{
+  public:
+    DtoMapper() = delete;
+
+    static SCE::{{ ent.pascal_name }} toEntity(const Create{{ ent.pascal_name }}Dto &dto)
+    {
+        return SCE::{{ ent.pascal_name }}{
+            .id = 0,
+        {%- for f in ent.fields %}
+            {%- if f.inner.field_type == "Enum" %}
+                {%- if f.optional %}
+            .{{ f.camel_name }} = CD::mapOptionalEnum<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- endif %}
+            {%- else %}
+            .{{ f.camel_name }} = dto.{{ f.camel_name }},
+            {%- endif %}
+        {%- endfor %}
+        };
+    }
+
+    static SCE::{{ ent.pascal_name }} toEntity(const {{ ent.pascal_name }}Dto &dto)
+    {
+        return SCE::{{ ent.pascal_name }}{
+            .id = dto.id,
+        {%- for f in ent.fields %}
+            {%- if f.inner.field_type == "Enum" %}
+                {%- if f.optional %}
+            .{{ f.camel_name }} = CD::mapOptionalEnum<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- endif %}
+            {%- else %}
+            .{{ f.camel_name }} = dto.{{ f.camel_name }},
+            {%- endif %}
+        {%- endfor %}
+        };
+    }
+
+    static {{ ent.pascal_name }}Dto toDto(const SCE::{{ ent.pascal_name }} &entity)
+    {
+        return {{ ent.pascal_name }}Dto{
+            .id = entity.id,
+        {%- for f in ent.fields %}
+            {%- if f.inner.field_type == "Enum" %}
+                {%- if f.optional %}
+            .{{ f.camel_name }} = CD::mapOptionalEnum<{{ f.inner.enum_name }}>(entity.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<{{ f.inner.enum_name }}>(entity.{{ f.camel_name }}),
+                {%- endif %}
+            {%- else %}
+            .{{ f.camel_name }} = entity.{{ f.camel_name }},
+            {%- endif %}
+        {%- endfor %}
+        };
+    }
+
+    static QList<SCE::{{ ent.pascal_name }}> toEntityList(const QList<Create{{ ent.pascal_name }}Dto> &dtos)
+    {
+        QList<SCE::{{ ent.pascal_name }}> entities;
+        entities.reserve(dtos.size());
+        std::ranges::transform(dtos, std::back_inserter(entities),
+            [](const Create{{ ent.pascal_name }}Dto &dto) { return toEntity(dto); });
+        return entities;
+    }
+
+    static QList<SCE::{{ ent.pascal_name }}> toEntityList(const QList<{{ ent.pascal_name }}Dto> &dtos)
+    {
+        QList<SCE::{{ ent.pascal_name }}> entities;
+        entities.reserve(dtos.size());
+        std::ranges::transform(dtos, std::back_inserter(entities),
+            [](const {{ ent.pascal_name }}Dto &dto) { return toEntity(dto); });
+        return entities;
+    }
+
+    static QList<{{ ent.pascal_name }}Dto> toDtoList(const QList<SCE::{{ ent.pascal_name }}> &entities)
+    {
+        QList<{{ ent.pascal_name }}Dto> dtos;
+        dtos.reserve(entities.size());
+        std::ranges::transform(entities, std::back_inserter(dtos),
+            [](const SCE::{{ ent.pascal_name }} &entity) { return toDto(entity); });
+        return dtos;
+    }
+{%- if ent.forward_relationships %}
+
+    static SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField toCommonRelationshipField({{ ent.pascal_name }}RelationshipField field)
+    {
+        switch (field)
+        {
+    {% for rid, r in ent.forward_relationships %}
+        case {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }}:
+            return SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }};
+    {%- endfor %}
+        }
+    {% for rid, r in ent.forward_relationships %}
+        return SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }}; // fallback
+    {%- break %}
+    {%- endfor %}
+    }
+{%- endif %}
+};
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

@@ -1,7 +1,29 @@
-import { ScrollView, ProgressIndicator, VerticalBox, ListView, CheckBox } from "std-widgets.slint";
-import { AppState, CRListItem, FeaturesTabState, CommonTools } from "../globals.slint";
-import { ListItem, Divider, SectionHeader, FormField, StyledLineEdit, Alert, Breadcrumb, Paper } from "../components/misc.slint";
-import { CheckableReorderableList } from "../components/checkable_reorderable_list.slint";
+import {
+    ScrollView,
+    ProgressIndicator,
+    VerticalBox,
+    ListView,
+    CheckBox,
+} from "std-widgets.slint";
+import {
+    AppState,
+    CRListItem,
+    FeaturesTabState,
+    CommonTools,
+} from "../globals.slint";
+import {
+    ListItem,
+    Divider,
+    SectionHeader,
+    FormField,
+    StyledLineEdit,
+    Alert,
+    Breadcrumb,
+    Paper,
+} from "../components/misc.slint";
+import {
+    CheckableReorderableList,
+} from "../components/checkable_reorderable_list.slint";
 import { DtoDetails } from "dto_details.slint";
 
 
@@ -9,49 +31,59 @@ export component FeaturesTab inherits Rectangle {
     background: #ffffff;
 
     VerticalLayout {
-        padding: 10px;
+        padding: 5px;
         spacing: 0px;
 
         // Title
         Text {
             text: "Features";
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: #212529;
         }
 
-        if FeaturesTabState.selected_feature_id >= 0 : Rectangle { height: 12px; }
-        if FeaturesTabState.selected_feature_id >= 0 : Breadcrumb {
-            path: (FeaturesTabState.selected_use_case_id >= 0) ? (
-                (FeaturesTabState.selected_dto_in_field_id >= 0) ? [
+        HorizontalLayout {
+            height: 30px;
+
+            if FeaturesTabState.selected_feature_id >= 0: Rectangle {
+                height: 12px;
+            }
+            if FeaturesTabState.selected_feature_id >= 0: Breadcrumb {
+                path: (FeaturesTabState.selected_use_case_id >= 0) ? ((FeaturesTabState.selected_dto_in_field_id >= 0) ? [
                     "Features",
                     FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
                     FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case",
                     "DTO In",
                     FeaturesTabState.selected_dto_in_field_name != "" ? FeaturesTabState.selected_dto_in_field_name : "Unnamed Field"
-                ] : (
-                    (FeaturesTabState.selected_dto_out_field_id >= 0) ? [
-                        "Features",
-                        FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
-                        FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case",
-                        "DTO Out",
-                        FeaturesTabState.selected_dto_out_field_name != "" ? FeaturesTabState.selected_dto_out_field_name : "Unnamed Field"
-                    ] : [
-                        "Features",
-                        FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
-                        FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case"
-                    ]
-                )
-            ) : [
-                "Features",
-                FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature"
-            ];
+                ] : ((FeaturesTabState.selected_dto_out_field_id >= 0) ? [
+                    "Features",
+                    FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
+                    FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case",
+                    "DTO Out",
+                    FeaturesTabState.selected_dto_out_field_name != "" ? FeaturesTabState.selected_dto_out_field_name : "Unnamed Field"
+                ] : [
+                    "Features",
+                    FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature",
+                    FeaturesTabState.selected_use_case_name != "" ? FeaturesTabState.selected_use_case_name : "Unnamed Use Case"
+                ])) : [
+                    "Features",
+                    FeaturesTabState.selected_feature_name != "" ? FeaturesTabState.selected_feature_name : "Unnamed Feature"
+                ];
+            }
+
+            // Spacer
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+
         }
 
-        Rectangle { height: 24px; }
+        Rectangle {
+            height: 24px;
+        }
 
         // Loading state
-        if FeaturesTabState.features_is_loading : Alert {
+        if FeaturesTabState.features_is_loading: Alert {
             title: "Loading";
             message: "Loading features data...";
             alert-color: #228be6;
@@ -59,14 +91,14 @@ export component FeaturesTab inherits Rectangle {
         }
 
         // Error state
-        if FeaturesTabState.features_error_message != "" : Alert {
+        if FeaturesTabState.features_error_message != "": Alert {
             title: "Error Loading Data";
             message: FeaturesTabState.features_error_message;
             alert-color: #fa5252;
         }
 
         // Main content area - 3 columns
-        if !FeaturesTabState.features_is_loading && FeaturesTabState.features_error_message == "" : HorizontalLayout {
+        if !FeaturesTabState.features_is_loading && FeaturesTabState.features_error_message == "": HorizontalLayout {
             spacing: 0px;
 
             // Column 1: Feature List
@@ -121,7 +153,6 @@ export component FeaturesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-
                     if FeaturesTabState.feature_cr_list.length == 0: Text {
                         font-size: 14px;
                         text: "No features yet. Click + to create one.";
@@ -159,7 +190,7 @@ export component FeaturesTab inherits Rectangle {
             }
 
             // Divider
-            Divider {}
+            Divider { }
 
             // Column 2: Feature Details + Use Cases
             Paper {
@@ -177,24 +208,20 @@ export component FeaturesTab inherits Rectangle {
                         background: #dee2e6;
                     }
 
-                    if FeaturesTabState.selected_feature_id >= 0 : Rectangle {
+                    if FeaturesTabState.selected_feature_id >= 0: Rectangle {
                         height: 100px;
-                        
                         VerticalLayout {
                             padding: 16px;
                             spacing: 8px;
-                            
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") ? "Feature name is required" :
-                                    (CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name) ? "" : "Feature name must be in snake_case");
+                                error-message: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") ? "Feature name is required" : (CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name) ? "" : "Feature name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_feature_name;
                                     placeholder: "Enter the feature name";
-                                    has-error: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "")
-                                        || !CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name);
+                                    has-error: (FeaturesTabState.selected_feature_id >= 0 && FeaturesTabState.selected_feature_name == "") || !CommonTools.check_is_snake_case(FeaturesTabState.selected_feature_name);
 
                                     edited(text) => {
                                         FeaturesTabState.feature_name_changed(text);
@@ -264,7 +291,7 @@ export component FeaturesTab inherits Rectangle {
                     Rectangle {
                         vertical-stretch: 1;
 
-                        use_case_list :=  CheckableReorderableList {
+                        use_case_list := CheckableReorderableList {
                             items: FeaturesTabState.use_case_cr_list;
                             reorderable: true;
                             enable-checkbox: false;
@@ -286,15 +313,14 @@ export component FeaturesTab inherits Rectangle {
                                 }
                             }
                         }
-
                     }
                 }
             }
 
             // Conditional: Use Case Details Column (only show when use case is selected)
-            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
+            if FeaturesTabState.selected_use_case_id >= 0: Divider { }
 
-            if FeaturesTabState.selected_use_case_id >= 0 : Paper {
+            if FeaturesTabState.selected_use_case_id >= 0: Paper {
                 horizontal-stretch: 1;
                 with-border: true;
 
@@ -318,8 +344,7 @@ export component FeaturesTab inherits Rectangle {
                             FormField {
                                 label: "Name";
                                 required: true;
-                                error-message: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") ? "Use case name is required" :
-                                (CommonTools.check_is_snake_case(FeaturesTabState.selected_use_case_name) ? "" : "Use case name must be in snake_case");
+                                error-message: (FeaturesTabState.selected_use_case_id >= 0 && FeaturesTabState.selected_use_case_name == "") ? "Use case name is required" : (CommonTools.check_is_snake_case(FeaturesTabState.selected_use_case_name) ? "" : "Use case name must be in snake_case");
 
                                 StyledLineEdit {
                                     text <=> FeaturesTabState.selected_use_case_name;
@@ -339,21 +364,23 @@ export component FeaturesTab inherits Rectangle {
                                 VerticalLayout {
                                     spacing: 8px;
 
-                                    CheckBox {
-                                        text: "Undoable";
-                                        checked <=> FeaturesTabState.selected_use_case_undoable;
 
-                                        toggled => {
-                                            FeaturesTabState.use_case_undoable_changed(self.checked);
-                                        }
-                                    }
-
-                                    CheckBox {
+                                    read_only_checkbox := CheckBox {
                                         text: "Read Only";
                                         checked <=> FeaturesTabState.selected_use_case_read_only;
 
                                         toggled => {
                                             FeaturesTabState.use_case_read_only_changed(self.checked);
+                                        }
+                                    }
+
+                                    if !read_only_checkbox.checked:
+                                        CheckBox {
+                                        text: "Undoable";
+                                        checked <=> FeaturesTabState.selected_use_case_undoable;
+
+                                        toggled => {
+                                            FeaturesTabState.use_case_undoable_changed(self.checked);
                                         }
                                     }
 
@@ -369,26 +396,28 @@ export component FeaturesTab inherits Rectangle {
                             }
 
                             // Spacer
-                            Rectangle { vertical-stretch: 1; }
+                            Rectangle {
+                                vertical-stretch: 1;
+                            }
                         }
                     }
                 }
             }
 
             // Conditional: DTO Details Column (only show when use case is selected)
-            if FeaturesTabState.selected_use_case_id >= 0 : Divider {}
+            if FeaturesTabState.selected_use_case_id >= 0: Divider { }
 
-            if FeaturesTabState.selected_use_case_id >= 0 : ScrollView {
+            if FeaturesTabState.selected_use_case_id >= 0: ScrollView {
                 horizontal-stretch: 1;
                 min-width: 500px;
 
-                DtoDetails {}
+                DtoDetails { }
             }
         }
     }
 
     // Loading overlay
-    if FeaturesTabState.features_is_loading : Rectangle {
+    if FeaturesTabState.features_is_loading: Rectangle {
         background: #ffffff80;
         x: 0px;
         y: 0px;

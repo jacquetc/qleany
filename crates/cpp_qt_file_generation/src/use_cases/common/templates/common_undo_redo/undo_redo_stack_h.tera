@@ -1,0 +1,62 @@
+#pragma once
+
+#include "undo_redo_command.h"
+#include <QRecursiveMutex>
+#include <QObject>
+#include <QStack>
+#include <memory>
+
+using namespace Qt::StringLiterals;
+
+namespace {{ s.global.application_pascal_name }}::Common::UndoRedo
+{
+
+class UndoRedoStack : public QObject
+{
+    Q_OBJECT
+
+  public:
+    explicit UndoRedoStack(QObject *parent = nullptr);
+
+    void push(std::shared_ptr<UndoRedoCommand> command);
+    bool canUndo() const;
+    bool canRedo() const;
+    void execute();
+    void undo();
+    void redo();
+    void clear();
+
+    int undoCount() const;
+    int redoCount() const;
+    QString undoText() const;
+    QString redoText() const;
+
+    // Stack size management
+    void setMaxStackSize(int maxSize);
+    int maxStackSize() const;
+    void setAutoCleanupEnabled(bool enabled);
+    bool isAutoCleanupEnabled() const;
+
+  Q_SIGNALS:
+    void canUndoChanged(bool canUndo);
+    void canRedoChanged(bool canRedo);
+    void undoTextChanged(const QString &undoText);
+    void redoTextChanged(const QString &redoText);
+    void commandFinished(bool success);
+
+  private Q_SLOTS:
+    void onCommandFinished(bool success);
+
+  private:
+    void updateState();
+
+    mutable QRecursiveMutex m_mutex;
+    QStack<std::shared_ptr<UndoRedoCommand>> m_undoStack;
+    QStack<std::shared_ptr<UndoRedoCommand>> m_redoStack;
+    std::shared_ptr<UndoRedoCommand> m_currentCommand;
+    int m_maxStackSize = -1; // -1 means unlimited
+    bool m_autoCleanupEnabled = false;
+    friend class UndoRedoManager;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::UndoRedo

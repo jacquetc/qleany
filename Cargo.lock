@@ -4380,6 +4380,7 @@ dependencies = [
  "arboard",
  "clap",
  "common",
+ "cpp_qt_file_generation",
  "ctrlc",
  "direct_access",
  "dirs",

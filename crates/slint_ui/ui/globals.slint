@@ -102,9 +102,9 @@ export global EntitiesTabState {
     // Field details properties
     in-out property <string> selected_field_name: "";
     in-out property <string> selected_field_type: "String";
-    in-out property <int> selected_field_entity: -1;
+    in-out property <int> selected_field_entity_index: -1;
     in-out property <string> selected_field_relationship: "one_to_one";
-    in-out property <bool> selected_field_required: false;
+    in-out property <bool> selected_field_optional: false;
     in-out property <bool> selected_field_strong: true;
     in-out property <bool> selected_field_list_model: false;
     in-out property <string> selected_field_list_model_displayed_field: "";
@@ -125,7 +125,7 @@ export global EntitiesTabState {
     callback field_entity_changed(int);
     callback field_is_primary_key_changed(bool);
     callback field_relationship_changed(string);
-    callback field_required_changed(bool);
+    callback field_optional_changed(bool);
     callback field_strong_changed(bool);
     callback field_list_model_changed(bool);
     callback field_list_model_displayed_field_changed(string);
@@ -201,13 +201,13 @@ export global FeaturesTabState {
     // DTO In field details properties
     in-out property <string> selected_dto_in_field_name: "";
     in-out property <int> selected_dto_in_field_type_index: 4; // Default to String
-    in-out property <bool> selected_dto_in_field_is_nullable: false;
+    in-out property <bool> selected_dto_in_field_optional: false;
     in-out property <bool> selected_dto_in_field_is_list: false;
 
     // DTO In field details callbacks
     callback dto_in_field_name_changed(string);
     callback dto_in_field_type_changed(string);
-    callback dto_in_field_is_nullable_changed(bool);
+    callback dto_in_field_optional_changed(bool);
     callback dto_in_field_is_list_changed(bool);
 
     // DTO Out properties
@@ -226,13 +226,13 @@ export global FeaturesTabState {
     // DTO Out field details properties
     in-out property <string> selected_dto_out_field_name: "";
     in-out property <int> selected_dto_out_field_type_index: 4; // Default to String
-    in-out property <bool> selected_dto_out_field_is_nullable: false;
+    in-out property <bool> selected_dto_out_field_optional: false;
     in-out property <bool> selected_dto_out_field_is_list: false;
 
     // DTO Out field details callbacks
     callback dto_out_field_name_changed(string);
     callback dto_out_field_type_changed(string);
-    callback dto_out_field_is_nullable_changed(bool);
+    callback dto_out_field_optional_changed(bool);
     callback dto_out_field_is_list_changed(bool);
 
     // Use case entities list (checkable list of all entities, checked = associated with use case)
@@ -309,8 +309,6 @@ export global AppState {
     callback refresh_generate_tab();
     // File filter callback
     callback file_filter_changed(string);
-    // Group check change callback (for exclusive selection behavior)
-    callback group_check_changed(int, bool);
     // File check change callback (for updating selected files count)
     callback file_check_changed(int, bool);
     // Select/Unselect all files

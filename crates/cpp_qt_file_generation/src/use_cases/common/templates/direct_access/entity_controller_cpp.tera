@@ -1,0 +1,195 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#include "{{ ent.snake_name }}_controller.h"
+
+#include "{{ ent.snake_name }}_unit_of_work.h"
+#include "service_locator.h"
+#include "use_cases/common/dto_mapper.h"
+#include "use_cases/create_uc.h"
+#include "use_cases/get_uc.h"
+#include "use_cases/remove_uc.h"
+#include "use_cases/update_uc.h"
+#include "controller_command_helpers.h"
+#include <QCoro/QCoroTask>
+#include <QCoro/QCoroTimer>
+{%- if ent.forward_relationships %}
+#include "use_cases/get_relationship_ids_count_uc.h"
+#include "use_cases/get_relationship_ids_in_range_uc.h"
+#include "use_cases/get_relationship_ids_many_uc.h"
+#include "use_cases/get_relationship_ids_uc.h"
+#include "use_cases/set_relationship_ids_uc.h"
+{%- endif %}
+
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+namespace Helpers = {{ s.global.application_pascal_name }}::Common::ControllerHelpers;
+
+// Default timeout for async command/query execution (ms)
+static constexpr int kDefaultCommandTimeoutMs = 500;
+
+{{ ent.pascal_name }}Controller::{{ ent.pascal_name }}Controller(QObject *parent, int undoRedoStackId) : QObject(parent),
+m_undoRedoStackId(undoRedoStackId)
+{
+    resolveDependencies();
+}
+
+void {{ ent.pascal_name }}Controller::setUndoRedoStackId(int undoRedoStackId) {
+    m_undoRedoStackId = undoRedoStackId;
+}
+
+int {{ ent.pascal_name }}Controller::undoRedoStackId() const{
+    return m_undoRedoStackId;
+}
+
+void {{ ent.pascal_name }}Controller::resolveDependencies()
+{
+    auto *locator = Common::ServiceLocator::instance();
+    if (!locator) [[unlikely]]
+    {
+        qCritical() << "ServiceLocator not initialized";
+        return;
+    }
+    m_dbContext = locator->dbContext();
+    m_eventRegistry = locator->eventRegistry();
+    m_undoRedoSystem = locator->undoRedoSystem();
+}
+
+// ---------------------------------------------------------------------------
+// CRUD Operations
+// ---------------------------------------------------------------------------
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Create{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+        m_undoRedoStackId,
+        u"Create {{ ent.camel_plural_name }} Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        {{ ent.camel_plural_name }});
+}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::get(const QList<int> &{{ ent.camel_name }}Ids) const
+{
+    co_return co_await Helpers::executeReadQuery<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+        u"Get {{ ent.camel_plural_name }} Query"_s,
+        [this, {{ ent.camel_name }}Ids]() -> QList<{{ ent.pascal_name }}Dto> {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<Get{{ ent.pascal_name }}UseCase>(std::move(uow));
+            return useCase->execute({{ ent.camel_name }}Ids);
+        });
+}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Update{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+        m_undoRedoStackId,
+        u"Update {{ ent.camel_plural_name }} Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        {{ ent.camel_plural_name }});
+}
+
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int> &{{ ent.camel_name }}Ids)
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<Remove{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    co_return co_await Helpers::executeUndoableCommand<QList<int>>(
+        m_undoRedoSystem,
+        m_undoRedoStackId,
+        u"Remove {{ ent.camel_plural_name }} Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        {{ ent.camel_name }}Ids);
+}
+
+{%- if ent.forward_relationships %}
+
+// ---------------------------------------------------------------------------
+// Relationship Operations
+// ---------------------------------------------------------------------------
+
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIds(
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
+{
+    co_return co_await Helpers::executeReadQuery<QList<int>>(
+        m_undoRedoSystem,
+        u"Get {{ ent.pascal_name }} Relationship IDs Query"_s,
+        [this, {{ ent.camel_name }}Id, relationship]() -> QList<int> {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<GetRelationshipIdsUseCase>(std::move(uow));
+            return useCase->execute({{ ent.camel_name }}Id, relationship);
+        });
+}
+
+QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+    const QList<int> &relatedIds)
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<SetRelationshipIdsUseCase>(std::move(uow));
+
+    co_await Helpers::executeUndoableCommandVoid(
+        m_undoRedoSystem,
+        m_undoRedoStackId,
+        u"Set {{ ent.pascal_name }} Relationship IDs Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        {{ ent.camel_name }}Id, relationship, relatedIds);
+}
+
+QCoro::Task<QHash<int, QList<int>>> {{ ent.pascal_name }}Controller::getRelationshipIdsMany(
+    const QList<int> &{{ ent.camel_name }}Ids, {{ ent.pascal_name }}RelationshipField relationship) const
+{
+    co_return co_await Helpers::executeReadQuery<QHash<int, QList<int>>>(
+        m_undoRedoSystem,
+        u"Get {{ ent.pascal_name }} Relationship IDs Many Query"_s,
+        [this, {{ ent.camel_name }}Ids, relationship]() -> QHash<int, QList<int>> {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<GetRelationshipIdsManyUseCase>(std::move(uow));
+            return useCase->execute({{ ent.camel_name }}Ids, relationship);
+        });
+}
+
+QCoro::Task<int> {{ ent.pascal_name }}Controller::getRelationshipIdsCount(
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
+{
+    co_return co_await Helpers::executeReadQuery<int>(
+        m_undoRedoSystem,
+        u"Get {{ ent.pascal_name }} Relationship IDs Count Query"_s,
+        [this, {{ ent.camel_name }}Id, relationship]() -> int {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<GetRelationshipIdsCountUseCase>(std::move(uow));
+            return useCase->execute({{ ent.camel_name }}Id, relationship);
+        });
+}
+
+QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIdsInRange(
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+    int offset, int limit) const
+{
+    co_return co_await Helpers::executeReadQuery<QList<int>>(
+        m_undoRedoSystem,
+        u"Get {{ ent.pascal_name }} Relationship IDs In Range Query"_s,
+        [this, {{ ent.camel_name }}Id, relationship, offset, limit]() -> QList<int> {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<GetRelationshipIdsInRangeUseCase>(std::move(uow));
+            return useCase->execute({{ ent.camel_name }}Id, relationship, offset, limit);
+        });
+}
+
+{%- endif %}
+
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

@@ -106,14 +106,14 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         {%- if f.inner.relationship == "OneToOne" %}
-            {% if f.required %}
-        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
-            .delete(event_hub, &{{ f.snake_name }})?;
-            {%- else %}
+            {% if f.optional %}
         if let Some({{ f.snake_name }}_id) = {{ f.snake_name }} {
             repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
                 .delete(event_hub, &{{ f.snake_name }}_id)?;
             }
+            {%- else %}
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+            .delete(event_hub, &{{ f.snake_name }})?;
             {%- endif %}
         {%- else %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
@@ -136,15 +136,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {% for f in s.entities[e].fields %}
         {% if f.inner.field_type == "Entity" and f.inner.strong %}
         {% if f.inner.relationship == "OneToOne" %}
-            {% if f.required %}
+            {% if f.optional %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.{{ f.snake_name }}.clone()))
             .collect();
             {% else %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.{{ f.snake_name }}.clone()))
+            .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}))
             .collect();
             {%- endif %}
         {% else %}

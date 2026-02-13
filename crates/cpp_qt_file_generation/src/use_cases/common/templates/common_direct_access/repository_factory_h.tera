@@ -1,0 +1,23 @@
+#pragma once
+
+#include "database/db_context.h"
+#include "direct_access/event_registry.h"
+{%- for eid, ent in s.entities %}
+#include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_repository.h"
+{%- endfor %}
+
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::RepositoryFactory
+{
+{%- for eid, ent in s.entities %}
+namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
+{%- endfor %}
+
+// Original methods with individual event pointers
+{%- for eid, ent in s.entities %}
+std::unique_ptr<SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository> create{{ ent.pascal_name }}Repository(Database::DbSubContext &dbSubContext,
+                                                              QPointer<EventRegistry> eventRegistry);
+{%- endfor %}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::RepositoryFactory

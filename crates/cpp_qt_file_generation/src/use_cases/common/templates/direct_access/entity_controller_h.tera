@@ -1,0 +1,57 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "database/db_context.h"
+#include "direct_access/event_registry.h"
+#include "undo_redo/undo_redo_system.h"
+#include "dtos.h"
+#include <QCoro/QCoroTask>
+
+#include <QPointer>
+
+namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
+{
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
+
+class {{ ent.pascal_name }}Controller : public QObject
+{
+    Q_OBJECT
+  public:
+    {{ ent.pascal_name }}Controller(const {{ ent.pascal_name }}Controller &) = delete;
+    {{ ent.pascal_name }}Controller &operator=(const {{ ent.pascal_name }}Controller &) = delete;
+    {{ ent.pascal_name }}Controller({{ ent.pascal_name }}Controller &&) = delete;
+    {{ ent.pascal_name }}Controller &operator=({{ ent.pascal_name }}Controller &&) = delete;
+    explicit {{ ent.pascal_name }}Controller(QObject *parent, int undoRedoStackId = 0);
+
+    void setUndoRedoStackId(int undoRedoStackId);
+    int undoRedoStackId() const;
+
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
+    static Create{{ ent.pascal_name }}Dto getCreateDto()
+    {
+        return {};
+    }
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> get(const QList<int> &{{ ent.camel_name }}Ids) const;
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
+    QCoro::Task<QList<int>> remove(const QList<int> &{{ ent.camel_name }}Ids);
+
+{%- if ent.forward_relationships %}
+
+    QCoro::Task<QList<int>> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const;
+    QCoro::Task<void> setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, const QList<int> &relatedIds);
+    QCoro::Task<QHash<int, QList<int>>> getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
+                                                               {{ ent.pascal_name }}RelationshipField relationship) const;
+    QCoro::Task<int> getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const;
+    QCoro::Task<QList<int>> getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset,
+                                                      int limit) const;
+{%- endif %}
+
+  private:
+    void resolveDependencies();
+    SCDatabase::DbContext *m_dbContext = nullptr;
+    QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
+    QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;
+    int m_undoRedoStackId = 0;
+};
+} // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

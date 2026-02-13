@@ -1,0 +1,77 @@
+/******************************************************************************
+ * Unit of Work Framework
+ *
+ * A minimal framework for the Unit of Work pattern using:
+ * - Template interfaces + CRTP for generated per-entity UoWs (uow_ops.h)
+ * - Atomic macros for hand-written custom multi-entity UoWs (uow_macros.h)
+ *
+ * Quick Start (generated per-entity UoW):
+ *
+ *   // Interface — a simple alias:
+ *   using IPersonUnitOfWork = SCUoW::IEntityCrud<SCE::Person>;
+ *
+ *   // Implementation — CRTP + one method:
+ *   class PersonUnitOfWork final
+ *       : public SCUoW::UnitOfWorkBase,
+ *         public SCUoW::EntityCrudImpl<PersonUnitOfWork, SCE::Person>
+ *   {
+ *   public:
+ *       PersonUnitOfWork(SCDatabase::DbContext &db, QPointer<SCD::EventRegistry> er)
+ *           : UnitOfWorkBase(db, er) {}
+ *
+ *       [[nodiscard]] auto makeRepository() {
+ *           return SCD::RepositoryFactory::createPersonRepository(
+ *               m_dbSubContext, m_eventRegistry);
+ *       }
+ *   };
+ *
+ * Quick Start (custom multi-entity UoW — uses atomic macros):
+ *
+ *   class ILoadWorkUnitOfWork : public virtual SCUoW::ITransactional {
+ *   public:
+ *       ~ILoadWorkUnitOfWork() override = default;
+ *       DECLARE_UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField);
+ *       DECLARE_UOW_ENTITY_CREATE(Content);
+ *       virtual void publishWorkLoaded(int workId) = 0;
+ *   };
+ *
+ *   class LoadWorkUnitOfWork : public SCUoW::UnitOfWorkBase,
+ *                              public ILoadWorkUnitOfWork
+ *   {
+ *   public:
+ *       LoadWorkUnitOfWork(SCDatabase::DbContext &db,
+ *                          QPointer<SCD::EventRegistry> er)
+ *           : UnitOfWorkBase(db, er) {}
+ *
+ *       UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField)
+ *       UOW_ENTITY_CREATE(Content)
+ *       void publishWorkLoaded(int workId) override { ... }
+ *   };
+ *
+ * Available Template Interfaces (uow_ops.h):
+ *   - IEntityCrud<Entity>                           : CRUD
+ *   - IEntityWithRelationships<Entity, RelFieldEnum> : CRUD + relationships
+ *
+ * Available CRTP Bases (uow_ops.h):
+ *   - EntityCrudImpl<Derived, Entity>                          : CRUD
+ *   - EntityFullImpl<Derived, Entity, RelFieldEnum>            : CRUD + relationships
+ *
+ * Available Concepts (uow_ops.h):
+ *   - EntityCrudCapable<T, Entity>
+ *   - EntityRelationshipCapable<T, Entity, RelFieldEnum>
+ *   - TransactionalCrud<T, Entity>
+ *   - TransactionalFull<T, Entity, RelFieldEnum>
+ *
+ * Available Atomic Macros (uow_macros.h — for custom UoWs):
+ *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *                 DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)
+ *   Implementation: UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *                   UOW_ENTITY_RELATIONSHIPS(Name, Rel)
+ *                   UOW_ENTITY_CREATE_WITH_REL(Name, Rel) (not sure about this one)
+ ******************************************************************************/
+
+#pragma once
+
+#include "uow_base.h"
+#include "uow_ops.h"
+#include "uow_macros.h"

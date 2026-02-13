@@ -1,7 +1,7 @@
-//! Generate tab - Rust file generation UI logic
+//! Generate tab - File generation UI logic
 //!
 //! This module handles the Generate tab functionality including:
-//! - Listing rust files to be generated
+//! - Listing files to be generated
 //! - Filtering files by group
 //! - Previewing generated code
 //! - Starting/cancelling file generation
@@ -12,9 +12,14 @@ use std::sync::Arc;
 use slint::{ComponentHandle, Model, SharedString, VecModel};
 
 use crate::app_context::AppContext;
-use crate::commands::{handling_manifest_commands, rust_file_generation_commands};
+use crate::commands::{
+    cpp_qt_file_generation_commands, global_commands, rust_file_generation_commands,
+};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
+use common::long_operation::OperationProgress;
+use common::types::EntityId;
+use cpp_qt_file_generation::{GenerateCppQtFilesDto, ListCppQtFilesDto};
 use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, ListRustFilesDto};
 use slint::Timer;
 
@@ -26,20 +31,75 @@ struct FileData {
     _checked: bool,
 }
 
+enum Language {
+    Rust,
+    CppQt,
+}
+
+fn determine_language(app: &App, app_context: &Arc<AppContext>) -> Result<Language, String> {
+    if let Some(global_id) = crate::tabs::common::get_global_id(app, app_context)
+        && let Ok(Some(global)) = global_commands::get_global(app_context, &global_id)
+    {
+        match global.language.as_str() {
+            "rust" => Ok(Language::Rust),
+            "cpp-qt" => Ok(Language::CppQt),
+            other => Err(format!("Unsupported language: {}", other)),
+        }
+    } else {
+        Err("Failed to determine language".to_string())
+    }
+}
+
+struct ListFilesReturnDto {
+    pub file_ids: Vec<EntityId>,
+    pub file_names: Vec<String>,
+    pub file_groups: Vec<String>,
+}
+fn list_files_helper(
+    app: &App,
+    app_context: &Arc<AppContext>,
+) -> Result<ListFilesReturnDto, String> {
+    match determine_language(app, app_context)? {
+        Language::Rust => {
+            let dto = ListRustFilesDto {
+                only_list_already_existing: false,
+            };
+
+            match rust_file_generation_commands::list_rust_files(app_context, &dto) {
+                Ok(return_dto) => Ok(ListFilesReturnDto {
+                    file_ids: return_dto.file_ids,
+                    file_names: return_dto.file_names,
+                    file_groups: return_dto.file_groups,
+                }),
+                Err(e) => Err(format!("Failed to list rust files: {}", e)),
+            }
+        }
+        Language::CppQt => {
+            let dto = ListCppQtFilesDto {
+                only_list_already_existing: false,
+            };
+
+            match cpp_qt_file_generation_commands::list_cpp_qt_files(app_context, &dto) {
+                Ok(return_dto) => Ok(ListFilesReturnDto {
+                    file_ids: return_dto.file_ids,
+                    file_names: return_dto.file_names,
+                    file_groups: return_dto.file_groups,
+                }),
+                Err(e) => Err(format!("Failed to list C++/Qt files: {}", e)),
+            }
+        }
+    }
+}
 /// Refresh the file lists (groups and files)
 fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
-    let dto = ListRustFilesDto {
-        only_list_already_existing: false,
-    };
-
-    match rust_file_generation_commands::list_rust_files(app_context, &dto) {
-        Ok(result) => {
+    match list_files_helper(app, app_context) {
+        Ok(return_dto) => {
             // Build file data with groups from the DTO
             let mut groups: HashMap<String, Vec<FileData>> = HashMap::new();
 
-            for (idx, file_name) in result.file_names.iter().enumerate() {
-                let file_id = result.file_ids[idx] as i32;
-                let group_name = result.file_groups[idx].clone();
+            for (idx, file_name) in return_dto.file_names.iter().enumerate() {
+                let file_id = return_dto.file_ids[idx] as i32;
+                let group_name = return_dto.file_groups[idx].clone();
 
                 let file_data = FileData {
                     _file_id: file_id,
@@ -74,12 +134,12 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
             }
 
             // Build file list items (all files initially, all checked since "All" is checked)
-            let file_items: Vec<ListItem> = result
+            let file_items: Vec<ListItem> = return_dto
                 .file_names
                 .iter()
                 .enumerate()
                 .map(|(idx, file_name)| ListItem {
-                    id: result.file_ids[idx] as i32,
+                    id: return_dto.file_ids[idx] as i32,
                     text: SharedString::from(file_name.as_str()),
                     subtitle: SharedString::default(),
                     checked: true,
@@ -87,7 +147,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 .collect();
 
             // Compute text prefixes and bolds for bold filename display
-            let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) = result
+            let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) = return_dto
                 .file_names
                 .iter()
                 .map(|file_name| {
@@ -111,7 +171,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 Vec<SharedString>,
                 Vec<SharedString>,
                 Vec<SharedString>,
-            ) = result
+            ) = return_dto
                 .file_names
                 .iter()
                 .map(|file_name| {
@@ -179,7 +239,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 .set_group_list(group_list_model.into());
 
             // Store file names in file_list for lookup
-            let file_list: Vec<SharedString> = result
+            let file_list: Vec<SharedString> = return_dto
                 .file_names
                 .iter()
                 .map(|s| SharedString::from(s.as_str()))
@@ -224,11 +284,11 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
             log::info!(
                 "Loaded {} groups and {} files",
                 groups.len(),
-                result.file_names.len()
+                return_dto.file_names.len()
             );
         }
         Err(e) => {
-            log::error!("Failed to list rust files: {}", e);
+            log::error!("Failed to list files: {}", e);
             app.global::<AppState>()
                 .set_error_message(SharedString::from(e.as_str()));
         }
@@ -269,43 +329,127 @@ fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: 
     let selected_group_str = selected_group.to_string();
 
     // Get all files and filter by group
-    let dto = ListRustFilesDto {
-        only_list_already_existing: false,
-    };
 
-    match rust_file_generation_commands::list_rust_files(app_context, &dto) {
-        Ok(result) => {
-            // If "All" is selected (index 0), show all files
-            let filtered_files: Vec<ListItem> = if selected_group_str == "All" {
-                result
-                    .file_names
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, file_name)| ListItem {
-                        id: result.file_ids[idx] as i32,
-                        text: SharedString::from(file_name.as_str()),
-                        subtitle: SharedString::default(),
-                        checked: true,
-                    })
-                    .collect()
+    match list_files_helper(app, app_context) {
+        Ok(file_list) => {
+            let filtered_indices: Vec<usize> = if selected_group_str == "All" {
+                (0..file_list.file_names.len()).collect()
             } else {
-                // Filter by group using file_groups from DTO
-                result
+                file_list
                     .file_names
                     .iter()
                     .enumerate()
-                    .filter(|(idx, _)| result.file_groups[*idx] == selected_group_str)
-                    .map(|(idx, file_name)| ListItem {
-                        id: result.file_ids[idx] as i32,
-                        text: SharedString::from(file_name.as_str()),
-                        subtitle: SharedString::default(),
-                        checked: true,
-                    })
+                    .filter(|(idx, _)| file_list.file_groups[*idx] == selected_group_str)
+                    .map(|(idx, _)| idx)
                     .collect()
             };
 
-            let file_model = std::rc::Rc::new(VecModel::from(filtered_files));
+            let file_items: Vec<ListItem> = filtered_indices
+                .iter()
+                .map(|&idx| ListItem {
+                    id: file_list.file_ids[idx] as i32,
+                    text: SharedString::from(file_list.file_names[idx].as_str()),
+                    subtitle: SharedString::default(),
+                    checked: true,
+                })
+                .collect();
+
+            // Compute text prefixes and bolds for filtered files
+            let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
+                filtered_indices
+                    .iter()
+                    .map(|&idx| {
+                        let file_name = &file_list.file_names[idx];
+                        if let Some(last_slash) = file_name.rfind('/') {
+                            let prefix = &file_name[..=last_slash];
+                            let bold = &file_name[last_slash + 1..];
+                            (SharedString::from(prefix), SharedString::from(bold))
+                        } else {
+                            (
+                                SharedString::default(),
+                                SharedString::from(file_name.as_str()),
+                            )
+                        }
+                    })
+                    .unzip();
+
+            // Compute elided texts for long file names
+            let max_text_length = 50;
+            let (elided_texts, elided_prefixes, elided_bolds): (
+                Vec<SharedString>,
+                Vec<SharedString>,
+                Vec<SharedString>,
+            ) = filtered_indices
+                .iter()
+                .map(|&idx| {
+                    let file_name = &file_list.file_names[idx];
+                    let char_count = file_name.chars().count();
+                    if char_count > max_text_length {
+                        let suffix: String = file_name
+                            .chars()
+                            .skip(char_count - max_text_length)
+                            .collect();
+                        let elided_full = format!("...{}", suffix);
+
+                        if let Some(last_slash) = elided_full.rfind('/') {
+                            let prefix = &elided_full[..=last_slash];
+                            let bold = &elided_full[last_slash + 1..];
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::from(prefix),
+                                SharedString::from(bold),
+                            )
+                        } else {
+                            (
+                                SharedString::from(elided_full.as_str()),
+                                SharedString::default(),
+                                SharedString::from(elided_full.as_str()),
+                            )
+                        }
+                    } else {
+                        (
+                            SharedString::default(),
+                            SharedString::default(),
+                            SharedString::default(),
+                        )
+                    }
+                })
+                .fold(
+                    (Vec::new(), Vec::new(), Vec::new()),
+                    |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
+                        texts.push(text);
+                        prefixes.push(prefix);
+                        bolds.push(bold);
+                        (texts, prefixes, bolds)
+                    },
+                );
+
+            let selected_count = file_items.len() as i32;
+
+            let file_model = std::rc::Rc::new(VecModel::from(file_items));
             app.global::<AppState>().set_file_cr_list(file_model.into());
+
+            let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
+            let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
+            app.global::<AppState>()
+                .set_file_text_prefixes(text_prefixes_model.into());
+            app.global::<AppState>()
+                .set_file_text_bolds(text_bolds_model.into());
+
+            let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
+            app.global::<AppState>()
+                .set_file_elided_texts(elided_texts_model.into());
+
+            let elided_prefixes_model = std::rc::Rc::new(VecModel::from(elided_prefixes));
+            app.global::<AppState>()
+                .set_file_elided_prefixes(elided_prefixes_model.into());
+
+            let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
+            app.global::<AppState>()
+                .set_file_elided_bolds(elided_bolds_model.into());
+
+            app.global::<AppState>()
+                .set_selected_files_count(selected_count);
 
             // Reset file selection
             app.global::<AppState>().set_selected_file_index(-1);
@@ -326,18 +470,45 @@ fn load_code_preview(app: &App, app_context: &Arc<AppContext>, file_id: i32) {
         return;
     }
 
-    let dto = GenerateRustCodeDto {
-        file_id: file_id as u64,
-    };
+    match determine_language(app, app_context) {
+        Ok(Language::Rust) => {
+            let dto = GenerateRustCodeDto {
+                file_id: file_id as u64,
+            };
 
-    match rust_file_generation_commands::generate_rust_code(app_context, &dto) {
-        Ok(result) => {
-            app.global::<AppState>()
-                .set_code_preview(SharedString::from(result.generated_code.as_str()));
-            log::info!("Loaded code preview for file {}", file_id);
+            match rust_file_generation_commands::generate_rust_code(app_context, &dto) {
+                Ok(result) => {
+                    app.global::<AppState>()
+                        .set_code_preview(SharedString::from(result.generated_code.as_str()));
+                    log::info!("Loaded code preview for file {}", file_id);
+                }
+                Err(e) => {
+                    log::error!("Failed to generate code preview: {}", e);
+                    app.global::<AppState>()
+                        .set_code_preview(SharedString::from(format!("Error: {}", e).as_str()));
+                }
+            }
+        }
+        Ok(Language::CppQt) => {
+            let dto = cpp_qt_file_generation::GenerateCppQtCodeDto {
+                file_id: file_id as u64,
+            };
+
+            match cpp_qt_file_generation_commands::generate_cpp_qt_code(app_context, &dto) {
+                Ok(result) => {
+                    app.global::<AppState>()
+                        .set_code_preview(SharedString::from(result.generated_code.as_str()));
+                    log::info!("Loaded code preview for file {}", file_id);
+                }
+                Err(e) => {
+                    log::error!("Failed to generate code preview: {}", e);
+                    app.global::<AppState>()
+                        .set_code_preview(SharedString::from(format!("Error: {}", e).as_str()));
+                }
+            }
         }
         Err(e) => {
-            log::error!("Failed to generate code preview: {}", e);
+            log::error!("Failed to determine language: {}", e);
             app.global::<AppState>()
                 .set_code_preview(SharedString::from(format!("Error: {}", e).as_str()));
         }
@@ -350,7 +521,7 @@ fn setup_list_files_callback(app: &App, app_context: &Arc<AppContext>) {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move || {
-            log::info!("List Rust Files clicked");
+            log::info!("List Files clicked");
             if let Some(app) = app_weak.upgrade() {
                 // Preserve manifest_is_saved state
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
@@ -371,6 +542,35 @@ fn setup_list_files_callback(app: &App, app_context: &Arc<AppContext>) {
 
 /// Setup the start_generate callback
 fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
+    fn generate_files_helper(
+        app: &App,
+        app_context: &Arc<AppContext>,
+        file_ids: Vec<EntityId>,
+        root_path: String,
+        prefix: String,
+    ) -> Result<String, String> {
+        match determine_language(app, app_context)? {
+            Language::Rust => {
+                let dto = GenerateRustFilesDto {
+                    file_ids,
+                    root_path,
+                    prefix,
+                };
+
+                rust_file_generation_commands::generate_rust_files(&app_context, &dto)
+            }
+            Language::CppQt => {
+                let dto = GenerateCppQtFilesDto {
+                    file_ids,
+                    root_path,
+                    prefix,
+                };
+
+                cpp_qt_file_generation_commands::generate_cpp_qt_files(&app_context, &dto)
+            }
+        }
+    }
+
     app.global::<GenerateCommands>().on_start_generate({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
@@ -403,19 +603,13 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
                     String::new()
                 };
 
-                let dto = GenerateRustFilesDto {
-                    file_ids,
-                    root_path,
-                    prefix,
-                };
-
                 // Set running state
                 app.global::<AppState>().set_generate_is_running(true);
                 app.global::<AppState>().set_generate_progress(0.0);
                 app.global::<AppState>()
                     .set_generate_message(SharedString::from("Starting generation..."));
 
-                match rust_file_generation_commands::generate_rust_files(&ctx, &dto) {
+                match generate_files_helper(&app, &ctx, file_ids, root_path, prefix) {
                     Ok(operation_id) => {
                         log::info!("Started generation with operation ID: {}", operation_id);
                         // Poll for completion in a timer
@@ -444,13 +638,84 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
 
 /// Poll for generation result
 fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, operation_id: String) {
+    struct GenerateFilesReturnDto {
+        pub files: Vec<String>,
+        pub timestamp: String,
+        pub duration: String,
+    }
+
+    fn get_generate_files_result_helper(
+        app: &App,
+        app_context: &Arc<AppContext>,
+        operation_id: &str,
+    ) -> Result<Option<GenerateFilesReturnDto>, String> {
+        match determine_language(app, app_context)? {
+            Language::Rust => {
+                match rust_file_generation_commands::get_generate_rust_files_result(
+                    app_context,
+                    operation_id,
+                ) {
+                    Ok(Some(result)) => Ok(Some(GenerateFilesReturnDto {
+                        files: result.files,
+                        timestamp: result.timestamp,
+                        duration: result.duration,
+                    })),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(format!("Error getting rust generation result: {}", e)),
+                }
+            }
+            Language::CppQt => {
+                match cpp_qt_file_generation_commands::get_generate_cpp_qt_files_result(
+                    app_context,
+                    operation_id,
+                ) {
+                    Ok(Some(result)) => Ok(Some(GenerateFilesReturnDto {
+                        files: result.files,
+                        timestamp: result.timestamp,
+                        duration: result.duration,
+                    })),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(format!("Error getting C++/Qt generation result: {}", e)),
+                }
+            }
+        }
+    }
+    fn get_generate_files_progress_helper(
+        app: &App,
+        app_context: &Arc<AppContext>,
+        operation_id: &str,
+    ) -> Result<Option<OperationProgress>, String> {
+        match determine_language(app, app_context)? {
+            Language::Rust => {
+                match rust_file_generation_commands::get_generate_rust_files_progress(
+                    app_context,
+                    operation_id,
+                ) {
+                    Ok(Some(progress)) => Ok(Some(progress)),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(format!("Error getting Rust generation progress: {}", e)),
+                }
+            }
+            Language::CppQt => {
+                match cpp_qt_file_generation_commands::get_generate_cpp_qt_files_progress(
+                    app_context,
+                    operation_id,
+                ) {
+                    Ok(Some(progress)) => Ok(Some(progress)),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(format!("Error getting C++/Qt generation progress: {}", e)),
+                }
+            }
+        }
+    }
+
     if let Some(app) = app_weak.upgrade() {
         // Check if still running
         if !app.global::<AppState>().get_generate_is_running() {
             return; // Cancelled
         }
 
-        match rust_file_generation_commands::get_generate_rust_files_result(&ctx, &operation_id) {
+        match get_generate_files_result_helper(&app, &ctx, &operation_id) {
             Ok(Some(result)) => {
                 // Generation complete
                 log::info!(
@@ -472,10 +737,7 @@ fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, oper
 
                 // Update progress from backend
                 if let Ok(Some(progress)) =
-                    rust_file_generation_commands::get_generate_rust_files_progress(
-                        &ctx,
-                        &operation_id,
-                    )
+                    get_generate_files_progress_helper(&app, &ctx, &operation_id)
                 {
                     app.global::<AppState>()
                         .set_generate_progress(progress.percentage / 100.0);
@@ -524,21 +786,29 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<AppState>().on_group_selected({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
-        move |group_index| {
-            log::info!("Group selected: {}", group_index);
+        move |group_id| {
+            log::info!("Group selected: id={}", group_id);
+
             if let Some(app) = app_weak.upgrade() {
                 let was_saved = app.global::<AppState>().get_manifest_is_saved();
 
-                // Update selected group name for breadcrumb
+                    // When a group is checked, uncheck all other groups and display only files in this group
                 let group_list = app.global::<AppState>().get_group_cr_list();
-                if group_index >= 0
-                    && (group_index as usize) < group_list.row_count()
-                    && let Some(item) = group_list.row_data(group_index as usize)
-                {
-                    app.global::<AppState>().set_selected_group_name(item.text);
-                }
 
-                filter_files_by_group(&app, &ctx, group_index);
+                // Update group checkboxes: only the selected group is checked
+                let mut updated_groups: Vec<ListItem> = Vec::new();
+                for i in 0..group_list.row_count() {
+                    if let Some(mut item) = group_list.row_data(i) {
+                        item.checked = item.id == group_id;
+                        updated_groups.push(item);
+                    }
+                }
+                let group_model = std::rc::Rc::new(VecModel::from(updated_groups));
+                app.global::<AppState>()
+                    .set_group_cr_list(group_model.into());
+
+                // Use filter_files_by_group to update all models
+                filter_files_by_group(&app, &ctx, group_id);
 
                 // Re-apply manifest_is_saved after a short delay
                 Timer::single_shot(std::time::Duration::from_millis(800), move || {
@@ -601,195 +871,6 @@ fn setup_refresh_generate_tab_callback(app: &App, app_context: &Arc<AppContext>)
     });
 }
 
-/// Setup the group_check_changed callback for exclusive group selection
-fn setup_group_check_changed_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<AppState>().on_group_check_changed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move |group_id, checked| {
-            log::info!("Group check changed: id={}, checked={}", group_id, checked);
-
-            if let Some(app) = app_weak.upgrade() {
-                let was_saved = app.global::<AppState>().get_manifest_is_saved();
-
-                if checked {
-                    // When a group is checked, uncheck all other groups and display only files in this group
-                    let group_list = app.global::<AppState>().get_group_cr_list();
-                    let group_names = app.global::<AppState>().get_group_list();
-
-                    // Update group checkboxes: only the selected group is checked
-                    let mut updated_groups: Vec<ListItem> = Vec::new();
-                    for i in 0..group_list.row_count() {
-                        if let Some(mut item) = group_list.row_data(i) {
-                            item.checked = item.id == group_id;
-                            updated_groups.push(item);
-                        }
-                    }
-                    let group_model = std::rc::Rc::new(VecModel::from(updated_groups));
-                    app.global::<AppState>()
-                        .set_group_cr_list(group_model.into());
-
-                    // Get the selected group name
-                    let selected_group_name = if group_id == 0 {
-                        "All".to_string()
-                    } else if (group_id as usize) < group_names.row_count() {
-                        group_names
-                            .row_data(group_id as usize)
-                            .unwrap_or_default()
-                            .to_string()
-                    } else {
-                        return;
-                    };
-
-                    // Get all files and filter to show only files from the selected group (like clicking on the group)
-                    let dto = ListRustFilesDto {
-                        only_list_already_existing: false,
-                    };
-
-                    if let Ok(result) = rust_file_generation_commands::list_rust_files(&ctx, &dto) {
-                        // Filter files by group (like clicking on the group item)
-                        let filtered_indices: Vec<usize> = result
-                            .file_names
-                            .iter()
-                            .enumerate()
-                            .filter(|(idx, _)| {
-                                selected_group_name == "All"
-                                    || result.file_groups[*idx] == selected_group_name
-                            })
-                            .map(|(idx, _)| idx)
-                            .collect();
-
-                        let file_items: Vec<ListItem> = filtered_indices
-                            .iter()
-                            .map(|&idx| {
-                                ListItem {
-                                    id: result.file_ids[idx] as i32,
-                                    text: SharedString::from(result.file_names[idx].as_str()),
-                                    subtitle: SharedString::default(),
-                                    checked: true, // All displayed files are checked
-                                }
-                            })
-                            .collect();
-
-                        // Compute text prefixes and bolds for filtered files
-                        let (text_prefixes, text_bolds): (Vec<SharedString>, Vec<SharedString>) =
-                            filtered_indices
-                                .iter()
-                                .map(|&idx| {
-                                    let file_name = &result.file_names[idx];
-                                    if let Some(last_slash) = file_name.rfind('/') {
-                                        let prefix = &file_name[..=last_slash];
-                                        let bold = &file_name[last_slash + 1..];
-                                        (SharedString::from(prefix), SharedString::from(bold))
-                                    } else {
-                                        (
-                                            SharedString::default(),
-                                            SharedString::from(file_name.as_str()),
-                                        )
-                                    }
-                                })
-                                .unzip();
-
-                        // Compute elided texts for long file names
-                        let max_text_length = 50;
-                        let (elided_texts, elided_prefixes, elided_bolds): (
-                            Vec<SharedString>,
-                            Vec<SharedString>,
-                            Vec<SharedString>,
-                        ) = filtered_indices
-                            .iter()
-                            .map(|&idx| {
-                                let file_name = &result.file_names[idx];
-                                let char_count = file_name.chars().count();
-                                if char_count > max_text_length {
-                                    let suffix: String = file_name
-                                        .chars()
-                                        .skip(char_count - max_text_length)
-                                        .collect();
-                                    let elided_full = format!("...{}", suffix);
-
-                                    // For bold display, split elided text at last slash
-                                    if let Some(last_slash) = elided_full.rfind('/') {
-                                        let prefix = &elided_full[..=last_slash];
-                                        let bold = &elided_full[last_slash + 1..];
-                                        (
-                                            SharedString::from(elided_full.as_str()),
-                                            SharedString::from(prefix),
-                                            SharedString::from(bold),
-                                        )
-                                    } else {
-                                        (
-                                            SharedString::from(elided_full.as_str()),
-                                            SharedString::default(),
-                                            SharedString::from(elided_full.as_str()),
-                                        )
-                                    }
-                                } else {
-                                    (
-                                        SharedString::default(),
-                                        SharedString::default(),
-                                        SharedString::default(),
-                                    )
-                                }
-                            })
-                            .fold(
-                                (Vec::new(), Vec::new(), Vec::new()),
-                                |(mut texts, mut prefixes, mut bolds), (text, prefix, bold)| {
-                                    texts.push(text);
-                                    prefixes.push(prefix);
-                                    bolds.push(bold);
-                                    (texts, prefixes, bolds)
-                                },
-                            );
-
-                        // Update selected files count
-                        let selected_count = file_items.iter().filter(|f| f.checked).count() as i32;
-
-                        let file_model = std::rc::Rc::new(VecModel::from(file_items));
-                        app.global::<AppState>().set_file_cr_list(file_model.into());
-
-                        let text_prefixes_model = std::rc::Rc::new(VecModel::from(text_prefixes));
-                        let text_bolds_model = std::rc::Rc::new(VecModel::from(text_bolds));
-                        app.global::<AppState>()
-                            .set_file_text_prefixes(text_prefixes_model.into());
-                        app.global::<AppState>()
-                            .set_file_text_bolds(text_bolds_model.into());
-
-                        let elided_texts_model = std::rc::Rc::new(VecModel::from(elided_texts));
-                        app.global::<AppState>()
-                            .set_file_elided_texts(elided_texts_model.into());
-
-                        let elided_prefixes_model =
-                            std::rc::Rc::new(VecModel::from(elided_prefixes));
-                        app.global::<AppState>()
-                            .set_file_elided_prefixes(elided_prefixes_model.into());
-
-                        let elided_bolds_model = std::rc::Rc::new(VecModel::from(elided_bolds));
-                        app.global::<AppState>()
-                            .set_file_elided_bolds(elided_bolds_model.into());
-
-                        app.global::<AppState>()
-                            .set_selected_files_count(selected_count);
-
-                        // Reset file selection and code preview
-                        app.global::<AppState>().set_selected_file_index(-1);
-                        app.global::<AppState>()
-                            .set_code_preview(SharedString::from(""));
-
-                        // Re-apply manifest_is_saved after a short delay
-                        Timer::single_shot(std::time::Duration::from_millis(800), move || {
-                            if was_saved {
-                                app.global::<AppState>().set_manifest_is_saved(true);
-                                println!("Re-applied manifest_is_saved after refresh");
-                            }
-                        });
-                    }
-                }
-            }
-        }
-    });
-}
-
 /// Setup the file_filter_changed callback for filtering files by text
 fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<AppState>().on_file_filter_changed({
@@ -801,26 +882,23 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                 let filter_lower = filter_text.to_string().to_lowercase();
 
                 // Get all files
-                let dto = ListRustFilesDto {
-                    only_list_already_existing: false,
-                };
 
-                if let Ok(result) = rust_file_generation_commands::list_rust_files(&ctx, &dto) {
+                if let Ok(file_list) = list_files_helper(&app, &ctx) {
                     // Get current group selection to maintain checked state
                     let group_list = app.global::<AppState>().get_group_cr_list();
                     let group_names = app.global::<AppState>().get_group_list();
 
                     // Find which group is checked
-                    let mut checked_group_name = "All".to_string();
+                    let mut group_name = "All".to_string();
                     for i in 0..group_list.row_count() {
-                        if let Some(item) = group_list.row_data(i)
-                            && item.checked
+                        if let Some(group) = group_list.row_data(i)
+                            && group.checked
                         {
-                            if item.id == 0 {
-                                checked_group_name = "All".to_string();
-                            } else if (item.id as usize) < group_names.row_count() {
-                                checked_group_name = group_names
-                                    .row_data(item.id as usize)
+                            if group.id == 0 {
+                                group_name = "All".to_string();
+                            } else if (group.id as usize) < group_names.row_count() {
+                                group_name = group_names
+                                    .row_data(group.id as usize)
                                     .unwrap_or_default()
                                     .to_string();
                             }
@@ -829,7 +907,7 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                     }
 
                     // Filter files by text and build list
-                    let filtered_indices: Vec<usize> = result
+                    let filtered_indices: Vec<usize> = file_list
                         .file_names
                         .iter()
                         .enumerate()
@@ -843,12 +921,12 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                     let file_items: Vec<ListItem> = filtered_indices
                         .iter()
                         .map(|&idx| {
-                            let file_name = &result.file_names[idx];
-                            let file_group = &result.file_groups[idx];
+                            let file_name = &file_list.file_names[idx];
+                            let file_group = &file_list.file_groups[idx];
                             let is_checked =
-                                checked_group_name == "All" || file_group == &checked_group_name;
+                                group_name == "All" || file_group == &group_name;
                             ListItem {
-                                id: result.file_ids[idx] as i32,
+                                id: file_list.file_ids[idx] as i32,
                                 text: SharedString::from(file_name.as_str()),
                                 subtitle: SharedString::default(),
                                 checked: is_checked,
@@ -861,7 +939,7 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                         filtered_indices
                             .iter()
                             .map(|&idx| {
-                                let file_name = &result.file_names[idx];
+                                let file_name = &file_list.file_names[idx];
                                 if let Some(last_slash) = file_name.rfind('/') {
                                     let prefix = &file_name[..=last_slash];
                                     let bold = &file_name[last_slash + 1..];
@@ -884,7 +962,7 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                     ) = filtered_indices
                         .iter()
                         .map(|&idx| {
-                            let file_name = &result.file_names[idx];
+                            let file_name = &file_list.file_names[idx];
                             let char_count = file_name.chars().count();
                             if char_count > max_text_length {
                                 let suffix: String = file_name
@@ -1057,7 +1135,6 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_refresh_generate_tab_callback(app, app_context);
 
     // Setup group check, file check, and file filter callbacks
-    setup_group_check_changed_callback(app, app_context);
     setup_file_check_changed_callback(app, app_context);
     setup_file_filter_changed_callback(app, app_context);
     setup_select_all_files_callback(app, app_context);

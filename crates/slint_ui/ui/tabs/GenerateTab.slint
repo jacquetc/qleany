@@ -42,13 +42,13 @@ export component GenerateTab inherits Rectangle {
     background: #ffffff;
 
     VerticalLayout {
-        padding: 10px;
+        padding: 5px;
         spacing: 0px;
 
         // Title
         Text {
             text: "Generate";
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: #212529;
         }
@@ -112,18 +112,12 @@ export component GenerateTab inherits Rectangle {
                         file_group_list:= CheckableReorderableList {
                             items: AppState.group_cr_list;
                             reorderable: false;
-                            enable-checkbox: true;
                             selected-id: AppState.selected_group_index;
                             selection-changed(id) => {
                                 if (id >= 0) {
                                     AppState.selected_group_index = id;
                                     // Selection is handled by Rust controller, we just update index here
                                     AppState.group_selected(id);
-                                }
-                            }
-                            request-check-change(id, checked) => {
-                                if (id >= 0) {
-                                    AppState.group_check_changed(id, checked);
                                 }
                             }
                         }

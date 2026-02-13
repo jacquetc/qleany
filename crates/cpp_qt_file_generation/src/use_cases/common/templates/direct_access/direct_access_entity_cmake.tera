@@ -1,0 +1,43 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+target_sources(${LIBRARY_NAME} PRIVATE
+        {{ ent.snake_name }}_controller.cpp
+        {{ ent.snake_name }}_controller.h
+        {{ ent.snake_name }}_unit_of_work.h
+        dtos.h
+        use_cases/i_{{ ent.snake_name }}_unit_of_work.h
+        use_cases/create_uc.cpp
+        use_cases/create_uc.h
+        use_cases/common/dto_mapper.h
+        use_cases/remove_uc.cpp
+        use_cases/remove_uc.h
+        use_cases/get_uc.cpp
+        use_cases/get_uc.h
+        use_cases/update_uc.cpp
+        use_cases/update_uc.h
+{%- if ent.forward_relationships %}
+        use_cases/set_relationship_ids_uc.cpp
+        use_cases/set_relationship_ids_uc.h
+        use_cases/get_relationship_ids_uc.cpp
+        use_cases/get_relationship_ids_uc.h
+        use_cases/get_relationship_ids_many_uc.cpp
+        use_cases/get_relationship_ids_many_uc.h
+        use_cases/get_relationship_ids_count_uc.cpp
+        use_cases/get_relationship_ids_count_uc.h
+        use_cases/get_relationship_ids_in_range_uc.cpp
+        use_cases/get_relationship_ids_in_range_uc.h
+{%- endif %}
+        # models
+{%- for f in ent.fields %}
+{%- if f.inner.field_type == "Entity" and f.inner.list_model %}
+        models/{{ ent.snake_name }}_{{ f.snake_name }}_list_model.h
+        models/{{ ent.snake_name }}_{{ f.snake_name }}_list_model.cpp
+{%- endif %}
+{%- endfor %}
+        # single model
+{%- if ent.inner.single_model %}
+        models/single_{{ ent.snake_name }}.h
+        models/single_{{ ent.snake_name }}.cpp
+{%- endif %}
+
+)

@@ -1,0 +1,48 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+
+#include "entities/{{ ent.snake_name }}.h"
+
+#include <QList>
+#include <optional>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}
+{
+
+// Relationships for {{ ent.pascal_name }} entity derived from its relational fields
+enum class {{ ent.pascal_name }}RelationshipField
+{
+    {% for rid, r in ent.forward_relationships %}
+    {{ r.field_pascal_name }}{% if not loop.last %},{% endif %}
+    {%- endfor %}
+};
+
+class I{{ ent.pascal_name }}Repository
+{
+  public:
+    virtual ~I{{ ent.pascal_name }}Repository() = default;
+
+    // CRUD
+    virtual QList<Entities::{{ ent.pascal_name }}> create(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    virtual QList<Entities::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const = 0;
+    virtual QList<Entities::{{ ent.pascal_name }}> update(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    virtual QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) = 0;
+
+    {%- if ent.forward_relationships %}
+
+    // Relationship setters/getters
+    // Set the relationship value for a given {{ ent.pascal_name }} id (e.g., set {{ ent.camel_name }} id)
+    virtual void setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedId) = 0;
+
+    // Get the relationship value for a given {{ ent.pascal_name }} id (e.g., get {{ ent.camel_name }} id)
+    virtual QList<int> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const = 0;
+    virtual QHash<int, QList<int>> getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
+                                                          {{ ent.pascal_name }}RelationshipField relationship) const = 0;
+    virtual int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const = 0;
+    virtual QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
+                                                 int limit) const = 0;
+    {%- endif %}
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}

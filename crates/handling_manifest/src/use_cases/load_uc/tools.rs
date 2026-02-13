@@ -61,10 +61,10 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
             // Derive cardinality and order from relationship type
             let (cardinality, order) = match field.relationship {
                 FieldRelationshipType::OneToOne => {
-                    let card = if field.required {
-                        Cardinality::One
-                    } else {
+                    let card = if field.optional {
                         Cardinality::ZeroOrOne
+                    } else {
+                        Cardinality::One
                     };
                     (card, Some(Order::Unordered))
                 }
@@ -75,10 +75,10 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
                     (Cardinality::ZeroOrMore, Some(Order::Ordered))
                 }
                 FieldRelationshipType::ManyToOne => {
-                    let card = if field.required {
-                        Cardinality::One
-                    } else {
+                    let card = if field.optional {
                         Cardinality::ZeroOrOne
+                    } else {
+                        Cardinality::One
                     };
                     (card, Some(Order::Unordered))
                 }
@@ -193,7 +193,7 @@ mod tests {
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
                 relationship: FieldRelationshipType::OneToOne,
-                required: true,
+                optional: false,
                 strong: true,
                 list_model: false,
                 list_model_displayed_field: None,
@@ -207,7 +207,7 @@ mod tests {
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
                 relationship: FieldRelationshipType::OrderedOneToMany,
-                required: false,
+                optional: true,
                 strong: true,
                 list_model: true,
                 list_model_displayed_field: None,
