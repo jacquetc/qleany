@@ -30,9 +30,18 @@ namespace Helpers = {{ s.global.application_pascal_name }}::Common::ControllerHe
 // Default timeout for async command/query execution (ms)
 static constexpr int kDefaultCommandTimeoutMs = 500;
 
-{{ ent.pascal_name }}Controller::{{ ent.pascal_name }}Controller(QObject *parent) : QObject(parent)
+{{ ent.pascal_name }}Controller::{{ ent.pascal_name }}Controller(QObject *parent, int undoRedoStackId) : QObject(parent),
+m_undoRedoStackId(undoRedoStackId)
 {
     resolveDependencies();
+}
+
+void {{ ent.pascal_name }}Controller::setUndoRedoStackId(int undoRedoStackId) {
+    m_undoRedoStackId = undoRedoStackId;
+}
+
+int {{ ent.pascal_name }}Controller::undoRedoStackId() const{
+    return m_undoRedoStackId;
 }
 
 void {{ ent.pascal_name }}Controller::resolveDependencies()
@@ -59,6 +68,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
 
     co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
+        m_undoRedoStackId,
         u"Create {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -84,6 +94,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::up
 
     co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
+        m_undoRedoStackId,
         u"Update {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -97,6 +108,7 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int>
 
     co_return co_await Helpers::executeUndoableCommand<QList<int>>(
         m_undoRedoSystem,
+        m_undoRedoStackId,
         u"Remove {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -131,6 +143,7 @@ QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
 
     co_await Helpers::executeUndoableCommandVoid(
         m_undoRedoSystem,
+        m_undoRedoStackId,
         u"Set {{ ent.pascal_name }} Relationship IDs Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,

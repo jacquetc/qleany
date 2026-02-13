@@ -24,7 +24,10 @@ class {{ feat.pascal_name }}Controller : public QObject
     {{ feat.pascal_name }}Controller &operator=(const {{ feat.pascal_name }}Controller &) = delete;
     {{ feat.pascal_name }}Controller({{ feat.pascal_name }}Controller &&) = delete;
     {{ feat.pascal_name }}Controller &operator=({{ feat.pascal_name }}Controller &&) = delete;
-    explicit {{ feat.pascal_name }}Controller(QObject *parent = nullptr);
+    explicit {{ feat.pascal_name }}Controller(QObject *parent, int undoRedoStackId = 0);
+
+    void setUndoRedoStackId(int undoRedoStackId);
+    int undoRedoStackId() const;
 
 {%- for uc_id, uc in feat.use_cases %}
   {%- if uc.dto_out %}
@@ -51,5 +54,6 @@ class {{ feat.pascal_name }}Controller : public QObject
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Common::Features::FeatureEventRegistry> m_featureEventRegistry;
     QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;
+    int m_undoRedoStackId = 0;
 };
 } // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

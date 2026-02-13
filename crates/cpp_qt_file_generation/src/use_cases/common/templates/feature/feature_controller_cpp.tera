@@ -17,10 +17,21 @@ namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 static constexpr int kDefaultCommandTimeoutMs = 500;
 
 
-{{ feat.pascal_name }}Controller::{{ feat.pascal_name }}Controller(QObject *parent) : QObject(parent)
+{{ feat.pascal_name }}Controller::{{ feat.pascal_name }}Controller(QObject *parent, int undoRedoStackId) : QObject(parent),
+ m_undoRedoStackId(undoRedoStackId)
 {
     resolveDependencies();
 }
+
+void {{ feat.pascal_name }}Controller::setUndoRedoStackId(int undoRedoStackId) {
+    m_undoRedoStackId = undoRedoStackId;
+}
+
+int {{ feat.pascal_name }}Controller::undoRedoStackId() const{
+    return m_undoRedoStackId;
+}
+
+
 void {{ feat.pascal_name }}Controller::resolveDependencies()
 {
     auto *locator = Common::ServiceLocator::instance(); // set by provider
@@ -75,6 +86,7 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
        co_return co_await Common::ControllerHelpers::executeUndoableCommandVoid(
        {%- endif %}
           m_undoRedoSystem,
+          m_undoRedoStackId,
             u"{{ uc.snake_name }} Command"_s,
             std::move(useCase),
             kDefaultCommandTimeoutMs
@@ -96,6 +108,7 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
        co_return co_await Common::ControllerHelpers::executeNotUndoableCommandVoid(
        {%- endif %}
           m_undoRedoSystem,
+          m_undoRedoStackId,
             u"{{ uc.snake_name }} Command"_s,
             std::move(useCase),
             kDefaultCommandTimeoutMs

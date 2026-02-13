@@ -62,6 +62,7 @@ namespace SCUndoRedo = {{ s.global.application_pascal_name }}::Common::UndoRedo;
  * @tparam ExecArgs      Argument types forwarded to useCase->execute(...)
  *
  * @param undoRedoSystem The undo-redo system to execute on
+ * @param undoRedoStackId The undo redo stack to use
  * @param commandName    Human-readable name for the command
  * @param useCase        Shared ownership of the use case
  * @param timeoutMs      Timeout in milliseconds for async execution
@@ -72,6 +73,7 @@ namespace SCUndoRedo = {{ s.global.application_pascal_name }}::Common::UndoRedo;
 template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<ResultT> executeUndoableCommand(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -102,7 +104,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
     });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
 
     if (!success.has_value()) [[unlikely]]
     {
@@ -132,6 +134,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 template <typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<bool> executeUndoableCommandVoid(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -159,7 +162,7 @@ template <typename UseCaseT, typename... ExecArgs>
     });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
 
     if (!success.has_value()) [[unlikely]]
     {
@@ -186,13 +189,14 @@ template <typename UseCaseT, typename... ExecArgs>
  * Constructs the UndoRedoCommand, wires execute/undo/redo, and co_awaits
  * the undo-redo system. The UseCase is kept alive by shared_ptr capture
  * inside the lambdas.
- * Clears the undo redo stacks after execution.
+ * Clears all the undo redo stacks after execution.
  *
  * @tparam ResultT       Return type of the use-case execute method
  * @tparam UseCaseT      UseCase type (must have execute(...), undo(), redo())
  * @tparam ExecArgs      Argument types forwarded to useCase->execute(...)
  *
  * @param undoRedoSystem The undo-redo system to execute on
+ * @param undoRedoStackId The undo redo stack to use
  * @param commandName    Human-readable name for the command
  * @param useCase        Shared ownership of the use case
  * @param timeoutMs      Timeout in milliseconds for async execution
@@ -203,6 +207,7 @@ template <typename UseCaseT, typename... ExecArgs>
 template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<ResultT> executeNotUndoableCommand(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -225,7 +230,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
         });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
 
     if (!success.has_value()) [[unlikely]]
     {
@@ -254,11 +259,12 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
  *
  * Same pattern as the result-returning variant but returns a boolean
  * indicating success/failure.
- * Clears the undo redo stacks after execution.
+ * Clears all the undo redo stacks after execution.
  */
 template <typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<bool> executeNotUndoableCommandVoid(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
+    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -278,7 +284,7 @@ template <typename UseCaseT, typename... ExecArgs>
         });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, 0);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
 
     if (!success.has_value()) [[unlikely]]
     {
