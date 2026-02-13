@@ -9,7 +9,7 @@ namespace {{ s.global.application_pascal_name }}::Common::Database::JunctionTabl
 {
 constexpr int ORDER_GAP = 1000;
 
-QHash<int, QList<int>> OrderedOneToMany::getRightIdsMany(QSqlDatabase &db, const QList<int> &leftIds,
+QHash<int, QList<int>> OrderedOneToMany::getRightIdsMany(const QSqlDatabase &db, const QList<int> &leftIds,
                                                          const QString &junctionTableName)
 {
     QHash<int, QList<int>> result;
@@ -57,7 +57,7 @@ QHash<int, QList<int>> OrderedOneToMany::getRightIdsMany(QSqlDatabase &db, const
     return result;
 }
 
-QList<int> OrderedOneToMany::getRightIds(QSqlDatabase &db, int leftId, const QString &junctionTableName)
+QList<int> OrderedOneToMany::getRightIds(const QSqlDatabase &db, int leftId, const QString &junctionTableName)
 {
     QList<int> cachedResult;
     if (JunctionCache::instance().getCachedRightIds(junctionTableName, leftId, cachedResult))
@@ -269,7 +269,7 @@ QList<int> OrderedOneToMany::upsertRightIds(QSqlDatabase &db, int leftId, const 
     return upsertRightIds(db, leftId, junctionTableName, rightIds.value());
 }
 
-QMap<int, int> OrderedOneToMany::getLeftIdMany(QSqlDatabase &db, const QString &junctionTableName,
+QMap<int, int> OrderedOneToMany::getLeftIdMany(const QSqlDatabase &db, const QString &junctionTableName,
                                                const QList<int> &rightIds)
 {
     QMap<int, int> result;
@@ -308,13 +308,13 @@ QMap<int, int> OrderedOneToMany::getLeftIdMany(QSqlDatabase &db, const QString &
     return result;
 }
 
-int OrderedOneToMany::getLeftId(QSqlDatabase &db, const QString &junctionTableName, int rightId)
+int OrderedOneToMany::getLeftId(const QSqlDatabase &db, const QString &junctionTableName, int rightId)
 {
     QMap<int, int> result = getLeftIdMany(db, junctionTableName, {rightId});
     return result.value(rightId, -1);
 }
 
-int OrderedOneToMany::getRightIdsCount(QSqlDatabase &db, int leftId, const QString &junctionTableName)
+int OrderedOneToMany::getRightIdsCount(const QSqlDatabase &db, int leftId, const QString &junctionTableName)
 {
     int cachedResult;
     if (JunctionCache::instance().getCachedRightIdsCount(junctionTableName, leftId, cachedResult))
@@ -346,7 +346,7 @@ int OrderedOneToMany::getRightIdsCount(QSqlDatabase &db, int leftId, const QStri
     return count;
 }
 
-QList<int> OrderedOneToMany::getRightIdsInRange(QSqlDatabase &db, int leftId, const QString &junctionTableName,
+QList<int> OrderedOneToMany::getRightIdsInRange(const QSqlDatabase &db, int leftId, const QString &junctionTableName,
                                                 int offset, int limit)
 {
     QList<int> cachedResult;

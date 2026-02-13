@@ -25,7 +25,7 @@ class I{{ ent.pascal_name }}Repository
 
     // CRUD
     virtual QList<Entities::{{ ent.pascal_name }}> create(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
-    virtual QList<Entities::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) = 0;
+    virtual QList<Entities::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const = 0;
     virtual QList<Entities::{{ ent.pascal_name }}> update(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
     virtual QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) = 0;
 
@@ -36,12 +36,12 @@ class I{{ ent.pascal_name }}Repository
     virtual void setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedId) = 0;
 
     // Get the relationship value for a given {{ ent.pascal_name }} id (e.g., get {{ ent.camel_name }} id)
-    virtual QList<int> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) = 0;
+    virtual QList<int> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const = 0;
     virtual QHash<int, QList<int>> getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
-                                                          {{ ent.pascal_name }}RelationshipField relationship) = 0;
-    virtual int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) = 0;
+                                                          {{ ent.pascal_name }}RelationshipField relationship) const = 0;
+    virtual int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const = 0;
     virtual QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
-                                                 int limit) = 0;
+                                                 int limit) const = 0;
     {%- endif %}
 };
 

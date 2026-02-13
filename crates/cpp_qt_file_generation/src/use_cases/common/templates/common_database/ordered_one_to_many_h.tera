@@ -11,10 +11,10 @@ namespace {{ s.global.application_pascal_name }}::Common::Database::JunctionTabl
 class OrderedOneToMany
 {
   public:
-    static QHash<int, QList<int>> getRightIdsMany(QSqlDatabase &db, const QList<int> &leftIds,
+    static QHash<int, QList<int>> getRightIdsMany(const QSqlDatabase &db, const QList<int> &leftIds,
                                                   const QString &junctionTableName);
 
-    static QList<int> getRightIds(QSqlDatabase &db, int leftId, const QString &junctionTableName);
+    static QList<int> getRightIds(const QSqlDatabase &db, int leftId, const QString &junctionTableName);
 
     static QHash<int, bool> removeWithLeftIdsMany(QSqlDatabase &db, const QList<int> &leftIds,
                                                   const QString &junctionTableName);
@@ -36,13 +36,13 @@ class OrderedOneToMany
     static QList<int> upsertRightIds(QSqlDatabase &db, int leftId, const QString &junctionTableName,
                                      const std::optional<QList<int>> &rightIds);
 
-    static QMap<int, int> getLeftIdMany(QSqlDatabase &db, const QString &junctionTableName, const QList<int> &rightIds);
+    static QMap<int, int> getLeftIdMany(const QSqlDatabase &db, const QString &junctionTableName, const QList<int> &rightIds);
 
-    static int getLeftId(QSqlDatabase &db, const QString &junctionTableName, int rightId);
+    static int getLeftId(const QSqlDatabase &db, const QString &junctionTableName, int rightId);
 
-    static int getRightIdsCount(QSqlDatabase &db, int leftId, const QString &junctionTableName);
+    static int getRightIdsCount(const QSqlDatabase &db, int leftId, const QString &junctionTableName);
 
-    static QList<int> getRightIdsInRange(QSqlDatabase &db, int leftId, const QString &junctionTableName, int offset,
+    static QList<int> getRightIdsInRange(const QSqlDatabase &db, int leftId, const QString &junctionTableName, int offset,
                                          int limit);
 };
 

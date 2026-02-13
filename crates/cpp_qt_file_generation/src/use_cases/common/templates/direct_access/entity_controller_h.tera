@@ -32,19 +32,19 @@ class {{ ent.pascal_name }}Controller : public QObject
     {
         return {};
     }
-    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> get(const QList<int> &{{ ent.camel_name }}Ids);
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> get(const QList<int> &{{ ent.camel_name }}Ids) const;
     QCoro::Task<QList<{{ ent.pascal_name }}Dto>> update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
     QCoro::Task<QList<int>> remove(const QList<int> &{{ ent.camel_name }}Ids);
 
 {%- if ent.forward_relationships %}
 
-    QCoro::Task<QList<int>> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship);
+    QCoro::Task<QList<int>> getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const;
     QCoro::Task<void> setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, const QList<int> &relatedIds);
     QCoro::Task<QHash<int, QList<int>>> getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
-                                                               {{ ent.pascal_name }}RelationshipField relationship);
-    QCoro::Task<int> getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship);
+                                                               {{ ent.pascal_name }}RelationshipField relationship) const;
+    QCoro::Task<int> getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const;
     QCoro::Task<QList<int>> getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset,
-                                                      int limit);
+                                                      int limit) const;
 {%- endif %}
 
   private:

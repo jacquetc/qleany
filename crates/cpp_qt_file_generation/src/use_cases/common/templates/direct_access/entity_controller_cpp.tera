@@ -75,7 +75,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
         {{ ent.camel_plural_name }});
 }
 
-QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::get(const QList<int> &{{ ent.camel_name }}Ids)
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::get(const QList<int> &{{ ent.camel_name }}Ids) const
 {
     co_return co_await Helpers::executeReadQuery<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
@@ -122,7 +122,7 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int>
 // ---------------------------------------------------------------------------
 
 QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIds(
-    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     co_return co_await Helpers::executeReadQuery<QList<int>>(
         m_undoRedoSystem,
@@ -151,7 +151,7 @@ QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
 }
 
 QCoro::Task<QHash<int, QList<int>>> {{ ent.pascal_name }}Controller::getRelationshipIdsMany(
-    const QList<int> &{{ ent.camel_name }}Ids, {{ ent.pascal_name }}RelationshipField relationship)
+    const QList<int> &{{ ent.camel_name }}Ids, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     co_return co_await Helpers::executeReadQuery<QHash<int, QList<int>>>(
         m_undoRedoSystem,
@@ -164,7 +164,7 @@ QCoro::Task<QHash<int, QList<int>>> {{ ent.pascal_name }}Controller::getRelation
 }
 
 QCoro::Task<int> {{ ent.pascal_name }}Controller::getRelationshipIdsCount(
-    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+    int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     co_return co_await Helpers::executeReadQuery<int>(
         m_undoRedoSystem,
@@ -178,7 +178,7 @@ QCoro::Task<int> {{ ent.pascal_name }}Controller::getRelationshipIdsCount(
 
 QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIdsInRange(
     int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
-    int offset, int limit)
+    int offset, int limit) const
 {
     co_return co_await Helpers::executeReadQuery<QList<int>>(
         m_undoRedoSystem,

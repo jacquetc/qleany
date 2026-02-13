@@ -577,7 +577,7 @@ QHash<int, QList<int>> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::get
     return result;
 }
 
-int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     QSqlDatabase db = m_dbSubContext.getConnection();
 
@@ -606,7 +606,7 @@ int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsCoun
 }
 
 QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset,
-                                                         int limit)
+                                                         int limit) const
 {
     QSqlDatabase db = m_dbSubContext.getConnection();
 

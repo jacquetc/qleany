@@ -129,7 +129,7 @@ class DbContext : public QObject
         return query.exec(QStringLiteral("PRAGMA wal_checkpoint(TRUNCATE);"));
     }
 
-    QPair<int, int> getWalInfo()
+    QPair<int, int> getWalInfo() const
     {
         QReadLocker guard(&m_lock);
         if (m_connections.isEmpty())

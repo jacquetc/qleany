@@ -35,7 +35,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
     return created;
 }
 
-QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::get(const QList<int> &{{ ent.camel_name }}Ids)
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::get(const QList<int> &{{ ent.camel_name }}Ids) const
 {
     return m_table->findMany({{ ent.camel_name }}Ids);
 }
@@ -93,24 +93,24 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipI
     emitUpdated(QList<int>{ {{ ent.camel_name }}Id });
 }
 
-QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     return getRelationshipIdsMany(QList<int>{ {{ ent.camel_name }}Id }, relationship).value({{ ent.camel_name }}Id);
 }
 
 QHash<int, QList<int>> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsMany(const QList<int> &{{ ent.camel_name }}Ids,
-                                                                       {{ ent.pascal_name }}RelationshipField relationship)
+                                                                       {{ ent.pascal_name }}RelationshipField relationship) const
 {
     return m_table->getRelationshipIdsMany({{ ent.camel_name }}Ids, relationship);
 }
 
-int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship)
+int SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const
 {
     return m_table->getRelationshipIdsCount(rootId, relationship);
 }
 
 QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship,
-                                                              int offset, int limit)
+                                                              int offset, int limit) const
 {
     return m_table->getRelationshipIdsInRange(rootId, relationship, offset, limit);
 }
