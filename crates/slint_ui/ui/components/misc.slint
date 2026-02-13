@@ -290,3 +290,43 @@ export component StyledButton inherits Rectangle {
         }
     }
 }
+
+export component DocLink inherits Rectangle {
+    in property <string> label;
+    in property <string> url;
+    in property <string> description;
+
+    callback clicked();
+
+    min-height: 48px;
+    background: touch.pressed ? #e9ecef : (touch.has-hover ? #f1f3f5 : transparent);
+    border-radius: 4px;
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    VerticalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        alignment: center;
+        spacing: 2px;
+
+        Text {
+            text: label;
+            font-size: 14px;
+            font-weight: 600;
+            color: #228be6;
+        }
+        Text {
+            text: description;
+            font-size: 12px;
+            color: #868e96;
+            wrap: word-wrap;
+        }
+    }
+}

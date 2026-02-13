@@ -41,6 +41,9 @@ pub fn init_developer_mode(app: &App) {
 }
 
 pub fn init(app: &App, _app_context: &Arc<AppContext>) {
+    app.global::<CommonTools>().on_open_url(|url| {
+        let _ = open::that(url.as_str());
+    });
     setup_check_is_pascal_case_callback(app);
     setup_check_is_snake_case_callback(app);
     init_developer_mode(app);

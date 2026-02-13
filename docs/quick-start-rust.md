@@ -46,7 +46,7 @@ Before touching any tool, grab paper or open a diagramming tool. This is the mos
 
 ### Draw It First
 
-Sketch your entities and relationships before using Qleany. Use paper, whiteboard, or Mermaid.
+Sketch your entities and relationships before using Qleany. Use paper, whiteboard, or [Mermaid](https://mermaid.live/).
 
 Deeper explanations about relationships are available in the [Manifest Reference](manifest-reference.md#understanding-relationships).
 

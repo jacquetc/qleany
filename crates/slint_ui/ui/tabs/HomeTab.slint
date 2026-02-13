@@ -1,6 +1,6 @@
 import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
 import { ManifestCommands, AppState, CommonTools } from "../globals.slint";
-import { Paper, Alert, StyledButton } from "../components/misc.slint";
+import { Paper, Alert, StyledButton, DocLink } from "../components/misc.slint";
 
 
 export component HomeTab inherits Rectangle {
@@ -104,6 +104,70 @@ export component HomeTab inherits Rectangle {
                             }
                         }
                         primary: false;
+                    }
+                }
+
+                // Documentation section
+                Paper {
+                    bg: #f8f9fa;
+                    with-border: false;
+
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 12px;
+
+                        Text {
+                            text: "Documentation";
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #212529;
+                        }
+
+                        GridLayout {
+                            spacing: 8px;
+                            Row {
+                                DocLink {
+                                    label: "Quick Start — C++/Qt";
+                                    url: "https://jacquetc.github.io/qleany/quick-start-cpp-qt.html";
+                                    description: "Build a complete app step by step";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
+                                    label: "Quick Start — Rust";
+                                    url: "https://jacquetc.github.io/qleany/quick-start-rust.html";
+                                    description: "Build a complete app step by step";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                            }
+                            Row {
+                                DocLink {
+                                    label: "Design Philosophy";
+                                    url: "https://jacquetc.github.io/qleany/design-philosophy.html";
+                                    description: "Why Qleany generates code the way it does";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
+                                    label: "Undo Redo Architecture";
+                                    url: "https://jacquetc.github.io/qleany/undo-redo-architecture.html";
+                                    description: "How to add undo/redo support to your app";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                            }
+                            Row {
+                                DocLink {
+                                    label: "Manifest Reference";
+                                    url: "https://jacquetc.github.io/qleany/manifest-reference.html";
+                                    description: "All YAML options explained";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
+                                    label: "Troubleshooting";
+                                    url: "https://jacquetc.github.io/qleany/troubleshooting.html";
+                                    description: "Common issues and fixes";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                            }
+                        }
                     }
                 }
 

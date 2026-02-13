@@ -34,7 +34,7 @@ serde_yml = "0.0.12"
 ctrlc = "3.5.0"
 heck = "0.5"
 arboard = "3.6"
-
+open = "5.3"
 [build-dependencies]
 slint-build = "1.15"
 
