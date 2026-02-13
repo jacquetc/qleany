@@ -13,15 +13,19 @@ class Single{{ ent.pascal_name }} : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int itemId READ id WRITE setId NOTIFY itemIdChanged)
+    Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
     {%- for f in ent.fields %}
     Q_PROPERTY({{ f.cpp_qt_type }} {{ f.camel_name }} READ {{ f.camel_name }} WRITE set{{ f.pascal_name }} NOTIFY {{ f.camel_name }}Changed)
     {%- endfor %}
 
   public:
-    Single{{ ent.pascal_name }}(QObject *parent = nullptr);
+    Single{{ ent.pascal_name }}(QObject *parent = nullptr, int undoRedoStackId = 0);
 
     int id() const;
     void setId(int id);
+    int undoRedoStackId() const;
+    void setUndoRedoStackId(int undoRedoStackId);
+
     {%- for f in ent.fields %}
     {{ f.cpp_qt_type }} {{ f.camel_name }}() const;
     void set{{ f.pascal_name }}(const {{ f.cpp_qt_type }} &{{ f.camel_name }});
@@ -29,6 +33,7 @@ class Single{{ ent.pascal_name }} : public QObject
 
   Q_SIGNALS:
     void itemIdChanged();
+    void undoRedoStackIdChanged();
     {%- for f in ent.fields %}
     void {{ f.camel_name }}Changed();
     {%- endfor %}
@@ -41,6 +46,7 @@ class Single{{ ent.pascal_name }} : public QObject
     void refreshData();
 
     int m_id = -1;
+    int m_undoRedoStackId = 0;
     {%- for f in ent.fields %}
     {{ f.cpp_qt_type }} m_{{ f.camel_name }};
     {%- endfor %}

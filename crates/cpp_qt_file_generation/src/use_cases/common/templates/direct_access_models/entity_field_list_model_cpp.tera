@@ -25,8 +25,9 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 
     using namespace Common::DirectAccess; // to access operators.h
 
-{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::{{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent)
-    : QAbstractListModel(parent)
+{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::{{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent,
+ int undoRedoStackId)
+    : QAbstractListModel(parent), m_undoRedoStackId(undoRedoStackId)
 {
     resolveDependencies();
 }
@@ -62,6 +63,21 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
             connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this, SLOT(on{{ ent.pascal_name }}Updated(QList<int>)));
         }
     }
+}
+
+
+int {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::undoRedoStackId() const
+{
+    return m_undoRedoStackId;
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::setUndoRedoStackId(int undoRedoStackId)
+{
+    if (m_undoRedoStackId == undoRedoStackId)
+        return;
+
+    m_undoRedoStackId = undoRedoStackId;
+    Q_EMIT undoRedoStackIdChanged();
 }
 
 int {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::rowCount(const QModelIndex &parent) const

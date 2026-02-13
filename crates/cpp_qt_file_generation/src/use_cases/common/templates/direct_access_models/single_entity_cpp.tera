@@ -6,7 +6,8 @@
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
-Single{{ ent.pascal_name }}::Single{{ ent.pascal_name }}(QObject *parent) : QObject(parent)
+Single{{ ent.pascal_name }}::Single{{ ent.pascal_name }}(QObject *parent, int undoRedoStackId) : QObject(parent),
+m_undoRedoStackId(undoRedoStackId)
 {
     resolveDependencies();
 }
@@ -35,6 +36,21 @@ void Single{{ ent.pascal_name }}::resolveDependencies()
                     SLOT(onUpdatedEvent(QList<int>)));
         }
     }
+}
+
+
+int Single{{ ent.pascal_name }}::undoRedoStackId() const
+{
+    return m_undoRedoStackId;
+}
+
+void Single{{ ent.pascal_name }}::setUndoRedoStackId(int undoRedoStackId)
+{
+    if (m_undoRedoStackId == undoRedoStackId)
+        return;
+
+    m_undoRedoStackId = undoRedoStackId;
+    emit undoRedoStackIdChanged();
 }
 
 void Single{{ ent.pascal_name }}::onUpdatedEvent(const QList<int> &ids)

@@ -23,6 +23,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
     Q_PROPERTY(int {{ ent.camel_name }}Id READ {{ ent.camel_name }}Id WRITE set{{ ent.pascal_name }}Id NOTIFY {{ ent.camel_name }}IdChanged)
 
   public:
@@ -35,7 +36,10 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
     };
     Q_ENUM(Roles)
 
-    explicit {{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent = nullptr);
+    explicit {{ ent.pascal_name }}{{ field.pascal_name }}ListModel(QObject *parent = nullptr, int undoRedoStackId = 0);
+
+    int undoRedoStackId() const;
+    void setUndoRedoStackId(int undoRedoStackId);
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -54,6 +58,7 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
 
   Q_SIGNALS:
     void {{ ent.camel_name }}IdChanged();
+    void undoRedoStackIdChanged();
 
   private Q_SLOTS:
     void on{{ target_ent.pascal_name }}Updated(const QList<int> &ids);
@@ -64,6 +69,7 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
     void refreshData();
 
     int m_{{ ent.camel_name }}Id = -1;
+    int m_undoRedoStackId = 0;
     QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> m_{{ target_ent.camel_plural_name }};
 
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
