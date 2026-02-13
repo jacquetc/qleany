@@ -37,24 +37,24 @@ src/
 ├── domain/
 │   └── entities/
 │       ├── work.h
-│       ├── binder.h
-│       └── binder_item.h
+│       ├── car.h
+│       └── car_item.h
 ├── application/
 │   └── use_cases/
 │       ├── work/
-│       ├── binder/
-│       └── binder_item/
+│       ├── car/
+│       └── car_item/
 ├── infrastructure/
 │   └── repositories/
 │       ├── work_repository.h
-│       └── binder_repository.h
+│       └── car_repository.h
 └── presentation/
     └── controllers/
         ├── work_controller.h
-        └── binder_controller.h
+        └── car_controller.h
 ```
 
-To modify "Binder," you touch four directories. For a 17-entity project, Qleany v0 generated **1700+ C++ files across 500 folders**. Technically correct, practically unmaintainable.
+To modify "Car," you touch four directories. For a 17-entity project, Qleany v0 generated **1700+ C++ files across 500 folders**. Technically correct, practically unmaintainable.
 
 ## Package by Feature (a.k.a. Vertical Slice Architecture)
 
@@ -67,9 +67,9 @@ src/
 │   ├── database/
 │   └── undo_redo/
 └── direct_access/
-    └── binder/                  # Everything about Binder in one place
-        ├── binder_controller.h
-        ├── binder_repository.h
+    └── car/                  # Everything about Car in one place
+        ├── car_controller.h
+        ├── car_repository.h
         ├── dtos.h
         ├── unit_of_work.h
         └── use_cases/
@@ -79,10 +79,10 @@ src/
             └── remove_uc.h
 ```
 
-To modify "Binder," you only touch one folder. It's easier to find code, understand features, and make changes. For the same 17-entity project, Qleany now generates **600 files across 80 folders**. Roughly, 33 files per entity instead of 90.
+To modify "Car," you only touch one folder. It's easier to find code, understand features, and make changes. For the same 17-entity project, Qleany now generates **600 files across 80 folders**. Roughly, 33 files per entity instead of 90.
 
 **Benefits:**
-- **Discoverability** — Find all Binder code in one place
+- **Discoverability** — Find all Car code in one place
 - **Cohesion** — Related code changes together
 - **Fewer files** — Same 17-entity project produces ~600 files across ~80 folders
 - **Easier onboarding** — New developers understand features, not layers
@@ -91,7 +91,7 @@ To modify "Binder," you only touch one folder. It's easier to find code, underst
 
 The term comes from visualizing your application as a layered cake. A horizontal slice would be one entire layer (all controllers, or all repositories). A vertical slice cuts through all layers for one feature — from UI down to database, but only for that specific capability.
 
-Each slice is relatively self-contained. You can understand, modify, and test the Binder feature without understanding how Events or Tags work internally. This isolation makes onboarding easier and reduces the blast radius of changes.
+Each slice is relatively self-contained. You can understand, modify, and test the Car feature without understanding how Events or Tags work internally. This isolation makes onboarding easier and reduces the blast radius of changes.
 
 ### What We Keep from Clean Architecture
 
@@ -214,10 +214,39 @@ If I had to create an application using plugins, I would design entities dedicat
 
 Also, I'd separate the plugins extending the UI from the plugins extending the backend logic. The UI plugins would be loaded and managed by the UI layer, while the backend plugins would exist in their own section, always in the outermost layer, separate from the UI. And all plugins can have access to the features/use cases dedicated to plugins.
 
-## User settings and Configuration
+## User settings and UI configuration
 
 This part may be obvious to most developers. Does the user settings/configuration belong to the core application logic? No, it doesn't. It belongs to the outermost layer (Frameworks & UI). The core application logic should be agnostic of how settings are stored or managed. The settings/configuration system should be implemented in the outer layer, allowing the core logic to remain unaffected by changes in how settings are handled.
 
 You don't want the window geometry to be held in entities. Its place is in the UI layer. You don't want the theme preference to be held in use cases. Its place is in the UI layer too. The core application logic should focus on business rules and data management, while settings and configuration are handled separately in the outer layer.
 
-Use cases must stay pure and repeatable. They should not depend on user-specific settings or configurations. If a use case needs to behave differently based on user settings, it should receive those settings as input parameters, rather than accessing them directly. This keeps the use cases decoupled from the settings system, maintains their reusability, and keeps them testable.
+The business rules (= entities + use cases) can manage UI-agnostic settings, like user preferences that affect the behavior of the application but are not directly related to the UI. For example, the core logic can manage a setting that determines how data is processed or how certain features behave. But anything directly related to the UI should be kept in the UI layer.
+
+In a perfect world, the use cases would stay pure and repeatable. They should not depend on user-specific settings or configurations. If a use case needs to behave differently based on user settings, it should receive those settings as input parameters, rather than accessing them directly. This keeps the use cases decoupled from the settings system, maintains their reusability, and keeps them testable.
+
+This is not a perfect world. In practice, you can add a ISettings interface to the use case, the same way that the unit of work interface is made accessible to the use case. This way, the use case can access the settings it needs without being tightly coupled to the settings implementation. The settings system can be implemented in the outer layer, and the use cases can interact with it through a well-defined interface, maintaining separation of concerns and keeping the core logic clean.
+
+## Online APIs, databases, and other external services
+
+Consider the application's internal database as local and private. How do you handle data that needs to be synced with an external API or a remote database?   
+
+If the application needs to interact with an external API or a remote database, it should be done through a dedicated service or repository layer. This layer should handle the communication with the external system and provide a clean interface IRemoteWhatever for the use cases to interact with (like it's already done with the units of work).
+
+Need to check any update from this API? Create a dedicated use case to fetch the data from the API and update the internal database and/or act on the answer. This use case would be called periodically to check for updates. Typically, the UI layer would handle the timed loop that calls this use case every few seconds or minutes.
+
+Example: a calendar application that syncs with an external calendar API.
+- the RemoteWhatever service is instantiated in the UI layer (or just before calling the use case if it's stateless)
+- the UI calls the use case every few seconds to check for updates
+- the use case calls the service from IRemoteWhatever to fetch the data from the API
+- the service updates the local database with the new data
+- the UI is notified of the changes and updates its UI accordingly
+- the use case can also trigger notifications or reminders based on the new data
+
+Examples of services:
+- calling terminal commands 
+- fetching data from an API
+- sending emails
+- sending push notifications
+- communicate with another application
+
+When a use case is bound to use a specialized library, avoid putting the library-specific code directly in the use case. Instead, create an interface that abstracts away the library, and implement that interface in a separate class. This way, the use case remains decoupled from the specific library, making it easier to test and maintain. The implementation of the interface can be done in the outer layer, allowing you to swap out libraries or change implementations without affecting the core logic of the use case.
