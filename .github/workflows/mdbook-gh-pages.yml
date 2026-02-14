@@ -21,7 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
+        with:
+          fetch-depth: 0  # Full history needed for sitemap lastmod dates
+          
       - name: Install mdBook
         run: |
           mkdir -p "$HOME/.local/bin"
@@ -46,7 +48,23 @@ jobs:
           echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> book/sitemap.xml
           find book -name '*.html' -not -name 'print.html' -not -name '404.html' | sort | while read -r file; do
             path="${file#book/}"
-            echo "  <url><loc>${BASE_URL}/${path}</loc></url>" >> book/sitemap.xml
+            # Find the corresponding source markdown file
+            base="${path%.html}"
+            case "$base" in
+              introduction) src_file="README.md" ;;
+              contributing) src_file="CONTRIBUTING.md" ;;
+              dco)          src_file="DCO.md" ;;
+              *)            src_file="docs/${base}.md" ;;
+            esac
+            if [ -f "$src_file" ]; then
+              lastmod=$(git log -1 --format="%aI" -- "$src_file")
+            else
+              lastmod=$(git log -1 --format="%aI")
+            fi
+            echo "  <url>" >> book/sitemap.xml
+            echo "    <loc>${BASE_URL}/${path}</loc>" >> book/sitemap.xml
+            echo "    <lastmod>${lastmod}</lastmod>" >> book/sitemap.xml
+            echo "  </url>" >> book/sitemap.xml
           done
           echo '</urlset>' >> book/sitemap.xml
 
