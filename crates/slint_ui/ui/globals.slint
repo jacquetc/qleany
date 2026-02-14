@@ -337,5 +337,6 @@ export global UserInterfaceTabState {
 export global CommonTools{
     pure callback check_is_pascal_case(string) -> bool;
     pure callback check_is_snake_case(string) -> bool;
+    callback open_url(string);
     in-out property <bool> developer_mode: false;
 }
