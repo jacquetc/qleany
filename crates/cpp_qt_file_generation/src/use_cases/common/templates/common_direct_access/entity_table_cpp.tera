@@ -39,6 +39,8 @@
 {% if needs_many2one -%}
 #include "database/junction_table_ops/many_to_one.h"
 {% endif -%}
+#include "database/junction_table_ops/junction_cache.h"
+#include "database/snapshot_types.h"
 #include "database/table_cache.h"
 #include "entities/{{ ent.snake_name }}.h"
 
@@ -47,6 +49,7 @@
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
+#include <QtSql/QSqlRecord>
 #include <algorithm>
 #include <iterator>
 
@@ -632,4 +635,61 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationship
     default:
         throw std::invalid_argument("Unhandled relationship type");
     }
+}
+
+TableLevelSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::snapshotRows(const QList<int> &ids)
+{
+    TableLevelSnapshot snap;
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    // 1. Capture entity rows
+    snap.entityRows = SnapshotUtil::captureRowsByIds(db, "{{ ent.snake_name }}"_L1, ids);
+
+    // 2. Capture forward junction rows
+    {% for rid, r in ent.forward_relationships %}
+    snap.forwardJunctions.append(SnapshotUtil::captureJunctionByLeft(db, {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE, ids));
+    {%- endfor %}
+
+    // 3. Capture backward junction rows (self-referencing only)
+    {% for rid, r in s.entities[e].backward_relationships %}
+    {%- if r.inner.left_entity == e %}
+    snap.backwardJunctions.append(SnapshotUtil::captureJunctionByRight(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD, ids));
+    {%- endif %}
+    {%- endfor %}
+
+    return snap;
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::restoreRows(const TableLevelSnapshot &snap)
+{
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    // 1. Restore entity rows
+    SnapshotUtil::restoreRows(db, snap.entityRows);
+
+    // 2. Restore forward junction rows
+    for (const auto &jSnap : snap.forwardJunctions)
+        SnapshotUtil::restoreRows(db, jSnap);
+
+    // 3. Restore backward junction rows
+    for (const auto &jSnap : snap.backwardJunctions)
+        SnapshotUtil::restoreRows(db, jSnap);
+
+    // 4. Invalidate caches for restored IDs
+    const auto restoredIds = SnapshotUtil::extractIds(snap.entityRows);
+    if (!restoredIds.isEmpty())
+    {
+        {{ ent.pascal_name }}Cache::instance().invalidateEntities(restoredIds);
+        {{ ent.pascal_name }}Cache::instance().invalidateRelationships(restoredIds);
+    }
+
+    // 5. Invalidate JunctionCache for affected junction tables
+    {% for rid, r in ent.forward_relationships %}
+    JunctionTableOps::JunctionCache::instance().invalidateTable({{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE);
+    {%- endfor %}
+    {% for rid, r in s.entities[e].backward_relationships %}
+    {%- if r.inner.left_entity == e %}
+    JunctionTableOps::JunctionCache::instance().invalidateTable({{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD);
+    {%- endif %}
+    {%- endfor %}
 }

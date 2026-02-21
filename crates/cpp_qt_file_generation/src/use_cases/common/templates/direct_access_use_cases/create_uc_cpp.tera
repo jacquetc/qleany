@@ -5,6 +5,7 @@
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
 namespace SCE = Common::Entities;
+namespace SCDatabase = Common::Database;
 
 QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }}, int ownerId, int index)
 {
@@ -16,6 +17,8 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
 
     // Store original data for undo/redo
     m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
+    m_ownerId = ownerId;
+    m_index = index;
 
     m_uow->beginTransaction();
     auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
@@ -27,6 +30,13 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
         entity.createdAt = currentTime;
         entity.updatedAt = entity.createdAt;
     }
+
+{%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
+    // Pre-snapshot existing children that will be cascade-removed by create
+    m_existingChildIds = m_uow->getRelationshipsFromOwner(ownerId);
+    if (!m_existingChildIds.isEmpty())
+        m_displacedChildrenSnapshot = m_uow->snapshot(m_existingChildIds);
+{%- endif %}
 
     auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
     m_uow->commit();
@@ -48,15 +58,32 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
     {
         m_uow->beginTransaction();
 
-        // Remove the created {{ ent.camel_plural_name }} by their IDs
+        // Collect IDs of created {{ ent.camel_plural_name }}
         QList<int> idsToRemove;
         for (const auto &{{ ent.camel_name }} : m_created{{ ent.pascal_plural_name }})
         {
             idsToRemove.append({{ ent.camel_name }}.id);
         }
 
-        // Use the unit of work to remove the created {{ ent.camel_plural_name }}
+        // Snapshot the created entity tree before removing (for redo)
+        m_oldTreeSnapshot = m_uow->snapshot(idsToRemove);
+
+        // Remove the created {{ ent.camel_plural_name }}
         m_uow->remove(idsToRemove);
+
+{%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
+        // Restore displaced children and fix owner junction
+        if (!m_displacedChildrenSnapshot.tableData.entityRows.rows.isEmpty())
+        {
+            m_uow->restore(m_displacedChildrenSnapshot);
+            m_uow->setRelationshipsInOwner(m_existingChildIds, m_ownerId);
+        }
+        else
+        {
+            m_uow->setRelationshipsInOwner({}, m_ownerId);
+        }
+{%- endif %}
+
         m_uow->commit();
 
         return SCU::Result<void>();
@@ -78,11 +105,27 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
     try
     {
         m_uow->beginTransaction();
-        auto mappedEntities = DtoMapper::toEntityList(m_original{{ ent.pascal_plural_name }});
-        auto createdEntities = m_uow->create(mappedEntities);
-        m_uow->commit();
 
-        m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
+{%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
+        // Re-snapshot displaced children (restored by undo) for next undo cycle
+        if (!m_existingChildIds.isEmpty())
+        {
+            m_displacedChildrenSnapshot = m_uow->snapshot(m_existingChildIds);
+            m_uow->remove(m_existingChildIds);
+        }
+
+        // Restore the new entity tree
+        m_uow->restore(m_oldTreeSnapshot);
+
+        // Fix owner junction to point to the new entities
+        const auto newIds = SCDatabase::SnapshotUtil::extractIds(m_oldTreeSnapshot.tableData.entityRows);
+        m_uow->setRelationshipsInOwner(newIds, m_ownerId);
+{%- else %}
+        // Restore the entity tree from the snapshot taken during undo
+        m_uow->restore(m_oldTreeSnapshot);
+{%- endif %}
+
+        m_uow->commit();
 
         return SCU::Result<void>();
     }

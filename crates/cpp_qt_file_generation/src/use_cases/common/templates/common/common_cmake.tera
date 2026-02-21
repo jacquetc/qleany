@@ -30,6 +30,7 @@ set(SRCS
         database/junction_table_ops/one_to_one.h
         database/junction_table_ops/one_to_one.cpp
         database/junction_table_ops/junction_cache.h
+        database/snapshot_types.h
         service_locator.cpp
         service_locator.h
 

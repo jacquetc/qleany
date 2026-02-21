@@ -12,6 +12,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 {
 namespace SCE = Common::Entities;
 namespace SCU = Common::UndoRedo;
+namespace SCDatabase = Common::Database;
 
 class Create{{ ent.pascal_name }}UseCase
 {
@@ -29,6 +30,13 @@ class Create{{ ent.pascal_name }}UseCase
     std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
     QList<Create{{ ent.pascal_name }}Dto> m_original{{ ent.pascal_plural_name }};
     QList<{{ ent.pascal_name }}Dto> m_created{{ ent.pascal_plural_name }};
+    int m_ownerId = 0;
+    int m_index = -1;
+    SCDatabase::EntityTreeSnapshot m_oldTreeSnapshot;
+{%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
+    QList<int> m_existingChildIds;
+    SCDatabase::EntityTreeSnapshot m_displacedChildrenSnapshot;
+{%- endif %}
     bool m_hasExecuted = false;
 };
 

@@ -76,13 +76,27 @@
     DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
-    DECLARE_UOW_ENTITY_REMOVE(Name)
+    DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_SNAPSHOT(Name)
 
 #define DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)                                                                          \
     DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name);                                                                          \
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
-    DECLARE_UOW_ENTITY_REMOVE(Name)
+    DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_SNAPSHOT(Name)
+
+// -- Snapshot / Restore fragments --
+
+#define DECLARE_UOW_ENTITY_SNAPSHOT(Name) \
+    virtual SCDatabase::EntityTreeSnapshot snapshot##Name(const QList<int> &ids) = 0; \
+    virtual void restore##Name(const SCDatabase::EntityTreeSnapshot &snap) = 0
+
+// -- Snapshot Related fragments --
+
+#define DECLARE_UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum) \
+    virtual SCDatabase::EntityTreeSnapshot snapshot##Name##Related(int id, RelFieldEnum rel) = 0; \
+    virtual void restore##Name##Related(RelFieldEnum rel, const SCDatabase::EntityTreeSnapshot &snap) = 0
 
 // -- Relationship fragments --
 
@@ -93,7 +107,8 @@
                                                                              RelFieldEnum rel) = 0;                   \
     [[nodiscard]] virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                             \
     [[nodiscard]] virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                         \
-                                                                     int offset, int limit) = 0
+                                                                     int offset, int limit) = 0;                      \
+    DECLARE_UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)
 
 
 // #############################################################################
@@ -120,18 +135,18 @@
 
 #define UOW_ENTITY_GET_REL_FROM_OWNER(Name)                                                                           \
   public:                                                                                                             \
-    [[nodiscard]] QList<int> get##Name##RelationshipsFromOwner(int ownerId) override       \
+    [[nodiscard]] QList<int> get##Name##RelationshipsFromOwner(int ownerId) override                                  \
     {                                                                                                                 \
         auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
-        return repo->getRelationshipsFromOwner(ownerId);                                                     \
+        return repo->getRelationshipsFromOwner(ownerId);                                                              \
     }
 
 #define UOW_ENTITY_SET_REL_IN_OWNER(Name)                                                                             \
-  public:
-  void set##Name##RelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
-  {
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);
-        repo->setRelationshipsInOwner(itemIds, ownerId);
+  public:                                                                                                             \
+  void set##Name##RelationshipsInOwner(const QList<int> &itemIds, int ownerId) override                               \
+  {                                                                                                                   \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        repo->setRelationshipsInOwner(itemIds, ownerId);                                                              \
   }
 
 #define UOW_ENTITY_GET(Name)                                                                                          \
@@ -158,6 +173,32 @@
         return repo->remove(ids);                                                                                     \
     }
 
+#define UOW_ENTITY_SNAPSHOT(Name)                                                                                     \
+  public:                                                                                                             \
+    SCDatabase::EntityTreeSnapshot snapshot##Name(const QList<int> &ids) override                                     \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->snapshot(ids);                                                                                   \
+    }                                                                                                                 \
+    void restore##Name(const SCDatabase::EntityTreeSnapshot &snap) override                                           \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        repo->restore(snap);                                                                                          \
+    }
+
+#define UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)                                                               \
+  public:                                                                                                             \
+    SCDatabase::EntityTreeSnapshot snapshot##Name##Related(int id, RelFieldEnum rel) override                         \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->snapshotRelated(id, rel);                                                                        \
+    }                                                                                                                 \
+    void restore##Name##Related(RelFieldEnum rel, const SCDatabase::EntityTreeSnapshot &snap) override                \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        repo->restoreRelated(rel, snap);                                                                              \
+    }
+
 // -- CRUD composite --
 
 #define UOW_ENTITY_CRUD(Name)                                                                                         \
@@ -167,13 +208,15 @@
     UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
     UOW_ENTITY_GET(Name)                                                                                              \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
-    UOW_ENTITY_REMOVE(Name)
+    UOW_ENTITY_REMOVE(Name)                                                                                           \
+    UOW_ENTITY_SNAPSHOT(Name)
 
 #define UOW_ORPHAN_ENTITY_CRUD(Name)                                                                                  \
     UOW_ENTITY_CREATE_ORPHANS(Name)                                                                                   \
     UOW_ENTITY_GET(Name)                                                                                              \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
-    UOW_ENTITY_REMOVE(Name)
+    UOW_ENTITY_REMOVE(Name)                                                                                           \
+    UOW_ENTITY_SNAPSHOT(Name)
 
 // -- Relationship operations --
 
@@ -205,5 +248,6 @@
     {                                                                                                                 \
         auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
-    }
+    }                                                                                                                 \
+    UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)
 

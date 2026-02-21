@@ -5,6 +5,7 @@
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
 namespace SCE = Common::Entities;
+namespace SCDatabase = Common::Database;
 
 QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.camel_name }}Ids)
 {
@@ -18,12 +19,9 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
     m_original{{ ent.pascal_name }}Ids = {{ ent.camel_name }}Ids;
 
     m_uow->beginTransaction();
-    // Get the {{ ent.camel_name }} data before removing for potential undo
-    auto {{ ent.camel_name }}Entities = m_uow->get({{ ent.camel_name }}Ids);
-    m_removed{{ ent.pascal_name }}s = DtoMapper::toDtoList({{ ent.camel_name }}Entities);
 
-    // Create savepoint before removal
-    m_uow->createSavepoint();
+    // Snapshot the entity tree before removal (for undo)
+    m_entityTreeSnapshot = m_uow->snapshot({{ ent.camel_name }}Ids);
 
     // Perform the removal
     m_removedIds = m_uow->remove({{ ent.camel_name }}Ids);
@@ -36,7 +34,7 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
 
 SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
 {
-    if (!m_hasExecuted || m_removed{{ ent.pascal_name }}s.isEmpty())
+    if (!m_hasExecuted || m_removedIds.isEmpty())
     {
         return SCU::Result<void>("Cannot undo: no {{ ent.camel_plural_name }} were removed"_L1);
     }
@@ -45,8 +43,8 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
     {
         m_uow->beginTransaction();
 
-        // Use rollback to savepoint to restore the removed {{ ent.camel_plural_name }}
-        m_uow->rollbackToSavepoint();
+        // Restore the entity tree from the snapshot
+        m_uow->restore(m_entityTreeSnapshot);
         m_uow->commit();
 
         return SCU::Result<void>();
@@ -69,8 +67,10 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::redo()
     {
         m_uow->beginTransaction();
 
-        // Release the savepoint and perform removal again
-        m_uow->releaseSavepoint();
+        // Re-snapshot the entity tree (restored by undo) before removing again
+        m_entityTreeSnapshot = m_uow->snapshot(m_original{{ ent.pascal_name }}Ids);
+
+        // Remove the entities again
         m_uow->remove(m_original{{ ent.pascal_name }}Ids);
         m_uow->commit();
 

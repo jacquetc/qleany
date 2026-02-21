@@ -5,7 +5,10 @@
 #include "{{ ent.snake_name }}_unit_of_work.h"
 #include "service_locator.h"
 #include "use_cases/common/dto_mapper.h"
+#include "use_cases/create_orphans_uc.h"
+{%- if ent.owner %}
 #include "use_cases/create_uc.h"
+{%- endif %}
 #include "use_cases/get_uc.h"
 #include "use_cases/remove_uc.h"
 #include "use_cases/update_uc.h"

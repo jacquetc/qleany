@@ -66,13 +66,17 @@ class IEntityCrud : public virtual ITransactional
   public:
     ~IEntityCrud() override = default;
 
-    [[nodiscard]] virtual QList<EntityType> create(const QList<EntityType> &items) = 0;
+    [[nodiscard]] virtual QList<EntityType> create(const QList<EntityType> &items, int owner, int index) = 0;
     [[nodiscard]] virtual QList<EntityType> createOrphans(const QList<EntityType> &items) = 0;
-    [[nodiscard]] QList<int> getRelationshipsFromOwner(const QList<int> &itemIds, int ownerId) const = 0;
-    void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) = 0;
+    [[nodiscard]] virtual QList<int> getRelationshipsFromOwner(int ownerId) = 0;
+    virtual void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) = 0;
     [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
     [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
+
+    // Snapshot / Restore
+    virtual Database::EntityTreeSnapshot snapshot(const QList<int> &ids) = 0;
+    virtual void restore(const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 /**
@@ -91,6 +95,10 @@ class IOrphanEntityCrud : public virtual ITransactional
     [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
     [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
+
+    // Snapshot / Restore
+    virtual Database::EntityTreeSnapshot snapshot(const QList<int> &ids) = 0;
+    virtual void restore(const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 /**
@@ -107,6 +115,10 @@ class IEntityWithRelationships : public IEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
+
+    // Snapshot / Restore related children (dispatches to child repo by relationship field)
+    virtual Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) = 0;
+    virtual void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 /**
@@ -123,6 +135,10 @@ class IOrphanEntityWithRelationships : public IOrphanEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
+
+    // Snapshot / Restore related children (dispatches to child repo by relationship field)
+    virtual Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) = 0;
+    virtual void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 // =============================================================================
@@ -188,10 +204,10 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
   public:
     ~EntityCrudImpl() override = default;
 
-    [[nodiscard]] QList<EntityType> create(const QList<EntityType> &items) override
+    [[nodiscard]] QList<EntityType> create(const QList<EntityType> &items, int owner, int index) override
     {
         auto repo = self().makeRepository();
-        return repo->create(items);
+        return repo->create(items, owner, index);
     }
 
     [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
@@ -200,16 +216,16 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
         return repo->createOrphans(items);
     }
 
-    QList<int> getRelationshipsFromOwner(const QList<int> &itemIds, int ownerId) const override
+    QList<int> getRelationshipsFromOwner(int ownerId) override
     {
         auto repo = self().makeRepository();
-        return repo->getRelationshipsFromOwner(itemIds, ownerId);
+        return repo->getRelationshipsFromOwner(ownerId);
     }
 
     void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
     {
         auto repo = self().makeRepository();
-        repo->setRelationshipsInOwner(itemIds, ownerId, index);
+        repo->setRelationshipsInOwner(itemIds, ownerId);
     }
 
     [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
@@ -228,6 +244,19 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
     {
         auto repo = self().makeRepository();
         return repo->remove(ids);
+    }
+
+    // Snapshot / Restore
+    Database::EntityTreeSnapshot snapshot(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshot(ids);
+    }
+
+    void restore(const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restore(snap);
     }
 
   private:
@@ -245,15 +274,15 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
  * m_eventRegistry access via makeRepository).
  */
 template <typename Derived, typename EntityType>
-class OrphanEntityCrudImpl : public virtual IEntityCrud<EntityType>
+class OrphanEntityCrudImpl : public virtual IOrphanEntityCrud<EntityType>
 {
   public:
-    ~EntityCrudImpl() override = default;
+    ~OrphanEntityCrudImpl() override = default;
 
     [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
     {
         auto repo = self().makeRepository();
-        return repo->create(items);
+        return repo->createOrphans(items);
     }
 
     [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
@@ -272,6 +301,19 @@ class OrphanEntityCrudImpl : public virtual IEntityCrud<EntityType>
     {
         auto repo = self().makeRepository();
         return repo->remove(ids);
+    }
+
+    // Snapshot / Restore
+    Database::EntityTreeSnapshot snapshot(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshot(ids);
+    }
+
+    void restore(const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restore(snap);
     }
 
   private:
@@ -303,10 +345,10 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
         return repo->createOrphans(items);
     }
 
-    QList<int> getRelationshipsFromOwner(int ownerId) const override
+    QList<int> getRelationshipsFromOwner(int ownerId) override
     {
         auto repo = self().makeRepository();
-        return repo->getRelationshipsFromOwner(itemIds, ownerId);
+        return repo->getRelationshipsFromOwner(ownerId);
     }
 
     void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
@@ -364,6 +406,32 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);
     }
 
+    // Snapshot / Restore
+    Database::EntityTreeSnapshot snapshot(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshot(ids);
+    }
+
+    void restore(const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restore(snap);
+    }
+
+    // Snapshot / Restore related children
+    Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshotRelated(id, rel);
+    }
+
+    void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restoreRelated(rel, snap);
+    }
+
   private:
     Derived &self() { return static_cast<Derived &>(*this); }
 };
@@ -375,16 +443,16 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
  * makeRepository() must additionally support relationship methods.
  */
 template <typename Derived, typename EntityType, typename RelFieldEnum>
-class OrphanEntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFieldEnum>
+class OrphanEntityFullImpl : public virtual IOrphanEntityWithRelationships<EntityType, RelFieldEnum>
 {
   public:
     ~OrphanEntityFullImpl() override = default;
 
     // CRUD
-    [[nodiscard]] QList<EntityType> create(const QList<EntityType> &items) override
+    [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
     {
         auto repo = self().makeRepository();
-        return repo->create(items);
+        return repo->createOrphans(items);
     }
 
     [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
@@ -434,6 +502,32 @@ class OrphanEntityFullImpl : public virtual IEntityWithRelationships<EntityType,
     {
         auto repo = self().makeRepository();
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);
+    }
+
+    // Snapshot / Restore
+    Database::EntityTreeSnapshot snapshot(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshot(ids);
+    }
+
+    void restore(const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restore(snap);
+    }
+
+    // Snapshot / Restore related children
+    Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) override
+    {
+        auto repo = self().makeRepository();
+        return repo->snapshotRelated(id, rel);
+    }
+
+    void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) override
+    {
+        auto repo = self().makeRepository();
+        repo->restoreRelated(rel, snap);
     }
 
   private:

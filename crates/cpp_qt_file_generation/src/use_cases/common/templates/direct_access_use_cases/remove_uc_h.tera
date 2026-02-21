@@ -12,6 +12,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 {
 namespace SCE = Common::Entities;
 namespace SCU = Common::UndoRedo;
+namespace SCDatabase = Common::Database;
 
 class Remove{{ ent.pascal_name }}UseCase
 {
@@ -28,8 +29,8 @@ class Remove{{ ent.pascal_name }}UseCase
   private:
     std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
     QList<int> m_original{{ ent.pascal_name }}Ids;
-    QList<{{ ent.pascal_name }}Dto> m_removed{{ ent.pascal_name }}s;
     QList<int> m_removedIds;
+    SCDatabase::EntityTreeSnapshot m_entityTreeSnapshot;
     bool m_hasExecuted = false;
 };
 

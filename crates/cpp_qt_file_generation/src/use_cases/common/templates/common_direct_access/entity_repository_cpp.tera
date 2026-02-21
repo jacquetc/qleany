@@ -1,6 +1,7 @@
 {%- set e = s.file.inner.entity %}
 {%- set ent = s.entities[e] %}
 #include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_repository.h"
+#include "database/snapshot_types.h"
 #include "direct_access/repository_factory.h"
 
 #include <QSet>
@@ -10,6 +11,7 @@
 
 namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
 namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
+namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
 
 // Helper: extract IDs from a list of entities
 static QList<int> extractIds(const QList<SCE::{{ ent.pascal_name }}> &items)
@@ -39,45 +41,58 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
 
 QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}, int ownerId, int index)
 {
-    auto created = m_table->createMany({{ ent.camel_plural_name }});
-    auto createdIds = extractIds(created);
+    const auto created = m_table->createMany({{ ent.camel_plural_name }});
+    const auto createdIds = extractIds(created);
 
-    auto relationships = getRelationshipsFromOwner(ownerId);
+    auto relationshipIds = getRelationshipsFromOwner(ownerId);
 
 {%- if ent.owner_relationship_type == "OneToMany" or ent.owner_relationship_type == "OrderedOneToMany" or ent.owner_relationship_type == "ManyToMany"  %}
 
     // insert at index
-    relationships.reserve(relationships.size() + {{ ent.camel_plural_name }}.size());
-    if (index >= 0 && index < relationships.size())
+    relationshipIds.reserve(relationshipIds.size() + {{ ent.camel_plural_name }}.size());
+    if (index >= 0 && index < relationshipIds.size())
     {
         for (int i = 0; i < createdIds.size(); ++i)
         {
-            relationships.insert(index + i, createdIds.at(i));
+            relationshipIds.insert(index + i, createdIds.at(i));
         }
     }
     else // index == -1, out of range, or empty list → append
     {
-        relationships.append(createdIds);
+        relationshipIds.append(createdIds);
+    }
+{%- else %} {# OneToOne and ManyToOne #}
+
+    if (relationshipIds.isEmpty())
+    {
+        relationshipIds = createdIds;
+    }
+    else
+    {
+        // Replace existing relationship: cascade-remove old entities first
+        remove(relationshipIds);
+        relationshipIds = createdIds;
     }
 
-{%- endif %} {* OneToOne and ManyToOne *}
-    setRelationshipsInOwner(createdIds)
+
+{%- endif %}
+    setRelationshipsInOwner(relationshipIds, ownerId);
     emitCreated(createdIds);
     return created;
 }
 
-QList<int> getRelationshipsFromOwner(int ownerId) const
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipsFromOwner(int ownerId) const
 {
     // get owner repository
     auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
-    return repo->getRelationshipIds(ownerId, {{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }});
+    return repo->getRelationshipIds(ownerId, {{ ent.owner_pascal_name }}::{{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }});
 }
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipsInOwner(const QList<int> &itemIds, int ownerId)
 {
    // get owner repository
    auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
-   repo->setRelationshipIds(ownerId, {{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }}, itemIds);
+   repo->setRelationshipIds(ownerId, {{ ent.owner_pascal_name }}::{{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }}, itemIds);
 }
 
 {%- endif %}
@@ -135,6 +150,30 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::remove(con
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, QList<int> relatedIds)
 {
+    // Get old related IDs before setting new ones
+    const auto oldIds = getRelationshipIds({{ ent.camel_name }}Id, relationship);
+
+    // Compute displaced IDs (old IDs not present in the new set)
+    const QSet<int> newSet(relatedIds.begin(), relatedIds.end());
+    QList<int> displacedIds;
+    for (int id : oldIds)
+    {
+        if (!newSet.contains(id))
+            displacedIds.append(id);
+    }
+
+    // Cascade-remove displaced children
+    if (!displacedIds.isEmpty())
+    {
+        {% for rid, r in ent.forward_relationships %}
+        {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
+        {
+            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            childRepo->remove(displacedIds);
+        }
+        {% endfor %}
+    }
+
     m_table->setRelationshipIds({{ ent.camel_name }}Id, relationship, relatedIds);
     emitRelationshipChanged({{ ent.camel_name }}Id, relationship, relatedIds);
     emitUpdated(QList<int>{ {{ ent.camel_name }}Id });
@@ -162,7 +201,94 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelatio
     return m_table->getRelationshipIdsInRange(rootId, relationship, offset, limit);
 }
 
+SCDatabase::EntityTreeSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::snapshotRelated(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
+{
+    const auto relatedIds = getRelationshipIds({{ ent.camel_name }}Id, relationship);
+    if (relatedIds.isEmpty())
+        return {};
+
+    {% for rid, r in ent.forward_relationships %}
+    {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
+    {
+        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+        return childRepo->snapshot(relatedIds);
+    }
+    {% endfor %}
+
+    return {};
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::restoreRelated({{ ent.pascal_name }}RelationshipField relationship, const SCDatabase::EntityTreeSnapshot &snap)
+{
+    if (snap.tableData.entityRows.rows.isEmpty())
+        return;
+
+    {% for rid, r in ent.forward_relationships %}
+    {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
+    {
+        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+        childRepo->restore(snap);
+    }
+    {% endfor %}
+}
+
 {%- endif %}
+
+SCDatabase::EntityTreeSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::snapshot(const QList<int> &ids)
+{
+    SCDatabase::EntityTreeSnapshot snap;
+    snap.tableData = m_table->snapshotRows(ids);
+
+    {% for rid, r in ent.forward_relationships %}
+    {
+        // Snapshot children for {{ r.field_camel_name }} relationship
+        const auto childIds = SCDatabase::SnapshotUtil::extractRightIds(snap.tableData.forwardJunctions.at({{ loop.index0 }}));
+        if (!childIds.isEmpty())
+        {
+            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            snap.children.append(childRepo->snapshot(childIds));
+        }
+    }
+    {% endfor %}
+
+    return snap;
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::restore(const SCDatabase::EntityTreeSnapshot &snap)
+{
+    // 1. Restore children first (bottom-up)
+    for (const auto &childSnap : snap.children)
+    {
+        const QString &childTable = childSnap.tableData.entityRows.tableName;
+        {% for eid, childEnt in s.entities %}
+        {% if loop.first %}if{% else %}else if{% endif %} (childTable == QLatin1StringView("{{ childEnt.snake_name }}"))
+        {
+            auto childRepo = RepositoryFactory::create{{ childEnt.pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            childRepo->restore(childSnap);
+        }
+        {% endfor %}
+    }
+
+    // 2. Restore this entity's table data
+    m_table->restoreRows(snap.tableData);
+
+    // 3. Emit Created events for restored entity IDs
+    const auto restoredIds = SCDatabase::SnapshotUtil::extractIds(snap.tableData.entityRows);
+    emitCreated(restoredIds);
+
+    {%- if ent.forward_relationships %}
+    // 4. Emit RelationshipChanged events for restored relationships
+    for (int restoredId : restoredIds)
+    {
+        {% for rid, r in ent.forward_relationships %}
+        {
+            const auto relIds = m_table->getRelationshipIdsMany(QList<int>{ restoredId }, {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }}).value(restoredId);
+            emitRelationshipChanged(restoredId, {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }}, relIds);
+        }
+        {% endfor %}
+    }
+    {%- endif %}
+}
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitCreated(const QList<int> &ids) const
 {

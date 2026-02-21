@@ -3,6 +3,7 @@
 #pragma once
 
 #include "database/db_context.h"
+#include "database/snapshot_types.h"
 #include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_repository.h"
 #include "entities/{{ ent.snake_name }}.h"
 
@@ -27,6 +28,10 @@ class {{ ent.pascal_name }}Table final : public I{{ ent.pascal_name }}Table
     int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const override;
     QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                          int limit) const override;
+
+    // Snapshot / Restore (table level)
+    Database::TableLevelSnapshot snapshotRows(const QList<int> &ids) override;
+    void restoreRows(const Database::TableLevelSnapshot &snap) override;
 
   private:
     Database::DbSubContext &m_dbSubContext;

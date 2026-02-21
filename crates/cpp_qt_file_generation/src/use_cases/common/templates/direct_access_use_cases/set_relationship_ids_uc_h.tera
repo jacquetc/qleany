@@ -12,6 +12,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 {
 namespace SCE = Common::Entities;
 namespace SCU = Common::UndoRedo;
+namespace SCDatabase = Common::Database;
 namespace SCD{{ ent.pascal_name }} = Common::DirectAccess::{{ ent.pascal_name }};
 
 class SetRelationshipIdsUseCase
@@ -32,6 +33,8 @@ class SetRelationshipIdsUseCase
     {{ ent.pascal_name }}RelationshipField m_relationship;
     QList<int> m_newRelatedIds;
     QList<int> m_originalRelatedIds;
+    SCDatabase::EntityTreeSnapshot m_displacedChildrenSnapshot;
+    SCDatabase::EntityTreeSnapshot m_newChildrenSnapshot;
     bool m_hasExecuted = false;
 };
 

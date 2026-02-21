@@ -252,6 +252,18 @@ impl ListCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            name: "snapshot_types.h".to_string(),
+            relative_path: format!("{}/common/database", prefix),
+            group: "common_db".to_string(),
+            template_name: "snapshot_types_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
             name: "unordered_many_to_many.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
