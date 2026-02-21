@@ -148,7 +148,6 @@ impl SaveUseCase {
             rust_slint: ui.rust_slint,
             cpp_qt_qtwidgets: ui.cpp_qt_qtwidgets,
             cpp_qt_qtquick: ui.cpp_qt_qtquick,
-            cpp_qt_kirigami: ui.cpp_qt_kirigami,
         };
 
         let model_entities = entities

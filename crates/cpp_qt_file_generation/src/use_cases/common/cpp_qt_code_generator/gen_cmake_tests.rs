@@ -67,11 +67,16 @@ fn render_direct_access_lib_lists_entities() {
             backward_relationships: IndexMap::new(),
             snake_name: "feature".into(),
             pascal_name: "Feature".into(),
+            pascal_plural_name: "Features".into(),
             camel_name: "feature".into(),
             camel_plural_name: "features".to_string(),
             sql_safe_snake_name: "feature".to_string(),
             fields: vec![],
             normal_fields: vec![],
+            owner: None,
+            owner_pascal_name: None,
+            owner_relationship_field_pascal_name: None,
+            owner_relationship_type: None,
         },
     );
     entities.insert(
@@ -83,11 +88,16 @@ fn render_direct_access_lib_lists_entities() {
             backward_relationships: IndexMap::new(),
             snake_name: "field".into(),
             pascal_name: "Field".into(),
+            pascal_plural_name: "Fields".into(),
             camel_name: "field".into(),
             camel_plural_name: "fields".to_string(),
             sql_safe_snake_name: "field".to_string(),
             fields: vec![],
             normal_fields: vec![],
+            owner: None,
+            owner_pascal_name: None,
+            owner_relationship_field_pascal_name: None,
+            owner_relationship_type: None,
         },
     );
 

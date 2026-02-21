@@ -49,7 +49,12 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     ~{{ ent.pascal_name }}Repository() override = default;
 
     // CRUD
-    QList<SCE::{{ ent.pascal_name }}> create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
+    QList<SCE::{{ ent.pascal_name }}> createOrphans(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
+    {%- if ent.owner %}
+    QList<SCE::{{ ent.pascal_name }}> create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}, int ownerId, int index) override;
+    QList<int> getRelationshipsFromOwner(int ownerId) const override;
+    void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override;
+    {%- endif %}
     QList<SCE::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const override;
     QList<SCE::{{ ent.pascal_name }}> update(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
     QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) override;

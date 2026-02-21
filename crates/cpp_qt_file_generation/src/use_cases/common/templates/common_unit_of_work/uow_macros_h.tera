@@ -49,7 +49,16 @@
 // -- CRUD fragments --
 
 #define DECLARE_UOW_ENTITY_CREATE(Name) \
-    [[nodiscard]] virtual QList<SCE::Name> create##Name(const QList<SCE::Name> &items) = 0
+    [[nodiscard]] virtual QList<SCE::Name> create##Name(const QList<SCE::Name> &items, int ownerId, int index) = 0
+
+#define DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name) \
+    [[nodiscard]] virtual QList<SCE::Name> createOrphan##Name(const QList<SCE::Name> &items) = 0
+
+#define DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(Name) \
+    [[nodiscard]] virtual QList<int> get##Name##RelationshipsFromOwner(int ownerId) = 0
+
+#define DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(Name) \
+    virtual void set##Name##RelationshipsInOwner(const QList<int> &itemIds, int ownerId) = 0
 
 #define DECLARE_UOW_ENTITY_GET(Name) \
     [[nodiscard]] virtual QList<SCE::Name> get##Name(const QList<int> &ids) = 0
@@ -62,6 +71,15 @@
 
 #define DECLARE_UOW_ENTITY_CRUD(Name)                                                                                 \
     DECLARE_UOW_ENTITY_CREATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name);                                                                          \
+    DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(Name);                                                                      \
+    DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
+    DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
+    DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_REMOVE(Name)
+
+#define DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)                                                                          \
+    DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name);                                                                          \
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_REMOVE(Name)
@@ -77,11 +95,6 @@
     [[nodiscard]] virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                         \
                                                                      int offset, int limit) = 0
 
-// -- Composite fragments --
-
-#define DECLARE_UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                        \
-    DECLARE_UOW_ENTITY_CREATE(Name);                                                                                  \
-    virtual void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) = 0
 
 // #############################################################################
 // IMPLEMENTATION MACROS (override implementations)
@@ -91,11 +104,35 @@
 
 #define UOW_ENTITY_CREATE(Name)                                                                                       \
   public:                                                                                                             \
-    [[nodiscard]] QList<SCE::Name> create##Name(const QList<SCE::Name> &items) override                               \
+    [[nodiscard]] QList<SCE::Name> create##Name(const QList<SCE::Name> &items, int ownerId, int index) override                               \
     {                                                                                                                 \
         auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
-        return repo->create(items);                                                                                   \
+        return repo->create(items, ownerId, index);                                                                                   \
     }
+
+#define UOW_ENTITY_CREATE_ORPHANS(Name)                                                                               \
+  public:                                                                                                             \
+  [[nodiscard]] QList<SCE::Name> createOrphan##Name(const QList<SCE::Name> &items) override                           \
+  {                                                                                                                   \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->createOrphans(items);                                                                            \
+  }
+
+#define UOW_ENTITY_GET_REL_FROM_OWNER(Name)                                                                           \
+  public:                                                                                                             \
+    [[nodiscard]] QList<int> get##Name##RelationshipsFromOwner(int ownerId) override       \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        return repo->getRelationshipsFromOwner(ownerId);                                                     \
+    }
+
+#define UOW_ENTITY_SET_REL_IN_OWNER(Name)                                                                             \
+  public:
+  void set##Name##RelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
+  {
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);
+        repo->setRelationshipsInOwner(itemIds, ownerId);
+  }
 
 #define UOW_ENTITY_GET(Name)                                                                                          \
   public:                                                                                                             \
@@ -125,6 +162,15 @@
 
 #define UOW_ENTITY_CRUD(Name)                                                                                         \
     UOW_ENTITY_CREATE(Name)                                                                                           \
+    UOW_ENTITY_CREATE_ORPHANS(Name)                                                                                   \
+    UOW_ENTITY_GET_REL_FROM_OWNER(Name);                                                                      \
+    UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
+    UOW_ENTITY_GET(Name)                                                                                              \
+    UOW_ENTITY_UPDATE(Name)                                                                                           \
+    UOW_ENTITY_REMOVE(Name)
+
+#define UOW_ORPHAN_ENTITY_CRUD(Name)                                                                                  \
+    UOW_ENTITY_CREATE_ORPHANS(Name)                                                                                   \
     UOW_ENTITY_GET(Name)                                                                                              \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
     UOW_ENTITY_REMOVE(Name)
@@ -161,13 +207,3 @@
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
     }
 
-// -- Composite: Create + SetRelationship (common for load operations) --
-
-#define UOW_ENTITY_CREATE_WITH_REL(Name, RelFieldEnum)                                                                \
-    UOW_ENTITY_CREATE(Name)                                                                                           \
-  public:                                                                                                             \
-    void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) override                     \
-    {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
-        repo->setRelationshipIds(id, rel, relatedIds);                                                                \
-    }

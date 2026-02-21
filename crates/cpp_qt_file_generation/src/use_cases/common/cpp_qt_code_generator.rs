@@ -4,10 +4,7 @@ mod gen_cmake_tests;
 use crate::use_cases::common::tools;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{
-    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, Root, UseCase, UserInterface, Workspace,
-};
+use common::entities::{Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global, Relationship, RelationshipType, Root, Strength, UseCase, UserInterface, Workspace};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -78,11 +75,16 @@ struct EntityVM {
     pub backward_relationships: IndexMap<EntityId, RelationshipVM>,
     pub snake_name: String,
     pub pascal_name: String,
+    pub pascal_plural_name: String,
     pub camel_name: String,
     pub camel_plural_name: String,
     pub sql_safe_snake_name: String,
     pub fields: Vec<FieldVM>,
     pub normal_fields: Vec<FieldVM>,
+    pub owner: Option<EntityId>,
+    pub owner_pascal_name: Option<String>,
+    pub owner_relationship_field_pascal_name: Option<String>,
+    pub owner_relationship_type: Option<RelationshipType>
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -397,6 +399,10 @@ impl SnapshotBuilder {
             }
         }
 
+        let owner = SnapshotBuilder::get_entity_owner(uow, &entity_id);
+        let owner_entity: Option<Entity> = owner
+            .and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
+
         Ok(EntityVM {
             inner: entity.clone(),
             fields: fields_vm_vec.clone(),
@@ -405,6 +411,7 @@ impl SnapshotBuilder {
             backward_relationships: rel_bwd,
             snake_name: heck::AsSnakeCase(&entity.name).to_string(),
             pascal_name: heck::AsPascalCase(&entity.name).to_string(),
+            pascal_plural_name: heck::AsPascalCase(&tools::to_plural(&entity.name)).to_string(),
             camel_name: heck::AsLowerCamelCase(&entity.name).to_string(),
             camel_plural_name: heck::AsLowerCamelCase(&tools::to_plural(&entity.name)).to_string(),
             sql_safe_snake_name: tools::to_sql_safe_identifier(
@@ -415,6 +422,10 @@ impl SnapshotBuilder {
                 .filter(|f| f.inner.field_type != FieldType::Entity)
                 .cloned()
                 .collect(),
+            owner,
+            owner_pascal_name: owner_entity.as_ref().map(|e| heck::AsPascalCase(&e.name).to_string()),
+            owner_relationship_field_pascal_name: SnapshotBuilder::get_entity_owner_relationship_field_pascal_name(uow, entity_id),
+            owner_relationship_type: SnapshotBuilder::get_entity_owner_relationship_type(uow, entity_id),
         })
     }
 
@@ -450,6 +461,60 @@ impl SnapshotBuilder {
                 .clone()
                 .unwrap_or("enum_name not set".to_string()),
         }
+    }
+
+    fn get_entity_owner(uow: &dyn GenerationReadOps, entity_id: &EntityId) -> Option<EntityId> {
+        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+
+            // find the backward relationship that points to the entity owner
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(rel.left_entity);
+                }
+            }
+        }
+        None
+    }
+
+    fn get_entity_owner_relationship_field_pascal_name(
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
+    ) -> Option<String> {
+        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+
+            // find the backward relationship that points to the entity owner
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(heck::AsPascalCase(rel.field_name.clone()).to_string());
+                }
+            }
+        }
+        None
+    }
+
+
+    fn get_entity_owner_relationship_type(
+    uow: &dyn GenerationReadOps,
+    entity_id: &EntityId,
+    ) -> Option<RelationshipType> {
+        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+
+            // find the backward relationship that points to the entity owner
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(rel.relationship_type);
+                }
+            }
+        }
+        None
+
+
     }
 
     pub(crate) fn for_file(
@@ -891,12 +956,17 @@ impl SnapshotBuilder {
                                                                             Default::default(),
                                                                         snake_name: "".to_string(),
                                                                         pascal_name: "".to_string(),
+                                                                        pascal_plural_name: "".to_string(),
                                                                         camel_name: "".to_string(),
                                                                         camel_plural_name: ""
                                                                             .to_string(),
                                                                         sql_safe_snake_name: "".to_string(),
                                                                         fields: vec![],
                                                                         normal_fields: vec![],
+                                                                        owner: None,
+                                                                        owner_pascal_name: None,
+                                                                        owner_relationship_field_pascal_name: None,
+                                                                        owner_relationship_type: None,
                                                                     }),
                                                                 )
                                                             })
@@ -1034,11 +1104,16 @@ impl SnapshotBuilder {
                                                     backward_relationships: Default::default(),
                                                     snake_name: "".to_string(),
                                                     pascal_name: "".to_string(),
+                                                    pascal_plural_name: "".to_string(),
                                                     camel_name: "".to_string(),
                                                     camel_plural_name: "".to_string(),
                                                     sql_safe_snake_name: "".to_string(),
                                                     fields: vec![],
                                                     normal_fields: vec![],
+                                                    owner: None,
+                                                    owner_pascal_name: None,
+                                                    owner_relationship_field_pascal_name: None,
+                                                    owner_relationship_type: None,
                                                 },
                                             ),
                                         )
@@ -1187,7 +1262,6 @@ mod tests {
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,
                     cpp_qt_qtquick: false,
-                    cpp_qt_kirigami: false,
                 },
             },
             entities: IndexMap::new(),
@@ -1279,7 +1353,6 @@ mod tests {
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,
                     cpp_qt_qtquick: false,
-                    cpp_qt_kirigami: false,
                 },
             },
             entities: {
@@ -1321,6 +1394,7 @@ mod tests {
                         backward_relationships: IndexMap::new(),
                         snake_name: "user".to_string(),
                         pascal_name: "User".to_string(),
+                        pascal_plural_name: "Users".to_string(),
                         camel_name: "user".to_string(),
                         camel_plural_name: "users".to_string(),
                         sql_safe_snake_name: "user".to_string(),
@@ -1330,6 +1404,10 @@ mod tests {
                             .filter(|f| f.inner.field_type != FieldType::Entity)
                             .cloned()
                             .collect(),
+                        owner: None,
+                        owner_pascal_name: None,
+                        owner_relationship_field_pascal_name: None,
+                        owner_relationship_type: None,
                     },
                 );
                 m

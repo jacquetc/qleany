@@ -61,7 +61,8 @@ void {{ ent.pascal_name }}Controller::resolveDependencies()
 // CRUD Operations
 // ---------------------------------------------------------------------------
 
-QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+    {%- if ent.owner %}
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }}, int ownerId, int index)
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<Create{{ ent.pascal_name }}UseCase>(std::move(uow));
@@ -70,6 +71,21 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
         m_undoRedoSystem,
         m_undoRedoStackId,
         u"Create {{ ent.camel_plural_name }} Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        {{ ent.camel_plural_name }}, ownerId, index);
+}
+    {%- endif %}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::createOrphans(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<CreateOrphan{{ ent.pascal_name }}UseCase>(std::move(uow));
+
+    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+        m_undoRedoStackId,
+        u"Create orphan {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
         {{ ent.camel_plural_name }});

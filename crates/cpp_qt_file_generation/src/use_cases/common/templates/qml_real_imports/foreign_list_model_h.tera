@@ -1,0 +1,18 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+{%- set field_id = s.file.inner.field %}
+{%- for f in ent.fields %}
+    {%- if f.inner.id == field_id %}
+        {%- set_global field = f %}
+    {%- endif %}
+{%- endfor %}
+#pragma once
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_{{ field.snake_name }}_list_model.h"
+#include <QQmlEngine>
+
+struct Foreign{{ ent.pascal_name }}{{ field.pascal_name }}ListModel
+{
+    Q_GADGET
+    QML_FOREIGN({{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}{{ field.pascal_name }}ListModel)
+    QML_NAMED_ELEMENT({{ ent.pascal_name }}{{ field.pascal_name }}ListModel)
+};

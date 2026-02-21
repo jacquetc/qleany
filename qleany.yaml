@@ -346,9 +346,6 @@ entities:
   - name: cpp_qt_qtquick
     type: boolean
     strong: true
-  - name: cpp_qt_kirigami
-    type: boolean
-    strong: true
   undoable: true
 features:
 - name: handling_app_lifecycle

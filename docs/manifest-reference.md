@@ -526,8 +526,6 @@ You can't put entities in DTOs. Only primitive types are allowed because entitie
     rust_slint: true
     cpp_qt_qtwidgets: false
     cpp_qt_qtquick: false
-    cpp_qt_lomiri: false
-    cpp_qt_kirigami: false
 
 
 ```

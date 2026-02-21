@@ -145,9 +145,6 @@ pub struct Ui {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
     pub cpp_qt_qtquick: bool,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_false")]
-    pub cpp_qt_kirigami: bool,
 }
 
 #[derive(Serialize, Deserialize)]

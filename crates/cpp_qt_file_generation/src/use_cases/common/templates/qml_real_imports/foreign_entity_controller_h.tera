@@ -1,0 +1,96 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+#pragma once
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_controller.h"
+#include <QCoro/QCoroQml>
+#include <QCoro/QCoroQmlTask>
+#include <QQmlEngine>
+
+struct Foreign{{ ent.pascal_name }}Controller : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT({{ ent.pascal_name }}Controller)
+    Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
+
+  public:
+    explicit Foreign{{ ent.pascal_name }}Controller(QObject *parent = nullptr)
+        : QObject(parent), m_controller(new {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller(this))
+
+    {
+    }
+    Q_INVOKABLE QCoro::QmlTask get(const QList<int> &ids) const
+    {
+        return m_controller->get(ids);
+    }
+
+    Q_INVOKABLE static {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto getCreateDto() const
+    {
+        return {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller::getCreateDto();
+    }
+
+    Q_INVOKABLE QCoro::QmlTask createOrphan(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto> &dtos) const
+    {
+        return m_controller->create(dtos);
+    }
+
+    {%- if ent.owner %}
+
+    Q_INVOKABLE QCoro::QmlTask create(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto> &dtos, int ownerId, int index ) const
+    {
+        return m_controller->create(dtos, ownerId, index);
+    }
+
+    {%- endif %}
+
+    Q_INVOKABLE QCoro::QmlTask update(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto> &dtos) const
+    {
+        return m_controller->update(dtos);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask remove(const QList<int> &ids) const
+    {
+        return m_controller->remove(ids);
+    }
+
+{%- if ent.forward_relationships %}
+
+    Q_INVOKABLE QCoro::QmlTask getRelationshipIds(
+        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
+    {
+        return m_controller->getRelationshipIds(binderItemId, relationship);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask setRelationshipIds(
+        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
+        const QList<int> &relatedIds) const
+    {
+        return m_controller->setRelationshipIds(binderItemId, relationship, relatedIds);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask getRelationshipIdsCount(
+        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
+    {
+        return m_controller->getRelationshipIdsCount(binderItemId, relationship);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask getRelationshipIdsInRange(
+        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
+        const int offset, const int limit) const
+    {
+        return m_controller->getRelationshipIdsInRange(binderItemId, relationship, offset, limit);
+    }
+{%- endif %}
+
+  Q_SIGNALS:
+    void undoRedoStackIdChanged();
+
+  private:
+    void setUndoRedoStackId(int undoRedoStackId)
+    {
+        if (undoRedoStackId == m_controller->undoRedoStackId()) { return;}
+        m_controller->setUndoRedoStackId(undoRedoStackId);
+        Q_EMIT undoRedoStackIdChanged();
+    }
+    int undoRedoStackId() const { return m_controller->undoRedoStackId();}
+    {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller *m_controller;
+};

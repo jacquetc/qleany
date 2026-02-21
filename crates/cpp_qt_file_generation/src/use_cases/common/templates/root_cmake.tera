@@ -81,16 +81,18 @@ if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
   {%- for fid, feature in s.features %}
     add_subdirectory({{ s.global.prefix }}/{{ feature.snake_name }})
   {%- endfor %}
+
+{%- if s.ui.inner.cpp_qt_qtquick %}
+    add_subdirectory(presentation)
+{%- endif %}
 endif (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
+
 
 {%- if s.ui.inner.cpp_qt_qtquick %}
 add_subdirectory({{ s.global.prefix }}/qtquick_app)
 {%- endif %}
 {%- if s.ui.inner.cpp_qt_qtwidgets %}
 add_subdirectory({{ s.global.prefix }}/qtwidgets_app)
-{%- endif %}
-{%- if s.ui.inner.cpp_qt_kirigami %}
-add_subdirectory({{ s.global.prefix }}/kirigami_app)
 {%- endif %}
 
 enable_testing()

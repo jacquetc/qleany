@@ -62,7 +62,6 @@ fn fill_user_interface_tab(app: &App, app_context: &Arc<AppContext>) {
         state.set_rust_slint(ui.rust_slint);
         state.set_cpp_qt_qtwidgets(ui.cpp_qt_qtwidgets);
         state.set_cpp_qt_qtquick(ui.cpp_qt_qtquick);
-        state.set_cpp_qt_kirigami(ui.cpp_qt_kirigami);
     }
 }
 
@@ -73,7 +72,6 @@ fn clear_user_interface_tab(app: &App) {
     state.set_rust_slint(false);
     state.set_cpp_qt_qtwidgets(false);
     state.set_cpp_qt_qtquick(false);
-    state.set_cpp_qt_kirigami(false);
 }
 
 fn subscribe_close_manifest_event(
@@ -301,21 +299,6 @@ fn setup_cpp_qt_qtquick_callback(app: &App, app_context: &Arc<AppContext>) {
         });
 }
 
-fn setup_cpp_qt_kirigami_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<UserInterfaceTabState>()
-        .on_cpp_qt_kirigami_changed({
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move |new_value| {
-                if let Some(app) = app_weak.upgrade() {
-                    update_user_interface_helper(&app, &ctx, |ui| {
-                        ui.cpp_qt_kirigami = new_value;
-                    });
-                }
-            }
-        });
-}
-
 /// Initialize all user interface tab related callbacks
 pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     subscribe_ui_created_event(event_hub_client, app, app_context);
@@ -327,5 +310,4 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_rust_slint_callback(app, app_context);
     setup_cpp_qt_qtwidgets_callback(app, app_context);
     setup_cpp_qt_qtquick_callback(app, app_context);
-    setup_cpp_qt_kirigami_callback(app, app_context);
 }

@@ -217,7 +217,6 @@ fn for_file_feature_without_use_cases_errors() {
         rust_slint: false,
         cpp_qt_qtwidgets: false,
         cpp_qt_qtquick: false,
-        cpp_qt_kirigami: false,
     };
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
@@ -350,7 +349,6 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         rust_slint: false,
         cpp_qt_qtwidgets: false,
         cpp_qt_qtquick: false,
-        cpp_qt_kirigami: false,
     };
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
@@ -460,7 +458,6 @@ fn for_file_various_combinations_generate_expected_items() {
         rust_slint: false,
         cpp_qt_qtwidgets: false,
         cpp_qt_qtquick: false,
-        cpp_qt_kirigami: false,
     };
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {

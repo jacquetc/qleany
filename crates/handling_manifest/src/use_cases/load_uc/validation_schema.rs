@@ -251,9 +251,6 @@ pub fn json_validation_schema() -> serde_json::Value {
                     },
                     "cpp_qt_qtquick": {
                         "type": "boolean"
-                    },
-                    "cpp_qt_kirigami": {
-                        "type": "boolean"
                     }
 
                 },

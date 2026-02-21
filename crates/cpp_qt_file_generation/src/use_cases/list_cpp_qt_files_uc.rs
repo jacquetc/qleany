@@ -880,10 +880,10 @@ impl ListCppQtFilesUseCase {
 
                 files.push(File {
                     id: 0,
-                    name: "create_uc.cpp".to_string(),
+                    name: "create_orphans_uc.cpp".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
-                    template_name: "create_uc_cpp".to_string(),
+                    template_name: "create_orphans_uc_cpp".to_string(),
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
@@ -892,10 +892,10 @@ impl ListCppQtFilesUseCase {
 
                 files.push(File {
                     id: 0,
-                    name: "create_uc.h".to_string(),
+                    name: "create_orphans_uc.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
-                    template_name: "create_uc_h".to_string(),
+                    template_name: "create_orphans_uc_h".to_string(),
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
@@ -992,6 +992,43 @@ impl ListCppQtFilesUseCase {
                     &common::direct_access::entity::EntityRelationshipField::Relationships,
                 )?;
                 let relationships = uow.get_relationship_multi(&relationships)?;
+
+                let has_owner = relationships.iter().any(|r| {
+                    if let Some(r) = r {
+                        r.direction == common::entities::Direction::Backward && r.strength == common::entities::Strength::Strong
+                    } else {
+                        false
+                    }
+                });
+
+                if has_owner {
+                    files.push(File {
+                        id: 0,
+                        name: "create_uc.cpp".to_string(),
+                        relative_path: relative_path.clone(),
+                        group: "direct_access".to_string(),
+                        template_name: "create_uc_cpp".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+
+                    files.push(File {
+                        id: 0,
+                        name: "create_uc.h".to_string(),
+                        relative_path: relative_path.clone(),
+                        group: "direct_access".to_string(),
+                        template_name: "create_uc_h".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+                }
+
+
+
                 let has_forward_relationship = relationships.iter().any(|r| {
                     if let Some(r) = r {
                         r.direction == common::entities::Direction::Forward

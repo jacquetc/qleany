@@ -121,7 +121,6 @@ impl NewUseCase {
             rust_slint: false,
             cpp_qt_qtwidgets: false,
             cpp_qt_qtquick: false,
-            cpp_qt_kirigami: false,
         })?;
 
         let workspace = Workspace {

@@ -13,7 +13,6 @@ pub struct UserInterfaceDto {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
-    pub cpp_qt_kirigami: bool,
 }
 
 impl From<UserInterfaceDto> for UserInterface {
@@ -24,7 +23,6 @@ impl From<UserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
-            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
@@ -37,7 +35,6 @@ impl From<&UserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
-            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
@@ -50,7 +47,6 @@ impl From<UserInterface> for UserInterfaceDto {
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,
             cpp_qt_qtquick: entity.cpp_qt_qtquick,
-            cpp_qt_kirigami: entity.cpp_qt_kirigami,
         }
     }
 }
@@ -61,7 +57,6 @@ pub struct CreateUserInterfaceDto {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
-    pub cpp_qt_kirigami: bool,
 }
 
 impl From<CreateUserInterfaceDto> for UserInterface {
@@ -72,7 +67,6 @@ impl From<CreateUserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
-            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
@@ -85,7 +79,6 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
-            cpp_qt_kirigami: dto.cpp_qt_kirigami,
         }
     }
 }
@@ -97,7 +90,6 @@ impl From<UserInterface> for CreateUserInterfaceDto {
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,
             cpp_qt_qtquick: entity.cpp_qt_qtquick,
-            cpp_qt_kirigami: entity.cpp_qt_kirigami,
         }
     }
 }

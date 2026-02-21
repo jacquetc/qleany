@@ -6,8 +6,12 @@ target_sources(${LIBRARY_NAME} PRIVATE
         {{ ent.snake_name }}_unit_of_work.h
         dtos.h
         use_cases/i_{{ ent.snake_name }}_unit_of_work.h
+{%- if ent.owner %}
         use_cases/create_uc.cpp
         use_cases/create_uc.h
+{%- endif %}
+        use_cases/create_orphans_uc.cpp
+        use_cases/create_orphans_uc.h
         use_cases/common/dto_mapper.h
         use_cases/remove_uc.cpp
         use_cases/remove_uc.h

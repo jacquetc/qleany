@@ -16,12 +16,12 @@ namespace SCUoW = Common::UnitOfWork;
 namespace SCD{{ ent.pascal_name }} = Common::DirectAccess::{{ ent.pascal_name }};
 
 // a bit of magic to share interface definitions between all the units of work interfaces
-using I{{ ent.pascal_name }}UnitOfWork = SCUoW::IEntityWithRelationships<SCE::{{ ent.pascal_name }},
+using I{{ ent.pascal_name }}UnitOfWork = SCUoW::I{% if not ent.owner %}Orphan{% endif %}EntityWithRelationships<SCE::{{ ent.pascal_name }},
                                                                          SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>;
 {%- else %}
 
 // a bit of magic to share interface definitions between all the units of work interfaces
-using I{{ ent.pascal_name }}UnitOfWork = SCUoW::IEntityCrud<SCE::{{ ent.pascal_name }}>;
+using I{{ ent.pascal_name }}UnitOfWork = SCUoW::I{% if not ent.owner %}Orphan{% endif %}EntityCrud<SCE::{{ ent.pascal_name }}>;
 {%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

@@ -63,11 +63,14 @@
  *   - TransactionalFull<T, Entity, RelFieldEnum>
  *
  * Available Atomic Macros (uow_macros.h — for custom UoWs):
- *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *   Interface:    DECLARE_UOW_ENTITY_{CREATE,CREATE_ORPHANS,GET_REL_FROM_OWNER,SET_REL_IN_OWNER,GET,UPDATE,REMOVE}(Name)
+ *                 DECLARE_UOW_ENTITY_CRUD(Name)
+ *                 DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)
  *                 DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)
- *   Implementation: UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *   Implementation: UOW_ENTITY_{CREATE,CREATE_ORPHANS,GET_REL_FROM_OWNER,SET_REL_IN_OWNER,GET,UPDATE,REMOVE}(Name)
+ *                   UOW_ENTITY_CRUD(Name)
+ *                   UOW_ORPHAN_ENTITY_CRUD(Name)
  *                   UOW_ENTITY_RELATIONSHIPS(Name, Rel)
- *                   UOW_ENTITY_CREATE_WITH_REL(Name, Rel) (not sure about this one)
  ******************************************************************************/
 
 #pragma once

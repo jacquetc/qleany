@@ -105,7 +105,6 @@ pub struct UserInterface {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
-    pub cpp_qt_kirigami: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

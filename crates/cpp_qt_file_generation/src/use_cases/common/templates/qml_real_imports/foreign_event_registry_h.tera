@@ -1,0 +1,53 @@
+// This file was generated with Qleany, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+
+#include "direct_access/event_registry.h"
+#include "service_locator.h"
+#include <QQmlEngine>
+
+struct ForeignEventDispatcher
+{
+    Q_GADGET
+    QML_FOREIGN({{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry)
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(EventRegistry)
+
+  public:
+    // Initialize this singleton instance with the given engine.
+
+    inline static {{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry *s_singletonInstance = nullptr;
+
+    static {{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry *create(QQmlEngine *, QJSEngine *engine)
+    {
+        s_singletonInstance = {{ s.global.application_pascal_name }}::Common::ServiceLocator::instance()->eventRegistry();
+
+        // The instance has to exist before it is used. We cannot replace it.
+        Q_ASSERT(s_singletonInstance);
+
+        // The engine has to have the same thread affinity as the singleton.
+        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
+
+        // There can only be one engine accessing the singleton.
+        if (s_engine)
+            Q_ASSERT(engine == s_engine);
+        else
+            s_engine = engine;
+
+        // Explicitly specify C++ ownership so that the engine doesn't delete
+        // the instance.
+        QJSEngine::setObjectOwnership(s_singletonInstance, QJSEngine::CppOwnership);
+
+        return s_singletonInstance;
+    }
+
+{%- for eid, ent in s.entities %}
+    Q_INVOKABLE {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootEvents *{{ ent.camel_name }}Events() const
+    {
+        return s_singletonInstance->{{ ent.camel_name }}Events();
+    }
+{%- endfor %}
+
+  private:
+    inline static QJSEngine *s_engine = nullptr;
+};

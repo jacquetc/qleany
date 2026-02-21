@@ -6,16 +6,16 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 {
 namespace SCE = Common::Entities;
 
-QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }}, int ownerId, int index)
 {
     if (m_hasExecuted)
     {
         // If already executed, return cached results
-        return m_created{{ ent.pascal_name }}s;
+        return m_created{{ ent.pascal_plural_name }};
     }
 
     // Store original data for undo/redo
-    m_original{{ ent.pascal_name }}s = {{ ent.camel_plural_name }};
+    m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
 
     m_uow->beginTransaction();
     auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
@@ -28,18 +28,18 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
         entity.updatedAt = entity.createdAt;
     }
 
-    auto createdEntities = m_uow->create(mappedEntities);
+    auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
     m_uow->commit();
 
-    m_created{{ ent.pascal_name }}s = DtoMapper::toDtoList(createdEntities);
+    m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
     m_hasExecuted = true;
 
-    return m_created{{ ent.pascal_name }}s;
+    return m_created{{ ent.pascal_plural_name }};
 }
 
 SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 {
-    if (!m_hasExecuted || m_created{{ ent.pascal_name }}s.isEmpty())
+    if (!m_hasExecuted || m_created{{ ent.pascal_plural_name }}.isEmpty())
     {
         return SCU::Result<void>("Cannot undo: no {{ ent.camel_plural_name }} were created"_L1);
     }
@@ -50,7 +50,7 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 
         // Remove the created {{ ent.camel_plural_name }} by their IDs
         QList<int> idsToRemove;
-        for (const auto &{{ ent.camel_name }} : m_created{{ ent.pascal_name }}s)
+        for (const auto &{{ ent.camel_name }} : m_created{{ ent.pascal_plural_name }})
         {
             idsToRemove.append({{ ent.camel_name }}.id);
         }
@@ -78,11 +78,11 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
     try
     {
         m_uow->beginTransaction();
-        auto mappedEntities = DtoMapper::toEntityList(m_original{{ ent.pascal_name }}s);
+        auto mappedEntities = DtoMapper::toEntityList(m_original{{ ent.pascal_plural_name }});
         auto createdEntities = m_uow->create(mappedEntities);
         m_uow->commit();
 
-        m_created{{ ent.pascal_name }}s = DtoMapper::toDtoList(createdEntities);
+        m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
 
         return SCU::Result<void>();
     }

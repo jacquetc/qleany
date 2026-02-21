@@ -73,14 +73,6 @@ export component UserInterfaceTab inherits Rectangle {
                             UserInterfaceTabState.cpp_qt_qtquick_changed(self.checked);
                         }
                     }
-
-                    CheckBox {
-                        text: "Kirigami";
-                        checked <=> UserInterfaceTabState.cpp_qt_kirigami;
-                        toggled => {
-                            UserInterfaceTabState.cpp_qt_kirigami_changed(self.checked);
-                        }
-                    }
                 }
             }
         }

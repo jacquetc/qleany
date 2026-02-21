@@ -42,7 +42,7 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 ## Key Features
 
 - **Complete CRUD scaffolding** — Controllers, DTOs, use cases, repositories per entity
-- **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Kirigami, or combinations thereof
+- **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, or combinations thereof
 - **Undo/redo system** (optional) — Command-based with grouping, scopes, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust
 - **Reactive QML models** — Auto-updating list models and single-entity wrappers (C++/Qt)
 - **QML mocks** — JavaScript stubs for UI development without backend (C++/Qt)
@@ -61,7 +61,7 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 **Applications targeting multiple platforms** — if you're building for desktop Linux and want to support Plasma Mobile or Ubuntu Touch with the same codebase, Qleany's generated backend works identically across all of them. Write your business logic once, swap UI frontends as needed.
 
-**Applications needing multiple Qt frontends** — if you need QtQuick, QtWidgets, KDE Widgets, or Kirigami (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
+**Applications needing multiple Qt frontends** — if you need QtQuick, QtWidgets (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
 
 **Solo developers or small teams** without established architectural patterns. Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application (or I couldn't find it). Qleany gives you that structure immediately, with patterns validated through real-world use in Skribisto.
 
@@ -105,10 +105,10 @@ This is the tool I needed when I started Skribisto. If it saves someone else fro
 
 ## Target Platforms
 
-| Language | Standard | internal database | Frontend Options                                       |
-|----------|----------|-------------------|--------------------------------------------------------|
-| C++ | C++20 / Qt6 | SQLite            | QtQuick, QtWidgets, Kirigami, Ubuntu Touch Components (Lomiri) |
-| Rust | Rust 2024 | redb              | CLI, Slint                                             |
+| Language | Standard    | internal database | Frontend Options   |
+|----------|-------------|-------------------|--------------------|
+| C++      | C++20 / Qt6 | SQLite            | QtQuick, QtWidgets |
+| Rust     | Rust 2024   | redb              | CLI, Slint         |
 
 **Supported deployment targets for C++/Qt:**
 - Desktop Linux (KDE Plasma, GNOME, etc.)

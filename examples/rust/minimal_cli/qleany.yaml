@@ -18,13 +18,10 @@ entities:
     fields:
       - name: id
         type: uinteger
-        required: true
       - name: created_at
         type: datetime
-        required: true
       - name: updated_at
         type: datetime
-        required: true
 
   # Root entity - entry point for the application
   - name: Root
@@ -37,13 +34,11 @@ entities:
         entity: Car
         relationship: ordered_one_to_many
         strong: true
-        required: true
       - name: customers
         type: entity
         entity: Customer
         relationship: one_to_many
         strong: true
-        required: true
 
   # Car entity - vehicles in the dealership inventory
   - name: Car
@@ -53,16 +48,12 @@ entities:
     fields:
       - name: make
         type: string
-        required: true
       - name: model
         type: string
-        required: true
       - name: year
         type: integer
-        required: true
       - name: price
         type: float
-        required: true
       - name: status
         type: enum
         enum_name: CarStatus
@@ -70,7 +61,6 @@ entities:
           - Available
           - Sold
           - Reserved
-        required: true
 
   # Customer entity - potential buyers
   - name: Customer
@@ -80,13 +70,11 @@ entities:
     fields:
       - name: name
         type: string
-        required: true
       - name: email
         type: string
-        required: true
       - name: phone
         type: string
-        required: false
+        optional: true
 
 features:
   - name: car_management

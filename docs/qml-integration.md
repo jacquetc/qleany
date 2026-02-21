@@ -1,6 +1,6 @@
 # QML Integration (C++/Qt)
 
-This document covers QML-based frontends: **QtQuick**, **Kirigami**, **Lomiri**. They use QML, so the generated models and patterns apply equally to each.
+This document covers QML-based frontends: **QtQuick**. They use QML, so the generated models and patterns apply equally to each.
 
 ---
 

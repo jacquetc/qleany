@@ -141,7 +141,6 @@ impl LoadUseCase {
             rust_slint: manifest.ui.rust_slint,
             cpp_qt_qtwidgets: manifest.ui.cpp_qt_qtwidgets,
             cpp_qt_qtquick: manifest.ui.cpp_qt_qtquick,
-            cpp_qt_kirigami: manifest.ui.cpp_qt_kirigami,
         })?;
 
         // create workspace

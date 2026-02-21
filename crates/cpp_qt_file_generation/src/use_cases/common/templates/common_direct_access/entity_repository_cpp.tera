@@ -28,12 +28,59 @@ SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::{{ ent.pascal_name }}
     m_events = m_eventRegistry ? m_eventRegistry->{{ ent.camel_name }}Events() : nullptr;
 }
 
-QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::createOrphans(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
 {
     auto created = m_table->createMany({{ ent.camel_plural_name }});
     emitCreated(extractIds(created));
     return created;
 }
+
+{%- if ent.owner %}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::create(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}, int ownerId, int index)
+{
+    auto created = m_table->createMany({{ ent.camel_plural_name }});
+    auto createdIds = extractIds(created);
+
+    auto relationships = getRelationshipsFromOwner(ownerId);
+
+{%- if ent.owner_relationship_type == "OneToMany" or ent.owner_relationship_type == "OrderedOneToMany" or ent.owner_relationship_type == "ManyToMany"  %}
+
+    // insert at index
+    relationships.reserve(relationships.size() + {{ ent.camel_plural_name }}.size());
+    if (index >= 0 && index < relationships.size())
+    {
+        for (int i = 0; i < createdIds.size(); ++i)
+        {
+            relationships.insert(index + i, createdIds.at(i));
+        }
+    }
+    else // index == -1, out of range, or empty list → append
+    {
+        relationships.append(createdIds);
+    }
+
+{%- endif %} {* OneToOne and ManyToOne *}
+    setRelationshipsInOwner(createdIds)
+    emitCreated(createdIds);
+    return created;
+}
+
+QList<int> getRelationshipsFromOwner(int ownerId) const
+{
+    // get owner repository
+    auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+    return repo->getRelationshipIds(ownerId, {{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }});
+}
+
+void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipsInOwner(const QList<int> &itemIds, int ownerId)
+{
+   // get owner repository
+   auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+   repo->setRelationshipIds(ownerId, {{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }}, itemIds);
+}
+
+{%- endif %}
 
 QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::get(const QList<int> &{{ ent.camel_name }}Ids) const
 {

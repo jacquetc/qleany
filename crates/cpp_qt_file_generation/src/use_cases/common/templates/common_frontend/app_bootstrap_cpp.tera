@@ -1,0 +1,95 @@
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+
+#include "app_bootstrap.h"
+
+#ifndef {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS
+#include "database/db_context.h"
+#include "direct_access/event_registry.h"
+#include "service_locator.h"
+#include <QCoroQml>
+#include <QCoroQmlTask>
+#endif
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QThread>
+
+using namespace Qt::StringLiterals;
+
+namespace {{ s.global.application_pascal_name }}::Common::Frontend
+{
+
+auto bootstrapBackend(QObject *parent) -> BootstrapResult
+{
+#ifdef {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS
+    Q_UNUSED(parent)
+    qDebug() << "Backend bootstrap skipped ({{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)";
+    return {.success = true};
+#else
+    // Database
+    auto *db = new Database::DbContext(parent);
+
+    // Event registries
+    auto *ev = new DirectAccess::EventRegistry(parent);
+    auto *fev = new Features::FeatureEventRegistry(parent);
+
+    // Undo-redo system
+    // Scope configuration could be made data-driven via the manifest in the future:
+    //   UndoRedo::Scopes scopes(QStringList() << "root"_L1 << "work"_L1 << ...);
+    auto *urs = new UndoRedo::UndoRedoSystem(parent);
+
+    // Wire everything through the service locator
+    auto *locator = new ServiceLocator(parent);
+    locator->setDbContext(db);
+    locator->setEventRegistry(ev);
+    locator->setFeatureEventRegistry(fev);
+    locator->setUndoRedoSystem(urs);
+    ServiceLocator::setInstance(locator);
+
+    qDebug() << "Backend bootstrap complete";
+    return {.success = true};
+#endif
+}
+
+void registerQmlTypes()
+{
+#ifndef {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS
+    QCoro::Qml::registerTypes();
+#endif
+}
+
+void connectCleanupHandler(QCoreApplication &app)
+{
+#ifdef {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS
+    Q_UNUSED(app)
+#else
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, [&]() {
+        auto *locator = ServiceLocator::instance();
+        if (locator && locator->undoRedoSystem())
+        {
+            locator->undoRedoSystem()->shutdown();
+
+            // Give Qt's background threads time to complete cleanup.
+            // This prevents database operations from happening after
+            // QCoreApplication destruction.
+            QThread::msleep(100);
+
+            qDebug() << "Cleanup complete, application will now exit";
+        }
+    });
+#endif
+}
+
+void configureEngine(QQmlApplicationEngine &engine)
+{
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml"_L1);
+    engine.addImportPath(":/"_L1);
+
+#if defined({{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
+    engine.addImportPath(QString(QML_IMPORT_PATH));
+    qDebug() << "Using mock imports from:" << QML_IMPORT_PATH;
+#endif
+}
+
+} // namespace {{ s.global.application_pascal_name }}::Common::Frontend

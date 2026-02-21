@@ -24,7 +24,12 @@ class I{{ ent.pascal_name }}Repository
     virtual ~I{{ ent.pascal_name }}Repository() = default;
 
     // CRUD
-    virtual QList<Entities::{{ ent.pascal_name }}> create(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    virtual QList<Entities::{{ ent.pascal_name }}> createOrphans(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    {%- if ent.owner %}
+    virtual QList<Entities::{{ ent.pascal_name }}> create(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}, int ownerId, int index) = 0;
+    virtual QList<int> getRelationshipsFromOwner(int ownerId) const = 0;
+    virtual void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) = 0;
+     {%- endif %}
     virtual QList<Entities::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const = 0;
     virtual QList<Entities::{{ ent.pascal_name }}> update(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
     virtual QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) = 0;

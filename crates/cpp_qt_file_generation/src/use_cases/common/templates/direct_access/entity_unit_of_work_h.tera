@@ -21,17 +21,19 @@ namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Com
 class {{ ent.pascal_name }}UnitOfWork final
     : public SCUoW::UnitOfWorkBase,
 {%- if ent.forward_relationships %}
-      public SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+
+      public SCUoW::{% if not ent.owner %}Orphan{% endif %}EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
                                     SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>
+
 {%- else %}
-      public SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>
+      public SCUoW::{% if not ent.owner %}Orphan{% endif %}EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>
 {%- endif %}
 {
 {%- if ent.forward_relationships %}
-    friend class SCUoW::EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
+    friend class SCUoW::{% if not ent.owner %}Orphan{% endif %}EntityFullImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }},
                                         SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField>;
 {%- else %}
-    friend class SCUoW::EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>;
+    friend class SCUoW::{% if not ent.owner %}Orphan{% endif %}EntityCrudImpl<{{ ent.pascal_name }}UnitOfWork, SCE::{{ ent.pascal_name }}>;
 {%- endif %}
 
   public:

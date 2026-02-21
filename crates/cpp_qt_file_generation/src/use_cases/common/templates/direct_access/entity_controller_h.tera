@@ -27,7 +27,10 @@ class {{ ent.pascal_name }}Controller : public QObject
     void setUndoRedoStackId(int undoRedoStackId);
     int undoRedoStackId() const;
 
-    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
+    {%- if ent.owner %}
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }}, int ownerId, int index = -1);
+    {%- endif %}
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> createOrphans(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
     static Create{{ ent.pascal_name }}Dto getCreateDto()
     {
         return {};

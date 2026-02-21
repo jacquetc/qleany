@@ -67,6 +67,27 @@ class IEntityCrud : public virtual ITransactional
     ~IEntityCrud() override = default;
 
     [[nodiscard]] virtual QList<EntityType> create(const QList<EntityType> &items) = 0;
+    [[nodiscard]] virtual QList<EntityType> createOrphans(const QList<EntityType> &items) = 0;
+    [[nodiscard]] QList<int> getRelationshipsFromOwner(const QList<int> &itemIds, int ownerId) const = 0;
+    void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) = 0;
+    [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
+    [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
+    [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
+};
+
+/**
+ * @brief Pure virtual CRUD interface for a single orphan entity type.
+ *
+ * Inherits ITransactional virtually so that concrete classes only need one
+ * ITransactional implementation (provided by UnitOfWorkBase).
+ */
+template <typename EntityType>
+class IOrphanEntityCrud : public virtual ITransactional
+{
+  public:
+    ~IOrphanEntityCrud() override = default;
+
+    [[nodiscard]] virtual QList<EntityType> createOrphans(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
     [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
@@ -80,6 +101,22 @@ class IEntityWithRelationships : public IEntityCrud<EntityType>
 {
   public:
     ~IEntityWithRelationships() override = default;
+
+    [[nodiscard]] virtual QList<int> getRelationship(int id, RelFieldEnum rel) = 0;
+    virtual void setRelationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) = 0;
+    [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
+    [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
+    [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
+};
+
+/**
+ * @brief Pure virtual CRUD + relationship interface for a single orphan entity type.
+ */
+template <typename EntityType, typename RelFieldEnum>
+class IOrphanEntityWithRelationships : public IOrphanEntityCrud<EntityType>
+{
+  public:
+    ~IOrphanEntityWithRelationships() override = default;
 
     [[nodiscard]] virtual QList<int> getRelationship(int id, RelFieldEnum rel) = 0;
     virtual void setRelationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) = 0;
@@ -157,6 +194,68 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
         return repo->create(items);
     }
 
+    [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->createOrphans(items);
+    }
+
+    QList<int> getRelationshipsFromOwner(const QList<int> &itemIds, int ownerId) const override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipsFromOwner(itemIds, ownerId);
+    }
+
+    void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
+    {
+        auto repo = self().makeRepository();
+        repo->setRelationshipsInOwner(itemIds, ownerId, index);
+    }
+
+    [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->get(ids);
+    }
+
+    [[nodiscard]] QList<EntityType> update(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->update(items);
+    }
+
+    [[nodiscard]] QList<int> remove(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->remove(ids);
+    }
+
+  private:
+    Derived &self() { return static_cast<Derived &>(*this); }
+};
+
+
+/**
+ * @brief CRTP mixin providing CRUD overrides for orphan entities.
+ *
+ * Requires: Derived must expose a `makeRepository()` method returning a
+ * unique_ptr to a repository with create/get/update/remove methods.
+ *
+ * Derived must also inherit from UnitOfWorkBase (for m_dbSubContext,
+ * m_eventRegistry access via makeRepository).
+ */
+template <typename Derived, typename EntityType>
+class OrphanEntityCrudImpl : public virtual IEntityCrud<EntityType>
+{
+  public:
+    ~EntityCrudImpl() override = default;
+
+    [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->create(items);
+    }
+
     [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
     {
         auto repo = self().makeRepository();
@@ -190,6 +289,96 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
 {
   public:
     ~EntityFullImpl() override = default;
+
+    // CRUD
+    [[nodiscard]] QList<EntityType> create(const QList<EntityType> &items, int ownerId, int index) override
+    {
+        auto repo = self().makeRepository();
+        return repo->create(items, ownerId, index);
+    }
+
+    [[nodiscard]] QList<EntityType> createOrphans(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->createOrphans(items);
+    }
+
+    QList<int> getRelationshipsFromOwner(int ownerId) const override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipsFromOwner(itemIds, ownerId);
+    }
+
+    void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override
+    {
+        auto repo = self().makeRepository();
+        repo->setRelationshipsInOwner(itemIds, ownerId);
+    }
+
+    [[nodiscard]] QList<EntityType> get(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->get(ids);
+    }
+
+    [[nodiscard]] QList<EntityType> update(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->update(items);
+    }
+
+    [[nodiscard]] QList<int> remove(const QList<int> &ids) override
+    {
+        auto repo = self().makeRepository();
+        return repo->remove(ids);
+    }
+
+    // Relationships
+    [[nodiscard]] QList<int> getRelationship(int id, RelFieldEnum rel) override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipIds(id, rel);
+    }
+
+    void setRelationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) override
+    {
+        auto repo = self().makeRepository();
+        repo->setRelationshipIds(id, rel, relatedIds);
+    }
+
+    [[nodiscard]] QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipIdsMany(ids, rel);
+    }
+
+    [[nodiscard]] int getRelationshipCount(int id, RelFieldEnum rel) override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipIdsCount(id, rel);
+    }
+
+    [[nodiscard]] QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) override
+    {
+        auto repo = self().makeRepository();
+        return repo->getRelationshipIdsInRange(id, rel, offset, limit);
+    }
+
+  private:
+    Derived &self() { return static_cast<Derived &>(*this); }
+};
+
+/**
+ * @brief CRTP mixin providing full CRUD + relationship overrides for orphan entities.
+ *
+ * Same requirements as EntityCrudImpl. The repository returned by
+ * makeRepository() must additionally support relationship methods.
+ */
+template <typename Derived, typename EntityType, typename RelFieldEnum>
+class OrphanEntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFieldEnum>
+{
+  public:
+    ~OrphanEntityFullImpl() override = default;
 
     // CRUD
     [[nodiscard]] QList<EntityType> create(const QList<EntityType> &items) override

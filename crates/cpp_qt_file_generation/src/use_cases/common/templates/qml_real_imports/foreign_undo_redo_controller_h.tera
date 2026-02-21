@@ -1,0 +1,223 @@
+// This file was generated with Qleany, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+#pragma once
+#include "undo_redo/undo_redo_system.h"
+#include "service_locator.h"
+#include <QQmlEngine>
+
+using namespace {{ s.global.application_pascal_name }}::Common::UndoRedo;
+
+struct ForeignUndoRedoController
+{
+    Q_GADGET
+    QML_FOREIGN({{ s.global.application_pascal_name }}::Common::UndoRedo::UndoRedoManager)
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(UndoRedoController)
+
+  public:
+    // Initialize this singleton instance with the given engine.
+
+    inline static UndoRedoManager *s_singletonInstance = nullptr;
+
+    static UndoRedoSystem *create(QQmlEngine *, QJSEngine *engine)
+    {
+        s_singletonInstance = {{ s.global.application_pascal_name }}::Common::ServiceLocator::instance()->undoRedoSystem()->manager();
+
+        // The instance has to exist before it is used. We cannot replace it.
+        Q_ASSERT(s_singletonInstance);
+
+        // The engine has to have the same thread affinity as the singleton.
+        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
+
+        // There can only be one engine accessing the singleton.
+        if (s_engine)
+            Q_ASSERT(engine == s_engine);
+        else
+            s_engine = engine;
+
+        // Explicitly specify C++ ownership so that the engine doesn't delete
+        // the instance.
+        QJSEngine::setObjectOwnership(s_singletonInstance, QJSEngine::CppOwnership);
+
+        return s_singletonInstance;
+    }
+
+    Q_INVOKABLE int createStack()
+    {
+        return s_singletonInstance->createStack();
+    }
+
+    Q_INVOKABLE void removeStack(int stackId)
+    {
+        s_singletonInstance->removeStack(stackId);
+    }
+
+    Q_INVOKABLE void setCurrentStackId(int stackId)
+    {
+        s_singletonInstance->setCurrentStackId(stackId);
+    }
+
+    Q_INVOKABLE int currentStackId() const
+    {
+        return s_singletonInstance->currentStackId();
+    }
+
+    // Undo/Redo operations for current stack
+    Q_INVOKABLE bool canUndo() const
+    {
+        return s_singletonInstance->canUndo();
+    }
+
+    Q_INVOKABLE bool canRedo() const
+    {
+        return s_singletonInstance->canRedo();
+    }
+
+    Q_INVOKABLE void execute()
+    {
+        s_singletonInstance->execute();
+    }
+
+    Q_INVOKABLE void undo()
+    {
+        s_singletonInstance->undo();
+    }
+
+    Q_INVOKABLE void redo()
+    {
+        s_singletonInstance->redo();
+    }
+
+    Q_INVOKABLE QString undoText() const
+    {
+        return s_singletonInstance->undoText();
+    }
+
+    Q_INVOKABLE QString redoText() const
+    {
+        return s_singletonInstance->redoText();
+    }
+
+    // Undo/Redo operations for specific stack
+    Q_INVOKABLE bool canUndo(int stackId) const
+    {
+        return s_singletonInstance->canUndo(stackId);
+    }
+
+    Q_INVOKABLE bool canRedo(int stackId) const
+    {
+        return s_singletonInstance->canRedo(stackId);
+    }
+
+    Q_INVOKABLE void execute(int stackId)
+    {
+        s_singletonInstance->execute(stackId);
+    }
+
+    Q_INVOKABLE void undo(int stackId)
+    {
+        s_singletonInstance->undo(stackId);
+    }
+
+    Q_INVOKABLE void redo(int stackId)
+    {
+        s_singletonInstance->redo(stackId);
+    }
+
+    Q_INVOKABLE QString undoText(int stackId) const
+    {
+        return s_singletonInstance->undoText(stackId);
+    }
+
+    Q_INVOKABLE QString redoText(int stackId) const
+    {
+        return s_singletonInstance->redoText(stackId);
+    }
+
+    // Stack management
+    Q_INVOKABLE void clearStack(int stackId)
+    {
+        s_singletonInstance->clearStack(stackId);
+    }
+
+    Q_INVOKABLE void clearAllStacks()
+    {
+        s_singletonInstance->clearAllStacks();
+    }
+
+    // Information
+    Q_INVOKABLE QList<int> activeStackIds() const
+    {
+        return s_singletonInstance->activeStackIds();
+    }
+
+    Q_INVOKABLE int undoCount(int stackId) const
+    {
+        return s_singletonInstance->undoCount(stackId);
+    }
+
+    Q_INVOKABLE int redoCount(int stackId) const
+    {
+        return s_singletonInstance->redoCount(stackId);
+    }
+
+    // Stack size management for current stack
+    Q_INVOKABLE void setMaxStackSize(int maxSize)
+    {
+        s_singletonInstance->setMaxStackSize(maxSize);
+    }
+
+    Q_INVOKABLE int maxStackSize() const
+    {
+        return s_singletonInstance->maxStackSize();
+    }
+
+    Q_INVOKABLE void setAutoCleanupEnabled(bool enabled)
+    {
+        s_singletonInstance->setAutoCleanupEnabled(enabled);
+    }
+
+    Q_INVOKABLE bool isAutoCleanupEnabled() const
+    {
+        return s_singletonInstance->isAutoCleanupEnabled();
+    }
+
+    // Stack size management for specific stack
+    Q_INVOKABLE void setMaxStackSize(int stackId, int maxSize)
+    {
+        s_singletonInstance->setMaxStackSize(stackId, maxSize);
+    }
+
+    Q_INVOKABLE int maxStackSize(int stackId) const
+    {
+        return s_singletonInstance->maxStackSize(stackId);
+    }
+
+    Q_INVOKABLE void setAutoCleanupEnabled(int stackId, bool enabled)
+    {
+        s_singletonInstance->setAutoCleanupEnabled(stackId, enabled);
+    }
+
+    Q_INVOKABLE bool isAutoCleanupEnabled(int stackId) const
+    {
+        return s_singletonInstance->isAutoCleanupEnabled(stackId);
+    }
+
+    // Cancel all running commands in all stacks
+    Q_INVOKABLE void cancelAllCommands()
+    {
+        s_singletonInstance->cancelAllCommands();
+    }
+
+// forwarded signals:
+/*    void currentStackIdChanged(int stackId);
+    void canUndoChanged(bool canUndo);
+    void canRedoChanged(bool canRedo);
+    void undoTextChanged(const QString &undoText);
+    void redoTextChanged(const QString &redoText);
+    void commandFinished(bool success);
+    */
+
+  private:
+    inline static QJSEngine *s_engine = nullptr;
+};
