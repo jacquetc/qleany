@@ -66,12 +66,10 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          FONTCONFIG_STATIC: "1"
         with:
           target: ${{ matrix.target }}
           args: --release --out dist
-          manylinux: auto
+          manylinux: off
           before-script-linux: |
             if command -v yum &> /dev/null; then
               yum install -y fontconfig-devel freetype-devel libxkbcommon-devel wayland-devel
