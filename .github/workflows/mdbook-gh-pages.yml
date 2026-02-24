@@ -43,7 +43,7 @@ jobs:
 
       - name: Generate sitemap.xml
         run: |
-          BASE_URL="https://jacquetc.github.io/qleany"
+          BASE_URL="https://qleany-docs.pages.dev"
           echo '<?xml version="1.0" encoding="UTF-8"?>' > book/sitemap.xml
           echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' >> book/sitemap.xml
           echo 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' >> book/sitemap.xml
@@ -77,8 +77,9 @@ jobs:
         run: cp .github/google5d0f63f0638b11c8.html book/
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
+          name: book
           path: book  # default mdBook output directory
 
   deploy:
@@ -88,6 +89,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: book
+          path: book
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy book --project-name=qleany-docs
