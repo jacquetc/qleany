@@ -5,3 +5,4 @@ pub mod generate;
 pub mod list;
 pub mod new;
 pub mod show;
+pub mod docs;

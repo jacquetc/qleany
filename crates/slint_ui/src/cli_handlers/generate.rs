@@ -271,32 +271,52 @@ fn get_prefix_path(app_context: &Arc<AppContext>) -> Result<String> {
 fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Result<Vec<EntityId>> {
     use direct_access::file_controller;
 
+
+    let target_language = get_target_language(app_context)?;
+
     // First, list all files
-    let dto = rust_file_generation::ListRustFilesDto {
-        only_list_already_existing: false,
+
+    let (file_ids, file_names) = match target_language {
+        TargetLanguage::Rust => {
+            let dto = rust_file_generation::ListRustFilesDto {
+                only_list_already_existing: false,
+            };
+            let list_result = rust_file_generation_controller::list_rust_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+            (list_result.file_ids, list_result.file_names)
+        }
+        TargetLanguage::CppQt => {
+            let dto = cpp_qt_file_generation::ListCppQtFilesDto {
+                only_list_already_existing: false,
+            };
+            let list_result = cpp_qt_file_generation_controller::list_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+            (list_result.file_ids, list_result.file_names)
+        }
     };
-    let list_result = rust_file_generation_controller::list_rust_files(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &dto,
-    )?;
 
     let target = args.target.as_ref().unwrap_or(&GenerateTarget::All);
 
     match target {
-        GenerateTarget::All => Ok(list_result.file_ids),
+        GenerateTarget::All => Ok(file_ids),
 
         GenerateTarget::Feature { name } => {
-            filter_files_by_path_prefix(app_context, &list_result.file_ids, name)
+            filter_files_by_path_prefix(app_context, &file_ids, name)
         }
 
         GenerateTarget::Entity { name } => {
-            filter_files_by_path_prefix(app_context, &list_result.file_ids, name)
+            filter_files_by_path_prefix(app_context, &file_ids, name)
         }
 
         GenerateTarget::Group { name } => {
             let mut matching = Vec::new();
-            for id in list_result.file_ids {
+            for id in file_ids {
                 if let Some(file) = file_controller::get(&app_context.db_context, &id)?
                     && file.group.eq_ignore_ascii_case(name)
                 {
@@ -309,15 +329,15 @@ fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Resul
         GenerateTarget::File { target } => {
             // Try to parse as numeric ID first
             if let Ok(id) = target.parse::<EntityId>()
-                && list_result.file_ids.contains(&id)
+                && file_ids.contains(&id)
             {
                 return Ok(vec![id]);
             }
 
             // Otherwise match by path
-            for (idx, file_path) in list_result.file_names.iter().enumerate() {
+            for (idx, file_path) in file_names.iter().enumerate() {
                 if file_path.ends_with(target) || file_path == target {
-                    return Ok(vec![list_result.file_ids[idx]]);
+                    return Ok(vec![file_ids[idx]]);
                 }
             }
 

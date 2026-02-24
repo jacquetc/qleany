@@ -37,6 +37,7 @@ pub enum Commands {
     List(ListArgs),
 
     /// Generate scaffolding code
+    #[command(visible_alias = "gen")]
     Generate(GenerateArgs),
 
     /// Display manifest information
@@ -44,6 +45,9 @@ pub enum Commands {
 
     /// Export entity diagram
     Export(ExportArgs),
+
+    /// Embedded documentation
+    Docs(DocsArgs)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -232,6 +236,70 @@ pub enum ExportFormat {
     Json,
 }
 
+// ─────────────────────────────────────────────────────────────
+// DOC
+// ─────────────────────────────────────────────────────────────
+
+
+#[derive(Args)]
+pub struct DocsArgs {
+    /// Which documentation to show
+    #[command(subcommand)]
+    pub target: Option<DocsTarget>,
+}
+
+#[derive(Subcommand, Clone)]
+pub enum DocsTarget {
+    /// Show all documentations
+    All,
+
+    /// Show introduction documentation
+    #[command(visible_alias = "intro")]
+    Introduction,
+
+    /// Show manifest reference documentation
+    #[command(visible_alias = "manifest")]
+    ManifestReference,
+
+    /// Show architecture design documentation
+    #[command(visible_alias = "design")]
+    DesignPhilosophy,
+
+    /// Show undo/redo architecture documentation
+    #[command(visible_alias = "undo")]
+    UndoRedoArchitecture,
+
+    /// Show generated code documentation for C++/Qt
+    #[command(visible_alias = "cpp")]
+    GeneratedCodeCppQt,
+
+    /// Show generated code documentation for Rust
+    #[command(visible_alias = "rust")]
+    GeneratedCodeRust,
+
+    /// Show quick start guide for C++/Qt
+    #[command(visible_alias = "start-cpp")]
+    QuickStartCppQt,
+
+    /// Show quick start guide for Rust
+    #[command(visible_alias = "start-rust")]
+    QuickStartRust,
+
+    /// Show QML integration documentation
+    #[command(visible_alias = "qml")]
+    QmlIntegration,
+
+    /// Show troubleshooting documentation
+    #[command(visible_alias = "trouble")]
+    Troubleshooting,
+
+    /// Show regeneration workflow documentation
+    #[command(visible_alias = "regen")]
+    RegenerationWorkflow
+
+}
+
+
 /// Run the CLI with the given application context.
 /// Returns `Some(())` if the application should continue running as GUI, `None` otherwise.
 pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
@@ -276,6 +344,9 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
             let path = manifest_path.expect("Export requires a manifest");
             cli_handlers::export::execute(app_context, &path, &args, &output)
         }
+        Commands::Docs(args) => {
+            cli_handlers::docs::execute(app_context, &args, &output)
+        }
     };
 
     if let Err(e) = result {
@@ -290,8 +361,8 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
 
 /// Resolves the manifest path from CLI arguments or discovers it in the current directory.
 fn resolve_manifest_path(explicit: &Option<PathBuf>, command: &Commands) -> Option<PathBuf> {
-    // New command doesn't need an existing manifest
-    if matches!(command, Commands::New(_)) {
+    // New and Doc commands don't need an existing manifest
+    if matches!(command, Commands::New(_) | Commands::Docs(_)) {
         return None;
     }
 

@@ -30,7 +30,6 @@ pub fn execute(
 
     // TODO: Additional validation could go here:
     // - Check for orphaned entity references
-    // - Validate relationship consistency
 
     Ok(())
 }

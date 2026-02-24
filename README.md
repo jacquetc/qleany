@@ -188,8 +188,16 @@ For more details, see the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.m
 # Show help
 qleany -h
 
+
 # Show an option help
 qleany generate -h
+
+
+# show the list of available documentation
+qleany doc -h
+
+# show all documentation
+qleany doc
 
 # new qleany.yaml manifest
 qleany new --language cpp-qt (or rust)

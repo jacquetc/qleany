@@ -616,3 +616,4 @@ features:
 ui:
   rust_cli: true
   rust_slint: true
+  cpp_qt_qtwidgets: true

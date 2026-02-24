@@ -35,6 +35,9 @@ ctrlc = "3.5.0"
 heck = "0.5"
 arboard = "3.6"
 open = "5.3"
+include_dir = "0.7"
+termimad = "0.34.1"
+
 [build-dependencies]
 slint-build = "1.15"
 
