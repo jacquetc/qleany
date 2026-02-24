@@ -14,7 +14,7 @@ entities:
   allow_direct_access: false
   fields:
   - name: id
-    type: integer
+    type: uinteger
   - name: created_at
     type: datetime
   - name: updated_at

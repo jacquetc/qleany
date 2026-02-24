@@ -53,7 +53,7 @@ entities:
     allow_direct_access: false
     fields:
       - name: id
-        type: integer
+        type: uinteger
       - name: created_at
         type: datetime
       - name: updated_at
@@ -86,7 +86,7 @@ entities:
     allow_direct_access: false
     fields:
       - name: id
-        type: integer
+        type: uinteger
       - name: created_at
         type: datetime
       - name: updated_at
@@ -527,7 +527,7 @@ You can't put entities in DTOs. Only primitive types are allowed because entitie
 
 ```yaml
 
-  user_interface:
+  ui:
     rust_cli: true
     rust_slint: true
     cpp_qt_qtwidgets: false

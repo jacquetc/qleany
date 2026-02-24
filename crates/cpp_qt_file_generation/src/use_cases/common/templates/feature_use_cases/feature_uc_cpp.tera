@@ -30,7 +30,7 @@ namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
     m_uow->beginTransaction();
 
-    qWarning("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
+    qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
 
     m_uow->endTransaction();
 
