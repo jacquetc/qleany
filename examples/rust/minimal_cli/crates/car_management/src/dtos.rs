@@ -16,7 +16,7 @@ pub struct AddCarDto {
     pub model: String,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AddCarResultDto {
+pub struct AddCarReturnDto {
     pub car_id: i64,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -25,6 +25,6 @@ pub struct SellCarDto {
     pub car_id: i64,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SellCarResultDto {
+pub struct SellCarReturnDto {
     pub success: bool,
 }

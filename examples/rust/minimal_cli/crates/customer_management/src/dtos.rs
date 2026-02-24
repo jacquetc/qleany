@@ -15,6 +15,6 @@ pub struct AddCustomerDto {
     pub name: String,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AddCustomerResultDto {
+pub struct AddCustomerReturnDto {
     pub customer_id: i64,
 }

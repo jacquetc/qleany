@@ -165,7 +165,7 @@ features:
             - name: file_path
               type: string
         dto_out:
-          name: LoadWorkResultDto
+          name: LoadWorkReturnDto
           fields:
             - name: work_id
               type: integer

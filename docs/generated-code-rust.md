@@ -88,7 +88,7 @@ pub fn get_generate_rust_files_result(
         return Ok(None);
     }
 
-    // Parse the JSON string into a GenerateRustFilesResultDto
+    // Parse the JSON string into a GenerateRustFilesReturnDto
     let result_dto: GenerateRustFilesReturnDto = serde_json::from_str(&result_json.unwrap())?;
 
     Ok(Some(result_dto))

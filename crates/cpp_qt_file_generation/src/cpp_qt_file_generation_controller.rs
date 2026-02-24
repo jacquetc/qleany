@@ -73,7 +73,7 @@ pub fn get_generate_cpp_qt_files_result(
         return Ok(None);
     }
 
-    // Parse the JSON string into a GenerateCppQtFilesResultDto
+    // Parse the JSON string into a GenerateCppQtFilesReturnDto
     let result_dto: GenerateCppQtFilesReturnDto = serde_json::from_str(&result_json.unwrap())?;
 
     Ok(Some(result_dto))

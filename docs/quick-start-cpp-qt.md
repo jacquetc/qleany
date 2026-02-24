@@ -258,7 +258,7 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 4. Switch to the **DTO Out** tab:
     - Enable the checkbox
-    - **Name**: `ImportResultDto`
+    - **Name**: `ImportReturnDto`
     - Add fields: `imported_count` (Integer), `error_messages` (String, List: ✓)
 
 5. Switch to the **Entities** tab:
@@ -283,7 +283,7 @@ Click **Features** in the sidebar. You'll see a four-column layout.
     - Field: `output_path` (String)
 
 4. **DTO Out**:
-    - **Name**: `ExportResultDto`
+    - **Name**: `ExportReturnDto`
     - Field: `exported_count` (Integer)
 
 5. **Entities**: Check `Root`, `Car`

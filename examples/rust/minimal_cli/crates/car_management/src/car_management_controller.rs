@@ -8,10 +8,10 @@ use crate::use_cases::add_car_uc::AddCarUseCase;
 use crate::use_cases::list_cars_uc::ListCarsUseCase;
 use crate::use_cases::sell_car_uc::SellCarUseCase;
 use crate::AddCarDto;
-use crate::AddCarResultDto;
+use crate::AddCarReturnDto;
 use crate::CarListDto;
 use crate::SellCarDto;
-use crate::SellCarResultDto;
+use crate::SellCarReturnDto;
 use anyhow::Result;
 use common::event::{Event, Origin};
 
@@ -39,7 +39,7 @@ pub fn add_car(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     dto: &AddCarDto,
-) -> Result<AddCarResultDto> {
+) -> Result<AddCarReturnDto> {
     let uow_context = AddCarUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = AddCarUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
@@ -56,7 +56,7 @@ pub fn sell_car(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     dto: &SellCarDto,
-) -> Result<SellCarResultDto> {
+) -> Result<SellCarReturnDto> {
     let uow_context = SellCarUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = SellCarUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;

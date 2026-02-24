@@ -103,7 +103,7 @@ features:
             - name: price
               type: float
         dto_out:
-          name: AddCarResultDto
+          name: AddCarReturnDto
           fields:
             - name: car_id
               type: integer
@@ -119,7 +119,7 @@ features:
             - name: customer_id
               type: integer
         dto_out:
-          name: SellCarResultDto
+          name: SellCarReturnDto
           fields:
             - name: success
               type: boolean
@@ -149,7 +149,7 @@ features:
               type: string
               is_nullable: true
         dto_out:
-          name: AddCustomerResultDto
+          name: AddCustomerReturnDto
           fields:
             - name: customer_id
               type: integer

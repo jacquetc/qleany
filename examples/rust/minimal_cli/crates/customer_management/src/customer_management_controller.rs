@@ -6,7 +6,7 @@ use crate::units_of_work::list_customers_uow::ListCustomersUnitOfWorkFactory;
 use crate::use_cases::add_customer_uc::AddCustomerUseCase;
 use crate::use_cases::list_customers_uc::ListCustomersUseCase;
 use crate::AddCustomerDto;
-use crate::AddCustomerResultDto;
+use crate::AddCustomerReturnDto;
 use crate::CustomerListDto;
 use anyhow::Result;
 use common::event::{Event, Origin};
@@ -37,7 +37,7 @@ pub fn add_customer(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     dto: &AddCustomerDto,
-) -> Result<AddCustomerResultDto> {
+) -> Result<AddCustomerReturnDto> {
     let uow_context = AddCustomerUnitOfWorkFactory::new(&db_context, &event_hub);
     let mut uc = AddCustomerUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;

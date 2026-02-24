@@ -456,6 +456,18 @@ impl SnapshotBuilder {
     }
 
     fn get_dto_field_cpp_qt_type(dto_field: &DtoField) -> String {
+        let base_type = Self::get_dto_field_cpp_qt_base_type(dto_field);
+        if dto_field.optional {
+            format!("std::optional<{}>", base_type)
+        }
+        else if dto_field.is_list {
+            format!("QList<{}>", base_type)
+        }
+        else {
+            base_type
+        }
+    }
+    fn get_dto_field_cpp_qt_base_type(dto_field: &DtoField) -> String {
         match dto_field.field_type {
             DtoFieldType::Boolean => "bool".to_string(),
             DtoFieldType::Integer => "int".to_string(),
@@ -889,19 +901,13 @@ impl SnapshotBuilder {
             let mut df_vec: Vec<DtoFieldVM> = Vec::new();
             for (dfid, df) in &dto_fields {
                 if d.fields.contains(dfid) {
-                    let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
-                    let cpp_qt_type = if df.is_list {
-                        format!("QList<{}>", &cpp_qt_base_type)
-                    } else {
-                        cpp_qt_base_type.clone()
-                    };
                     df_vec.push(DtoFieldVM {
                         inner: df.clone(),
                         pascal_name: heck::AsPascalCase(&df.name).to_string(),
                         camel_name: heck::AsLowerCamelCase(&df.name).to_string(),
                         snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                        cpp_qt_base_type,
-                        cpp_qt_type,
+                        cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
+                        cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                         cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(&df),
                     });
                 }
@@ -993,15 +999,6 @@ impl SnapshotBuilder {
                                                             Vec::new();
                                                         for (dfid, df) in &dto_fields {
                                                             if d.fields.contains(dfid) {
-                                                                let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
-                                                                let cpp_qt_type = if df.is_list {
-                                                                    format!(
-                                                                        "QList<{}>",
-                                                                        &cpp_qt_base_type
-                                                                    )
-                                                                } else {
-                                                                    cpp_qt_base_type.clone()
-                                                                };
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name:
@@ -1014,8 +1011,8 @@ impl SnapshotBuilder {
                                                                         &df.name,
                                                                     )
                                                                     .to_string(),
-                                                                    cpp_qt_base_type,
-                                                                    cpp_qt_type,
+                                                                    cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
+                                                                    cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                                     cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
                                                                 });
                                                             }
@@ -1036,15 +1033,6 @@ impl SnapshotBuilder {
                                                             Vec::new();
                                                         for (dfid, df) in &dto_fields {
                                                             if d.fields.contains(dfid) {
-                                                                let cpp_qt_base_type = SnapshotBuilder::get_dto_field_cpp_qt_type(df);
-                                                                let cpp_qt_type = if df.is_list {
-                                                                    format!(
-                                                                        "QList<{}>",
-                                                                        &cpp_qt_base_type
-                                                                    )
-                                                                } else {
-                                                                    cpp_qt_base_type.clone()
-                                                                };
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name:
@@ -1057,8 +1045,8 @@ impl SnapshotBuilder {
                                                                         &df.name,
                                                                     )
                                                                     .to_string(),
-                                                                    cpp_qt_base_type,
-                                                                    cpp_qt_type,
+                                                                    cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
+                                                                    cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                                     cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
                                                                 });
                                                             }
@@ -1139,13 +1127,6 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type =
-                                                SnapshotBuilder::get_dto_field_cpp_qt_type(df);
-                                            let cpp_qt_type = if df.is_list {
-                                                format!("QList<{}>", &cpp_qt_base_type)
-                                            } else {
-                                                cpp_qt_base_type.clone()
-                                            };
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
@@ -1153,8 +1134,8 @@ impl SnapshotBuilder {
                                                 camel_name: heck::AsLowerCamelCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                cpp_qt_base_type,
-                                                cpp_qt_type,
+                                                cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
+                                                cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                 cpp_default_init:
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
                                                         df,
@@ -1175,13 +1156,6 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let cpp_qt_base_type =
-                                                SnapshotBuilder::get_dto_field_cpp_qt_type(df);
-                                            let cpp_qt_type = if df.is_list {
-                                                format!("QList<{}>", &cpp_qt_base_type)
-                                            } else {
-                                                cpp_qt_base_type.clone()
-                                            };
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
@@ -1189,8 +1163,8 @@ impl SnapshotBuilder {
                                                 camel_name: heck::AsLowerCamelCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                cpp_qt_base_type,
-                                                cpp_qt_type,
+                                                cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
+                                                cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                 cpp_default_init:
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
                                                         df,
