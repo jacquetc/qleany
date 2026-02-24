@@ -73,6 +73,39 @@ jobs:
           done
           echo '</urlset>' >> book/sitemap.xml
 
+      - name: Add robots.txt
+        run: |
+          cat > book/robots.txt << 'EOF'
+          User-agent: *
+          Allow: /
+
+          Sitemap: https://qleany-docs.pages.dev/sitemap.xml
+          EOF
+
+      - name: Generate llms.txt
+        run: |
+          cat > book/llms.txt << 'EOF'
+          # Qleany
+
+          > Clean Architecture code generator for C++/Qt6, Rust, and Python applications. Qleany generates a pragmatic "Package by Feature" (Vertical Slice Architecture) variant of Clean Architecture from YAML manifests. It is not a framework — all needed code is generated with zero runtime dependencies.
+
+          ## Documentation
+
+          - [Introduction](https://qleany-docs.pages.dev/introduction.html): Overview, installation, and getting started
+          - [Design Philosophy](https://qleany-docs.pages.dev/design-philosophy.html): Architecture decisions and rationale behind Qleany
+          - [Manifest Reference](https://qleany-docs.pages.dev/manifest-reference.html): Complete YAML manifest specification
+          - [Quick Start C++/Qt](https://qleany-docs.pages.dev/quick-start-cpp-qt.html): Getting started with C++/Qt6 target
+          - [Quick Start Rust](https://qleany-docs.pages.dev/quick-start-rust.html): Getting started with Rust target
+          - [Generated Code C++/Qt](https://qleany-docs.pages.dev/generated-code-cpp-qt.html): What Qleany generates for C++/Qt6
+          - [Generated Code Rust](https://qleany-docs.pages.dev/generated-code-rust.html): What Qleany generates for Rust
+          - [QML Integration](https://qleany-docs.pages.dev/qml-integration.html): Using generated code with QML frontends
+          - [Undo/Redo Architecture](https://qleany-docs.pages.dev/undo-redo-architecture.html): Undo/redo patterns and implementation
+          - [Regeneration Workflow](https://qleany-docs.pages.dev/regeneration-workflow.html): How to regenerate code after manifest changes
+          - [Troubleshooting](https://qleany-docs.pages.dev/troubleshooting.html): Common issues and solutions
+          - [Contributing](https://qleany-docs.pages.dev/contributing.html): How to contribute to Qleany
+          - [DCO](https://qleany-docs.pages.dev/dco.html): Developer Certificate of Origin
+          EOF
+
       - name: Add Google Search Console verification
         run: cp .github/google5d0f63f0638b11c8.html book/
 
