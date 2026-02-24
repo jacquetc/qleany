@@ -4,7 +4,10 @@ mod gen_cmake_tests;
 use crate::use_cases::common::tools;
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global, Relationship, RelationshipType, Root, Strength, UseCase, UserInterface, Workspace};
+use common::entities::{
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
+    Global, Relationship, RelationshipType, Root, Strength, UseCase, UserInterface, Workspace,
+};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -84,7 +87,7 @@ struct EntityVM {
     pub owner: Option<EntityId>,
     pub owner_pascal_name: Option<String>,
     pub owner_relationship_field_pascal_name: Option<String>,
-    pub owner_relationship_type: Option<RelationshipType>
+    pub owner_relationship_type: Option<RelationshipType>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -400,8 +403,8 @@ impl SnapshotBuilder {
         }
 
         let owner = SnapshotBuilder::get_entity_owner(uow, &entity_id);
-        let owner_entity: Option<Entity> = owner
-            .and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
+        let owner_entity: Option<Entity> =
+            owner.and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
 
         Ok(EntityVM {
             inner: entity.clone(),
@@ -423,9 +426,14 @@ impl SnapshotBuilder {
                 .cloned()
                 .collect(),
             owner,
-            owner_pascal_name: owner_entity.as_ref().map(|e| heck::AsPascalCase(&e.name).to_string()),
-            owner_relationship_field_pascal_name: SnapshotBuilder::get_entity_owner_relationship_field_pascal_name(uow, entity_id),
-            owner_relationship_type: SnapshotBuilder::get_entity_owner_relationship_type(uow, entity_id),
+            owner_pascal_name: owner_entity
+                .as_ref()
+                .map(|e| heck::AsPascalCase(&e.name).to_string()),
+            owner_relationship_field_pascal_name:
+                SnapshotBuilder::get_entity_owner_relationship_field_pascal_name(uow, entity_id),
+            owner_relationship_type: SnapshotBuilder::get_entity_owner_relationship_type(
+                uow, entity_id,
+            ),
         })
     }
 
@@ -466,7 +474,9 @@ impl SnapshotBuilder {
     fn get_entity_owner(uow: &dyn GenerationReadOps, entity_id: &EntityId) -> Option<EntityId> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
         if let Some(entity) = entity {
-            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
 
             // find the backward relationship that points to the entity owner
             for rel in relationships.into_iter().flatten() {
@@ -484,7 +494,9 @@ impl SnapshotBuilder {
     ) -> Option<String> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
         if let Some(entity) = entity {
-            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
 
             // find the backward relationship that points to the entity owner
             for rel in relationships.into_iter().flatten() {
@@ -496,14 +508,15 @@ impl SnapshotBuilder {
         None
     }
 
-
     fn get_entity_owner_relationship_type(
-    uow: &dyn GenerationReadOps,
-    entity_id: &EntityId,
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
     ) -> Option<RelationshipType> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
         if let Some(entity) = entity {
-            let relationships = uow.get_relationship_multi(entity.relationships.as_slice()).ok()?;
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
 
             // find the backward relationship that points to the entity owner
             for rel in relationships.into_iter().flatten() {
@@ -513,8 +526,6 @@ impl SnapshotBuilder {
             }
         }
         None
-
-
     }
 
     pub(crate) fn for_file(

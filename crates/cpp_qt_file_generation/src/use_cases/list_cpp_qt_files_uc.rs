@@ -1007,7 +1007,8 @@ impl ListCppQtFilesUseCase {
 
                 let has_owner = relationships.iter().any(|r| {
                     if let Some(r) = r {
-                        r.direction == common::entities::Direction::Backward && r.strength == common::entities::Strength::Strong
+                        r.direction == common::entities::Direction::Backward
+                            && r.strength == common::entities::Strength::Strong
                     } else {
                         false
                     }
@@ -1038,8 +1039,6 @@ impl ListCppQtFilesUseCase {
                         field: None,
                     });
                 }
-
-
 
                 let has_forward_relationship = relationships.iter().any(|r| {
                     if let Some(r) = r {
