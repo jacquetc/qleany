@@ -21,7 +21,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           # Linux ARM64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
           # Windows x86_64
           - os: windows-latest
@@ -58,11 +58,11 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxkbcommon-dev libwayland-dev
+          sudo apt-get install -y libfontconfig1-dev libfreetype-dev libxkbcommon-dev libwayland-dev
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -70,6 +70,14 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist
           manylinux: auto
+          before-script-linux: |
+            if command -v yum &> /dev/null; then
+              yum install -y fontconfig-devel freetype-devel libxkbcommon-devel wayland-devel
+            elif command -v apk &> /dev/null; then
+              apk add fontconfig-dev freetype-dev libxkbcommon-dev wayland-dev
+            elif command -v apt-get &> /dev/null; then
+              apt-get update && apt-get install -y libfontconfig1-dev libfreetype-dev libxkbcommon-dev libwayland-dev
+            fi
 
       - name: Upload wheels
         uses: actions/upload-artifact@v6
