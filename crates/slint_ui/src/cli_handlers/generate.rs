@@ -1,8 +1,10 @@
 use crate::app_context::AppContext;
 use crate::cli::{GenerateArgs, GenerateTarget, OutputContext};
+use crate::cli_handlers::common::{TargetLanguage, get_target_language};
 use anyhow::Result;
 use common::long_operation::OperationStatus;
 use common::types::EntityId;
+use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;
 use std::path::{Path, PathBuf};
@@ -31,6 +33,9 @@ pub fn execute(
 
     output.verbose(&format!("Output directory: {}", output_path.display()));
 
+    // Determine target language
+    let target_language = get_target_language(app_context)?;
+
     // Get file IDs to generate based on target
     let file_ids = collect_file_ids(app_context, args)?;
 
@@ -48,20 +53,49 @@ pub fn execute(
 
     // Perform generation
     let prefix = get_prefix_path(app_context)?;
-    let dto = rust_file_generation::GenerateRustFilesDto {
-        file_ids: file_ids.iter().map(|&id| id as EntityId).collect(),
-        root_path: output_path.to_string_lossy().to_string(),
-        prefix,
-    };
 
-    let operation_id = {
-        let mut long_op_manager = app_context.long_operation_manager.lock().unwrap();
-        rust_file_generation_controller::generate_rust_files(
-            &app_context.db_context,
-            &app_context.event_hub,
-            &mut long_op_manager,
-            &dto,
-        )?
+    let operation_id = match target_language {
+        TargetLanguage::Rust => {
+            let dto = rust_file_generation::GenerateRustFilesDto {
+                file_ids: file_ids.iter().map(|&id| id as EntityId).collect(),
+                root_path: output_path.to_string_lossy().to_string(),
+                prefix,
+            };
+            let mut long_op_manager =
+                app_context
+                    .long_operation_manager
+                    .lock()
+                    .unwrap_or_else(|_| {
+                        panic!("Failed to acquire lock on long operation manager.");
+                    });
+            rust_file_generation_controller::generate_rust_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+                &dto,
+            )?
+        }
+        TargetLanguage::CppQt => {
+            let dto = cpp_qt_file_generation::GenerateCppQtFilesDto {
+                file_ids: file_ids.iter().map(|&id| id as EntityId).collect(),
+                root_path: output_path.to_string_lossy().to_string(),
+                prefix,
+            };
+
+            let mut long_op_manager =
+                app_context
+                    .long_operation_manager
+                    .lock()
+                    .unwrap_or_else(|_| {
+                        panic!("Failed to acquire lock on long operation manager.");
+                    });
+            cpp_qt_file_generation_controller::generate_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+                &dto,
+            )?
+        }
     };
 
     // Set up SIGINT handler for graceful cancellation
@@ -123,7 +157,7 @@ pub fn execute(
                 // Retrieve and display result
                 if let Some(result_json) = long_op_manager.get_operation_result(&operation_id) {
                     drop(long_op_manager); // Release lock before parsing
-                    handle_completed_result(&result_json, output)?;
+                    handle_completed_result(app_context, &result_json, output)?;
                 } else {
                     output.success("Generation completed");
                 }
@@ -142,23 +176,51 @@ pub fn execute(
     Ok(())
 }
 
-fn handle_completed_result(result_json: &str, output: &OutputContext) -> Result<()> {
-    let result: rust_file_generation::GenerateRustFilesReturnDto =
-        serde_json::from_str(result_json)?;
+fn handle_completed_result(
+    app_context: &Arc<AppContext>,
+    result_json: &str,
+    output: &OutputContext,
+) -> Result<()> {
+    let target_language = get_target_language(app_context)?;
 
-    output.success(&format!(
-        "Generated {} files ({})",
-        result.files.len(),
-        result.timestamp
-    ));
+    match target_language {
+        TargetLanguage::Rust => {
+            let result: rust_file_generation::GenerateRustFilesReturnDto =
+                serde_json::from_str(result_json)?;
 
-    if output.verbose {
-        for file in &result.files {
-            output.verbose(&format!("  {}", file));
+            output.success(&format!(
+                "Generated {} files ({})",
+                result.files.len(),
+                result.timestamp
+            ));
+
+            if output.verbose {
+                for file in &result.files {
+                    output.verbose(&format!("  {}", file));
+                }
+            }
+
+            Ok(())
+        }
+        TargetLanguage::CppQt => {
+            let result: cpp_qt_file_generation::GenerateCppQtFilesReturnDto =
+                serde_json::from_str(result_json)?;
+
+            output.success(&format!(
+                "Generated {} files ({})",
+                result.files.len(),
+                result.timestamp
+            ));
+
+            if output.verbose {
+                for file in &result.files {
+                    output.verbose(&format!("  {}", file));
+                }
+            }
+
+            Ok(())
         }
     }
-
-    Ok(())
 }
 
 fn determine_output_path(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Result<PathBuf> {

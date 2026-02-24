@@ -2,8 +2,10 @@ mod file_tree;
 
 use crate::app_context::AppContext;
 use crate::cli::{ListArgs, ListTarget, OutputContext, OutputFormat};
+use crate::cli_handlers::common::{TargetLanguage, get_target_language};
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
+use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use direct_access::{EntityDto, UseCaseDto, system_controller};
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;
@@ -41,36 +43,75 @@ fn list_files(
     args: &ListArgs,
     output: &OutputContext,
 ) -> Result<()> {
-    let dto = rust_file_generation::ListRustFilesDto {
-        only_list_already_existing: args.existing_only,
-    };
+    let target_language = get_target_language(app_context)?; // Ensure language is supported for file listing
 
-    let result = rust_file_generation_controller::list_rust_files(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &dto,
-    )?;
+    match target_language {
+        TargetLanguage::Rust => {
+            let dto = rust_file_generation::ListRustFilesDto {
+                only_list_already_existing: args.existing_only,
+            };
 
-    match args.format {
-        OutputFormat::Plain => {
-            for file in &result.file_names {
-                println!("{}", file);
+            let result = rust_file_generation_controller::list_rust_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+
+            match args.format {
+                OutputFormat::Plain => {
+                    for file in &result.file_names {
+                        println!("{}", file);
+                    }
+                    output.info(&format!("\n{} files", result.file_names.len()));
+                }
+                OutputFormat::Json => {
+                    let json = serde_json::json!({
+                        "files": result.file_names,
+                        "count": result.file_names.len()
+                    });
+                    println!("{}", serde_json::to_string_pretty(&json)?);
+                }
+                OutputFormat::Tree => {
+                    file_tree::print_file_tree(&result.file_names);
+                }
             }
-            output.info(&format!("\n{} files", result.file_names.len()));
+
+            Ok(())
         }
-        OutputFormat::Json => {
-            let json = serde_json::json!({
-                "files": result.file_names,
-                "count": result.file_names.len()
-            });
-            println!("{}", serde_json::to_string_pretty(&json)?);
-        }
-        OutputFormat::Tree => {
-            file_tree::print_file_tree(&result.file_names);
+
+        TargetLanguage::CppQt => {
+            let dto = cpp_qt_file_generation::ListCppQtFilesDto {
+                only_list_already_existing: args.existing_only,
+            };
+
+            let result = cpp_qt_file_generation_controller::list_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+
+            match args.format {
+                OutputFormat::Plain => {
+                    for file in &result.file_names {
+                        println!("{}", file);
+                    }
+                    output.info(&format!("\n{} files", result.file_names.len()));
+                }
+                OutputFormat::Json => {
+                    let json = serde_json::json!({
+                        "files": result.file_names,
+                        "count": result.file_names.len()
+                    });
+                    println!("{}", serde_json::to_string_pretty(&json)?);
+                }
+                OutputFormat::Tree => {
+                    file_tree::print_file_tree(&result.file_names);
+                }
+            }
+
+            Ok(())
         }
     }
-
-    Ok(())
 }
 
 fn list_entities(

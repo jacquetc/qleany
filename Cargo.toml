@@ -26,9 +26,9 @@ authors = ["Cyril Jacquet <cyril.jacquet@ferntech.eu>"]
 documentation = "https://docs.rs/qleany/"
 readme = "README.md"
 description = """
-Scaffold code generator for Rust and C++/Qt applications.
+Architecture generator for Rust and C++/Qt applications.
 """
-keywords = ["scaffold", "codegen", "rust", "cpp", "qt"]
+keywords = ["architecture", "scaffold", "codegen", "rust", "qt"]
 categories = ["development-tools", "template-engine", "gui", "command-line-utilities", "data-structures"]
 
 [workspace.dependencies]

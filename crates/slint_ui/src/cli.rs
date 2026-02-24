@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(author, version)]
-#[command(about = "Architecture scaffolding generator for C++/Qt6 and Rust applications")]
+#[command(about = "Architecture generator for C++/Qt6 and Rust applications")]
 #[command(propagate_version = true)]
 pub struct Cli {
     #[command(subcommand)]
@@ -80,7 +80,7 @@ pub struct NewArgs {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum LanguageOption {
     Rust,
-    #[value(alias = "cpp")]
+    #[value(alias = "cpp-qt")]
     CppQt,
 }
 
