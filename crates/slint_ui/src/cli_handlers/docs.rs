@@ -1,13 +1,11 @@
-use std::sync::Arc;
 use crate::app_context::AppContext;
 use crate::cli::{DocsArgs, DocsTarget, OutputContext};
 use include_dir::{Dir, include_dir};
+use std::sync::Arc;
 
-static DOCS_DIR: Dir<'_> =
-    include_dir!("$CARGO_MANIFEST_DIR/../../docs/");
+static DOCS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/../../docs/");
 
-static README: &str =
-    include_str!("../../../../README.md");
+static README: &str = include_str!("../../../../README.md");
 
 pub fn execute(
     app_context: &Arc<AppContext>,

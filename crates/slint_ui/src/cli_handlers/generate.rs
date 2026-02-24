@@ -52,7 +52,11 @@ pub fn execute(
     }
 
     // Perform generation
-    let prefix = get_prefix_path(app_context)?;
+    let prefix = if args.temp {
+        "temp".to_string()
+    } else {
+        "".to_string()
+    };
 
     let operation_id = match target_language {
         TargetLanguage::Rust => {
@@ -224,53 +228,18 @@ fn handle_completed_result(
 }
 
 fn determine_output_path(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Result<PathBuf> {
-    if args.temp {
-        let temp_path = std::env::current_dir()?.join("temp");
-        std::fs::create_dir_all(&temp_path)?;
-        return Ok(temp_path);
-    }
-
     if let Some(output) = &args.output {
         std::fs::create_dir_all(output)?;
         return Ok(output.clone());
     }
 
-    // Use manifest's prefix_path relative to current directory
-    let prefix = get_prefix_path(app_context)?;
-    let path = std::env::current_dir()?.join(&prefix);
+    let path = std::env::current_dir()?;
     std::fs::create_dir_all(&path)?;
     Ok(path)
 }
 
-fn get_prefix_path(app_context: &Arc<AppContext>) -> Result<String> {
-    use common::direct_access::workspace::WorkspaceRelationshipField;
-    use direct_access::{global_controller, workspace_controller};
-
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
-    let workspace = workspaces
-        .into_iter()
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
-
-    let global_ids = workspace_controller::get_relationship(
-        &app_context.db_context,
-        &workspace.id,
-        &WorkspaceRelationshipField::Global,
-    )?;
-    let global_id = global_ids
-        .first()
-        .ok_or_else(|| anyhow::anyhow!("No global configuration found"))?;
-
-    let global = global_controller::get(&app_context.db_context, global_id)?
-        .ok_or_else(|| anyhow::anyhow!("Global configuration not found"))?;
-
-    Ok(global.prefix_path)
-}
-
 fn collect_file_ids(app_context: &Arc<AppContext>, args: &GenerateArgs) -> Result<Vec<EntityId>> {
     use direct_access::file_controller;
-
 
     let target_language = get_target_language(app_context)?;
 

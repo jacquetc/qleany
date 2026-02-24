@@ -47,7 +47,7 @@ pub enum Commands {
     Export(ExportArgs),
 
     /// Embedded documentation
-    Docs(DocsArgs)
+    Docs(DocsArgs),
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -240,7 +240,6 @@ pub enum ExportFormat {
 // DOC
 // ─────────────────────────────────────────────────────────────
 
-
 #[derive(Args)]
 pub struct DocsArgs {
     /// Which documentation to show
@@ -295,10 +294,8 @@ pub enum DocsTarget {
 
     /// Show regeneration workflow documentation
     #[command(visible_alias = "regen")]
-    RegenerationWorkflow
-
+    RegenerationWorkflow,
 }
-
 
 /// Run the CLI with the given application context.
 /// Returns `Some(())` if the application should continue running as GUI, `None` otherwise.
@@ -344,9 +341,7 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
             let path = manifest_path.expect("Export requires a manifest");
             cli_handlers::export::execute(app_context, &path, &args, &output)
         }
-        Commands::Docs(args) => {
-            cli_handlers::docs::execute(app_context, &args, &output)
-        }
+        Commands::Docs(args) => cli_handlers::docs::execute(app_context, &args, &output),
     };
 
     if let Err(e) = result {
