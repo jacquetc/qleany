@@ -459,11 +459,9 @@ impl SnapshotBuilder {
         let base_type = Self::get_dto_field_cpp_qt_base_type(dto_field);
         if dto_field.optional {
             format!("std::optional<{}>", base_type)
-        }
-        else if dto_field.is_list {
+        } else if dto_field.is_list {
             format!("QList<{}>", base_type)
-        }
-        else {
+        } else {
             base_type
         }
     }
@@ -1134,8 +1132,12 @@ impl SnapshotBuilder {
                                                 camel_name: heck::AsLowerCamelCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
-                                                cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
+                                                cpp_qt_base_type:
+                                                    SnapshotBuilder::get_dto_field_cpp_qt_base_type(
+                                                        df,
+                                                    ),
+                                                cpp_qt_type:
+                                                    SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                 cpp_default_init:
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
                                                         df,
@@ -1163,8 +1165,12 @@ impl SnapshotBuilder {
                                                 camel_name: heck::AsLowerCamelCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
-                                                cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
+                                                cpp_qt_base_type:
+                                                    SnapshotBuilder::get_dto_field_cpp_qt_base_type(
+                                                        df,
+                                                    ),
+                                                cpp_qt_type:
+                                                    SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                 cpp_default_init:
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
                                                         df,
