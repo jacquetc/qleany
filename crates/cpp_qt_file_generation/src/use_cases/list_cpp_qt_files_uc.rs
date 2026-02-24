@@ -1517,6 +1517,154 @@ impl ListCppQtFilesUseCase {
             });
         }
 
+        //----------------------------------------------------------------------
+        // Tests
+        //----------------------------------------------------------------------
+
+        files.push(File {
+            id: 0,
+            name: "CMakeLists.txt".to_string(),
+            relative_path: format!("{}/tests/", prefix),
+            group: "tests".to_string(),
+            template_name: "tests_cmake".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "CMakeLists.txt".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tests_database_cmake".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_many_to_one_junction.cpp".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_many_to_one_junction_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_one_to_one_junction.cpp".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_one_to_one_junction_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_ordered_one_to_many_junction.cpp".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_ordered_one_to_many_junction_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_unordered_many_to_many_junction.cpp".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_unordered_many_to_many_junction_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_unordered_one_to_many_junction.cpp".to_string(),
+            relative_path: format!("{}/tests/database/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_unordered_one_to_many_junction_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "CMakeLists.txt".to_string(),
+            relative_path: format!("{}/tests/undo_redo/", prefix),
+            group: "tests".to_string(),
+            template_name: "tests_undo_redo_cmake".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_enhanced_undo_redo.cpp".to_string(),
+            relative_path: format!("{}/tests/undo_redo/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_enhanced_undo_redo_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_qcoro_integration.cpp".to_string(),
+            relative_path: format!("{}/tests/undo_redo/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_qcoro_integration_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_root_undo_redo.cpp".to_string(),
+            relative_path: format!("{}/tests/undo_redo/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_root_undo_redo_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "tst_undo_redo.cpp".to_string(),
+            relative_path: format!("{}/tests/undo_redo/", prefix),
+            group: "tests".to_string(),
+            template_name: "tst_undo_redo_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
         // Keep only the files already existing
         let files = files
             .into_iter()

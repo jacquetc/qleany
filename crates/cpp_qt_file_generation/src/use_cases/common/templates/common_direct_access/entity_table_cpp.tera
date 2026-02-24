@@ -412,17 +412,17 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::removeMany(cons
     {%- endif %}
     {%- endfor %}
 
-    // Clean up backward junction table relationships
+    // Clean up backward junction table relationships (including owner junctions)
 {% for rid, r in s.entities[e].backward_relationships %}
-    {%- if r.inner.left_entity == e and r.inner.relationship_type == "OrderedOneToMany" %}
+    {%- if r.inner.relationship_type == "OrderedOneToMany" %}
     JunctionTableOps::OrderedOneToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
-    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "OneToMany" %}
+    {%- elif r.inner.relationship_type == "OneToMany" %}
     JunctionTableOps::UnorderedOneToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
-    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "OneToOne" %}
-    JunctionTableOps::OneToOne::removeWithRightIdMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
-    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "ManyToOne" %}
+    {%- elif r.inner.relationship_type == "OneToOne" %}
+    JunctionTableOps::OneToOne::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
+    {%- elif r.inner.relationship_type == "ManyToOne" %}
     JunctionTableOps::ManyToOne::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
-    {%- elif r.inner.left_entity == e and r.inner.relationship_type == "ManyToMany" %}
+    {%- elif r.inner.relationship_type == "ManyToMany" %}
     JunctionTableOps::UnorderedManyToMany::removeWithRightIdsMany(db, ids, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
     {%- endif %}
 {%- endfor %}
@@ -642,19 +642,17 @@ TableLevelSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::snapsho
     TableLevelSnapshot snap;
     QSqlDatabase db = m_dbSubContext.getConnection();
 
-    // 1. Capture entity rows
+    // Capture entity rows
     snap.entityRows = SnapshotUtil::captureRowsByIds(db, "{{ ent.snake_name }}"_L1, ids);
 
-    // 2. Capture forward junction rows
+    // Capture forward junction rows
     {% for rid, r in ent.forward_relationships %}
-    snap.forwardJunctions.append(SnapshotUtil::captureJunctionByLeft(db, {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE, ids));
+    snap.forwardJunctions.append(SnapshotUtil::captureJunctionByLeft(db, {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE, ids{% if r.inner.order == "Ordered" %}, true {% endif %}));
     {%- endfor %}
 
-    // 3. Capture backward junction rows (self-referencing only)
+    // Capture backward junction rows (including owner junctions)
     {% for rid, r in s.entities[e].backward_relationships %}
-    {%- if r.inner.left_entity == e %}
-    snap.backwardJunctions.append(SnapshotUtil::captureJunctionByRight(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD, ids));
-    {%- endif %}
+    snap.backwardJunctions.append(SnapshotUtil::captureJunctionByRight(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, ids {% if r.inner.order == "Ordered" %}, true {% endif %}));
     {%- endfor %}
 
     return snap;
@@ -664,32 +662,29 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::restoreRows(const Tab
 {
     QSqlDatabase db = m_dbSubContext.getConnection();
 
-    // 1. Restore entity rows
+    // Restore entity rows
     SnapshotUtil::restoreRows(db, snap.entityRows);
 
-    // 2. Restore forward junction rows
+    // Restore forward junction rows
     for (const auto &jSnap : snap.forwardJunctions)
-        SnapshotUtil::restoreRows(db, jSnap);
+        SnapshotUtil::restoreJunctionRowsByLeft(db, jSnap);
 
-    // 3. Restore backward junction rows
+    // Restore backward junction rows
     for (const auto &jSnap : snap.backwardJunctions)
-        SnapshotUtil::restoreRows(db, jSnap);
+        SnapshotUtil::restoreJunctionRowsByRight(db, jSnap);
 
-    // 4. Invalidate caches for restored IDs
-    const auto restoredIds = SnapshotUtil::extractIds(snap.entityRows);
-    if (!restoredIds.isEmpty())
+    // Invalidate caches for restored IDs
+    if (const auto restoredIds = SnapshotUtil::extractIds(snap.entityRows); !restoredIds.isEmpty())
     {
         {{ ent.pascal_name }}Cache::instance().invalidateEntities(restoredIds);
         {{ ent.pascal_name }}Cache::instance().invalidateRelationships(restoredIds);
     }
 
-    // 5. Invalidate JunctionCache for affected junction tables
+    // Invalidate JunctionCache for affected junction tables
     {% for rid, r in ent.forward_relationships %}
     JunctionTableOps::JunctionCache::instance().invalidateTable({{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE);
     {%- endfor %}
     {% for rid, r in s.entities[e].backward_relationships %}
-    {%- if r.inner.left_entity == e %}
-    JunctionTableOps::JunctionCache::instance().invalidateTable({{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD);
-    {%- endif %}
+    JunctionTableOps::JunctionCache::instance().invalidateTable({{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
     {%- endfor %}
 }

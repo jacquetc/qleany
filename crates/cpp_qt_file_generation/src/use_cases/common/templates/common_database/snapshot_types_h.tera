@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QVariant>
 #include <QVariantMap>
@@ -69,7 +70,8 @@ class SnapshotUtil
         return snap;
     }
 
-    static TableSnapshot captureJunctionByLeft(QSqlDatabase &db, const QString &tableName, const QList<int> &leftIds)
+    static TableSnapshot captureJunctionByLeft(QSqlDatabase &db, const QString &tableName, const QList<int> &leftIds,
+                                               bool ordered = false)
     {
         TableSnapshot snap;
         snap.tableName = tableName;
@@ -79,8 +81,13 @@ class SnapshotUtil
 
         QStringList placeholders;
         placeholders.fill("?"_L1, leftIds.size());
-        const QString sql = "SELECT * FROM %1 WHERE left_id IN (%2)"_L1
+        QString sql = "SELECT * FROM %1 WHERE left_id IN (%2)"_L1
             .arg(tableName, placeholders.join(","_L1));
+
+        if (ordered)
+        {
+            sql += " ORDER BY order_"_L1;
+        }
 
         QSqlQuery q(db);
         q.prepare(sql);
@@ -105,7 +112,8 @@ class SnapshotUtil
         return snap;
     }
 
-    static TableSnapshot captureJunctionByRight(QSqlDatabase &db, const QString &tableName, const QList<int> &rightIds)
+    static TableSnapshot captureJunctionByRight(QSqlDatabase &db, const QString &tableName, const QList<int> &rightIds,
+                                                bool ordered = false)
     {
         TableSnapshot snap;
         snap.tableName = tableName;
@@ -115,8 +123,13 @@ class SnapshotUtil
 
         QStringList placeholders;
         placeholders.fill("?"_L1, rightIds.size());
-        const QString sql = "SELECT * FROM %1 WHERE right_id IN (%2)"_L1
+        QString sql = "SELECT * FROM %1 WHERE right_id IN (%2)"_L1
             .arg(tableName, placeholders.join(","_L1));
+
+        if (ordered)
+        {
+            sql += " ORDER BY order_"_L1;
+        }
 
         QSqlQuery q(db);
         q.prepare(sql);
@@ -169,6 +182,64 @@ class SnapshotUtil
             if (!q.exec())
                 qCritical() << "SnapshotUtil::restoreRows failed:" << q.lastError().text();
         }
+    }
+
+    // Restore junction rows, deleting stale rows by left_id before inserting snapshotted rows
+    static void restoreJunctionRowsByLeft(QSqlDatabase &db, const TableSnapshot &snap)
+    {
+        if (snap.rows.isEmpty())
+            return;
+
+        // Collect unique left_ids from the snapshot
+        QSet<int> leftIds;
+        for (const QVariantMap &row : snap.rows)
+            leftIds.insert(row.value("left_id"_L1).toInt());
+
+        // Delete all existing junction rows for these left_ids
+        QStringList placeholders;
+        placeholders.fill("?"_L1, leftIds.size());
+        const QString deleteSql = "DELETE FROM %1 WHERE left_id IN (%2)"_L1.arg(
+            snap.tableName, placeholders.join(","_L1));
+
+        QSqlQuery dq(db);
+        dq.prepare(deleteSql);
+        for (int id : leftIds)
+            dq.addBindValue(id);
+
+        if (!dq.exec())
+            qCritical() << "SnapshotUtil::restoreJunctionRowsByLeft DELETE failed:" << dq.lastError().text();
+
+        // Insert snapshotted rows
+        restoreRows(db, snap);
+    }
+
+    // Restore junction rows, deleting stale rows by right_id before inserting snapshotted rows
+    static void restoreJunctionRowsByRight(QSqlDatabase &db, const TableSnapshot &snap)
+    {
+        if (snap.rows.isEmpty())
+            return;
+
+        // Collect unique right_ids from the snapshot
+        QSet<int> rightIds;
+        for (const QVariantMap &row : snap.rows)
+            rightIds.insert(row.value("right_id"_L1).toInt());
+
+        // Delete all existing junction rows for these right_ids
+        QStringList placeholders;
+        placeholders.fill("?"_L1, rightIds.size());
+        const QString deleteSql = "DELETE FROM %1 WHERE right_id IN (%2)"_L1.arg(
+            snap.tableName, placeholders.join(","_L1));
+
+        QSqlQuery dq(db);
+        dq.prepare(deleteSql);
+        for (int id : rightIds)
+            dq.addBindValue(id);
+
+        if (!dq.exec())
+            qCritical() << "SnapshotUtil::restoreJunctionRowsByRight DELETE failed:" << dq.lastError().text();
+
+        // Insert snapshotted rows
+        restoreRows(db, snap);
     }
 
     static QList<int> extractIds(const TableSnapshot &snap)

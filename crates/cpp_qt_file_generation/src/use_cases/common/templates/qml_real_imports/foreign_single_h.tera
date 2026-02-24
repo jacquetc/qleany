@@ -1,10 +1,12 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
 #pragma once
-#include "binder_item/single_binder_item.h"
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_item.h"
 #include <QQmlEngine>
 
-struct ForeignSingleContent
+struct ForeignSingle{{ ent.pascal_name }}
 {
     Q_GADGET
-    QML_FOREIGN(Skribisto::DirectAccess::BinderItem::SingleBinderItem)
-    QML_NAMED_ELEMENT(SingleBinderItem)
+    QML_FOREIGN({{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Single{{ ent.pascal_name }})
+    QML_NAMED_ELEMENT(Single{{ ent.pascal_name }})
 };

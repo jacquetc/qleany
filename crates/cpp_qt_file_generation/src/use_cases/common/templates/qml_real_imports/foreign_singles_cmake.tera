@@ -20,7 +20,7 @@ qt6_add_qml_module(${PLUGIN_NAME}
         # entity list models
 {%- for eid, ent in s.entities %}
     {%- if ent.inner.single_model %}
-        foreign_single_{{ ent.snake_name }}_controller.h
+        foreign_single_{{ ent.snake_name }}.h
     {%- endif %}
 {%- endfor %}
 

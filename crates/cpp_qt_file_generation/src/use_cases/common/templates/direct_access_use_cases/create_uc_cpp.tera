@@ -36,6 +36,9 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
     m_existingChildIds = m_uow->getRelationshipsFromOwner(ownerId);
     if (!m_existingChildIds.isEmpty())
         m_displacedChildrenSnapshot = m_uow->snapshot(m_existingChildIds);
+{%- else %}
+    // Capture owner junction state before create (for undo)
+    m_previousOwnerRelationshipIds = m_uow->getRelationshipsFromOwner(ownerId);
 {%- endif %}
 
     auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
@@ -82,6 +85,9 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
         {
             m_uow->setRelationshipsInOwner({}, m_ownerId);
         }
+{%- else %}
+        // Restore owner junction to pre-create state
+        m_uow->setRelationshipsInOwner(m_previousOwnerRelationshipIds, m_ownerId);
 {%- endif %}
 
         m_uow->commit();
@@ -123,6 +129,20 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
 {%- else %}
         // Restore the entity tree from the snapshot taken during undo
         m_uow->restore(m_oldTreeSnapshot);
+
+        // Rebuild owner junction: previous IDs + created IDs at the correct index
+        auto redoJunction = m_previousOwnerRelationshipIds;
+        const auto createdIds = SCDatabase::SnapshotUtil::extractIds(m_oldTreeSnapshot.tableData.entityRows);
+        if (m_index >= 0 && m_index < redoJunction.size())
+        {
+            for (int i = 0; i < createdIds.size(); ++i)
+                redoJunction.insert(m_index + i, createdIds.at(i));
+        }
+        else
+        {
+            redoJunction.append(createdIds);
+        }
+        m_uow->setRelationshipsInOwner(redoJunction, m_ownerId);
 {%- endif %}
 
         m_uow->commit();

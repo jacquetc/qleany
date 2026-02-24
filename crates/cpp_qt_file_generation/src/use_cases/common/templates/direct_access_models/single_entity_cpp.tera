@@ -29,7 +29,7 @@ void Single{{ ent.pascal_name }}::resolveDependencies()
     // Connect to events
     if (m_eventRegistry)
     {
-        auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}();
+        auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}Events();
         if ({{ ent.camel_name }}Events)
         {
             connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this,
@@ -50,7 +50,7 @@ void Single{{ ent.pascal_name }}::setUndoRedoStackId(int undoRedoStackId)
         return;
 
     m_undoRedoStackId = undoRedoStackId;
-    emit undoRedoStackIdChanged();
+    Q_EMIT undoRedoStackIdChanged();
 }
 
 void Single{{ ent.pascal_name }}::onUpdatedEvent(const QList<int> &ids)
@@ -101,7 +101,7 @@ void Single{{ ent.pascal_name }}::setId(int id)
 {
     return m_{{ f.camel_name }};
 }
-void Single{{ ent.pascal_name }}::setCreatedAt(const {{ f.cpp_qt_type }} &{{ f.camel_name }})
+void Single{{ ent.pascal_name }}::set{{ f.pascal_name }}(const {{ f.cpp_qt_type }} &{{ f.camel_name }})
 {
     if (m_{{ f.camel_name }} != {{ f.camel_name }})
     {

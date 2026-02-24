@@ -1,10 +1,40 @@
 {%- set e = s.file.inner.entity %}
 {%- set ent = s.entities[e] %}
+{#- Determine which headers are actually needed based on field types -#}
+{%- set needs_qdatetime = false %}
+{%- set needs_qstring = false %}
+{%- set needs_quuid = false %}
+{%- set needs_qlist = false %}
+{%- set needs_optional = false %}
+{%- for f in ent.fields %}
+  {%- if f.inner.field_type == "DateTime" %}{% set_global needs_qdatetime = true %}{% endif %}
+  {%- if f.inner.field_type == "String" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if f.inner.field_type == "Uuid" %}{% set_global needs_quuid = true %}{% endif %}
+  {%- if f.inner.field_type == "Enum" %}{% set_global needs_qstring = true %}{% endif %}
+  {%- if f.is_list %}{% set_global needs_qlist = true %}{% endif %}
+  {%- if f.is_optional %}{% set_global needs_optional = true %}{% endif %}
+{%- endfor %}
 #pragma once
-#include "{{ ent.snake_name }}_controller.h"
+#include "{{ ent.snake_name }}/{{ ent.snake_name }}_controller.h"
 #include "direct_access/event_registry.h"
 
 #include <QObject>
+{% if needs_qdatetime -%}
+#include <QDateTime>
+{% endif -%}
+{% if needs_qlist -%}
+#include <QList>
+{% endif -%}
+{% if needs_qstring -%}
+#include <QString>
+{% endif -%}
+{% if needs_quuid -%}
+#include <QUuid>
+{% endif -%}
+#include <compare>
+{% if needs_optional -%}
+#include <optional>
+{% endif -%}
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
@@ -19,7 +49,7 @@ class Single{{ ent.pascal_name }} : public QObject
     {%- endfor %}
 
   public:
-    Single{{ ent.pascal_name }}(QObject *parent = nullptr, int undoRedoStackId = 0);
+    explicit Single{{ ent.pascal_name }}(QObject *parent = nullptr, int undoRedoStackId = 0);
 
     int id() const;
     void setId(int id);

@@ -1,5 +1,6 @@
 #include "one_to_one.h"
 #include "junction_cache.h"
+#include <QSet>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlDriver>
@@ -107,6 +108,63 @@ bool OneToOne::removeWithLeftId(QSqlDatabase &db, int leftId, const QString &jun
 {
     QHash<int, bool> result = removeWithLeftIdMany(db, {leftId}, junctionTableName);
     return result.value(leftId, false);
+}
+
+QHash<int, bool> OneToOne::removeWithRightIdsMany(QSqlDatabase &db, const QList<int> &rightIds,
+                                                   const QString &junctionTableName)
+{
+    QHash<int, bool> result;
+
+    if (rightIds.isEmpty())
+    {
+        return result;
+    }
+
+    // Invalidate cache for affected left IDs
+    QHash<int, int> leftIdsMap = getLeftIdMany(db, junctionTableName, rightIds);
+    QSet<int> uniqueLeftIds;
+    for (int leftId : leftIdsMap.values())
+    {
+        uniqueLeftIds.insert(leftId);
+    }
+    for (int leftId : uniqueLeftIds)
+    {
+        JunctionCache::instance().invalidateLeftId(junctionTableName, leftId);
+    }
+
+    // Build dynamic IN clause for efficient bulk delete
+    QStringList placeholders;
+    placeholders.fill("?"_L1, rightIds.size());
+    const QString sql =
+        QStringLiteral("DELETE FROM %1 WHERE right_id IN (%2)").arg(junctionTableName, placeholders.join(","_L1));
+
+    QSqlQuery query(db);
+    query.prepare(sql);
+    for (int rightId : rightIds)
+    {
+        query.addBindValue(rightId);
+    }
+
+    bool success = query.exec();
+
+    if (!success)
+    {
+        qCritical() << "Failed to execute removeWithRightIdsMany query:" << query.lastError().text();
+    }
+
+    // Initialize all results based on success
+    for (int rightId : rightIds)
+    {
+        result[rightId] = success;
+    }
+
+    return result;
+}
+
+bool OneToOne::removeWithRightIds(QSqlDatabase &db, int rightId, const QString &junctionTableName)
+{
+    QHash<int, bool> result = removeWithRightIdsMany(db, {rightId}, junctionTableName);
+    return result.value(rightId, false);
 }
 
 QHash<int, QList<int>> OneToOne::upsertRightIdMany(QSqlDatabase &db, const QHash<int, int> &leftIdToRightId,

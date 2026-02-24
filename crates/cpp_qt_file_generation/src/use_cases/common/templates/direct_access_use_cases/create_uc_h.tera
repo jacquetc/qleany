@@ -36,6 +36,8 @@ class Create{{ ent.pascal_name }}UseCase
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
     QList<int> m_existingChildIds;
     SCDatabase::EntityTreeSnapshot m_displacedChildrenSnapshot;
+{%- else %}
+    QList<int> m_previousOwnerRelationshipIds;
 {%- endif %}
     bool m_hasExecuted = false;
 };
