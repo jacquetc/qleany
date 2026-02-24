@@ -1,6 +1,6 @@
 # Qleany Quick Start - C++/Qt
 
-This guide walks you through creating a complete desktop application for a car dealership using Qleany. By the end, you'll have generated architecture scaffolding with entities, repositories, controllers, and undo/redo infrastructure.
+This guide walks you through creating a complete desktop application for a car dealership using Qleany. By the end, you'll have generated architecture with entities, repositories, controllers, and undo/redo infrastructure.
 
 For Rust, see [Qleany Quick Start - Rust](quick-start-rust.md). The differences are minor.
 
@@ -302,7 +302,7 @@ Click **Save Manifest** in the header (or Ctrl+S).
 
 I mean it. A fresher mind sees things more clearly. You already saved a lot of time by using Qleany instead of writing all the boilerplate yourself. Don't rush the design phase, it's where you get the most value from Qleany.
 
-Designing your domain and use cases is the most important part. The generated code is just scaffolding. If the model is wrong, the code won't help much. Take your time to get it right before generating.
+Designing your domain and use cases is the most important part. The generated code is a complete architecture, not mere scaffolding. If the model is wrong, the code won't help much. Take your time to get it right before generating.
 
 Yes, you can change the manifest and regenerate later. But it's better to get a solid design upfront. The more you change the model after generating, the more work you create for yourself. It's not a problem to evolve your design, but try to avoid major changes that require rewriting large parts of the generated code.
 
@@ -521,6 +521,7 @@ After a generation, your project contains:
 - DTOs for data transfer
 - Repository pattern for database access
 - Undo/redo infrastructure for undoable operations
+- Tests suites for the database and undo redo infrastructure
 - Macros for unit of work
 - Event system for reactive updates
 - Basic CLI (if selected during project setup)

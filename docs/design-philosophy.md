@@ -235,7 +235,7 @@ If the application needs to interact with an external API or a remote database, 
 Need to check any update from this API? Create a dedicated use case to fetch the data from the API and update the internal database and/or act on the answer. This use case would be called periodically to check for updates. Typically, the UI layer would handle the timed loop that calls this use case every few seconds or minutes.
 
 Example: a calendar application that syncs with an external calendar API.
-- the RemoteWhatever service is instantiated in the UI layer (or just before calling the use case if it's stateless)
+- the RemoteWhatever service is instantiated in the UI layer (typically instantiated in main.cpp and stored inside ServiceLocator or directly instantiated in the controller, just before calling the use case if it's stateless)
 - the UI calls the use case every few seconds to check for updates
 - the use case calls the service from IRemoteWhatever to fetch the data from the API
 - the service updates the local database with the new data

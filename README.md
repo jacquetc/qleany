@@ -5,20 +5,28 @@
 
 # Qleany
 
-**Architecture scaffolding generator for C++20/Qt6 or Rust 2024 applications — desktop, mobile, and CLI.**
+**Define your entities in YAML. Get a complete, tested architecture in C++20/Qt6 or Rust — controllers, repositories, undo/redo, reactive models, and ready-to-compile UIs.**
 
 > **No framework. No runtime. No Qleany dependencies in your code.**
-> 
+>
 > The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on.
 
-Building an app in Qt or Rust? Not sure how to structure it beyond "put code in files"?
-Qleany generates a complete architecture: controllers, repositories, DTOs, undo/redo, reactive models, GUI skeletons — organized by feature, ready to extend.
+Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application. Rust's GUI ecosystem is growing fast, but there's nothing to help you structure what sits behind the UI. Qleany fills that gap. Write a YAML manifest describing your entities, relationships, and features. Qleany generates the rest: the database layer, the repository infrastructure, the event system, the controller wiring, and — if you need it — a multi-stack undo/redo system with cascade snapshot/restore for entity trees. For C++/Qt, it also generates reactive QML models that update themselves, and JavaScript mock controllers so your UI developer can work without waiting for the backend.
 
-Define your entities and relationships in a YAML manifest or in its dedicated UI tool. Qleany generates several hundred repetitive files — saving you conservatively several days of tedious, error-prone work. Get a working structure that scales from a simple CLI tool to a full-featured application with desktop and mobile variants.
+For a 13-entity project, that's roughly 600 files in C++/Qt or 300 in Rust, all compiling, all internally consistent, with a generated test suite that validates the infrastructure before you write a single line of business logic. The generated code is deliberately straightforward — readable and modifiable by a developer with a few years of experience, not a showcase of advanced language features.
 
-Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent scaffolding across Rust and C++/Qt with baking-in (empty) UIs. The generated code aims to be readable, idiomatic, and easy to modify, more than sophisticated and abstract.
+Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent architecture across Rust and C++/Qt with baked-in (empty) UIs. Qleany's own Slint-based tool is built using the same patterns it generates.
 
-Qleany's own Slint-based tool is built using the same patterns it generates.
+## Key Features
+
+- **Complete CRUD infrastructure** — Controllers, DTOs, use cases, repositories per entity
+- **Undo/redo system** (optional) — Command-based with multi-stack scoping, composite grouping, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust; cascade snapshot/restore for entity trees
+- **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
+- **Reactive QML models** — Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
+- **QML mocks** — JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
+- **Relationship management** — Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
+- **Event system** — Thread-safe, decoupled communication between features
+- **Generated test suite** — Junction table operations, undo/redo behavior, and async integration tests
 
 ## Documentation
 
@@ -39,16 +47,6 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 ![Screenshot](docs/screenshot_1.png)
 
-## Key Features
-
-- **Complete CRUD scaffolding** — Controllers, DTOs, use cases, repositories per entity
-- **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, or combinations thereof
-- **Undo/redo system** (optional) — Command-based with grouping, scopes, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust
-- **Reactive QML models** — Auto-updating list models and single-entity wrappers (C++/Qt)
-- **QML mocks** — JavaScript stubs for UI development without backend (C++/Qt)
-- **Relationship management** — Junction tables with ordering, caching, cascade deletion
-- **Event system** — Decoupled communication between features
-
 ---
 
 ## Is Qleany the Right Fit?
@@ -65,7 +63,7 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 **Solo developers or small teams** without established architectural patterns. Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application (or I couldn't find it). Qleany gives you that structure immediately, with patterns validated through real-world use in Skribisto.
 
-**Projects that will grow incrementally** — the manifest-driven approach means you can define a new entity, regenerate the scaffolding, and immediately have a working controller, repository, DTOs, and use cases. The consistency this brings across your codebase is hard to achieve manually.
+**Projects that will grow incrementally** — the manifest-driven approach means you can define a new entity, regenerate the architecture, and immediately have a working controller, repository, DTOs, and use cases. The consistency this brings across your codebase is hard to achieve manually.
 
 ### When to Reconsider
 
@@ -83,7 +81,7 @@ You can also have a Rust backend and a C++/Qt frontend in the same codebase, usi
 
 ### The Practical Test
 
-If your project matches the profile, start by **generating the scaffolding for a small subset of your entities** and spend time reading through the generated code. Understand how the controllers wire to use cases, how the event system propagates changes, how the undo commands work. This investment of a few hours will tell you whether the patterns feel natural to your way of thinking.
+If your project matches the profile, start by **generating the architecture for a small subset of your entities** and spend time reading through the generated code. Understand how the controllers wire to use cases, how the event system propagates changes, how the undo commands work. This investment of a few hours will tell you whether the patterns feel natural to your way of thinking.
 
 The "generate and disappear" philosophy means you're not locked in. If you decide halfway through that you'd prefer a different approach, the generated code is yours to modify or replace.
 

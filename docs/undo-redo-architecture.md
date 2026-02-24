@@ -27,7 +27,9 @@ Think about interactions from the user's perspective: they expect undo and redo 
 
 Instead, each context should have its own undo-redo stack. The question is how to define "context." Qleany supports two approaches, described below, suited to different application types. Both use the same generated infrastructure; they differ only in when and where stacks are created and destroyed.
 
-For destructive operations such as deleting entities, Qleany supports cascading deletions but not their undoing. If you delete a parent entity, all its strongly-owned children are also deleted. At first, I used a database savepoint to be restored on undo, but the savepoint impacted non-undoable data as well, leading to confusion and unexpected behavior. As a consequence, there is no undo for entity deletions through the stack. Instead, use soft-deletion with timed recovery, described in the Soft Deletion section below.
+For destructive operations such as deleting entities, Qleany supports cascading deletions and their undoing. If you delete a parent entity, all its strongly-owned children are also deleted, and you can undo that. At first, I used a database savepoint to be restored on undo, but the savepoint impacted non-undoable data as well, leading to confusion and unexpected behavior. Now, the `create`, `createOrphans`, `remove` and `setRelationshipsIds` commands use cascading snapshots of the individual tables to restore the database state before the operation.
+
+Yet this behavior may be not what the user expects. Instead, you can use soft-deletion with timed recovery, described in the Soft Deletion section below.
 
 ## Two Approaches to Undo-Redo
 
@@ -297,6 +299,38 @@ With Approach A, each document gets its own stack. Ctrl+Z in Document A's editor
 
 With Approach B, the multi-document structure is less relevant since each panel manages its own immediate-undo stack regardless of which document it edits.
 
+Here is the section, written to sit between Configuration 3 and Cross-Trunk References:
+
+---
+
+## Breaking the Mold
+
+The three configurations above are the patterns I recommend and use myself. They are not the only ones the infrastructure supports.
+
+Qleany's generated code does not enforce a single Root entity. It does not enforce tree-structured ownership at all. The repository layer provides `createOrphans` alongside `create`. The undo/redo system keys its stacks by integer ID, not by position in a tree. The snapshot/restore system captures whatever entity graph it finds. Nothing checks that your entities form a coherent tree at runtime.
+
+This means you can do things the configurations above don't show:
+
+**Multiple independent roots.** You can create several root-like entities, each owning a separate subtree with its own undo stack. Think of a multi-workspace IDE where each workspace is truly independent — its own entities, its own undo history, no shared state. This works. I haven't needed it in Skribisto or Qleany, but the infrastructure won't stop you.
+
+**Flat orphan entities.** You can skip the tree model entirely and use `createOrphans` for everything, managing relationships through weak references. For a simple utility with a handful of entities and no undo/redo, this is less ceremony than setting up a Root → Workspace hierarchy you don't need.
+
+**Hybrid approaches.** A tree for your main domain model, orphan entities for transient data that doesn't belong in the tree. The infrastructure doesn't care.
+
+So why do I recommend the tree model so insistently?
+
+Because the tree model gives you things for free that you must handle manually without it. Cascade deletion follows ownership: delete a parent, all strongly-owned children are deleted. Snapshot/restore captures the full subtree: undo a deletion, everything comes back including nested children and their junction relationships. Undo stack scoping maps naturally to tree branches: one stack per document, one stack per workspace.
+
+Without the tree, you take on these responsibilities yourself. Orphan entities have no owner to cascade from, you must track and delete them explicitly. A parent's snapshot does not capture entities outside a tree, you must manage their lifecycle in your use case logic. Undo stack assignment becomes your problem rather than a natural consequence of the data structure.
+
+None of this is impossible. It's just work that the tree model handles for you.
+
+> If you deviate from the prescribed configurations, the undo/redo rules from the previous section still apply. A non-undoable entity should not be strongly owned by an undoable entity, regardless of your tree topology. The infrastructure won't warn you. The undo stacks will just become inconsistent, and you'll spend an afternoon figuring out why.
+
+My advice: start with the tree model. If you later find it too rigid for a specific part of your application, relax it locally — use orphans for that part, keep the tree for the rest. Don't start with a flat model and try to add structure later. It's easier to remove structure than to add it.
+
+---
+
 ## Cross-Trunk References
 
 Non-undoable entities can hold weak references (many_to_one, many_to_many) to undoable entities. This is useful for search results, recent items, or bookmarks that point to user data without owning it.
@@ -315,7 +349,7 @@ The reverse is also true: undoable entities can reference non-undoable entities,
 
 ## Soft Deletion
 
-Deletions are handled outside the undo stack using soft-deletion with timed hard-deletion. This applies to both approaches but is essential for Approach B where the stack cannot hold complex cascade-reversal logic.
+Definition: deletions are handled outside the undo stack using soft-deletion with timed hard-deletion.
 
 To implement soft deletion, add an `activated` boolean field to your entities. When "deleting" an entity, set this flag to false instead of removing it from the database. Your UI filters out entities where `activated` is false, effectively hiding them from the user.
 

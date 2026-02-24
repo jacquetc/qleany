@@ -341,6 +341,12 @@ This may be easier to understand: all relationships are defined from the perspec
 - For `one_to_many` and `ordered_one_to_many`, the entity with the field is the "one" side, the referenced entity is the "many" side. `Car.brand: Vec<EntityId>`
 - For `many_to_many`, both sides are "many". `Car.brand: Vec<EntityId>`
 
+**Why this design?** The manifest describes *meaning*: ownership, cardinality, ordering, whether deletion cascades. The generated code handles *implementation*: junction tables, column schemas, query patterns, cache invalidation. You think about your domain; the generator thinks about the database. These are deliberately separated.
+
+The cost is storage overhead. A `one_to_one` that could be a single foreign key column gets its own junction table instead. For a desktop or mobile application with hundreds or thousands of entities, you will never notice. For a web backend serving millions of rows, you would care, but that's not what Qleany targets.
+
+The payoff is uniformity. Every relationship, regardless of type, goes through the same junction table infrastructure. This means one code path for snapshot/restore (which is what makes undo/redo work on entity trees), one code path for bidirectional navigation (both sides can always see each other), and one code path for the generator to produce. No special cases, no "this relationship is simple enough for a foreign key but that one needs a junction table." The complexity stays in the infrastructure, not in your head.
+
 Yes, database engineers might cringe at this, but this greatly simplifies the code generation and the overall mental model when designing your entities. They can cringe more when I say there is no notion of foreign keys in Qleany internal database.
 
 **When to use each:**
