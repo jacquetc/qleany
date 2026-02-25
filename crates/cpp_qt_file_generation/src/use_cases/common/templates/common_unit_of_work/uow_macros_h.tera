@@ -121,7 +121,7 @@
   public:                                                                                                             \
     [[nodiscard]] QList<SCE::Name> create##Name(const QList<SCE::Name> &items, int ownerId, int index) override                               \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->create(items, ownerId, index);                                                                                   \
     }
 
@@ -129,7 +129,7 @@
   public:                                                                                                             \
   [[nodiscard]] QList<SCE::Name> createOrphan##Name(const QList<SCE::Name> &items) override                           \
   {                                                                                                                   \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->createOrphans(items);                                                                            \
   }
 
@@ -137,7 +137,7 @@
   public:                                                                                                             \
     [[nodiscard]] QList<int> get##Name##RelationshipsFromOwner(int ownerId) override                                  \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipsFromOwner(ownerId);                                                              \
     }
 
@@ -145,7 +145,7 @@
   public:                                                                                                             \
   void set##Name##RelationshipsInOwner(const QList<int> &itemIds, int ownerId) override                               \
   {                                                                                                                   \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         repo->setRelationshipsInOwner(itemIds, ownerId);                                                              \
   }
 
@@ -153,7 +153,7 @@
   public:                                                                                                             \
     [[nodiscard]] QList<SCE::Name> get##Name(const QList<int> &ids) override                                          \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->get(ids);                                                                                        \
     }
 
@@ -161,7 +161,7 @@
   public:                                                                                                             \
     [[nodiscard]] QList<SCE::Name> update##Name(const QList<SCE::Name> &items) override                               \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->update(items);                                                                                   \
     }
 
@@ -169,7 +169,7 @@
   public:                                                                                                             \
     [[nodiscard]] QList<int> remove##Name(const QList<int> &ids) override                                             \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->remove(ids);                                                                                     \
     }
 
@@ -177,12 +177,12 @@
   public:                                                                                                             \
     SCDatabase::EntityTreeSnapshot snapshot##Name(const QList<int> &ids) override                                     \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->snapshot(ids);                                                                                   \
     }                                                                                                                 \
     void restore##Name(const SCDatabase::EntityTreeSnapshot &snap) override                                           \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         repo->restore(snap);                                                                                          \
     }
 
@@ -190,12 +190,12 @@
   public:                                                                                                             \
     SCDatabase::EntityTreeSnapshot snapshot##Name##Related(int id, RelFieldEnum rel) override                         \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->snapshotRelated(id, rel);                                                                        \
     }                                                                                                                 \
     void restore##Name##Related(RelFieldEnum rel, const SCDatabase::EntityTreeSnapshot &snap) override                \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         repo->restoreRelated(rel, snap);                                                                              \
     }
 
@@ -224,29 +224,29 @@
   public:                                                                                                             \
     [[nodiscard]] QList<int> get##Name##Relationship(int id, RelFieldEnum rel) override                               \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIds(id, rel);                                                                     \
     }                                                                                                                 \
     void set##Name##Relationship(int id, RelFieldEnum rel, const QList<int> &relatedIds) override                     \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         repo->setRelationshipIds(id, rel, relatedIds);                                                                \
     }                                                                                                                 \
     [[nodiscard]] QHash<int, QList<int>> get##Name##RelationshipMany(const QList<int> &ids,                           \
                                                                       RelFieldEnum rel) override                      \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIdsMany(ids, rel);                                                                \
     }                                                                                                                 \
     [[nodiscard]] int get##Name##RelationshipCount(int id, RelFieldEnum rel) override                                 \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIdsCount(id, rel);                                                                \
     }                                                                                                                 \
     [[nodiscard]] QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                                 \
                                                              int offset, int limit) override                          \
     {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry);                \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
     }                                                                                                                 \
     UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)

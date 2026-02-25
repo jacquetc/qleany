@@ -33,8 +33,7 @@ set(SRCS
         database/snapshot_types.h
         service_locator.cpp
         service_locator.h
-
-
+        signal_buffer.h
 )
 
 set(UNDO_REDO_LIST
@@ -61,8 +60,13 @@ set(UNIT_OF_WORK_LIST
         unit_of_work/uow_ops.h
 )
 
+set(LONG_OPERATION_LIST
+        long_operation/i_long_operation.h
+        long_operation/long_operation_manager.h
+        long_operation/long_operation_manager.cpp
+)
 
-qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${UNDO_REDO_LIST} ${UNIT_OF_WORK_LIST} )
+qt_add_library(${LIBRARY_NAME} ${LIB_TYPE} ${SRCS} ${UNDO_REDO_LIST} ${UNIT_OF_WORK_LIST} ${LONG_OPERATION_LIST} )
 
 add_subdirectory(entities)
 add_subdirectory(direct_access)

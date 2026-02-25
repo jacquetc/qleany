@@ -1,5 +1,11 @@
 {%- set f_id = s.file.inner.feature %}
 {%- set feat = s.features[f_id] %}
+{%- set has_long_op = false %}
+{%- for uc_id, uc in feat.use_cases %}
+{%- if uc.inner.long_operation %}
+{%- set_global has_long_op = true %}
+{%- endif %}
+{%- endfor %}
 #include "{{ feat.snake_name }}_controller.h"
 #include "service_locator.h"
 #include "controller_command_helpers.h"
@@ -44,6 +50,9 @@ void {{ feat.pascal_name }}Controller::resolveDependencies()
     m_eventRegistry = locator->eventRegistry();
     m_undoRedoSystem = locator->undoRedoSystem();
     m_featureEventRegistry = locator->featureEventRegistry();
+{%- if has_long_op %}
+    m_longOperationManager = locator->longOperationManager();
+{%- endif %}
 }
 
 {%- for uc_id, uc in feat.use_cases %}
@@ -53,7 +62,9 @@ void {{ feat.pascal_name }}Controller::resolveDependencies()
   {%- else %}
        {% set dto_in_arg_str = "" %}
   {%- endif %}
-  {%- if uc.dto_out %}
+  {%- if uc.inner.long_operation %}
+       {% set dto_out_str = "QString" %}
+  {%- elif uc.dto_out %}
        {% set dto_out_str = uc.dto_out.pascal_name %}
   {%- else %}
        {% set dto_out_str = "bool" %}
@@ -63,7 +74,14 @@ void {{ feat.pascal_name }}Controller::resolveDependencies()
 QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_name }}({{ dto_in_arg_str }})
 {
 
-    {%- if uc.inner.read_only %}
+    {%- if uc.inner.long_operation %}
+
+    // Long operation: run on background thread with progress/cancellation support
+    auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
+    auto operation = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow){% if uc.dto_in %}, {{ uc.dto_in.camel_name }}{% endif %});
+    co_return m_longOperationManager->startOperation(std::move(operation));
+
+    {%- elif uc.inner.read_only %}
 
     co_return co_await Common::ControllerHelpers::executeReadQuery<{{ dto_out_str }}>(
         m_undoRedoSystem,

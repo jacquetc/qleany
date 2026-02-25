@@ -1,10 +1,16 @@
+{%- set qml_enabled = false %}
+{%- if s.ui.inner.cpp_qt_qtquick %}
+{%- set qml_enabled = true %}
+{%- endif %}
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 
 #pragma once
 
 #include <QCoreApplication>
+{%- if qml_enabled %}
 #include <QQmlApplicationEngine>
+{%- endif %}
 
 namespace {{ s.global.application_pascal_name }}::Common::Frontend
 {
@@ -27,11 +33,15 @@ struct BootstrapResult
 /// When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined this is a no-op that returns success.
 auto bootstrapBackend(QObject *parent) -> BootstrapResult;
 
+{%- if qml_enabled %}
+
 /// Register QCoro QML types. Must be called before the QML engine loads
 /// any component that uses QCoro tasks.
 ///
 /// When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined this is a no-op.
 void registerQmlTypes();
+
+{%- endif %}
 
 /// Connect cleanup logic to QCoreApplication::aboutToQuit so that
 /// async operations (undo-redo, database) are shut down gracefully
@@ -40,10 +50,14 @@ void registerQmlTypes();
 /// When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined this is a no-op.
 void connectCleanupHandler(QCoreApplication &app);
 
+{%- if qml_enabled %}
+
 /// Configure the QML engine with common import paths.
 /// Adds the application-dir-relative "qml" path and ":/" for
 /// resource-based imports. When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined,
 /// also adds the mock import path from the QML_IMPORT_PATH define.
 void configureEngine(QQmlApplicationEngine &engine);
+
+{%- endif %}
 
 } // namespace{{ s.global.application_pascal_name }}::Common::Frontend

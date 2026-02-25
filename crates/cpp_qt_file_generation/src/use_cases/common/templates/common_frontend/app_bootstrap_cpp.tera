@@ -1,3 +1,8 @@
+{%- set qml_enabled = false %}
+{%- if s.ui.inner.cpp_qt_qtquick %}
+{%- set qml_enabled = true %}
+{%- endif %}
+
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 
@@ -7,6 +12,7 @@
 #include "database/db_context.h"
 #include "direct_access/event_registry.h"
 #include "service_locator.h"
+#include "long_operation/long_operation_manager.h"
 #include <QCoroQml>
 #include <QCoroQmlTask>
 #endif
@@ -35,16 +41,16 @@ auto bootstrapBackend(QObject *parent) -> BootstrapResult
     auto *fev = new Features::FeatureEventRegistry(parent);
 
     // Undo-redo system
-    // Scope configuration could be made data-driven via the manifest in the future:
-    //   UndoRedo::Scopes scopes(QStringList() << "root"_L1 << "work"_L1 << ...);
     auto *urs = new UndoRedo::UndoRedoSystem(parent);
-
+    // Long operation manager
+    auto *lom = new LongOperation::LongOperationManager(parent);
     // Wire everything through the service locator
     auto *locator = new ServiceLocator(parent);
     locator->setDbContext(db);
     locator->setEventRegistry(ev);
     locator->setFeatureEventRegistry(fev);
     locator->setUndoRedoSystem(urs);
+    locator->setLongOperationManager(lom);
     ServiceLocator::setInstance(locator);
 
     qDebug() << "Backend bootstrap complete";
@@ -81,6 +87,8 @@ void connectCleanupHandler(QCoreApplication &app)
 #endif
 }
 
+{%- if qml_enabled %}
+
 void configureEngine(QQmlApplicationEngine &engine)
 {
     engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml"_L1);
@@ -91,5 +99,6 @@ void configureEngine(QQmlApplicationEngine &engine)
     qDebug() << "Using mock imports from:" << QML_IMPORT_PATH;
 #endif
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::Common::Frontend

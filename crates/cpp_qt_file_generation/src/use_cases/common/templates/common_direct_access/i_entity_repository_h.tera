@@ -10,6 +10,7 @@
 
 namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}
 {
+Q_NAMESPACE
 
 // Relationships for {{ ent.pascal_name }} entity derived from its relational fields
 enum class {{ ent.pascal_name }}RelationshipField
@@ -18,6 +19,7 @@ enum class {{ ent.pascal_name }}RelationshipField
     {{ r.field_pascal_name }}{% if not loop.last %},{% endif %}
     {%- endfor %}
 };
+Q_ENUM_NS({{ ent.pascal_name }}RelationshipField)
 
 class I{{ ent.pascal_name }}Repository
 {

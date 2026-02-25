@@ -63,7 +63,9 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
   private Q_SLOTS:
     void on{{ target_ent.pascal_name }}Updated(const QList<int> &ids);
     void on{{ ent.pascal_name }}Updated(const QList<int> &ids);
-
+    void on{{ ent.pascal_name }}RelationshipChanged(int {{ ent.camel_name }}Id,
+                                    Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationshipField,
+                                    const QList<int> &relatedIds);
   private:
     void resolveDependencies();
     void refreshData();

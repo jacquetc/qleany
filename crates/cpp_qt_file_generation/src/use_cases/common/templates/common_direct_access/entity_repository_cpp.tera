@@ -24,8 +24,8 @@ static QList<int> extractIds(const QList<SCE::{{ ent.pascal_name }}> &items)
 }
 
 SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::{{ ent.pascal_name }}Repository(std::unique_ptr<I{{ ent.pascal_name }}Table> table, Database::DbSubContext &dbSubContext,
-                                        QPointer<EventRegistry> eventRegistry)
-    : m_table(std::move(table)), m_eventRegistry(std::move(eventRegistry)), m_dbSubContext(dbSubContext)
+                                        QPointer<EventRegistry> eventRegistry, QPointer<Common::SignalBuffer> signalBuffer)
+    : m_table(std::move(table)), m_eventRegistry(std::move(eventRegistry)), m_signalBuffer(std::move(signalBuffer)), m_dbSubContext(dbSubContext)
 {
     m_events = m_eventRegistry ? m_eventRegistry->{{ ent.camel_name }}Events() : nullptr;
 }
@@ -84,14 +84,14 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
 QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelationshipsFromOwner(int ownerId) const
 {
     // get owner repository
-    auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+    auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
     return repo->getRelationshipIds(ownerId, {{ ent.owner_pascal_name }}::{{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }});
 }
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipsInOwner(const QList<int> &itemIds, int ownerId)
 {
    // get owner repository
-   auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+   auto repo = RepositoryFactory::create{{ ent.owner_pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
    repo->setRelationshipIds(ownerId, {{ ent.owner_pascal_name }}::{{ ent.owner_pascal_name }}RelationshipField::{{ ent.owner_relationship_field_pascal_name }}, itemIds);
 }
 
@@ -135,7 +135,7 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::remove(con
 
         if (!{{ s.entities[r.inner.right_entity].camel_name }}Ids.isEmpty())
         {
-            auto repo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            auto repo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
             repo->remove({{ s.entities[r.inner.right_entity].camel_name }}Ids.values());
         }
     }
@@ -168,7 +168,7 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipI
         {% for rid, r in ent.forward_relationships %}
         {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
         {
-            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
             childRepo->remove(displacedIds);
         }
         {% endfor %}
@@ -210,7 +210,7 @@ SCDatabase::EntityTreeSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Re
     {% for rid, r in ent.forward_relationships %}
     {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
     {
-        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
         return childRepo->snapshot(relatedIds);
     }
     {% endfor %}
@@ -226,7 +226,7 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::restoreRelated({
     {% for rid, r in ent.forward_relationships %}
     {% if loop.first %}if{% else %}else if{% endif %} (relationship == {{ ent.pascal_name }}RelationshipField::{{ r.field_pascal_name }})
     {
-        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+        auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
         childRepo->restore(snap);
     }
     {% endfor %}
@@ -245,7 +245,7 @@ SCDatabase::EntityTreeSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Re
         const auto childIds = SCDatabase::SnapshotUtil::extractRightIds(snap.tableData.forwardJunctions.at({{ loop.index0 }}));
         if (!childIds.isEmpty())
         {
-            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
             snap.children.append(childRepo->snapshot(childIds));
         }
     }
@@ -263,7 +263,7 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::restore(const SC
         {% for rid, r in ent.forward_relationships %}
         {% if loop.first %}if{% else %}else if{% endif %} (childTable == QLatin1StringView("{{ s.entities[r.inner.right_entity].snake_name }}"))
         {
-            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+            auto childRepo = RepositoryFactory::create{{ s.entities[r.inner.right_entity].pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
             childRepo->restore(childSnap);
         }
         {% endfor %}
@@ -292,23 +292,44 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::restore(const SC
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitCreated(const QList<int> &ids) const
 {
-    if (!m_events || ids.isEmpty())
+    if (ids.isEmpty())
         return;
-    QMetaObject::invokeMethod(m_events, "publishCreated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    if (m_signalBuffer) {
+        m_signalBuffer->push([events = m_events, ids]() {
+            if (events)
+                QMetaObject::invokeMethod(events, "publishCreated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+        });
+    } else if (m_events) {
+        QMetaObject::invokeMethod(m_events, "publishCreated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    }
 }
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitUpdated(const QList<int> &ids) const
 {
-    if (!m_events || ids.isEmpty())
+    if (ids.isEmpty())
         return;
-    QMetaObject::invokeMethod(m_events, "publishUpdated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    if (m_signalBuffer) {
+        m_signalBuffer->push([events = m_events, ids]() {
+            if (events)
+                QMetaObject::invokeMethod(events, "publishUpdated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+        });
+    } else if (m_events) {
+        QMetaObject::invokeMethod(m_events, "publishUpdated", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    }
 }
 
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitRemoved(const QList<int> &ids) const
 {
-    if (!m_events || ids.isEmpty())
+    if (ids.isEmpty())
         return;
-    QMetaObject::invokeMethod(m_events, "publishRemoved", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    if (m_signalBuffer) {
+        m_signalBuffer->push([events = m_events, ids]() {
+            if (events)
+                QMetaObject::invokeMethod(events, "publishRemoved", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+        });
+    } else if (m_events) {
+        QMetaObject::invokeMethod(m_events, "publishRemoved", Qt::QueuedConnection, Q_ARG(QList<int>, ids));
+    }
 }
 
 {%- if ent.forward_relationships %}
@@ -316,10 +337,16 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitRemoved(cons
 void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::emitRelationshipChanged(const int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField rel,
                                                       const QList<int> &relatedIds) const
 {
-    if (!m_events)
-        return;
-    QMetaObject::invokeMethod(m_events, "publishRelationshipChanged", Qt::QueuedConnection, Q_ARG(int, {{ ent.camel_name }}Id),
-                              Q_ARG({{ ent.pascal_name }}RelationshipField, rel), Q_ARG(QList<int>, relatedIds));
+    if (m_signalBuffer) {
+        m_signalBuffer->push([events = m_events, {{ ent.camel_name }}Id, rel, relatedIds]() {
+            if (events)
+                QMetaObject::invokeMethod(events, "publishRelationshipChanged", Qt::QueuedConnection, Q_ARG(int, {{ ent.camel_name }}Id),
+                                          Q_ARG({{ ent.pascal_name }}RelationshipField, rel), Q_ARG(QList<int>, relatedIds));
+        });
+    } else if (m_events) {
+        QMetaObject::invokeMethod(m_events, "publishRelationshipChanged", Qt::QueuedConnection, Q_ARG(int, {{ ent.camel_name }}Id),
+                                  Q_ARG({{ ent.pascal_name }}RelationshipField, rel), Q_ARG(QList<int>, relatedIds));
+    }
 }
 
 {%- endif %}

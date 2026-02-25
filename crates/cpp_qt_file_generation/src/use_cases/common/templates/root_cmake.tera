@@ -87,6 +87,7 @@ if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
 {%- endif %}
 endif (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
 
+add_subdirectory({{ s.global.prefix }}/common/frontend)
 
 {%- if s.ui.inner.cpp_qt_qtquick %}
 add_subdirectory({{ s.global.prefix }}/qtquick_app)

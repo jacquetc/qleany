@@ -46,7 +46,7 @@ class {{ ent.pascal_name }}UnitOfWork final
     /// Called by CRTP base to get a repository for {{ ent.pascal_name }}.
     [[nodiscard]] auto makeRepository()
     {
-        return SCD::RepositoryFactory::create{{ ent.pascal_name }}Repository(m_dbSubContext, m_eventRegistry);
+        return SCD::RepositoryFactory::create{{ ent.pascal_name }}Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);
     }
 };
 

@@ -21,6 +21,7 @@ target_link_libraries(
 target_link_libraries(${APP_NAME} PRIVATE QCoro::Core)
 target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common)
 target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-direct-access)
+target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common-frontend-bootstrap)
   {%- for fid, feature in s.features %}
 target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-{{ feature.kebab_name }})
   {%- endfor %}

@@ -31,7 +31,11 @@ QHash<int, std::optional<int>> ManyToOne::getRightIdMany(QSqlDatabase &db, const
                             .arg(junctionTableName, placeholders.join(","_L1));
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare getRightIdMany query:" << query.lastError().text();
+        return result;
+    }
     for (int leftId : leftIds)
     {
         query.addBindValue(leftId);
@@ -82,7 +86,15 @@ QHash<int, bool> ManyToOne::removeWithLeftIdMany(QSqlDatabase &db, const QList<i
         QStringLiteral("DELETE FROM %1 WHERE left_id IN (%2)").arg(junctionTableName, placeholders.join(","_L1));
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare removeWithLeftIdMany query:" << query.lastError().text();
+        for (int leftId : leftIds)
+        {
+            result[leftId] = false;
+        }
+        return result;
+    }
     for (int leftId : leftIds)
     {
         query.addBindValue(leftId);
@@ -142,7 +154,15 @@ QHash<int, bool> ManyToOne::removeWithRightIdsMany(QSqlDatabase &db, const QList
         QStringLiteral("DELETE FROM %1 WHERE right_id IN (%2)").arg(junctionTableName, placeholders.join(","_L1));
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare removeWithRightIdsMany query:" << query.lastError().text();
+        for (int rightId : rightIds)
+        {
+            result[rightId] = false;
+        }
+        return result;
+    }
     for (int rightId : rightIds)
     {
         query.addBindValue(rightId);
@@ -180,16 +200,6 @@ QHash<int, QList<int>> ManyToOne::upsertRightIdMany(QSqlDatabase &db, const QHas
         return result;
     }
 
-    bool transactionStarted = false;
-    if (!db.driver()->hasFeature(QSqlDriver::Transactions) || !db.transaction())
-    {
-        qWarning() << "Failed to start transaction for upsertRightIdMany";
-    }
-    else
-    {
-        transactionStarted = true;
-    }
-
     // Invalidate cache for affected left IDs
     QList<int> leftIds = leftIdToRightId.keys();
     for (int leftId : leftIds)
@@ -198,10 +208,18 @@ QHash<int, QList<int>> ManyToOne::upsertRightIdMany(QSqlDatabase &db, const QHas
     }
 
     QSqlQuery updateQuery(db);
-    updateQuery.prepare(QStringLiteral("UPDATE %1 SET right_id = ? WHERE left_id = ?").arg(junctionTableName));
+    if (!updateQuery.prepare(QStringLiteral("UPDATE %1 SET right_id = ? WHERE left_id = ?").arg(junctionTableName)))
+    {
+        qCritical() << "Failed to prepare upsertRightIdMany update query:" << updateQuery.lastError().text();
+        return result;
+    }
 
     QSqlQuery insertQuery(db);
-    insertQuery.prepare(QStringLiteral("INSERT INTO %1 (left_id, right_id) VALUES (?, ?)").arg(junctionTableName));
+    if (!insertQuery.prepare(QStringLiteral("INSERT INTO %1 (left_id, right_id) VALUES (?, ?)").arg(junctionTableName)))
+    {
+        qCritical() << "Failed to prepare upsertRightIdMany insert query:" << insertQuery.lastError().text();
+        return result;
+    }
 
     // Process each left_id to right_id mapping
     for (auto it = leftIdToRightId.begin(); it != leftIdToRightId.end(); ++it)
@@ -231,15 +249,6 @@ QHash<int, QList<int>> ManyToOne::upsertRightIdMany(QSqlDatabase &db, const QHas
         }
 
         result[leftId] = QList<int>{rightId};
-    }
-
-    if (transactionStarted)
-    {
-        if (!db.commit())
-        {
-            qCritical() << "Failed to commit transaction for upsertRightIdMany:" << db.lastError().text();
-            db.rollback();
-        }
     }
 
     return result;
@@ -313,7 +322,11 @@ QMap<int, QList<int>> ManyToOne::getLeftIdsMany(QSqlDatabase &db, const QString 
                             .arg(junctionTableName, placeholders.join(","_L1));
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare getLeftIdsMany query:" << query.lastError().text();
+        return result;
+    }
     for (int rightId : rightIds)
     {
         query.addBindValue(rightId);
@@ -352,7 +365,11 @@ int ManyToOne::getRightIdCount(QSqlDatabase &db, int leftId, const QString &junc
     const QString sql = QStringLiteral("SELECT COUNT(right_id) FROM %1 WHERE left_id = ?").arg(junctionTableName);
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare getRightIdCount query:" << query.lastError().text();
+        return 0;
+    }
     query.addBindValue(leftId);
 
     int count = 0;
@@ -398,7 +415,11 @@ QList<int> ManyToOne::getRightIdInRange(QSqlDatabase &db, int leftId, const QStr
     const QString sql = QStringLiteral("SELECT right_id FROM %1 WHERE left_id = ?").arg(junctionTableName);
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare getRightIdInRange query:" << query.lastError().text();
+        return {};
+    }
     query.addBindValue(leftId);
 
     if (!query.exec())
@@ -434,7 +455,11 @@ bool ManyToOne::validateUniqueLeftId(QSqlDatabase &db, int leftId, int rightId, 
     const QString sql = QStringLiteral("SELECT right_id FROM %1 WHERE left_id = ?").arg(junctionTableName);
 
     QSqlQuery query(db);
-    query.prepare(sql);
+    if (!query.prepare(sql))
+    {
+        qCritical() << "Failed to prepare validateUniqueLeftId query:" << query.lastError().text();
+        return false;
+    }
     query.addBindValue(leftId);
 
     if (!query.exec())

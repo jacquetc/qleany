@@ -53,14 +53,17 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
         const auto {{ target_ent.camel_name }}Events = m_eventRegistry->{{ target_ent.camel_name }}Events();
         if ({{ target_ent.camel_name }}Events)
         {
-            connect({{ target_ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this,
-                    SLOT(on{{ target_ent.pascal_name }}Updated(QList<int>)));
+            connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::updated, this,
+                    &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Updated);
         }
 
         const auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}Events();
         if ({{ ent.camel_name }}Events)
         {
-            connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this, SLOT(on{{ ent.pascal_name }}Updated(QList<int>)));
+            connect({{ ent.camel_name }}Events.data(), &Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Events::updated,
+             this, &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated);
+            connect({{ ent.camel_name }}Events.data(), &Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Events::relationshipChanged,
+             this, &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}RelationshipChanged);
         }
     }
 }
@@ -97,6 +100,8 @@ QVariant {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::data(const QMode
 
     switch (role)
     {
+    case Qt::DisplayRole:
+        return {{ target_ent.camel_name }}.{{ field.list_model_display_field_camel_name }};
     case IdRole:
         return {{ target_ent.camel_name }}.id;
         {%- for f in target_ent.fields %}
@@ -370,6 +375,79 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
             }
         });
     }
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}RelationshipChanged(int {{ ent.camel_name }}Id,
+                                    Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationshipField,
+                                    const QList<int> &relatedIds)
+{
+    // Check if our {{ ent.camel_name }} was updated
+    if ({{ ent.camel_name }}Id != m_{{ ent.camel_name }}Id)
+        return;
+    if (relationshipField !=
+    Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField::{{ field.pascal_name }})
+        return;
+
+    // Build set of current IDs
+    QSet<int> currentIds;
+    for (const auto &item : m_{{ ent.camel_name }}Events)
+    {
+        currentIds.insert(item.id);
+    }
+
+    QSet<int> newIds(relatedIds.begin(), relatedIds.end());
+
+    // Find removed IDs and remove them from the model
+    QSet<int> removedIds = currentIds - newIds;
+    for (const int id : removedIds)
+    {
+        for (int i = 0; i < m_{{ ent.camel_name }}Events.size(); ++i)
+        {
+            if (m_{{ ent.camel_name }}Events[i].id == id)
+            {
+                beginRemoveRows(QModelIndex(), i, i);
+                m_{{ ent.camel_name }}Events.removeAt(i);
+                endRemoveRows();
+                break;
+            }
+        }
+    }
+
+    // Find added IDs and fetch them
+    QList<int> addedIds;
+    for (const int id : relatedIds)
+    {
+        if (!currentIds.contains(id))
+        {
+            addedIds.append(id);
+        }
+    }
+
+    if (addedIds.isEmpty())
+        return;
+
+    if (!m_{{ target_ent.camel_name }}Controller)
+        return;
+
+    QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetchTask = m_{{ target_ent.camel_name }}Controller->get(addedIds);
+
+    QCoro::connect(std::move(fetchTask), this, [this](auto &&result) {
+        if (!m_{{ target_ent.camel_name }}Controller)
+            return;
+
+        if (result.isEmpty())
+            return;
+
+        const int first = m_{{ ent.camel_name }}Events.size();
+        const int last = first + result.size() - 1;
+        beginInsertRows(QModelIndex(), first, last);
+        for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : result)
+        {
+            m_{{ ent.camel_name }}Events.append(dto);
+        }
+        endInsertRows();
+    });
+
 }
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

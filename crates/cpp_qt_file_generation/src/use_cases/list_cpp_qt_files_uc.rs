@@ -200,6 +200,56 @@ impl ListCppQtFilesUseCase {
             field: None,
         });
 
+        files.push(File {
+            id: 0,
+            name: "signal_buffer.h".to_string(),
+            relative_path: format!("{}/common/", prefix),
+            group: "base".to_string(),
+            template_name: "signal_buffer_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "app_bootstrap.h".to_string(),
+            relative_path: format!("{}/common/frontend", prefix),
+            group: "base".to_string(),
+            template_name: "app_bootstrap_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+
+        files.push(File {
+            id: 0,
+            name: "app_bootstrap.cpp".to_string(),
+            relative_path: format!("{}/common/frontend", prefix),
+            group: "base".to_string(),
+            template_name: "app_bootstrap_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+
+        files.push(File {
+            id: 0,
+            name: "CMakeLists.txt".to_string(),
+            relative_path: format!("{}/common/frontend", prefix),
+            group: "base".to_string(),
+            template_name: "common_frontend_cmake".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
         // database
 
         files.push(File {
@@ -1460,6 +1510,46 @@ impl ListCppQtFilesUseCase {
         }
 
         //----------------------------------------------------------------------
+        // Long Operation support
+        //----------------------------------------------------------------------
+
+        files.push(File {
+            id: 0,
+            name: "i_long_operation.h".to_string(),
+            relative_path: format!("{}/common/long_operation/", prefix),
+            group: "base".to_string(),
+            template_name: "i_long_operation_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "long_operation_manager.h".to_string(),
+            relative_path: format!("{}/common/long_operation/", prefix),
+            group: "base".to_string(),
+            template_name: "long_operation_manager_h".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "long_operation_manager.cpp".to_string(),
+            relative_path: format!("{}/common/long_operation/", prefix),
+            group: "base".to_string(),
+            template_name: "long_operation_manager_cpp".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        //----------------------------------------------------------------------
         // QtWidgets GUI
         //----------------------------------------------------------------------
 
@@ -1535,7 +1625,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tests_database_cmake".to_string(),
             feature: None,
@@ -1547,7 +1637,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_many_to_one_junction.cpp".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_many_to_one_junction_cpp".to_string(),
             feature: None,
@@ -1559,7 +1649,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_one_to_one_junction.cpp".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_one_to_one_junction_cpp".to_string(),
             feature: None,
@@ -1571,7 +1661,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_ordered_one_to_many_junction.cpp".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_ordered_one_to_many_junction_cpp".to_string(),
             feature: None,
@@ -1583,7 +1673,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_unordered_many_to_many_junction.cpp".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_unordered_many_to_many_junction_cpp".to_string(),
             feature: None,
@@ -1595,7 +1685,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_unordered_one_to_many_junction.cpp".to_string(),
-            relative_path: format!("{}/tests/database/", prefix),
+            relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_unordered_one_to_many_junction_cpp".to_string(),
             feature: None,
@@ -1607,7 +1697,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/tests/undo_redo/", prefix),
+            relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
             template_name: "tests_undo_redo_cmake".to_string(),
             feature: None,
@@ -1619,7 +1709,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_enhanced_undo_redo.cpp".to_string(),
-            relative_path: format!("{}/tests/undo_redo/", prefix),
+            relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_enhanced_undo_redo_cpp".to_string(),
             feature: None,
@@ -1631,7 +1721,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_qcoro_integration.cpp".to_string(),
-            relative_path: format!("{}/tests/undo_redo/", prefix),
+            relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_qcoro_integration_cpp".to_string(),
             feature: None,
@@ -1643,7 +1733,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_root_undo_redo.cpp".to_string(),
-            relative_path: format!("{}/tests/undo_redo/", prefix),
+            relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_root_undo_redo_cpp".to_string(),
             feature: None,
@@ -1655,7 +1745,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "tst_undo_redo.cpp".to_string(),
-            relative_path: format!("{}/tests/undo_redo/", prefix),
+            relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
             template_name: "tst_undo_redo_cpp".to_string(),
             feature: None,

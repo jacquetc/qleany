@@ -62,14 +62,14 @@ using {{ ent.pascal_name }}Cache = TableCache<SCE::{{ ent.pascal_name }}, SCD{{ 
 
 // Forward relationship junction tables
 {% for rid, r in ent.forward_relationships %}
-const QString {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ ent.camel_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction"_L1;
+const QString {{ ent.snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction"_L1;
 {%- endfor %}
 // Backward relationship junction tables
 {% for rid, r in s.entities[e].backward_relationships %}
 {%- if r.inner.left_entity == e %}
-const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.camel_name }}_junction"_L1;
+const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.snake_name }}_junction"_L1;
 {%- else %}
-const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.camel_name }}_junction"_L1;
+const QString {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE = "{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_to_{{ ent.snake_name }}_junction"_L1;
 {%- endif %}
 {%- endfor %}
 

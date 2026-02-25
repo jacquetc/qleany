@@ -8,10 +8,37 @@
 #include "database/db_context.h"
 #include "{{ uc.snake_name }}_uc/i_{{ uc.snake_name }}_uow.h"
 #include "{{ feat.snake_name }}_dtos.h"
+{%- if uc.inner.long_operation %}
+#include "long_operation/i_long_operation.h"
+{%- endif %}
 #include <memory>
 
 namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
+
+{%- if uc.inner.long_operation %}
+
+class {{ uc.pascal_name }}UseCase : public Common::LongOperation::ILongOperation
+{
+  public:
+  {%- if uc.dto_in %}
+    {{ uc.pascal_name }}UseCase(std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> uow, const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }});
+  {%- else %}
+    explicit {{ uc.pascal_name }}UseCase(std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> uow);
+  {%- endif %}
+
+    QJsonObject execute(
+        std::function<void(Common::LongOperation::OperationProgress)> progressCallback,
+        const std::atomic<bool> &cancelFlag) override;
+
+  private:
+    std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> m_uow;
+  {%- if uc.dto_in %}
+    {{ uc.dto_in.pascal_name }} m_{{ uc.dto_in.camel_name }};
+  {%- endif %}
+};
+
+{%- else %}
 
 class {{ uc.pascal_name }}UseCase
 {
@@ -35,5 +62,7 @@ class {{ uc.pascal_name }}UseCase
   private:
     std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> m_uow;
 };
+
+{%- endif %}
 
 } // {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

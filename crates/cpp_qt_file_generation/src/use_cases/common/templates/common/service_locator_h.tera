@@ -3,6 +3,7 @@
 #include "direct_access/event_registry.h"
 #include "features/feature_event_registry.h"
 #include "undo_redo/undo_redo_system.h"
+#include "long_operation/long_operation_manager.h"
 
 #include <QObject>
 #include <QPointer>
@@ -21,11 +22,13 @@ class ServiceLocator : public QObject
     void setEventRegistry(DirectAccess::EventRegistry *ev);
     void setFeatureEventRegistry(Features::FeatureEventRegistry *fev);
     void setUndoRedoSystem(UndoRedo::UndoRedoSystem *urs);
+    void setLongOperationManager(LongOperation::LongOperationManager *lom);
 
     Database::DbContext *dbContext() const;
     QPointer<DirectAccess::EventRegistry> eventRegistry() const;
     QPointer<Features::FeatureEventRegistry> featureEventRegistry() const;
     QPointer<UndoRedo::UndoRedoSystem> undoRedoSystem() const;
+    QPointer<LongOperation::LongOperationManager> longOperationManager() const;
 
     static void setInstance(ServiceLocator *locator);
     static ServiceLocator *instance();
@@ -36,6 +39,7 @@ class ServiceLocator : public QObject
     QPointer<DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Features::FeatureEventRegistry> m_featureEventRegistry;
     QPointer<UndoRedo::UndoRedoSystem> m_undoRedoSystem;
+    QPointer<LongOperation::LongOperationManager> m_longOperationManager;
 };
 
 } // namespace {{ s.global.application_pascal_name }}::Common

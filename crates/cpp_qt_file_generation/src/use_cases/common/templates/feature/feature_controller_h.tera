@@ -1,11 +1,20 @@
 {%- set f_id = s.file.inner.feature %}
 {%- set feat = s.features[f_id] %}
+{%- set has_long_op = false %}
+{%- for uc_id, uc in feat.use_cases %}
+{%- if uc.inner.long_operation %}
+{%- set_global has_long_op = true %}
+{%- endif %}
+{%- endfor %}
 #pragma once
 
 #include "database/db_context.h"
 #include "direct_access/event_registry.h"
 #include "features/feature_event_registry.h"
 #include "undo_redo/undo_redo_system.h"
+{%- if has_long_op %}
+#include "long_operation/long_operation_manager.h"
+{%- endif %}
 #include "{{ feat.snake_name }}_dtos.h"
 
 #include <QCoro/QCoroTask>
@@ -30,7 +39,9 @@ class {{ feat.pascal_name }}Controller : public QObject
     int undoRedoStackId() const;
 
 {%- for uc_id, uc in feat.use_cases %}
-  {%- if uc.dto_out %}
+  {%- if uc.inner.long_operation %}
+       {% set dto_out_str = "QString" %}
+  {%- elif uc.dto_out %}
        {% set dto_out_str = uc.dto_out.pascal_name %}
   {%- else %}
        {% set dto_out_str = "bool" %}
@@ -54,6 +65,9 @@ class {{ feat.pascal_name }}Controller : public QObject
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Common::Features::FeatureEventRegistry> m_featureEventRegistry;
     QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;
+{%- if has_long_op %}
+    QPointer<Common::LongOperation::LongOperationManager> m_longOperationManager;
+{%- endif %}
     int m_undoRedoStackId = 0;
 };
 } // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

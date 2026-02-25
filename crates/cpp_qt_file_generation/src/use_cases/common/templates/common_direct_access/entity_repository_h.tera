@@ -8,6 +8,7 @@
 #include "direct_access/{{ ent.snake_name }}/i_{{ ent.snake_name }}_repository.h"
 #include "direct_access/{{ ent.snake_name }}/{{ ent.snake_name }}_events.h"
 #include "entities/{{ ent.snake_name }}.h"
+#include "signal_buffer.h"
 #include <QPointer>
 
 namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}
@@ -47,9 +48,8 @@ class I{{ ent.pascal_name }}Table
 class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
 {
   public:
-    // Original constructor for backward compatibility
     {{ ent.pascal_name }}Repository(std::unique_ptr<I{{ ent.pascal_name }}Table> table, Database::DbSubContext &dbSubContext,
-                   QPointer<EventRegistry> eventRegistry);
+                   QPointer<EventRegistry> eventRegistry, QPointer<Common::SignalBuffer> signalBuffer);
 
     ~{{ ent.pascal_name }}Repository() override = default;
 
@@ -89,6 +89,7 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     std::unique_ptr<I{{ ent.pascal_name }}Table> m_table;
     QPointer<{{ ent.pascal_name }}Events> m_events;           // not owned
     QPointer<EventRegistry> m_eventRegistry; // not owned
+    QPointer<Common::SignalBuffer> m_signalBuffer; // not owned
 
     // For cascade operations
     Database::DbSubContext &m_dbSubContext;

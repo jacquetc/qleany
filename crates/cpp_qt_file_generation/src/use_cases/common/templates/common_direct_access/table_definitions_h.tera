@@ -53,7 +53,7 @@ inline QList<QString> getSqlJunctionTableDefinitions()
         {%- elif r.inner.relationship_type == "OneToMany" %}
 
     // unordered one-to-many junction table for {{ r.field_snake_name }}
-    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
                                   "    left_id INTEGER NOT NULL,"
                                   "    right_id INTEGER NOT NULL,"
                                   "    PRIMARY KEY (left_id, right_id)"
@@ -62,7 +62,7 @@ inline QList<QString> getSqlJunctionTableDefinitions()
         {%- elif r.inner.relationship_type == "OneToOne" %}
 
     // one-to-one junction table for {{ r.field_snake_name }}
-    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
                                   "    left_id INTEGER NOT NULL,"
                                   "    right_id INTEGER NOT NULL,"
                                   "    PRIMARY KEY (left_id, right_id)"
@@ -71,7 +71,7 @@ inline QList<QString> getSqlJunctionTableDefinitions()
         {%- elif r.inner.relationship_type == "ManyToOne" %}
 
     // many-to-one junction table for {{ r.field_snake_name }}
-    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_tag_junction ("
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
                                   "    left_id INTEGER NOT NULL,"
                                   "    right_id INTEGER NOT NULL,"
                                   "    PRIMARY KEY (left_id, right_id)"
@@ -80,7 +80,7 @@ inline QList<QString> getSqlJunctionTableDefinitions()
         {%- elif r.inner.relationship_type == "ManyToMany" %}
 
     // many-to-many junction table for {{ r.field_snake_name }}
-    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_pascal_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
+    definitions << QStringLiteral("CREATE TABLE IF NOT EXISTS {{ ent.snake_name }}_{{ r.field_snake_name }}_to_{{ s.entities[r.inner.right_entity].snake_name }}_junction ("
                                   "    left_id INTEGER NOT NULL,"
                                   "    right_id INTEGER NOT NULL,"
                                   "    PRIMARY KEY (left_id, right_id)"

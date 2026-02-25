@@ -131,6 +131,7 @@ struct FieldVM {
     pub cpp_qt_base_type: String,
     pub cpp_qt_type: String,
     pub cpp_default_init: String,
+    pub list_model_display_field_camel_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -317,6 +318,10 @@ impl SnapshotBuilder {
                 cpp_qt_base_type,
                 cpp_qt_type,
                 cpp_default_init,
+                list_model_display_field_camel_name: f.list_model_displayed_field.as_ref().map(|field_name| {
+                    heck::AsLowerCamelCase(field_name).to_string()
+                }),
+
             });
         }
 
@@ -1362,6 +1367,7 @@ mod tests {
                         cpp_qt_base_type: "QString".to_string(),
                         cpp_qt_type: "QStringS".to_string(),
                         cpp_default_init: "".to_string(),
+                        list_model_display_field_camel_name: None,
                     },
                     FieldVM {
                         inner: field_tags.clone(),
@@ -1374,6 +1380,7 @@ mod tests {
                         cpp_qt_base_type: "QString".to_string(),
                         cpp_qt_type: "QList<QString>".to_string(),
                         cpp_default_init: "".to_string(),
+                        list_model_display_field_camel_name: None,
                     },
                 ];
                 m.insert(

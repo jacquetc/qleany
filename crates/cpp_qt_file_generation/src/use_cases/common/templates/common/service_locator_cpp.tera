@@ -9,6 +9,7 @@ SC::ServiceLocator::ServiceLocator(QObject *parent) : QObject(parent)
 SC::ServiceLocator::~ServiceLocator()
 {
     // destroy in the reverse order of creation
+    m_longOperationManager = nullptr;
     m_undoRedoSystem = nullptr;
     m_eventRegistry = nullptr;
     m_featureEventRegistry = nullptr;
@@ -31,6 +32,10 @@ void SC::ServiceLocator::setUndoRedoSystem(SC::UndoRedo::UndoRedoSystem *urs)
 {
     m_undoRedoSystem = urs;
 }
+void SC::ServiceLocator::setLongOperationManager(SC::LongOperation::LongOperationManager *lom)
+{
+    m_longOperationManager = lom;
+}
 
 SC::Database::DbContext *SC::ServiceLocator::dbContext() const
 {
@@ -47,6 +52,10 @@ QPointer<SC::Features::FeatureEventRegistry> SC::ServiceLocator::featureEventReg
 QPointer<SC::UndoRedo::UndoRedoSystem> SC::ServiceLocator::undoRedoSystem() const
 {
     return m_undoRedoSystem;
+}
+QPointer<SC::LongOperation::LongOperationManager> SC::ServiceLocator::longOperationManager() const
+{
+    return m_longOperationManager;
 }
 void SC::ServiceLocator::setInstance(ServiceLocator *locator)
 {

@@ -15,6 +15,7 @@
 #include "database/db_context.h"
 #include "database/snapshot_types.h"
 #include "direct_access/event_registry.h"
+#include "signal_buffer.h"
 
 #include <QHash>
 #include <QList>
@@ -58,17 +59,38 @@ class UnitOfWorkBase : public virtual ITransactional
 {
   public:
     UnitOfWorkBase(SCDatabase::DbContext &dbContext, QPointer<SCD::EventRegistry> eventRegistry)
-        : m_dbSubContext(SCDatabase::DbSubContext(dbContext)), m_eventRegistry(std::move(eventRegistry))
+        : m_dbSubContext(SCDatabase::DbSubContext(dbContext)), m_eventRegistry(std::move(eventRegistry)),
+          m_signalBuffer(new SignalBuffer())
     {
     }
 
-    ~UnitOfWorkBase() override = default;
+    ~UnitOfWorkBase() override
+    {
+        delete m_signalBuffer;
+    }
 
     // ITransactional overrides — all forwarded to DbSubContext
-    void beginTransaction() override { m_dbSubContext.beginTransaction(); }
-    void commit() override { m_dbSubContext.commit(); }
-    void endTransaction() override { m_dbSubContext.endTransaction(); }
-    void rollback() override { m_dbSubContext.rollback(); }
+    // Signal buffering is integrated into transaction lifecycle
+    void beginTransaction() override
+    {
+        m_dbSubContext.beginTransaction();
+        m_signalBuffer->beginBuffering();
+    }
+    void commit() override
+    {
+     m_dbSubContext.commit();
+     m_signalBuffer->flush();
+    }
+    void endTransaction() override
+    {
+        m_dbSubContext.endTransaction();
+        m_signalBuffer->flush();
+    }
+    void rollback() override
+    {
+        m_dbSubContext.rollback();
+        m_signalBuffer->discard();
+    }
     void createSavepoint() override { m_dbSubContext.createSavepoint(); }
     void rollbackToSavepoint() override { m_dbSubContext.rollbackToSavepoint(); }
     void releaseSavepoint() override { m_dbSubContext.releaseSavepoint(); }
@@ -76,6 +98,7 @@ class UnitOfWorkBase : public virtual ITransactional
   protected:
     SCDatabase::DbSubContext m_dbSubContext;
     QPointer<SCD::EventRegistry> m_eventRegistry;
+    QPointer<SignalBuffer> m_signalBuffer;
 };
 
 } // namespace {{ s.global.application_pascal_name }}::Common::UnitOfWork
