@@ -108,7 +108,6 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
        co_return co_await Common::ControllerHelpers::executeNotUndoableCommandVoid(
        {%- endif %}
           m_undoRedoSystem,
-          m_undoRedoStackId,
             u"{{ uc.snake_name }} Command"_s,
             std::move(useCase),
             kDefaultCommandTimeoutMs

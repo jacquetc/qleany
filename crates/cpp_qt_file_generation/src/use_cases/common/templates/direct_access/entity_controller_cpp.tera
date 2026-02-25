@@ -70,9 +70,13 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<Create{{ ent.pascal_name }}UseCase>(std::move(uow));
 
-    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+        
+
+    co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
+            {% if ent.inner.undoable %}
         m_undoRedoStackId,
+             {%- endif %}
         u"Create {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -85,9 +89,11 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<CreateOrphan{{ ent.pascal_name }}UseCase>(std::move(uow));
 
-    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+    co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
+            {% if ent.inner.undoable %}
         m_undoRedoStackId,
+             {%- endif %}
         u"Create orphan {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -111,9 +117,11 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::up
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<Update{{ ent.pascal_name }}UseCase>(std::move(uow));
 
-    co_return co_await Helpers::executeUndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+    co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
+            {% if ent.inner.undoable %}
         m_undoRedoStackId,
+             {%- endif %}
         u"Update {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -125,9 +133,11 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int>
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<Remove{{ ent.pascal_name }}UseCase>(std::move(uow));
 
-    co_return co_await Helpers::executeUndoableCommand<QList<int>>(
+    co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<int>>(
         m_undoRedoSystem,
+            {% if ent.inner.undoable %}
         m_undoRedoStackId,
+             {%- endif %}
         u"Remove {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
@@ -160,9 +170,11 @@ QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<SetRelationshipIdsUseCase>(std::move(uow));
 
-    co_await Helpers::executeUndoableCommandVoid(
+    co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommandVoid(
         m_undoRedoSystem,
+            {% if ent.inner.undoable %}
         m_undoRedoStackId,
+             {%- endif %}
         u"Set {{ ent.pascal_name }} Relationship IDs Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,

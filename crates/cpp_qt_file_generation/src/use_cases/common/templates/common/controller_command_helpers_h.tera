@@ -189,7 +189,6 @@ template <typename UseCaseT, typename... ExecArgs>
  * Constructs the UndoRedoCommand, wires execute/undo/redo, and co_awaits
  * the undo-redo system. The UseCase is kept alive by shared_ptr capture
  * inside the lambdas.
- * Clears all the undo redo stacks after execution.
  *
  * @tparam ResultT       Return type of the use-case execute method
  * @tparam UseCaseT      UseCase type (must have execute(...), undo(), redo())
@@ -207,7 +206,6 @@ template <typename UseCaseT, typename... ExecArgs>
 template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<ResultT> executeNotUndoableCommand(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
-    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -223,14 +221,14 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
     ResultT result{};
 
     // Capture useCase by shared_ptr value — it stays alive as long as the
-    // command's lambdas exist. No weak_ptr dance, no QVariant::fromValue.
+    // command's lambdas exist.
     command->setExecuteFunction(
         [useCase, ...args = std::move(execArgs), &result](auto & /*promise*/) {
             result = useCase->execute(args...);
         });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, -1);
 
     if (!success.has_value()) [[unlikely]]
     {
@@ -245,7 +243,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
     }
 
     // clear undo redo
-    undoRedoSystem->manager()->clearAllStacks();
+    undoRedoSystem->manager()->clearStack(-1);
 
     co_return result;
 }
@@ -259,12 +257,10 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
  *
  * Same pattern as the result-returning variant but returns a boolean
  * indicating success/failure.
- * Clears all the undo redo stacks after execution.
  */
 template <typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<bool> executeNotUndoableCommandVoid(
     SCUndoRedo::UndoRedoSystem *undoRedoSystem,
-    int undoRedoStackId,
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
@@ -284,7 +280,7 @@ template <typename UseCaseT, typename... ExecArgs>
         });
 
     std::optional<bool> success =
-        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, undoRedoStackId);
+        co_await undoRedoSystem->executeCommandAsync(command, timeoutMs, -1);
 
     if (!success.has_value()) [[unlikely]]
     {
@@ -299,7 +295,7 @@ template <typename UseCaseT, typename... ExecArgs>
     }
 
     // clear undo redo
-    undoRedoSystem->manager()->clearAllStacks();
+    undoRedoSystem->manager()->clearStack(-1);
 
     co_return true;
 }
