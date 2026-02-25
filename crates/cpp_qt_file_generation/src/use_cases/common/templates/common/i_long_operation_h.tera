@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QObject>
 #include <QString>
 
 #include <atomic>
@@ -14,6 +15,13 @@ namespace {{ s.global.application_pascal_name }}::Common::LongOperation
  */
 struct OperationProgress
 {
+    Q_GADGET
+    Q_PROPERTY(int current MEMBER current)
+    Q_PROPERTY(int total MEMBER total)
+    Q_PROPERTY(QString message MEMBER message)
+    Q_PROPERTY(double percentage READ percentage)
+
+  public:
     int current = 0;       ///< Current progress value
     int total = 0;         ///< Total progress value
     QString message;       ///< Human-readable status message

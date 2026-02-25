@@ -13,8 +13,12 @@
 #include "units_of_work/{{ uc.snake_name }}_uow.h"
 #include "use_cases/{{ uc.snake_name }}_uc.h"
 {%- endfor %}
+{%- if has_long_op %}
+#include "direct_access/mapper_tools.h"
+{%- endif %}
 #include <QCoro/QCoroTask>
 #include <memory>
+#include <optional>
 
 namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
@@ -71,17 +75,22 @@ void {{ feat.pascal_name }}Controller::resolveDependencies()
   {%- endif %}
 
 
-QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_name }}({{ dto_in_arg_str }})
+  {%- if uc.inner.long_operation %}
+
+QString {{ feat.pascal_name }}Controller::{{ uc.camel_name }}({{ dto_in_arg_str }})
 {
-
-    {%- if uc.inner.long_operation %}
-
     // Long operation: run on background thread with progress/cancellation support
     auto uow = std::make_unique<{{ uc.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
     auto operation = std::make_shared<{{ uc.pascal_name }}UseCase>(std::move(uow){% if uc.dto_in %}, {{ uc.dto_in.camel_name }}{% endif %});
-    co_return m_longOperationManager->startOperation(std::move(operation));
+    return m_longOperationManager->startOperation(std::move(operation));
+}
 
-    {%- elif uc.inner.read_only %}
+  {%- else %}
+
+QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_name }}({{ dto_in_arg_str }})
+{
+
+    {%- if uc.inner.read_only %}
 
     co_return co_await Common::ControllerHelpers::executeReadQuery<{{ dto_out_str }}>(
         m_undoRedoSystem,
@@ -138,6 +147,34 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
     {%- endif %}
 
 }
+
+  {%- endif %}
+
+  {%- if uc.inner.long_operation %}
+
+std::optional<Common::LongOperation::OperationProgress>
+{{ feat.pascal_name }}Controller::get{{ uc.pascal_name }}Progress(const QString &operationId) const
+{
+    if (!m_longOperationManager)
+        return std::nullopt;
+    return m_longOperationManager->getProgress(operationId);
+}
+
+    {%- if uc.dto_out %}
+
+std::optional<{{ uc.dto_out.pascal_name }}>
+{{ feat.pascal_name }}Controller::get{{ uc.pascal_name }}Result(const QString &operationId) const
+{
+    if (!m_longOperationManager)
+        return std::nullopt;
+    auto result = m_longOperationManager->getResult(operationId);
+    if (!result.has_value())
+        return std::nullopt;
+    return Common::DirectAccess::gadgetFromJson<{{ uc.dto_out.pascal_name }}>(result.value());
+}
+    {%- endif %}
+
+  {%- endif %}
 {%- endfor %}
 
 } // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

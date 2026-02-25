@@ -39,6 +39,7 @@ QString LongOperationManager::startOperation(std::shared_ptr<ILongOperation> ope
     // Progress callback — marshalled to main thread via signal
     auto progressCallback = [this, operationId](const OperationProgress &progress) {
         QMetaObject::invokeMethod(this, [this, operationId, progress]() {
+            m_progressCache[operationId] = progress;
             Q_EMIT progressChanged(operationId, progress);
         }, Qt::QueuedConnection);
     };
@@ -57,15 +58,18 @@ QString LongOperationManager::startOperation(std::shared_ptr<ILongOperation> ope
                 try
                 {
                     const QJsonObject result = watcher->result();
-                    if (wasCancelled)
+                    if (wasCancelled) {
                         Q_EMIT operationCancelled(operationId);
-                    else
+                    } else {
+                        m_completedResults.insert(operationId, result);
                         Q_EMIT operationCompleted(operationId, result);
+                    }
                 }
                 catch (const std::exception &e)
                 {
                     Q_EMIT operationFailed(operationId, QString::fromUtf8(e.what()));
                 }
+                m_progressCache.remove(operationId);
                 watcher->deleteLater();
             });
 
@@ -91,6 +95,28 @@ void LongOperationManager::cancelOperation(const QString &operationId)
 bool LongOperationManager::isRunning(const QString &operationId) const
 {
     return m_running.contains(operationId);
+}
+
+std::optional<OperationProgress> LongOperationManager::getProgress(const QString &operationId) const
+{
+    auto it = m_progressCache.find(operationId);
+    if (it != m_progressCache.end())
+        return it.value();
+    return std::nullopt;
+}
+
+std::optional<QJsonObject> LongOperationManager::getResult(const QString &operationId) const
+{
+    auto it = m_completedResults.find(operationId);
+    if (it != m_completedResults.end())
+        return it.value();
+    return std::nullopt;
+}
+
+void LongOperationManager::cleanupOperation(const QString &operationId)
+{
+    m_progressCache.remove(operationId);
+    m_completedResults.remove(operationId);
 }
 
 } // namespace {{ s.global.application_pascal_name }}::Common::LongOperation

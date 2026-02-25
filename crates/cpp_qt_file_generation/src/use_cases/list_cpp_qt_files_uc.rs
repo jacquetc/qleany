@@ -1606,6 +1606,49 @@ impl ListCppQtFilesUseCase {
             });
         }
 
+
+
+        //----------------------------------------------------------------------
+        // Presentation
+        //----------------------------------------------------------------------
+        let relative_path = format!("{}/presentation/", prefix);
+
+        let qml_enabled = ui.cpp_qt_qtquick;
+
+        if qml_enabled {
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_presentation_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+        }
+
+        //----------------------------------------------------------------------
+        // QtWidgets GUI
+        //----------------------------------------------------------------------
+
+        let relative_path = format!("{}/qtquick_app/", prefix);
+
+        if ui.cpp_qt_qtquick {
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_app_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+        }
+
         //----------------------------------------------------------------------
         // Tests
         //----------------------------------------------------------------------

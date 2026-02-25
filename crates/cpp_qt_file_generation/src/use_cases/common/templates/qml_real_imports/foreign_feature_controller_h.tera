@@ -1,0 +1,105 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set has_long_op = false %}
+{%- for uc_id, uc in feat.use_cases %}
+{%- if uc.inner.long_operation %}
+{%- set_global has_long_op = true %}
+{%- endif %}
+{%- endfor %}
+#pragma once
+#include "{{ feat.snake_name }}/{{ feat.snake_name }}_controller.h"
+#include <QCoro/QCoroQml>
+#include <QCoro/QCoroQmlTask>
+#include <QQmlEngine>
+
+struct Foreign{{ feat.pascal_name }}Controller : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT({{ feat.pascal_name }}Controller)
+    Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
+
+  public:
+    explicit Foreign{{ feat.pascal_name }}Controller(QObject *parent = nullptr)
+        : QObject(parent), m_controller(new {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ feat.pascal_name }}Controller(this))
+    {
+    }
+
+{%- for uc_id, uc in feat.use_cases %}
+  {%- if uc.inner.long_operation %}
+       {% set dto_out_str = "QString" %}
+  {%- elif uc.dto_out %}
+       {% set dto_out_str = s.global.application_pascal_name ~ "::" ~ feat.pascal_name ~ "::" ~ uc.dto_out.pascal_name %}
+  {%- else %}
+       {% set dto_out_str = "bool" %}
+  {%- endif %}
+
+  {%- if uc.dto_in %}
+
+    Q_INVOKABLE static {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_in.pascal_name }} get{{ uc.dto_in.pascal_name }}()
+    {
+        return {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ feat.pascal_name }}Controller::get{{ uc.dto_in.pascal_name }}();
+    }
+
+    {%- if uc.inner.long_operation %}
+    Q_INVOKABLE QString {{ uc.camel_name }}(const {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }})
+    {
+        return m_controller->{{ uc.camel_name }}({{ uc.dto_in.camel_name }});
+    }
+    {%- else %}
+    Q_INVOKABLE QCoro::QmlTask {{ uc.camel_name }}(const {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }})
+    {
+        return m_controller->{{ uc.camel_name }}({{ uc.dto_in.camel_name }});
+    }
+    {%- endif %}
+  {%- else %}
+    {%- if uc.inner.long_operation %}
+    Q_INVOKABLE QString {{ uc.camel_name }}()
+    {
+        return m_controller->{{ uc.camel_name }}();
+    }
+    {%- else %}
+    Q_INVOKABLE QCoro::QmlTask {{ uc.camel_name }}()
+    {
+        return m_controller->{{ uc.camel_name }}();
+    }
+    {%- endif %}
+  {%- endif %}
+
+  {%- if uc.inner.long_operation %}
+
+    Q_INVOKABLE {{ s.global.application_pascal_name }}::Common::LongOperation::OperationProgress get{{ uc.pascal_name }}Progress(const QString &operationId) const
+    {
+        auto progress = m_controller->get{{ uc.pascal_name }}Progress(operationId);
+        return progress.value_or({{ s.global.application_pascal_name }}::Common::LongOperation::OperationProgress{});
+    }
+
+    {%- if uc.dto_out %}
+
+    Q_INVOKABLE bool has{{ uc.pascal_name }}Result(const QString &operationId) const
+    {
+        return m_controller->get{{ uc.pascal_name }}Result(operationId).has_value();
+    }
+
+    Q_INVOKABLE {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_out.pascal_name }} get{{ uc.pascal_name }}Result(const QString &operationId) const
+    {
+        auto result = m_controller->get{{ uc.pascal_name }}Result(operationId);
+        return result.value_or({{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ uc.dto_out.pascal_name }}{});
+    }
+    {%- endif %}
+  {%- endif %}
+
+{%- endfor %}
+
+  Q_SIGNALS:
+    void undoRedoStackIdChanged();
+
+  private:
+    void setUndoRedoStackId(int undoRedoStackId)
+    {
+        if (undoRedoStackId == m_controller->undoRedoStackId()) { return; }
+        m_controller->setUndoRedoStackId(undoRedoStackId);
+        Q_EMIT undoRedoStackIdChanged();
+    }
+    int undoRedoStackId() const { return m_controller->undoRedoStackId(); }
+    {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}::{{ feat.pascal_name }}Controller *m_controller;
+};

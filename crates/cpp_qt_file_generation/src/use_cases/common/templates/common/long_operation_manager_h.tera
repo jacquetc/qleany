@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 
 namespace {{ s.global.application_pascal_name }}::Common::LongOperation
 {
@@ -53,6 +54,23 @@ class LongOperationManager : public QObject
      */
     [[nodiscard]] bool isRunning(const QString &operationId) const;
 
+    /**
+     * @brief Get the latest progress for an operation (poll-style, QML-compatible via Q_GADGET).
+     * @return Progress if the operation exists, std::nullopt otherwise.
+     */
+    [[nodiscard]] std::optional<OperationProgress> getProgress(const QString &operationId) const;
+
+    /**
+     * @brief Get the result of a completed operation (poll-style).
+     * @return QJsonObject result if completed, std::nullopt otherwise.
+     */
+    [[nodiscard]] std::optional<QJsonObject> getResult(const QString &operationId) const;
+
+    /**
+     * @brief Remove cached progress/result for a finished operation.
+     */
+    void cleanupOperation(const QString &operationId);
+
   Q_SIGNALS:
     void progressChanged(const QString &operationId, const OperationProgress &progress);
     void operationCompleted(const QString &operationId, const QJsonObject &result);
@@ -68,6 +86,8 @@ class LongOperationManager : public QObject
     };
 
     QHash<QString, RunningOperation> m_running;
+    QHash<QString, OperationProgress> m_progressCache;
+    QHash<QString, QJsonObject> m_completedResults;
     int m_nextId = 1;
 };
 

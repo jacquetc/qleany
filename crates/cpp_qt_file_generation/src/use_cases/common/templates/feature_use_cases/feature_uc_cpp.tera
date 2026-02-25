@@ -5,6 +5,9 @@
 
 
 #include "{{ uc.snake_name }}_uc.h"
+{%- if uc.inner.long_operation %}
+#include "direct_access/mapper_tools.h"
+{%- endif %}
 
 namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
@@ -40,7 +43,13 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
 
     m_uow->publish{{ uc.pascal_name }}Signal();
 
-{% raw %}    return QJsonObject{ {"success", true} };{% endraw %}
+{%- if uc.dto_out %}
+    // TODO: Populate resultDto with actual results, then return serialized JSON.
+    {{ uc.dto_out.pascal_name }} resultDto{};
+    return Common::DirectAccess::gadgetToJson(resultDto);
+{%- else %}
+{% raw %}    return QJsonObject{ {u"success"_s, true} };{% endraw %}
+{%- endif %}
 }
 
 {%- else %}

@@ -21,6 +21,8 @@
 
 #include <QPointer>
 
+#include <optional>
+
 namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
 namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
@@ -52,9 +54,24 @@ class {{ feat.pascal_name }}Controller : public QObject
     {
         return {};
     }
+    {%- if uc.inner.long_operation %}
+    QString {{ uc.camel_name }}(const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }});
+    {%- else %}
     QCoro::Task<{{ dto_out_str }}> {{ uc.camel_name }}(const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }});
+    {%- endif %}
   {%- else %}
+    {%- if uc.inner.long_operation %}
+    QString {{ uc.camel_name }}();
+    {%- else %}
     QCoro::Task<{{ dto_out_str }}> {{ uc.camel_name }}();
+    {%- endif %}
+  {%- endif %}
+
+  {%- if uc.inner.long_operation %}
+    std::optional<Common::LongOperation::OperationProgress> get{{ uc.pascal_name }}Progress(const QString &operationId) const;
+    {%- if uc.dto_out %}
+    std::optional<{{ uc.dto_out.pascal_name }}> get{{ uc.pascal_name }}Result(const QString &operationId) const;
+    {%- endif %}
   {%- endif %}
 
 {%- endfor %}
