@@ -69,6 +69,7 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
   private:
     void resolveDependencies();
     void refreshData();
+    void reorderToMatch(const QList<int> &orderedIds);
 
     int m_{{ ent.camel_name }}Id = -1;
     int m_undoRedoStackId = 0;

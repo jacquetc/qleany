@@ -348,33 +348,101 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
 
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated(const QList<int> &ids)
 {
-    // Check if our {{ ent.camel_name }} was updated
-    if (ids.contains(m_{{ ent.camel_name }}Id))
-    {
-        QCoro::Task<QList<{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto>> fetch{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_{{ ent.camel_name }}Id});
 
-        QCoro::connect(std::move(fetch{{ ent.pascal_name }}Task), this, [this](auto &&result) {
-            if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller)
-                return;
+    // Check if our calendar was updated
+    if (!ids.contains(m_calendarId))
+        return;
 
-            if (result.isEmpty())
-                return;
+    QCoro::Task<QList<Calendar::CalendarDto>> fetchCalendarTask = m_calendarController->get({m_calendarId});
 
-            const auto &{{ ent.camel_name }} = result.first();
+    QCoro::connect(std::move(fetchCalendarTask), this, [this](auto &&result) {
+        if (!m_calendarController || !m_{{ target_ent.camel_name }}Controller)
+            return;
 
-            QList<int> currentItemIds;
-            for (const auto &item : m_{{ target_ent.camel_plural_name }})
+        if (result.isEmpty())
+            return;
+
+        const auto &calendar = result.first();
+        const QList<int> &relatedIds = calendar.events;
+
+        QList<int> currentItemIds;
+        for (const auto &item : m_{{ ent.camel_name }}Events)
+        {
+            currentItemIds.append(item.id);
+        }
+
+        // No change
+        if (relatedIds == currentItemIds)
+            return;
+
+        // Build set of current IDs
+        QSet<int> currentIds(currentItemIds.begin(), currentItemIds.end());
+        QSet<int> newIds(relatedIds.begin(), relatedIds.end());
+
+        // Find removed IDs and remove them from the model
+        QSet<int> removedIds = currentIds - newIds;
+        for (const int id : removedIds)
+        {
+            for (int i = 0; i < m_{{ ent.camel_name }}Events.size(); ++i)
             {
-                currentItemIds.append(item.id);
+                if (m_{{ ent.camel_name }}Events[i].id == id)
+                {
+                    beginRemoveRows(QModelIndex(), i, i);
+                    m_{{ ent.camel_name }}Events.removeAt(i);
+                    endRemoveRows();
+                    break;
+                }
+            }
+        }
+
+        // Find added IDs
+        QList<int> addedIds;
+        for (const int id : relatedIds)
+        {
+            if (!currentIds.contains(id))
+            {
+                addedIds.append(id);
+            }
+        }
+
+        // If no additions, just reorder existing items to match relatedIds ordering
+        if (addedIds.isEmpty())
+        {
+            reorderToMatch(relatedIds);
+            return;
+        }
+
+        // Fetch new items and insert at correct positions
+        QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetchTask = m_{{ target_ent.camel_name }}Controller->get(addedIds);
+
+        QCoro::connect(std::move(fetchTask), this, [this, relatedIds](auto &&fetchResult) {
+            if (!m_{{ target_ent.camel_name }}Controller)
+                return;
+
+            if (fetchResult.isEmpty())
+                return;
+
+            // Build a lookup from id to fetched dto
+            QHash<int, {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> fetchedById;
+            for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : fetchResult)
+            {
+                fetchedById.insert(dto.id, dto);
             }
 
-            // If {{ ent.camel_name }} items changed, refresh data
-            if ({{ ent.camel_name }}.{{ field.camel_name }} != currentItemIds)
+            // Insert each new item at its correct position according to relatedIds ordering
+            for (int targetPos = 0; targetPos < relatedIds.size(); ++targetPos)
             {
-                refreshData();
+                const int id = relatedIds[targetPos];
+                if (!fetchedById.contains(id))
+                    continue;
+
+                const int insertPos = qMin(targetPos, m_{{ ent.camel_name }}Events.size());
+                beginInsertRows(QModelIndex(), insertPos, insertPos);
+                m_{{ ent.camel_name }}Events.insert(insertPos, fetchedById.value(id));
+                endInsertRows();
             }
         });
-    }
+    });
 }
 
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}RelationshipChanged(int {{ ent.camel_name }}Id,
@@ -423,31 +491,83 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
         }
     }
 
+    // If no additions, just reorder existing items to match relatedIds ordering
     if (addedIds.isEmpty())
+    {
+        reorderToMatch(relatedIds);
         return;
+    }
 
     if (!m_{{ target_ent.camel_name }}Controller)
         return;
 
     QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetchTask = m_{{ target_ent.camel_name }}Controller->get(addedIds);
 
-    QCoro::connect(std::move(fetchTask), this, [this](auto &&result) {
+    QCoro::connect(std::move(fetchTask), this, [this, relatedIds](auto &&result) {
         if (!m_{{ target_ent.camel_name }}Controller)
             return;
 
         if (result.isEmpty())
             return;
 
-        const int first = m_{{ ent.camel_name }}Events.size();
-        const int last = first + result.size() - 1;
-        beginInsertRows(QModelIndex(), first, last);
+        // Build a lookup from id to fetched dto
+        QHash<int, {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> fetchedById;
         for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : result)
         {
-            m_{{ ent.camel_name }}Events.append(dto);
+            fetchedById.insert(dto.id, dto);
         }
-        endInsertRows();
-    });
 
+        // Insert each new item at its correct position according to relatedIds ordering
+        for (int targetPos = 0; targetPos < relatedIds.size(); ++targetPos)
+        {
+            const int id = relatedIds[targetPos];
+            if (!fetchedById.contains(id))
+                continue;
+
+            // targetPos may exceed current size if items are at the end
+            const int insertPos = qMin(targetPos, m_{{ ent.camel_name }}Events.size());
+            beginInsertRows(QModelIndex(), insertPos, insertPos);
+            m_{{ ent.camel_name }}Events.insert(insertPos, fetchedById.value(id));
+            endInsertRows();
+        }
+    });
+}
+
+void {{ ent.pascal_name }}EventsListModel::reorderToMatch(const QList<int> &orderedIds)
+{
+    // Build a map from id to desired position
+    QHash<int, int> idToDesiredPos;
+    for (int i = 0; i < orderedIds.size(); ++i)
+    {
+        idToDesiredPos.insert(orderedIds[i], i);
+    }
+
+    // Move items into their correct positions
+    for (int desiredPos = 0; desiredPos < m_{{ ent.camel_name }}Events.size(); ++desiredPos)
+    {
+        // Find which item should be at desiredPos
+        int currentId = m_{{ ent.camel_name }}Events[desiredPos].id;
+        if (idToDesiredPos.value(currentId, desiredPos) == desiredPos)
+            continue;
+
+        // Find the item that belongs at desiredPos
+        int sourcePos = -1;
+        for (int j = desiredPos + 1; j < m_{{ ent.camel_name }}Events.size(); ++j)
+        {
+            if (idToDesiredPos.value(m_{{ ent.camel_name }}Events[j].id, j) == desiredPos)
+            {
+                sourcePos = j;
+                break;
+            }
+        }
+
+        if (sourcePos < 0)
+            continue;
+
+        beginMoveRows(QModelIndex(), sourcePos, sourcePos, QModelIndex(), desiredPos);
+        m_{{ ent.camel_name }}Events.move(sourcePos, desiredPos);
+        endMoveRows();
+    }
 }
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
