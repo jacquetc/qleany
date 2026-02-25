@@ -75,7 +75,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --release --out dist --auditwheel skip
           manylinux: auto
           before-script-linux: |
             if command -v yum &> /dev/null; then
