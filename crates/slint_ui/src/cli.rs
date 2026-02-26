@@ -245,6 +245,10 @@ pub struct DocsArgs {
     /// Which documentation to show
     #[command(subcommand)]
     pub target: Option<DocsTarget>,
+
+    /// Output raw Markdown instead of terminal-formatted text
+    #[arg(long, global = true)]
+    pub md: bool,
 }
 
 #[derive(Subcommand, Clone)]

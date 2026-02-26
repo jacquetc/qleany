@@ -7,21 +7,33 @@ static DOCS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/../../docs/");
 
 static README: &str = include_str!("../../../../README.md");
 
+fn print_md(content: &str, raw: bool) {
+    if raw {
+        println!("{}", content);
+    } else {
+        let skin = termimad::MadSkin::default();
+        skin.print_text(content);
+    }
+    println!();
+}
+
 pub fn execute(
-    app_context: &Arc<AppContext>,
+    _app_context: &Arc<AppContext>,
     args: &DocsArgs,
     output: &OutputContext,
 ) -> anyhow::Result<()> {
-    let target = args.target.as_ref().cloned().unwrap_or(DocsTarget::All);
+    let raw = args.md;
 
-    let skin = termimad::MadSkin::default();
-
-    // When showing all docs, prepend a listing of available commands
-    if !output.quiet {
-        let listing = "\
+    // No target → show help listing and return
+    let target = match args.target.as_ref() {
+        Some(t) => t.clone(),
+        None => {
+            if !output.quiet {
+                let listing = "\
 **Available documentation commands:**
 
 |:-|:-|:-|
+|`qleany docs all`||All documentations|
 |`qleany docs introduction`|`intro`|Introduction (README)|
 |`qleany docs quick-start-rust`|`start-rust`|Quick Start — Rust|
 |`qleany docs quick-start-cpp-qt`|`start-cpp`|Quick Start — C++/Qt|
@@ -36,17 +48,18 @@ pub fn execute(
 |`qleany docs troubleshooting`|`trouble`|Troubleshooting|
 |-|-|-|
 
----
+Use `--md` to output raw Markdown instead of terminal-formatted text.
 ";
-        skin.print_text(listing);
-        println!();
-    }
+                print_md(listing, raw);
+            }
+            return Ok(());
+        }
+    };
 
     // Handle Intro specially (README.md is not in docs/)
     if matches!(target, DocsTarget::Introduction | DocsTarget::All) {
         if !output.quiet {
-            skin.print_text(README);
-            println!();
+            print_md(README, raw);
         }
         if matches!(target, DocsTarget::Introduction) {
             return Ok(());
@@ -86,8 +99,7 @@ pub fn execute(
             Some(file) => {
                 let content = file.contents_utf8().unwrap_or("[binary content]");
                 if !output.quiet {
-                    skin.print_text(content);
-                    println!();
+                    print_md(content, raw);
                 }
             }
             None => {
