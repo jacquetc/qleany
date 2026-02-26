@@ -16,6 +16,9 @@ use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
 use std::sync::Arc;
+{%- if s.entities[e].owner %}
+use common::direct_access::repository_factory;
+{%- endif %}
 
 pub struct {{ s.entities[e].pascal_name }}UnitOfWork {
     context: DbContext,
@@ -97,7 +100,37 @@ impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationshipMulti")]
 {%- endif %}
-impl {{ s.entities[e].pascal_name }}UnitOfWorkTrait for {{ s.entities[e].pascal_name }}UnitOfWork {}
+impl {{ s.entities[e].pascal_name }}UnitOfWorkTrait for {{ s.entities[e].pascal_name }}UnitOfWork {
+{%- if s.entities[e].owner %}
+    fn create_{{ s.entities[e].snake_name }}_with_owner(&self, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
+    }
+
+    fn create_{{ s.entities[e].snake_name }}_multi_with_owner(&self, entities: &[{{ s.entities[e].pascal_name }}], owner_id: EntityId, index: i32) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
+    }
+
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        Ok(repo.get_relationships_from_owner(owner_id)?)
+    }
+
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        repo.set_relationships_in_owner(&mut event_buffer, owner_id, ids)?;
+        Ok(())
+    }
+{%- endif %}
+}
 
 pub struct {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
     context: DbContext,

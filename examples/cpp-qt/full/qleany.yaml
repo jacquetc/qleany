@@ -38,6 +38,7 @@ entities:
   inherits_from: EntityBase
   allow_direct_access: true
   undoable: true
+  single_model: true
   fields:
   - name: name
     type: string

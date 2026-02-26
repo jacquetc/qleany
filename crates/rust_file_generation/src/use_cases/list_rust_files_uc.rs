@@ -483,12 +483,13 @@ impl ListRustFilesUseCase {
                     field: None,
                 });
 
+                // create_orphans use cases (always generated)
                 files.push(File {
                     id: 0,
-                    name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    name: format!("create_orphans_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
-                    template_name: "entity_create_use_case".to_string(),
+                    template_name: "entity_create_orphans_use_case".to_string(),
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
@@ -497,10 +498,13 @@ impl ListRustFilesUseCase {
 
                 files.push(File {
                     id: 0,
-                    name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    name: format!(
+                        "create_orphans_{}_multi_uc.rs",
+                        heck::AsSnakeCase(&entity.name)
+                    ),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
-                    template_name: "entity_create_multi_use_case".to_string(),
+                    template_name: "entity_create_orphans_multi_use_case".to_string(),
                     feature: None,
                     entity: Some(entity.id),
                     use_case: None,
@@ -588,6 +592,45 @@ impl ListRustFilesUseCase {
                         relative_path: relative_path.clone(),
                         group: "entities".to_string(),
                         template_name: "entity_set_relationship_use_case".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+                }
+
+                // create use cases with owner (only for owned entities)
+                let has_owner = relationships.iter().any(|r| {
+                    if let Some(r) = r {
+                        r.right_entity == entity.id
+                            && r.strength == common::entities::Strength::Strong
+                    } else {
+                        false
+                    }
+                });
+
+                if has_owner {
+                    files.push(File {
+                        id: 0,
+                        name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                        relative_path: relative_path.clone(),
+                        group: "entities".to_string(),
+                        template_name: "entity_create_use_case".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+
+                    files.push(File {
+                        id: 0,
+                        name: format!(
+                            "create_{}_multi_uc.rs",
+                            heck::AsSnakeCase(&entity.name)
+                        ),
+                        relative_path: relative_path.clone(),
+                        group: "entities".to_string(),
+                        template_name: "entity_create_multi_use_case".to_string(),
                         feature: None,
                         entity: Some(entity.id),
                         use_case: None,

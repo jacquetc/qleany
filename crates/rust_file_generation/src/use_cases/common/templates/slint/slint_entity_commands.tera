@@ -13,11 +13,39 @@ use direct_access::{{ entity.pascal_name }}RelationshipDto;
 use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.snake_name }}_controller};
 use common::types::EntityId;
 
-/// Create a new {{ entity.snake_name }} entity
+/// Create a new {{ entity.snake_name }} entity (orphan, no parent)
+pub fn create_orphans_{{ entity.snake_name }}(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dto: &Create{{ entity.pascal_name }}Dto,
+) -> Result<{{ entity.pascal_name }}Dto, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::create_orphans(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dto,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::create_orphans(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dto,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error creating {{ entity.snake_name }}: {:?}", e))
+}
+
+{% if entity.owner -%}
+/// Create a new {{ entity.snake_name }} entity as child of owner
 pub fn create_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dto: &Create{{ entity.pascal_name }}Dto,
+    owner_id: EntityId,
+    index: i32,
 ) -> Result<{{ entity.pascal_name }}Dto, String> {
     {% if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -27,22 +55,55 @@ pub fn create_{{ entity.snake_name }}(
         &mut *undo_redo_manager,
         stack_id,
         dto,
+        owner_id,
+        index,
     )
     {% else %}
     {{ entity.snake_name }}_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
         dto,
+        owner_id,
+        index,
     )
     {% endif %}
     .map_err(|e| format!("Error creating {{ entity.snake_name }}: {:?}", e))
 }
+{% endif -%}
 
-/// Create multiple {{ entity.snake_name }} entities
+/// Create multiple {{ entity.snake_name }} entities (orphan, no parent)
+pub fn create_orphans_{{ entity.snake_name }}_multi(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dtos: &[Create{{ entity.pascal_name }}Dto],
+) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+    {% if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::create_orphans_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        dtos,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::create_orphans_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dtos,
+    )
+    {% endif %}
+    .map_err(|e| format!("Error creating entities: {:?}", e))
+}
+
+{% if entity.owner -%}
+/// Create multiple {{ entity.snake_name }} entities as children of owner
 pub fn create_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dtos: &[Create{{ entity.pascal_name }}Dto],
+    owner_id: EntityId,
+    index: i32,
 ) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
     {% if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -52,16 +113,21 @@ pub fn create_{{ entity.snake_name }}_multi(
         &mut *undo_redo_manager,
         stack_id,
         dtos,
+        owner_id,
+        index,
     )
     {% else %}
     {{ entity.snake_name }}_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
         dtos,
+        owner_id,
+        index,
     )
     {% endif %}
     .map_err(|e| format!("Error creating entities: {:?}", e))
 }
+{% endif -%}
 
 /// Get a {{ entity.snake_name }} entity by ID
 pub fn get_{{ entity.snake_name }}(ctx: &AppContext, id: &EntityId) -> Result<Option<{{ entity.pascal_name }}Dto>, String> {

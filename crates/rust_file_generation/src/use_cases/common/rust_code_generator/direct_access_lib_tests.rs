@@ -68,6 +68,12 @@ fn render_direct_access_lib_lists_entities() {
             snake_name: "feature".into(),
             pascal_name: "Feature".into(),
             fields: vec![],
+            owner: None,
+            owner_pascal_name: None,
+            owner_snake_name: None,
+            owner_relationship_field_pascal_name: None,
+            owner_relationship_field_snake_name: None,
+            owner_relationship_type: None,
         },
     );
     entities.insert(
@@ -80,6 +86,12 @@ fn render_direct_access_lib_lists_entities() {
             snake_name: "field".into(),
             pascal_name: "Field".into(),
             fields: vec![],
+            owner: None,
+            owner_pascal_name: None,
+            owner_snake_name: None,
+            owner_relationship_field_pascal_name: None,
+            owner_relationship_field_snake_name: None,
+            owner_relationship_type: None,
         },
     );
 

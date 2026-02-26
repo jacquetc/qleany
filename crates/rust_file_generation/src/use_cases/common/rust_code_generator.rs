@@ -6,7 +6,7 @@ use anyhow::Result;
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, Root, UseCase, UserInterface, Workspace,
+    Global, Relationship, RelationshipType, Root, Strength, UseCase, UserInterface, Workspace,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -77,6 +77,12 @@ struct EntityVM {
     pub snake_name: String,
     pub pascal_name: String,
     pub fields: Vec<FieldVM>,
+    pub owner: Option<EntityId>,
+    pub owner_pascal_name: Option<String>,
+    pub owner_snake_name: Option<String>,
+    pub owner_relationship_field_pascal_name: Option<String>,
+    pub owner_relationship_field_snake_name: Option<String>,
+    pub owner_relationship_type: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -346,6 +352,10 @@ impl SnapshotBuilder {
             }
         }
 
+        let owner = Self::get_entity_owner(uow, &entity_id);
+        let owner_entity: Option<Entity> =
+            owner.and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
+
         Ok(EntityVM {
             inner: entity.clone(),
             fields: fields_vm_vec,
@@ -354,7 +364,89 @@ impl SnapshotBuilder {
             backward_relationships: rel_bwd,
             snake_name: heck::AsSnakeCase(&entity.name).to_string(),
             pascal_name: heck::AsPascalCase(&entity.name).to_string(),
+            owner,
+            owner_pascal_name: owner_entity
+                .as_ref()
+                .map(|e| heck::AsPascalCase(&e.name).to_string()),
+            owner_snake_name: owner_entity
+                .as_ref()
+                .map(|e| heck::AsSnakeCase(&e.name).to_string()),
+            owner_relationship_field_pascal_name:
+                Self::get_entity_owner_relationship_field_pascal_name(uow, entity_id),
+            owner_relationship_field_snake_name:
+                Self::get_entity_owner_relationship_field_snake_name(uow, entity_id),
+            owner_relationship_type: Self::get_entity_owner_relationship_type(uow, entity_id)
+                .map(|rt| format!("{:?}", rt)),
         })
+    }
+
+    fn get_entity_owner(uow: &dyn GenerationReadOps, entity_id: &EntityId) -> Option<EntityId> {
+        let entity: Option<Entity> = uow.get_entity(entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(rel.left_entity);
+                }
+            }
+        }
+        None
+    }
+
+    fn get_entity_owner_relationship_field_pascal_name(
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
+    ) -> Option<String> {
+        let entity: Option<Entity> = uow.get_entity(entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(heck::AsPascalCase(rel.field_name.clone()).to_string());
+                }
+            }
+        }
+        None
+    }
+
+    fn get_entity_owner_relationship_field_snake_name(
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
+    ) -> Option<String> {
+        let entity: Option<Entity> = uow.get_entity(entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(heck::AsSnakeCase(rel.field_name.clone()).to_string());
+                }
+            }
+        }
+        None
+    }
+
+    fn get_entity_owner_relationship_type(
+        uow: &dyn GenerationReadOps,
+        entity_id: &EntityId,
+    ) -> Option<RelationshipType> {
+        let entity: Option<Entity> = uow.get_entity(entity_id).ok().flatten();
+        if let Some(entity) = entity {
+            let relationships = uow
+                .get_relationship_multi(entity.relationships.as_slice())
+                .ok()?;
+            for rel in relationships.into_iter().flatten() {
+                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                    return Some(rel.relationship_type);
+                }
+            }
+        }
+        None
     }
 
     pub(crate) fn for_file(
@@ -799,6 +891,12 @@ impl SnapshotBuilder {
                                                                 snake_name: "".to_string(),
                                                                 pascal_name: "".to_string(),
                                                                 fields: vec![],
+                                                                owner: None,
+                                                                owner_pascal_name: None,
+                                                                owner_snake_name: None,
+                                                                owner_relationship_field_pascal_name: None,
+                                                                owner_relationship_field_snake_name: None,
+                                                                owner_relationship_type: None,
                                                             }),
                                                         )
                                                     })
@@ -920,6 +1018,12 @@ impl SnapshotBuilder {
                                                     snake_name: "".to_string(),
                                                     pascal_name: "".to_string(),
                                                     fields: vec![],
+                                                    owner: None,
+                                                    owner_pascal_name: None,
+                                                    owner_snake_name: None,
+                                                    owner_relationship_field_pascal_name: None,
+                                                    owner_relationship_field_snake_name: None,
+                                                    owner_relationship_type: None,
                                                 },
                                             ),
                                         )
@@ -1201,6 +1305,12 @@ mod tests {
                         snake_name: "user".to_string(),
                         pascal_name: "User".to_string(),
                         fields: fields_vm,
+                        owner: None,
+                        owner_pascal_name: None,
+                        owner_snake_name: None,
+                        owner_relationship_field_pascal_name: None,
+                        owner_relationship_field_snake_name: None,
+                        owner_relationship_type: None,
                     },
                 );
                 m

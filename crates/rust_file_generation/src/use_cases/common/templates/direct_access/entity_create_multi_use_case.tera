@@ -6,18 +6,27 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{Create{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto};
 use anyhow::{Ok, Result};
+use common::types::EntityId;
 {% if s.entities[e].inner.undoable -%}
 use common::entities::{{ s.entities[e].pascal_name }};
+use common::snapshot::EntityTreeSnapshot;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use std::collections::VecDeque;
 {% endif %}
 
 pub struct Create{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
 {%- if s.entities[e].inner.undoable %}
-    undo_stack: VecDeque<Vec<{{ s.entities[e].pascal_name }}>>,
-    redo_stack: VecDeque<Vec<{{ s.entities[e].pascal_name }}>>,
+    created_entities: Vec<{{ s.entities[e].pascal_name }}>,
+    owner_id: Option<EntityId>,
+    index: i32,
+    old_tree_snapshot: Option<EntityTreeSnapshot>,
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+    existing_child_ids: Vec<EntityId>,
+    displaced_children_snapshot: Option<EntityTreeSnapshot>,
+{%- else %}
+    previous_owner_relationship_ids: Option<Vec<EntityId>>,
+{%- endif %}
 {%- endif %}
 }
 
@@ -26,22 +35,47 @@ impl Create{{ s.entities[e].pascal_name }}MultiUseCase {
         Create{{ s.entities[e].pascal_name }}MultiUseCase {
             uow_factory,
 {%- if s.entities[e].inner.undoable %}
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
+            created_entities: Vec::new(),
+            owner_id: None,
+            index: -1,
+            old_tree_snapshot: None,
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+            existing_child_ids: Vec::new(),
+            displaced_children_snapshot: None,
+{%- else %}
+            previous_owner_relationship_ids: None,
+{%- endif %}
 {%- endif %}
         }
     }
-    pub fn execute(&mut self, dtos: &[Create{{ s.entities[e].pascal_name }}Dto]) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-        // create
+
+    pub fn execute(&mut self, dtos: &[Create{{ s.entities[e].pascal_name }}Dto], owner_id: EntityId, index: i32) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entities = uow.create_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+
+{%- if s.entities[e].inner.undoable %}
+        self.owner_id = Some(owner_id);
+        self.index = index;
+
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+        // Pre-snapshot existing children that will be displaced by create
+        self.existing_child_ids = uow.get_relationships_from_owner(&owner_id)?;
+        if !self.existing_child_ids.is_empty() {
+            self.displaced_children_snapshot = Some(uow.snapshot_{{ s.entities[e].snake_name }}(&self.existing_child_ids)?);
+        }
+{%- else %}
+        // Capture owner junction state before create (for undo)
+        self.previous_owner_relationship_ids = Some(uow.get_relationships_from_owner(&owner_id)?);
+{%- endif %}
+{%- endif %}
+
+        // Create with owner (repository handles junction management internally)
+        let entities = uow.create_{{ s.entities[e].snake_name }}_multi_with_owner(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(), owner_id, index)?;
+
         uow.commit()?;
 
 {%- if s.entities[e].inner.undoable %}
-        //store in undo stack
-        self.undo_stack.push_back(entities.clone());
-        self.redo_stack.clear();
+        self.created_entities = entities.clone();
 {%- endif %}
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
@@ -51,25 +85,77 @@ impl Create{{ s.entities[e].pascal_name }}MultiUseCase {
 {% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.undo_stack.pop_back() {
+        if !self.created_entities.is_empty() {
+            let owner_id = self.owner_id.expect("owner_id not set");
+            let ids_to_remove: Vec<EntityId> = self.created_entities.iter().map(|e| e.id).collect();
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_{{ s.entities[e].snake_name }}_multi(
-                &last_entities.iter().map(|entity| entity.id).collect::<Vec<_>>(),
-            )?;
+
+            // Snapshot the created entity tree before removing (for redo)
+            self.old_tree_snapshot = Some(uow.snapshot_{{ s.entities[e].snake_name }}(&ids_to_remove)?);
+
+            // Remove the created entities
+            uow.delete_{{ s.entities[e].snake_name }}_multi(&ids_to_remove)?;
+
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+            // Restore displaced children and fix owner junction
+            if let Some(ref snap) = self.displaced_children_snapshot {
+                uow.restore_{{ s.entities[e].snake_name }}(snap)?;
+                uow.set_relationships_in_owner(&owner_id, &self.existing_child_ids)?;
+            } else {
+                uow.set_relationships_in_owner(&owner_id, &[])?;
+            }
+{%- else %}
+            // Restore owner junction to pre-create state
+            if let Some(ref prev_ids) = self.previous_owner_relationship_ids {
+                uow.set_relationships_in_owner(&owner_id, prev_ids)?;
+            }
+{%- endif %}
+
             uow.commit()?;
-            self.redo_stack.push_back(last_entities);
         }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.redo_stack.pop_back() {
+        if let Some(ref snapshot) = self.old_tree_snapshot {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.create_{{ s.entities[e].snake_name }}_multi(&last_entities)?;
+
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+            // Re-snapshot displaced children for next undo cycle
+            if !self.existing_child_ids.is_empty() {
+                self.displaced_children_snapshot = Some(uow.snapshot_{{ s.entities[e].snake_name }}(&self.existing_child_ids)?);
+                uow.delete_{{ s.entities[e].snake_name }}_multi(&self.existing_child_ids)?;
+            }
+
+            // Restore the created entity tree
+            uow.restore_{{ s.entities[e].snake_name }}(snapshot)?;
+
+            // Fix owner junction to point to the recreated entities
+            let created_ids: Vec<EntityId> = self.created_entities.iter().map(|e| e.id).collect();
+            uow.set_relationships_in_owner(&owner_id, &created_ids)?;
+{%- else %}
+            // Restore the created entity tree from snapshot
+            uow.restore_{{ s.entities[e].snake_name }}(snapshot)?;
+
+            // Rebuild owner junction: previous IDs + created IDs at the correct index
+            if let Some(ref prev_ids) = self.previous_owner_relationship_ids {
+                let mut redo_junction = prev_ids.clone();
+                let created_ids: Vec<EntityId> = self.created_entities.iter().map(|e| e.id).collect();
+                if self.index >= 0 && (self.index as usize) < redo_junction.len() {
+                    for (i, id) in created_ids.iter().enumerate() {
+                        redo_junction.insert(self.index as usize + i, *id);
+                    }
+                } else {
+                    redo_junction.extend(created_ids.iter());
+                }
+                uow.set_relationships_in_owner(&owner_id, &redo_junction)?;
+            }
+{%- endif %}
+
             uow.commit()?;
-            self.undo_stack.push_back(last_entities);
         }
         Ok(())
     }
