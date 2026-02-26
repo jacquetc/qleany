@@ -212,9 +212,19 @@ bool UndoRedoStack::isAutoCleanupEnabled() const
 
 void UndoRedoStack::onCommandFinished(bool success)
 {
-    if (!success && !m_undoStack.isEmpty() && m_undoStack.top() == m_currentCommand)
+    if (!success)
     {
-        m_undoStack.pop();
+        if (!m_redoStack.isEmpty() && m_redoStack.top() == m_currentCommand)
+        {
+            // Undo failed: move command back from redo to undo stack
+            auto cmd = m_redoStack.pop();
+            m_undoStack.push(cmd);
+        }
+        else if (!m_undoStack.isEmpty() && m_undoStack.top() == m_currentCommand)
+        {
+            // Execute or redo failed: drop command from undo stack
+            m_undoStack.pop();
+        }
     }
     m_currentCommand.reset();
     updateState();
