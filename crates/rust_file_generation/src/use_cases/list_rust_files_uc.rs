@@ -261,6 +261,18 @@ impl ListRustFilesUseCase {
 
         files.push(File {
             id: 0,
+            name: "snapshot.rs".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
+            group: "base".to_string(),
+            template_name: "snapshot".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
             name: "redb_tests.rs".to_string(),
             relative_path: format!("{}/common/tests/", prefix),
             group: "base".to_string(),
@@ -277,6 +289,18 @@ impl ListRustFilesUseCase {
             relative_path: format!("{}/common/tests/", prefix),
             group: "base".to_string(),
             template_name: "undo_redo_tests".to_string(),
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            name: "snapshot_tests.rs".to_string(),
+            relative_path: format!("{}/common/tests/", prefix),
+            group: "base".to_string(),
+            template_name: "snapshot_tests".to_string(),
             feature: None,
             entity: None,
             use_case: None,

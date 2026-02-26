@@ -181,6 +181,8 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get", thread_safe = true)]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti", thread_safe = true)]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot", thread_safe = true)]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore", thread_safe = true)]
 {%- endfor %}
 impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
 
@@ -381,6 +383,8 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
 impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
 

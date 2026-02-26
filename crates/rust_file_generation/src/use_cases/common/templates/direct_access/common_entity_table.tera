@@ -9,6 +9,7 @@ use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_na
 use crate::database::db_helpers;
 use crate::database::Bincode;
 use crate::entities::{{ s.entities[e].pascal_name }};
+use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
@@ -304,6 +305,144 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         Ok(())
     }
 {% endif %}
+
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
+
+        // Snapshot entity rows as bincode bytes
+        let mut rows = Vec::new();
+        for id in ids {
+            if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
+                let entity = guard.value();
+                let bytes = bincode::serialize(&entity).map_err(|e| Error::TableDoesNotExist(format!("bincode serialize error: {}", e)))?;
+                rows.push((*id, bytes));
+            }
+        }
+
+        // Snapshot forward junction tables
+        {% if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{% else %}let forward_junctions = Vec::new();{% endif %}
+        {% for rid, r in s.entities[e].forward_relationships %}
+        {
+            let junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
+                entries,
+            });
+        }
+        {%- endfor %}
+
+        // Snapshot backward junction tables (entries that reference any of the given ids)
+        {% if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{% else %}let backward_junctions = Vec::new();{% endif %}
+        {% for rid, r in s.entities[e].backward_relationships %}
+            {%- if r.inner.left_entity == e %}
+        {
+            let junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+            {%- else %}
+        {
+            let junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+            {%- endif %}
+        {%- endfor %}
+
+        Ok(TableLevelSnapshot {
+            entity_rows: TableSnapshot {
+                table_name: "{{ s.entities[e].snake_name }}".to_string(),
+                rows,
+            },
+            forward_junctions,
+            backward_junctions,
+        })
+    }
+
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
+
+        // Restore entity rows from bincode bytes (redb insert is upsert)
+        for (id, bytes) in &snap.entity_rows.rows {
+            let entity: {{ s.entities[e].pascal_name }} = bincode::deserialize(bytes).map_err(|e| Error::TableDoesNotExist(format!("bincode deserialize error: {}", e)))?;
+            {{ s.entities[e].snake_name }}_table.insert(*id, entity)?;
+        }
+
+        // Restore forward junction entries
+        {% for rid, r in s.entities[e].forward_relationships %}
+        {
+            let mut junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {%- endfor %}
+
+        // Restore backward junction entries
+        {% for rid, r in s.entities[e].backward_relationships %}
+            {%- if r.inner.left_entity == e %}
+        {
+            let mut junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+            {%- else %}
+        {
+            let mut junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+            {%- endif %}
+        {%- endfor %}
+
+        Ok(())
+    }
 }
 
 pub struct {{ s.entities[e].pascal_name }}RedbTableRO<'a> { transaction: &'a ReadTransaction }

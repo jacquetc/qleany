@@ -34,6 +34,8 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Snapshot")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Restore")]
 {% if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]

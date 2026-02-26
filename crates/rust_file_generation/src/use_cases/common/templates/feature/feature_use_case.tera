@@ -64,6 +64,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
 {%- endif %}
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %}QueryUnitOfWork{% else %}CommandUnitOfWork{% endif %} + Send + Sync {}
@@ -183,6 +185,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait : {
 {%- for e_id, entity in uc.entities  %}
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMulti")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot")]
+#[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
 {%- endif %}
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %} QueryUnitOfWork {% else %} CommandUnitOfWork {% endif %} {}

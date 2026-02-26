@@ -10,6 +10,7 @@ use crate::{
     direct_access::repository_factory,
     entities::{{ s.entities[e].pascal_name }},
     event::{DirectAccessEntity, EntityEvent, Event, EventBuffer, Origin},
+    snapshot::{EntityTreeSnapshot, TableLevelSnapshot},
     types::EntityId,
 };
 
@@ -44,6 +45,8 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn set_relationship_multi(&mut self, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
     fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
 {% endif %}
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
 }
 
 pub trait {{ s.entities[e].pascal_name }}TableRO {
@@ -231,6 +234,62 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         Ok(())
     }
 {% endif %}
+
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+        let table_data = self.redb_table.snapshot_rows(ids)?;
+
+        // Recursively snapshot strong children
+        #[allow(unused_mut)]
+        let mut children = Vec::new();
+        {% for f in s.entities[e].fields %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
+        {
+            // Extract child IDs from the forward junction snapshot for {{ f.snake_name }}
+            let junction_name = "{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }}_junction";
+            let child_ids: Vec<EntityId> = table_data.forward_junctions.iter()
+                .filter(|j| j.table_name == junction_name)
+                .flat_map(|j| j.entries.iter().flat_map(|(_, right_ids)| right_ids.iter().copied()))
+                .collect();
+            if !child_ids.is_empty() {
+                let child_repo = repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction);
+                children.push(child_repo.snapshot(&child_ids)?);
+            }
+        }
+        {%- endif %}
+        {%- endfor %}
+
+        Ok(EntityTreeSnapshot { table_data, children })
+    }
+
+    pub fn restore(&mut self, event_buffer: &mut EventBuffer, snap: &EntityTreeSnapshot) -> Result<(), Error> {
+        // Restore children first (bottom-up)
+        {% for f in s.entities[e].fields %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
+        for child_snap in &snap.children {
+            if child_snap.table_data.entity_rows.table_name == "{{ s.entities[f.inner.entity].snake_name }}" {
+                repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+                    .restore(event_buffer, child_snap)?;
+            }
+        }
+        {%- endif %}
+        {%- endfor %}
+
+        // Restore this entity's rows
+        self.redb_table.restore_rows(&snap.table_data)?;
+
+        // Emit Created events for restored entity IDs
+        let restored_ids: Vec<EntityId> = snap.table_data.entity_rows.rows.iter().map(|(id, _)| *id).collect();
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: restored_ids.clone(), data: None });
+        }
+{% if s.entities[e].forward_relationships %}
+        // Emit Updated events for restored relationships
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: restored_ids, data: None });
+        }
+{% endif %}
+        Ok(())
+    }
 }
 
 pub struct {{ s.entities[e].pascal_name }}RepositoryRO<'a> { redb_table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>, }

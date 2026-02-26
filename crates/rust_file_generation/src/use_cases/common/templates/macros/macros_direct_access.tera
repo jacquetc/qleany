@@ -972,6 +972,106 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
+    fn snapshot_action(
+        _entity_ident: &syn::Ident,
+        entity_snake_ident: &syn::Ident,
+        function_ident: &syn::Ident,
+        item_type: &ItemType,
+        thread_safe: bool,
+    ) -> proc_macro2::TokenStream {
+        let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
+
+        match item_type {
+            ItemType::Trait(_) => {
+                quote! {
+                    fn #function_ident(&self, ids: &[EntityId]) -> Result<common::snapshot::EntityTreeSnapshot>;
+                }
+            }
+            ItemType::Impl(_) => {
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<common::snapshot::EntityTreeSnapshot> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let snapshot = repo.snapshot(ids)?;
+                            Ok(snapshot)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, ids: &[EntityId]) -> Result<common::snapshot::EntityTreeSnapshot> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let snapshot = repo.snapshot(ids)?;
+                            Ok(snapshot)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn restore_action(
+        _entity_ident: &syn::Ident,
+        entity_snake_ident: &syn::Ident,
+        function_ident: &syn::Ident,
+        item_type: &ItemType,
+        thread_safe: bool,
+    ) -> proc_macro2::TokenStream {
+        let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
+
+        match item_type {
+            ItemType::Trait(_) => {
+                quote! {
+                    fn #function_ident(&self, snap: &common::snapshot::EntityTreeSnapshot) -> Result<()>;
+                }
+            }
+            ItemType::Impl(_) => {
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(&self, snap: &common::snapshot::EntityTreeSnapshot) -> Result<()> {
+                            use common::direct_access::repository_factory;
+
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let mut event_buffer = self.event_buffer.lock().unwrap();
+                            repo.restore(&mut event_buffer, snap)?;
+                            Ok(())
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(&self, snap: &common::snapshot::EntityTreeSnapshot) -> Result<()> {
+                            use common::direct_access::repository_factory;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let mut event_buffer = self.event_buffer.borrow_mut();
+                            repo.restore(&mut event_buffer, snap)?;
+                            Ok(())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Parse les arguments de l'attribut avec syn v2
     let args = parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
 
@@ -1064,6 +1164,8 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
         "SetRelationship" => format!("set_{}_relationship", entity_name_snake_case),
         "SetRelationshipMulti" => format!("set_{}_relationship_multi", entity_name_snake_case),
+        "Snapshot" => format!("snapshot_{}", entity_name_snake_case),
+        "Restore" => format!("restore_{}", entity_name_snake_case),
         _ => {
             return Error::new_spanned(args.first().unwrap(), "Unknown action")
                 .to_compile_error()
@@ -1183,6 +1285,20 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
             thread_safe,
         ),
         "SetRelationshipMulti" => set_relationship_multi_action(
+            &entity_ident,
+            &entity_snake_ident,
+            &function_ident,
+            &item_type,
+            thread_safe,
+        ),
+        "Snapshot" => snapshot_action(
+            &entity_ident,
+            &entity_snake_ident,
+            &function_ident,
+            &item_type,
+            thread_safe,
+        ),
+        "Restore" => restore_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,
