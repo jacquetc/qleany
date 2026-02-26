@@ -11,6 +11,7 @@ use common::{
     database::CommandUnitOfWork, entities::Feature, entities::Field, entities::File,
     entities::Global, entities::Relationship, entities::Root, entities::UseCase,
 };
+use heck::ToPascalCase;
 
 pub trait ListCppQtFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn ListCppQtFilesUnitOfWorkTrait>;
@@ -224,7 +225,6 @@ impl ListCppQtFilesUseCase {
             field: None,
         });
 
-
         files.push(File {
             id: 0,
             name: "app_bootstrap.cpp".to_string(),
@@ -236,7 +236,6 @@ impl ListCppQtFilesUseCase {
             use_case: None,
             field: None,
         });
-
 
         files.push(File {
             id: 0,
@@ -1606,11 +1605,18 @@ impl ListCppQtFilesUseCase {
             });
         }
 
-
-
         //----------------------------------------------------------------------
         // Presentation
         //----------------------------------------------------------------------
+
+        // 3 first letters
+        let application_short_name = global
+            .application_name
+            .chars()
+            .take(3)
+            .collect::<String>()
+            .to_pascal_case();
+
         let relative_path = format!("{}/presentation/", prefix);
 
         let qml_enabled = ui.cpp_qt_qtquick;
@@ -1627,15 +1633,468 @@ impl ListCppQtFilesUseCase {
                 use_case: None,
                 field: None,
             });
+
+            // Real controllers
+
+            let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_controllers_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "foreign_event_registry.h".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_event_registry_h".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "foreign_feature_event_registry.h".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_feature_event_registry_h".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "foreign_undo_redo_controller.h".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_undo_redo_controller_h".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // mock controllers
+
+            let relative_path = format!(
+                "{}/presentation/mock_imports/{}/Controllers",
+                prefix, application_short_name
+            );
+
+            files.push(File {
+                id: 0,
+                name: "EventRegistry.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "event_registry_qml".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "QCoroQmlTask.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "qcoro_qml_task_qml".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "UndoRedoController.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "undo_redo_controller_qml".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "qmldir".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "mock_controllers_qmldir".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // Real models
+
+            let relative_path = format!("{}/presentation/real_imports/models", prefix);
+
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_models_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // mock models
+
+            let relative_path = format!(
+                "{}/presentation/mock_imports/{}/Models",
+                prefix, application_short_name
+            );
+
+            files.push(File {
+                id: 0,
+                name: "qmldir".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "mock_models_qmldir".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // Real singles
+
+            let relative_path = format!("{}/presentation/real_imports/singles", prefix);
+
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_singles_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // mock singles
+
+            let relative_path = format!(
+                "{}/presentation/mock_imports/{}/Singles",
+                prefix, application_short_name
+            );
+
+            files.push(File {
+                id: 0,
+                name: "qmldir".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "mock_singles_qmldir".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            // Get entities
+            let entities = uow
+                .get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
+            let entities = uow.get_entity_multi(&entities)?;
+
+            for entity in &entities {
+                let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
+
+                // skip if entity is "heritage"
+                if entity.only_for_heritage {
+                    continue;
+                }
+
+                let entity_snake_name = heck::AsSnakeCase(&entity.name);
+                let entity_pascal_name = heck::AsPascalCase(&entity.name);
+
+                // Real controllers
+
+                let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+
+                files.push(File {
+                    id: 0,
+                    name: format!("foreign_{}_controller.h", entity_snake_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "foreign_entity_controller_h".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}Controller.h", entity_snake_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "entity_controller_qml".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
+                // mock controllers
+
+                let relative_path = format!(
+                    "{}/presentation/mock_imports/{}/Controllers",
+                    prefix, application_short_name
+                );
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}Events.qml", entity_snake_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "entity_events_qml".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
+                let fields = uow.get_entity_relationship(
+                    &entity.id,
+                    &common::direct_access::entity::EntityRelationshipField::Fields,
+                )?;
+                let fields = uow.get_field_multi(&fields)?;
+                let list_model_fields = fields
+                    .into_iter()
+                    .flatten()
+                    .filter(|f| f.list_model)
+                    .collect::<Vec<_>>();
+
+                for list_model_field in list_model_fields {
+                    let field_snake_name = heck::AsSnakeCase(&list_model_field.name);
+                    let field_pascal_name = heck::AsPascalCase(&list_model_field.name);
+
+                    // real models
+
+                    let relative_path = format!("{}/presentation/real_imports/models", prefix);
+
+                    files.push(File {
+                        id: 0,
+                        name: format!(
+                            "foreign_{}_{}_list_model.h",
+                            entity_snake_name, field_snake_name
+                        ),
+                        relative_path: relative_path.clone(),
+                        group: "QML Presentation".to_string(),
+                        template_name: "foreign_list_model_h".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: Some(list_model_field.id),
+                    });
+
+                    // mock models
+
+                    let relative_path = format!(
+                        "{}/presentation/mock_imports/{}/Models",
+                        prefix, application_short_name
+                    );
+
+                    files.push(File {
+                        id: 0,
+                        name: format!("{}{}.qml", entity_pascal_name, field_pascal_name),
+                        relative_path: relative_path.clone(),
+                        group: "QML Presentation".to_string(),
+                        template_name: "list_model_qml".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: Some(list_model_field.id),
+                    });
+                }
+
+                if entity.single_model {
+                    // real singles
+                    let relative_path = format!("{}/presentation/real_imports/singles", prefix);
+
+                    files.push(File {
+                        id: 0,
+                        name: format!("foreign_single_{}.h", entity_snake_name),
+                        relative_path: relative_path.clone(),
+                        group: "QML Presentation".to_string(),
+                        template_name: "foreign_single_h".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+
+                    // mock singles
+
+                    let relative_path = format!(
+                        "{}/presentation/mock_imports/{}/Singles",
+                        prefix, application_short_name
+                    );
+
+                    files.push(File {
+                        id: 0,
+                        name: format!("Single{}.qml", entity_pascal_name),
+                        relative_path: relative_path.clone(),
+                        group: "QML Presentation".to_string(),
+                        template_name: "single_entity.qml".to_string(),
+                        feature: None,
+                        entity: Some(entity.id),
+                        use_case: None,
+                        field: None,
+                    });
+                }
+            }
+
+            let features = uow
+                .get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Features)?;
+
+            let features = uow.get_feature_multi(&features)?;
+
+            for feature in &features {
+                let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
+
+                let feature_snake_name = heck::AsSnakeCase(&feature.name);
+                let feature_pascal_name = heck::AsPascalCase(&feature.name);
+
+                let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}_controller.h", feature_snake_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "foreign_feature_controller_h".to_string(),
+                    feature: Some(feature.id),
+                    entity: None,
+                    use_case: None,
+                    field: None,
+                });
+
+                // mock controllers feature
+
+                let relative_path = format!(
+                    "{}/presentation/mock_imports/{}/Controllers",
+                    prefix, application_short_name
+                );
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}Controller.qml", feature_pascal_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "feature_controller_qml".to_string(),
+                    feature: Some(feature.id),
+                    entity: None,
+                    use_case: None,
+                    field: None,
+                });
+            }
         }
 
         //----------------------------------------------------------------------
-        // QtWidgets GUI
+        // QtQuick GUI
         //----------------------------------------------------------------------
 
-        let relative_path = format!("{}/qtquick_app/", prefix);
-
         if ui.cpp_qt_qtquick {
+            let relative_path = format!("{}/qtquick_app/", prefix);
+
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "main.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_main_qml".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "main.cpp".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_main_cpp".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "qtquickcontrols2.conf".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_qtquickcontrols2_conf".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            let relative_path = format!("{}/qtquick_app/content/", prefix);
+
+            files.push(File {
+                id: 0,
+                name: "CmakeLists.txt".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_content_cmake".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                name: "main.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QtQuick UI".to_string(),
+                template_name: "qt_quick_app_qml".to_string(),
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            let relative_path =
+                format!("{}/qtquick_app/content/{}", prefix, application_short_name);
+
             files.push(File {
                 id: 0,
                 name: "CmakeLists.txt".to_string(),
