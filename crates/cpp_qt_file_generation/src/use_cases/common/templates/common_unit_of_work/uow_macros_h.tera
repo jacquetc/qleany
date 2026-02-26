@@ -92,12 +92,6 @@
     virtual SCDatabase::EntityTreeSnapshot snapshot##Name(const QList<int> &ids) = 0; \
     virtual void restore##Name(const SCDatabase::EntityTreeSnapshot &snap) = 0
 
-// -- Snapshot Related fragments --
-
-#define DECLARE_UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum) \
-    virtual SCDatabase::EntityTreeSnapshot snapshot##Name##Related(int id, RelFieldEnum rel) = 0; \
-    virtual void restore##Name##Related(RelFieldEnum rel, const SCDatabase::EntityTreeSnapshot &snap) = 0
-
 // -- Relationship fragments --
 
 #define DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)                                                          \
@@ -107,8 +101,7 @@
                                                                              RelFieldEnum rel) = 0;                   \
     [[nodiscard]] virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                             \
     [[nodiscard]] virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                         \
-                                                                     int offset, int limit) = 0;                      \
-    DECLARE_UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)
+                                                                     int offset, int limit) = 0
 
 
 // #############################################################################
@@ -186,19 +179,6 @@
         repo->restore(snap);                                                                                          \
     }
 
-#define UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)                                                               \
-  public:                                                                                                             \
-    SCDatabase::EntityTreeSnapshot snapshot##Name##Related(int id, RelFieldEnum rel) override                         \
-    {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
-        return repo->snapshotRelated(id, rel);                                                                        \
-    }                                                                                                                 \
-    void restore##Name##Related(RelFieldEnum rel, const SCDatabase::EntityTreeSnapshot &snap) override                \
-    {                                                                                                                 \
-        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
-        repo->restoreRelated(rel, snap);                                                                              \
-    }
-
 // -- CRUD composite --
 
 #define UOW_ENTITY_CRUD(Name)                                                                                         \
@@ -248,6 +228,5 @@
     {                                                                                                                 \
         auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
-    }                                                                                                                 \
-    UOW_ENTITY_SNAPSHOT_RELATED(Name, RelFieldEnum)
+    }
 

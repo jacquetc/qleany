@@ -79,10 +79,6 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                          int limit) const override;
 
-    // Snapshot / Restore related children
-    Database::EntityTreeSnapshot snapshotRelated(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) override;
-    void restoreRelated({{ ent.pascal_name }}RelationshipField relationship, const Database::EntityTreeSnapshot &snap) override;
-
 {%- endif %}
 
   private:

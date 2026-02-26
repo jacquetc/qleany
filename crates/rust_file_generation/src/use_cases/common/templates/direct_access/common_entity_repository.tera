@@ -178,6 +178,27 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
 
     pub fn set_relationship_multi(&mut self, event_hub: &Arc<EventHub>, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        let all_right_ids: Vec<EntityId> = relationships.iter().flat_map(|(_, ids)| ids.iter().copied()).collect();
+        if !all_right_ids.is_empty() {
+            match field {
+                {% for rid, r in s.entities[e].forward_relationships %}
+                {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {
+                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction);
+                    let found = child_repo.get_multi(&all_right_ids)?;
+                    let missing: Vec<_> = all_right_ids.iter().zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(
+                            format!("set_relationship_multi: child entities do not exist: {:?}", missing)
+                        ));
+                    }
+                }
+                {%- endfor %}
+            }
+        }
         self.redb_table.set_relationship_multi(field, relationships.clone())?;
         for (left_id, right_ids) in relationships {
             event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![left_id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
@@ -186,6 +207,26 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
     pub fn set_relationship(&mut self, event_hub: &Arc<EventHub>, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        if !right_ids.is_empty() {
+            match field {
+                {% for rid, r in s.entities[e].forward_relationships %}
+                {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {
+                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction);
+                    let found = child_repo.get_multi(right_ids)?;
+                    let missing: Vec<_> = right_ids.iter().zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(
+                            format!("set_relationship: child entities do not exist: {:?}", missing)
+                        ));
+                    }
+                }
+                {%- endfor %}
+            }
+        }
         self.redb_table.set_relationship(id, field, right_ids)?;
         event_hub.send_event(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(())

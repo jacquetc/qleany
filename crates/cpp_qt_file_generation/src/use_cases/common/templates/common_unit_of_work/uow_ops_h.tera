@@ -115,10 +115,6 @@ class IEntityWithRelationships : public IEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
-
-    // Snapshot / Restore related children (dispatches to child repo by relationship field)
-    virtual Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) = 0;
-    virtual void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 /**
@@ -135,10 +131,6 @@ class IOrphanEntityWithRelationships : public IOrphanEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
-
-    // Snapshot / Restore related children (dispatches to child repo by relationship field)
-    virtual Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) = 0;
-    virtual void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) = 0;
 };
 
 // =============================================================================
@@ -419,19 +411,6 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
         repo->restore(snap);
     }
 
-    // Snapshot / Restore related children
-    Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) override
-    {
-        auto repo = self().makeRepository();
-        return repo->snapshotRelated(id, rel);
-    }
-
-    void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) override
-    {
-        auto repo = self().makeRepository();
-        repo->restoreRelated(rel, snap);
-    }
-
   private:
     Derived &self() { return static_cast<Derived &>(*this); }
 };
@@ -515,19 +494,6 @@ class OrphanEntityFullImpl : public virtual IOrphanEntityWithRelationships<Entit
     {
         auto repo = self().makeRepository();
         repo->restore(snap);
-    }
-
-    // Snapshot / Restore related children
-    Database::EntityTreeSnapshot snapshotRelated(int id, RelFieldEnum rel) override
-    {
-        auto repo = self().makeRepository();
-        return repo->snapshotRelated(id, rel);
-    }
-
-    void restoreRelated(RelFieldEnum rel, const Database::EntityTreeSnapshot &snap) override
-    {
-        auto repo = self().makeRepository();
-        repo->restoreRelated(rel, snap);
     }
 
   private:

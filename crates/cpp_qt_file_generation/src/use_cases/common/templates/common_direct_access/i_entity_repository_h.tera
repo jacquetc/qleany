@@ -51,9 +51,6 @@ class I{{ ent.pascal_name }}Repository
     virtual QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                                  int limit) const = 0;
 
-    // Snapshot / Restore related children (dispatches to child repo by relationship field)
-    virtual Database::EntityTreeSnapshot snapshotRelated(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) = 0;
-    virtual void restoreRelated({{ ent.pascal_name }}RelationshipField relationship, const Database::EntityTreeSnapshot &snap) = 0;
     {%- endif %}
 
     // Snapshot / Restore

@@ -167,18 +167,6 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         return {};
     }
 
-    {{ s.global.application_pascal_name }}::Common::Database::EntityTreeSnapshot snapshotRelated(int id, {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootRelationshipField rel) override
-    {
-
-        return {};
-    }
-
-    void restoreRelated({{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootRelationshipField rel, const {{ s.global.application_pascal_name }}::Common::Database::EntityTreeSnapshot &snap) override
-    {
-         Q_UNUSED(rel)
-        Q_UNUSED(snap)
-    }
-
   private:
     QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> m_createdRoots;
     int m_nextId = 0;
