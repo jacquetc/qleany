@@ -15,8 +15,10 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
         return m_created{{ ent.pascal_plural_name }};
     }
 
+{%- if ent.inner.undoable %}
     // Store original data for undo/redo
     m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
+{%- endif %}
 
     try
     {
@@ -48,6 +50,8 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
 
     return m_created{{ ent.pascal_plural_name }};
 }
+
+{%- if ent.inner.undoable %}
 
 SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 {
@@ -110,5 +114,6 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::redo()
         throw;
     }
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

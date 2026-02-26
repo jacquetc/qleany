@@ -6,40 +6,51 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].pascal_name }}RelationshipDto;
 use anyhow::Result;
+{% if s.entities[e].inner.undoable -%}
 use common::types::Savepoint;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
 use std::collections::VecDeque;
+{% endif %}
 
 pub struct Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if s.entities[e].inner.undoable %}
     undo_stack: VecDeque<Savepoint>,
     redo_stack: VecDeque<{{ s.entities[e].pascal_name }}RelationshipDto>,
+{%- endif %}
 }
 
 impl Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
             uow_factory,
+{%- if s.entities[e].inner.undoable %}
             undo_stack: VecDeque::new(),
             redo_stack: VecDeque::new(),
+{%- endif %}
         }
     }
 
     pub fn execute(&mut self, dto: &{{ s.entities[e].pascal_name }}RelationshipDto) -> Result<()> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
+{%- if s.entities[e].inner.undoable %}
         let savepoint = uow.create_savepoint()?;
+{%- endif %}
         uow.set_{{ s.entities[e].snake_name }}_relationship(&dto.id, &dto.field, dto.right_ids.as_slice())?;
         uow.commit()?;
+{%- if s.entities[e].inner.undoable %}
         // store savepoint in undo stack
         self.undo_stack.push_back(savepoint);
         self.redo_stack.push_back(dto.clone());
+{%- endif %}
 
         Ok(())
     }
 }
 
+{% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
@@ -66,6 +77,7 @@ impl UndoRedoCommand for Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
         self
     }
 }
+{% endif -%}
 {% else %}
 // No entity bound to this file
 {% endif %}

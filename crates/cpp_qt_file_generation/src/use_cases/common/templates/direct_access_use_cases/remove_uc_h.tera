@@ -5,13 +5,17 @@
 #include "common/dto_mapper.h"
 #include "entities/{{ ent.snake_name }}.h"
 #include "i_{{ ent.snake_name }}_unit_of_work.h"
+{%- if ent.inner.undoable %}
 #include "undo_redo/undo_redo_command.h"
+{%- endif %}
 #include <memory>
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
 namespace SCE = Common::Entities;
+{%- if ent.inner.undoable %}
 namespace SCU = Common::UndoRedo;
+{%- endif %}
 namespace SCDatabase = Common::Database;
 
 class Remove{{ ent.pascal_name }}UseCase
@@ -23,15 +27,22 @@ class Remove{{ ent.pascal_name }}UseCase
     ~Remove{{ ent.pascal_name }}UseCase() = default;
 
     QList<int> execute(const QList<int> &{{ ent.camel_name }}Ids);
+{%- if ent.inner.undoable %}
     SCU::Result<void> undo();
     SCU::Result<void> redo();
+{%- endif %}
 
   private:
     std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+{%- if ent.inner.undoable %}
     QList<int> m_original{{ ent.pascal_name }}Ids;
     QList<int> m_removedIds;
     SCDatabase::EntityTreeSnapshot m_entityTreeSnapshot;
     bool m_hasExecuted = false;
+{%- else %}
+    QList<int> m_removedIds;
+    bool m_hasExecuted = false;
+{%- endif %}
 };
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

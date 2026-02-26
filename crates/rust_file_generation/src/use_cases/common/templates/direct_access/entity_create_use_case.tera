@@ -6,23 +6,29 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{Create{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto};
 use anyhow::{Ok, Result};
+{% if s.entities[e].inner.undoable -%}
 use common::entities::{{ s.entities[e].pascal_name }};
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
 use std::collections::VecDeque;
+{% endif %}
 
 pub struct Create{{ s.entities[e].pascal_name }}UseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if s.entities[e].inner.undoable %}
     undo_stack: VecDeque<{{ s.entities[e].pascal_name }}>,
     redo_stack: VecDeque<{{ s.entities[e].pascal_name }}>,
+{%- endif %}
 }
 
 impl Create{{ s.entities[e].pascal_name }}UseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Create{{ s.entities[e].pascal_name }}UseCase {
             uow_factory,
+{%- if s.entities[e].inner.undoable %}
             undo_stack: VecDeque::new(),
             redo_stack: VecDeque::new(),
+{%- endif %}
         }
     }
 
@@ -32,14 +38,17 @@ impl Create{{ s.entities[e].pascal_name }}UseCase {
         let entity = uow.create_{{ s.entities[e].snake_name }}(&dto.into())?;
         uow.commit()?;
 
+{%- if s.entities[e].inner.undoable %}
         // store in undo stack
         self.undo_stack.push_back(entity.clone());
         self.redo_stack.clear();
+{%- endif %}
 
         Ok(entity.into())
     }
 }
 
+{% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}UseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entity) = self.undo_stack.pop_back() {
@@ -66,6 +75,7 @@ impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}UseCase {
         self
     }
 }
+{% endif -%}
 {% else %}
 // No entity bound to this file
 {% endif %}

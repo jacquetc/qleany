@@ -5,13 +5,17 @@
 #include "common/dto_mapper.h"
 #include "entities/{{ ent.snake_name }}.h"
 #include "i_{{ ent.snake_name }}_unit_of_work.h"
+{%- if ent.inner.undoable %}
 #include "undo_redo/undo_redo_command.h"
+{%- endif %}
 #include <memory>
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
 namespace SCE = Common::Entities;
+{%- if ent.inner.undoable %}
 namespace SCU = Common::UndoRedo;
+{%- endif %}
 namespace SCD{{ ent.pascal_name }} = Common::DirectAccess::{{ ent.pascal_name }};
 
 class SetRelationshipIdsUseCase
@@ -23,15 +27,19 @@ class SetRelationshipIdsUseCase
     ~SetRelationshipIdsUseCase() = default;
 
     void execute(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField entityRelationship, const QList<int> &relatedIds);
+{%- if ent.inner.undoable %}
     SCU::Result<void> undo();
     SCU::Result<void> redo();
+{%- endif %}
 
   private:
     std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
     int m_{{ ent.camel_name }}Id = 0;
     {{ ent.pascal_name }}RelationshipField m_relationship;
     QList<int> m_newRelatedIds;
+{%- if ent.inner.undoable %}
     QList<int> m_originalRelatedIds;
+{%- endif %}
     bool m_hasExecuted = false;
 };
 

@@ -23,8 +23,10 @@ void SetRelationshipIdsUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pasca
         if (!m_uow->beginTransaction())
             throw std::runtime_error("Failed to begin transaction");
 
+{%- if ent.inner.undoable %}
         // Save original IDs for undo
         m_originalRelatedIds = m_uow->getRelationship({{ ent.camel_name }}Id, commonRel);
+{%- endif %}
 
         // Set the new relationship IDs (junction-only, no entity deletion)
         m_uow->setRelationship({{ ent.camel_name }}Id, commonRel, relatedIds);
@@ -44,6 +46,8 @@ void SetRelationshipIdsUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pasca
         throw;
     }
 }
+
+{%- if ent.inner.undoable %}
 
 SCU::Result<void> SetRelationshipIdsUseCase::undo()
 {
@@ -88,5 +92,6 @@ SCU::Result<void> SetRelationshipIdsUseCase::redo()
         throw;
     }
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

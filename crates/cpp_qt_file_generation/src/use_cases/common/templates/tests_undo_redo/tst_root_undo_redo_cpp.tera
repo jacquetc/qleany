@@ -1,15 +1,25 @@
+{%- set_global root_undoable = false %}
+{%- for eid, ent in s.entities %}
+{%- if ent.pascal_name == "Root" %}{% set_global root_undoable = ent.inner.undoable %}{% endif %}
+{%- endfor %}
 #include "root/dtos.h"
 #include "root/use_cases/create_orphans_uc.h"
 #include "root/use_cases/i_root_unit_of_work.h"
+{%- if root_undoable %}
 #include "undo_redo/undo_redo_command.h"
+{%- endif %}
 #include <QObject>
+{%- if root_undoable %}
 #include <QSignalSpy>
+{%- endif %}
 #include <QTest>
 #include <memory>
 
 using namespace Qt::StringLiterals;
 
+{%- if root_undoable %}
 namespace SCU = {{ s.global.application_pascal_name }}::Common::UndoRedo;
+{%- endif %}
 namespace SDAR = {{ s.global.application_pascal_name }}::DirectAccess::Root;
 
 // Mock unit of work for testing
@@ -182,12 +192,38 @@ class TestRootUndoRedo : public QObject
     Q_OBJECT
 
   private Q_SLOTS:
+    void testCreateOrphansUseCaseExecute();
+{%- if root_undoable %}
     void testCreateOrphansUseCaseExecuteUndoRedo();
     void testCreateOrphansUseCaseWithCommand();
     void testCreateOrphansUseCaseUndoWithoutExecute();
+{%- endif %}
 
   private:
 };
+
+void TestRootUndoRedo::testCreateOrphansUseCaseExecute()
+{
+    // Arrange
+    auto mockUow = std::make_unique<MockRootUnitOfWork>();
+    auto *uowPtr = mockUow.get();
+    SDAR::CreateOrphanRootUseCase useCase(std::move(mockUow));
+
+    QList<SDAR::CreateRootDto> createDtos;
+    SDAR::CreateRootDto dto1;
+    dto1.createdAt = QDateTime::currentDateTime();
+    createDtos.append(dto1);
+
+    // Act - Execute
+    auto results = useCase.execute(createDtos);
+
+    // Assert - Verify creation
+    QCOMPARE(results.size(), 1);
+    QVERIFY(results.first().id > 0);
+    QCOMPARE(uowPtr->createdRoots().size(), 1);
+}
+
+{%- if root_undoable %}
 
 void TestRootUndoRedo::testCreateOrphansUseCaseExecuteUndoRedo()
 {
@@ -287,6 +323,7 @@ void TestRootUndoRedo::testCreateOrphansUseCaseUndoWithoutExecute()
     QVERIFY(!undoResult.isSuccess());
     QVERIFY(undoResult.error().contains("Cannot undo"_L1));
 }
+{%- endif %}
 
 QTEST_MAIN(TestRootUndoRedo)
 #include "tst_root_undo_redo.moc"

@@ -15,16 +15,20 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
         return m_removedIds;
     }
 
+{%- if ent.inner.undoable %}
     // Store original data for undo/redo
     m_original{{ ent.pascal_name }}Ids = {{ ent.camel_name }}Ids;
+{%- endif %}
 
     try
     {
         if (!m_uow->beginTransaction())
             throw std::runtime_error("Failed to begin transaction");
 
+{%- if ent.inner.undoable %}
         // Snapshot the entity tree before removal (for undo)
         m_entityTreeSnapshot = m_uow->snapshot({{ ent.camel_name }}Ids);
+{%- endif %}
 
         // Perform the removal
         m_removedIds = m_uow->remove({{ ent.camel_name }}Ids);
@@ -41,6 +45,8 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
 
     return m_removedIds;
 }
+
+{%- if ent.inner.undoable %}
 
 SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
 {
@@ -96,5 +102,6 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::redo()
         throw;
     }
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

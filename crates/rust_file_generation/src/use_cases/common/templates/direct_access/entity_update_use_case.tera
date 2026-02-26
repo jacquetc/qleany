@@ -6,22 +6,28 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{{ s.entities[e].pascal_name }}Dto;
 use anyhow::{Ok, Result};
+{% if s.entities[e].inner.undoable -%}
 use common::{entities::{{ s.entities[e].pascal_name }}, undo_redo::UndoRedoCommand};
 use std::any::Any;
 use std::collections::VecDeque;
+{% endif %}
 
 pub struct Update{{ s.entities[e].pascal_name }}UseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if s.entities[e].inner.undoable %}
     undo_stack: VecDeque<{{ s.entities[e].pascal_name }}>,
     redo_stack: VecDeque<{{ s.entities[e].pascal_name }}>,
+{%- endif %}
 }
 
 impl Update{{ s.entities[e].pascal_name }}UseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Update{{ s.entities[e].pascal_name }}UseCase {
             uow_factory,
+{%- if s.entities[e].inner.undoable %}
             undo_stack: VecDeque::new(),
             redo_stack: VecDeque::new(),
+{%- endif %}
         }
     }
 
@@ -36,19 +42,24 @@ impl Update{{ s.entities[e].pascal_name }}UseCase {
         if uow.get_{{ s.entities[e].snake_name }}(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("{{ s.entities[e].pascal_name }} with id {} does not exist", dto.id));
         }
+{%- if s.entities[e].inner.undoable %}
         // fetch old entity for undo stack
         let old_entity = uow.get_{{ s.entities[e].snake_name }}(&dto.id)?.unwrap();
+{%- endif %}
 
         let entity = uow.update_{{ s.entities[e].snake_name }}(&dto.into())?;
         uow.commit()?;
 
+{%- if s.entities[e].inner.undoable %}
         // store in undo stack only after successful commit
         self.undo_stack.push_back(old_entity);
+{%- endif %}
 
         Ok(entity.into())
     }
 }
 
+{% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}UseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entity) = self.undo_stack.pop_back() {
@@ -75,6 +86,7 @@ impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}UseCase {
         self
     }
 }
+{% endif -%}
 {% else %}
 // No entity bound to this file
 {% endif %}

@@ -15,10 +15,12 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
         return m_created{{ ent.pascal_plural_name }};
     }
 
+{%- if ent.inner.undoable %}
     // Store original data for undo/redo
     m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
     m_ownerId = ownerId;
     m_index = index;
+{%- endif %}
 
     try
     {
@@ -35,6 +37,7 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
             entity.updatedAt = entity.createdAt;
         }
 
+{%- if ent.inner.undoable %}
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
         // Pre-snapshot existing children that will be cascade-removed by create
         m_existingChildIds = m_uow->getRelationshipsFromOwner(ownerId);
@@ -43,6 +46,7 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
 {%- else %}
         // Capture owner junction state before create (for undo)
         m_previousOwnerRelationshipIds = m_uow->getRelationshipsFromOwner(ownerId);
+{%- endif %}
 {%- endif %}
 
         auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
@@ -60,6 +64,8 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
 
     return m_created{{ ent.pascal_plural_name }};
 }
+
+{%- if ent.inner.undoable %}
 
 SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 {
@@ -170,5 +176,6 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
         throw;
     }
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

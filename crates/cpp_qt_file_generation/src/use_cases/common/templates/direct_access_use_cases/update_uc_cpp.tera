@@ -14,20 +14,24 @@ QList<{{ ent.pascal_name }}Dto> Update{{ ent.pascal_name }}UseCase::execute(cons
         return m_updated{{ ent.pascal_name }}s;
     }
 
+{%- if ent.inner.undoable %}
     // First, get the original data for undo/redo
     QList<int> {{ ent.camel_name }}Ids;
     for (const auto &{{ ent.camel_name }} : {{ ent.camel_plural_name }})
     {
         {{ ent.camel_name }}Ids.append({{ ent.camel_name }}.id);
     }
+{%- endif %}
 
     try
     {
         if (!m_uow->beginTransaction())
             throw std::runtime_error("Failed to begin transaction");
 
+{%- if ent.inner.undoable %}
         auto originalEntities = m_uow->get({{ ent.camel_name }}Ids);
         m_original{{ ent.pascal_name }}s = DtoMapper::toDtoList(originalEntities);
+{%- endif %}
 
         // Perform the update
         auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
@@ -52,6 +56,8 @@ QList<{{ ent.pascal_name }}Dto> Update{{ ent.pascal_name }}UseCase::execute(cons
 
     return m_updated{{ ent.pascal_name }}s;
 }
+
+{%- if ent.inner.undoable %}
 
 SCU::Result<void> Update{{ ent.pascal_name }}UseCase::undo()
 {
@@ -105,5 +111,6 @@ SCU::Result<void> Update{{ ent.pascal_name }}UseCase::redo()
         throw;
     }
 }
+{%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

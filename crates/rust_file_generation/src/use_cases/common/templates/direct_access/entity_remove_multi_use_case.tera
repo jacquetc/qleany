@@ -5,23 +5,33 @@
 {% if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
+{% if s.entities[e].inner.undoable -%}
 use common::{snapshot::EntityTreeSnapshot, types::EntityId, undo_redo::UndoRedoCommand};
 use std::any::Any;
+{% else -%}
+use common::types::EntityId;
+{% endif %}
 
 /// Use case to remove multiple {{ s.entities[e].snake_name }} entities.
+{%- if s.entities[e].inner.undoable %}
 /// Supports undo/redo via entity tree snapshots.
+{%- endif %}
 pub struct Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if s.entities[e].inner.undoable %}
     entity_tree_snapshot: Option<EntityTreeSnapshot>,
     original_ids: Option<Vec<EntityId>>,
+{%- endif %}
 }
 
 impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Remove{{ s.entities[e].pascal_name }}MultiUseCase {
             uow_factory,
+{%- if s.entities[e].inner.undoable %}
             entity_tree_snapshot: None,
             original_ids: None,
+{%- endif %}
         }
     }
 
@@ -34,17 +44,22 @@ impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
                 return Err(anyhow::anyhow!("{{ s.entities[e].pascal_name }} with id {} does not exist", id));
             }
         }
+{%- if s.entities[e].inner.undoable %}
         // snapshot the entity trees before deletion (for undo)
         self.entity_tree_snapshot = Some(uow.snapshot_{{ s.entities[e].snake_name }}(ids)?);
+{%- endif %}
         uow.delete_{{ s.entities[e].snake_name }}_multi(ids)?;
         uow.commit()?;
 
+{%- if s.entities[e].inner.undoable %}
         self.original_ids = Some(ids.to_vec());
+{%- endif %}
 
         Ok(())
     }
 }
 
+{% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(ref snap) = self.entity_tree_snapshot {
@@ -71,6 +86,7 @@ impl UndoRedoCommand for Remove{{ s.entities[e].pascal_name }}MultiUseCase {
         self
     }
 }
+{% endif -%}
 {% else %}
 // No entity bound to this file
 {% endif %}

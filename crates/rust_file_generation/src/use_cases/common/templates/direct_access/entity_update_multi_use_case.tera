@@ -6,22 +6,28 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{{ s.entities[e].pascal_name }}Dto;
 use anyhow::{Ok, Result};
+{% if s.entities[e].inner.undoable -%}
 use common::{entities::{{ s.entities[e].pascal_name }}, undo_redo::UndoRedoCommand};
 use std::any::Any;
 use std::collections::VecDeque;
+{% endif %}
 
 pub struct Update{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
+{%- if s.entities[e].inner.undoable %}
     undo_stack: VecDeque<Vec<{{ s.entities[e].pascal_name }}>>,
     redo_stack: VecDeque<Vec<{{ s.entities[e].pascal_name }}>>,
+{%- endif %}
 }
 
 impl Update{{ s.entities[e].pascal_name }}MultiUseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
         Update{{ s.entities[e].pascal_name }}MultiUseCase {
             uow_factory,
+{%- if s.entities[e].inner.undoable %}
             undo_stack: VecDeque::new(),
             redo_stack: VecDeque::new(),
+{%- endif %}
         }
     }
 
@@ -40,24 +46,29 @@ impl Update{{ s.entities[e].pascal_name }}MultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
+{%- if s.entities[e].inner.undoable %}
         // fetch old entities for undo stack
         let old_entities = uow
             .get_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?
             .iter()
             .filter_map(|entity| entity.clone())
             .collect();
+{%- endif %}
 
         let entities =
             uow.update_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
+{%- if s.entities[e].inner.undoable %}
         // store in undo stack only after successful commit
         self.undo_stack.push_back(old_entities);
+{%- endif %}
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
     }
 }
 
+{% if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entities) = self.undo_stack.pop_back() {
@@ -84,6 +95,7 @@ impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}MultiUseCase {
         self
     }
 }
+{% endif -%}
 {% else %}
 // No entity bound to this file
 {% endif %}

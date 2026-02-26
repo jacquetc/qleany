@@ -5,13 +5,17 @@
 #include "common/dto_mapper.h"
 #include "entities/{{ ent.snake_name }}.h"
 #include "i_{{ ent.snake_name }}_unit_of_work.h"
+{%- if ent.inner.undoable %}
 #include "undo_redo/undo_redo_command.h"
+{%- endif %}
 #include <memory>
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
 namespace SCE = Common::Entities;
+{%- if ent.inner.undoable %}
 namespace SCU = Common::UndoRedo;
+{%- endif %}
 
 class Update{{ ent.pascal_name }}UseCase
 {
@@ -22,13 +26,19 @@ class Update{{ ent.pascal_name }}UseCase
     ~Update{{ ent.pascal_name }}UseCase() = default;
 
     QList<{{ ent.pascal_name }}Dto> execute(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
+{%- if ent.inner.undoable %}
     SCU::Result<void> undo();
     SCU::Result<void> redo();
+{%- endif %}
 
   private:
     std::unique_ptr<I{{ ent.pascal_name }}UnitOfWork> m_uow;
+{%- if ent.inner.undoable %}
     QList<{{ ent.pascal_name }}Dto> m_original{{ ent.pascal_name }}s;
     QList<{{ ent.pascal_name }}Dto> m_updated{{ ent.pascal_name }}s;
+{%- else %}
+    QList<{{ ent.pascal_name }}Dto> m_updated{{ ent.pascal_name }}s;
+{%- endif %}
     bool m_hasExecuted = false;
 };
 
