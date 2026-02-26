@@ -51,7 +51,7 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO")]
 {%- endfor %}
-{%- else %}}{# read_only #}
+{%- else %}{# read_only #}
 //TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
 //DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
 //GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
@@ -92,7 +92,7 @@ impl {{ uc.pascal_name }}UseCase {
 }
 impl LongOperation for {{ uc.pascal_name }}UseCase {
 {%- if uc.dto_out %}
-    type Output = GenerateRustFilesReturnDto;
+    type Output = {{ uc.dto_out.pascal_name }};
 {%- endif %}
 
     fn execute(
@@ -109,14 +109,18 @@ impl LongOperation for {{ uc.pascal_name }}UseCase {
             Some("Starting...".to_string()),
         ));
 
-        let uow = self.uow_factory.create();
+        let {% if not uc.inner.read_only %}mut {% endif %}uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
         //TODO: {{ uc.pascal_name }}UseCase to be implemented
         unimplemented!("{{ uc.pascal_name }}UseCase unimplemented");
 
         if cancel_flag.load(Ordering::Relaxed) {
+            {%- if uc.inner.read_only %}
             uow.end_transaction()?;
+            {%- else %}
+            uow.rollback()?;
+            {%- endif %}
             return Err(anyhow!("Operation was cancelled"));
         }
 
@@ -224,7 +228,7 @@ impl {{ uc.pascal_name }}UseCase {
 {%- if uc.inner.undoable and not uc.inner.read_only %}
 use std::any::Any;
 use common::undo_redo::UndoRedoCommand;
-impl UndoRedoCommand for CreateGlobalUseCase {
+impl UndoRedoCommand for {{ uc.pascal_name }}UseCase {
     fn undo(&mut self) -> Result<()> {
         //TODO: {{ uc.pascal_name }}UseCase  undo to be implemented
         unimplemented!("{{ uc.pascal_name }}UseCase undo unimplemented");

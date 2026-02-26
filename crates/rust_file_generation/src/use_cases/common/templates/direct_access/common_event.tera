@@ -94,6 +94,67 @@ impl Event {
         .to_lowercase()
     }
 }
+/// Thread-safe event buffer for deferring event emissions during transactions.
+///
+/// Repositories push events into this buffer instead of sending them directly
+/// to the EventHub. On commit(), the UoW drains the buffer and sends all events.
+/// On rollback(), the buffer is discarded. This prevents the UI from seeing
+/// phantom state from failed transactions.
+///
+/// This is the Rust equivalent of SignalBuffer in the C++/Qt target.
+pub struct EventBuffer {
+    buffering: bool,
+    pending: Vec<Event>,
+}
+
+impl EventBuffer {
+    pub fn new() -> Self {
+        Self {
+            buffering: false,
+            pending: Vec::new(),
+        }
+    }
+
+    /// Start buffering. Clears any stale events from a previous cycle.
+    pub fn begin_buffering(&mut self) {
+        self.buffering = true;
+        self.pending.clear();
+    }
+
+    /// Queue an event for deferred delivery.
+    ///
+    /// If buffering is not active, the event is silently dropped.
+    /// (Callers should only push during an active transaction.)
+    pub fn push(&mut self, event: Event) {
+        if self.buffering {
+            self.pending.push(event);
+        }
+    }
+
+    /// Drain all pending events and stop buffering.
+    /// The caller is responsible for sending them to the EventHub.
+    pub fn flush(&mut self) -> Vec<Event> {
+        self.buffering = false;
+        std::mem::take(&mut self.pending)
+    }
+
+    /// Discard all pending events and stop buffering.
+    pub fn discard(&mut self) {
+        self.buffering = false;
+        self.pending.clear();
+    }
+
+    pub fn is_buffering(&self) -> bool {
+        self.buffering
+    }
+}
+
+impl Default for EventBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub type Queue = Arc<Mutex<Vec<Event>>>;
 
 /// Central event hub for managing subscriptions and dispatching events

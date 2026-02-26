@@ -27,13 +27,19 @@ use common::database::QueryUnitOfWork;
 {%- else %}
 use std::sync::Arc;
 use common::database::CommandUnitOfWork;
+use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 {%- endif %}
+use common::types;
 use common::types::EntityId;
 use std::sync::Mutex;
 
 pub struct {{ uc.pascal_name }}UnitOfWork {
     context: DbContext,
     transaction: Mutex<Option<Transaction>>,
+{%- if not uc.inner.read_only %}
+    event_hub: Arc<EventHub>,
+    event_buffer: Mutex<EventBuffer>,
+{%- endif %}
 }
 
 {%- if uc.inner.read_only %}
@@ -104,6 +110,7 @@ impl {{ uc.pascal_name }}UnitOfWork {
             context: db_context.clone(),
             transaction: Mutex::new(None),
             event_hub: event_hub.clone(),
+            event_buffer: Mutex::new(EventBuffer::new()),
         }
     }
 }
@@ -111,19 +118,26 @@ impl {{ uc.pascal_name }}UnitOfWork {
 impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     fn begin_transaction(&mut self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
-        *transaction = Some(Transaction::begin_read_transaction(&self.context)?);
+        *transaction = Some(Transaction::begin_write_transaction(&self.context)?);
+        self.event_buffer.lock().unwrap().begin_buffering();
         Ok(())
     }
 
     fn commit(&mut self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
         transaction.take().unwrap().commit()?;
+        drop(transaction); // release lock before flushing events
+        for event in self.event_buffer.lock().unwrap().flush() {
+            self.event_hub.send_event(event);
+        }
         Ok(())
     }
 
     fn rollback(&mut self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
         transaction.take().unwrap().rollback()?;
+        drop(transaction);
+        self.event_buffer.lock().unwrap().discard();
         Ok(())
     }
 
@@ -133,17 +147,21 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
-        let mut transaction = self.transaction.lock().unwrap();
-        let mut transaction = transaction.take().unwrap().restore_to_savepoint(savepoint)?;
+        let mut transaction_guard = self.transaction.lock().unwrap();
+        let mut transaction = transaction_guard.take().unwrap();
+        transaction.restore_to_savepoint(savepoint)?;
 
+        // Discard buffered events — savepoint restore invalidated them
+        self.event_buffer.lock().unwrap().discard();
+
+        // Send Reset immediately (not buffered — UI must refresh now)
         self.event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
             ids: vec![],
             data: None,
         });
 
-        // Recreate the transaction after restoring to savepoint
-        self.transaction = Some(transaction);
+        *transaction_guard = Some(transaction);
 
         Ok(())
     }
@@ -207,7 +225,8 @@ use common::database::QueryUnitOfWork;
 use std::cell::RefCell;
 {%- else %}
 use common::database::CommandUnitOfWork;
-use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
+use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
+use std::cell::RefCell;
 use std::sync::Arc;
 {%- endif %}
 use common::types;
@@ -287,6 +306,7 @@ pub struct {{ uc.pascal_name }}UnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
     event_hub: Arc<EventHub>,
+    event_buffer: RefCell<EventBuffer>,
 }
 
 impl {{ uc.pascal_name }}UnitOfWork {
@@ -295,6 +315,7 @@ impl {{ uc.pascal_name }}UnitOfWork {
             context: db_context.clone(),
             transaction: None,
             event_hub: event_hub.clone(),
+            event_buffer: RefCell::new(EventBuffer::new()),
         }
     }
 }
@@ -302,16 +323,21 @@ impl {{ uc.pascal_name }}UnitOfWork {
 impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     fn begin_transaction(&mut self) -> Result<()> {
         self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
+        self.event_buffer.get_mut().begin_buffering();
         Ok(())
     }
 
     fn commit(&mut self) -> Result<()> {
         self.transaction.take().unwrap().commit()?;
+        for event in self.event_buffer.get_mut().flush() {
+            self.event_hub.send_event(event);
+        }
         Ok(())
     }
 
     fn rollback(&mut self) -> Result<()> {
         self.transaction.take().unwrap().rollback()?;
+        self.event_buffer.get_mut().discard();
         Ok(())
     }
 
@@ -323,6 +349,10 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
         let mut transaction = self.transaction.take().unwrap();
         transaction.restore_to_savepoint(savepoint)?;
 
+        // Discard buffered events — savepoint restore invalidated them
+        self.event_buffer.get_mut().discard();
+
+        // Send Reset immediately (not buffered — UI must refresh now)
         self.event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
             ids: vec![],

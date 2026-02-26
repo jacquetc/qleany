@@ -1,0 +1,179 @@
+schema:
+  version: 2
+global:
+  language: rust
+  application_name: RustCalendarApp
+  organisation:
+    name: FernTech
+    domain: eu.ferntech
+  prefix_path: crates
+entities:
+- name: EntityBase
+  only_for_heritage: true
+  allow_direct_access: false
+  undoable: false
+  fields:
+  - name: id
+    type: uinteger
+  - name: created_at
+    type: datetime
+  - name: updated_at
+    type: datetime
+- name: Root
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: false
+  fields:
+  - name: calendars
+    type: entity
+    entity: Calendar
+    relationship: ordered_one_to_many
+    strong: true
+  - name: tags
+    type: entity
+    entity: Tag
+    relationship: one_to_many
+    strong: true
+- name: Calendar
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: true
+  fields:
+  - name: name
+    type: string
+  - name: description
+    type: string
+  - name: color
+    type: string
+  - name: events
+    type: entity
+    entity: CalendarEvent
+    relationship: ordered_one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: title
+- name: CalendarEvent
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: true
+  fields:
+  - name: title
+    type: string
+  - name: description
+    type: string
+  - name: start_time
+    type: datetime
+  - name: end_time
+    type: datetime
+  - name: is_all_day
+    type: boolean
+  - name: location
+    type: string
+  - name: is_recurring
+    type: boolean
+  - name: recurrence_rule
+    type: string
+  - name: reminders
+    type: entity
+    entity: Reminder
+    relationship: one_to_many
+    strong: true
+  - name: tags
+    type: entity
+    entity: Tag
+    relationship: many_to_many
+- name: Reminder
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: true
+  fields:
+  - name: minutes_before
+    type: uinteger
+  - name: reminder_type
+    type: enum
+    enum_name: ReminderType
+    enum_values:
+    - Notification
+    - Email
+    - Alarm
+- name: Tag
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: false
+  fields:
+  - name: name
+    type: string
+  - name: color
+    type: string
+features:
+- name: calendar_management
+  use_cases:
+  - name: get_events_in_range
+    undoable: false
+    read_only: true
+    long_operation: true
+    entities: [Root, Calendar, CalendarEvent]
+    dto_in:
+      name: GetEventsInRangeDto
+      fields:
+      - name: calendar_id
+        type: uinteger
+      - name: start_date
+        type: string
+      - name: end_date
+        type: string
+    dto_out:
+      name: EventListDto
+      fields:
+      - name: event_ids
+        type: uinteger
+        is_list: true
+  - name: create_recurring_event
+    undoable: false
+    long_operation: true
+    entities: [Calendar, CalendarEvent, Reminder]
+    dto_in:
+      name: CreateRecurringEventDto
+      fields:
+      - name: calendar_id
+        type: uinteger
+      - name: title
+        type: string
+      - name: description
+        type: string
+      - name: start_time
+        type: string
+      - name: end_time
+        type: string
+      - name: location
+        type: string
+      - name: recurrence_rule
+        type: string
+      - name: reminder_minutes
+        type: uinteger
+        optional: true
+    dto_out:
+      name: CreateRecurringEventResultDto
+      fields:
+      - name: event_id
+        type: uinteger
+  - name: get_upcoming_reminders
+    undoable: false
+    read_only: true
+    entities: [Root, Calendar, CalendarEvent, Reminder]
+    dto_in:
+      name: GetUpcomingRemindersDto
+      fields:
+      - name: within_minutes
+        type: uinteger
+    dto_out:
+      name: UpcomingRemindersDto
+      fields:
+      - name: event_ids
+        type: uinteger
+        is_list: true
+      - name: reminder_ids
+        type: uinteger
+        is_list: true
+ui:
+  cpp_qt_qtwidgets: true

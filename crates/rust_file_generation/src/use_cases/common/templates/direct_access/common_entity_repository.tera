@@ -6,10 +6,10 @@
 use std::fmt::Display;
 
 use crate::{
-    database::{transactions::Transaction, EventBuffer},
+    database::transactions::Transaction,
     direct_access::repository_factory,
     entities::{{ s.entities[e].pascal_name }},
-    event::{DirectAccessEntity, EntityEvent, Event, Origin},
+    event::{DirectAccessEntity, EntityEvent, Event, EventBuffer, Origin},
     types::EntityId,
 };
 
