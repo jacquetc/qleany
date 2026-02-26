@@ -176,3 +176,11 @@ temp_*/
 
 # qleany specific
 temp_manifest.yaml
+
+# LLM/AI tools
+.claude/
+.cursor/
+.copilot/
+.aider*
+.codeium/
+.continue/
