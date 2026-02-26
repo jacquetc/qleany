@@ -116,7 +116,10 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
           m_undoRedoStackId,
             u"{{ uc.snake_name }} Command"_s,
             std::move(useCase),
-            kDefaultCommandTimeoutMs
+            kDefaultCommandTimeoutMs,
+            [this](const QString &cmd, const QString &msg) {
+                if (m_featureEventRegistry) m_featureEventRegistry->publishError(cmd, msg);
+            }
             {%- if uc.dto_in %}
             ,{{  uc.dto_in.camel_name }});
             {%- else %}
@@ -137,7 +140,10 @@ QCoro::Task<{{ dto_out_str }}> {{ feat.pascal_name }}Controller::{{ uc.camel_nam
           m_undoRedoSystem,
             u"{{ uc.snake_name }} Command"_s,
             std::move(useCase),
-            kDefaultCommandTimeoutMs
+            kDefaultCommandTimeoutMs,
+            [this](const QString &cmd, const QString &msg) {
+                if (m_featureEventRegistry) m_featureEventRegistry->publishError(cmd, msg);
+            }
             {%- if uc.dto_in %}
             ,{{  uc.dto_in.camel_name }});
             {%- else %}

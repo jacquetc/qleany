@@ -80,6 +80,9 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
         u"Create {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
         {{ ent.camel_plural_name }}, ownerId, index);
 }
     {%- endif %}
@@ -97,6 +100,9 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
         u"Create orphan {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
         {{ ent.camel_plural_name }});
 }
 
@@ -125,6 +131,9 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::up
         u"Update {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
         {{ ent.camel_plural_name }});
 }
 
@@ -141,6 +150,9 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int>
         u"Remove {{ ent.camel_plural_name }} Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
         {{ ent.camel_name }}Ids);
 }
 
@@ -178,6 +190,9 @@ QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
         u"Set {{ ent.pascal_name }} Relationship IDs Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
         {{ ent.camel_name }}Id, relationship, relatedIds);
 }
 

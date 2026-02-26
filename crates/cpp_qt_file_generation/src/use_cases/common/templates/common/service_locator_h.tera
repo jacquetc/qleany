@@ -33,6 +33,11 @@ class ServiceLocator : public QObject
     static void setInstance(ServiceLocator *locator);
     static ServiceLocator *instance();
 
+  Q_SIGNALS:
+    /// Forwarded from EventRegistry and FeatureEventRegistry when a command
+    /// times out or fails. Single subscription point for all command errors.
+    void errorOccurred(const QString &commandName, const QString &errorMessage);
+
   private:
     inline static ServiceLocator *s_instance = nullptr;
     Database::DbContext *m_dbContext;

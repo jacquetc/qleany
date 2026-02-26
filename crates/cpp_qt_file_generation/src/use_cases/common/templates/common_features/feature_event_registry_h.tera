@@ -30,6 +30,15 @@ class FeatureEventRegistry : public QObject
     [[nodiscard]] QPointer<{{ feat.pascal_name }}Events> {{ feat.camel_name }}Events() const;
     {%- endfor %}
 
+  public Q_SLOTS:
+    void publishError(const QString &commandName, const QString &errorMessage)
+    {
+        Q_EMIT errorOccurred(commandName, errorMessage);
+    }
+
+  Q_SIGNALS:
+    void errorOccurred(const QString &commandName, const QString &errorMessage);
+
   private:
     {%- for fid, feat in s.features %}
     QPointer<{{ feat.pascal_name }}Events> m_{{ feat.camel_name }}Events;

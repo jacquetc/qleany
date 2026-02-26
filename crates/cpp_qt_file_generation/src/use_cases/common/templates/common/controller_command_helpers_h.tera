@@ -7,6 +7,7 @@
  * Features:
  * - Configurable timeout per call
  * - UseCase lifetime managed by direct shared_ptr capture
+ * - Error callback for signal-based error reporting
  * - Type-safe, debuggable, IDE-navigable
  *
  * Usage (in a generated controller):
@@ -19,10 +20,13 @@
  *
  *       co_return co_await executeUndoableCommand<QList<PersonDto>>(
  *           m_undoRedoSystem,
+ *           m_undoRedoStackId,
  *           u"Create persons Command"_s,
- *           useCase,
+ *           std::move(useCase),
  *           500,                              // timeout ms
- *           &CreatePersonUseCase::execute,
+ *           [this](const QString &cmd, const QString &msg) {
+ *               if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+ *           },
  *           persons);
  *   }
  ******************************************************************************/
@@ -66,6 +70,7 @@ namespace SCUndoRedo = {{ s.global.application_pascal_name }}::Common::UndoRedo;
  * @param commandName    Human-readable name for the command
  * @param useCase        Shared ownership of the use case
  * @param timeoutMs      Timeout in milliseconds for async execution
+ * @param onError        Callback invoked on timeout or failure (commandName, message)
  * @param execArgs       Arguments forwarded to useCase->execute(...)
  *
  * @return The result of useCase->execute(), or a default-constructed ResultT on failure.
@@ -77,6 +82,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
+    std::function<void(const QString &, const QString &)> onError,
     ExecArgs... execArgs)
 {
     if (!undoRedoSystem) [[unlikely]]
@@ -108,13 +114,17 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 
     if (!success.has_value()) [[unlikely]]
     {
-        qWarning() << commandName << "timed out";
+        QString msg = commandName + " timed out"_L1;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return ResultT{};
     }
 
     if (!success.value()) [[unlikely]]
     {
-        qWarning() << "Failed to execute" << commandName;
+        QString msg = "Failed to execute "_L1 + commandName;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return ResultT{};
     }
 
@@ -138,6 +148,7 @@ template <typename UseCaseT, typename... ExecArgs>
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
+    std::function<void(const QString &, const QString &)> onError,
     ExecArgs... execArgs)
 {
     if (!undoRedoSystem) [[unlikely]]
@@ -166,13 +177,17 @@ template <typename UseCaseT, typename... ExecArgs>
 
     if (!success.has_value()) [[unlikely]]
     {
-        qWarning() << commandName << "timed out";
+        QString msg = commandName + " timed out"_L1;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return false;
     }
 
     if (!success.value()) [[unlikely]]
     {
-        qWarning() << "Failed to execute" << commandName;
+        QString msg = "Failed to execute "_L1 + commandName;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return false;
     }
 
@@ -186,19 +201,20 @@ template <typename UseCaseT, typename... ExecArgs>
 /**
  * @brief Execute a not-undoable command, returning the use-case result.
  *
- * Constructs the UndoRedoCommand, wires execute/undo/redo, and co_awaits
- * the undo-redo system. The UseCase is kept alive by shared_ptr capture
- * inside the lambdas.
+ * Constructs the UndoRedoCommand, wires only execute (no undo/redo), and
+ * co_awaits the undo-redo system on a throwaway stack. After execution the
+ * stack is cleared. The UseCase is kept alive by shared_ptr capture inside
+ * the lambda.
  *
  * @tparam ResultT       Return type of the use-case execute method
- * @tparam UseCaseT      UseCase type (must have execute(...), undo(), redo())
+ * @tparam UseCaseT      UseCase type (must have execute(...))
  * @tparam ExecArgs      Argument types forwarded to useCase->execute(...)
  *
  * @param undoRedoSystem The undo-redo system to execute on
- * @param undoRedoStackId The undo redo stack to use
  * @param commandName    Human-readable name for the command
  * @param useCase        Shared ownership of the use case
  * @param timeoutMs      Timeout in milliseconds for async execution
+ * @param onError        Callback invoked on timeout or failure (commandName, message)
  * @param execArgs       Arguments forwarded to useCase->execute(...)
  *
  * @return The result of useCase->execute(), or a default-constructed ResultT on failure.
@@ -209,6 +225,7 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
+    std::function<void(const QString &, const QString &)> onError,
     ExecArgs... execArgs)
 {
     if (!undoRedoSystem) [[unlikely]]
@@ -232,13 +249,17 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 
     if (!success.has_value()) [[unlikely]]
     {
-        qWarning() << commandName << "timed out";
+        QString msg = commandName + " timed out"_L1;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return ResultT{};
     }
 
     if (!success.value()) [[unlikely]]
     {
-        qWarning() << "Failed to execute" << commandName;
+        QString msg = "Failed to execute "_L1 + commandName;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return ResultT{};
     }
 
@@ -253,10 +274,10 @@ template <typename ResultT, typename UseCaseT, typename... ExecArgs>
 // =============================================================================
 
 /**
- * @brief Execute an not-undoable command whose execute() returns void.
+ * @brief Execute a not-undoable command whose execute() returns void.
  *
- * Same pattern as the result-returning variant but returns a boolean
- * indicating success/failure.
+ * Same pattern as the result-returning not-undoable variant but returns
+ * a boolean indicating success/failure.
  */
 template <typename UseCaseT, typename... ExecArgs>
 [[nodiscard]] QCoro::Task<bool> executeNotUndoableCommandVoid(
@@ -264,6 +285,7 @@ template <typename UseCaseT, typename... ExecArgs>
     const QString &commandName,
     std::shared_ptr<UseCaseT> useCase,
     int timeoutMs,
+    std::function<void(const QString &, const QString &)> onError,
     ExecArgs... execArgs)
 {
     if (!undoRedoSystem) [[unlikely]]
@@ -284,13 +306,17 @@ template <typename UseCaseT, typename... ExecArgs>
 
     if (!success.has_value()) [[unlikely]]
     {
-        qWarning() << commandName << "timed out";
+        QString msg = commandName + " timed out"_L1;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return false;
     }
 
     if (!success.value()) [[unlikely]]
     {
-        qWarning() << "Failed to execute" << commandName;
+        QString msg = "Failed to execute "_L1 + commandName;
+        qWarning() << msg;
+        if (onError) onError(commandName, msg);
         co_return false;
     }
 

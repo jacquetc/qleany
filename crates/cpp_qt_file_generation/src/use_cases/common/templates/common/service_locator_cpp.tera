@@ -23,10 +23,16 @@ void SC::ServiceLocator::setDbContext(SC::Database::DbContext *db)
 void SC::ServiceLocator::setEventRegistry(SC::DirectAccess::EventRegistry *ev)
 {
     m_eventRegistry = ev;
+    if (ev)
+        connect(ev, &SC::DirectAccess::EventRegistry::errorOccurred,
+                this, &ServiceLocator::errorOccurred);
 }
 void SC::ServiceLocator::setFeatureEventRegistry(SC::Features::FeatureEventRegistry *fev)
 {
     m_featureEventRegistry = fev;
+    if (fev)
+        connect(fev, &SC::Features::FeatureEventRegistry::errorOccurred,
+                this, &ServiceLocator::errorOccurred);
 }
 void SC::ServiceLocator::setUndoRedoSystem(SC::UndoRedo::UndoRedoSystem *urs)
 {

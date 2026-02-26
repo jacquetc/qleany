@@ -31,6 +31,15 @@ class EventRegistry : public QObject
     [[nodiscard]] QPointer<{{ ent.pascal_name }}::{{ ent.pascal_name }}Events> {{ ent.camel_name }}Events() const;
         {%- endfor %}
 
+  public Q_SLOTS:
+    void publishError(const QString &commandName, const QString &errorMessage)
+    {
+        Q_EMIT errorOccurred(commandName, errorMessage);
+    }
+
+  Q_SIGNALS:
+    void errorOccurred(const QString &commandName, const QString &errorMessage);
+
   private:
         {%- for eid, ent in s.entities %}
     QPointer<{{ ent.pascal_name }}::{{ ent.pascal_name }}Events> m_{{ ent.camel_name }}Events;
