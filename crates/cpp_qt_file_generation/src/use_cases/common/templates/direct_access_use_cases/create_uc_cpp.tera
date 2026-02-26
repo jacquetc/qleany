@@ -22,7 +22,8 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
         auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
 
@@ -45,7 +46,8 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
 {%- endif %}
 
         auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
         m_hasExecuted = true;
@@ -68,7 +70,8 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
         // Collect IDs of created {{ ent.camel_plural_name }}
         QList<int> idsToRemove;
@@ -99,7 +102,8 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
         m_uow->setRelationshipsInOwner(m_previousOwnerRelationshipIds, m_ownerId);
 {%- endif %}
 
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         return SCU::Result<void>();
     }
@@ -119,7 +123,8 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
         // Re-snapshot displaced children (restored by undo) for next undo cycle
@@ -154,7 +159,8 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
         m_uow->setRelationshipsInOwner(redoJunction, m_ownerId);
 {%- endif %}
 
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         return SCU::Result<void>();
     }

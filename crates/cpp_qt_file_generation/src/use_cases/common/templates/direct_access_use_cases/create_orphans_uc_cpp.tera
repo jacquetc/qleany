@@ -20,7 +20,8 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
         auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
 
@@ -33,7 +34,8 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
         }
 
         auto createdEntities = m_uow->createOrphans(mappedEntities);
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
         m_hasExecuted = true;
@@ -56,7 +58,8 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
         // Remove the created {{ ent.camel_plural_name }} by their IDs
         QList<int> idsToRemove;
@@ -70,7 +73,8 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 
         // Use the unit of work to remove the created {{ ent.camel_plural_name }}
         m_uow->remove(idsToRemove);
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         return SCU::Result<void>();
     }
@@ -90,11 +94,13 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
 
         // Restore the entity tree from the snapshot taken during undo
         m_uow->restore(m_oldTreeSnapshot);
-        m_uow->commit();
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
 
         return SCU::Result<void>();
     }
