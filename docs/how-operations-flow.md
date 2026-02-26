@@ -278,9 +278,11 @@ Events are the backbone of UI reactivity. When a `Calendar` is updated, the UI n
 
 Entity events and feature events live in separate registries:
 
-- **Entity events**: Each entity has a dedicated `[Entity]Events` class (e.g., `CalendarEvents`) with signals: `created(QList<int>)`, `updated(QList<int>)`, `removed(QList<int>)`, and `relationshipChanged(int, RelationshipField, QList<int>)`. These are centralized in `EventRegistry`.
+- **Entity events**: Each entity has a dedicated `[Entity]Events` class (e.g., `CalendarEvents`) with signals: `created(QList<int>)`, `updated(QList<int>)`, `removed(QList<int>)`, and `relationshipChanged(int, RelationshipField, QList<int>)`. These are centralized in `EventRegistry`, which also provides `errorOccurred(commandName, errorMessage)` for command failures.
 
-- **Feature events**: Each feature group has a `[Feature]Events` class (e.g., `CalendarManagementEvents`) with a signal per use case. Centralized in `FeatureEventRegistry`.
+- **Feature events**: Each feature group has a `[Feature]Events` class (e.g., `CalendarManagementEvents`) with a signal per use case. Centralized in `FeatureEventRegistry`, which also provides `errorOccurred(commandName, errorMessage)`.
+
+Both registries forward their `errorOccurred` signal to `ServiceLocator::errorOccurred`, giving the UI a single subscription point for all command errors.
 
 Events are **deferred** via the `SignalBuffer`. The flow:
 
@@ -347,6 +349,294 @@ In both cases, the unit of work owns the transaction lifecycle. `beginTransactio
 Early versions of Qleany used database savepoints to handle undo for destructive operations. This turned out to be a trap: savepoints restore *everything*, including non-undoable data. Now, `create`, `createOrphans`, `remove`, and `setRelationshipIds` use **cascading table-level snapshots** that only touch the affected entities. This is currently **C++/Qt only**. Rust use cases store entity state in their own undo/redo stacks for now, with cascading snapshots coming soon.
 
 For the full story, see the [Undo-Redo Architecture](undo-redo-architecture.md#savepoints) documentation.
+
+## Error Control Flow
+
+This section describes what happens when things go wrong: a repository call throws, a transaction fails to commit, an undo operation blows up. Both targets follow the same principle -- **failed operations must leave no observable trace** (no events emitted, no stale undo history, no half-committed data) -- but the mechanics differ.
+
+### C++/Qt
+
+#### Use case level: try/catch + explicit rollback
+
+Every generated use case method (`execute()`, `undo()`, `redo()`) wraps its work in the same pattern:
+
+```cpp
+try
+{
+    if (!m_uow->beginTransaction())
+        throw std::runtime_error("Failed to begin transaction");
+
+    // ... repository calls ...
+
+    if (!m_uow->commit())
+        throw std::runtime_error("Failed to commit transaction");
+}
+catch (...)
+{
+    m_uow->rollback();
+    throw;
+}
+```
+
+`beginTransaction()` and `commit()` return `bool`. A `false` return is promoted to an exception so it enters the `catch(...)` block. In the catch block, `rollback()` calls `SignalBuffer::discard()`, which drops all queued entity events. Then the exception is re-thrown.
+
+On successful `commit()`, the `UnitOfWorkBase` calls `SignalBuffer::flush()`, which delivers all queued events. If `commit()` returns `false`, the UoW itself calls `discard()` before returning. Either way, the invariant holds: **events fire if and only if the transaction commits**.
+
+```cpp
+// UnitOfWorkBase (uow_base.h)
+bool commit() override
+{
+    bool ok = m_dbSubContext.commit();
+    if (ok)
+        m_signalBuffer->flush();     // success: deliver all events
+    else
+        m_signalBuffer->discard();   // commit failed: drop all events
+    return ok;
+}
+bool rollback() override
+{
+    m_dbSubContext.rollback();
+    m_signalBuffer->discard();       // rollback: drop all events
+    return true;
+}
+```
+
+#### UndoRedoCommand: exceptions become Result values
+
+Use cases execute on a background thread via `QtConcurrent::run`. The `UndoRedoCommand` wraps each call in a try/catch:
+
+```cpp
+auto future = QtConcurrent::run([safeThis, executeFunction]() -> Result<void> {
+    try
+    {
+        QPromise<Result<void>> promise;
+        executeFunction(promise);     // calls useCase->execute()
+        return Result<void>();
+    }
+    catch (const std::exception &e)
+    {
+        return Result<void>(QString::fromStdString(e.what()), ErrorCategory::ExecutionError);
+    }
+    catch (...)
+    {
+        return Result<void>("Unknown exception"_L1, ErrorCategory::UnknownError);
+    }
+});
+```
+
+The exception thrown by the use case (after it has already rolled back its own transaction) is caught here and converted to a `Result<void>`. When the future completes, `onExecuteFinished()` (or `onUndoFinished()` / `onRedoFinished()`) checks the result and emits `finished(bool success)`. This signal is what the undo/redo stack and the controller coroutine both listen to.
+
+#### Undo/redo stack: failure recovery
+
+The `UndoRedoStack` moves commands between stacks *before* the async operation runs. On failure, `onCommandFinished(false)` restores the stacks:
+
+- **Execute fails:** The command was left at the top of `m_undoStack` (it was already pushed there). On failure, the stack **pops and drops it**. The command is gone, a failed execute should leave no trace.
+
+- **Undo fails:** The command was moved from `m_undoStack` to `m_redoStack` before `asyncUndo()`. On failure, the command is **moved back from redo to undo**, restoring the stack to its pre-undo state. The use case's catch block already rolled back the transaction, so the database is unchanged. The user can retry the undo.
+
+- **Redo fails:** The command was moved from `m_redoStack` to `m_undoStack` before `asyncRedo()`. On failure, the stack **pops and drops it**. Same as execute failure.
+
+```cpp
+void UndoRedoStack::onCommandFinished(bool success)
+{
+    if (!success)
+    {
+        if (!m_redoStack.isEmpty() && m_redoStack.top() == m_currentCommand)
+        {
+            // Undo failed: move command back from redo to undo stack
+            auto cmd = m_redoStack.pop();
+            m_undoStack.push(cmd);
+        }
+        else if (!m_undoStack.isEmpty() && m_undoStack.top() == m_currentCommand)
+        {
+            // Execute or redo failed: drop command from undo stack
+            m_undoStack.pop();
+        }
+    }
+    m_currentCommand.reset();
+    updateState();
+    Q_EMIT commandFinished(success);
+}
+```
+
+#### Controller level: defaults on failure + error signals
+
+The controller coroutine `co_await`s the undo/redo system with a timeout. Each command helper takes an `onError` callback that the controller wires to the appropriate event registry:
+
+```cpp
+std::optional<bool> success = co_await undoRedoSystem->executeCommandAsync(
+    command, timeoutMs, undoRedoStackId);
+
+if (!success.has_value()) [[unlikely]]        // timeout
+{
+    QString msg = commandName + " timed out"_L1;
+    qWarning() << msg;
+    if (onError) onError(commandName, msg);   // signal-based error reporting
+    co_return ResultT{};                      // default-constructed result
+}
+if (!success.value()) [[unlikely]]            // execution failed
+{
+    QString msg = "Failed to execute "_L1 + commandName;
+    qWarning() << msg;
+    if (onError) onError(commandName, msg);   // signal-based error reporting
+    co_return ResultT{};                      // default-constructed result
+}
+co_return result;                             // success
+```
+
+On timeout or failure, the controller returns a default-constructed result (empty list, default DTO) *and* invokes the `onError` callback. The callback is a lambda that calls `publishError()` on the appropriate event registry (`EventRegistry` for entity controllers, `FeatureEventRegistry` for feature controllers), which emits `errorOccurred(commandName, errorMessage)`. Both registries forward this signal to `ServiceLocator::errorOccurred`, giving the UI a single subscription point for all command errors:
+
+```
+Controller onError lambda
+    → EventRegistry::publishError() / FeatureEventRegistry::publishError()
+        → errorOccurred signal
+            → ServiceLocator::errorOccurred signal  (connected in setters)
+```
+
+The return value stays simple (default-constructed) so the controller API remains easy to use from QML. The `errorOccurred` signal provides the structured error details for UIs that need to display error messages, show toasts, or log failures.
+
+#### Long operations: failure via signals
+
+Long operations run on a `QtConcurrent::run` thread. If `ILongOperation::execute()` throws, the `QFutureWatcher::finished` handler catches it:
+
+```cpp
+try {
+    const QJsonObject result = watcher->result();  // re-throws if execute() threw
+    m_completedResults.insert(operationId, result);
+    Q_EMIT operationCompleted(operationId, result);
+}
+catch (const std::exception &e) {
+    Q_EMIT operationFailed(operationId, QString::fromUtf8(e.what()));
+}
+```
+
+On failure, `operationFailed(operationId, errorMessage)` is emitted. No result is stored. The controller's `get_*_result()` returns `std::nullopt` in that case. On QML, it will be seen, as an invalid QVariant. The UI must listen to the `operationFailed` signal or poll `getResult()` and handle `nullopt`.
+
+### Rust
+
+#### Use case level: `?` operator + implicit rollback via Drop
+
+Rust use cases use the `?` operator throughout. Any failure causes an immediate `Err` return:
+
+```rust
+pub fn execute(&mut self, dto: &CalendarDto) -> Result<CalendarDto> {
+    let mut uow = self.uow_factory.create();
+    uow.begin_transaction()?;               // fails? Err returned, uow dropped
+    if uow.get_calendar(&dto.id)?.is_none() {
+        return Err(anyhow!("..."));         // uow dropped without commit
+    }
+    let old_entity = uow.get_calendar(&dto.id)?.unwrap();
+    let entity = uow.update_calendar(&dto.into())?;
+    uow.commit()?;                          // fails? Err returned, but transaction
+                                            //   was already consumed by commit()
+
+    // only reached on full success:
+    self.undo_stack.push_back(old_entity);
+    Ok(entity.into())
+}
+```
+
+There is **no explicit rollback** in the error path. The safety net is redb's transaction semantics: a `WriteTransaction` that is dropped without calling `commit()` automatically aborts. The `EventBuffer` is similarly safe: if it is dropped without `flush()`, the buffered events are simply freed. No events are ever delivered for uncommitted work.
+
+The undo stack push happens **after** `commit()`. If any step before commit fails, the old entity is never stored in the undo stack and is simply dropped with the local variable. This prevents stale entries from accumulating on failed operations.
+
+#### Controller level: `?` propagation
+
+The controller uses the `?` operator to chain the use case execution and the undo/redo registration:
+
+```rust
+pub fn update(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CalendarDto,
+) -> Result<CalendarDto> {
+    let uow_factory = CalendarUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = UpdateCalendarUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity)?;                                    // fails? uc dropped
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;     // fails? mutation committed
+                                                                         //   but not in undo history
+    Ok(result)
+}
+```
+
+If `execute()` fails, the use case is dropped and never added to the undo stack. If `execute()` succeeds but `add_command_to_stack()` fails (e.g., invalid stack ID), the mutation is committed to the database but the command is not tracked. The caller gets an `Err`, which is misleading since the data change persisted. In practice this edge case does not arise because stack IDs are set up at initialization time.
+
+#### Undo/redo manager: pop-then-try, drop on failure
+
+The `UndoRedoManager` pops the command from the stack *before* running `undo()` or `redo()`. If the operation fails, the command is intentionally dropped:
+
+```rust
+pub fn undo(&mut self, stack_id: Option<u64>) -> Result<()> {
+    // ...
+    if let Some(mut command) = stack.undo_stack.pop() {
+        if let Err(e) = command.undo() {
+            log::error!("Undo failed, dropping command: {e}");
+            // command dropped intentionally — goes out of scope
+            return Err(e);
+        }
+        stack.redo_stack.push(command);   // only on success
+    }
+    Ok(())
+}
+```
+
+This is different from C++/Qt, where a failed undo moves the command back to the undo stack for retry. In Rust, the command is gone permanently. The rationale: a failed undo means the use case's `undo()` method failed mid-transaction. redb aborted the transaction on drop, so the database is in the pre-undo state. But the command's internal state (its undo/redo stacks, cached entities) may be inconsistent. Re-attempting could make things worse, so the conservative choice is to discard it.
+
+The `redo()` path is identical: pop, try, drop on failure.
+
+#### Composite commands: no partial rollback
+
+`CompositeCommand::undo()` iterates sub-commands in reverse with `?`:
+
+```rust
+fn undo(&mut self) -> Result<()> {
+    for command in self.commands.iter_mut().rev() {
+        command.undo()?;   // short-circuits on first failure
+    }
+    Ok(())
+}
+```
+
+If commands [A, B, C] are being undone in order C, B, A and B fails: C's undo has already committed (each sub-command opens its own transaction). A's undo never runs. The composite is in a **partially undone state**. Since the `UndoRedoManager` then drops the entire composite, all sub-commands and their undo/redo history are lost.
+
+This is a known limitation. Fixing it would require either nested transactions (not supported by redb) or a two-phase protocol where sub-commands speculatively undo and then commit together. In practice, composites group closely related operations (e.g., create entity + set relationship) where failure of one implies the other would also fail.
+
+#### Long operations: status enum + event
+
+When a long operation's `execute()` returns `Err`, the manager sets the status and emits an event:
+
+```rust
+match &operation_result {
+    Ok(result) => {
+        results.insert(id.clone(), serde_json::to_string(result)?);
+        OperationStatus::Completed
+    }
+    Err(e) => OperationStatus::Failed(e.to_string()),
+};
+// ...
+event_hub.send_event(Event {
+    origin: Origin::LongOperation(LongOperationEvent::Failed),
+    data: Some(json!({"id": id, "error": error_string}).to_string()),
+    ..
+});
+```
+
+On failure, no result is stored. The controller's `get_*_result()` returns `Ok(None)`, which is **ambiguous**: it also returns `Ok(None)` when the operation is still running. Callers must check the operation status separately via `get_operation_status()` to distinguish "not finished yet" from "failed." The error message is available through the status enum and through the event's JSON payload.
+
+### Summary
+
+| Scenario | C++/Qt | Rust |
+|----------|--------|------|
+| Repository call fails mid-transaction | `catch(...)` calls `rollback()` + `SignalBuffer::discard()` | `?` returns `Err`; UoW dropped; redb aborts on drop; `EventBuffer` freed |
+| `beginTransaction()` fails | Throws `std::runtime_error`, caught by same `catch(...)` | `?` returns `Err`; no transaction was opened |
+| `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; redb transaction was consumed by the failed commit attempt |
+| `execute()` fails at controller level | Command dropped from undo stack; default result returned to UI; `errorOccurred` signal emitted via registry → `ServiceLocator` | Use case dropped; never added to undo stack; `Err` propagated |
+| Undo fails | Command moved back from redo to undo stack (retryable) | Command popped and dropped permanently |
+| Redo fails | Command dropped from undo stack | Command popped and dropped permanently |
+| Composite undo partially fails | N/A (composites are Rust-only) | Short-circuits; already-undone sub-commands stay committed; composite dropped |
+| Long operation fails | `operationFailed` signal emitted; no result stored | `Failed` status set; `Failed` event emitted; `get_*_result()` returns `None` |
 
 ## Where the Code Lives
 
