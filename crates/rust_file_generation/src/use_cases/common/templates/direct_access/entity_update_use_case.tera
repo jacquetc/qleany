@@ -36,12 +36,14 @@ impl Update{{ s.entities[e].pascal_name }}UseCase {
         if uow.get_{{ s.entities[e].snake_name }}(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("{{ s.entities[e].pascal_name }} with id {} does not exist", dto.id));
         }
-        // store in undo stack
-        let entity = uow.get_{{ s.entities[e].snake_name }}(&dto.id)?.unwrap();
-        self.undo_stack.push_back(entity.clone());
+        // fetch old entity for undo stack
+        let old_entity = uow.get_{{ s.entities[e].snake_name }}(&dto.id)?.unwrap();
 
         let entity = uow.update_{{ s.entities[e].snake_name }}(&dto.into())?;
         uow.commit()?;
+
+        // store in undo stack only after successful commit
+        self.undo_stack.push_back(old_entity);
 
         Ok(entity.into())
     }
