@@ -76,11 +76,11 @@ impl LongOperation for GenerateCppQtFilesUseCase {
             PathBuf::from(&self.dto.root_path)
         };
 
-        println!(
-            "Generating CppQt files to root path: {}, with prefix: {}",
-            root_path.display(),
-            prefix_path.display()
-        );
+        // println!(
+        //     "Generating CppQt files to root path: {}, with prefix: {}",
+        //     root_path.display(),
+        //     prefix_path.display()
+        // );
 
         // create a cache for GenerationSnapshot if needed in the future
         let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
@@ -96,7 +96,7 @@ impl LongOperation for GenerateCppQtFilesUseCase {
             let file_meta: File = uow_read
                 .get_file(file_id)?
                 .ok_or_else(|| anyhow!("File not found"))?;
-            println!("Processing file ID {}: {}", file_id, file_meta.name);
+            // println!("Processing file ID {}: {}", file_id, file_meta.name);
 
             // Build snapshot and generate code for the file
             let (snapshot, from_cache) =
@@ -107,7 +107,7 @@ impl LongOperation for GenerateCppQtFilesUseCase {
             }
 
             let file_name = &file_meta.name;
-            println!("Generated code for file {}:\ncode omitted", file_name);
+            // println!("Generated code for file {}:\ncode omitted", file_name);
 
             // Compute destination path: root_path/prefix/relative_path/name
             let mut out_dir = root_path.clone();

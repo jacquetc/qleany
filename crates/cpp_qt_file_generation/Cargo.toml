@@ -19,6 +19,7 @@ include_dir = "0.7"
 tera = "1.18"
 indexmap = { version = "2", features = ["serde"] }
 which = "8.0.0"
+log = "0.4"
 
 [lints]
 workspace = true

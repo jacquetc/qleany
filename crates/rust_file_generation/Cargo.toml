@@ -20,6 +20,8 @@ tera = "1.18"
 indexmap = { version = "2", features = ["serde"] }
 which = "8.0.0"
 time = "0.3.43"
+log = "0.4"
+
 
 [lints]
 workspace = true

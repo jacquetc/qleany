@@ -577,7 +577,7 @@ impl SnapshotBuilder {
                     dtos: cached_snapshot.dtos.clone(),
                 };
 
-                println!("Snapshot cache hit for file id {}", file_id);
+                log::debug!("Snapshot cache hit for file id {}", file_id);
 
                 return Ok((new_snapshot, true));
             }

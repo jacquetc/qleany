@@ -911,10 +911,13 @@ impl ListRustFilesUseCase {
                 field: None,
             });
 
+            // commands:
+            let relative_path = format!("{}/slint_ui/src/commands/", prefix);
+
             files.push(File {
                 id: 0,
-                name: "slint_undo_redo_commands.rs".to_string(),
-                relative_path: format!("{}/slint_ui/src/commands/", prefix),
+                name: "undo_redo_commands.rs".to_string(),
+                relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_undo_redo_commands".to_string(),
                 feature: Some(0),
@@ -922,9 +925,6 @@ impl ListRustFilesUseCase {
                 use_case: None,
                 field: None,
             });
-
-            // commands:
-            let relative_path = format!("{}/slint_ui/src/commands/", prefix);
 
             for entity in &entities {
                 let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
