@@ -54,7 +54,7 @@ class DbContext : public QObject
     {
         QWriteLocker guard(&m_lock);
         const int id = ++m_nextId;
-        const QString connName = QStringLiteral("skri_conn_%1").arg(id);
+        const QString connName = QStringLiteral("conn_%1").arg(id);
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE"_L1, connName);
         db.setDatabaseName(m_databaseName);
         if (!db.open())

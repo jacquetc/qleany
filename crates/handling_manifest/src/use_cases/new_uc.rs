@@ -87,7 +87,7 @@ impl NewUseCase {
             undoable: false,
         };
 
-        let created_entity = uow.create_entity_multi(&vec![entity_base])?;
+        let created_entity = uow.create_entity_multi(&[entity_base])?;
         let root_entity = Entity {
             id: 0,
             name: "Root".to_string(),
@@ -100,7 +100,7 @@ impl NewUseCase {
             undoable: false,
         };
 
-        let created_root_entity = uow.create_entity_multi(&vec![root_entity])?;
+        let created_root_entity = uow.create_entity_multi(&[root_entity])?;
 
         // create global
         let global = Global {
@@ -112,7 +112,7 @@ impl NewUseCase {
             prefix_path: "".to_string(),
         };
 
-        let created_global = uow.create_global_multi(&vec![global])?;
+        let created_global = uow.create_global_multi(&[global])?;
 
         // create user interface
         let ui = uow.create_user_interface(&UserInterface {
@@ -132,16 +132,14 @@ impl NewUseCase {
             user_interface: ui.id,
         };
 
-        let created_workspace = uow.create_workspace_multi(&vec![workspace])?;
+        let created_workspace = uow.create_workspace_multi(&[workspace])?;
 
-        let mut root = uow.get_root(&1)?.ok_or(anyhow!("Root entity not found"))?;
-
-        root.workspace = Some(created_workspace[0].id);
+        let root = uow.get_root(&1)?.ok_or(anyhow!("Root entity not found"))?;
 
         uow.set_root_relationship(
             &root.id,
             &RootRelationshipField::Workspace,
-            &vec![created_workspace[0].id],
+            &[created_workspace[0].id],
         )?;
 
         uow.commit()?;

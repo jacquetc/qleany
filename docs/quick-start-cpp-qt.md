@@ -249,8 +249,6 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 | Read Only      | ✗ *(it will update the internal database)*   |
 | Long Operation | ✗                                |
 
-> **Note:** Long Operation is currently implemented for Rust only. For now, C++ / Qt6 ignores this setting.
-
 3. Switch to the **DTO In** tab:
     - Enable the checkbox
     - **Name**: `ImportInventoryDto`
@@ -275,8 +273,6 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 | Undoable       | ✗                                |
 | Read Only      | ✓ *(just reading internal data)* |
 | Long Operation | ✗                                |
-
-> **Note:** Long Operation is currently implemented for Rust only.
 
 3. **DTO In**:
     - **Name**: `ExportInventoryDto`

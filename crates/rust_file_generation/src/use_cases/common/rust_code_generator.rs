@@ -220,7 +220,9 @@ impl SnapshotBuilder {
         }
 
         // Load fields belonging to the entity
-        fields_vec.extend(uow.get_field_multi(&entity.fields)?.into_iter().flatten());
+        if !entity.fields.is_empty() {
+            fields_vec.extend(uow.get_field_multi(&entity.fields)?.into_iter().flatten());
+        }
 
         // Build FieldVMs with the same Rust type mapping as used elsewhere
         let mut fields_vm_vec: Vec<FieldVM> = Vec::new();
@@ -721,11 +723,14 @@ impl SnapshotBuilder {
                     }
 
                     // load fields
-                    let entity_fields: Vec<Field> = uow
-                        .get_field_multi(&ent_opt.fields)?
-                        .into_iter()
-                        .flatten()
-                        .collect();
+                    let entity_fields: Vec<Field> = if ent_opt.fields.is_empty() {
+                        vec![]
+                    } else {
+                        uow.get_field_multi(&ent_opt.fields)?
+                            .into_iter()
+                            .flatten()
+                            .collect()
+                    };
                     for field in &entity_fields {
                         if let Some(eid) = field.entity
                             && field.field_type == FieldType::Entity
@@ -741,12 +746,15 @@ impl SnapshotBuilder {
                 let entity = uow
                     .get_entity(&entity_id)?
                     .ok_or_else(|| anyhow!("Entity not found"))?;
-                let entity_fields: Vec<Field> = uow
-                    .get_field_multi(&entity.fields)?
-                    .into_iter()
-                    .flatten()
-                    .collect();
-                // load fields ao as to list entity dependencies
+                let entity_fields: Vec<Field> = if entity.fields.is_empty() {
+                    vec![]
+                } else {
+                    uow.get_field_multi(&entity.fields)?
+                        .into_iter()
+                        .flatten()
+                        .collect()
+                };
+                // load fields so as to list entity dependencies
                 for field in &entity_fields {
                     if let Some(eid) = field.entity
                         && field.field_type == FieldType::Entity
