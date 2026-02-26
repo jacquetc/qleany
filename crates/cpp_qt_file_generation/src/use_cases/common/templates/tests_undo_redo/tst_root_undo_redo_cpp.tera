@@ -18,21 +18,25 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
   public:
     MockRootUnitOfWork() = default;
 
-    void beginTransaction() override
+    bool beginTransaction() override
     {
         m_inTransaction = true;
+        return true;
     }
-    void commit() override
+    bool commit() override
     {
         m_inTransaction = false;
+        return true;
     }
-    void endTransaction() override
+    bool endTransaction() override
     {
         m_inTransaction = false;
+        return true;
     }
-    void rollback() override
+    bool rollback() override
     {
         m_inTransaction = false;
+        return true;
     }
 
     void createSavepoint() override

@@ -1656,7 +1656,7 @@ impl ListCppQtFilesUseCase {
         files.push(File {
             id: 0,
             name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/tests/", prefix),
+            relative_path: "tests/".to_string(),
             group: "tests".to_string(),
             template_name: "tests_cmake".to_string(),
             feature: None,
