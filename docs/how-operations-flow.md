@@ -95,13 +95,14 @@ Same architecture, different execution model. Rust is **synchronous**:
             fetch original for undo
 
       3d. uow.update_calendar(&entity)
-            CalendarRepository::update(event_hub, &entity)
+            CalendarRepository::update(event_buffer, &entity)
                 CalendarTable::update(&entity)
-                event_hub.send_event(Calendar(Updated))
-                    event pushed to flume channel, queued in EventHub
+                event_buffer.push(Calendar(Updated))     // queued, not delivered yet
 
       3e. uow.commit()
             redb transaction committed
+            EventBuffer::flush()                          // NOW the events fire
+                event_hub.send_event(Calendar(Updated)) via flume channel
 
 ── Return to controller ──────────────────────────────────────────
 
@@ -109,7 +110,7 @@ Same architecture, different execution model. Rust is **synchronous**:
 5.  returns CalendarDto
 ```
 
-In Rust, events flow through a central `EventHub` using flume channels. The event loop runs on a dedicated thread, receiving events and pushing them into a shared `Queue` (an `Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes.
+In Rust, events are deferred via an `EventBuffer` owned by each write unit of work. Repositories push events into the buffer during a transaction. On `commit()`, the buffer flushes all events to the central `EventHub` (a flume channel). On `rollback()`, the buffer is discarded. The event loop runs on a dedicated thread, receiving events from the hub and pushing them into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes.
 
 The `UndoRedoManager` is simpler than the C++/Qt version: no async, no worker thread. Commands implement the `UndoRedoCommand` trait (`undo()`, `redo()`, `as_any()`), and the manager maintains multiple stacks with `HashMap<u64, StackData>`. Each stack has an undo and redo `Vec`. The manager also supports composite commands for grouping multiple operations as one undoable unit (via `begin_composite()` / `end_composite()`), and command merging for operations like continuous typing.
 
@@ -292,7 +293,7 @@ The `Qt::QueuedConnection` ensures signals are delivered on the events object's 
 
 ### Rust
 
-All events (entity, feature, undo/redo, long operation) flow through a single `EventHub`:
+No separate registries here. Entity events, feature events, undo/redo events, long operation events,they all flow through a single `EventHub`:
 
 ```rust
 pub struct Event {
@@ -309,9 +310,27 @@ pub enum Origin {
 }
 ```
 
-The `EventHub` uses a flume channel internally. Events are sent from any thread via `send_event()`, received by a dedicated event loop thread, and pushed into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI layer polls this queue to process events.
+The `EventHub` uses a flume channel internally. Events are sent from any thread via `send_event()`, received by a dedicated event loop thread, and pushed into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes. One hub, one queue, one subscription point. The `Origin` enum tells you who sent what.
 
-Events are **not deferred** in Rust. Unlike C++/Qt's `SignalBuffer`, the repository sends the event into the `EventHub` channel immediately, even before the redb transaction commits. If the transaction later fails and rolls back, the events are already in the queue, referencing data that no longer exists. In practice, the UI handles "entity not found" gracefully, but it's not as clean as C++/Qt's approach where events are strictly withheld until commit. Deferred events for Rust are planned but not yet implemented.
+Events are **deferred** via the `EventBuffer`, the Rust equivalent of the C++/Qt `SignalBuffer`. Each write unit of work owns one (wrapped in `RefCell` for single-threaded UoWs, `Mutex` for long-operation UoWs). The flow:
+
+1. Repository calls `event_buffer.push(event)`.
+2. The buffer holds it in a `Vec<Event>`. Not delivered yet.
+3. On `commit()`, the UoW calls `event_buffer.flush()`, drains all pending events, and sends each one to the `EventHub`.
+4. On `rollback()`, the UoW calls `event_buffer.discard()`. Gone. The UI never knows.
+
+```rust
+pub struct EventBuffer {
+    buffering: bool,
+    pending: Vec<Event>,
+}
+```
+
+Deliberately simple. `begin_buffering()` arms it and clears stale events from a previous cycle. `push()` queues an event (silently dropped if not buffering). `flush()` drains via `std::mem::take()` and hands you back the `Vec`. `discard()` clears everything and stops buffering.
+
+One edge case worth knowing: `restore_to_savepoint()` discards the buffer (the database state it described is gone), then sends a `Reset` event **directly** to the `EventHub`, bypassing the buffer entirely. The UI must refresh immediately, that Reset cannot sit around waiting for a future `commit()`.
+
+Thread safety lives at the UoW level, not the repository level. The repositories just take `&mut EventBuffer`.
 
 ## Transaction Boundaries
 
@@ -321,7 +340,7 @@ Both targets use transactions to guarantee atomicity:
 
 - **Rust**: redb write transactions. The `Transaction` struct wraps redb's `WriteTransaction` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`), but same story: Qleany doesn't rely on them.
 
-In both cases, the unit of work owns the transaction lifecycle. `beginTransaction()` opens it, `commit()` closes it successfully (and flushes events in C++/Qt), `rollback()` aborts it (and discards events in C++/Qt).
+In both cases, the unit of work owns the transaction lifecycle. `beginTransaction()` opens it (and arms the event buffer), `commit()` closes it successfully (and flushes buffered events), `rollback()` aborts it (and discards buffered events).
 
 ### Why Snapshots, Not Savepoints
 
@@ -382,7 +401,7 @@ src/
 ├── common/src/
 │   ├── direct_access/               # repositories, tables per entity
 │   │   ├── calendar/
-│   │   │   ├── calendar_repository.rs  # CRUD + event emission via EventHub
+│   │   │   ├── calendar_repository.rs  # CRUD + event emission via EventBuffer
 │   │   │   └── calendar_table.rs       # redb operations
 │   │   └── repository_factory.rs       # creates repositories within transactions
 │   ├── event.rs                     # EventHub, Event, Origin enums (all events)
@@ -398,7 +417,7 @@ src/
 |--------|--------|------|
 | Execution model | Async (QCoro coroutines) | Synchronous |
 | Command execution | Undo/redo system executes the command | Use case executes, then pushed to stack |
-| Event deferral | SignalBuffer (explicit buffer/flush/discard) | Not yet deferred (coming soon) |
+| Event deferral | SignalBuffer (explicit buffer/flush/discard) | EventBuffer (explicit buffer/flush/discard) |
 | Event registries | Separate per entity + separate per feature | Single EventHub with Origin enum |
 | Long operations | QtConcurrent::run | std::thread::spawn |
 | Database | SQLite (WAL mode) | redb (embedded key-value) |
