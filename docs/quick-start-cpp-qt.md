@@ -1,6 +1,6 @@
 # Qleany Quick Start - C++/Qt
 
-This guide walks you through creating a complete desktop application for a car dealership using Qleany. By the end, you'll have generated architecture with entities, repositories, controllers, and undo/redo infrastructure.
+This guide walks you through creating a complete desktop application for a car dealership using Qleany. By the end, you'll have generated architecture with entities, repositories, controllers, and undo/redo infrastructure. After generation, the only code you write is inside the use cases (your business logic) and the UI. Everything else compiles and works out of the box.
 
 For Rust, see [Qleany Quick Start - Rust](quick-start-rust.md). The differences are minor.
 

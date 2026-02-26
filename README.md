@@ -13,6 +13,8 @@
 
 Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application. Rust's GUI ecosystem is growing fast, but there's nothing to help you structure what sits behind the UI. Qleany fills that gap. Write a YAML manifest describing your entities, relationships, and features. Qleany generates the rest: the database layer, the repository infrastructure, the event system, the controller wiring, and — if you need it — a multi-stack undo/redo system with cascade snapshot/restore for entity trees. For C++/Qt, it also generates reactive QML models that update themselves, and JavaScript mock controllers so your UI developer can work without waiting for the backend.
 
+Once the code is generated, your work is two things: fill in the use case bodies where the TODOs are, and build your UI. The rest is done. Think of it as getting the framework without adopting one.
+
 For a 13-entity project, that's roughly 600 files in C++/Qt or 300 in Rust, all compiling, all internally consistent, with a generated test suite that validates the infrastructure before you write a single line of business logic. The generated code is deliberately straightforward — readable and modifiable by a developer with a few years of experience, not a showcase of advanced language features.
 
 Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent architecture across Rust and C++/Qt with baked-in (empty) UIs. Qleany's own Slint-based tool is built using the same patterns it generates.
