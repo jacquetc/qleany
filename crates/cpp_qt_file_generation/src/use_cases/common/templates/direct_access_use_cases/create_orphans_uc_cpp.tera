@@ -18,26 +18,31 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
     // Store original data for undo/redo
     m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
 
-    if (!m_uow->beginTransaction())
+    try
     {
-        qCritical() << "Failed to begin transaction";
-        return {};
-    }
-    auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
+        m_uow->beginTransaction();
 
-    // set dates:
-    QDateTime currentTime = QDateTime::currentDateTimeUtc();
-    for (auto &entity : mappedEntities)
+        auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
+
+        // set dates:
+        QDateTime currentTime = QDateTime::currentDateTimeUtc();
+        for (auto &entity : mappedEntities)
+        {
+            entity.createdAt = currentTime;
+            entity.updatedAt = entity.createdAt;
+        }
+
+        auto createdEntities = m_uow->createOrphans(mappedEntities);
+        m_uow->commit();
+
+        m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
+        m_hasExecuted = true;
+    }
+    catch (...)
     {
-        entity.createdAt = currentTime;
-        entity.updatedAt = entity.createdAt;
+        m_uow->rollback();
+        throw;
     }
-
-    auto createdEntities = m_uow->createOrphans(mappedEntities);
-    m_uow->commit();
-
-    m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
-    m_hasExecuted = true;
 
     return m_created{{ ent.pascal_plural_name }};
 }
@@ -51,10 +56,7 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
         // Remove the created {{ ent.camel_plural_name }} by their IDs
         QList<int> idsToRemove;
@@ -72,10 +74,10 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Undo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 
@@ -88,10 +90,7 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
         // Restore the entity tree from the snapshot taken during undo
         m_uow->restore(m_oldTreeSnapshot);
@@ -99,10 +98,10 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::redo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Redo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 

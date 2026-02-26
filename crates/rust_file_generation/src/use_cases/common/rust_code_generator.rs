@@ -175,88 +175,15 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
     let mut context = Context::new();
     context.insert("s", snapshot);
 
-    let code = match snapshot.file.inner.template_name.as_str() {
-        // root and common
-        "root_cargo" => tera.render("root_cargo", &context)?,
-        "common_cargo" => tera.render("common_cargo", &context)?,
-        "common_lib" => tera.render("common_lib", &context)?,
-        // common modules
-        "undo_redo" => tera.render("undo_redo", &context)?,
-        "types" => tera.render("types", &context)?,
-        "long_operation" => tera.render("long_operation", &context)?,
-        "database" => tera.render("database", &context)?,
-        "db_context" => tera.render("db_context", &context)?,
-        "db_helpers" => tera.render("db_helpers", &context)?,
-        "transactions" => tera.render("transactions", &context)?,
-        "redb_tests" => tera.render("redb_tests", &context)?,
-        "undo_redo_tests" => tera.render("undo_redo_tests", &context)?,
-        "repository_factory" => tera.render("repository_factory", &context)?,
-        "common_setup" => tera.render("common_setup", &context)?,
-        // common direct access entities registry
-        "common_entities" => tera.render("common_entities", &context)?,
-        "common_event" => tera.render("common_event", &context)?,
-        "common_direct_access_mod" => tera.render("common_direct_access_mod", &context)?,
-        // direct_access crate
-        "direct_access_cargo" => tera.render("direct_access_cargo", &context)?,
-        "direct_access_lib" => tera.render("direct_access_lib", &context)?,
-        // per-entity files inside direct_access
-        "entity_mod" => tera.render("entity_mod", &context)?,
-        "entity_dtos" => tera.render("entity_dtos", &context)?,
-        "entity_use_cases_mod" => tera.render("entity_use_cases_mod", &context)?,
-        "entity_units_of_work" => tera.render("entity_units_of_work", &context)?,
-        "entity_controller" => tera.render("entity_controller", &context)?,
-        "entity_get_use_case" => tera.render("entity_get_use_case", &context)?,
-        "entity_get_multi_use_case" => tera.render("entity_get_multi_use_case", &context)?,
-        "entity_create_use_case" => tera.render("entity_create_use_case", &context)?,
-        "entity_create_multi_use_case" => tera.render("entity_create_multi_use_case", &context)?,
-        "entity_update_multi_use_case" => tera.render("entity_update_multi_use_case", &context)?,
-        "entity_update_use_case" => tera.render("entity_update_use_case", &context)?,
-        "entity_remove_multi_use_case" => tera.render("entity_remove_multi_use_case", &context)?,
-        "entity_remove_use_case" => tera.render("entity_remove_use_case", &context)?,
-        "entity_get_relationship_use_case" => {
-            tera.render("entity_get_relationship_use_case", &context)?
-        }
-        "entity_set_relationship_use_case" => {
-            tera.render("entity_set_relationship_use_case", &context)?
-        }
-        // common direct_access per-entity
-        "common_entity_mod" => tera.render("common_entity_mod", &context)?,
-        "common_entity_repository" => tera.render("common_entity_repository", &context)?,
-        "common_entity_table" => tera.render("common_entity_table", &context)?,
-        // feature crates
-        "feature_cargo" => tera.render("feature_cargo", &context)?,
-        "feature_lib" => tera.render("feature_lib", &context)?,
-        "feature_use_cases_mod" => tera.render("feature_use_cases_mod", &context)?,
-        "feature_dtos" => tera.render("feature_dtos", &context)?,
-        "feature_units_of_work_mod" => tera.render("feature_units_of_work_mod", &context)?,
-        "feature_controller" => tera.render("feature_controller", &context)?,
-        "feature_use_case" => tera.render("feature_use_case", &context)?,
-        "feature_use_case_uow" => tera.render("feature_use_case_uow", &context)?,
-        // macros crate
-        "macros_cargo" => tera.render("macros_cargo", &context)?,
-        "macros_lib" => tera.render("macros_lib", &context)?,
-        "macros_direct_access" => tera.render("macros_direct_access", &context)?,
-        // cli
-        "cli_cargo" => tera.render("cli_cargo", &context)?,
-        "cli_main" => tera.render("cli_main", &context)?,
-        // slint
-        "slint_cargo" => tera.render("slint_cargo", &context)?,
-        "slint_build" => tera.render("slint_build", &context)?,
-        "slint_main" => tera.render("slint_main", &context)?,
-        "slint_app" => tera.render("slint_app", &context)?,
-        "slint_globals" => tera.render("slint_globals", &context)?,
-        "slint_app_context" => tera.render("slint_app_context", &context)?,
-        "slint_commands_mod" => tera.render("slint_commands_mod", &context)?,
-        "slint_event_hub_client" => tera.render("slint_event_hub_client", &context)?,
-        "slint_entity_commands" => tera.render("slint_entity_commands", &context)?,
-        "slint_feature_commands" => tera.render("slint_feature_commands", &context)?,
-        "slint_undo_redo_commands" => tera.render("slint_undo_redo_commands", &context)?,
-        _ => {
-            return Err(anyhow::anyhow!(
-                "Unknown template name: {}",
-                snapshot.file.inner.template_name
-            ));
-        }
+    let template_name = snapshot.file.inner.template_name.as_str();
+
+    let code = if tera.get_template(template_name).is_ok() {
+        tera.render(template_name, &context)?
+    } else {
+        return Err(anyhow::anyhow!(
+            "Unknown template name: {}",
+            snapshot.file.inner.template_name
+        ));
     };
 
     Ok(code)

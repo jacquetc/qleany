@@ -212,7 +212,12 @@ bool UndoRedoStack::isAutoCleanupEnabled() const
 
 void UndoRedoStack::onCommandFinished(bool success)
 {
+    if (!success && !m_undoStack.isEmpty() && m_undoStack.top() == m_currentCommand)
+    {
+        m_undoStack.pop();
+    }
     m_currentCommand.reset();
+    updateState();
     Q_EMIT commandFinished(success);
 }
 

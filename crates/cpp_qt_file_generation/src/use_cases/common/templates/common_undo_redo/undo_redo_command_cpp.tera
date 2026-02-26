@@ -68,7 +68,6 @@ void UndoRedoCommand::asyncExecute()
             }
         });
         m_executeWatcher->setFuture(future);
-        m_wasAlreadyExecuted = true;
     }
     else
     {
@@ -248,7 +247,12 @@ void UndoRedoCommand::onUndoFinished()
     if (m_undoWatcher->isFinished())
     {
         auto result = m_undoWatcher->result();
-        
+
+        if (result.isSuccess())
+        {
+            m_wasAlreadyExecuted = true;
+        }
+
         // Log detailed error information if operation failed
         if (!result.isSuccess())
         {

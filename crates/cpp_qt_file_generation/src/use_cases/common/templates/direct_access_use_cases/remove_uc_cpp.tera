@@ -18,20 +18,24 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
     // Store original data for undo/redo
     m_original{{ ent.pascal_name }}Ids = {{ ent.camel_name }}Ids;
 
-    if (!m_uow->beginTransaction())
+    try
     {
-        qCritical() << "Failed to begin transaction";
-        return {};
+        m_uow->beginTransaction();
+
+        // Snapshot the entity tree before removal (for undo)
+        m_entityTreeSnapshot = m_uow->snapshot({{ ent.camel_name }}Ids);
+
+        // Perform the removal
+        m_removedIds = m_uow->remove({{ ent.camel_name }}Ids);
+        m_uow->commit();
+
+        m_hasExecuted = true;
     }
-
-    // Snapshot the entity tree before removal (for undo)
-    m_entityTreeSnapshot = m_uow->snapshot({{ ent.camel_name }}Ids);
-
-    // Perform the removal
-    m_removedIds = m_uow->remove({{ ent.camel_name }}Ids);
-    m_uow->commit();
-
-    m_hasExecuted = true;
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
 
     return m_removedIds;
 }
@@ -45,10 +49,7 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
         // Restore the entity tree from the snapshot
         m_uow->restore(m_entityTreeSnapshot);
@@ -56,10 +57,10 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Undo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 
@@ -72,10 +73,7 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
         // Re-snapshot the entity tree (restored by undo) before removing again
         m_entityTreeSnapshot = m_uow->snapshot(m_original{{ ent.pascal_name }}Ids);
@@ -86,10 +84,10 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::redo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Redo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 

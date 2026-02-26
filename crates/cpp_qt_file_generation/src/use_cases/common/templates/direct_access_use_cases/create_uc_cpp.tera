@@ -20,36 +20,41 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
     m_ownerId = ownerId;
     m_index = index;
 
-    if (!m_uow->beginTransaction())
+    try
     {
-        qCritical() << "Failed to begin transaction";
-        return {};
-    }
-    auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
+        m_uow->beginTransaction();
 
-    // set dates:
-    QDateTime currentTime = QDateTime::currentDateTimeUtc();
-    for (auto &entity : mappedEntities)
-    {
-        entity.createdAt = currentTime;
-        entity.updatedAt = entity.createdAt;
-    }
+        auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
+
+        // set dates:
+        QDateTime currentTime = QDateTime::currentDateTimeUtc();
+        for (auto &entity : mappedEntities)
+        {
+            entity.createdAt = currentTime;
+            entity.updatedAt = entity.createdAt;
+        }
 
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
-    // Pre-snapshot existing children that will be cascade-removed by create
-    m_existingChildIds = m_uow->getRelationshipsFromOwner(ownerId);
-    if (!m_existingChildIds.isEmpty())
-        m_displacedChildrenSnapshot = m_uow->snapshot(m_existingChildIds);
+        // Pre-snapshot existing children that will be cascade-removed by create
+        m_existingChildIds = m_uow->getRelationshipsFromOwner(ownerId);
+        if (!m_existingChildIds.isEmpty())
+            m_displacedChildrenSnapshot = m_uow->snapshot(m_existingChildIds);
 {%- else %}
-    // Capture owner junction state before create (for undo)
-    m_previousOwnerRelationshipIds = m_uow->getRelationshipsFromOwner(ownerId);
+        // Capture owner junction state before create (for undo)
+        m_previousOwnerRelationshipIds = m_uow->getRelationshipsFromOwner(ownerId);
 {%- endif %}
 
-    auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
-    m_uow->commit();
+        auto createdEntities = m_uow->create(mappedEntities, ownerId, index);
+        m_uow->commit();
 
-    m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
-    m_hasExecuted = true;
+        m_created{{ ent.pascal_plural_name }} = DtoMapper::toDtoList(createdEntities);
+        m_hasExecuted = true;
+    }
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
 
     return m_created{{ ent.pascal_plural_name }};
 }
@@ -63,10 +68,7 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
         // Collect IDs of created {{ ent.camel_plural_name }}
         QList<int> idsToRemove;
@@ -101,10 +103,10 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Undo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 
@@ -117,10 +119,7 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        if (!m_uow->beginTransaction())
-        {
-            return SCU::Result<void>("Failed to begin transaction"_L1);
-        }
+        m_uow->beginTransaction();
 
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
         // Re-snapshot displaced children (restored by undo) for next undo cycle
@@ -159,10 +158,10 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
 
         return SCU::Result<void>();
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         m_uow->rollback();
-        return SCU::Result<void>("Redo failed: "_L1 + QString::fromStdString(e.what()));
+        throw;
     }
 }
 
