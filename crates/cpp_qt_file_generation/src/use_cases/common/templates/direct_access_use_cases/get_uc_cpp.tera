@@ -8,10 +8,7 @@ namespace SCE = Common::Entities;
 
 QList<{{ ent.pascal_name }}Dto> Get{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.camel_name }}Ids)
 {
-    m_uow->beginTransaction();
     auto getEntities = m_uow->get({{ ent.camel_name }}Ids);
-    m_uow->endTransaction();
-
     return DtoMapper::toDtoList(getEntities);
 }
 

@@ -18,7 +18,11 @@ QList<int> Remove{{ ent.pascal_name }}UseCase::execute(const QList<int> &{{ ent.
     // Store original data for undo/redo
     m_original{{ ent.pascal_name }}Ids = {{ ent.camel_name }}Ids;
 
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
 
     // Snapshot the entity tree before removal (for undo)
     m_entityTreeSnapshot = m_uow->snapshot({{ ent.camel_name }}Ids);
@@ -41,7 +45,10 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Restore the entity tree from the snapshot
         m_uow->restore(m_entityTreeSnapshot);
@@ -65,7 +72,10 @@ SCU::Result<void> Remove{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Re-snapshot the entity tree (restored by undo) before removing again
         m_entityTreeSnapshot = m_uow->snapshot(m_original{{ ent.pascal_name }}Ids);

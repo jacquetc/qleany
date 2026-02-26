@@ -16,6 +16,22 @@ using namespace Qt::StringLiterals;
 class DbBuilder
 {
   public:
+    /// PRAGMAs that must be applied to EVERY connection (not persisted to file).
+    /// journal_mode=WAL is excluded — it is file-level and set only during buildDatabase().
+    static QStringList perConnectionPragmas()
+    {
+        return {
+            QStringLiteral("PRAGMA synchronous=NORMAL"),
+            QStringLiteral("PRAGMA cache_size=20000"),
+            QStringLiteral("PRAGMA temp_store=MEMORY"),
+            QStringLiteral("PRAGMA busy_timeout=30000"),
+            QStringLiteral("PRAGMA mmap_size=268435456"),
+            QStringLiteral("PRAGMA case_sensitive_like=true"),
+            QStringLiteral("PRAGMA recursive_triggers=ON"),
+            QStringLiteral("PRAGMA foreign_keys=ON"),
+        };
+    }
+
     // Creates an SQLite database file in the temp folder and builds schema.
     // Returns the absolute file path used as databaseName for QSqlDatabase.
     static QString buildDatabase()
@@ -68,28 +84,24 @@ class DbBuilder
             }
         }
 
-        // WAL-optimized database settings for writing IDE
-        QStringList optimization;
-        optimization << QStringLiteral("PRAGMA journal_mode=WAL")        // Enable WAL mode
-                     << QStringLiteral("PRAGMA synchronous=NORMAL")      // Balance safety/performance
-                     << QStringLiteral("PRAGMA cache_size=20000")        // 20MB cache for better performance
-                     << QStringLiteral("PRAGMA temp_store=MEMORY")       // Store temp data in memory
-                     << QStringLiteral("PRAGMA wal_autocheckpoint=1000") // Auto-checkpoint every 1000 pages
-                     << QStringLiteral("PRAGMA busy_timeout=30000")      // 30s timeout for operations
-                     << QStringLiteral("PRAGMA mmap_size=268435456")     // 256MB memory mapping
-                     << QStringLiteral("PRAGMA case_sensitive_like=true")
-                     << QStringLiteral("PRAGMA recursive_triggers=ON") << QStringLiteral("PRAGMA foreign_keys=ON");
-
-        // execute each optimization option as a single query within the transaction
+        // File-level PRAGMAs (persist to database file, only need to be set once)
         {
             QSqlQuery query(db);
-            for (const QString &string : std::as_const(optimization))
+            query.exec(QStringLiteral("PRAGMA journal_mode=WAL"));
+            if (query.lastError().isValid())
+                qCritical() << "Error setting journal mode:" << query.lastError().text();
+            query.exec(QStringLiteral("PRAGMA wal_autocheckpoint=1000"));
+            if (query.lastError().isValid())
+                qCritical() << "Error setting wal_autocheckpoint:" << query.lastError().text();
+        }
+
+        // Per-connection PRAGMAs (re-applied by DbContext for each runtime connection)
+        {
+            QSqlQuery query(db);
+            for (const QString &pragma : perConnectionPragmas())
             {
-                query.prepare(string);
-                query.exec();
-                // check for errors
-                if (query.lastError().isValid())
-                    qCritical() << "Error creating table:" << query.lastError().text();
+                if (!query.exec(pragma))
+                    qCritical() << "Error applying PRAGMA:" << query.lastError().text();
             }
         }
         db.commit();

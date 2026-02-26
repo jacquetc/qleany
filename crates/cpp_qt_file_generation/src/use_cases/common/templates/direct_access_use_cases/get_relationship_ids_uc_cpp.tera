@@ -7,11 +7,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 
 QList<int> GetRelationshipIdsUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship)
 {
-    m_uow->beginTransaction();
-    auto result = m_uow->getRelationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(relationship));
-    m_uow->endTransaction();
-
-    return result;
+    return m_uow->getRelationship({{ ent.camel_name }}Id, DtoMapper::toCommonRelationshipField(relationship));
 }
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

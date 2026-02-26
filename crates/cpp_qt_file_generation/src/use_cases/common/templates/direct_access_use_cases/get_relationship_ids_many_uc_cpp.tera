@@ -8,11 +8,7 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 QHash<int, QList<int>> GetRelationshipIdsManyUseCase::execute(const QList<int> &{{ ent.camel_name }}Ids,
                                                               {{ ent.pascal_name }}RelationshipField relationship)
 {
-    m_uow->beginTransaction();
-    auto result = m_uow->getRelationshipMany({{ ent.camel_name }}Ids, DtoMapper::toCommonRelationshipField(relationship));
-    m_uow->endTransaction();
-
-    return result;
+    return m_uow->getRelationshipMany({{ ent.camel_name }}Ids, DtoMapper::toCommonRelationshipField(relationship));
 }
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

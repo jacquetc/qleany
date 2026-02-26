@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QHash>
+#include <QMutex>
 #include <QPointer>
 #include <QReadWriteLock>
 #include <QString>
@@ -59,7 +60,22 @@ class DbContext : public QObject
         if (!db.open())
         {
             qCritical() << "DbContext: failed to open database:" << db.lastError().text();
+            m_connections.insert(id, connName);
+            return id;
         }
+
+        // Apply per-connection PRAGMAs (these are NOT persisted to the file)
+        {
+            QSqlQuery query(db);
+            for (const QString &pragma : DbBuilder::perConnectionPragmas())
+            {
+                if (!query.exec(pragma))
+                {
+                    qWarning() << "DbContext: PRAGMA failed:" << query.lastError().text();
+                }
+            }
+        }
+
         m_connections.insert(id, connName);
         return id;
     }
@@ -149,8 +165,22 @@ class DbContext : public QObject
         return {-1, -1};
     }
 
+    /// Acquire exclusive write access. Blocks until available.
+    /// Must be paired with releaseWriteLock().
+    void acquireWriteLock()
+    {
+        m_writeMutex.lock();
+    }
+
+    /// Release exclusive write access.
+    void releaseWriteLock()
+    {
+        m_writeMutex.unlock();
+    }
+
   private:
-    mutable QReadWriteLock m_lock;
+    mutable QReadWriteLock m_lock;          // protects connection pool
+    QMutex m_writeMutex;                    // serializes write transactions
     QString m_databaseName;
     int m_nextId = 0;
     // map id -> connectionName
@@ -169,7 +199,14 @@ struct DbSubContext
 
     ~DbSubContext()
     {
-        // Only close if connection was created
+        // Safety: release write lock if still held (abnormal exit path)
+        if (m_holdsWriteLock)
+        {
+            qWarning() << "DbSubContext destroyed while holding write lock — forcing release";
+            m_parentDbContext.releaseWriteLock();
+            m_holdsWriteLock = false;
+        }
+
         if (m_dbId != -1)
         {
             m_parentDbContext.closeDatabaseConnection(m_dbId);
@@ -207,42 +244,75 @@ struct DbSubContext
     }
 
     // Transaction API - all methods need to ensure connection exists
-    void beginTransaction()
+
+    /// Begin a write transaction. Acquires the write mutex first.
+    /// Returns false if the SQL transaction could not be started.
+    [[nodiscard]] bool beginTransaction()
     {
-        QSqlDatabase db = getConnection(); // This will create connection if needed
+        m_parentDbContext.acquireWriteLock();
+        m_holdsWriteLock = true;
+
+        QSqlDatabase db = getConnection();
         if (!db.isValid())
-            return;
+        {
+            qCritical() << "BEGIN TRANSACTION failed: invalid database connection";
+            m_parentDbContext.releaseWriteLock();
+            m_holdsWriteLock = false;
+            return false;
+        }
         if (!db.transaction())
         {
-            qWarning() << "BEGIN TRANSACTION failed:" << db.lastError().text();
+            qCritical() << "BEGIN TRANSACTION failed:" << db.lastError().text();
+            m_parentDbContext.releaseWriteLock();
+            m_holdsWriteLock = false;
+            return false;
         }
+        return true;
     }
 
-    void commit()
+    [[nodiscard]] bool commit()
     {
         QSqlDatabase db = getConnection();
-        if (!db.isValid())
-            return;
-        if (!db.commit())
+        bool ok = true;
+        if (db.isValid())
         {
-            qWarning() << "COMMIT failed:" << db.lastError().text();
+            if (!db.commit())
+            {
+                qCritical() << "COMMIT failed:" << db.lastError().text();
+                ok = false;
+            }
         }
+        if (m_holdsWriteLock)
+        {
+            m_parentDbContext.releaseWriteLock();
+            m_holdsWriteLock = false;
+        }
+        return ok;
     }
 
-    void endTransaction()
+    [[nodiscard]] bool endTransaction()
     {
-        commit();
+        return commit();
     }
 
-    void rollback()
+    bool rollback()
     {
         QSqlDatabase db = getConnection();
-        if (!db.isValid())
-            return;
-        if (!db.rollback())
+        bool ok = true;
+        if (db.isValid())
         {
-            qWarning() << "ROLLBACK failed:" << db.lastError().text();
+            if (!db.rollback())
+            {
+                qWarning() << "ROLLBACK failed:" << db.lastError().text();
+                ok = false;
+            }
         }
+        if (m_holdsWriteLock)
+        {
+            m_parentDbContext.releaseWriteLock();
+            m_holdsWriteLock = false;
+        }
+        return ok;
     }
 
     void createSavepoint()
@@ -306,6 +376,7 @@ struct DbSubContext
   private:
     DbContext &m_parentDbContext;
     mutable int m_dbId = -1; // Initialize to invalid ID
+    bool m_holdsWriteLock = false;
     QString m_savepointName;
 };
 

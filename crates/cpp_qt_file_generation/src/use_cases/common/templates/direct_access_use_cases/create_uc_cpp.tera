@@ -20,7 +20,11 @@ QList<{{ ent.pascal_name }}Dto> Create{{ ent.pascal_name }}UseCase::execute(cons
     m_ownerId = ownerId;
     m_index = index;
 
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
     auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
 
     // set dates:
@@ -59,7 +63,10 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Collect IDs of created {{ ent.camel_plural_name }}
         QList<int> idsToRemove;
@@ -110,7 +117,10 @@ SCU::Result<void> Create{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
 {%- if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}
         // Re-snapshot displaced children (restored by undo) for next undo cycle

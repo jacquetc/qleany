@@ -37,10 +37,10 @@ class ITransactional
 {
   public:
     virtual ~ITransactional() = default;
-    virtual void beginTransaction() = 0;
-    virtual void commit() = 0;
-    virtual void endTransaction() = 0;
-    virtual void rollback() = 0;
+    [[nodiscard]] virtual bool beginTransaction() = 0;
+    [[nodiscard]] virtual bool commit() = 0;
+    [[nodiscard]] virtual bool endTransaction() = 0;
+    virtual bool rollback() = 0;
     virtual void createSavepoint() = 0;
     virtual void rollbackToSavepoint() = 0;
     virtual void releaseSavepoint() = 0;
@@ -71,25 +71,31 @@ class UnitOfWorkBase : public virtual ITransactional
 
     // ITransactional overrides — all forwarded to DbSubContext
     // Signal buffering is integrated into transaction lifecycle
-    void beginTransaction() override
+    [[nodiscard]] bool beginTransaction() override
     {
-        m_dbSubContext.beginTransaction();
+        if (!m_dbSubContext.beginTransaction())
+            return false;
         m_signalBuffer->beginBuffering();
+        return true;
     }
-    void commit() override
+    [[nodiscard]] bool commit() override
     {
-     m_dbSubContext.commit();
-     m_signalBuffer->flush();
+        bool ok = m_dbSubContext.commit();
+        if (ok)
+            m_signalBuffer->flush();
+        else
+            m_signalBuffer->discard();
+        return ok;
     }
-    void endTransaction() override
+    [[nodiscard]] bool endTransaction() override
     {
-        m_dbSubContext.endTransaction();
-        m_signalBuffer->flush();
+        return commit();
     }
-    void rollback() override
+    bool rollback() override
     {
         m_dbSubContext.rollback();
         m_signalBuffer->discard();
+        return true;
     }
     void createSavepoint() override { m_dbSubContext.createSavepoint(); }
     void rollbackToSavepoint() override { m_dbSubContext.rollbackToSavepoint(); }

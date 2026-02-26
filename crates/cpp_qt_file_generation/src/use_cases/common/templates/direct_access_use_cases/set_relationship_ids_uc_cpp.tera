@@ -18,7 +18,11 @@ void SetRelationshipIdsUseCase::execute(int {{ ent.camel_name }}Id, {{ ent.pasca
 
     const auto commonRel = DtoMapper::toCommonRelationshipField(entityRelationship);
 
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return;
+    }
 
     // Save original IDs for undo
     m_originalRelatedIds = m_uow->getRelationship({{ ent.camel_name }}Id, commonRel);
@@ -43,7 +47,10 @@ SCU::Result<void> SetRelationshipIdsUseCase::undo()
     try
     {
         const auto commonRel = DtoMapper::toCommonRelationshipField(m_relationship);
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
         m_uow->setRelationship(m_{{ ent.camel_name }}Id, commonRel, m_originalRelatedIds);
         m_uow->commit();
         return SCU::Result<void>();
@@ -63,7 +70,10 @@ SCU::Result<void> SetRelationshipIdsUseCase::redo()
     try
     {
         const auto commonRel = DtoMapper::toCommonRelationshipField(m_relationship);
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
         m_uow->setRelationship(m_{{ ent.camel_name }}Id, commonRel, m_newRelatedIds);
         m_uow->commit();
         return SCU::Result<void>();

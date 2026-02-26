@@ -18,7 +18,11 @@ QList<{{ ent.pascal_name }}Dto> CreateOrphan{{ ent.pascal_name }}UseCase::execut
     // Store original data for undo/redo
     m_original{{ ent.pascal_plural_name }} = {{ ent.camel_plural_name }};
 
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
     auto mappedEntities = DtoMapper::toEntityList({{ ent.camel_plural_name }});
 
     // set dates:
@@ -47,7 +51,10 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Remove the created {{ ent.camel_plural_name }} by their IDs
         QList<int> idsToRemove;
@@ -81,7 +88,10 @@ SCU::Result<void> CreateOrphan{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Restore the entity tree from the snapshot taken during undo
         m_uow->restore(m_oldTreeSnapshot);

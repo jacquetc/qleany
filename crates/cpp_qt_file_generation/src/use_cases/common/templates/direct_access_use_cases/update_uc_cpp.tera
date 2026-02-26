@@ -21,7 +21,11 @@ QList<{{ ent.pascal_name }}Dto> Update{{ ent.pascal_name }}UseCase::execute(cons
         {{ ent.camel_name }}Ids.append({{ ent.camel_name }}.id);
     }
 
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
     auto originalEntities = m_uow->get({{ ent.camel_name }}Ids);
     m_original{{ ent.pascal_name }}s = DtoMapper::toDtoList(originalEntities);
 
@@ -51,7 +55,10 @@ SCU::Result<void> Update{{ ent.pascal_name }}UseCase::undo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
 
         // Restore the original {{ ent.camel_plural_name }}
         auto mappedEntities = DtoMapper::toEntityList(m_original{{ ent.pascal_name }}s);
@@ -76,7 +83,10 @@ SCU::Result<void> Update{{ ent.pascal_name }}UseCase::redo()
 
     try
     {
-        m_uow->beginTransaction();
+        if (!m_uow->beginTransaction())
+        {
+            return SCU::Result<void>("Failed to begin transaction"_L1);
+        }
         auto mappedEntities = DtoMapper::toEntityList(m_updated{{ ent.pascal_name }}s);
         m_uow->update(mappedEntities);
         m_uow->commit();

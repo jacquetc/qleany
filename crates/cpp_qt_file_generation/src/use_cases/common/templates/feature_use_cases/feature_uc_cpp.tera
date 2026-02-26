@@ -32,7 +32,11 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
     std::function<void(Common::LongOperation::OperationProgress)> progressCallback,
     const std::atomic<bool> &cancelFlag)
 {
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
 
     // TODO: Implement long operation logic.
     // Check cancelFlag.load() periodically and call progressCallback() to report progress.
@@ -74,7 +78,11 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
 
 {{ dto_out_str }} {{ uc.pascal_name }}UseCase::execute({{ dto_in_arg_str }}) const
 {
-    m_uow->beginTransaction();
+    if (!m_uow->beginTransaction())
+    {
+        qCritical() << "Failed to begin transaction";
+        return {};
+    }
 
     qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
 
