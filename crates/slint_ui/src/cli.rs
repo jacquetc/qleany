@@ -263,6 +263,10 @@ pub enum DocsTarget {
     /// Show architecture design documentation
     #[command(visible_alias = "design")]
     DesignPhilosophy,
+    
+    /// Show how operations flow documentation
+    #[command(visible_alias = "flow")]
+    HowOperationsFlow,
 
     /// Show undo/redo architecture documentation
     #[command(visible_alias = "undo")]

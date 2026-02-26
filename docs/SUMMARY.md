@@ -11,6 +11,7 @@
 
 - [Design Philosophy](design-philosophy.md)
 - [Undo-Redo Architecture](undo-redo-architecture.md)
+- [How Operations Flow](how-operations-flow.md)
 - [Regeneration Workflow](regeneration-workflow.md)
 
 # Reference

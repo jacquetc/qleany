@@ -36,6 +36,7 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 | [Quick Start - C++/Qt](docs/quick-start-cpp-qt.md)                 | Step-by-step tutorial building a complete application                          |
 | [Manifest Reference](docs/manifest-reference.md)                   | Entity options, field types, relationships, features and use cases             |
 | [Design Philosophy](docs/design-philosophy.md)                     | Clean Architecture background, package by feature, Rust module structure       |
+| [How Operations Flow](docs/how-operations-flow.md)                 | How data flows through the application, events                                 |
 | [Regeneration Workflow](docs/regeneration-workflow.md)             | How file generation works, what gets overwritten, files that must stay in sync |
 | [Undo-Redo Architecture](docs/undo-redo-architecture.md)           | Entity tree structure, undoable vs non-undoable, configuration patterns        |
 | [QML Integration](docs/qml-integration.md)                         | Reactive models, mocks, and event system for C++/Qt                            |

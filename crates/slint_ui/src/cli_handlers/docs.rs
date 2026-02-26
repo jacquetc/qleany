@@ -27,6 +27,7 @@ pub fn execute(
 |`qleany docs quick-start-cpp-qt`|`start-cpp`|Quick Start — C++/Qt|
 |`qleany docs manifest-reference`|`manifest`|Manifest Reference|
 |`qleany docs design-philosophy`|`design`|Design Philosophy|
+|`qleany docs how-operations-flow`|`flow`|How Operations Flow|
 |`qleany docs regeneration-workflow`|`regen`|Regeneration Workflow|
 |`qleany docs undo-redo-architecture`|`undo`|Undo/Redo Architecture|
 |`qleany docs qml-integration`|`qml`|QML Integration|
@@ -58,6 +59,7 @@ pub fn execute(
             "quick-start-cpp-qt.md",
             "manifest-reference.md",
             "design-philosophy.md",
+            "how-operations-flow.md",
             "regeneration-workflow.md",
             "undo-redo-architecture.md",
             "qml-integration.md",
@@ -68,6 +70,7 @@ pub fn execute(
         DocsTarget::Introduction => unreachable!(),
         DocsTarget::ManifestReference => vec!["manifest-reference.md"],
         DocsTarget::DesignPhilosophy => vec!["design-philosophy.md"],
+        DocsTarget::HowOperationsFlow => vec!["how-operations-flow.md"],
         DocsTarget::UndoRedoArchitecture => vec!["undo-redo-architecture.md"],
         DocsTarget::GeneratedCodeCppQt => vec!["generated-code-cpp-qt.md"],
         DocsTarget::GeneratedCodeRust => vec!["generated-code-rust.md"],

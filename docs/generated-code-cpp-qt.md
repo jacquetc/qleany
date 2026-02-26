@@ -54,6 +54,94 @@ The user must implement this pattern in dedicated custom use cases.
 
 Note: the SQLite database can be set to exist in memory by using `:memory:` as the filename.
 
+### Long Operation Manager
+
+Threaded execution for heavy tasks. When a use case is marked `long_operation: true` in the manifest, the controller bypasses the coroutine-based command pipeline and instead delegates to a `LongOperationManager` that runs the work on a background thread via `QtConcurrent::run`.
+
+Operations implement the `ILongOperation` interface:
+
+```cpp
+class ILongOperation
+{
+  public:
+    virtual ~ILongOperation() = default;
+
+    virtual QJsonObject execute(
+        std::function<void(OperationProgress)> progressCallback,
+        const std::atomic<bool> &cancelFlag) = 0;
+};
+```
+
+Progress is reported via an `OperationProgress` Q_GADGET (usable from QML):
+
+```cpp
+struct OperationProgress
+{
+    Q_GADGET
+    Q_PROPERTY(int current MEMBER current)
+    Q_PROPERTY(int total MEMBER total)
+    Q_PROPERTY(QString message MEMBER message)
+    Q_PROPERTY(double percentage READ percentage)
+
+    int current = 0;
+    int total = 0;
+    QString message;
+
+    double percentage() const
+    { return total > 0 ? (static_cast<double>(current) / total) * 100.0 : 0.0; }
+};
+```
+
+The controller starts the operation synchronously (no `co_await`) and returns an operation ID:
+
+```cpp
+QString MyFeatureController::doHeavyWork(const HeavyWorkDto &dto)
+{
+    auto uow = std::make_unique<HeavyWorkUnitOfWork>(*m_dbContext, m_eventRegistry, m_featureEventRegistry);
+    auto operation = std::make_shared<HeavyWorkUseCase>(std::move(uow), dto);
+    return m_longOperationManager->startOperation(std::move(operation));
+}
+```
+
+Progress and results can be polled by the caller:
+
+```cpp
+std::optional<OperationProgress> MyFeatureController::getDoHeavyWorkProgress(const QString &operationId) const
+{
+    return m_longOperationManager->getProgress(operationId);
+}
+
+std::optional<HeavyWorkResultDto> MyFeatureController::getDoHeavyWorkResult(const QString &operationId) const
+{
+    auto result = m_longOperationManager->getResult(operationId);
+    if (!result.has_value())
+        return std::nullopt;
+    return gadgetFromJson<HeavyWorkResultDto>(result.value());
+}
+```
+
+The `LongOperationManager` also emits signals for reactive consumption:
+
+| Signal                                             | When                          |
+|----------------------------------------------------|-------------------------------|
+| `progressChanged(operationId, progress)`           | Progress callback fires       |
+| `operationCompleted(operationId, resultJson)`      | Operation finished normally   |
+| `operationFailed(operationId, errorString)`        | Operation threw an error      |
+| `operationCancelled(operationId)`                  | Cancellation was acknowledged |
+
+Cancellation is cooperative: the manager sets an `std::atomic<bool>` flag that the operation should check periodically.
+
+```cpp
+m_longOperationManager->cancelOperation(operationId);
+```
+
+Features:
+- Background execution via `QtConcurrent::run`
+- Progress callbacks marshalled to the main thread
+- Cancellation support via atomic flag
+- Result or error on completion
+- QML-compatible progress via Q_GADGET
+
 ### Async Undo/Redo with QCoro
 
 Controllers use C++20 coroutines via QCoro for non-blocking command execution:

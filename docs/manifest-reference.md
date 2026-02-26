@@ -469,7 +469,7 @@ features:
 | `name`           | string | required | Use case name (snake_case)                    |
 | `undoable`       | bool   | false    | Generate undo/redo command scaffolding        |
 | `read_only`      | bool   | false    | No data modification (affects generated code) |
-| `long_operation` | bool   | false    | Async execution with progress (Rust only)     |
+| `long_operation` | bool   | false    | Async execution with progress                 |
 | `entities`       | list   | []       | Entities this use case works with             |
 | `dto_in`         | object | none     | Input DTO for this use case                   |
 | `dto_out`        | object | none     | Output DTO for this use case                  |

@@ -384,6 +384,30 @@ The key questions to ask are: Do you have data that should not participate in un
 
 Settings, preferences, search results, and caches belong in non-undoable trunks. User-created content belongs in undoable trunks. Temporary UI state belongs outside the entity tree entirely or in non-undoable trunks.
 
+## Snapshots
+
+You will find a snapshot/restore system in the generated code, available in all units of work.
+
+This system captures the state of entities before a command executes and restores that state on undo. It handles cascading undos: undoing a parent entity also undoes all its strongly-owned children. The snapshot captures the entire subtree, including all relationships, even references from entities outside the tree.
+
+Most commands use snapshots for undo and redo. The exception is `update`, which does not change relationships and uses a more efficient before/after storage instead.
+
+Snapshots are essentially a tree of structs encompassing the rows of the entity tables and all their junction tables. They are not cheap to create or restore. Keep this in mind when choosing between an undoable entity and a not-undoable one.
+
+## Savepoints
+
+In the land of persistence, this is the nuclear option. Be cautious.
+
+A savepoint captures the state of the **entire database** at a given point in time, without any distinction between undoable and non-undoable entities. Nice in theory, less nice with an undo/redo system.
+
+Why did I implement it? At first, I thought about using savepoints instead of snapshots to undo cascade-deletions. Simpler logic, no tree walking. However, I quickly ran into the problem: non-undoable entities get reverted to an earlier state too. Application settings, caches, anything stored in the same database. I switched to the snapshot system, which is more complex but gives precise control over what gets undone and what doesn't.
+
+Why keep it? If you are not using the undo/redo system, if you have a basic application with orphan entities and no undoable/non-undoable distinction, a savepoint can be a quick way to revert the entire database to a previous state. A very specific situation.
+
+My recommendation: keep your finger away from the big red button.
+
 ---
+
+
 
 For implementation details of the undo/redo system including command infrastructure, async execution, and composite commands, see [Generated Infrastructure - C++/Qt](generated-code-cpp-qt.md) or [Generated Infrastructure - Rust](generated-code-rust.md).
