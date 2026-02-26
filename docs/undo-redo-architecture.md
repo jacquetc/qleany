@@ -386,13 +386,17 @@ Settings, preferences, search results, and caches belong in non-undoable trunks.
 
 ## Snapshots
 
-You will find a snapshot/restore system in the generated code, available in all units of work.
+Delete a `Calendar` and you don't just delete one row. You delete its `CalendarEvent`s, their `Reminder`s, and every junction table entry connecting those events to `Tag`s. Now undo that. You need to put back the entire tree, exactly as it was, relationships and all. That's what snapshots do.
 
-This system captures the state of entities before a command executes and restores that state on undo. It handles cascading undos: undoing a parent entity also undoes all its strongly-owned children. The snapshot captures the entire subtree, including all relationships, even references from entities outside the tree.
+Before a destructive command runs, the use case walks the ownership tree downward and serializes everything it finds into an `EntityTreeSnapshot` — entity rows, junction table entries, ordering data. On `undo()`, the snapshot is replayed. The tree reappears as if nothing happened.
 
-Most commands use snapshots for undo and redo. The exception is `update`, which does not change relationships and uses a more efficient before/after storage instead.
+How expensive is this? A Calendar with 200 events, each having 2 reminders and 3 tags, produces a snapshot of 1,801 rows. One calendar row, 200 event rows, 200 ordering entries, 400 reminder rows, 400 reminder junction entries, 600 event-tag junction entries. All serialized into memory before the deletion even starts. Weak references (the Tag entities themselves) are not captured — only the junction entries pointing to them.
 
-Snapshots are essentially a tree of structs encompassing the rows of the entity tables and all their junction tables. They are not cheap to create or restore. Keep this in mind when choosing between an undoable entity and a not-undoable one.
+The generated CRUD use cases handle all of this for you. `create` snapshots after insertion so undo can delete. `remove` snapshots before deletion so undo can restore. `setRelationshipIds` snapshots affected relationships before modification. `update` is the exception — no relationship changes, so it just stores a before/after pair. Cheaper.
+
+**Your feature use cases get none of this.** The snapshot methods are available on the unit of work (`snapshotCalendar(ids)`, `restoreCalendar(snap)`), but nobody calls them for you. If your feature use case is undoable and you skip the snapshot calls, undo will do nothing. Silently. I've been there. Non-undoable use cases and long operations don't need snapshots — the transaction rollback handles failures.
+
+Keep snapshot cost in mind when setting `undoable: true` on entities that accumulate large numbers of children. Single-entity updates are free. Deleting a parent with thousands of children is proportional to the subtree size. If that's your situation, either make it non-undoable or accept the latency.
 
 ## Savepoints
 
