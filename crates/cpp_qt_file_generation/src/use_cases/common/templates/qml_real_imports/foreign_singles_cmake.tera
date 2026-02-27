@@ -1,8 +1,6 @@
 
 # This file was generated with Qleany, edit at your own risk!
 # If you do, be careful to not overwrite it when you run the generator again.
-{%- set e = s.file.inner.entity %}
-{%- set ent = s.entities[e] %}
 find_package(Qt6 COMPONENTS Core Quick Qml REQUIRED)
 find_package(QCoro6 REQUIRED COMPONENTS Core Qml)
 

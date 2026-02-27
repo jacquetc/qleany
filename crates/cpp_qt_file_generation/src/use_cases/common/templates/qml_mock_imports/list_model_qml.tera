@@ -1,42 +1,36 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+{%- set field_id = s.file.inner.field %}
+{%- for f in ent.fields %}
+    {%- if f.inner.id == field_id %}
+        {%- set_global list_field = f %}
+    {%- endif %}
+{%- endfor %}
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+
 import QtQuick
 
 ListModel {
-    property int workId: 1
+    property int {{ ent.camel_name }}Id: 1
+{%- if list_field.inner.entity %}
+{%- set target_ent = s.entities[list_field.inner.entity] %}
+{%- for i in range(end=5) %}
 
     ListElement {
-        binderItems: [1, 2, 3]
-        createdAt: "2020-01-01T00:00:00"
-        itemId: 1
-        name: "example"
-        updatedAt: "2020-01-01T00:00:00"
+        itemId: {{ i + 1 }}
+{%- for tf in target_ent.normal_fields %}
+        {{ tf.camel_name }}: {{ tf.qml_default_init }}
+{%- endfor %}
     }
+{%- endfor %}
+{%- else %}
+{%- for i in range(end=5) %}
+
     ListElement {
-        binderItems: [1, 2, 3]
-        createdAt: "2020-01-01T00:00:00"
-        itemId: 2
-        name: "example"
-        updatedAt: "2020-01-01T00:00:00"
+        itemId: {{ i + 1 }}
+        value: "example"
     }
-    ListElement {
-        binderItems: [1, 2, 3]
-        createdAt: "2020-01-01T00:00:00"
-        itemId: 3
-        name: "example"
-        updatedAt: "2020-01-01T00:00:00"
-    }
-    ListElement {
-        binderItems: [1, 2, 3]
-        createdAt: "2020-01-01T00:00:00"
-        itemId: 4
-        name: "example"
-        updatedAt: "2020-01-01T00:00:00"
-    }
-    ListElement {
-        binderItems: [1, 2, 3]
-        createdAt: "2020-01-01T00:00:00"
-        itemId: 5
-        name: "example"
-        updatedAt: "2020-01-01T00:00:00"
-    }
+{%- endfor %}
+{%- endif %}
 }
-

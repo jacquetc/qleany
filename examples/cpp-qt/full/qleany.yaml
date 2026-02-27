@@ -24,11 +24,42 @@ entities:
   allow_direct_access: true
   undoable: false
   fields:
+  - name: workspace
+    type: entity
+    entity: Workspace
+    relationship: one_to_one
+    optional: true
+    strong: true
+  - name: system
+    type: entity
+    entity: System
+    relationship: one_to_one
+    optional: true
+    strong: true
+- name: System
+  inherits_from: EntityBase
+  allow_direct_access: false
+  undoable: false
+  fields:
+  - name: name
+    type: string
+  - name: description
+    type: entity
+    entity: CalendarEvent
+    relationship: ordered_one_to_many
+    strong: false
+- name: Workspace
+  inherits_from: EntityBase
+  allow_direct_access: true
+  undoable: true
+  fields:
   - name: calendars
     type: entity
     entity: Calendar
     relationship: ordered_one_to_many
     strong: true
+    list_model: true
+    list_model_displayed_field: name
   - name: tags
     type: entity
     entity: Tag
@@ -42,6 +73,8 @@ entities:
   fields:
   - name: name
     type: string
+  - name: uuid
+    type: uuid
   - name: description
     type: string
   - name: color
@@ -57,6 +90,7 @@ entities:
   inherits_from: EntityBase
   allow_direct_access: true
   undoable: true
+  single_model: true
   fields:
   - name: title
     type: string
@@ -87,6 +121,7 @@ entities:
   inherits_from: EntityBase
   allow_direct_access: true
   undoable: true
+  single_model: true
   fields:
   - name: minutes_before
     type: uinteger
@@ -100,7 +135,8 @@ entities:
 - name: Tag
   inherits_from: EntityBase
   allow_direct_access: true
-  undoable: false
+  undoable: true
+  single_model: true
   fields:
   - name: name
     type: string
@@ -178,3 +214,4 @@ features:
         is_list: true
 ui:
   cpp_qt_qtwidgets: true
+  cpp_qt_qtquick: true

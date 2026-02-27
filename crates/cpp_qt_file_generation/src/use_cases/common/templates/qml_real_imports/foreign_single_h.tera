@@ -1,7 +1,7 @@
 {%- set e = s.file.inner.entity %}
 {%- set ent = s.entities[e] %}
 #pragma once
-#include "{{ ent.snake_name }}/{{ ent.snake_name }}_item.h"
+#include "{{ ent.snake_name }}/models/single_{{ ent.snake_name }}.h"
 #include <QQmlEngine>
 
 struct ForeignSingle{{ ent.pascal_name }}

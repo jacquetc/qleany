@@ -83,7 +83,7 @@ if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
   {%- endfor %}
 
 {%- if s.ui.inner.cpp_qt_qtquick %}
-    add_subdirectory(presentation)
+    add_subdirectory({{ s.global.prefix }}/presentation)
 {%- endif %}
 endif (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
 

@@ -8,6 +8,7 @@
 #include <QReadWriteLock>
 #include <QString>
 #include <QTemporaryFile>
+#include <QThread>
 #include <QWriteLocker>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -229,6 +230,7 @@ struct DbSubContext
         if (m_dbId == -1)
         {
             m_dbId = m_parentDbContext.createDatabaseConnection();
+            m_connectionThread = QThread::currentThread();
         }
         return m_parentDbContext.getConnection(m_dbId);
     }
@@ -239,6 +241,7 @@ struct DbSubContext
         if (m_dbId == -1)
         {
             m_dbId = m_parentDbContext.createDatabaseConnection();
+            m_connectionThread = QThread::currentThread();
         }
         return m_dbId;
     }
@@ -251,6 +254,17 @@ struct DbSubContext
     {
         m_parentDbContext.acquireWriteLock();
         m_holdsWriteLock = true;
+
+        // QSqlDatabase connections are thread-bound. If the connection was
+        // created on a different thread (e.g. execute ran on thread-pool
+        // thread A, undo now runs on thread B), close it and create a
+        // fresh one on the current thread.
+        if (m_dbId != -1 && m_connectionThread != QThread::currentThread())
+        {
+            m_parentDbContext.closeDatabaseConnection(m_dbId);
+            m_dbId = -1;
+            m_connectionThread = nullptr;
+        }
 
         QSqlDatabase db = getConnection();
         if (!db.isValid())
@@ -375,7 +389,8 @@ struct DbSubContext
 
   private:
     DbContext &m_parentDbContext;
-    mutable int m_dbId = -1; // Initialize to invalid ID
+    mutable int m_dbId = -1;                        // Initialize to invalid ID
+    mutable QThread *m_connectionThread = nullptr;   // Thread that created the connection
     bool m_holdsWriteLock = false;
     QString m_savepointName;
 };

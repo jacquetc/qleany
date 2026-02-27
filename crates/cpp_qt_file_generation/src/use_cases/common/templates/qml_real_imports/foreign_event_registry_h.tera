@@ -6,7 +6,7 @@
 #include "service_locator.h"
 #include <QQmlEngine>
 
-struct ForeignEventDispatcher
+struct ForeignEventRegistry
 {
     Q_GADGET
     QML_FOREIGN({{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry)
@@ -42,7 +42,7 @@ struct ForeignEventDispatcher
     }
 
 {%- for eid, ent in s.entities %}
-    Q_INVOKABLE {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootEvents *{{ ent.camel_name }}Events() const
+    Q_INVOKABLE {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Events *{{ ent.camel_name }}Events() const
     {
         return s_singletonInstance->{{ ent.camel_name }}Events();
     }

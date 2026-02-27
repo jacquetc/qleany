@@ -1,21 +1,33 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+
 import QtQuick
 
 QtObject {
     id: controller
 
-    function getLoadWorkDto() {
+     property int undoRedoStackId: 0
+
+{%- for uc_id, uc in feat.use_cases %}
+{%- if uc.dto_in %}
+
+    function get{{ uc.dto_in.pascal_name }}() {
         return {
-            "fileName": ""
+{%- for field in uc.dto_in.fields %}
+            "{{ field.camel_name }}": {{ field.qml_default_init }}{% if not loop.last %},{% endif %}
+{%- endfor %}
         };
     }
-    function getSaveWorkDto() {
-        return {
-            "fileName": "",
-            "overwrite": false
-        };
-    }
-    function loadWork(loadWorkDto) {
+{%- endif %}
+
+    function {{ uc.camel_name }}({% if uc.dto_in %}{{ uc.dto_in.camel_name }}{% endif %}) {
+{%- if uc.dto_out %}
+        let returnDto = {};
+{%- else %}
         let returnDto = true;
+{%- endif %}
 
         // mocking QCoro::Task
         let task;
@@ -24,29 +36,9 @@ QtObject {
             task = component.createObject(controller);
             task.setValue(returnDto);
             task.setDelay(50);
-            task.setSignalFn(function () {
-                EventRegistry.root().created(loadDto);
-            });
         }
 
         return task;
     }
-    function saveWork(saveWorkDto) {
-        let returnDto = true;
-
-        // mocking QCoro::Task
-        let task;
-        var component = Qt.createComponent("QCoroQmlTask.qml");
-        if (component.status === Component.Ready) {
-            task = component.createObject(controller);
-            task.setValue(returnDto);
-            task.setDelay(50);
-            task.setSignalFn(function () {
-                EventRegistry.root().updated(saveWorkDto);
-            });
-        }
-
-        return task;
-    }
+{%- endfor %}
 }
-

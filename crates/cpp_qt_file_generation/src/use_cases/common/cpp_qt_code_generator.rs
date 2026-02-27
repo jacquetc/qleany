@@ -131,6 +131,10 @@ struct FieldVM {
     pub cpp_qt_base_type: String,
     pub cpp_qt_type: String,
     pub cpp_default_init: String,
+    pub is_list: bool,
+    pub qml_base_type: String,
+    pub qml_type: String,
+    pub qml_default_init: String,
     pub list_model_display_field_camel_name: Option<String>,
 }
 
@@ -143,6 +147,10 @@ struct DtoFieldVM {
     pub cpp_qt_base_type: String,
     pub cpp_qt_type: String,
     pub cpp_default_init: String,
+    pub is_list: bool,
+    pub qml_base_type: String,
+    pub qml_type: String,
+    pub qml_default_init: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -307,6 +315,49 @@ impl SnapshotBuilder {
                     }
                 }
             };
+            // Relationship-based lists: OneToMany, OrderedOneToMany, ManyToMany are inherently lists.
+            // Optional doesn't apply for these — an empty list means "null".
+            // TODO: also wire up to Field.is_list when list support is added for non-relationship fields
+            let is_list = matches!(
+                f.relationship,
+                FieldRelationshipType::OneToMany
+                    | FieldRelationshipType::OrderedOneToMany
+                    | FieldRelationshipType::ManyToMany
+            );
+
+            let qml_base_type = match f.field_type {
+                FieldType::Boolean => "bool",
+                FieldType::Integer | FieldType::UInteger | FieldType::Entity => "int",
+                FieldType::Float => "real",
+                FieldType::String | FieldType::Uuid => "string",
+                FieldType::DateTime => "date",
+                FieldType::Enum => "string",
+            }
+            .to_string();
+
+            let qml_type = if is_list || f.optional {
+                "var".to_string()
+            } else {
+                qml_base_type.clone()
+            };
+
+            let qml_default_init = if is_list {
+                "[]".to_string()
+            } else if f.optional {
+                "null".to_string()
+            } else {
+                match f.field_type {
+                    FieldType::Boolean => "false",
+                    FieldType::Integer | FieldType::UInteger | FieldType::Entity => "0",
+                    FieldType::Float => "0.0",
+                    FieldType::DateTime => "\"2026-01-01T00:00:00Z\"",
+                        FieldType::String
+                    | FieldType::Uuid
+                    | FieldType::Enum => "\"\"",
+                }
+                .to_string()
+            };
+
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
                 pascal_name: heck::AsPascalCase(&f.name).to_string(),
@@ -320,10 +371,13 @@ impl SnapshotBuilder {
                 cpp_qt_base_type,
                 cpp_qt_type,
                 cpp_default_init,
+                is_list,
+                qml_base_type,
+                qml_type,
+                qml_default_init,
                 list_model_display_field_camel_name: f.list_model_displayed_field.as_ref().map(|field_name| {
                     heck::AsLowerCamelCase(field_name).to_string()
                 }),
-
             });
         }
 
@@ -485,6 +539,45 @@ impl SnapshotBuilder {
                 .enum_name
                 .clone()
                 .unwrap_or("enum_name not set".to_string()),
+        }
+    }
+
+    fn get_dto_field_qml_base_type(dto_field: &DtoField) -> String {
+        match dto_field.field_type {
+            DtoFieldType::Boolean => "bool",
+            DtoFieldType::Integer | DtoFieldType::UInteger => "int",
+            DtoFieldType::Float => "real",
+            DtoFieldType::String | DtoFieldType::Uuid => "string",
+            DtoFieldType::DateTime => "date",
+            DtoFieldType::Enum => "string",
+        }
+        .to_string()
+    }
+
+    fn get_dto_field_qml_type(dto_field: &DtoField) -> String {
+        if dto_field.is_list || dto_field.optional {
+            "var".to_string()
+        } else {
+            Self::get_dto_field_qml_base_type(dto_field)
+        }
+    }
+
+    fn get_dto_field_qml_default_init(dto_field: &DtoField) -> String {
+        if dto_field.is_list {
+            "[]".to_string()
+        } else if dto_field.optional {
+            "null".to_string()
+        } else {
+            match dto_field.field_type {
+                DtoFieldType::Boolean => "false",
+                DtoFieldType::Integer | DtoFieldType::UInteger => "0",
+                DtoFieldType::Float => "0.0",
+                DtoFieldType::DateTime => "\"2026-01-01T00:00:00Z\"",
+                DtoFieldType::String
+                | DtoFieldType::Uuid
+                | DtoFieldType::Enum => "\"\"",
+            }
+            .to_string()
         }
     }
 
@@ -920,6 +1013,10 @@ impl SnapshotBuilder {
                         cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
                         cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                         cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(&df),
+                        is_list: df.is_list,
+                        qml_base_type: SnapshotBuilder::get_dto_field_qml_base_type(df),
+                        qml_type: SnapshotBuilder::get_dto_field_qml_type(df),
+                        qml_default_init: SnapshotBuilder::get_dto_field_qml_default_init(df),
                     });
                 }
             }
@@ -1025,6 +1122,10 @@ impl SnapshotBuilder {
                                                                     cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
                                                                     cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                                     cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
+                                                                    is_list: df.is_list,
+                                                                    qml_base_type: SnapshotBuilder::get_dto_field_qml_base_type(df),
+                                                                    qml_type: SnapshotBuilder::get_dto_field_qml_type(df),
+                                                                    qml_default_init: SnapshotBuilder::get_dto_field_qml_default_init(df),
                                                                 });
                                                             }
                                                         }
@@ -1059,6 +1160,10 @@ impl SnapshotBuilder {
                                                                     cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
                                                                     cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                                     cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
+                                                                    is_list: df.is_list,
+                                                                    qml_base_type: SnapshotBuilder::get_dto_field_qml_base_type(df),
+                                                                    qml_type: SnapshotBuilder::get_dto_field_qml_type(df),
+                                                                    qml_default_init: SnapshotBuilder::get_dto_field_qml_default_init(df),
                                                                 });
                                                             }
                                                         }
@@ -1155,6 +1260,15 @@ impl SnapshotBuilder {
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
                                                         df,
                                                     ),
+                                                is_list: df.is_list,
+                                                qml_base_type:
+                                                    SnapshotBuilder::get_dto_field_qml_base_type(df),
+                                                qml_type:
+                                                    SnapshotBuilder::get_dto_field_qml_type(df),
+                                                qml_default_init:
+                                                    SnapshotBuilder::get_dto_field_qml_default_init(
+                                                        df,
+                                                    ),
                                             });
                                         }
                                     }
@@ -1186,6 +1300,15 @@ impl SnapshotBuilder {
                                                     SnapshotBuilder::get_dto_field_cpp_qt_type(df),
                                                 cpp_default_init:
                                                     SnapshotBuilder::get_dto_field_cpp_default_init(
+                                                        df,
+                                                    ),
+                                                is_list: df.is_list,
+                                                qml_base_type:
+                                                    SnapshotBuilder::get_dto_field_qml_base_type(df),
+                                                qml_type:
+                                                    SnapshotBuilder::get_dto_field_qml_type(df),
+                                                qml_default_init:
+                                                    SnapshotBuilder::get_dto_field_qml_default_init(
                                                         df,
                                                     ),
                                             });
@@ -1375,6 +1498,10 @@ mod tests {
                         cpp_qt_base_type: "QString".to_string(),
                         cpp_qt_type: "QStringS".to_string(),
                         cpp_default_init: "".to_string(),
+                        is_list: false,
+                        qml_base_type: "int".to_string(),
+                        qml_type: "var".to_string(),
+                        qml_default_init: "null".to_string(),
                         list_model_display_field_camel_name: None,
                     },
                     FieldVM {
@@ -1388,6 +1515,10 @@ mod tests {
                         cpp_qt_base_type: "QString".to_string(),
                         cpp_qt_type: "QList<QString>".to_string(),
                         cpp_default_init: "".to_string(),
+                        is_list: true,
+                        qml_base_type: "string".to_string(),
+                        qml_type: "var".to_string(),
+                        qml_default_init: "[]".to_string(),
                         list_model_display_field_camel_name: None,
                     },
                 ];

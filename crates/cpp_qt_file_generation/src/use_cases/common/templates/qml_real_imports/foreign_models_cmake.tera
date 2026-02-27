@@ -17,13 +17,11 @@ qt6_add_qml_module(${PLUGIN_NAME}
         SOURCES
         # entity list models
 {%- for eid, ent in s.entities %}
-    {%- if ent.inner.list_model %}
-        {%- for f in ent.fields %}
-            {%- if f.inner.field_type == "Entity" and f.inner.list_model %}
-        foreign_{{ ent.snake_name }}_{{ f.snake_name }}_list_model.h
-            {%- endif %}
-        {%- endfor %}
-    {%- endif %}
+    {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "Entity" and f.inner.list_model %}
+    foreign_{{ ent.snake_name }}_{{ f.snake_name }}_list_model.h
+        {%- endif %}
+    {%- endfor %}
 {%- endfor %}
 
 )

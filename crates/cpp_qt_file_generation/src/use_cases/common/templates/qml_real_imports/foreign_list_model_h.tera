@@ -7,7 +7,7 @@
     {%- endif %}
 {%- endfor %}
 #pragma once
-#include "{{ ent.snake_name }}/{{ ent.snake_name }}_{{ field.snake_name }}_list_model.h"
+#include "{{ ent.snake_name }}/models/{{ ent.snake_name }}_{{ field.snake_name }}_list_model.h"
 #include <QQmlEngine>
 
 struct Foreign{{ ent.pascal_name }}{{ field.pascal_name }}ListModel

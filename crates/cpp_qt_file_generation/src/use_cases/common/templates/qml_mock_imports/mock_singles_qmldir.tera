@@ -1,6 +1,8 @@
-# This file was generated automatically by Qleany's generator, edit at your own risk! 
+# This file was generated automatically by Qleany's generator, edit at your own risk!
 # If you do, be careful to not overwrite it when you run the generator again.
-Module Singles
-SingleContent 1.0 SingleContent.qml
-SingleBinder 1.0 SingleBinder.qml
-SingleBinderItem 1.0 SingleBinderItem.qml
+module {{ s.global.application_short_name | capitalize }}.Singles
+{%- for eid, ent in s.entities %}
+{%- if not ent.inner.only_for_heritage and ent.inner.single_model %}
+Single{{ ent.pascal_name }} 1.0 Single{{ ent.pascal_name }}.qml
+{%- endif %}
+{%- endfor %}

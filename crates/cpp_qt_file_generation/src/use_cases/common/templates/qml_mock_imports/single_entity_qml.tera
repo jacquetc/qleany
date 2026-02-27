@@ -1,9 +1,13 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
+// This file was generated automatically by Qleany's generator, edit at your own risk!
+// If you do, be careful to not overwrite it when you run the generator again.
+
 import QtQuick
 
 QtObject {
-    property var binderItems: [1]
-    property date createdAt: new Date("2023-10-01T12:00:00Z")
-    property int itemId: 1
-    property string name: "My binder"
-    property date updatedAt: new Date("2023-10-01T12:00:00Z")
+    property int id: 1
+{%- for f in ent.fields %}
+    property {{ f.qml_type }} {{ f.camel_name }}: {{ f.qml_default_init }}
+{%- endfor %}
 }

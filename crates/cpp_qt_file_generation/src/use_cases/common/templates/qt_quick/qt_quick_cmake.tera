@@ -19,6 +19,7 @@ target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-
 if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
     target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
     target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common)
+    target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-direct-access)
 endif ()
 
 qt6_add_qml_module(${APP_NAME}
@@ -48,4 +49,4 @@ else ()
     )
 endif ()
 
-skr_install_target(${APP_NAME})
+{{ s.global.application_short_name | lower }}_install_target(${APP_NAME})

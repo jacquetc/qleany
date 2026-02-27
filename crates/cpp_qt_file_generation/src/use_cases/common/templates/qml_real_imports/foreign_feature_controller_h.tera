@@ -7,7 +7,7 @@
 {%- endif %}
 {%- endfor %}
 #pragma once
-#include "{{ feat.snake_name }}/{{ feat.snake_name }}_controller.h"
+#include "{{ feat.snake_name }}_controller.h"
 #include <QCoro/QCoroQml>
 #include <QCoro/QCoroQmlTask>
 #include <QQmlEngine>

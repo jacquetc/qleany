@@ -1624,7 +1624,7 @@ impl ListCppQtFilesUseCase {
         if qml_enabled {
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_presentation_cmake".to_string(),
@@ -1640,12 +1640,12 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_controllers_cmake".to_string(),
-                feature: None,
-                entity: None,
+                feature: Some(0),
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1657,7 +1657,7 @@ impl ListCppQtFilesUseCase {
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_event_registry_h".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1668,7 +1668,7 @@ impl ListCppQtFilesUseCase {
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_feature_event_registry_h".to_string(),
-                feature: None,
+                feature: Some(0),
                 entity: None,
                 use_case: None,
                 field: None,
@@ -1700,7 +1700,7 @@ impl ListCppQtFilesUseCase {
                 group: "QML Presentation".to_string(),
                 template_name: "event_registry_qml".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1735,8 +1735,8 @@ impl ListCppQtFilesUseCase {
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "mock_controllers_qmldir".to_string(),
-                feature: None,
-                entity: None,
+                feature: Some(0),
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1747,12 +1747,12 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_models_cmake".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1771,7 +1771,7 @@ impl ListCppQtFilesUseCase {
                 group: "QML Presentation".to_string(),
                 template_name: "mock_models_qmldir".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1782,12 +1782,12 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_singles_cmake".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1806,7 +1806,7 @@ impl ListCppQtFilesUseCase {
                 group: "QML Presentation".to_string(),
                 template_name: "mock_singles_qmldir".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
@@ -1843,18 +1843,6 @@ impl ListCppQtFilesUseCase {
                     field: None,
                 });
 
-                files.push(File {
-                    id: 0,
-                    name: format!("{}Controller.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "entity_controller_qml".to_string(),
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
                 // mock controllers
 
                 let relative_path = format!(
@@ -1864,7 +1852,19 @@ impl ListCppQtFilesUseCase {
 
                 files.push(File {
                     id: 0,
-                    name: format!("{}Events.qml", entity_snake_name),
+                    name: format!("{}Controller.qml", entity_pascal_name),
+                    relative_path: relative_path.clone(),
+                    group: "QML Presentation".to_string(),
+                    template_name: "entity_controller_qml".to_string(),
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
+                files.push(File {
+                    id: 0,
+                    name: format!("{}Events.qml", entity_pascal_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "entity_events_qml".to_string(),
@@ -1917,7 +1917,7 @@ impl ListCppQtFilesUseCase {
 
                     files.push(File {
                         id: 0,
-                        name: format!("{}{}.qml", entity_pascal_name, field_pascal_name),
+                        name: format!("{}{}ListModel.qml", entity_pascal_name, field_pascal_name),
                         relative_path: relative_path.clone(),
                         group: "QML Presentation".to_string(),
                         template_name: "list_model_qml".to_string(),
@@ -1956,7 +1956,7 @@ impl ListCppQtFilesUseCase {
                         name: format!("Single{}.qml", entity_pascal_name),
                         relative_path: relative_path.clone(),
                         group: "QML Presentation".to_string(),
-                        template_name: "single_entity.qml".to_string(),
+                        template_name: "single_entity_qml".to_string(),
                         feature: None,
                         entity: Some(entity.id),
                         use_case: None,
@@ -1980,7 +1980,7 @@ impl ListCppQtFilesUseCase {
 
                 files.push(File {
                     id: 0,
-                    name: format!("{}_controller.h", feature_snake_name),
+                    name: format!("foreign_{}_controller.h", feature_snake_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "foreign_feature_controller_h".to_string(),
@@ -2020,7 +2020,7 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_cmake".to_string(),
@@ -2070,7 +2070,7 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_content_cmake".to_string(),
@@ -2082,22 +2082,22 @@ impl ListCppQtFilesUseCase {
 
             files.push(File {
                 id: 0,
-                name: "main.qml".to_string(),
+                name: "App.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_app_qml".to_string(),
                 feature: None,
-                entity: None,
+                entity: Some(0),
                 use_case: None,
                 field: None,
             });
 
             let relative_path =
-                format!("{}/qtquick_app/content/{}", prefix, application_short_name);
+                format!("{}/qtquick_app/{}", prefix, application_short_name);
 
             files.push(File {
                 id: 0,
-                name: "CmakeLists.txt".to_string(),
+                name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_app_cmake".to_string(),

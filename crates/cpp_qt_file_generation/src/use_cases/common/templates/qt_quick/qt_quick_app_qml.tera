@@ -1,155 +1,391 @@
+{%- set_global demo_ent = false %}
+{%- for eid, ent in s.entities %}
+    {%- if not demo_ent and not ent.inner.only_for_heritage and ent.inner.allow_direct_access %}
+        {%- set_global has_form_fields = false %}
+        {%- for f in ent.normal_fields %}
+            {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+                {%- set_global has_form_fields = true %}
+            {%- endif %}
+        {%- endfor %}
+        {%- if has_form_fields %}
+            {%- set_global demo_ent = ent %}
+        {%- endif %}
+    {%- endif %}
+{%- endfor %}
+{%- set_global list_ent = false %}
+{%- set_global list_field = false %}
+{%- set_global list_target_ent = false %}
+{%- for eid, ent in s.entities %}
+    {%- if not list_field and not ent.inner.only_for_heritage %}
+        {%- for f in ent.fields %}
+            {%- if not list_field and f.inner.list_model and f.inner.entity %}
+                {%- set_global list_ent = ent %}
+                {%- set_global list_field = f %}
+                {%- set_global list_target_ent = s.entities[f.inner.entity] %}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+{%- endfor -%}
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQml
 import QtQuick.Controls.Basic
-// Components
-import Skr.Controllers
-
-// import Models
-import Skr.Singles
+import {{ s.global.application_short_name | capitalize }}.Controllers
+import {{ s.global.application_short_name | capitalize }}.Models
+import {{ s.global.application_short_name | capitalize }}.Singles
 
 ApplicationWindow {
     id: applicationWindow
 
-    height: 480
+    height: 600
     title: "{{ s.global.inner.application_name }}"
     visible: true
-    width: 800
+    width: 900
 
-    // Main layout
+    property int workspaceId: 1
+    property int undoRedoStackId: 1
+
+
+    // Entity controller
+    RootController {
+        id: rootController
+    }
+
+    WorkspaceController {
+        id: workspaceController
+    }
+
+
+{% if demo_ent %}
+    // Entity controller
+    {{ demo_ent.pascal_name }}Controller {
+        id: {{ demo_ent.camel_name }}Controller
+        undoRedoStackId: applicationWindow.undoRedoStackId
+
+    }
+{% endif %}
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        anchors.margins: 16
+        spacing: 16
 
         // Header
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: 8
 
-            // Title
-            Text {
-                font.pixelSize: 20
-                text: "Hello World"
+            Label {
+                font.bold: true
+                font.pixelSize: 24
+                text: "QtQuick + Qleany"
             }
 
-            // Spacer
+            Label {
+                color: "#888"
+                font.pixelSize: 14
+                text: "{{ s.global.inner.application_name }}"
+            }
+
             Item {
                 Layout.fillWidth: true
             }
-            RootController {
-                id: rootController
 
-            }
-            WorkManagementController {
-                id: workManagementController
-
-            }
-            WorkController {
-                id: workController
-
-            }
-            SingleBinderItem {
-                id: binderItem1
-
-                itemId: 1
-            }
-            // Button
             Button {
-                id: saveButton
+                id: undoButton
 
-                text: "Save"
+                text: "Undo"
 
                 onClicked: {
-                    console.log("Save button clicked");
-                    let dto = workManagementController.getSaveWorkDto();
-                    dto.fileName = "/tmp/mywork.myext";
-
-                    workManagementController.saveWork(dto).then(function (result) {
-                        console.log("Async save result :", result);
-                    });
+                    UndoRedoController.undo(undoRedoStackId);
                 }
             }
-            // Button
-            Button {
-                id: createWorkButton
 
-                text: "Create Work"
+            Button {
+                id: redoButton
+
+                text: "Redo"
 
                 onClicked: {
-                    colors.buttonText = "blue";
-                    console.log("Create button clicked");
-                    var dto = workController.getCreateDto();
-                    dto.title = "My Work ";
-
-                    workController.create([dto]).then(function (result) {
-                        console.log("Async work creation result :", result);
-                    });
-                }
-            }
-            // Button
-            Button {
-                id: createRootButton
-
-                enabled: true
-                text: "Create Root"
-
-                onClicked: {
-                    console.log("Create button clicked");
-
-                    var dto = rootController.getCreateDto();
-                    dto.works = [1];
-
-                    rootController.create([dto]).then(function (result) {
-                        console.log("Async root creation result :", result);
-                    });
-                }
-            }
-            // Button
-            Button {
-                id: getRootButton
-
-                text: "Get Root 1"
-
-                onClicked: {
-                    console.log("Get Root 1 button clicked");
-
-                    rootController.get([1]).then(function (res) {
-                        console.log("Async get root result :", res);
-                    });
-                }
-            }
-            // Button
-            Button {
-                id: getWorkButton
-
-                text: "Get Work 1"
-
-                onClicked: {
-                    console.log("Get Work 1 button clicked");
-
-                    workController.get([1]).then(function (res) {
-                        console.log("Async get work result :", res);
-                    });
-                }
-            }
-            Button {
-                id: removeRootButton
-
-                text: "Remove Root 1"
-
-                onClicked: {
-                    console.log("remove root 1 clicked");
-
-                    rootController.remove([1]).then(function (result) {
-                        console.log("Async root removal result :", result);
-                    });
+                    UndoRedoController.redo(undoRedoStackId);
                 }
             }
         }
 
-        Text {
-            text: "Hello, {{ s.global.application_pascal_name }}!"
+        Rectangle {
+            Layout.fillWidth: true
+            color: "#e0e0e0"
+            height: 1
         }
+
+        // Content area
+        RowLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            spacing: 24
+{% if demo_ent %}
+            // --- Form: New {{ demo_ent.pascal_name }} ---
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 320
+                spacing: 8
+
+                Label {
+                    font.bold: true
+                    font.pixelSize: 18
+                    text: "New {{ demo_ent.pascal_name }}"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: "#e0e0e0"
+                    height: 1
+                }
+    {%- for f in demo_ent.normal_fields %}
+        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+
+            {%- if f.inner.field_type == "Boolean" %}
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Label {
+                        Layout.preferredWidth: 100
+                        text: "{{ f.pascal_name }}"
+                    }
+
+                    Switch {
+                        id: {{ f.camel_name }}Field
+                    }
+                }
+            {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Label {
+                        Layout.preferredWidth: 100
+                        text: "{{ f.pascal_name }}"
+                    }
+
+                    SpinBox {
+                        id: {{ f.camel_name }}Field
+
+                        Layout.fillWidth: true
+                        from: {% if f.inner.field_type == "UInteger" %}0{% else %}-2147483647{% endif %}
+                        to: 2147483647
+                    }
+                }
+            {%- elif f.inner.field_type == "Float" %}
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Label {
+                        Layout.preferredWidth: 100
+                        text: "{{ f.pascal_name }}"
+                    }
+
+                    TextField {
+                        id: {{ f.camel_name }}Field
+
+                        Layout.fillWidth: true
+                        placeholderText: "0.0"
+                        validator: DoubleValidator {}
+                    }
+                }
+            {%- elif f.inner.field_type == "Enum" %}
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Label {
+                        Layout.preferredWidth: 100
+                        text: "{{ f.pascal_name }}"
+                    }
+
+                    ComboBox {
+                        id: {{ f.camel_name }}Field
+
+                        Layout.fillWidth: true
+                        model: [
+                {%- for ev in f.inner.enum_values %}
+                            "{{ ev }}"{% if not loop.last %},{% endif %}
+                {%- endfor %}
+                        ]
+                    }
+                }
+            {%- else %}
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Label {
+                        Layout.preferredWidth: 100
+                        text: "{{ f.pascal_name }}"
+                    }
+
+                    TextField {
+                        id: {{ f.camel_name }}Field
+
+                        Layout.fillWidth: true
+                {%- if f.inner.field_type == "DateTime" %}
+                        placeholderText: "YYYY-MM-DDTHH:MM:SS"
+                {%- elif f.inner.field_type == "Uuid" %}
+                        placeholderText: "Auto-generated UUID"
+                {%- else %}
+                        placeholderText: "Enter {{ f.camel_name }}..."
+                {%- endif %}
+                    }
+                }
+            {%- endif %}
+        {%- endif %}
+    {%- endfor %}
+
+                Item {
+                    height: 8
+                }
+
+                Button {
+                    id: addButton
+
+                    Layout.fillWidth: true
+                    highlighted: true
+                    text: "Add {{ demo_ent.pascal_name }}"
+
+                    onClicked: {
+                        var dto = {{ demo_ent.camel_name }}Controller.getCreateDto();
+    {%- for f in demo_ent.normal_fields %}
+        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+            {%- if f.inner.field_type == "Boolean" %}
+                        dto.{{ f.camel_name }} = {{ f.camel_name }}Field.checked;
+            {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
+                        dto.{{ f.camel_name }} = {{ f.camel_name }}Field.value;
+            {%- elif f.inner.field_type == "Float" %}
+                        dto.{{ f.camel_name }} = parseFloat({{ f.camel_name }}Field.text);
+            {%- elif f.inner.field_type == "Enum" %}
+                        dto.{{ f.camel_name }} = {{ f.camel_name }}Field.currentText;
+            {%- else %}
+                        dto.{{ f.camel_name }} = {{ f.camel_name }}Field.text;
+            {%- endif %}
+        {%- endif %}
+    {%- endfor %}
+                        {{ demo_ent.camel_name }}Controller.create([dto], workspaceId, -1).then(function(result) {
+                            console.log("{{ demo_ent.pascal_name }} created:", JSON.stringify(result));
+    {%- for f in demo_ent.normal_fields %}
+        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+            {%- if f.inner.field_type == "Boolean" %}
+                            {{ f.camel_name }}Field.checked = false;
+            {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
+                            {{ f.camel_name }}Field.value = 0;
+            {%- elif f.inner.field_type == "Enum" %}
+                            {{ f.camel_name }}Field.currentIndex = 0;
+            {%- else %}
+                            {{ f.camel_name }}Field.text = "";
+            {%- endif %}
+        {%- endif %}
+    {%- endfor %}
+                        });
+                    }
+                }
+
+                // Push remaining space below the form
+                Item {
+                    Layout.fillHeight: true
+                }
+            }
+{% endif %}
+{% if list_field %}
+            // --- List: {{ list_ent.pascal_name }}.{{ list_field.pascal_name }} ---
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                spacing: 8
+
+                Label {
+                    font.bold: true
+                    font.pixelSize: 18
+                    text: "{{ list_target_ent.pascal_name }} list (from {{ list_ent.pascal_name }}.{{ list_field.camel_name }})"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: "#e0e0e0"
+                    height: 1
+                }
+
+                ListView {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    clip: true
+
+                    model: {{ list_ent.pascal_name }}{{ list_field.pascal_name }}ListModel {
+                        {{ list_ent.camel_name }}Id: 1
+                    }
+
+                    delegate: ItemDelegate {
+                        required property int itemId
+    {%- for tf in list_target_ent.normal_fields %}
+        {%- if tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
+                        required property {{ tf.qml_type }} {{ tf.camel_name }}
+        {%- endif %}
+    {%- endfor %}
+
+                        width: ListView.view.width
+    {%- if list_field.list_model_display_field_camel_name %}
+                        text: {{ list_field.list_model_display_field_camel_name }} + " (id: " + itemId + ")"
+    {%- else %}
+                        text: "{{ list_target_ent.pascal_name }} #" + itemId
+    {%- endif %}
+                    }
+                }
+            }
+{% endif %}
+{% if not demo_ent and not list_field %}
+            // No entity with direct access and editable fields found.
+            // Add entities with allow_direct_access: true and normal fields to your qleany.yaml.
+            Label {
+                Layout.alignment: Qt.AlignCenter
+                font.pixelSize: 16
+                text: "Configure entities in qleany.yaml to see a demo form here."
+            }
+{% endif %}
+        }
+
+        // Footer
+        Rectangle {
+            Layout.fillWidth: true
+            color: "#e0e0e0"
+            height: 1
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignRight
+            color: "#888"
+            font.pixelSize: 12
+            text: "Generated by Qleany — {{ s.global.inner.application_name }}"
+        }
+    }
+
+    Component.onCompleted: {
+
+        var dto =  rootController.getCreateDto();
+        rootController.createOrphans([dto]).then(function(result) {
+            console.log("Root created:", JSON.stringify(result));
+
+            var dto = workspaceController.getCreateDto();
+            workspaceController.create([dto], result.id, 0).then(function(result) {
+                console.log("Workspace created:", JSON.stringify(result));
+
+                workspaceId = result.id;
+            });
+
+        }
+        )
     }
 }

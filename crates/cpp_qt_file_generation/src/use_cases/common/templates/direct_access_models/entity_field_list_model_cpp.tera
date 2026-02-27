@@ -363,7 +363,7 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
             return;
 
         const auto &{{ ent.camel_name }} = result.first();
-        const QList<int> &relatedIds = {{ ent.camel_name }}.events;
+        const QList<int> &relatedIds = {{ ent.camel_name }}.{{ field.camel_name }};
 
         QList<int> currentItemIds;
         for (const auto &item : m_{{ target_ent.camel_plural_name }})

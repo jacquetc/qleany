@@ -10,7 +10,7 @@ target_link_libraries(${LIBRARY_NAME}
     PUBLIC Qt6::Core Qt6::Qml
 )
 
-if (NOT SKR_BUILD_WITH_MOCKS)
+if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
     target_link_libraries(${LIBRARY_NAME}
         PRIVATE {{ s.global.application_kebab_name }}-common QCoro::Core QCoro::Qml
     )

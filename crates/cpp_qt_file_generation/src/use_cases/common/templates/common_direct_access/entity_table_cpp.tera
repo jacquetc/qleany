@@ -26,19 +26,19 @@
 #include "database/db_context.h"
 {% if needs_ordered_o2m -%}
 #include "database/junction_table_ops/ordered_one_to_many.h"
-{%- endif -%}
+{% endif -%}
 {% if needs_unordered_o2m -%}
 #include "database/junction_table_ops/unordered_one_to_many.h"
-{%- endif -%}
+{% endif -%}
 {% if needs_unordered_m2m -%}
 #include "database/junction_table_ops/unordered_many_to_many.h"
-{%- endif -%}
+{% endif -%}
 {% if needs_one2one -%}
 #include "database/junction_table_ops/one_to_one.h"
-{%- endif -%}
+{% endif -%}
 {% if needs_many2one -%}
 #include "database/junction_table_ops/many_to_one.h"
-{%- endif -%}
+{% endif -%}
 #include "database/junction_table_ops/junction_cache.h"
 #include "database/snapshot_types.h"
 #include "database/table_cache.h"

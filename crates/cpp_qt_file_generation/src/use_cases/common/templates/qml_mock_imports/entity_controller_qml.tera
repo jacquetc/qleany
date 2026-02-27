@@ -1,3 +1,5 @@
+{%- set e = s.file.inner.entity %}
+{%- set ent = s.entities[e] %}
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 
@@ -5,6 +7,8 @@ import QtQuick
 
 QtObject {
     id: controller
+
+    property int undoRedoStackId: 0
 
     function create(dtos) {
         for (var i = 0; i < dtos.length; i++) {
@@ -21,7 +25,7 @@ QtObject {
             task.setValue(dtos);
             task.setDelay(50);
             task.setSignalFn(function () {
-                EventRegistry.work().created(dtos);
+                EventRegistry.{{ ent.camel_name }}Events().created(dtos);
             });
         }
 
@@ -33,12 +37,9 @@ QtObject {
             const id = ids[i];
             let dto = {};
             dto["id"] = id;
-            dto["createdAt"] = "2023-10-01T12:00:00Z";
-            dto["updatedAt"] = "2023-10-01T12:00:00Z";
-            dto["title"] = "Work " + id;
-            dto["dictLanguage"] = "en_US";
-            dto["binders"] = [];
-            dto["tags"] = [];
+{%- for f in ent.fields %}
+            dto["{{ f.camel_name }}"] = {{ f.qml_default_init }};
+{%- endfor %}
             dtos.push(dto);
         }
         // mocking QCoro::Task
@@ -54,12 +55,9 @@ QtObject {
     }
     function getCreateDto() {
         return {
-            "createdAt": "",
-            "updatedAt": "",
-            "title": "",
-            "dictLanguage": "",
-            "binders": [],
-            "tags": []
+{%- for f in ent.fields %}
+            "{{ f.camel_name }}": {{ f.qml_default_init }}{% if not loop.last %},{% endif %}
+{%- endfor %}
         };
     }
     function remove(ids) {
@@ -71,7 +69,7 @@ QtObject {
             task.setValue(ids);
             task.setDelay(50);
             task.setSignalFn(function () {
-                EventRegistry.work().removed(ids);
+                EventRegistry.{{ ent.camel_name }}Events().removed(ids);
             });
         }
 
@@ -86,11 +84,11 @@ QtObject {
             task.setValue(dtos);
             task.setDelay(50);
             task.setSignalFn(function () {
-                EventRegistry.work().updated(dtos);
+                EventRegistry.{{ ent.camel_name }}Events().updated(dtos);
                 for (var i = 0; i < dtos.length; i++) {
                     const dto = dtos[i];
                     if (dto && dto.id !== undefined) {
-                        EventRegistry.work().allRelationsInvalidated(dto.id);
+                        EventRegistry.{{ ent.camel_name }}Events().allRelationsInvalidated(dto.id);
                     }
                 }
             });
@@ -98,7 +96,32 @@ QtObject {
 
         return task;
     }
+{%- for rid, rel in ent.forward_relationships %}
 
-    //TODO: add relation methods here
+    function get{{ rel.field_pascal_name }}Ids(entityId) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue([]);
+            task.setDelay(50);
+        }
+        return task;
+    }
+    function set{{ rel.field_pascal_name }}Ids(entityId, relatedIds) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue(true);
+            task.setDelay(50);
+            task.setSignalFn(function () {
+                EventRegistry.{{ ent.camel_name }}Events().relationshipChanged(entityId, "{{ rel.field_camel_name }}", relatedIds);
+            });
+        }
+        return task;
+    }
+{%- endfor %}
 }
-

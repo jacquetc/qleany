@@ -23,7 +23,7 @@ struct Foreign{{ ent.pascal_name }}Controller : public QObject
         return m_controller->get(ids);
     }
 
-    Q_INVOKABLE static {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto getCreateDto() const
+    Q_INVOKABLE static {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto getCreateDto()
     {
         return {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller::getCreateDto();
     }

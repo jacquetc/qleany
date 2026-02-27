@@ -1,7 +1,7 @@
 # This file was generated automatically by Qleany's generator, edit at your own risk!
 # If you do, be careful to not overwrite it when you run the generator again.
 
-set(APP_NAME {{ s.global.application_pascal_name }})
+set(APP_NAME {{ s.global.application_pascal_name }}Desktop)
 
 find_package(Qt6 ${QT_MIN_VERSION} COMPONENTS Widgets REQUIRED)
 
