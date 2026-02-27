@@ -2,15 +2,15 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{{ s.entities[e].pascal_name }}Dto;
 use anyhow::{Ok, Result};
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 use common::{entities::{{ s.entities[e].pascal_name }}, undo_redo::UndoRedoCommand};
 use std::any::Any;
 use std::collections::VecDeque;
-{% endif %}
+{%- endif %}
 
 pub struct Update{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
@@ -68,7 +68,7 @@ impl Update{{ s.entities[e].pascal_name }}MultiUseCase {
     }
 }
 
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entities) = self.undo_stack.pop_back() {
@@ -95,7 +95,7 @@ impl UndoRedoCommand for Update{{ s.entities[e].pascal_name }}MultiUseCase {
         self
     }
 }
-{% endif -%}
-{% else %}
+{%- endif -%}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

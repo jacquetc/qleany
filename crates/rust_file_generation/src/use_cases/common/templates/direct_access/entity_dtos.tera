@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 use common::entities::{{ s.entities[e].pascal_name }};
@@ -92,7 +92,7 @@ impl From<{{ s.entities[e].pascal_name }}> for Create{{ s.entities[e].pascal_nam
         }
     }
 }
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 pub use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -101,8 +101,8 @@ pub struct {{ s.entities[e].pascal_name }}RelationshipDto {
     pub field: {{ s.entities[e].pascal_name }}RelationshipField,
     pub right_ids: Vec<EntityId>,
 }
-{% endif %}
+{%- endif %}
 
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

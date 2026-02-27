@@ -18,20 +18,20 @@
 
 {% if needs_qdatetime -%}
 #include <QDateTime>
-{% endif -%}
+{%- endif -%}
 {% if needs_qlist -%}
 #include <QList>
-{% endif -%}
+{%- endif -%}
 #include <QObject>
 {% if needs_qstring -%}
 #include <QString>
-{% endif -%}
+{%- endif -%}
 {% if needs_quuid -%}
 #include <QUuid>
-{% endif -%}
+{%- endif -%}
 {% if needs_optional -%}
 #include <optional>
-{% endif -%}
+{%- endif -%}
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {

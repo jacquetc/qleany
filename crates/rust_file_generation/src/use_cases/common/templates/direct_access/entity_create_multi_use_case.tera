@@ -2,17 +2,17 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{Create{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto};
 use anyhow::{Ok, Result};
 use common::types::EntityId;
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 use common::entities::{{ s.entities[e].pascal_name }};
 use common::snapshot::EntityTreeSnapshot;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
-{% endif %}
+{%- endif %}
 
 pub struct Create{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
@@ -82,7 +82,7 @@ impl Create{{ s.entities[e].pascal_name }}MultiUseCase {
     }
 }
 
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if !self.created_entities.is_empty() {
@@ -163,7 +163,7 @@ impl UndoRedoCommand for Create{{ s.entities[e].pascal_name }}MultiUseCase {
         self
     }
 }
-{% endif -%}
-{% else %}
+{%- endif -%}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

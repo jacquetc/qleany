@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::use_cases::{
     {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROTrait,
     {{ s.entities[e].pascal_name }}UnitOfWorkTrait,
@@ -94,7 +94,7 @@ impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Snapshot")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Restore")]
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
@@ -181,7 +181,7 @@ impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWorkRO {
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]
 {%- endif %}
@@ -205,6 +205,6 @@ impl {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait for {{ s.entities[e
     }
 }
 
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

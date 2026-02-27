@@ -2,24 +2,24 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 // Sub-modules for {{ s.entities[e].pascal_name }} use cases
 pub(super) mod get_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod get_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_orphans_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_orphans_{{ s.entities[e].snake_name }}_uc;
-{% if s.entities[e].owner -%}
+{%- if s.entities[e].owner -%}
 pub(super) mod create_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_{{ s.entities[e].snake_name }}_uc;
-{% endif -%}
+{%- endif -%}
 pub(super) mod update_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod update_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod remove_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod remove_{{ s.entities[e].snake_name }}_uc;
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 pub(super) mod get_{{ s.entities[e].snake_name }}_relationship_uc;
 pub(super) mod set_{{ s.entities[e].snake_name }}_relationship_uc;
-{% endif %}
+{%- endif %}
 
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -40,12 +40,12 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Snapshot")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Restore")]
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationshipMulti")]
-{% endif %}
+{%- endif %}
 pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {
 {%- if s.entities[e].owner %}
     fn create_{{ s.entities[e].snake_name }}_with_owner(&self, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}>;
@@ -61,12 +61,12 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]
-{% endif %}
+{%- endif %}
 pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name }}UnitOfWorkROTrait: QueryUnitOfWork {}
 
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

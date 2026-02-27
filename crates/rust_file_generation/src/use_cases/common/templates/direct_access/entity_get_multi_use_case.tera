@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{{ s.entities[e].pascal_name }}Dto;
 use anyhow::Result;
@@ -28,6 +28,6 @@ impl Get{{ s.entities[e].pascal_name }}MultiUseCase {
             .collect())
     }
 }
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

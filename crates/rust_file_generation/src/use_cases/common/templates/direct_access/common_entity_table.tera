@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}Table;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}TableRO;
@@ -28,7 +28,7 @@ const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_ent
 {%- endif %}
 {%- endfor %}
 
-{% if s.entities[e].forward_relationships | length > 0 %}
+{%- if s.entities[e].forward_relationships | length > 0 %}
 fn get_junction_table_definition(
     field: &'_ {{ s.entities[e].pascal_name }}RelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -38,7 +38,7 @@ fn get_junction_table_definition(
         {%- endfor %}
     }
 }
-{% endif %}
+{%- endif %}
 
 pub struct {{ s.entities[e].pascal_name }}RedbTable<'a> { transaction: &'a WriteTransaction }
 impl<'a> {{ s.entities[e].pascal_name }}RedbTable<'a> {
@@ -86,33 +86,33 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 }
             entity.clone()
             };
-            {% if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{% endif %}
+            {%- if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{%- endif %}
             {% for f in s.entities[e].fields %}
-            {% if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+            {%- if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
             // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
             {
                 let mut iter = {{ f.snake_name }}_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-                    {% if f.optional %}
+                    {%- if f.optional %}
                     if let Some(ref right_id) = new_entity.{{ f.snake_name }}
                         && existing_id != new_entity.id && right_ids.value().contains(right_id) {
                             panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
 
                     }
-                    {% else %}
+                    {%- else %}
                     if existing_id != new_entity.id && right_ids.value().contains(&new_entity.{{ f.snake_name }}) {
                         panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id);
                     }
-                    {% endif %}
+                    {%- endif %}
                 }
             }
-            {% endif %}
-            {% endfor %}
+            {%- endif %}
+            {%- endfor %}
             {{ s.entities[e].snake_name }}_table.insert(new_entity.id, new_entity.clone())?;
             {% for rid, r in s.entities[e].forward_relationships %}
             {{ r.field_snake_name }}_junction_table.insert(new_entity.id,
-                {% if r.inner.cardinality == "ZeroOrMore" or r.inner.cardinality == "OneOrMore" %}
+                {%- if r.inner.cardinality == "ZeroOrMore" or r.inner.cardinality == "OneOrMore" %}
                 new_entity.{{ r.field_snake_name }}.clone())?;
                 {%- elif r.inner.cardinality == "One" %}
                 vec![new_entity.{{ r.field_snake_name }}] as Vec<EntityId>)?;
@@ -148,18 +148,18 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 let mut entity = data.value().clone();
 
                 {% for f in s.entities[e].fields %}
-                {% if f.inner.field_type == "Entity" %}
+                {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
-                    {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+                    {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% elif f.optional %}
+                    {%- elif f.optional %}
                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                    {% else %}
+                    {%- else %}
                 let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                    {% endif %}
+                    {%- endif %}
                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {% endif %}
-                {% endfor %}
+                {%- endif %}
+                {%- endfor %}
 
                 list.push(Some(entity));
                 count += 1;
@@ -169,18 +169,18 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                 let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
                     let mut entity = guard.value().clone();
                     {% for f in s.entities[e].fields %}
-                    {% if f.inner.field_type == "Entity" %}
+                    {%- if f.inner.field_type == "Entity" %}
                     // get {{ f.snake_name }} from junction table
-                        {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+                        {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                     let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                        {% elif f.optional %}
+                        {%- elif f.optional %}
                     let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                        {% else %}
+                        {%- else %}
                     let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                        {% endif %}
+                        {%- endif %}
                     entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {% endif %}
-                    {% endfor %}
+                    {%- endif %}
+                    {%- endfor %}
                     Some(entity)
                 } else {
                     None
@@ -201,35 +201,35 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
         for entity in entities {
             {% for f in s.entities[e].fields %}
-            {% if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+            {%- if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
             // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
             {
                 let mut iter = {{ f.snake_name }}_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-                    {% if f.optional %}
+                    {%- if f.optional %}
                     if let Some(ref right_id) = entity.{{ f.snake_name }}
                          && existing_id != entity.id && right_ids.value().contains(right_id) {
                             panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
 
                     }
-                    {% else %}
+                    {%- else %}
                     if existing_id != entity.id && right_ids.value().contains(&entity.{{ f.snake_name }}) {
                         panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id);
                     }
-                    {% endif %}
+                    {%- endif %}
                 }
             }
-            {% endif %}
-            {% endfor %}
+            {%- endif %}
+            {%- endfor %}
             {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
-                {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+                {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
             {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.clone())?;
-                {% elif f.optional %}
+                {%- elif f.optional %}
             {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.into_iter().collect::<Vec<EntityId>>())?;
-                {% else %}
+                {%- else %}
             {{ f.snake_name }}_junction_table.insert(entity.id, vec![entity.{{ f.snake_name }}] as Vec<EntityId>)?;
             {%- endif %}
             {%- endif %}
@@ -245,7 +245,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         // forward relationships
         {% for rid, r in s.entities[e].forward_relationships %}
         let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {% endfor %}
+        {%- endfor %}
 
         // backward relationships
         {% for rid, r in s.entities[e].backward_relationships %}
@@ -274,7 +274,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         Ok(())
     }
 
-{% if s.entities[e].forward_relationships | length > 0 %}
+{%- if s.entities[e].forward_relationships | length > 0 %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> {
         let table = self.transaction.open_table(get_junction_table_definition(field))?;
         let guard = table.get(id)?;
@@ -304,7 +304,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
-{% endif %}
+{%- endif %}
 
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
         let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
@@ -320,7 +320,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         }
 
         // Snapshot forward junction tables
-        {% if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{% else %}let forward_junctions = Vec::new();{% endif %}
+        {%- if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{%- else %}let forward_junctions = Vec::new();{%- endif %}
         {% for rid, r in s.entities[e].forward_relationships %}
         {
             let junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
@@ -338,7 +338,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         {%- endfor %}
 
         // Snapshot backward junction tables (entries that reference any of the given ids)
-        {% if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{% else %}let backward_junctions = Vec::new();{% endif %}
+        {%- if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{%- else %}let backward_junctions = Vec::new();{%- endif %}
         {% for rid, r in s.entities[e].backward_relationships %}
             {%- if r.inner.left_entity == e %}
         {
@@ -471,18 +471,18 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
                 let mut entity = data.value().clone();
 
                 {% for f in s.entities[e].fields %}
-                {% if f.inner.field_type == "Entity" %}
+                {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
-                    {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+                    {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-                    {% elif f.optional %}
+                    {%- elif f.optional %}
                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                    {% else %}
+                    {%- else %}
                 let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                    {% endif %}
+                    {%- endif %}
                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {% endif %}
-                {% endfor %}
+                {%- endif %}
+                {%- endfor %}
 
                 list.push(Some(entity));
                 count += 1;
@@ -492,18 +492,18 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
                 let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
                     let mut entity = guard.value().clone();
                     {% for f in s.entities[e].fields %}
-                    {% if f.inner.field_type == "Entity" %}
+                    {%- if f.inner.field_type == "Entity" %}
                     // get {{ f.snake_name }} from junction table
-                        {% if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+                        {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                     let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                        {% elif f.optional %}
+                        {%- elif f.optional %}
                     let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                        {% else %}
+                        {%- else %}
                     let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                        {% endif %}
+                        {%- endif %}
                     entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {% endif %}
-                    {% endfor %}
+                    {%- endif %}
+                    {%- endfor %}
                     Some(entity)
                 } else {
                     None
@@ -515,7 +515,7 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         Ok(list)
     }
 
-{% if s.entities[e].forward_relationships | length > 0 %}
+{%- if s.entities[e].forward_relationships | length > 0 %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> {
         let table = self.transaction.open_table(get_junction_table_definition(field))?;
         let guard = table.get(id)?;
@@ -534,9 +534,9 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         Ok(rels)
     }
 
-{% endif %}
+{%- endif %}
 
 }
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

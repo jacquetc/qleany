@@ -2,15 +2,15 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 use common::{snapshot::EntityTreeSnapshot, types::EntityId, undo_redo::UndoRedoCommand};
 use std::any::Any;
-{% else -%}
+{%- else -%}
 use common::types::EntityId;
-{% endif %}
+{%- endif %}
 
 /// Use case to remove multiple {{ s.entities[e].snake_name }} entities.
 {%- if s.entities[e].inner.undoable %}
@@ -59,7 +59,7 @@ impl Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     }
 }
 
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Remove{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(ref snap) = self.entity_tree_snapshot {
@@ -86,7 +86,7 @@ impl UndoRedoCommand for Remove{{ s.entities[e].pascal_name }}MultiUseCase {
         self
     }
 }
-{% endif -%}
-{% else %}
+{%- endif -%}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

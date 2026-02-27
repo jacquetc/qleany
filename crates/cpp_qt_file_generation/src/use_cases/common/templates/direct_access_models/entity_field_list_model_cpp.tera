@@ -112,7 +112,7 @@ QVariant {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::data(const QMode
         return static_cast<int>({{ target_ent.camel_name }}.{{ f.camel_name }});
             {%- elif f.cpp_qt_type is starting_with( "std::optional<") %}
         return toVariant({{ target_ent.camel_name }}.{{ f.camel_name }});
-            {% else %}
+            {%- else %}
         return {{ target_ent.camel_name }}.{{ f.camel_name }};
             {%- endif %}
     }
@@ -349,24 +349,24 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated(const QList<int> &ids)
 {
 
-    // Check if our calendar was updated
-    if (!ids.contains(m_calendarId))
+    // Check if our {{ ent.camel_name }} was updated
+    if (!ids.contains(m_{{ ent.camel_name }}Id))
         return;
 
-    QCoro::Task<QList<Calendar::CalendarDto>> fetchCalendarTask = m_calendarController->get({m_calendarId});
+    QCoro::Task<QList<{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto>> fetch{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_{{ ent.camel_name }}Id});
 
-    QCoro::connect(std::move(fetchCalendarTask), this, [this](auto &&result) {
-        if (!m_calendarController || !m_{{ target_ent.camel_name }}Controller)
+    QCoro::connect(std::move(fetch{{ ent.pascal_name }}Task), this, [this](auto &&result) {
+        if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller)
             return;
 
         if (result.isEmpty())
             return;
 
-        const auto &calendar = result.first();
-        const QList<int> &relatedIds = calendar.events;
+        const auto &{{ ent.camel_name }} = result.first();
+        const QList<int> &relatedIds = {{ ent.camel_name }}.events;
 
         QList<int> currentItemIds;
-        for (const auto &item : m_{{ ent.camel_name }}Events)
+        for (const auto &item : m_{{ target_ent.camel_plural_name }})
         {
             currentItemIds.append(item.id);
         }
@@ -383,12 +383,12 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
         QSet<int> removedIds = currentIds - newIds;
         for (const int id : removedIds)
         {
-            for (int i = 0; i < m_{{ ent.camel_name }}Events.size(); ++i)
+            for (int i = 0; i < m_{{ target_ent.camel_plural_name }}.size(); ++i)
             {
-                if (m_{{ ent.camel_name }}Events[i].id == id)
+                if (m_{{ target_ent.camel_plural_name }}[i].id == id)
                 {
                     beginRemoveRows(QModelIndex(), i, i);
-                    m_{{ ent.camel_name }}Events.removeAt(i);
+                    m_{{ target_ent.camel_plural_name }}.removeAt(i);
                     endRemoveRows();
                     break;
                 }
@@ -436,9 +436,9 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
                 if (!fetchedById.contains(id))
                     continue;
 
-                const int insertPos = qMin(targetPos, m_{{ ent.camel_name }}Events.size());
+                const int insertPos = qMin(targetPos, m_{{ target_ent.camel_plural_name }}.size());
                 beginInsertRows(QModelIndex(), insertPos, insertPos);
-                m_{{ ent.camel_name }}Events.insert(insertPos, fetchedById.value(id));
+                m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
                 endInsertRows();
             }
         });
@@ -458,7 +458,7 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
 
     // Build set of current IDs
     QSet<int> currentIds;
-    for (const auto &item : m_{{ ent.camel_name }}Events)
+    for (const auto &item : m_{{ target_ent.camel_plural_name }})
     {
         currentIds.insert(item.id);
     }
@@ -469,12 +469,12 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
     QSet<int> removedIds = currentIds - newIds;
     for (const int id : removedIds)
     {
-        for (int i = 0; i < m_{{ ent.camel_name }}Events.size(); ++i)
+        for (int i = 0; i < m_{{ target_ent.camel_plural_name }}.size(); ++i)
         {
-            if (m_{{ ent.camel_name }}Events[i].id == id)
+            if (m_{{ target_ent.camel_plural_name }}[i].id == id)
             {
                 beginRemoveRows(QModelIndex(), i, i);
-                m_{{ ent.camel_name }}Events.removeAt(i);
+                m_{{ target_ent.camel_plural_name }}.removeAt(i);
                 endRemoveRows();
                 break;
             }
@@ -525,15 +525,15 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
                 continue;
 
             // targetPos may exceed current size if items are at the end
-            const int insertPos = qMin(targetPos, m_{{ ent.camel_name }}Events.size());
+            const int insertPos = qMin(targetPos, m_{{ target_ent.camel_plural_name }}.size());
             beginInsertRows(QModelIndex(), insertPos, insertPos);
-            m_{{ ent.camel_name }}Events.insert(insertPos, fetchedById.value(id));
+            m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
             endInsertRows();
         }
     });
 }
 
-void {{ ent.pascal_name }}EventsListModel::reorderToMatch(const QList<int> &orderedIds)
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::reorderToMatch(const QList<int> &orderedIds)
 {
     // Build a map from id to desired position
     QHash<int, int> idToDesiredPos;
@@ -543,18 +543,18 @@ void {{ ent.pascal_name }}EventsListModel::reorderToMatch(const QList<int> &orde
     }
 
     // Move items into their correct positions
-    for (int desiredPos = 0; desiredPos < m_{{ ent.camel_name }}Events.size(); ++desiredPos)
+    for (int desiredPos = 0; desiredPos < m_{{ target_ent.camel_plural_name }}.size(); ++desiredPos)
     {
         // Find which item should be at desiredPos
-        int currentId = m_{{ ent.camel_name }}Events[desiredPos].id;
+        int currentId = m_{{ target_ent.camel_plural_name }}[desiredPos].id;
         if (idToDesiredPos.value(currentId, desiredPos) == desiredPos)
             continue;
 
         // Find the item that belongs at desiredPos
         int sourcePos = -1;
-        for (int j = desiredPos + 1; j < m_{{ ent.camel_name }}Events.size(); ++j)
+        for (int j = desiredPos + 1; j < m_{{ target_ent.camel_plural_name }}.size(); ++j)
         {
-            if (idToDesiredPos.value(m_{{ ent.camel_name }}Events[j].id, j) == desiredPos)
+            if (idToDesiredPos.value(m_{{ target_ent.camel_plural_name }}[j].id, j) == desiredPos)
             {
                 sourcePos = j;
                 break;
@@ -565,7 +565,7 @@ void {{ ent.pascal_name }}EventsListModel::reorderToMatch(const QList<int> &orde
             continue;
 
         beginMoveRows(QModelIndex(), sourcePos, sourcePos, QModelIndex(), desiredPos);
-        m_{{ ent.camel_name }}Events.move(sourcePos, desiredPos);
+        m_{{ target_ent.camel_plural_name }}.move(sourcePos, desiredPos);
         endMoveRows();
     }
 }

@@ -87,7 +87,7 @@ inline QList<QString> getSqlJunctionTableDefinitions()
                                   ");");
 
         {%- endif %}
-    {% endfor %}
+    {%- endfor %}
 
     return definitions;
 }

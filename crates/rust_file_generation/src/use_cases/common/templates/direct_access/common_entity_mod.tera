@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 pub mod {{ s.entities[e].snake_name }}_repository;
 pub(super) mod {{ s.entities[e].snake_name }}_table;
 
@@ -10,6 +10,6 @@ pub(super) mod {{ s.entities[e].snake_name }}_table;
 pub use {{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
 {%- endif %}
 
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

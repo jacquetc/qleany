@@ -2,7 +2,7 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use std::fmt::Display;
 
 use crate::{
@@ -42,12 +42,12 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn update_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
     fn set_relationship_multi(&mut self, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
     fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
-{% endif %}
+{%- endif %}
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
 }
@@ -55,7 +55,7 @@ pub trait {{ s.entities[e].pascal_name }}Table {
 pub trait {{ s.entities[e].pascal_name }}TableRO {
     fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, Error>;
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
 {%- endif %}
@@ -83,7 +83,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         Ok(new_entities)
     }
 
-{% if s.entities[e].owner %}
+{%- if s.entities[e].owner %}
     pub fn create_with_owner(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
@@ -139,7 +139,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: created_ids, data: None });
         Ok(new_entities)
     }
-{% endif %}
+{%- endif %}
 
     pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { self.redb_table.get(id) }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, Error> { self.redb_table.get_multi(ids) }
@@ -169,7 +169,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         {%- if f.inner.relationship == "OneToOne" %}
-            {% if f.optional %}
+            {%- if f.optional %}
         if let Some({{ f.snake_name }}_id) = {{ f.snake_name }} {
             repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
                 .delete(event_buffer, &{{ f.snake_name }}_id)?;
@@ -197,20 +197,20 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
-        {% if f.inner.field_type == "Entity" and f.inner.strong %}
-        {% if f.inner.relationship == "OneToOne" %}
-            {% if f.optional %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
+        {%- if f.inner.relationship == "OneToOne" %}
+            {%- if f.optional %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
             .filter_map(|entity| entity.as_ref().and_then(|entity| entity.{{ f.snake_name }}.clone()))
             .collect();
-            {% else %}
+            {%- else %}
         let {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
             .filter_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}))
             .collect();
             {%- endif %}
-        {% else %}
+        {%- else %}
         let mut {{ f.snake_name }}_ids: Vec<EntityId> = entities
             .iter()
             .flat_map(|entity| entity.as_ref().map(|entity| entity.{{ f.snake_name }}.clone()))
@@ -225,7 +225,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
         // delete all strong relationships, initiating a cascade delete
         {% for f in s.entities[e].fields %}
-        {% if f.inner.field_type == "Entity" and f.inner.strong %}
+        {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
             .delete_multi(event_buffer, &{{ f.snake_name }}_ids)?;
         {%- endif %}
@@ -236,7 +236,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         Ok(())
     }
 
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
     pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship(id, field) }
     pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
 
@@ -294,9 +294,9 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(())
     }
-{% endif %}
+{%- endif %}
 
-{% if s.entities[e].owner %}
+{%- if s.entities[e].owner %}
     pub fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>, Error> {
         let repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction);
         repo.get_relationship(
@@ -314,7 +314,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
             ids,
         )
     }
-{% endif %}
+{%- endif %}
 
     pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
@@ -363,12 +363,12 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         if !restored_ids.is_empty() {
             event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: restored_ids.clone(), data: None });
         }
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
         // Emit Updated events for restored relationships
         if !restored_ids.is_empty() {
             event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: restored_ids, data: None });
         }
-{% endif %}
+{%- endif %}
         Ok(())
     }
 }
@@ -378,11 +378,11 @@ impl<'a> {{ s.entities[e].pascal_name }}RepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>) -> Self { {{ s.entities[e].pascal_name }}RepositoryRO { redb_table } }
     pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { self.redb_table.get(id) }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, Error> { self.redb_table.get_multi(ids) }
-{% if s.entities[e].forward_relationships %}
+{%- if s.entities[e].forward_relationships %}
     pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship(id, field) }
     pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
-{% endif %}
+{%- endif %}
 }
-{% else %}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}

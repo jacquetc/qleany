@@ -2,16 +2,16 @@
 // as changes will be lost.
 
 {% set e = s.file.inner.entity %}
-{% if e %}
+{%- if e %}
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait;
 use crate::{{ s.entities[e].pascal_name }}RelationshipDto;
 use anyhow::Result;
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 use common::types::Savepoint;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
 use std::collections::VecDeque;
-{% endif %}
+{%- endif %}
 
 pub struct Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
@@ -50,7 +50,7 @@ impl Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     }
 }
 
-{% if s.entities[e].inner.undoable -%}
+{%- if s.entities[e].inner.undoable -%}
 impl UndoRedoCommand for Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {
@@ -77,7 +77,7 @@ impl UndoRedoCommand for Set{{ s.entities[e].pascal_name }}RelationshipUseCase {
         self
     }
 }
-{% endif -%}
-{% else %}
+{%- endif -%}
+{%- else %}
 // No entity bound to this file
-{% endif %}
+{%- endif %}
