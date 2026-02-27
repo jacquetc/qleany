@@ -127,14 +127,20 @@ export component HomeTab inherits Rectangle {
                             spacing: 8px;
                             Row {
                                 DocLink {
+                                    label: "Introduction";
+                                    url: "https://qleany-docs.pages.dev/introduction.html";
+                                    description: "What is Qleany and why use it?";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
                                     label: "Quick Start — C++/Qt";
-                                    url: "https://jacquetc.github.io/qleany/quick-start-cpp-qt.html";
+                                    url: "https://qleany-docs.pages.dev/quick-start-cpp-qt.html";
                                     description: "Build a complete app step by step";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }
                                 DocLink {
                                     label: "Quick Start — Rust";
-                                    url: "https://jacquetc.github.io/qleany/quick-start-rust.html";
+                                    url: "https://qleany-docs.pages.dev/quick-start-rust.html";
                                     description: "Build a complete app step by step";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }
@@ -142,27 +148,39 @@ export component HomeTab inherits Rectangle {
                             Row {
                                 DocLink {
                                     label: "Design Philosophy";
-                                    url: "https://jacquetc.github.io/qleany/design-philosophy.html";
+                                    url: "https://qleany-docs.pages.dev/design-philosophy.html";
                                     description: "Why Qleany generates code the way it does";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }
                                 DocLink {
                                     label: "Undo Redo Architecture";
-                                    url: "https://jacquetc.github.io/qleany/undo-redo-architecture.html";
+                                    url: "https://qleany-docs.pages.dev/undo-redo-architecture.html";
                                     description: "How to add undo/redo support to your app";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
+                                    label: "How Operations Flow";
+                                    url: "https://qleany-docs.pages.dev/how-operations-flow.html";
+                                    description: "Button to DB and back data flow, error handling, and more";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }
                             }
                             Row {
                                 DocLink {
                                     label: "Manifest Reference";
-                                    url: "https://jacquetc.github.io/qleany/manifest-reference.html";
+                                    url: "https://qleany-docs.pages.dev/manifest-reference.html";
                                     description: "All YAML options explained";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }
                                 DocLink {
+                                    label: "QML Integration";
+                                    url: "https://qleany-docs.pages.dev/qml-integration.html";
+                                    description: "How to use the generated QML components in your app, and UI mocking";
+                                    clicked => { CommonTools.open_url(self.url); }
+                                }
+                                DocLink {
                                     label: "Troubleshooting";
-                                    url: "https://jacquetc.github.io/qleany/troubleshooting.html";
+                                    url: "https://qleany-docs.pages.dev/troubleshooting.html";
                                     description: "Common issues and fixes";
                                     clicked => { CommonTools.open_url(self.url); }
                                 }

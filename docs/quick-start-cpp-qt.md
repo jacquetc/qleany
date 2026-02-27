@@ -533,6 +533,14 @@ After a generation, your project contains:
 
 Let's assume that you have Qt6 dev libs and QCoro-qt6 dev libs installed in the system. Also, install cmake and extra-cmake-modules. 
 
+You need the project to sit on a Git repository to generate code. The CMakeLists.txt checks for the latest version tag (vX.Y.Z) and fails if it's not found. So, if you need a new repository:
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git tag v0.1.0
+```
+
 You can use an IDE like Qt Creator or VS Code and build/run the project from there.
 
 Or in a terminal,
