@@ -1,7 +1,7 @@
 // This file was generated automatically by Qleany's generator, edit at your own risk!
 // If you do, be careful to not overwrite it when you run the generator again.
 
-#include "app_bootstrap.h"
+#include "frontend/app_bootstrap.h"
 
 #include <QCoreApplication>
 #include <QLoggingCategory>
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 #endif
 
     QCoreApplication app(argc, argv);
-    app.setApplicationName("{{ s.global.application_pascal_name }}"_L1);
+    app.setApplicationName("{{ s.global.inner.application_name }}"_L1);
     app.setOrganizationName("{{ s.global.inner.organisation_name }}"_L1);
     app.setOrganizationDomain("{{ s.global.inner.domain_name }}"_L1);
 

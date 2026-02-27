@@ -1,7 +1,7 @@
 # This file was generated automatically by Qleany's generator, edit at your own risk! 
 # If you do, be careful to not overwrite it when you run the generator again.
 
-set(APP_NAME Skribisto)
+set(APP_NAME {{ s.global.application_pascal_name }})
 qt_add_executable(${APP_NAME} main.cpp)
 
 target_link_libraries(${APP_NAME} PRIVATE project_options)
@@ -15,9 +15,10 @@ target_link_libraries(
         Qt6::Quick Qt6::Qml Qt6::QuickControls2
         Qt6::Concurrent Qt6::Sql)
 
+target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common-frontend-bootstrap)
 if (NOT {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
     target_link_libraries(${APP_NAME} PRIVATE QCoro::Core QCoro::Qml)
-    target_link_libraries(${APP_NAME} PRIVATE skribisto-common)
+    target_link_libraries(${APP_NAME} PRIVATE {{ s.global.application_kebab_name }}-common)
 endif ()
 
 qt6_add_qml_module(${APP_NAME}
@@ -29,7 +30,7 @@ qt6_add_qml_module(${APP_NAME}
 )
 
 add_subdirectory(content)
-add_subdirectory(Skr)
+add_subdirectory({{ s.global.application_short_name | capitalize }})
 
 target_link_libraries(${APP_NAME} PRIVATE
         contentplugin
@@ -41,9 +42,9 @@ if ({{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)
     message("Using mock imports from: ${CMAKE_SOURCE_DIR}/src/presentation/mock_imports")
 else ()
     target_link_libraries(${APP_NAME} PRIVATE
-            skribisto-qml-controllersplugin
-            skribisto-qml-modelsplugin
-            skribisto-qml-singlesplugin
+            {{ s.global.application_kebab_name }}-qml-controllersplugin
+            {{ s.global.application_kebab_name }}-qml-modelsplugin
+            {{ s.global.application_kebab_name }}-qml-singlesplugin
     )
 endif ()
 

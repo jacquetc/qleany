@@ -5,12 +5,12 @@ QtObject {
 
     function getLoadWorkDto() {
         return {
-            "fileName": "/my/pat/myfile.skrib"
+            "fileName": ""
         };
     }
     function getSaveWorkDto() {
         return {
-            "fileName": "/my/pat/myfile.skrib",
+            "fileName": "",
             "overwrite": false
         };
     }

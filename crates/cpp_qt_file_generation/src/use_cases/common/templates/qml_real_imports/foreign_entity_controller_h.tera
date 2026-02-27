@@ -28,9 +28,9 @@ struct Foreign{{ ent.pascal_name }}Controller : public QObject
         return {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller::getCreateDto();
     }
 
-    Q_INVOKABLE QCoro::QmlTask createOrphan(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto> &dtos) const
+    Q_INVOKABLE QCoro::QmlTask createOrphans(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto> &dtos) const
     {
-        return m_controller->create(dtos);
+        return m_controller->createOrphans(dtos);
     }
 
     {%- if ent.owner %}
