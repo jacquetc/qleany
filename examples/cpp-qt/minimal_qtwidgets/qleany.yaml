@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 2
+  version: 3
 
 global:
   language: cpp-qt
@@ -14,7 +14,6 @@ entities:
   # Base entity with common fields (id, created_at, updated_at)
   - name: EntityBase
     only_for_heritage: true
-    allow_direct_access: false
     fields:
       - name: id
         type: uinteger
@@ -26,7 +25,6 @@ entities:
   # Root entity - entry point for the application
   - name: Root
     inherits_from: EntityBase
-    allow_direct_access: true
     undoable: false
     fields:
       - name: cars
@@ -43,7 +41,6 @@ entities:
   # Car entity - vehicles in the dealership inventory
   - name: Car
     inherits_from: EntityBase
-    allow_direct_access: true
     undoable: true
     fields:
       - name: make
@@ -65,7 +62,6 @@ entities:
   # Customer entity - potential buyers
   - name: Customer
     inherits_from: EntityBase
-    allow_direct_access: true
     undoable: true
     fields:
       - name: name

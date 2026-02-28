@@ -220,7 +220,6 @@ impl SaveUseCase {
                     } else {
                         None
                     },
-                    allow_direct_access: entity.allow_direct_access,
                     fields: entity_fields,
                     undoable: entity.undoable,
                 }
@@ -350,7 +349,7 @@ impl SaveUseCase {
 
         // Create the manifest
         let manifest = model_structs::Manifest {
-            schema: model_structs::Schema { version: 2 },
+            schema: model_structs::Schema { version: 3 },
             global: model_global,
             entities: model_entities,
             features: model_features,

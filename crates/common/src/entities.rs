@@ -140,7 +140,6 @@ pub struct Entity {
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
     pub undoable: bool,
-    pub allow_direct_access: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

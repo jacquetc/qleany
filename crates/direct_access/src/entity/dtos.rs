@@ -16,7 +16,6 @@ pub struct EntityDto {
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
     pub undoable: bool,
-    pub allow_direct_access: bool,
 }
 
 impl From<EntityDto> for Entity {
@@ -30,7 +29,6 @@ impl From<EntityDto> for Entity {
             relationships: dto.relationships,
             single_model: dto.single_model,
             undoable: dto.undoable,
-            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -46,7 +44,6 @@ impl From<&EntityDto> for Entity {
             relationships: dto.relationships.clone(),
             single_model: dto.single_model,
             undoable: dto.undoable,
-            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -62,7 +59,6 @@ impl From<Entity> for EntityDto {
             relationships: entity.relationships,
             single_model: entity.single_model,
             undoable: entity.undoable,
-            allow_direct_access: entity.allow_direct_access,
         }
     }
 }
@@ -76,7 +72,6 @@ pub struct CreateEntityDto {
     pub relationships: Vec<EntityId>,
     pub single_model: bool,
     pub undoable: bool,
-    pub allow_direct_access: bool,
 }
 
 impl From<CreateEntityDto> for Entity {
@@ -90,7 +85,6 @@ impl From<CreateEntityDto> for Entity {
             relationships: dto.relationships,
             single_model: dto.single_model,
             undoable: dto.undoable,
-            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -106,7 +100,6 @@ impl From<&CreateEntityDto> for Entity {
             relationships: dto.relationships.clone(),
             single_model: dto.single_model,
             undoable: dto.undoable,
-            allow_direct_access: dto.allow_direct_access,
         }
     }
 }
@@ -121,7 +114,6 @@ impl From<Entity> for CreateEntityDto {
             relationships: entity.relationships,
             single_model: entity.single_model,
             undoable: entity.undoable,
-            allow_direct_access: entity.allow_direct_access,
         }
     }
 }

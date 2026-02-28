@@ -4,13 +4,9 @@
 //! Commands module - cleanly separated command handlers for Slint UI
 //!
 {% for e_id, e in s.entities %}
-    {%- if e.inner.allow_direct_access %}
 pub mod {{ e.snake_name }}_commands;
-    {%- endif %}
 {%- endfor %}
 {% for f_id, f in s.features %}
-    {%- if e.inner.allow_direct_access %}
 pub mod {{ f.snake_name }}_commands;
-    {%- endif %}
 {%- endfor %}
 pub mod undo_redo_commands;

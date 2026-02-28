@@ -281,7 +281,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         only_for_heritage: false,
         inherits_from: None,
         single_model: true,
-        allow_direct_access: true,
+
         fields: vec![400],
         relationships: vec![],
         undoable: false,
@@ -387,7 +387,7 @@ fn for_file_various_combinations_generate_expected_items() {
         only_for_heritage: false,
         inherits_from: None,
         single_model: true,
-        allow_direct_access: true,
+
         fields: vec![],
         relationships: vec![],
         undoable: false,
@@ -398,7 +398,7 @@ fn for_file_various_combinations_generate_expected_items() {
         only_for_heritage: false,
         inherits_from: None,
         single_model: true,
-        allow_direct_access: true,
+
         fields: vec![],
         relationships: vec![],
         undoable: false,

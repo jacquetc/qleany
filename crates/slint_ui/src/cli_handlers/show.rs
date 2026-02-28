@@ -147,7 +147,6 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
                 println!("  (heritage only)");
             }
             println!("  undoable: {}", entity.undoable);
-            println!("  allow_direct_access: {}", entity.allow_direct_access);
             println!("\nFields ({}):", fields.len());
             for field in &fields {
                 println!("  - {}: {:?}", field.name, field.field_type);
@@ -158,7 +157,6 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
                 "name": entity.name,
                 "only_for_heritage": entity.only_for_heritage,
                 "undoable": entity.undoable,
-                "allow_direct_access": entity.allow_direct_access,
                 "fields": fields.iter().map(|f| serde_json::json!({
                     "name": f.name,
                     "field_type": format!("{:?}", f.field_type),

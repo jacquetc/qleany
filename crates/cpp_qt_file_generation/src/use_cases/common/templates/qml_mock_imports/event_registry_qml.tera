@@ -6,10 +6,8 @@ import QtQuick
 
 QtObject {
 {%- for eid, ent in s.entities %}
-{%- if not ent.inner.only_for_heritage %}
     function {{ ent.camel_name }}Events() {
         return {{ ent.pascal_name }}Events;
     }
-{%- endif %}
 {%- endfor %}
 }

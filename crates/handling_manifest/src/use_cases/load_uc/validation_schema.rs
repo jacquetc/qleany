@@ -9,8 +9,8 @@ pub fn json_validation_schema() -> serde_json::Value {
                 "properties": {
                     "version": {
                         "type": "integer",
-                        "minimum": 2,
-                        "maximum": 2
+                        "minimum": 3,
+                        "maximum": 3
                     }
                 },
                 "required": ["version"],
@@ -64,9 +64,6 @@ pub fn json_validation_schema() -> serde_json::Value {
                             "type": "boolean"
                         },
                         "undoable": {
-                            "type": "boolean"
-                        },
-                        "allow_direct_access": {
                             "type": "boolean"
                         },
                         "fields": {

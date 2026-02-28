@@ -775,7 +775,7 @@ impl ListCppQtFilesUseCase {
             let entity_snake_name = heck::AsSnakeCase(&entity.name);
             let entity_pascal_name = heck::AsPascalCase(&entity.name);
 
-            if entity.allow_direct_access {
+            {
                 // for src/direct_access/{}
 
                 let relative_path = format!(
@@ -1218,7 +1218,7 @@ impl ListCppQtFilesUseCase {
                         field: None,
                     });
                 } // has forward relationship
-            } // allow direct access
+            }
 
             // for common/entities/
             let relative_path = format!("{}/common/entities/", prefix);

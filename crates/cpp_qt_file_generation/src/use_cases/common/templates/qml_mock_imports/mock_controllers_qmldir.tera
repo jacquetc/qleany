@@ -2,10 +2,8 @@
 # If you do, be careful to not overwrite it when you run the generator again.
 module {{ s.global.application_short_name | capitalize }}.Controllers
 {%- for eid, ent in s.entities %}
-    {%- if not ent.inner.only_for_heritage %}
 {{ ent.pascal_name }}Controller 1.0 {{ ent.pascal_name }}Controller.qml
 singleton {{ ent.pascal_name }}Events 1.0 {{ ent.pascal_name }}Events.qml
-    {%- endif %}
 {%- endfor %}
 {%- for fid, feat in s.features %}
 {{ feat.pascal_name }}Controller 1.0 {{ feat.pascal_name }}Controller.qml

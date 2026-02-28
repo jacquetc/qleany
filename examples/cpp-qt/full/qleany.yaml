@@ -1,5 +1,5 @@
 schema:
-  version: 2
+  version: 3
 global:
   language: cpp-qt
   application_name: CalendarApp
@@ -10,7 +10,6 @@ global:
 entities:
 - name: EntityBase
   only_for_heritage: true
-  allow_direct_access: false
   undoable: false
   fields:
   - name: id
@@ -21,7 +20,6 @@ entities:
     type: datetime
 - name: Root
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: false
   fields:
   - name: workspace
@@ -38,7 +36,6 @@ entities:
     strong: true
 - name: System
   inherits_from: EntityBase
-  allow_direct_access: false
   undoable: false
   fields:
   - name: name
@@ -50,7 +47,6 @@ entities:
     strong: false
 - name: Workspace
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: true
   fields:
   - name: calendars
@@ -67,7 +63,6 @@ entities:
     strong: true
 - name: Calendar
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: true
   single_model: true
   fields:
@@ -88,7 +83,6 @@ entities:
     list_model_displayed_field: title
 - name: CalendarEvent
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: true
   single_model: true
   fields:
@@ -119,7 +113,6 @@ entities:
     relationship: many_to_many
 - name: Reminder
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: true
   single_model: true
   fields:
@@ -134,7 +127,6 @@ entities:
     - Alarm
 - name: Tag
   inherits_from: EntityBase
-  allow_direct_access: true
   undoable: true
   single_model: true
   fields:

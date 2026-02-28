@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 2
+  version: 3
 global:
   language: rust
   application_name: TestApp
@@ -11,14 +11,12 @@ global:
 entities:
 - name: EntityBase
   only_for_heritage: true
-  allow_direct_access: false
   fields:
   - name: id
     type: integer
   undoable: false
 - name: Root
   inherits_from: EntityBase
-  allow_direct_access: false
   fields:
   - name: first
     type: entity
@@ -28,7 +26,6 @@ entities:
   undoable: false
 - name: First
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: test_string
     type: string

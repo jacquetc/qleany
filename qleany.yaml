@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 2
+  version: 3
 global:
   language: rust
   application_name: Qleany
@@ -11,7 +11,6 @@ global:
 entities:
 - name: EntityBase
   only_for_heritage: true
-  allow_direct_access: false
   fields:
   - name: id
     type: uinteger
@@ -22,7 +21,6 @@ entities:
   undoable: false
 - name: Root
   inherits_from: EntityBase
-  allow_direct_access: false
   fields:
   - name: workspace
     type: entity
@@ -39,7 +37,6 @@ entities:
   undoable: false
 - name: Workspace
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: manifest_absolute_path
     type: string
@@ -72,7 +69,6 @@ entities:
   undoable: true
 - name: System
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: files
     type: entity
@@ -85,7 +81,6 @@ entities:
   undoable: false
 - name: Entity
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -115,12 +110,9 @@ entities:
     strong: true
   - name: undoable
     type: boolean
-  - name: allow_direct_access
-    type: boolean
   undoable: true
 - name: Field
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -163,7 +155,6 @@ entities:
   undoable: true
 - name: Feature
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -178,7 +169,6 @@ entities:
   undoable: true
 - name: File
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -189,7 +179,6 @@ entities:
   undoable: false
 - name: UseCase
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -223,7 +212,6 @@ entities:
   undoable: true
 - name: Dto
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -238,7 +226,6 @@ entities:
   undoable: true
 - name: DtoField
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -267,7 +254,6 @@ entities:
   undoable: true
 - name: Global
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: language
     type: string
@@ -282,7 +268,6 @@ entities:
   undoable: true
 - name: Relationship
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: left_entity
     type: entity
@@ -332,7 +317,6 @@ entities:
   undoable: true
 - name: UserInterface
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: rust_cli
     type: boolean

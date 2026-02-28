@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 2
+  version: 3
 global:
   language: cpp-qt
   application_name: CarLot
@@ -11,7 +11,6 @@ global:
 entities:
 - name: EntityBase
   only_for_heritage: true
-  allow_direct_access: false
   fields:
   - name: id
     type: uinteger
@@ -23,7 +22,6 @@ entities:
 - name: Root
   single_model: true
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: cars
     type: entity
@@ -46,7 +44,6 @@ entities:
 - name: Car
   single_model: true
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: make
     type: string
@@ -67,7 +64,6 @@ entities:
 - name: Customer
   single_model: true
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: name
     type: string
@@ -80,7 +76,6 @@ entities:
 - name: Sale
   single_model: true
   inherits_from: EntityBase
-  allow_direct_access: true
   fields:
   - name: car
     type: entity

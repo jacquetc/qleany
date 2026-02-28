@@ -1,6 +1,6 @@
 {%- set_global demo_ent = false %}
 {%- for eid, ent in s.entities %}
-    {%- if not demo_ent and not ent.inner.only_for_heritage and ent.inner.allow_direct_access %}
+    {%- if not demo_ent %}
         {%- set_global has_form_fields = false %}
         {%- for f in ent.normal_fields %}
             {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
@@ -16,7 +16,7 @@
 {%- set_global list_field = false %}
 {%- set_global list_target_ent = false %}
 {%- for eid, ent in s.entities %}
-    {%- if not list_field and not ent.inner.only_for_heritage %}
+    {%- if not list_field %}
         {%- for f in ent.fields %}
             {%- if not list_field and f.inner.list_model and f.inner.entity %}
                 {%- set_global list_ent = ent %}
@@ -348,7 +348,7 @@ ApplicationWindow {
 {% endif %}
 {% if not demo_ent and not list_field %}
             // No entity with direct access and editable fields found.
-            // Add entities with allow_direct_access: true and normal fields to your qleany.yaml.
+            // Add entities with normal fields (not only_for_heritage) to your qleany.yaml.
             Label {
                 Layout.alignment: Qt.AlignCenter
                 font.pixelSize: 16

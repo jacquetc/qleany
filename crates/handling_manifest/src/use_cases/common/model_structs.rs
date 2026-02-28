@@ -69,8 +69,6 @@ pub struct Entity {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inherits_from: Option<String>,
-    #[serde(default = "serde_true")]
-    pub allow_direct_access: bool,
     pub fields: Vec<Field>,
     #[serde(default = "serde_true")]
     pub undoable: bool,
