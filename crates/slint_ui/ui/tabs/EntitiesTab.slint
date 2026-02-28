@@ -204,7 +204,7 @@ export component EntitiesTab inherits Rectangle {
                                 StyledLineEdit {
                                     text <=> EntitiesTabState.selected_entity_name;
                                     placeholder: "Enter the entity name (e.g., Person)";
-                                    has-error: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_field_enum_name);
+                                    has-error: (EntitiesTabState.selected_entity_id >= 0 && EntitiesTabState.selected_entity_name == "") || !CommonTools.check_is_pascal_case(EntitiesTabState.selected_entity_name);
                                     edited(text) => {
                                         EntitiesTabState.entity_name_changed(text);
                                     }

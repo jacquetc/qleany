@@ -298,22 +298,9 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
 /// Filter files by selected group
 fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: i32) {
     if group_index < 0 {
-        let was_saved = app.global::<AppState>().get_manifest_is_saved();
         // No group selected, show all files
         refresh_file_lists(app, app_context);
 
-        // Re-apply manifest_is_saved after a short delay
-        Timer::single_shot(std::time::Duration::from_millis(800), {
-            let app_weak = app.as_weak();
-            move || {
-                if let Some(app) = app_weak.upgrade()
-                    && was_saved
-                {
-                    app.global::<AppState>().set_manifest_is_saved(true);
-                    println!("Re-applied manifest_is_saved after refresh");
-                }
-            }
-        });
         return;
     }
 
@@ -523,18 +510,9 @@ fn setup_list_files_callback(app: &App, app_context: &Arc<AppContext>) {
         move || {
             log::info!("List Files clicked");
             if let Some(app) = app_weak.upgrade() {
-                // Preserve manifest_is_saved state
-                let was_saved = app.global::<AppState>().get_manifest_is_saved();
 
                 refresh_file_lists(&app, &ctx);
 
-                // Re-apply manifest_is_saved after a short delay
-                Timer::single_shot(std::time::Duration::from_millis(800), move || {
-                    if was_saved {
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        println!("Re-applied manifest_is_saved after refresh");
-                    }
-                });
             }
         }
     });
@@ -790,8 +768,6 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
             log::info!("Group selected: id={}", group_id);
 
             if let Some(app) = app_weak.upgrade() {
-                let was_saved = app.global::<AppState>().get_manifest_is_saved();
-
                 // When a group is checked, uncheck all other groups and display only files in this group
                 let group_list = app.global::<AppState>().get_group_cr_list();
 
@@ -810,13 +786,7 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
                 // Use filter_files_by_group to update all models
                 filter_files_by_group(&app, &ctx, group_id);
 
-                // Re-apply manifest_is_saved after a short delay
-                Timer::single_shot(std::time::Duration::from_millis(800), move || {
-                    if was_saved {
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        println!("Re-applied manifest_is_saved after refresh");
-                    }
-                });
+                
             }
         }
     });
@@ -853,19 +823,8 @@ fn setup_refresh_generate_tab_callback(app: &App, app_context: &Arc<AppContext>)
         move || {
             log::info!("Refreshing generate tab");
             if let Some(app) = app_weak.upgrade() {
-                // Preserve manifest_is_saved state
-                let was_saved = app.global::<AppState>().get_manifest_is_saved();
-
                 // Refresh file lists
                 refresh_file_lists(&app, &ctx);
-
-                // Re-apply manifest_is_saved after a short delay
-                Timer::single_shot(std::time::Duration::from_millis(800), move || {
-                    if was_saved {
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        println!("Re-applied manifest_is_saved after refresh");
-                    }
-                });
             }
         }
     });
