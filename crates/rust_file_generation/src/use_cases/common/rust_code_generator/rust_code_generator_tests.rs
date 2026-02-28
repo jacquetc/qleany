@@ -5,10 +5,7 @@
 use super::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::database::QueryUnitOfWork;
-use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global,
-    Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace,
-};
+use common::entities::{Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, File, FileStatus, Global, Relationship, RelationshipType, Root, System, UseCase, UserInterface, Workspace};
 use common::types::EntityId;
 use std::collections::HashMap;
 
@@ -190,6 +187,8 @@ fn for_file_feature_without_use_cases_errors() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "feature_lib".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: Some(10),
         entity: None,
         use_case: None,
@@ -249,6 +248,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "feature_lib".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: Some(10),
         entity: None,
         use_case: None,
@@ -485,6 +486,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "feature_lib".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: Some(200),
         entity: None,
         use_case: None,
@@ -504,6 +507,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "feature_use_case".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: None,
         entity: None,
         use_case: Some(100),
@@ -523,6 +528,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "entity_mod".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: None,
         entity: Some(1),
         use_case: None,
@@ -541,6 +548,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "entity_mod".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: None,
         entity: Some(0),
         use_case: None,
@@ -557,6 +566,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "feature_lib".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: Some(200),
         entity: Some(1),
         use_case: None,
@@ -576,6 +587,8 @@ fn for_file_various_combinations_generate_expected_items() {
         relative_path: "p".into(),
         group: "g".into(),
         template_name: "entity_use_cases_mod".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: None,
         entity: Some(2),
         use_case: Some(100),

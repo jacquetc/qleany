@@ -172,10 +172,17 @@ entities:
   fields:
   - name: name
     type: string
-  - name: path
+  - name: relative_path
     type: string
   - name: group
     type: string
+  - name: template_name
+    type: string
+  - name: generated_code
+    type: string
+    optional: true
+  - name: status
+    type: enum
   undoable: false
 - name: UseCase
   inherits_from: EntityBase

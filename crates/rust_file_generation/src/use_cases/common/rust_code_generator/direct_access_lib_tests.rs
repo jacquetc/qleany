@@ -6,7 +6,7 @@ use super::{
     DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, UseCaseVM,
     UserInterfaceVM, get_rust_tera,
 };
-use common::entities::{Entity, Field, FieldType, File, Global, Relationship, UserInterface};
+use common::entities::{Entity, Field, FieldType, File, FileStatus, Global, Relationship, UserInterface};
 use indexmap::IndexMap;
 use tera::Context;
 
@@ -19,6 +19,8 @@ fn render_direct_access_lib_lists_entities() {
         relative_path: "crates/direct_access/src/lib.rs".into(),
         group: "entities".into(),
         template_name: "direct_access_lib".into(),
+        generated_code: None,
+        status: FileStatus::New,
         feature: None,
         entity: Some(0),
         use_case: None,

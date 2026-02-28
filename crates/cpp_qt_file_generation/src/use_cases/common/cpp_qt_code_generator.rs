@@ -1346,6 +1346,7 @@ impl SnapshotBuilder {
 
 #[cfg(test)]
 mod tests {
+    use common::entities::FileStatus;
     use super::*;
 
     #[test]
@@ -1360,6 +1361,8 @@ mod tests {
                     relative_path: "".into(),
                     group: "root".into(),
                     template_name: "root_cmake".into(),
+                    generated_code: None,
+                    status: FileStatus::New,
                     feature: None,
                     entity: None,
                     use_case: None,
@@ -1412,6 +1415,8 @@ mod tests {
             relative_path: "src/user_dtos.rs".to_string(),
             group: "entities".to_string(),
             template_name: "dtos_h".to_string(),
+            generated_code: None,
+            status: FileStatus::New,
             feature: None,
             entity: Some(entity_id),
             use_case: None,

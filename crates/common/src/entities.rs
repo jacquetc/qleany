@@ -187,6 +187,16 @@ pub struct Feature {
     pub use_cases: Vec<EntityId>,
 }
 
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum FileStatus {
+    #[default]
+    Unknown,
+    Unchanged,
+    Modified,
+    New,
+}
+
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct File {
     pub id: EntityId,
@@ -194,6 +204,8 @@ pub struct File {
     pub relative_path: String,
     pub group: String,
     pub template_name: String,
+    pub generated_code: Option<String>,
+    pub status: FileStatus,
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
