@@ -41,6 +41,7 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 | [How Operations Flow](docs/how-operations-flow.md)                 | How data flows through the application, events                                 |
 | [Regeneration Workflow](docs/regeneration-workflow.md)             | How file generation works, what gets overwritten, files that must stay in sync |
 | [Undo-Redo Architecture](docs/undo-redo-architecture.md)           | Entity tree structure, undoable vs non-undoable, configuration patterns        |
+| [Migration Guide](docs/migration-guide.md)                         | Manifest changes and migration strategies                                      |
 | [QML Integration](docs/qml-integration.md)                         | Reactive models, mocks, and event system for C++/Qt                            |
 | [Generated Infrastructure - C++/Qt](docs/generated-code-cpp-qt.md) | Database layer, repositories, and file organization details                    |
 | [Generated Infrastructure - Rust](docs/generated-code-rust.md)     | Database layer, repositories, and file organization details                    |
@@ -256,7 +257,9 @@ v1 generates Package by Feature with pragmatic organization. The same project pr
 
 Bottom line: from v0 to v1, there is no automated migration path. You must regenerate from your manifest and manually port any custom code.
 
-Starting from the newer version 2 of the manifest (i.e., Qleany v1), the new architecture will allow a smoother transition to future versions.
+Starting from the newer version 2 of the manifest (i.e., Qleany v1), the new architecture offers a smoother transition to future versions, doing it automatically at load time, or using `qleany upgrade`.
+
+See the [Migration Guide](docs/migration-guide.md) for more details.
 
 ---
 

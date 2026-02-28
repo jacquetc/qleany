@@ -1,3 +1,4 @@
+mod migration;
 mod tools;
 mod validation_schema;
 use crate::use_cases::common::model_structs;
@@ -103,7 +104,9 @@ impl LoadUseCase {
             _ => return Err(anyhow::anyhow!("File extension not supported")),
         };
 
-        //let json = serde_json::to_string_pretty(&json_value);
+        // migrate older schema versions to current
+        let mut json_value = json_value;
+        migration::migrate_to_current(&mut json_value)?;
 
         // validate Json schema
 
@@ -164,7 +167,6 @@ impl LoadUseCase {
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
                 single_model: model_entity.single_model.unwrap_or_default(),
                 inherits_from: None, // will be filled in later
-                allow_direct_access: model_entity.allow_direct_access,
                 fields: vec![],        // will be filled in later
                 relationships: vec![], // will be filled in later
                 undoable: model_entity.undoable,

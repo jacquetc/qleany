@@ -2,11 +2,9 @@
 # If you do, be careful to not overwrite it when you run the generator again.
 module {{ s.global.application_short_name | capitalize }}.Models
 {%- for eid, ent in s.entities %}
-    {%- if not ent.inner.only_for_heritage %}
         {%- for f in ent.fields %}
             {%- if f.inner.list_model %}
 {{ ent.pascal_name }}{{ f.pascal_name }}ListModel 1.0 {{ ent.pascal_name }}{{ f.pascal_name }}ListModel.qml
             {%- endif %}
         {%- endfor %}
-    {%- endif %}
 {%- endfor %}

@@ -177,7 +177,7 @@ mod tests {
             name: "Parent".to_string(),
             only_for_heritage: false,
             inherits_from: None,
-            allow_direct_access: true,
+
             fields: vec![1, 2], // Field IDs
             relationships: vec![],
             single_model: false,

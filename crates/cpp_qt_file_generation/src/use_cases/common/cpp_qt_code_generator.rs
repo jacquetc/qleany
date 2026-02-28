@@ -1431,7 +1431,7 @@ mod tests {
             only_for_heritage: false,
             inherits_from: None,
             single_model: true,
-            allow_direct_access: true,
+
             fields: vec![100, 101],
             relationships: vec![],
             undoable: true,

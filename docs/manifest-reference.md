@@ -16,7 +16,7 @@ Real-world manifests you can reference:
 
 ```yaml
 schema:
-  version: 2
+  version: 3
 
 global:
   language: cpp-qt          # rust, cpp-qt
@@ -50,7 +50,6 @@ entities:
   # EntityBase provides the necessary id, created_at, updated_at
   - name: EntityBase
     only_for_heritage: true
-    allow_direct_access: false
     fields:
       - name: id
         type: uinteger
@@ -70,7 +69,7 @@ entities:
 
 ```yaml
 schema:
-  version: 2
+  version: 3
 
 global:
   language: cpp-qt
@@ -83,7 +82,6 @@ global:
 entities:
   - name: EntityBase
     only_for_heritage: true
-    allow_direct_access: false
     fields:
       - name: id
         type: uinteger
@@ -181,7 +179,6 @@ features:
 | `inherits_from`       | string | none     | Parent entity for inheritance                       |
 | `only_for_heritage`   | bool   | false    | Entity used only as base class                      |
 | `undoable`            | bool   | false    | Enable undo/redo for this entity's controller       |
-| `allow_direct_access` | bool   | true     | Generate files in `direct_access/` for UI access    |
 | `single_model`        | bool   | false    | Generate `Single{Entity}` QML wrapper (C++/Qt only) |
 
 ---

@@ -68,7 +68,6 @@ With the approach chosen, configure your entities using these properties relevan
 | Property              | Type | Default | Effect                                                   |
 |-----------------------|------|---------|----------------------------------------------------------|
 | `undoable`            | bool | false   | Adds undo/redo support to the entity's controller        |
-| `allow_direct_access` | bool | true    | Generates entity files in `direct_access/` for UI access |
 | `single_model`        | bool | false   | Generates `Single{Entity}` wrapper for QML (C++/Qt only) |
 
 ## Undo-Redo Rules
@@ -208,6 +207,15 @@ Root (undoable: false)
 
 ```yaml
 entities:
+  - name: EntityBase
+    only_for_heritage: true
+    fields:
+      - name: id
+        type: uinteger
+      - name: created_at
+        type: datetime
+      - name: updated_at
+        type: datetime
   - name: Root
     inherits_from: EntityBase
     undoable: false
@@ -226,7 +234,6 @@ entities:
   - name: System
     inherits_from: EntityBase
     undoable: false
-    allow_direct_access: true
     fields:
       - name: settings
         type: entity
@@ -256,7 +263,6 @@ entities:
   - name: SearchResult
     inherits_from: EntityBase
     undoable: false
-    allow_direct_access: false
     fields:
       - name: query
         type: string

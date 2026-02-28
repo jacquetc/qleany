@@ -83,7 +83,6 @@ impl NewUseCase {
             only_for_heritage: true,
             fields: created_field_ids,
             relationships: vec![],
-            allow_direct_access: false,
             undoable: false,
         };
 
@@ -96,7 +95,6 @@ impl NewUseCase {
             only_for_heritage: false,
             fields: vec![],
             relationships: vec![],
-            allow_direct_access: true,
             undoable: false,
         };
 

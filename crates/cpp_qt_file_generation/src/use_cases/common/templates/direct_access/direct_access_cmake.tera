@@ -15,9 +15,7 @@ qt_add_library(${LIBRARY_NAME} ${LIB_TYPE})
 target_link_libraries(${LIBRARY_NAME} PRIVATE project_options)
 
 {%- for eid, ent in s.entities %}
-{%- if ent.inner.allow_direct_access %}
 add_subdirectory({{ ent.snake_name }})
-{%- endif %}
 {%- endfor %}
 
 target_compile_definitions(${LIBRARY_NAME} PRIVATE
