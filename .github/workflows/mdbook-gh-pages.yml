@@ -111,7 +111,7 @@ jobs:
         run: cp .github/google5d0f63f0638b11c8.html book/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: book
           path: book  # default mdBook output directory
@@ -124,7 +124,7 @@ jobs:
     needs: build
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: book
           path: book
