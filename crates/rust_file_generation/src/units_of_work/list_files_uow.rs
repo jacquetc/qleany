@@ -1,5 +1,5 @@
-use crate::use_cases::list_rust_files_uc::{
-    ListRustFilesUnitOfWorkFactoryTrait, ListRustFilesUnitOfWorkTrait,
+use crate::use_cases::fill_rust_files_uc::{
+    FillRustFilesUnitOfWorkFactoryTrait, FillRustFilesUnitOfWorkTrait,
 };
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
@@ -17,17 +17,17 @@ use common::types;
 use common::types::EntityId;
 use std::sync::Arc;
 
-// Unit of work for ListRustFiles
+// Unit of work for FillRustFiles
 
-pub struct ListRustFilesUnitOfWork {
+pub struct FillRustFilesUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
     event_hub: Arc<EventHub>,
 }
 
-impl ListRustFilesUnitOfWork {
+impl FillRustFilesUnitOfWork {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        ListRustFilesUnitOfWork {
+        FillRustFilesUnitOfWork {
             context: db_context.clone(),
             transaction: None,
             event_hub: event_hub.clone(),
@@ -35,7 +35,7 @@ impl ListRustFilesUnitOfWork {
     }
 }
 
-impl CommandUnitOfWork for ListRustFilesUnitOfWork {
+impl CommandUnitOfWork for FillRustFilesUnitOfWork {
     fn begin_transaction(&mut self) -> Result<()> {
         self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
         Ok(())
@@ -88,24 +88,24 @@ impl CommandUnitOfWork for ListRustFilesUnitOfWork {
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-impl ListRustFilesUnitOfWorkTrait for ListRustFilesUnitOfWork {}
+impl FillRustFilesUnitOfWorkTrait for FillRustFilesUnitOfWork {}
 
-pub struct ListRustFilesUnitOfWorkFactory {
+pub struct FillRustFilesUnitOfWorkFactory {
     context: DbContext,
     event_hub: Arc<EventHub>,
 }
 
-impl ListRustFilesUnitOfWorkFactory {
+impl FillRustFilesUnitOfWorkFactory {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        ListRustFilesUnitOfWorkFactory {
+        FillRustFilesUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),
         }
     }
 }
 
-impl ListRustFilesUnitOfWorkFactoryTrait for ListRustFilesUnitOfWorkFactory {
-    fn create(&self) -> Box<dyn ListRustFilesUnitOfWorkTrait> {
-        Box::new(ListRustFilesUnitOfWork::new(&self.context, &self.event_hub))
+impl FillRustFilesUnitOfWorkFactoryTrait for FillRustFilesUnitOfWorkFactory {
+    fn create(&self) -> Box<dyn FillRustFilesUnitOfWorkTrait> {
+        Box::new(FillRustFilesUnitOfWork::new(&self.context, &self.event_hub))
     }
 }

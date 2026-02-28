@@ -19,8 +19,8 @@ use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use common::long_operation::OperationProgress;
 use common::types::EntityId;
-use cpp_qt_file_generation::{GenerateCppQtFilesDto, ListCppQtFilesDto};
-use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, ListRustFilesDto};
+use cpp_qt_file_generation::{GenerateCppQtFilesDto, FillCppQtFilesDto};
+use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, FillRustFilesDto};
 use slint::Timer;
 
 /// Internal state for tracking file data
@@ -61,11 +61,11 @@ fn list_files_helper(
 ) -> Result<ListFilesReturnDto, String> {
     match determine_language(app, app_context)? {
         Language::Rust => {
-            let dto = ListRustFilesDto {
+            let dto = FillRustFilesDto {
                 only_list_already_existing: false,
             };
 
-            match rust_file_generation_commands::list_rust_files(app_context, &dto) {
+            match rust_file_generation_commands::fill_rust_files(app_context, &dto) {
                 Ok(return_dto) => Ok(ListFilesReturnDto {
                     file_ids: return_dto.file_ids,
                     file_names: return_dto.file_names,
@@ -75,11 +75,11 @@ fn list_files_helper(
             }
         }
         Language::CppQt => {
-            let dto = ListCppQtFilesDto {
+            let dto = FillCppQtFilesDto {
                 only_list_already_existing: false,
             };
 
-            match cpp_qt_file_generation_commands::list_cpp_qt_files(app_context, &dto) {
+            match cpp_qt_file_generation_commands::fill_cpp_qt_files(app_context, &dto) {
                 Ok(return_dto) => Ok(ListFilesReturnDto {
                     file_ids: return_dto.file_ids,
                     file_names: return_dto.file_names,

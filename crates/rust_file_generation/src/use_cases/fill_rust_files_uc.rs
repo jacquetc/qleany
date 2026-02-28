@@ -1,5 +1,5 @@
 use crate::use_cases::common::tools;
-use crate::{ListRustFilesDto, ListRustFilesReturnDto};
+use crate::{FillRustFilesDto, FillRustFilesReturnDto};
 use anyhow::Result;
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
@@ -12,8 +12,8 @@ use common::{
     entities::Relationship, entities::Root, entities::UseCase,
 };
 
-pub trait ListRustFilesUnitOfWorkFactoryTrait {
-    fn create(&self) -> Box<dyn ListRustFilesUnitOfWorkTrait>;
+pub trait FillRustFilesUnitOfWorkFactoryTrait {
+    fn create(&self) -> Box<dyn FillRustFilesUnitOfWorkTrait>;
 }
 
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
@@ -32,18 +32,18 @@ pub trait ListRustFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-pub trait ListRustFilesUnitOfWorkTrait: CommandUnitOfWork {}
+pub trait FillRustFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
-pub struct ListRustFilesUseCase {
-    uow_factory: Box<dyn ListRustFilesUnitOfWorkFactoryTrait>,
+pub struct FillRustFilesUseCase {
+    uow_factory: Box<dyn FillRustFilesUnitOfWorkFactoryTrait>,
 }
 
-impl ListRustFilesUseCase {
-    pub fn new(uow_factory: Box<dyn ListRustFilesUnitOfWorkFactoryTrait>) -> Self {
-        ListRustFilesUseCase { uow_factory }
+impl FillRustFilesUseCase {
+    pub fn new(uow_factory: Box<dyn FillRustFilesUnitOfWorkFactoryTrait>) -> Self {
+        FillRustFilesUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: &ListRustFilesDto) -> Result<ListRustFilesReturnDto> {
+    pub fn execute(&mut self, dto: &FillRustFilesDto) -> Result<FillRustFilesReturnDto> {
         let mut files: Vec<File> = vec![];
 
         let mut uow = self.uow_factory.create();
@@ -1063,7 +1063,7 @@ impl ListRustFilesUseCase {
             file_groups.push(file.group.clone());
         }
 
-        Ok(ListRustFilesReturnDto {
+        Ok(FillRustFilesReturnDto {
             file_ids,
             file_names,
             file_groups,

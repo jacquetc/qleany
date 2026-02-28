@@ -1,5 +1,5 @@
 use crate::use_cases::common::tools;
-use crate::{ListCppQtFilesDto, ListCppQtFilesReturnDto};
+use crate::{FillCppQtFilesDto, FillCppQtFilesReturnDto};
 use anyhow::Result;
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
@@ -13,8 +13,8 @@ use common::{
 };
 use heck::ToPascalCase;
 
-pub trait ListCppQtFilesUnitOfWorkFactoryTrait {
-    fn create(&self) -> Box<dyn ListCppQtFilesUnitOfWorkTrait>;
+pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
+    fn create(&self) -> Box<dyn FillCppQtFilesUnitOfWorkTrait>;
 }
 
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
@@ -34,18 +34,18 @@ pub trait ListCppQtFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-pub trait ListCppQtFilesUnitOfWorkTrait: CommandUnitOfWork {}
+pub trait FillCppQtFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
-pub struct ListCppQtFilesUseCase {
-    uow_factory: Box<dyn ListCppQtFilesUnitOfWorkFactoryTrait>,
+pub struct FillCppQtFilesUseCase {
+    uow_factory: Box<dyn FillCppQtFilesUnitOfWorkFactoryTrait>,
 }
 
-impl ListCppQtFilesUseCase {
-    pub fn new(uow_factory: Box<dyn ListCppQtFilesUnitOfWorkFactoryTrait>) -> Self {
-        ListCppQtFilesUseCase { uow_factory }
+impl FillCppQtFilesUseCase {
+    pub fn new(uow_factory: Box<dyn FillCppQtFilesUnitOfWorkFactoryTrait>) -> Self {
+        FillCppQtFilesUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: &ListCppQtFilesDto) -> Result<ListCppQtFilesReturnDto> {
+    pub fn execute(&mut self, dto: &FillCppQtFilesDto) -> Result<FillCppQtFilesReturnDto> {
         let mut files: Vec<File> = vec![];
 
         let mut uow = self.uow_factory.create();
@@ -2292,7 +2292,7 @@ impl ListCppQtFilesUseCase {
             file_groups.push(file.group.clone());
         }
 
-        Ok(ListCppQtFilesReturnDto {
+        Ok(FillCppQtFilesReturnDto {
             file_ids,
             file_names,
             file_groups,

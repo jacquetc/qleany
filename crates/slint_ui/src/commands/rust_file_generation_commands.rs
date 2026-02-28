@@ -4,16 +4,16 @@ use crate::app_context::AppContext;
 use common::long_operation::OperationProgress;
 use rust_file_generation::{
     GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
-    GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
+    GenerateRustFilesReturnDto, FillRustFilesDto, FillRustFilesReturnDto,
     rust_file_generation_controller,
 };
 
 /// List rust files to be generated
-pub fn list_rust_files(
+pub fn fill_rust_files(
     ctx: &AppContext,
-    dto: &ListRustFilesDto,
-) -> Result<ListRustFilesReturnDto, String> {
-    rust_file_generation_controller::list_rust_files(&ctx.db_context, &ctx.event_hub, dto)
+    dto: &FillRustFilesDto,
+) -> Result<FillRustFilesReturnDto, String> {
+    rust_file_generation_controller::fill_rust_files(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error while listing rust files: {:?}", e))
 }
 

@@ -4,28 +4,28 @@ use crate::use_cases::generate_rust_code_uc::GenerateRustCodeUseCase;
 use crate::use_cases::generate_rust_files_uc::GenerateRustFilesUseCase;
 use crate::{
     GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
-    GenerateRustFilesReturnDto, ListRustFilesDto, ListRustFilesReturnDto,
-    units_of_work::list_files_uow::ListRustFilesUnitOfWorkFactory,
-    use_cases::list_rust_files_uc::ListRustFilesUseCase,
+    GenerateRustFilesReturnDto, FillRustFilesDto, FillRustFilesReturnDto,
+    units_of_work::list_files_uow::FillRustFilesUnitOfWorkFactory,
+    use_cases::fill_rust_files_uc::FillRustFilesUseCase,
 };
 use anyhow::Result;
-use common::event::RustFileGenerationEvent::ListRustFiles;
+use common::event::RustFileGenerationEvent::FillRustFiles;
 use common::event::{Event, Origin};
 use common::long_operation::{LongOperationManager, OperationProgress};
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
-pub fn list_rust_files(
+pub fn fill_rust_files(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
-    dto: &ListRustFilesDto,
-) -> Result<ListRustFilesReturnDto> {
-    let uow_context = ListRustFilesUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = ListRustFilesUseCase::new(Box::new(uow_context));
+    dto: &FillRustFilesDto,
+) -> Result<FillRustFilesReturnDto> {
+    let uow_context = FillRustFilesUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = FillRustFilesUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::RustFileGeneration(ListRustFiles),
+        origin: Origin::RustFileGeneration(FillRustFiles),
         ids: vec![],
         data: None,
     });
@@ -87,12 +87,12 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_list_rust_files() {
+    fn test_fill_rust_files() {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());
-        let load_dto = ListRustFilesDto {
+        let load_dto = FillRustFilesDto {
             only_list_already_existing: false,
         };
-        list_rust_files(&db_context, &event_hub, &load_dto).unwrap();
+        fill_rust_files(&db_context, &event_hub, &load_dto).unwrap();
     }
 }

@@ -419,7 +419,7 @@ features:
         type: string
 - name: rust_file_generation
   use_cases:
-  - name: list_rust_files
+  - name: fill_rust_files
     validator: true
     entities:
     - Root
@@ -431,12 +431,12 @@ features:
     - Relationship
     undoable: false
     dto_in:
-      name: ListRustFilesDto
+      name: FillRustFilesDto
       fields:
       - name: only_list_already_existing
         type: boolean
     dto_out:
-      name: ListRustFilesReturnDto
+      name: FillRustFilesReturnDto
       fields:
       - name: file_ids
         type: uinteger
@@ -509,7 +509,7 @@ features:
         type: string
 - name: cpp_qt_file_generation
   use_cases:
-  - name: list_cpp_qt_files
+  - name: fill_cpp_qt_files
     validator: true
     entities:
     - Root
@@ -521,12 +521,12 @@ features:
     - Relationship
     undoable: false
     dto_in:
-      name: ListCppQtFilesDto
+      name: FillCppQtFilesDto
       fields:
       - name: only_list_already_existing
         type: boolean
     dto_out:
-      name: ListCppQtFilesReturnDto
+      name: FillCppQtFilesReturnDto
       fields:
       - name: file_ids
         type: uinteger

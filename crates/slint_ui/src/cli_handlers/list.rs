@@ -47,11 +47,11 @@ fn list_files(
 
     match target_language {
         TargetLanguage::Rust => {
-            let dto = rust_file_generation::ListRustFilesDto {
+            let dto = rust_file_generation::FillRustFilesDto {
                 only_list_already_existing: args.existing_only,
             };
 
-            let result = rust_file_generation_controller::list_rust_files(
+            let result = rust_file_generation_controller::fill_rust_files(
                 &app_context.db_context,
                 &app_context.event_hub,
                 &dto,
@@ -80,11 +80,11 @@ fn list_files(
         }
 
         TargetLanguage::CppQt => {
-            let dto = cpp_qt_file_generation::ListCppQtFilesDto {
+            let dto = cpp_qt_file_generation::FillCppQtFilesDto {
                 only_list_already_existing: args.existing_only,
             };
 
-            let result = cpp_qt_file_generation_controller::list_cpp_qt_files(
+            let result = cpp_qt_file_generation_controller::fill_cpp_qt_files(
                 &app_context.db_context,
                 &app_context.event_hub,
                 &dto,

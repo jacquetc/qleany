@@ -4,28 +4,28 @@ use crate::use_cases::generate_cpp_qt_code_uc::GenerateCppQtCodeUseCase;
 use crate::use_cases::generate_cpp_qt_files_uc::GenerateCppQtFilesUseCase;
 use crate::{
     GenerateCppQtCodeDto, GenerateCppQtCodeReturnDto, GenerateCppQtFilesDto,
-    GenerateCppQtFilesReturnDto, ListCppQtFilesDto, ListCppQtFilesReturnDto,
-    units_of_work::list_files_uow::ListCppQtFilesUnitOfWorkFactory,
-    use_cases::list_cpp_qt_files_uc::ListCppQtFilesUseCase,
+    GenerateCppQtFilesReturnDto, FillCppQtFilesDto, FillCppQtFilesReturnDto,
+    units_of_work::list_files_uow::FillCppQtFilesUnitOfWorkFactory,
+    use_cases::fill_cpp_qt_files_uc::FillCppQtFilesUseCase,
 };
 use anyhow::Result;
-use common::event::CppQtFileGenerationEvent::ListCppQtFiles;
+use common::event::CppQtFileGenerationEvent::FillCppQtFiles;
 use common::event::{Event, Origin};
 use common::long_operation::{LongOperationManager, OperationProgress};
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
-pub fn list_cpp_qt_files(
+pub fn fill_cpp_qt_files(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
-    dto: &ListCppQtFilesDto,
-) -> Result<ListCppQtFilesReturnDto> {
-    let uow_context = ListCppQtFilesUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = ListCppQtFilesUseCase::new(Box::new(uow_context));
+    dto: &FillCppQtFilesDto,
+) -> Result<FillCppQtFilesReturnDto> {
+    let uow_context = FillCppQtFilesUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = FillCppQtFilesUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::CppQtFileGeneration(ListCppQtFiles),
+        origin: Origin::CppQtFileGeneration(FillCppQtFiles),
         ids: vec![],
         data: None,
     });
@@ -87,12 +87,12 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_list_cpp_qt_files() {
+    fn test_fill_cpp_qt_files() {
         let db_context = DbContext::new().unwrap();
         let event_hub = Arc::new(EventHub::new());
-        let load_dto = ListCppQtFilesDto {
+        let load_dto = FillCppQtFilesDto {
             only_list_already_existing: false,
         };
-        list_cpp_qt_files(&db_context, &event_hub, &load_dto).unwrap();
+        fill_cpp_qt_files(&db_context, &event_hub, &load_dto).unwrap();
     }
 }

@@ -75,14 +75,14 @@ pub enum HandlingManifestEvent {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum RustFileGenerationEvent {
-    ListRustFiles,
+    FillRustFiles,
     GenerateRustCode,
     GenerateRustFiles,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum CppQtFileGenerationEvent {
-    ListCppQtFiles,
+    FillCppQtFiles,
     GenerateCppQtCode,
     GenerateCppQtFiles,
 }

@@ -2,12 +2,12 @@ use common::types::EntityId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ListRustFilesDto {
+pub struct FillRustFilesDto {
     pub only_list_already_existing: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ListRustFilesReturnDto {
+pub struct FillRustFilesReturnDto {
     pub file_ids: Vec<EntityId>,
     pub file_names: Vec<String>,
     pub file_groups: Vec<String>,

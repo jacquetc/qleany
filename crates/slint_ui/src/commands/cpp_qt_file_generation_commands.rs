@@ -4,16 +4,16 @@ use crate::app_context::AppContext;
 use common::long_operation::OperationProgress;
 use cpp_qt_file_generation::{
     GenerateCppQtCodeDto, GenerateCppQtCodeReturnDto, GenerateCppQtFilesDto,
-    GenerateCppQtFilesReturnDto, ListCppQtFilesDto, ListCppQtFilesReturnDto,
+    GenerateCppQtFilesReturnDto, FillCppQtFilesDto, FillCppQtFilesReturnDto,
     cpp_qt_file_generation_controller,
 };
 
 /// List c++/qt files to be generated
-pub fn list_cpp_qt_files(
+pub fn fill_cpp_qt_files(
     ctx: &AppContext,
-    dto: &ListCppQtFilesDto,
-) -> Result<ListCppQtFilesReturnDto, String> {
-    cpp_qt_file_generation_controller::list_cpp_qt_files(&ctx.db_context, &ctx.event_hub, dto)
+    dto: &FillCppQtFilesDto,
+) -> Result<FillCppQtFilesReturnDto, String> {
+    cpp_qt_file_generation_controller::fill_cpp_qt_files(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error while listing c++/qt files: {:?}", e))
 }
 

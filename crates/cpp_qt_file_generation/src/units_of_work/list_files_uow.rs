@@ -1,5 +1,5 @@
-use crate::use_cases::list_cpp_qt_files_uc::{
-    ListCppQtFilesUnitOfWorkFactoryTrait, ListCppQtFilesUnitOfWorkTrait,
+use crate::use_cases::fill_cpp_qt_files_uc::{
+    FillCppQtFilesUnitOfWorkFactoryTrait, FillCppQtFilesUnitOfWorkTrait,
 };
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
@@ -18,17 +18,17 @@ use common::types;
 use common::types::EntityId;
 use std::sync::Arc;
 
-// Unit of work for ListCppQtFiles
+// Unit of work for FillCppQtFiles
 
-pub struct ListCppQtFilesUnitOfWork {
+pub struct FillCppQtFilesUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
     event_hub: Arc<EventHub>,
 }
 
-impl ListCppQtFilesUnitOfWork {
+impl FillCppQtFilesUnitOfWork {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        ListCppQtFilesUnitOfWork {
+        FillCppQtFilesUnitOfWork {
             context: db_context.clone(),
             transaction: None,
             event_hub: event_hub.clone(),
@@ -36,7 +36,7 @@ impl ListCppQtFilesUnitOfWork {
     }
 }
 
-impl CommandUnitOfWork for ListCppQtFilesUnitOfWork {
+impl CommandUnitOfWork for FillCppQtFilesUnitOfWork {
     fn begin_transaction(&mut self) -> Result<()> {
         self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
         Ok(())
@@ -90,25 +90,25 @@ impl CommandUnitOfWork for ListCppQtFilesUnitOfWork {
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-impl ListCppQtFilesUnitOfWorkTrait for ListCppQtFilesUnitOfWork {}
+impl FillCppQtFilesUnitOfWorkTrait for FillCppQtFilesUnitOfWork {}
 
-pub struct ListCppQtFilesUnitOfWorkFactory {
+pub struct FillCppQtFilesUnitOfWorkFactory {
     context: DbContext,
     event_hub: Arc<EventHub>,
 }
 
-impl ListCppQtFilesUnitOfWorkFactory {
+impl FillCppQtFilesUnitOfWorkFactory {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        ListCppQtFilesUnitOfWorkFactory {
+        FillCppQtFilesUnitOfWorkFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),
         }
     }
 }
 
-impl ListCppQtFilesUnitOfWorkFactoryTrait for ListCppQtFilesUnitOfWorkFactory {
-    fn create(&self) -> Box<dyn ListCppQtFilesUnitOfWorkTrait> {
-        Box::new(ListCppQtFilesUnitOfWork::new(
+impl FillCppQtFilesUnitOfWorkFactoryTrait for FillCppQtFilesUnitOfWorkFactory {
+    fn create(&self) -> Box<dyn FillCppQtFilesUnitOfWorkTrait> {
+        Box::new(FillCppQtFilesUnitOfWork::new(
             &self.context,
             &self.event_hub,
         ))
