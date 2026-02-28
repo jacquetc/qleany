@@ -87,7 +87,7 @@ jobs:
             fi
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.target }}
           path: dist
@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Download all wheels
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           merge-multiple: true
