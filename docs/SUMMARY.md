@@ -20,6 +20,7 @@
 - [Generated Code — Rust](generated-code-rust.md)
 - [Generated Code — C++/Qt](generated-code-cpp-qt.md)
 - [QML Integration](qml-integration.md)
+- [Migration Guide](migration-guide.md)
 - [Troubleshooting](troubleshooting.md)
 
 # Project
