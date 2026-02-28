@@ -48,6 +48,9 @@ pub enum Commands {
 
     /// Embedded documentation
     Docs(DocsArgs),
+
+    /// Upgrade manifest to the latest schema version
+    Upgrade,
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -350,6 +353,10 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
             cli_handlers::export::execute(app_context, &path, &args, &output)
         }
         Commands::Docs(args) => cli_handlers::docs::execute(app_context, &args, &output),
+        Commands::Upgrade => {
+            let path = manifest_path.expect("Upgrade requires a manifest");
+            cli_handlers::upgrade::execute(app_context, &path, &output)
+        }
     };
 
     if let Err(e) = result {
