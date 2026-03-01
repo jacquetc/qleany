@@ -1148,8 +1148,8 @@ impl SnapshotBuilder {
 
 #[cfg(test)]
 mod tests {
-    use common::entities::FileStatus;
     use super::*;
+    use common::entities::FileStatus;
 
     #[test]
     fn test_root_cargo_tera_template() {

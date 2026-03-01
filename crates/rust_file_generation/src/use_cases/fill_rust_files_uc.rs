@@ -4,8 +4,8 @@ use anyhow::Result;
 use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
-use common::entities::{Entity, FileStatus};
 use common::entities::UserInterface;
+use common::entities::{Entity, FileStatus};
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork, entities::Feature, entities::File, entities::Global,
@@ -469,10 +469,10 @@ impl FillRustFilesUseCase {
             // for crates/direct_access/src/
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: format!("{}/direct_access/src/", prefix),
                 group: "entities".to_string(),
                 template_name: "entity_mod".to_string(),
@@ -491,10 +491,10 @@ impl FillRustFilesUseCase {
             );
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "dtos.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "dtos.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_dtos".to_string(),
@@ -507,10 +507,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "use_cases.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "use_cases.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_use_cases_mod".to_string(),
@@ -523,10 +523,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "units_of_work.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "units_of_work.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_units_of_work".to_string(),
@@ -539,10 +539,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_controller".to_string(),
@@ -563,10 +563,10 @@ impl FillRustFilesUseCase {
             );
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("get_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("get_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_get_use_case".to_string(),
@@ -579,10 +579,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("get_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("get_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_get_multi_use_case".to_string(),
@@ -596,10 +596,10 @@ impl FillRustFilesUseCase {
 
             // create_orphans use cases (always generated)
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("create_orphans_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("create_orphans_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_create_orphans_use_case".to_string(),
@@ -612,10 +612,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!(
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!(
                     "create_orphans_{}_multi_uc.rs",
                     heck::AsSnakeCase(&entity.name)
                 ),
@@ -631,10 +631,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_update_multi_use_case".to_string(),
@@ -647,10 +647,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("update_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("update_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_update_use_case".to_string(),
@@ -663,10 +663,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("remove_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("remove_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_remove_multi_use_case".to_string(),
@@ -679,10 +679,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("remove_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("remove_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
                 template_name: "entity_remove_use_case".to_string(),
@@ -710,10 +710,10 @@ impl FillRustFilesUseCase {
 
             if has_forward_relationship {
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
                     template_name: "entity_get_relationship_use_case".to_string(),
@@ -726,10 +726,10 @@ impl FillRustFilesUseCase {
                 });
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
                     template_name: "entity_set_relationship_use_case".to_string(),
@@ -745,8 +745,7 @@ impl FillRustFilesUseCase {
             // create use cases with owner (only for owned entities)
             let has_owner = relationships.iter().any(|r| {
                 if let Some(r) = r {
-                    r.right_entity == entity.id
-                        && r.strength == common::entities::Strength::Strong
+                    r.right_entity == entity.id && r.strength == common::entities::Strength::Strong
                 } else {
                     false
                 }
@@ -754,10 +753,10 @@ impl FillRustFilesUseCase {
 
             if has_owner {
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
                     template_name: "entity_create_use_case".to_string(),
@@ -770,13 +769,10 @@ impl FillRustFilesUseCase {
                 });
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!(
-                        "create_{}_multi_uc.rs",
-                        heck::AsSnakeCase(&entity.name)
-                    ),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "entities".to_string(),
                     template_name: "entity_create_multi_use_case".to_string(),
@@ -793,10 +789,10 @@ impl FillRustFilesUseCase {
             let relative_path = format!("{}/common/src/direct_access/", prefix);
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: relative_path.to_string(),
                 group: "entities".to_string(),
                 template_name: "common_entity_mod".to_string(),
@@ -809,10 +805,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_repository.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}_repository.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
                 group: "entities".to_string(),
                 template_name: "common_entity_repository".to_string(),
@@ -825,10 +821,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_table.rs", heck::AsSnakeCase(&entity.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}_table.rs", heck::AsSnakeCase(&entity.name)),
                 relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
                 group: "entities".to_string(),
                 template_name: "common_entity_table".to_string(),
@@ -853,10 +849,10 @@ impl FillRustFilesUseCase {
             let relative_path = format!("{}/{}/", prefix, heck::AsSnakeCase(&feature.name));
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "Cargo.toml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_cargo".to_string(),
@@ -871,10 +867,10 @@ impl FillRustFilesUseCase {
             let relative_path = format!("{}/{}/src/", prefix, heck::AsSnakeCase(&feature.name));
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "lib.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "lib.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_lib".to_string(),
@@ -887,10 +883,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "use_cases.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "use_cases.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_use_cases_mod".to_string(),
@@ -903,10 +899,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "dtos.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "dtos.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_dtos".to_string(),
@@ -919,10 +915,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "units_of_work.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "units_of_work.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_units_of_work_mod".to_string(),
@@ -935,10 +931,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_controller.rs", heck::AsSnakeCase(&feature.name)),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("{}_controller.rs", heck::AsSnakeCase(&feature.name)),
                 relative_path: relative_path.clone(),
                 group: "features".to_string(),
                 template_name: "feature_controller".to_string(),
@@ -965,10 +961,10 @@ impl FillRustFilesUseCase {
                 let use_case = use_case.clone().ok_or(anyhow!("Use case not found"))?;
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_uc.rs", heck::AsSnakeCase(&use_case.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_uc.rs", heck::AsSnakeCase(&use_case.name)),
                     relative_path: relative_path.clone(),
                     group: "features".to_string(),
                     template_name: "feature_use_case".to_string(),
@@ -992,10 +988,10 @@ impl FillRustFilesUseCase {
                 let use_case = use_case.ok_or(anyhow!("Use case not found"))?;
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_uow.rs", heck::AsSnakeCase(&use_case.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_uow.rs", heck::AsSnakeCase(&use_case.name)),
                     relative_path: relative_path.clone(),
                     group: "features".to_string(),
                     template_name: "feature_use_case_uow".to_string(),
@@ -1061,10 +1057,10 @@ impl FillRustFilesUseCase {
 
         if ui.rust_cli {
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "Cargo.toml".to_string(),
                 relative_path: format!("{}/cli/", prefix),
                 group: "cli".to_string(),
                 template_name: "cli_cargo".to_string(),
@@ -1077,10 +1073,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "main.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "main.rs".to_string(),
                 relative_path: format!("{}/cli/src/", prefix),
                 group: "cli".to_string(),
                 template_name: "cli_main".to_string(),
@@ -1095,10 +1091,10 @@ impl FillRustFilesUseCase {
 
         if ui.rust_slint {
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "Cargo.toml".to_string(),
                 relative_path: format!("{}/slint_ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_cargo".to_string(),
@@ -1111,10 +1107,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "build.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "build.rs".to_string(),
                 relative_path: format!("{}/slint_ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_build".to_string(),
@@ -1129,10 +1125,10 @@ impl FillRustFilesUseCase {
             let relative_path = format!("{}/slint_ui/src/", prefix);
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "main.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "main.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_main".to_string(),
@@ -1145,10 +1141,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "app_context.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "app_context.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_app_context".to_string(),
@@ -1161,10 +1157,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "event_hub_client.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "event_hub_client.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_event_hub_client".to_string(),
@@ -1177,10 +1173,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "app.slint".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "app.slint".to_string(),
                 relative_path: format!("{}/slint_ui/ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_app".to_string(),
@@ -1193,10 +1189,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "globals.slint".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "globals.slint".to_string(),
                 relative_path: format!("{}/slint_ui/ui/", prefix),
                 group: "slint".to_string(),
                 template_name: "slint_globals".to_string(),
@@ -1209,10 +1205,10 @@ impl FillRustFilesUseCase {
             });
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "commands.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "commands.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_commands_mod".to_string(),
@@ -1228,10 +1224,10 @@ impl FillRustFilesUseCase {
             let relative_path = format!("{}/slint_ui/src/commands/", prefix);
 
             files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_commands.rs".to_string(),
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "undo_redo_commands.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "slint".to_string(),
                 template_name: "slint_undo_redo_commands".to_string(),
@@ -1250,10 +1246,10 @@ impl FillRustFilesUseCase {
                 }
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
                     relative_path: relative_path.clone(),
                     group: "slint".to_string(),
                     template_name: "slint_entity_commands".to_string(),
@@ -1270,10 +1266,10 @@ impl FillRustFilesUseCase {
                 let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
 
                 files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
                     relative_path: relative_path.clone(),
                     group: "slint".to_string(),
                     template_name: "slint_feature_commands".to_string(),

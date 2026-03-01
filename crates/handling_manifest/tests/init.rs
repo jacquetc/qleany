@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use anyhow::Result;
 use common::database::CommandUnitOfWork;
 use common::database::db_context::DbContext;
@@ -7,6 +6,7 @@ use common::entities::{Root, System};
 use common::event::HandlingAppLifecycleEvent::InitializeApp;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;
+use std::cell::RefCell;
 use std::sync::Arc;
 // Unit of work for InitializeApp
 

@@ -351,9 +351,7 @@ impl SnapshotBuilder {
                     FieldType::Integer | FieldType::UInteger | FieldType::Entity => "0",
                     FieldType::Float => "0.0",
                     FieldType::DateTime => "\"2026-01-01T00:00:00Z\"",
-                        FieldType::String
-                    | FieldType::Uuid
-                    | FieldType::Enum => "\"\"",
+                    FieldType::String | FieldType::Uuid | FieldType::Enum => "\"\"",
                 }
                 .to_string()
             };
@@ -375,9 +373,10 @@ impl SnapshotBuilder {
                 qml_base_type,
                 qml_type,
                 qml_default_init,
-                list_model_display_field_camel_name: f.list_model_displayed_field.as_ref().map(|field_name| {
-                    heck::AsLowerCamelCase(field_name).to_string()
-                }),
+                list_model_display_field_camel_name: f
+                    .list_model_displayed_field
+                    .as_ref()
+                    .map(|field_name| heck::AsLowerCamelCase(field_name).to_string()),
             });
         }
 
@@ -573,9 +572,7 @@ impl SnapshotBuilder {
                 DtoFieldType::Integer | DtoFieldType::UInteger => "0",
                 DtoFieldType::Float => "0.0",
                 DtoFieldType::DateTime => "\"2026-01-01T00:00:00Z\"",
-                DtoFieldType::String
-                | DtoFieldType::Uuid
-                | DtoFieldType::Enum => "\"\"",
+                DtoFieldType::String | DtoFieldType::Uuid | DtoFieldType::Enum => "\"\"",
             }
             .to_string()
         }
@@ -1346,8 +1343,8 @@ impl SnapshotBuilder {
 
 #[cfg(test)]
 mod tests {
-    use common::entities::FileStatus;
     use super::*;
+    use common::entities::FileStatus;
 
     #[test]
     fn test_root_cargo_tera_template() {

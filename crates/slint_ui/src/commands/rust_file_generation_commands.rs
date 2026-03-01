@@ -3,9 +3,8 @@
 use crate::app_context::AppContext;
 use common::long_operation::OperationProgress;
 use rust_file_generation::{
-    GenerateRustCodeDto, GenerateRustCodeReturnDto, GenerateRustFilesDto,
-    GenerateRustFilesReturnDto, FillRustFilesDto, FillRustFilesReturnDto,
-    rust_file_generation_controller,
+    FillRustFilesDto, FillRustFilesReturnDto, GenerateRustCodeDto, GenerateRustCodeReturnDto,
+    GenerateRustFilesDto, GenerateRustFilesReturnDto, rust_file_generation_controller,
 };
 
 /// List rust files to be generated

@@ -174,7 +174,7 @@ impl LoadUseCase {
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
                 single_model: model_entity.single_model.unwrap_or_default(),
-                inherits_from: None, // will be filled in later
+                inherits_from: None,   // will be filled in later
                 fields: vec![],        // will be filled in later
                 relationships: vec![], // will be filled in later
                 undoable: model_entity.undoable,

@@ -6,7 +6,9 @@ use super::{
     DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, UseCaseVM,
     UserInterfaceVM, get_cpp_qt_tera,
 };
-use common::entities::{Entity, Field, FieldType, File, FileStatus, Global, Relationship, UserInterface};
+use common::entities::{
+    Entity, Field, FieldType, File, FileStatus, Global, Relationship, UserInterface,
+};
 use indexmap::IndexMap;
 use tera::Context;
 

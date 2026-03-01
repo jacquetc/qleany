@@ -5,7 +5,7 @@ use crate::use_cases::close_uc::{CloseUnitOfWorkFactoryTrait, CloseUnitOfWorkTra
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{Workspace};
+use common::entities::Workspace;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;
 use common::types::EntityId;

@@ -19,8 +19,8 @@ use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use common::long_operation::OperationProgress;
 use common::types::EntityId;
-use cpp_qt_file_generation::{GenerateCppQtFilesDto, FillCppQtFilesDto};
-use rust_file_generation::{GenerateRustCodeDto, GenerateRustFilesDto, FillRustFilesDto};
+use cpp_qt_file_generation::{FillCppQtFilesDto, GenerateCppQtFilesDto};
+use rust_file_generation::{FillRustFilesDto, GenerateRustCodeDto, GenerateRustFilesDto};
 use slint::Timer;
 
 /// Internal state for tracking file data
@@ -510,9 +510,7 @@ fn setup_list_files_callback(app: &App, app_context: &Arc<AppContext>) {
         move || {
             log::info!("List Files clicked");
             if let Some(app) = app_weak.upgrade() {
-
                 refresh_file_lists(&app, &ctx);
-
             }
         }
     });
@@ -785,8 +783,6 @@ fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 // Use filter_files_by_group to update all models
                 filter_files_by_group(&app, &ctx, group_id);
-
-                
             }
         }
     });

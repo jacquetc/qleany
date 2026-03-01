@@ -291,7 +291,7 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
         }
 
         // Snapshot forward junction tables
-let mut forward_junctions = Vec::new();
+        let mut forward_junctions = Vec::new();
 
         {
             let junction_table = self
@@ -310,7 +310,7 @@ let mut forward_junctions = Vec::new();
         }
 
         // Snapshot backward junction tables (entries that reference any of the given ids)
-let mut backward_junctions = Vec::new();
+        let mut backward_junctions = Vec::new();
 
         {
             let junction_table = self

@@ -209,7 +209,6 @@ pub struct Feature {
     pub use_cases: Vec<EntityId>,
 }
 
-
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum FileStatus {
     #[default]

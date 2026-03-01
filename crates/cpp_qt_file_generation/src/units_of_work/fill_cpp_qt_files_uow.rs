@@ -7,7 +7,9 @@ use crate::use_cases::fill_cpp_qt_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{Entity, Feature, File, Global, Relationship, Root, UseCase, UserInterface, Field};
+use common::entities::{
+    Entity, Feature, Field, File, Global, Relationship, Root, UseCase, UserInterface,
+};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;
 use common::types::EntityId;

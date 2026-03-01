@@ -1,6 +1,6 @@
+use crate::use_cases::common::CURRENT_SCHEMA_VERSION;
 use anyhow::{Result, anyhow};
 use serde_json::Value;
-use crate::use_cases::common::CURRENT_SCHEMA_VERSION;
 
 /// Migrate a manifest JSON value to the current schema version.
 /// Operates on raw `serde_json::Value` before schema validation.
@@ -68,7 +68,6 @@ fn migrate_v3_to_v4(value: &mut Value) {
         schema.insert("version".to_string(), Value::Number(4.into()));
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -171,6 +170,11 @@ mod tests {
 
         let result = migrate_to_current(&mut value);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("newer than supported"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("newer than supported")
+        );
     }
 }

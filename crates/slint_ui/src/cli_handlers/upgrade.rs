@@ -17,22 +17,14 @@ pub fn execute(
         manifest_path: manifest_path.to_string_lossy().to_string(),
     };
 
-    handling_manifest_controller::load(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &load_dto,
-    )?;
+    handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
 
     // Save back with current schema version
     let save_dto = handling_manifest::SaveDto {
         manifest_path: manifest_path.to_string_lossy().to_string(),
     };
 
-    handling_manifest_controller::save(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &save_dto,
-    )?;
+    handling_manifest_controller::save(&app_context.db_context, &app_context.event_hub, &save_dto)?;
 
     output.success(&format!("Upgraded {}", manifest_path.display()));
 

@@ -376,7 +376,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         }
 
         // Snapshot forward junction tables
-let mut forward_junctions = Vec::new();
+        let mut forward_junctions = Vec::new();
 
         {
             let junction_table = self
@@ -410,7 +410,7 @@ let mut forward_junctions = Vec::new();
         }
 
         // Snapshot backward junction tables (entries that reference any of the given ids)
-let backward_junctions = Vec::new();
+        let backward_junctions = Vec::new();
 
         Ok(TableLevelSnapshot {
             entity_rows: TableSnapshot {

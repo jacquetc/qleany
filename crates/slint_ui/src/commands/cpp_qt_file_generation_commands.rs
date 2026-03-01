@@ -3,9 +3,8 @@
 use crate::app_context::AppContext;
 use common::long_operation::OperationProgress;
 use cpp_qt_file_generation::{
-    GenerateCppQtCodeDto, GenerateCppQtCodeReturnDto, GenerateCppQtFilesDto,
-    GenerateCppQtFilesReturnDto, FillCppQtFilesDto, FillCppQtFilesReturnDto,
-    cpp_qt_file_generation_controller,
+    FillCppQtFilesDto, FillCppQtFilesReturnDto, GenerateCppQtCodeDto, GenerateCppQtCodeReturnDto,
+    GenerateCppQtFilesDto, GenerateCppQtFilesReturnDto, cpp_qt_file_generation_controller,
 };
 
 /// List c++/qt files to be generated

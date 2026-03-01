@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use crate::SaveDto;
+use crate::use_cases::common::CURRENT_SCHEMA_VERSION;
 use crate::use_cases::common::model_structs;
 use anyhow::Result;
 use common::database::CommandUnitOfWork;
@@ -9,7 +10,6 @@ use common::entities::{
     Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root, UseCase, Workspace,
 };
 use common::types::EntityId;
-use crate::use_cases::common::CURRENT_SCHEMA_VERSION;
 
 pub trait SaveUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn SaveUnitOfWorkTrait>;
@@ -345,7 +345,9 @@ impl SaveUseCase {
 
         // Create the manifest
         let manifest = model_structs::Manifest {
-            schema: model_structs::Schema { version: i32::try_from(CURRENT_SCHEMA_VERSION)? },
+            schema: model_structs::Schema {
+                version: i32::try_from(CURRENT_SCHEMA_VERSION)?,
+            },
             global: model_global,
             entities: model_entities,
             features: model_features,
