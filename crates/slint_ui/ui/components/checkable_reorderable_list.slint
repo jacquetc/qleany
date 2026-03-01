@@ -1,38 +1,38 @@
 import { VerticalBox, HorizontalBox, ScrollView, Button, CheckBox } from "std-widgets.slint";
-import { StyledButton } from "misc.slint";
 
 // Reusable checkable reorderable list component
 //
 // API
 // - ListItem: struct describing one row (id:int, text:string, subtitle:string, checked:bool)
-// - ReorderableList: embeddable component that shows a draggable list
+// - CheckableReorderableList: embeddable component that shows a draggable list
 //
 // Properties:
-//   • in-out property <[ListItem]> items – bind/provide your model here
-//   • in-out property <bool> reorderable – enable/disable drag reordering (default: true)
-//   • in-out property <bool> enable-delete – show delete option in context menu (default: false)
-//   • in-out property <bool> enable-checkbox – show checkboxes on items (default: false)
-//   • in-out property <int> selected-id – currently selected item id (default: -1)
-//   • in-out property <int> max-text-length – maximum text length before left elide (default: 50)
-//   • in-out property <[string]> elided-texts – pre-computed elided texts (parallel array to items)
+//   - in-out property <[ListItem]> items -- bind/provide your model here
+//   - in-out property <bool> reorderable -- enable/disable drag reordering (default: true)
+//   - in-out property <bool> enable-delete -- show delete option in context menu (default: false)
+//   - in-out property <bool> enable-checkbox -- show checkboxes on items (default: false)
+//   - in-out property <int> selected-id -- currently selected item id (default: -1)
+//   - in-out property <int> max-text-length -- maximum text length before left elide (default: 50)
+//   - in-out property <[string]> elided-texts -- pre-computed elided texts (parallel array to items)
 //     When a text exceeds max-text-length, populate this array with "...{suffix}" versions
 //
 // Styling Properties:
-//   • in property <length> item-height – height of each list item (default: 60px)
-//   • in property <brush> item-background – background color of list items (default: white)
-//   • in property <brush> accent-color – primary/highlight color (default: #2196f3)
-//   • in property <brush> item-border-color – border color of list items (default: #e0e0e0)
-//   • in property <brush> text-color – main text color (default: #212121)
-//   • in property <brush> subtitle-color – subtitle text color (default: #21212180)
-//   • in property <brush> container-background – background of the list container (default: white)
+//   - in property <length> item-height -- height of each list item (default: 50px)
+//   - in property <brush> item-background -- background color of list items (default: white)
+//   - in property <brush> accent-color -- primary/highlight color (default: #2196f3)
+//   - in property <brush> highlight-color -- highlight for selection and drop targets (default: #e3f2fd)
+//   - in property <brush> item-border-color -- border color of list items (default: #e0e0e0)
+//   - in property <brush> text-color -- main text color (default: #212121)
+//   - in property <brush> subtitle-color -- subtitle text color (default: #21212180)
+//   - in property <brush> container-background -- background of the list container (default: white)
 //
 // Callbacks:
-//   • callback request-reorder(from:int, to:int) – emitted when the user drops
+//   - callback request-reorder(from:int, to:int) -- emitted when the user drops
 //     an item at a new location. Typical usage from Rust is to update your
 //     VecModel accordingly.
-//   • callback request-delete(id:int) – emitted when user requests item deletion
-//   • callback request-check-change(id:int, checked:bool) – emitted when checkbox toggled
-//   • callback selection-changed(id:int) – emitted when user selects a row
+//   - callback request-delete(id:int) -- emitted when user requests item deletion
+//   - callback request-check-change(id:int, checked:bool) -- emitted when checkbox toggled
+//   - callback selection-changed(id:int) -- emitted when user selects a row
 //
 // Notes
 // - The component is file-local and can be compiled/used from any project by
@@ -67,9 +67,6 @@ export struct ListItem {
     checked: bool,
 }
 
-// Utility: array membership test usable in property bindings
-// (No script helpers; keep component simple and bind to parallel models)
-
 component DraggableItem inherits Rectangle {
     in property <int> index;
     in property <ListItem> item;
@@ -79,9 +76,10 @@ component DraggableItem inherits Rectangle {
     in property <brush> theme-background: white;
     in property <brush> theme-border: #e0e0e0;
     in property <brush> theme-primary: #2196f3;
-    in property <brush> theme-highlight: #e3f2fd; // Light background for drop targets
+    in property <brush> theme-highlight: #e3f2fd;
+    in property <brush> theme-selected: #e3f2fd;
     in property <brush> theme-text: #212121;
-    in property <brush> theme-subtitle: #21212180; // Subtitle text color
+    in property <brush> theme-subtitle: #21212180;
     // When true, display the portion after the last "/" in bold
     in property <bool> bold-after-slash: false;
     // Pre-computed text parts for bold display (set by parent)
@@ -99,6 +97,9 @@ component DraggableItem inherits Rectangle {
 
     callback move-item(int); // Request reorder by offset
 
+    // Drag state (declared before first use in handle TouchArea)
+    private property <bool> drag-armed: false;
+
     in property <bool> is-dragging;
     in property <bool> is-drop-target;
     // When true, show a drop indicator on the bottom edge (used for drop-after-last)
@@ -109,34 +110,29 @@ component DraggableItem inherits Rectangle {
     in property <bool> enable-delete: false;
     in property <bool> enable-checkbox: false;
     in property <int> selected-id: -1;
-    // Menu visibility controlled by parent
-    in property <bool> show-menu: false;
     // Callbacks to outer world
     callback request-delete(int);
     callback request-check-change(int, bool);
     callback selection-changed(int);
-    // Control menu state from parent
-    callback open-menu(int);
     // Provide geometry of the menu button so parent can position a centralized popup
     // Parameters: index, id, btn-x, btn-y, btn-w, btn-h
     callback open-menu-geo(int, int, length, length, length, length);
     callback close-menu();
-    
+
     callback drag-started(int);
     callback drag-moved(length);
     // Horizontal drag delta (for natural wobble). Consumers may ignore.
     callback drag-moved-x(length);
     callback drag-ended();
-    
+
     // Accessibility
     accessible-role: list-item;
     accessible-label: item.text;
 
     height: visual-height;
-    // Note: z must be a number literal in this Slint version; keep at default level
     z: 0;
 
-    // Logic for keyboard focus
+    // Keyboard focus
     focus_scope := FocusScope {
         x: 0; y: 0; width: parent.width; height: parent.height;
         enabled: root.interactive;
@@ -156,16 +152,31 @@ component DraggableItem inherits Rectangle {
         }
     }
 
-    // Styling
-    // Note: Assuming colors are solid for simple darkening
-    background: is-drop-target ? theme-highlight : (touch.pressed ? theme-background.darker(0.1) : (touch.has-hover ? theme-background.darker(0.05) : theme-background));
+    // Styling: selected items get a highlight background
+    background: is-drop-target ? theme-highlight
+        : (selected-id == item.id && !is-dragging) ? theme-selected
+        : (touch.pressed ? theme-background.darker(0.1)
+        : (touch.has-hover ? theme-background.darker(0.05)
+        : theme-background));
     border-radius: 4px;
     border-width: focus_scope.has-focus ? 2px : 1px;
-    border-color: focus_scope.has-focus ? theme-primary : (is-drop-target ? theme-primary : theme-border);
+    border-color: focus_scope.has-focus ? theme-primary
+        : (is-drop-target ? theme-primary
+        : (selected-id == item.id && !is-dragging ? theme-primary : theme-border));
     // Add elevation while dragging for visual clarity
     drop-shadow-blur: is-dragging ? 8px : 0px;
     drop-shadow-color: #00000026;
-    
+
+    // Selected item accent bar on the left edge
+    if selected-id == item.id && !is-dragging: Rectangle {
+        x: 0;
+        y: 2px;
+        width: 3px;
+        height: parent.height - 4px;
+        background: theme-primary;
+        border-radius: 2px;
+    }
+
     // Drop indicator line at top
     if is-drop-target: Rectangle {
         y: -2px;
@@ -182,7 +193,7 @@ component DraggableItem inherits Rectangle {
         background: theme-primary;
         border-radius: 2px;
     }
-    
+
     // Content row
     HorizontalBox {
         padding: 2px;
@@ -218,22 +229,13 @@ component DraggableItem inherits Rectangle {
                     if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
                         drag-armed = true;
                         drag-started(index);
-                        return true;
-                    } else if (event.kind == PointerEventKind.move) {
-                        // Continue dragging even if the pointer leaves the handle bounds.
-                        if (drag-armed) {
-                            drag-moved(self.mouse-y - self.pressed-y);
-                            drag-moved-x(self.mouse-x - self.pressed-x);
-                            return true;
-                        }
-                    } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left) {
-                        if (drag-armed) {
-                            drag-ended();
-                            drag-armed = false;
-                            return true;
-                        }
+                    } else if (event.kind == PointerEventKind.move && drag-armed) {
+                        drag-moved(self.mouse-y - self.pressed-y);
+                        drag-moved-x(self.mouse-x - self.pressed-x);
+                    } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && drag-armed) {
+                        drag-ended();
+                        drag-armed = false;
                     }
-                    return false;
                 }
             }
         }
@@ -282,58 +284,65 @@ component DraggableItem inherits Rectangle {
         // Spacer to push text to far left
         if !text-align-right: Rectangle { background: transparent; horizontal-stretch: 1; }
 
-        // Spacer to push menu button to far right
+        // Spacer to push menu button to far right (needed for text-align-right + enable-delete)
         if enable-delete: Rectangle { background: transparent; horizontal-stretch: 1; }
 
-        // Context menu button (visible when hovered or selected)
-        menu_btn := StyledButton {
-            width: 40px;
-            flat: true;
-            visible: enable-delete && (touch.has-hover || (selected-id == item.id));
-            text: "⋯";
-            clicked => {
-                if (show-menu) { close-menu(); }
-                else { open-menu-geo(index, item.id, self.x, self.y, self.width, self.height); }
+        // Context menu button. Uses a custom Rectangle+TouchArea instead of StyledButton
+        // to avoid hover flickering: StyledButton's internal TouchArea steals hover from
+        // the row's touch area, toggling visible on/off in a loop. By using opacity (not
+        // visible) and tracking btn_touch.has-hover separately, the button stays in layout
+        // and the flicker loop is broken.
+        btn_container := Rectangle {
+            width: 36px;
+            // Always present in layout when delete is enabled (stable text positioning)
+            visible: enable-delete;
+            background: btn_touch.has-hover ? theme-border : transparent;
+            border-radius: 4px;
+            // Show only when the row is hovered (not on selection)
+            opacity: touch.has-hover || btn_touch.has-hover ? 1.0 : 0.0;
+
+            btn_touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    open-menu-geo(index, item.id, parent.x, parent.y, parent.width, parent.height);
+                }
+            }
+
+            Text {
+                text: "\u{22EF}";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                font-size: 16px;
+                font-weight: 700;
+                color: theme-text;
             }
         }
     }
 
-    // (Removed per-row popup; centralized popup is rendered by parent)
-    
-    // Place the drag-capturing touch area behind interactive children so
-    // it doesn't block clicks on CheckBox or the menu Button.
-    // Only allow starting a drag from the handle area
-    private property <bool> drag-armed: false;
-
-    // Row-wide touch area for selection (does not start drag)
+    // Row-wide touch area for selection (behind other children via z: -1)
     touch := TouchArea {
         x: 0px; y: 0px; width: parent.width; height: parent.height;
         z: -1;
         mouse-cursor: pointer;
         enabled: interactive;
         pointer-event(event) => {
-            // Selection click when not dragging
             if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && !drag-armed) {
                 close-menu();
                 selection-changed(item.id);
-                // Give focus to the FocusScope so keyboard navigation (Alt+Up/Down) works
                 focus_scope.focus();
-                return true;
             }
-            return false;
         }
     }
-
-    // Note: The handle-only TouchArea is embedded inside the drag_handle to ensure
-    // consistent coordinate space and reliable gesture ownership.
 }
 
 export component CheckableReorderableList inherits Rectangle {
     // Reusable list container.
+    accessible-role: list;
+
     width: 100%;
     height: 100%;
     background: transparent;
-    
+
     // Public API
     in-out property <[ListItem]> items;
     // Optional features
@@ -364,6 +373,7 @@ export component CheckableReorderableList inherits Rectangle {
     in property <length> item-height: 50px;
     in property <brush> item-background: white;
     in property <brush> accent-color: #2196f3;
+    in property <brush> highlight-color: #e3f2fd;
     in property <brush> item-border-color: #e0e0e0;
     in property <brush> text-color: #212121;
     in property <brush> subtitle-color: #21212180; // text-color with ~50% opacity
@@ -385,24 +395,26 @@ export component CheckableReorderableList inherits Rectangle {
     // Store the data of the currently dragged item for the floating preview
     private property <int> dragging-id: -1;
     private property <string> dragging-text: "";
+    private property <string> dragging-subtitle: "";
     // Which item's context menu is open (-1 = none)
     private property <int> open-menu-index: -1;
     private property <int> open-menu-id: -1;
-    // Centralized popup position
-    private property <length> menu-x: 0px;
-    private property <length> menu-y: 0px;
-    private property <length> menu-width: 120px;
+    // Context menu popup position (root-relative coordinates)
+    private property <length> menu-popup-x: 0px;
+    private property <length> menu-popup-y: 0px;
+    private property <length> menu-popup-width: 0px;
     private property <length> menu-height: 32px;
     // Pending selection id for deferred callback (to avoid crash during UI rebuild)
     private property <int> pending-selection-id: -1;
     // Property to control the selection timer
     private property <bool> selection-timer-running: false;
-    
+
     // Emitted when the user requests a reorder. The hosting app should update
     // its data/model accordingly.
     callback request-reorder(int, int);
-    
+
     // Timer to defer selection-changed callback, preventing crash when conditional UI rebuilds
+    // during event processing. This is a known Slint workaround; revisit on Slint upgrades.
     Timer {
         interval: 1ms;
         running: root.selection-timer-running;
@@ -414,41 +426,38 @@ export component CheckableReorderableList inherits Rectangle {
             }
         }
     }
-    
-    // Global background catcher: closes menu when clicking on empty areas
-    TouchArea {
-        x: 0px; y: 0px; width: parent.width; height: parent.height;
-        z: -1;
-        enabled: open-menu-index >= 0;
-        // Only effective where no other controls handle the event (placed before content)
-        clicked => { open-menu-index = -1; }
-    }
 
     VerticalBox {
         padding: 5px;
-        
-        
-        Rectangle {
+
+        container := Rectangle {
             background: root.container-background;
             border-radius: 8px;
             drop-shadow-blur: 4px;
             drop-shadow-color: #0000001a;
             clip: true;
-            
+
+            // Empty state placeholder
+            if items.length == 0: Rectangle {
+                VerticalLayout {
+                    alignment: center;
+                    Text {
+                        text: "No items";
+                        horizontal-alignment: center;
+                        color: root.subtitle-color;
+                        font-size: 14px;
+                    }
+                }
+            }
+
             // Main list container
-            ScrollView {
+            scroll_view := ScrollView {
                 viewport-height: items.length * root.item-height;
                 // Disable ScrollView interaction only while dragging to ensure the
                 // gesture is not stolen when the drag starts. This fixes the
                 // immediate-drag freeze on some platforms.
                 enabled: root.dragging-index < 0;
-                // Catch clicks on list background (areas with no rows)
-                TouchArea {
-                    x: 0px; y: 0px; width: parent.width; height: parent.height;
-                    enabled: root.open-menu-index >= 0;
-                    clicked => { root.open-menu-index = -1; }
-                }
-                
+
                 for item[idx] in items: DraggableItem {
                     // Keep original items at fixed positions; only the floating preview moves.
                     // This avoids feedback loops where changing the component's y would change
@@ -462,6 +471,8 @@ export component CheckableReorderableList inherits Rectangle {
                     visual-height: root.item-height - 4px;
                     theme-background: root.item-background;
                     theme-primary: root.accent-color;
+                    theme-highlight: root.highlight-color;
+                    theme-selected: root.highlight-color;
                     theme-border: root.item-border-color;
                     theme-text: root.text-color;
                     theme-subtitle: root.subtitle-color;
@@ -491,7 +502,6 @@ export component CheckableReorderableList inherits Rectangle {
                     enable-delete: root.enable-delete;
                     enable-checkbox: root.enable-checkbox;
                     selected-id: root.selected-id;
-                    show-menu: idx == open-menu-index;
                     // Show top indicator when dropping before this item
                     is-drop-target: idx == drop-target-index && !drop-after && idx != dragging-index;
                     // Show bottom indicator when dropping after this item (including the last one)
@@ -516,51 +526,41 @@ export component CheckableReorderableList inherits Rectangle {
                             root.pending-selection-id = -1;
                         }
                     }
-                    open-menu(i) => { if (i >= 0) { root.open-menu-index = i; } }
                     open-menu-geo(i, id_val, bx, by, bw, bh) => {
-                        // i is a row index (0-based) but id_val is an entity id: require id_val >= 0
-                        if (i < 0 || id_val < 0) { }
-                        else {
-                            // Base position of this row within the Flickable
-                            let row_x = 4px;
+                        if (i >= 0 && id_val >= 0) {
                             let row_y = idx * root.item-height + 2px;
+                            let visible_y = row_y + scroll_view.viewport-y;
 
-                            // Position the popup below the button, right-aligned to it, but elsewhere if it would overflow
-                            if (row_x + bx + bw + root.menu-width > parent.width && row_y + by + bh + root.menu-height > parent.height) {
-                                // Overflowing right edge and bottom edge: align left edge to button left edge, above button
-                                root.menu-x = row_x + bx;
-                                root.menu-y = row_y + by - root.menu-height - 4px;
+                            // Menu spans item width with 4px inset on each side
+                            root.menu-popup-x = 5px + 4px + 4px;
+                            root.menu-popup-width = container.width - 30px - 8px;
+
+                            // Position below the row, or above if it would overflow
+                            if (visible_y + root.item-height + root.menu-height > container.height) {
+                                root.menu-popup-y = 5px + visible_y - root.menu-height - 2px;
+                            } else {
+                                root.menu-popup-y = 5px + visible_y + root.item-height;
                             }
 
-                            else if (row_x + bx + bw + root.menu-width > parent.width) {
-                                // Overflowing right edge: align left edge to button left edge
-                                root.menu-x = row_x + bx;
-                                root.menu-y = row_y + by + bh + 4px;
-                            }
-                            else if (row_y + by + bh + root.menu-height > parent.height) {
-                                // Overflowing bottom edge: align above the button
-                                root.menu-x = row_x + bx + bw - root.menu-width;
-                                root.menu-y = row_y + by - root.menu-height - 4px;
-                            }
-                            else {
-                                // Normal case: align right edge to button right edge
-                                root.menu-x = row_x + bx + bw - root.menu-width;
-                                root.menu-y = row_y + by + bh + 4px;
-                            }
                             root.open-menu-index = i;
                             root.open-menu-id = id_val;
-                         }
-                     }
-                    close-menu() => { root.open-menu-index = -1; root.open-menu-id = -1; }
-                    
+                            menu_popup.show();
+                        }
+                    }
+                    close-menu() => {
+                        root.open-menu-index = -1;
+                        root.open-menu-id = -1;
+                    }
+
                     drag-started(i) => {
                         root.dragging-index = i;
                         root.drag-offset = 0px;
                         root.drag-offset-x = 0px;
                         root.dragging-id = item.id;
                         root.dragging-text = item.text;
+                        root.dragging-subtitle = item.subtitle;
                     }
-                    
+
                     drag-moved(delta) => {
                         root.drag-offset = delta;
                         // Compute the dragged item's center in "index space"
@@ -575,11 +575,11 @@ export component CheckableReorderableList inherits Rectangle {
                     }
                     // Horizontal movement handler: allow a limited horizontal wobble
                     drag-moved-x(dx) => {
-                        // Clamp to ±32px for subtle horizontal motion
+                        // Clamp to +/-32px for subtle horizontal motion
                         let limit = 32px;
                         root.drag-offset-x = max(-limit, min(limit, dx));
                     }
-                    
+
                     drag-ended() => {
                         if (root.dragging-index >= 0 && root.drop-target-index >= 0 && root.dragging-index < items.length && root.drop-target-index < items.length) {
                             let to_slot = root.drop-target-index + (root.drop-after ? 1 : 0);
@@ -594,6 +594,7 @@ export component CheckableReorderableList inherits Rectangle {
                         root.drag-offset-x = 0px;
                         root.dragging-id = -1;
                         root.dragging-text = "";
+                        root.dragging-subtitle = "";
                     }
                 }
                 // Note: Do NOT place a full-screen overlay TouchArea during drag.
@@ -607,15 +608,25 @@ export component CheckableReorderableList inherits Rectangle {
                     x: 4px + drag-offset-x;
                     width: parent.width - 8px;
                     index: dragging-index;
-                    item: { id: dragging-id, text: dragging-text, subtitle: "" };
-                    
+                    item: { id: dragging-id, text: dragging-text, subtitle: dragging-subtitle };
+
                     // Bind styling
                     visual-height: root.item-height - 4px;
                     theme-background: root.item-background;
                     theme-primary: root.accent-color;
+                    theme-highlight: root.highlight-color;
+                    theme-selected: root.highlight-color;
                     theme-border: root.item-border-color;
                     theme-text: root.text-color;
                     theme-subtitle: root.subtitle-color;
+                    // Carry over bold/elide styling from the dragged item
+                    bold-after-slash: root.bold-after-slash;
+                    text-prefix: root.bold-after-slash && dragging-index < root.text-prefixes.length ? root.text-prefixes[dragging-index] : "";
+                    text-bold: root.bold-after-slash && dragging-index < root.text-bolds.length ? root.text-bolds[dragging-index] : "";
+                    text-align-right: root.text-align-right;
+                    elided-text: dragging-index < root.elided-texts.length ? root.elided-texts[dragging-index] : "";
+                    elided-prefix: dragging-index < root.elided-prefixes.length ? root.elided-prefixes[dragging-index] : "";
+                    elided-bold: dragging-index < root.elided-bolds.length ? root.elided-bolds[dragging-index] : "";
 
                     is-dragging: true;
                     is-drop-target: false;
@@ -624,34 +635,39 @@ export component CheckableReorderableList inherits Rectangle {
                     // Half-transparent while dragging
                     opacity: 0.5;
                 }
-                // Centralized context menu popup, rendered above rows
-                Rectangle {
-                    visible: root.open-menu-index >= 0 && root.enable-delete;
-                    z: 1;
-                    x: root.menu-x;
-                    y: root.menu-y;
-                    width: root.menu-width;
-                    height: root.enable-delete ? root.menu-height : 0px;
-                    background: white;
-                    border-radius: 6px;
-                    border-width: 1px;
-                    border-color: #e0e0e0;
-                    drop-shadow-blur: 6px;
-                    drop-shadow-color: #00000033;
-                    if root.enable-delete: Button {
-                        width: parent.width;
-                        height: 28px;
-                        text: "Delete";
-                        clicked => {
-                            // Invoke delete for the currently open item id
-                            if (root.open-menu-id >= 0 && root.open-menu-index >= 0) { root.request-delete(root.open-menu-id); }
-                            root.open-menu-index = -1;
-                            root.open-menu-id = -1;
-                        }
-                    }
+            }
+        }
+    }
+
+    // Context menu as a PopupWindow: renders in a separate overlay layer above all other
+    // content, so it cannot be clipped by parent containers or covered by sibling elements.
+    // Auto-closes when clicking outside. Explicitly closed via .close() after Delete.
+    menu_popup := PopupWindow {
+        x: root.menu-popup-x;
+        y: root.menu-popup-y;
+
+        Rectangle {
+            width: root.menu-popup-width;
+            height: root.menu-height;
+            background: root.container-background;
+            border-radius: 6px;
+            border-width: 1px;
+            border-color: root.item-border-color;
+            drop-shadow-blur: 6px;
+            drop-shadow-color: #00000033;
+
+            Button {
+                width: parent.width;
+                height: 28px;
+                text: "Delete";
+                clicked => {
+                    let id_to_delete = root.open-menu-id;
+                    root.open-menu-index = -1;
+                    root.open-menu-id = -1;
+                    menu_popup.close();
+                    if (id_to_delete >= 0) { root.request-delete(id_to_delete); }
                 }
             }
         }
-        
     }
 }
