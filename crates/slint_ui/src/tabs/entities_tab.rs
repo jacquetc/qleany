@@ -81,7 +81,7 @@ fn subscribe_new_manifest_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Create), {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |_event| {
@@ -1364,6 +1364,8 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
 
                     // Create a new entity with default values
                     let create_dto = direct_access::CreateEntityDto {
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: "NewEntity".to_string(),
                         only_for_heritage: false,
                         inherits_from: None,
@@ -1373,7 +1375,7 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         undoable: true,
                     };
 
-                    match entity_commands::create_entity(
+                    match entity_commands::create_orphans_entity(
                         &ctx,
                         Some(
                             app.global::<EntitiesTabState>()
@@ -1449,6 +1451,8 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
 
                 // Create a new field with default values
                 let create_dto = direct_access::CreateFieldDto {
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     name: "new_field".to_string(),
                     field_type: FieldType::String,
                     entity: None,
@@ -1461,7 +1465,7 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     enum_values: None,
                 };
 
-                match field_commands::create_field(
+                match field_commands::create_orphans_field(
                     &ctx,
                     Some(
                         app.global::<EntitiesTabState>()

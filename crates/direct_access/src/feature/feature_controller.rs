@@ -7,25 +7,26 @@ use super::{
     units_of_work::FeatureUnitOfWorkROFactory,
     use_cases::{
         create_feature_multi_uc::CreateFeatureMultiUseCase,
-        create_feature_uc::CreateFeatureUseCase, get_feature_multi_uc::GetFeatureMultiUseCase,
-        get_feature_uc::GetFeatureUseCase, remove_feature_multi_uc::RemoveFeatureMultiUseCase,
+        create_feature_uc::CreateFeatureUseCase,
+        create_orphans_feature_multi_uc::CreateOrphansFeatureMultiUseCase,
+        create_orphans_feature_uc::CreateOrphansFeatureUseCase,
+        get_feature_multi_uc::GetFeatureMultiUseCase, get_feature_uc::GetFeatureUseCase,
+        remove_feature_multi_uc::RemoveFeatureMultiUseCase,
         remove_feature_uc::RemoveFeatureUseCase,
         update_feature_multi_uc::UpdateFeatureMultiUseCase,
         update_feature_uc::UpdateFeatureUseCase,
     },
 };
-use anyhow::{Ok, Result};
-
 use crate::FeatureRelationshipDto;
 use crate::feature::use_cases::get_feature_relationship_uc::GetFeatureRelationshipUseCase;
 use crate::feature::use_cases::set_feature_relationship_uc::SetFeatureRelationshipUseCase;
+use anyhow::{Ok, Result};
 use common::direct_access::feature::FeatureRelationshipField;
-
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -33,12 +34,26 @@ pub fn create(
     entity: &CreateFeatureDto,
 ) -> Result<FeatureDto> {
     let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFeatureUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFeatureUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateFeatureDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<FeatureDto> {
+    let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFeatureUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FeatureDto>> {
     let uow_factory = FeatureUnitOfWorkROFactory::new(db_context);
     let uc = GetFeatureUseCase::new(Box::new(uow_factory));
@@ -73,7 +88,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -81,12 +96,26 @@ pub fn create_multi(
     entities: &[CreateFeatureDto],
 ) -> Result<Vec<FeatureDto>> {
     let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFeatureMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFeatureMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CreateFeatureDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<FeatureDto>> {
+    let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFeatureMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<FeatureDto>>> {
     let uow_factory = FeatureUnitOfWorkROFactory::new(db_context);
     let uc = GetFeatureMultiUseCase::new(Box::new(uow_factory));

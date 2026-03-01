@@ -1357,6 +1357,8 @@ mod tests {
             file: FileVM {
                 inner: File {
                     id: 1,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     name: "CMakeLists.txt".into(),
                     relative_path: "".into(),
                     group: "root".into(),
@@ -1372,6 +1374,8 @@ mod tests {
             global: GlobalVM {
                 inner: Global {
                     id: 1,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     language: "cpp_qt".into(),
                     application_name: "test".into(),
                     organisation_name: "test".into(),
@@ -1387,7 +1391,8 @@ mod tests {
             ui: UserInterfaceVM {
                 inner: UserInterface {
                     id: 1,
-
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     rust_cli: false,
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,
@@ -1411,6 +1416,8 @@ mod tests {
         let entity_id: EntityId = 1;
         let file = File {
             id: 10,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "User DTOs".to_string(),
             relative_path: "src/user_dtos.rs".to_string(),
             group: "entities".to_string(),
@@ -1424,6 +1431,8 @@ mod tests {
         };
         let global = Global {
             id: 50,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             language: "".to_string(),
             application_name: "".to_string(),
             organisation_name: "".to_string(),
@@ -1432,6 +1441,8 @@ mod tests {
         };
         let entity = Entity {
             id: entity_id,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "User".to_string(),
             only_for_heritage: false,
             inherits_from: None,
@@ -1443,6 +1454,8 @@ mod tests {
         };
         let field_relationship = Field {
             id: 100,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "name".to_string(),
             field_type: FieldType::Entity,
             entity: Some(entity_id),
@@ -1456,6 +1469,8 @@ mod tests {
         };
         let field_tags = Field {
             id: 101,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tags".to_string(),
             field_type: FieldType::String,
             entity: None,
@@ -1481,6 +1496,8 @@ mod tests {
             ui: UserInterfaceVM {
                 inner: UserInterface {
                     id: 1,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     rust_cli: false,
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,

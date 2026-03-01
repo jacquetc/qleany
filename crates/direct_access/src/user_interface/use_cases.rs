@@ -2,6 +2,8 @@
 // as changes will be lost.
 
 // Sub-modules for UserInterface use cases
+pub(super) mod create_orphans_user_interface_multi_uc;
+pub(super) mod create_orphans_user_interface_uc;
 pub(super) mod create_user_interface_multi_uc;
 pub(super) mod create_user_interface_uc;
 pub(super) mod get_user_interface_multi_uc;
@@ -30,10 +32,25 @@ pub(in crate::user_interface) trait UserInterfaceUnitOfWorkFactoryTrait:
 #[macros::uow_action(entity = "UserInterface", action = "UpdateMulti")]
 #[macros::uow_action(entity = "UserInterface", action = "Delete")]
 #[macros::uow_action(entity = "UserInterface", action = "DeleteMulti")]
-
+#[macros::uow_action(entity = "UserInterface", action = "Snapshot")]
+#[macros::uow_action(entity = "UserInterface", action = "Restore")]
 pub(in crate::user_interface) trait UserInterfaceUnitOfWorkTrait:
     CommandUnitOfWork
 {
+    fn create_user_interface_with_owner(
+        &self,
+        entity: &UserInterface,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<UserInterface>;
+    fn create_user_interface_multi_with_owner(
+        &self,
+        entities: &[UserInterface],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<UserInterface>>;
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>>;
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()>;
 }
 
 pub(in crate::user_interface) trait UserInterfaceUnitOfWorkROFactoryTrait {
@@ -42,7 +59,6 @@ pub(in crate::user_interface) trait UserInterfaceUnitOfWorkROFactoryTrait {
 
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetMultiRO")]
-
 pub(in crate::user_interface) trait UserInterfaceUnitOfWorkROTrait:
     QueryUnitOfWork
 {

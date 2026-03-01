@@ -7,6 +7,7 @@ use super::relationship_repository::RelationshipTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Relationship;
+use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
@@ -29,7 +30,6 @@ const RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("relationship_from_entity_relationships_junction");
-
 fn get_junction_table_definition(
     field: &'_ RelationshipRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -153,25 +153,20 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
                 let mut entity = data.value().clone();
 
                 // get left_entity from junction table
-
                 let fetched_left_entity: EntityId = left_entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no left_entity");
-
                 entity.left_entity = fetched_left_entity;
-
                 // get right_entity from junction table
-
                 let fetched_right_entity: EntityId = right_entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no right_entity");
-
                 entity.right_entity = fetched_right_entity;
 
                 list.push(Some(entity));
@@ -183,27 +178,21 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
                     let mut entity = guard.value().clone();
 
                     // get left_entity from junction table
-
                     let fetched_left_entity: EntityId = left_entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop()
                         .expect("Relationship has no left_entity");
-
                     entity.left_entity = fetched_left_entity;
-
                     // get right_entity from junction table
-
                     let fetched_right_entity: EntityId = right_entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop()
                         .expect("Relationship has no right_entity");
-
                     entity.right_entity = fetched_right_entity;
-
                     Some(entity)
                 } else {
                     None
@@ -231,10 +220,8 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
 
             left_entity_junction_table
                 .insert(entity.id, vec![entity.left_entity] as Vec<EntityId>)?;
-
             right_entity_junction_table
                 .insert(entity.id, vec![entity.right_entity] as Vec<EntityId>)?;
-
             updated.push(entity.clone());
         }
         Ok(updated)
@@ -248,7 +235,6 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         let mut left_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
-
         let mut right_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
@@ -272,7 +258,6 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         }
         Ok(())
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -331,6 +316,145 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
+
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+        let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
+
+        // Snapshot entity rows as bincode bytes
+        let mut rows = Vec::new();
+        for id in ids {
+            if let Some(guard) = relationship_table.get(id)? {
+                let entity = guard.value();
+                let bytes = bincode::serialize(&entity).map_err(|e| {
+                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                })?;
+                rows.push((*id, bytes));
+            }
+        }
+
+        // Snapshot forward junction tables
+let mut forward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "entity_from_relationship_left_entity_junction".to_string(),
+                entries,
+            });
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "entity_from_relationship_right_entity_junction".to_string(),
+                entries,
+            });
+        }
+
+        // Snapshot backward junction tables (entries that reference any of the given ids)
+let mut backward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "relationship_from_entity_relationships_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+
+        Ok(TableLevelSnapshot {
+            entity_rows: TableSnapshot {
+                table_name: "relationship".to_string(),
+                rows,
+            },
+            forward_junctions,
+            backward_junctions,
+        })
+    }
+
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+        let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
+
+        // Restore entity rows from bincode bytes (redb insert is upsert)
+        for (id, bytes) in &snap.entity_rows.rows {
+            let entity: Relationship = bincode::deserialize(bytes).map_err(|e| {
+                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+            })?;
+            relationship_table.insert(*id, entity)?;
+        }
+
+        // Restore forward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "entity_from_relationship_left_entity_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "entity_from_relationship_right_entity_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        // Restore backward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "relationship_from_entity_relationships_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct RelationshipRedbTableRO<'a> {
@@ -372,25 +496,20 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
                 let mut entity = data.value().clone();
 
                 // get left_entity from junction table
-
                 let fetched_left_entity: EntityId = left_entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no left_entity");
-
                 entity.left_entity = fetched_left_entity;
-
                 // get right_entity from junction table
-
                 let fetched_right_entity: EntityId = right_entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no right_entity");
-
                 entity.right_entity = fetched_right_entity;
 
                 list.push(Some(entity));
@@ -402,27 +521,21 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
                     let mut entity = guard.value().clone();
 
                     // get left_entity from junction table
-
                     let fetched_left_entity: EntityId = left_entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop()
                         .expect("Relationship has no left_entity");
-
                     entity.left_entity = fetched_left_entity;
-
                     // get right_entity from junction table
-
                     let fetched_right_entity: EntityId = right_entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop()
                         .expect("Relationship has no right_entity");
-
                     entity.right_entity = fetched_right_entity;
-
                     Some(entity)
                 } else {
                     None
@@ -433,7 +546,6 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
 
         Ok(list)
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,

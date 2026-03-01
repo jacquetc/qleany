@@ -2,17 +2,18 @@
 // as changes will be lost.
 
 // Sub-modules for System use cases
+pub(super) mod create_orphans_system_multi_uc;
+pub(super) mod create_orphans_system_uc;
 pub(super) mod create_system_multi_uc;
 pub(super) mod create_system_uc;
 pub(super) mod get_system_multi_uc;
+pub(super) mod get_system_relationship_uc;
 pub(super) mod get_system_uc;
 pub(super) mod remove_system_multi_uc;
 pub(super) mod remove_system_uc;
+pub(super) mod set_system_relationship_uc;
 pub(super) mod update_system_multi_uc;
 pub(super) mod update_system_uc;
-
-pub(super) mod get_system_relationship_uc;
-pub(super) mod set_system_relationship_uc;
 
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -31,12 +32,28 @@ pub(in crate::system) trait SystemUnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "System", action = "UpdateMulti")]
 #[macros::uow_action(entity = "System", action = "Delete")]
 #[macros::uow_action(entity = "System", action = "DeleteMulti")]
+#[macros::uow_action(entity = "System", action = "Snapshot")]
+#[macros::uow_action(entity = "System", action = "Restore")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "System", action = "SetRelationship")]
 #[macros::uow_action(entity = "System", action = "SetRelationshipMulti")]
-
-pub(in crate::system) trait SystemUnitOfWorkTrait: CommandUnitOfWork {}
+pub(in crate::system) trait SystemUnitOfWorkTrait: CommandUnitOfWork {
+    fn create_system_with_owner(
+        &self,
+        entity: &System,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<System>;
+    fn create_system_multi_with_owner(
+        &self,
+        entities: &[System],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<System>>;
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>>;
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()>;
+}
 
 pub(in crate::system) trait SystemUnitOfWorkROFactoryTrait {
     fn create(&self) -> Box<dyn SystemUnitOfWorkROTrait>;
@@ -46,5 +63,4 @@ pub(in crate::system) trait SystemUnitOfWorkROFactoryTrait {
 #[macros::uow_action(entity = "System", action = "GetMultiRO")]
 #[macros::uow_action(entity = "System", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "System", action = "GetRelationshipsFromRightIdsRO")]
-
 pub(in crate::system) trait SystemUnitOfWorkROTrait: QueryUnitOfWork {}

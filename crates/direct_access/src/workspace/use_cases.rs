@@ -2,17 +2,18 @@
 // as changes will be lost.
 
 // Sub-modules for Workspace use cases
+pub(super) mod create_orphans_workspace_multi_uc;
+pub(super) mod create_orphans_workspace_uc;
 pub(super) mod create_workspace_multi_uc;
 pub(super) mod create_workspace_uc;
 pub(super) mod get_workspace_multi_uc;
+pub(super) mod get_workspace_relationship_uc;
 pub(super) mod get_workspace_uc;
 pub(super) mod remove_workspace_multi_uc;
 pub(super) mod remove_workspace_uc;
+pub(super) mod set_workspace_relationship_uc;
 pub(super) mod update_workspace_multi_uc;
 pub(super) mod update_workspace_uc;
-
-pub(super) mod get_workspace_relationship_uc;
-pub(super) mod set_workspace_relationship_uc;
 
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -33,14 +34,29 @@ pub(in crate::workspace) trait WorkspaceUnitOfWorkFactoryTrait:
 #[macros::uow_action(entity = "Workspace", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Workspace", action = "Delete")]
 #[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "Snapshot")]
+#[macros::uow_action(entity = "Workspace", action = "Restore")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationshipMulti")]
-
 pub(in crate::workspace) trait WorkspaceUnitOfWorkTrait:
     CommandUnitOfWork
 {
+    fn create_workspace_with_owner(
+        &self,
+        entity: &Workspace,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Workspace>;
+    fn create_workspace_multi_with_owner(
+        &self,
+        entities: &[Workspace],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<Workspace>>;
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>>;
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()>;
 }
 
 pub(in crate::workspace) trait WorkspaceUnitOfWorkROFactoryTrait {
@@ -51,7 +67,6 @@ pub(in crate::workspace) trait WorkspaceUnitOfWorkROFactoryTrait {
 #[macros::uow_action(entity = "Workspace", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIdsRO")]
-
 pub(in crate::workspace) trait WorkspaceUnitOfWorkROTrait:
     QueryUnitOfWork
 {

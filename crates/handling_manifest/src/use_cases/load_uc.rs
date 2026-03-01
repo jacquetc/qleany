@@ -129,6 +129,8 @@ impl LoadUseCase {
         // create global
         let global = uow.create_global(&Global {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             language: manifest.global.language,
             application_name: manifest.global.application_name,
             organisation_name: manifest.global.organisation.name,
@@ -140,6 +142,8 @@ impl LoadUseCase {
         // create user interface
         let ui = uow.create_user_interface(&UserInterface {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             rust_cli: manifest.ui.rust_cli,
             rust_slint: manifest.ui.rust_slint,
             cpp_qt_qtwidgets: manifest.ui.cpp_qt_qtwidgets,
@@ -149,6 +153,8 @@ impl LoadUseCase {
         // create workspace
         let workspace = uow.create_workspace(&Workspace {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             manifest_absolute_path: path,
             global: global_id,
             entities: vec![],
@@ -163,6 +169,8 @@ impl LoadUseCase {
         for model_entity in manifest.entities.iter() {
             let entity = uow.create_entity(&Entity {
                 id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
                 name: model_entity.name.clone(),
                 only_for_heritage: model_entity.only_for_heritage.unwrap_or_default(),
                 single_model: model_entity.single_model.unwrap_or_default(),
@@ -226,6 +234,8 @@ impl LoadUseCase {
                 // create field
                 let field = uow.create_field(&Field {
                     id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     name: model_field.name.clone(),
                     field_type,
                     entity: model_field
@@ -336,6 +346,8 @@ impl LoadUseCase {
 
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,
+                            created_at: chrono::Utc::now(),
+                            updated_at: chrono::Utc::now(),
                             name: model_dto_field.name.clone(),
                             field_type,
                             optional: model_dto_field.optional.unwrap_or_default(),
@@ -348,6 +360,8 @@ impl LoadUseCase {
 
                     let dto_in = uow.create_dto(&Dto {
                         id: 0,
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: dto_in.name.clone(),
                         fields: dto_field_ids,
                     })?;
@@ -364,6 +378,8 @@ impl LoadUseCase {
 
                         let dto_field = uow.create_dto_field(&DtoField {
                             id: 0,
+                            created_at: chrono::Utc::now(),
+                            updated_at: chrono::Utc::now(),
                             name: model_dto_field.name.clone(),
                             field_type,
                             optional: model_dto_field.optional.unwrap_or_default(),
@@ -376,6 +392,8 @@ impl LoadUseCase {
 
                     let dto_out = uow.create_dto(&Dto {
                         id: 0,
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: dto_out.name.clone(),
                         fields: dto_field_ids,
                     })?;
@@ -384,6 +402,8 @@ impl LoadUseCase {
 
                 let use_case = uow.create_use_case(&UseCase {
                     id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                     name: model_use_case.name.clone(),
                     validator: model_use_case.validator.unwrap_or_default(),
                     entities: use_case_entity_ids,
@@ -398,6 +418,8 @@ impl LoadUseCase {
 
             let feature = uow.create_feature(&Feature {
                 id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
                 name: model_feature.name.clone(),
                 use_cases: use_case_ids,
             })?;
@@ -424,6 +446,8 @@ impl LoadUseCase {
             .ok_or(anyhow::anyhow!("Root not found"))?;
         let root = Root {
             id: root.id,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             workspace: Some(workspace_id),
             system: root.system,
         };

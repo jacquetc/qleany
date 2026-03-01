@@ -3,7 +3,7 @@
 
 use crate::database::db_context::DbContext;
 use anyhow::{Ok, Result};
-use redb::{ReadTransaction, WriteTransaction};
+use redb::{ReadableDatabase, ReadTransaction, WriteTransaction};
 
 use crate::types;
 

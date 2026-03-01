@@ -10,6 +10,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct DtoFieldDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: DtoFieldType,
     pub optional: bool,
@@ -22,6 +24,8 @@ impl From<DtoFieldDto> for DtoField {
     fn from(dto: DtoFieldDto) -> Self {
         DtoField {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             field_type: dto.field_type,
             optional: dto.optional,
@@ -36,10 +40,12 @@ impl From<&DtoFieldDto> for DtoField {
     fn from(dto: &DtoFieldDto) -> Self {
         DtoField {
             id: dto.id,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            optional: dto.optional,
-            is_list: dto.is_list,
+            optional: dto.optional.clone(),
+            is_list: dto.is_list.clone(),
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }
@@ -50,6 +56,8 @@ impl From<DtoField> for DtoFieldDto {
     fn from(entity: DtoField) -> Self {
         DtoFieldDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             field_type: entity.field_type,
             optional: entity.optional,
@@ -62,6 +70,8 @@ impl From<DtoField> for DtoFieldDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateDtoFieldDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: DtoFieldType,
     pub optional: bool,
@@ -74,6 +84,8 @@ impl From<CreateDtoFieldDto> for DtoField {
     fn from(dto: CreateDtoFieldDto) -> Self {
         DtoField {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             field_type: dto.field_type,
             optional: dto.optional,
@@ -88,10 +100,12 @@ impl From<&CreateDtoFieldDto> for DtoField {
     fn from(dto: &CreateDtoFieldDto) -> Self {
         DtoField {
             id: 0,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            optional: dto.optional,
-            is_list: dto.is_list,
+            optional: dto.optional.clone(),
+            is_list: dto.is_list.clone(),
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }
@@ -101,6 +115,8 @@ impl From<&CreateDtoFieldDto> for DtoField {
 impl From<DtoField> for CreateDtoFieldDto {
     fn from(entity: DtoField) -> Self {
         CreateDtoFieldDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             field_type: entity.field_type,
             optional: entity.optional,

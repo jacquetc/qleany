@@ -7,6 +7,7 @@ use super::field_repository::FieldTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Field;
+use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
@@ -20,7 +21,8 @@ const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Ent
 
 const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("field_from_entity_fields_junction");
-
+const FIELD_FROM_FILE_FIELD_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("field_from_file_field_junction");
 fn get_junction_table_definition(
     field: &'_ FieldRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -44,6 +46,7 @@ impl<'a> FieldRedbTable<'a> {
         transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
         transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        transaction.open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -130,13 +133,11 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                 let mut entity = data.value().clone();
 
                 // get entity from junction table
-
                 let fetched_entity: Option<EntityId> = entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.entity = fetched_entity;
 
                 list.push(Some(entity));
@@ -148,15 +149,12 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                     let mut entity = guard.value().clone();
 
                     // get entity from junction table
-
                     let fetched_entity: Option<EntityId> = entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.entity = fetched_entity;
-
                     Some(entity)
                 } else {
                     None
@@ -202,6 +200,9 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         let mut backward_entity_fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let mut backward_file_field_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
 
         for id in ids {
             field_table.remove(id)?;
@@ -212,10 +213,13 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                 &mut backward_entity_fields_junction_table,
                 id,
             )?;
+            db_helpers::delete_from_backward_junction_table(
+                &mut backward_file_field_junction_table,
+                id,
+            )?;
         }
         Ok(())
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -274,6 +278,150 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
+
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+        let field_table = self.transaction.open_table(FIELD_TABLE)?;
+
+        // Snapshot entity rows as bincode bytes
+        let mut rows = Vec::new();
+        for id in ids {
+            if let Some(guard) = field_table.get(id)? {
+                let entity = guard.value();
+                let bytes = bincode::serialize(&entity).map_err(|e| {
+                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                })?;
+                rows.push((*id, bytes));
+            }
+        }
+
+        // Snapshot forward junction tables
+let mut forward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "entity_from_field_entity_junction".to_string(),
+                entries,
+            });
+        }
+
+        // Snapshot backward junction tables (entries that reference any of the given ids)
+let mut backward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "field_from_entity_fields_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "field_from_file_field_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+
+        Ok(TableLevelSnapshot {
+            entity_rows: TableSnapshot {
+                table_name: "field".to_string(),
+                rows,
+            },
+            forward_junctions,
+            backward_junctions,
+        })
+    }
+
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+        let mut field_table = self.transaction.open_table(FIELD_TABLE)?;
+
+        // Restore entity rows from bincode bytes (redb insert is upsert)
+        for (id, bytes) in &snap.entity_rows.rows {
+            let entity: Field = bincode::deserialize(bytes).map_err(|e| {
+                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+            })?;
+            field_table.insert(*id, entity)?;
+        }
+
+        // Restore forward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "entity_from_field_entity_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        // Restore backward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "field_from_entity_fields_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "field_from_file_field_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct FieldRedbTableRO<'a> {
@@ -312,13 +460,11 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
                 let mut entity = data.value().clone();
 
                 // get entity from junction table
-
                 let fetched_entity: Option<EntityId> = entity_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.entity = fetched_entity;
 
                 list.push(Some(entity));
@@ -330,15 +476,12 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
                     let mut entity = guard.value().clone();
 
                     // get entity from junction table
-
                     let fetched_entity: Option<EntityId> = entity_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.entity = fetched_entity;
-
                     Some(entity)
                 } else {
                     None
@@ -349,7 +492,6 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
 
         Ok(list)
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,

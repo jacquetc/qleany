@@ -14,7 +14,7 @@ anyhow = { workspace = true }
 common = { path = "../common" }
 macros = { path = "../macros" }
 heck = "0.5"
-chrono = "0.4"
+chrono = { workspace = true }
 include_dir = "0.7"
 tera = "1.18"
 indexmap = { version = "2", features = ["serde"] }

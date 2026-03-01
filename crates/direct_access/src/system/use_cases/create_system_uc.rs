@@ -4,63 +4,31 @@
 use super::SystemUnitOfWorkFactoryTrait;
 use crate::system::dtos::{CreateSystemDto, SystemDto};
 use anyhow::{Ok, Result};
-use common::entities::System;
-use common::undo_redo::UndoRedoCommand;
-use std::any::Any;
-use std::collections::VecDeque;
+use common::types::EntityId;
 
 pub struct CreateSystemUseCase {
     uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<System>,
-    redo_stack: VecDeque<System>,
 }
 
 impl CreateSystemUseCase {
     pub fn new(uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>) -> Self {
-        CreateSystemUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        CreateSystemUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: CreateSystemDto) -> Result<SystemDto> {
+    pub fn execute(
+        &mut self,
+        dto: CreateSystemDto,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<SystemDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity = uow.create_system(&dto.into())?;
+
+        // Create with owner (repository handles junction management internally)
+        let entity = uow.create_system_with_owner(&dto.into(), owner_id, index)?;
+
         uow.commit()?;
 
-        // store in undo stack
-        self.undo_stack.push_back(entity.clone());
-        self.redo_stack.clear();
-
         Ok(entity.into())
-    }
-}
-
-impl UndoRedoCommand for CreateSystemUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.delete_system(&last_entity.id)?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entity);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.create_system(&last_entity)?;
-            uow.commit()?;
-            self.undo_stack.push_back(last_entity);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

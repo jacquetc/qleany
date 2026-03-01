@@ -4,23 +4,14 @@
 use super::SystemUnitOfWorkFactoryTrait;
 use crate::system::dtos::SystemDto;
 use anyhow::{Ok, Result};
-use common::{entities::System, undo_redo::UndoRedoCommand};
-use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct UpdateSystemUseCase {
     uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<System>,
-    redo_stack: VecDeque<System>,
 }
 
 impl UpdateSystemUseCase {
     pub fn new(uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>) -> Self {
-        UpdateSystemUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        UpdateSystemUseCase { uow_factory }
     }
 
     pub fn description(&self) -> &str {
@@ -34,40 +25,10 @@ impl UpdateSystemUseCase {
         if uow.get_system(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("System with id {} does not exist", dto.id));
         }
-        // store in undo stack
-        let entity = uow.get_system(&dto.id)?.unwrap();
-        self.undo_stack.push_back(entity.clone());
 
         let entity = uow.update_system(&dto.into())?;
         uow.commit()?;
 
         Ok(entity.into())
-    }
-}
-
-impl UndoRedoCommand for UpdateSystemUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_system(&last_entity)?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entity);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(entity) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_system(&entity)?;
-            uow.commit()?;
-            self.undo_stack.push_back(entity);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

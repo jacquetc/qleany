@@ -89,6 +89,8 @@ fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relati
 
             Relationship {
                 id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
                 left_entity: entity.id,
                 right_entity: field.entity.unwrap(),
                 field_name: field.name.clone(),
@@ -122,6 +124,8 @@ fn get_backward_relationships(
         .filter(|relationship| relationship.right_entity == *entity_id)
         .map(|relationship| Relationship {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             left_entity: relationship.left_entity,
             right_entity: relationship.right_entity,
             field_name: relationship.field_name.clone(),
@@ -174,6 +178,8 @@ mod tests {
         // Create two entities: Parent and Child
         let parent_entity = Entity {
             id: 1,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "Parent".to_string(),
             only_for_heritage: false,
             inherits_from: None,
@@ -189,6 +195,8 @@ mod tests {
             // A OneToOne relationship (required)
             Field {
                 id: 1,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
                 name: "single_child".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity
@@ -203,6 +211,8 @@ mod tests {
             // An OrderedOneToMany relationship
             Field {
                 id: 2,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
                 name: "multiple_children".to_string(),
                 field_type: FieldType::Entity,
                 entity: Some(2), // Points to Child entity

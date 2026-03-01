@@ -7,23 +7,23 @@ use super::{
     units_of_work::FieldUnitOfWorkROFactory,
     use_cases::{
         create_field_multi_uc::CreateFieldMultiUseCase, create_field_uc::CreateFieldUseCase,
+        create_orphans_field_multi_uc::CreateOrphansFieldMultiUseCase,
+        create_orphans_field_uc::CreateOrphansFieldUseCase,
         get_field_multi_uc::GetFieldMultiUseCase, get_field_uc::GetFieldUseCase,
         remove_field_multi_uc::RemoveFieldMultiUseCase, remove_field_uc::RemoveFieldUseCase,
         update_field_multi_uc::UpdateFieldMultiUseCase, update_field_uc::UpdateFieldUseCase,
     },
 };
-use anyhow::{Ok, Result};
-
 use crate::FieldRelationshipDto;
 use crate::field::use_cases::get_field_relationship_uc::GetFieldRelationshipUseCase;
 use crate::field::use_cases::set_field_relationship_uc::SetFieldRelationshipUseCase;
+use anyhow::{Ok, Result};
 use common::direct_access::field::FieldRelationshipField;
-
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -31,12 +31,26 @@ pub fn create(
     entity: &CreateFieldDto,
 ) -> Result<FieldDto> {
     let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFieldUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFieldUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateFieldDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<FieldDto> {
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFieldUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FieldDto>> {
     let uow_factory = FieldUnitOfWorkROFactory::new(db_context);
     let uc = GetFieldUseCase::new(Box::new(uow_factory));
@@ -71,7 +85,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -79,12 +93,26 @@ pub fn create_multi(
     entities: &[CreateFieldDto],
 ) -> Result<Vec<FieldDto>> {
     let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFieldMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFieldMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CreateFieldDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<FieldDto>> {
+    let uow_factory = FieldUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFieldMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<FieldDto>>> {
     let uow_factory = FieldUnitOfWorkROFactory::new(db_context);
     let uc = GetFieldMultiUseCase::new(Box::new(uow_factory));

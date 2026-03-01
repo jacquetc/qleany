@@ -225,7 +225,11 @@ impl UndoRedoManager {
             .ok_or_else(|| anyhow!("Stack with ID {} not found", target_stack_id))?;
 
         if let Some(mut command) = stack.undo_stack.pop() {
-            command.undo()?;
+            if let Err(e) = command.undo() {
+                log::error!("Undo failed, dropping command: {e}");
+                // command dropped intentionally
+                return Err(e);
+            }
             stack.redo_stack.push(command);
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {
@@ -251,7 +255,11 @@ impl UndoRedoManager {
             .ok_or_else(|| anyhow!("Stack with ID {} not found", target_stack_id))?;
 
         if let Some(mut command) = stack.redo_stack.pop() {
-            command.redo()?;
+            if let Err(e) = command.redo() {
+                log::error!("Undo failed, dropping command: {e}");
+                // command dropped intentionally
+                return Err(e);
+            }
             stack.undo_stack.push(command);
             if let Some(event_hub) = &self.event_hub {
                 event_hub.send_event(Event {

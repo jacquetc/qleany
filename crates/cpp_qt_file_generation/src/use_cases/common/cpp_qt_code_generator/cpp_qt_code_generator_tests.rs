@@ -183,6 +183,8 @@ fn for_file_feature_without_use_cases_errors() {
     let mut uow = DummyGenerationReadOps::new();
     let file = File {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -197,12 +199,16 @@ fn for_file_feature_without_use_cases_errors() {
     uow.files.insert(1, file);
     let feature = Feature {
         id: 10,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Feat".into(),
         use_cases: vec![],
     };
     uow.features.insert(10, feature);
     let global = Global {
         id: 3,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         application_name: "App".into(),
         language: "cpp_qt".into(),
         organisation_name: "Org".into(),
@@ -212,6 +218,8 @@ fn for_file_feature_without_use_cases_errors() {
     uow.globals.insert(3, global);
     let user_interface = UserInterface {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         rust_cli: false,
         rust_slint: false,
         cpp_qt_qtwidgets: false,
@@ -220,6 +228,8 @@ fn for_file_feature_without_use_cases_errors() {
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![],
@@ -230,6 +240,8 @@ fn for_file_feature_without_use_cases_errors() {
     uow.workspace_features.insert(2, vec![10]);
     let root = Root {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         workspace: Some(2),
         system: None,
     };
@@ -244,6 +256,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     // File bound to feature
     let file = File {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -259,6 +273,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     // Feature with use case 100
     let uc = UseCase {
         id: 100,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "UC".into(),
         validator: false,
         entities: vec![300],
@@ -270,6 +286,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     let feature = Feature {
         id: 10,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Feat".into(),
         use_cases: vec![100],
     };
@@ -278,6 +296,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     // Entity and fields
     let ent = Entity {
         id: 300,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "User".into(),
         only_for_heritage: false,
         inherits_from: None,
@@ -289,6 +309,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     let field = Field {
         id: 400,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "name".into(),
         field_type: FieldType::String,
         entity: Some(300),
@@ -305,11 +327,15 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     // DTOs and fields
     let dto_in = Dto {
         id: 200,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "In".into(),
         fields: vec![500],
     };
     let dto_out = Dto {
         id: 201,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Out".into(),
         fields: vec![501],
     };
@@ -317,6 +343,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     uow.dtos.insert(201, dto_out);
     let df_in = DtoField {
         id: 500,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "a".into(),
         field_type: common::entities::DtoFieldType::String,
         optional: false,
@@ -326,6 +354,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     let df_out = DtoField {
         id: 501,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "b".into(),
         field_type: common::entities::DtoFieldType::Integer,
         optional: true,
@@ -337,6 +367,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     uow.dto_fields.insert(501, df_out);
     let global = Global {
         id: 3,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         application_name: "App".into(),
         language: "cpp_qt".into(),
         organisation_name: "Org".into(),
@@ -346,6 +378,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     uow.globals.insert(3, global);
     let user_interface = UserInterface {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         rust_cli: false,
         rust_slint: false,
         cpp_qt_qtwidgets: false,
@@ -354,6 +388,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![],
@@ -364,6 +400,8 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     uow.workspace_features.insert(2, vec![10]);
     let root = Root {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         workspace: Some(2),
         system: None,
     };
@@ -384,6 +422,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // Common entities
     let ent_a = Entity {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "A".into(),
         only_for_heritage: false,
         inherits_from: None,
@@ -395,6 +435,8 @@ fn for_file_various_combinations_generate_expected_items() {
     };
     let ent_b = Entity {
         id: 2,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "B".into(),
         only_for_heritage: false,
         inherits_from: None,
@@ -412,11 +454,15 @@ fn for_file_various_combinations_generate_expected_items() {
     // DTOs for UC
     let dto_in = Dto {
         id: 10,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "In".into(),
         fields: vec![],
     };
     let dto_out = Dto {
         id: 11,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Out".into(),
         fields: vec![],
     };
@@ -426,6 +472,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // Use case referencing ent_a and ent_b
     let uc = UseCase {
         id: 100,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "UC".into(),
         validator: false,
         entities: vec![1, 2],
@@ -440,12 +488,16 @@ fn for_file_various_combinations_generate_expected_items() {
     // Feature with the UC
     let feat = Feature {
         id: 200,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Feat".into(),
         use_cases: vec![100],
     };
     uow.features.insert(200, feat.clone());
     let global = Global {
         id: 3,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         application_name: "App".into(),
         language: "cpp_qt".into(),
         organisation_name: "Org".into(),
@@ -455,6 +507,8 @@ fn for_file_various_combinations_generate_expected_items() {
     uow.globals.insert(3, global);
     let user_interface = UserInterface {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         rust_cli: false,
         rust_slint: false,
         cpp_qt_qtwidgets: false,
@@ -463,6 +517,8 @@ fn for_file_various_combinations_generate_expected_items() {
     uow.user_interfaces.insert(1, user_interface);
     let workspace = Workspace {
         id: 2,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         manifest_absolute_path: "".into(),
         global: 3,
         entities: vec![1, 2],
@@ -474,6 +530,8 @@ fn for_file_various_combinations_generate_expected_items() {
     uow.workspace_entities.insert(2, vec![1, 2]);
     let root = Root {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         workspace: Some(2),
         system: None,
     };
@@ -482,6 +540,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 1) File with only feature
     let file_feature_only = File {
         id: 1000,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f1".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -503,6 +563,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 2) File with only use_case
     let file_uc_only = File {
         id: 1001,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f2".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -524,6 +586,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 3) File with only entity
     let file_ent_only = File {
         id: 1002,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f3".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -544,6 +608,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 4) File with entity Some(0) -> loads all entities from root
     let file_all_ent = File {
         id: 1003,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f4".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -562,6 +628,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 5) File with feature + entity: ensure both feature scope (UCs, dtos, uc entities) and explicit entity are included
     let file_feat_ent = File {
         id: 1004,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f5".into(),
         relative_path: "p".into(),
         group: "g".into(),
@@ -583,6 +651,8 @@ fn for_file_various_combinations_generate_expected_items() {
     // 6) File with use_case + entity
     let file_uc_ent = File {
         id: 1005,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "f6".into(),
         relative_path: "p".into(),
         group: "g".into(),

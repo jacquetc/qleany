@@ -3,74 +3,64 @@
 
 use super::FieldUnitOfWorkFactoryTrait;
 use anyhow::{Ok, Result};
-// use common::types::Savepoint;
-use common::{types::EntityId, undo_redo::UndoRedoCommand};
+use common::{snapshot::EntityTreeSnapshot, types::EntityId, undo_redo::UndoRedoCommand};
 use std::any::Any;
 
-/// Use case to remove multiple field entities. The undo and redo operations are deactivated
-/// on purpose since restoring deleted entities using database savepoints impacts the whole database state, not only the deleted entities.
-/// See documentation for more complete explanations and ways around it.
+/// Use case to remove multiple field entities.
+/// Supports undo/redo via entity tree snapshots.
 pub struct RemoveFieldMultiUseCase {
     uow_factory: Box<dyn FieldUnitOfWorkFactoryTrait>,
-    // undo_stack: VecDeque<Savepoint>,
-    // redo_stack: VecDeque<Vec<EntityId>>,
+    entity_tree_snapshot: Option<EntityTreeSnapshot>,
+    original_ids: Option<Vec<EntityId>>,
 }
 
 impl RemoveFieldMultiUseCase {
     pub fn new(uow_factory: Box<dyn FieldUnitOfWorkFactoryTrait>) -> Self {
         RemoveFieldMultiUseCase {
             uow_factory,
-            // undo_stack: VecDeque::new(),
-            // redo_stack: VecDeque::new(),
+            entity_tree_snapshot: None,
+            original_ids: None,
         }
     }
 
     pub fn execute(&mut self, ids: &[EntityId]) -> Result<()> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        // let savepoint = uow.create_savepoint()?;
-        // check if id exists
-        let mut exists = true;
+        // check if all ids exist
         for id in ids {
             if uow.get_field(id)?.is_none() {
-                exists = false;
-                break;
+                return Err(anyhow::anyhow!("Field with id {} does not exist", id));
             }
         }
-        if !exists {
-            return Err(anyhow::anyhow!("One or more ids do not exist"));
-        }
+        // snapshot the entity trees before deletion (for undo)
+        self.entity_tree_snapshot = Some(uow.snapshot_field(ids)?);
         uow.delete_field_multi(ids)?;
         uow.commit()?;
-
-        // store savepoint in undo stack
-        // self.undo_stack.push_back(savepoint);
-        // self.redo_stack.push_back(ids.to_vec());
+        self.original_ids = Some(ids.to_vec());
 
         Ok(())
     }
 }
-
 impl UndoRedoCommand for RemoveFieldMultiUseCase {
     fn undo(&mut self) -> Result<()> {
-        // if let Some(savepoint) = self.undo_stack.pop_back() {
-        //    let mut uow = self.uow_factory.create();
-        //    uow.begin_transaction()?;
-        //    uow.restore_to_savepoint(savepoint)?;
-        //    uow.commit()?;
-        // }
+        if let Some(ref snap) = self.entity_tree_snapshot {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            uow.restore_field(snap)?;
+            uow.commit()?;
+        }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        // if let Some(ids) = self.redo_stack.pop_back() {
-        //     let mut uow = self.uow_factory.create();
-        //     uow.begin_transaction()?;
-        //     let savepoint = uow.create_savepoint()?;
-        //     uow.delete_field_multi(&ids)?;
-        //     uow.commit()?;
-        //     self.undo_stack.push_back(savepoint);
-        // }
+        if let Some(ref ids) = self.original_ids {
+            let mut uow = self.uow_factory.create();
+            uow.begin_transaction()?;
+            // re-snapshot before re-deleting
+            self.entity_tree_snapshot = Some(uow.snapshot_field(ids)?);
+            uow.delete_field_multi(ids)?;
+            uow.commit()?;
+        }
         Ok(())
     }
     fn as_any(&self) -> &dyn Any {

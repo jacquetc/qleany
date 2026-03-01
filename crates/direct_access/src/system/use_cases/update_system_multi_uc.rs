@@ -4,23 +4,14 @@
 use super::SystemUnitOfWorkFactoryTrait;
 use crate::system::dtos::SystemDto;
 use anyhow::{Ok, Result};
-use common::{entities::System, undo_redo::UndoRedoCommand};
-use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct UpdateSystemMultiUseCase {
     uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Vec<System>>,
-    redo_stack: VecDeque<Vec<System>>,
 }
 
 impl UpdateSystemMultiUseCase {
     pub fn new(uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>) -> Self {
-        UpdateSystemMultiUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        UpdateSystemMultiUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dtos: &[SystemDto]) -> Result<Vec<SystemDto>> {
@@ -38,45 +29,11 @@ impl UpdateSystemMultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
-        // store in undo stack
-        let entities = uow
-            .get_system_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?
-            .iter()
-            .filter_map(|entity| entity.clone())
-            .collect();
-        self.undo_stack.push_back(entities);
 
         let entities =
             uow.update_system_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
-    }
-}
-
-impl UndoRedoCommand for UpdateSystemMultiUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_system_multi(&last_entities)?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entities);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(entities) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_system_multi(&entities)?;
-            uow.commit()?;
-            self.undo_stack.push_back(entities);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

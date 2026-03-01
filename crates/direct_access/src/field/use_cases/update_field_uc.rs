@@ -34,17 +34,17 @@ impl UpdateFieldUseCase {
         if uow.get_field(&dto.id)?.is_none() {
             return Err(anyhow::anyhow!("Field with id {} does not exist", dto.id));
         }
-        // store in undo stack
-        let entity = uow.get_field(&dto.id)?.unwrap();
-        self.undo_stack.push_back(entity.clone());
+        // fetch old entity for undo stack
+        let old_entity = uow.get_field(&dto.id)?.unwrap();
 
         let entity = uow.update_field(&dto.into())?;
         uow.commit()?;
+        // store in undo stack only after successful commit
+        self.undo_stack.push_back(old_entity);
 
         Ok(entity.into())
     }
 }
-
 impl UndoRedoCommand for UpdateFieldUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entity) = self.undo_stack.pop_back() {

@@ -37,7 +37,6 @@ impl SetDtoRelationshipUseCase {
         Ok(())
     }
 }
-
 impl UndoRedoCommand for SetDtoRelationshipUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(savepoint) = self.undo_stack.pop_back() {

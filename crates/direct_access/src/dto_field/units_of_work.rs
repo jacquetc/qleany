@@ -8,8 +8,9 @@ use super::use_cases::{
 use anyhow::{Ok, Result};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::direct_access::repository_factory;
 use common::entities::DtoField;
-use common::event::{AllEvent, DirectAccessEntity, Event, EventHub, Origin};
+use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
@@ -19,6 +20,7 @@ pub struct DtoFieldUnitOfWork {
     context: DbContext,
     transaction: Option<Transaction>,
     event_hub: Arc<EventHub>,
+    event_buffer: RefCell<EventBuffer>,
 }
 
 impl DtoFieldUnitOfWork {
@@ -27,6 +29,7 @@ impl DtoFieldUnitOfWork {
             context: db_context.clone(),
             transaction: None,
             event_hub: event_hub.clone(),
+            event_buffer: RefCell::new(EventBuffer::new()),
         }
     }
 }
@@ -34,16 +37,21 @@ impl DtoFieldUnitOfWork {
 impl CommandUnitOfWork for DtoFieldUnitOfWork {
     fn begin_transaction(&mut self) -> Result<()> {
         self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
+        self.event_buffer.get_mut().begin_buffering();
         Ok(())
     }
 
     fn commit(&mut self) -> Result<()> {
         self.transaction.take().unwrap().commit()?;
+        for event in self.event_buffer.get_mut().flush() {
+            self.event_hub.send_event(event);
+        }
         Ok(())
     }
 
     fn rollback(&mut self) -> Result<()> {
         self.transaction.take().unwrap().rollback()?;
+        self.event_buffer.get_mut().discard();
         Ok(())
     }
 
@@ -55,6 +63,10 @@ impl CommandUnitOfWork for DtoFieldUnitOfWork {
         let mut transaction = self.transaction.take().unwrap();
         transaction.restore_to_savepoint(savepoint)?;
 
+        // Discard buffered events — savepoint restore invalidated them
+        self.event_buffer.get_mut().discard();
+
+        // Send Reset immediately (not buffered — UI must refresh now)
         self.event_hub.send_event(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
             ids: vec![],
@@ -76,8 +88,47 @@ impl CommandUnitOfWork for DtoFieldUnitOfWork {
 #[macros::uow_action(entity = "DtoField", action = "UpdateMulti")]
 #[macros::uow_action(entity = "DtoField", action = "Delete")]
 #[macros::uow_action(entity = "DtoField", action = "DeleteMulti")]
+#[macros::uow_action(entity = "DtoField", action = "Snapshot")]
+#[macros::uow_action(entity = "DtoField", action = "Restore")]
+impl DtoFieldUnitOfWorkTrait for DtoFieldUnitOfWork {
+    fn create_dto_field_with_owner(
+        &self,
+        entity: &DtoField,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<DtoField> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_dto_field_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
+    }
 
-impl DtoFieldUnitOfWorkTrait for DtoFieldUnitOfWork {}
+    fn create_dto_field_multi_with_owner(
+        &self,
+        entities: &[DtoField],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<DtoField>> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_dto_field_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
+    }
+
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_dto_field_repository(borrowed_transaction);
+        Ok(repo.get_relationships_from_owner(owner_id)?)
+    }
+
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()> {
+        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_dto_field_repository(borrowed_transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        repo.set_relationships_in_owner(&mut event_buffer, owner_id, ids)?;
+        Ok(())
+    }
+}
 
 pub struct DtoFieldUnitOfWorkFactory {
     context: DbContext,
@@ -128,7 +179,6 @@ impl QueryUnitOfWork for DtoFieldUnitOfWorkRO {
 
 #[macros::uow_action(entity = "DtoField", action = "GetRO")]
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
-
 impl DtoFieldUnitOfWorkROTrait for DtoFieldUnitOfWorkRO {}
 
 pub struct DtoFieldUnitOfWorkROFactory {

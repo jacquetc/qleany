@@ -711,6 +711,6 @@ src/
 | Event registries | Separate per entity + separate per feature | Single EventHub with Origin enum |
 | Long operations | QtConcurrent::run | std::thread::spawn |
 | Database | SQLite (WAL mode) | redb (embedded key-value) |
-| Cascade snapshots | Yes (table-level snapshot/restore) | Coming soon (per-field undo stacks for now) |
+| Cascade snapshots | Yes (table-level snapshot/restore) | Yes (table-level snapshot/restore) |
 | UoW boilerplate | CRTP templates (entities), macros (feature use cases) | Procedural macros (`#[macros::uow_action]`) |
 | Read-only queries | Through undo/redo system (serialization) | Direct call with read-only UoW |

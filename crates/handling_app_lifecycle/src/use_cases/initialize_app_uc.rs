@@ -27,11 +27,15 @@ impl InitializeAppUseCase {
         // create system
         let system = uow.create_system(&System {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             files: vec![],
         })?;
 
         uow.create_root(&Root {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             workspace: None,
             system: Some(system.id),
         })?;

@@ -68,16 +68,17 @@ pub enum HandlingAppLifecycleEvent {
 pub enum HandlingManifestEvent {
     Load,
     Save,
-    New,
+    Create,
     Close,
     ExportToMermaid,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum RustFileGenerationEvent {
-    FillRustFiles,
     GenerateRustCode,
     GenerateRustFiles,
+    FillRustFiles,
+    FillCodeInRustFiles,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -85,6 +86,13 @@ pub enum CppQtFileGenerationEvent {
     FillCppQtFiles,
     GenerateCppQtCode,
     GenerateCppQtFiles,
+    FillCodeInCppQtFiles,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
+pub enum FileGenerationSharedStepsEvent {
+    FillStatusInFiles,
+    GetFileDiff,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -97,6 +105,7 @@ pub enum Origin {
     HandlingManifest(HandlingManifestEvent),
     RustFileGeneration(RustFileGenerationEvent),
     CppQtFileGeneration(CppQtFileGenerationEvent),
+    FileGenerationSharedSteps(FileGenerationSharedStepsEvent),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -140,13 +149,75 @@ impl Event {
             Origin::HandlingAppLifecycle(event) => format!("handling_app_lifecycle_{:?}", event),
             Origin::HandlingManifest(event) => format!("handling_manifest_{:?}", event),
             Origin::RustFileGeneration(event) => format!("rust_file_generation_{:?}", event),
-            Origin::CppQtFileGeneration(event) => {
-                format!("cpp_qt_file_generation_{:?}", event)
+            Origin::CppQtFileGeneration(event) => format!("cpp_qt_file_generation_{:?}", event),
+            Origin::FileGenerationSharedSteps(event) => {
+                format!("file_generation_shared_steps_{:?}", event)
             }
         }
         .to_lowercase()
     }
 }
+/// Thread-safe event buffer for deferring event emissions during transactions.
+///
+/// Repositories push events into this buffer instead of sending them directly
+/// to the EventHub. On commit(), the UoW drains the buffer and sends all events.
+/// On rollback(), the buffer is discarded. This prevents the UI from seeing
+/// phantom state from failed transactions.
+///
+/// This is the Rust equivalent of SignalBuffer in the C++/Qt target.
+pub struct EventBuffer {
+    buffering: bool,
+    pending: Vec<Event>,
+}
+
+impl EventBuffer {
+    pub fn new() -> Self {
+        Self {
+            buffering: false,
+            pending: Vec::new(),
+        }
+    }
+
+    /// Start buffering. Clears any stale events from a previous cycle.
+    pub fn begin_buffering(&mut self) {
+        self.buffering = true;
+        self.pending.clear();
+    }
+
+    /// Queue an event for deferred delivery.
+    ///
+    /// If buffering is not active, the event is silently dropped.
+    /// (Callers should only push during an active transaction.)
+    pub fn push(&mut self, event: Event) {
+        if self.buffering {
+            self.pending.push(event);
+        }
+    }
+
+    /// Drain all pending events and stop buffering.
+    /// The caller is responsible for sending them to the EventHub.
+    pub fn flush(&mut self) -> Vec<Event> {
+        self.buffering = false;
+        std::mem::take(&mut self.pending)
+    }
+
+    /// Discard all pending events and stop buffering.
+    pub fn discard(&mut self) {
+        self.buffering = false;
+        self.pending.clear();
+    }
+
+    pub fn is_buffering(&self) -> bool {
+        self.buffering
+    }
+}
+
+impl Default for EventBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub type Queue = Arc<Mutex<Vec<Event>>>;
 
 /// Central event hub for managing subscriptions and dispatching events

@@ -7,27 +7,44 @@ use super::{
     units_of_work::FileUnitOfWorkROFactory,
     use_cases::{
         create_file_multi_uc::CreateFileMultiUseCase, create_file_uc::CreateFileUseCase,
-        get_file_multi_uc::GetFileMultiUseCase, get_file_uc::GetFileUseCase,
-        remove_file_multi_uc::RemoveFileMultiUseCase, remove_file_uc::RemoveFileUseCase,
-        update_file_multi_uc::UpdateFileMultiUseCase, update_file_uc::UpdateFileUseCase,
+        create_orphans_file_multi_uc::CreateOrphansFileMultiUseCase,
+        create_orphans_file_uc::CreateOrphansFileUseCase, get_file_multi_uc::GetFileMultiUseCase,
+        get_file_uc::GetFileUseCase, remove_file_multi_uc::RemoveFileMultiUseCase,
+        remove_file_uc::RemoveFileUseCase, update_file_multi_uc::UpdateFileMultiUseCase,
+        update_file_uc::UpdateFileUseCase,
     },
 };
+use crate::FileRelationshipDto;
+use crate::file::use_cases::get_file_relationship_uc::GetFileRelationshipUseCase;
+use crate::file::use_cases::set_file_relationship_uc::SetFileRelationshipUseCase;
 use anyhow::{Ok, Result};
+use common::direct_access::file::FileRelationshipField;
 
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entity: &CreateFileDto,
 ) -> Result<FileDto> {
     let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFileUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFileUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    entity: &CreateFileDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<FileDto> {
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFileUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FileDto>> {
     let uow_factory = FileUnitOfWorkROFactory::new(db_context);
     let uc = GetFileUseCase::new(Box::new(uow_factory));
@@ -52,17 +69,28 @@ pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) 
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entities: &[CreateFileDto],
 ) -> Result<Vec<FileDto>> {
     let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateFileMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansFileMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    entities: &[CreateFileDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<FileDto>> {
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateFileMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    Ok(result)
+}
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<FileDto>>> {
     let uow_factory = FileUnitOfWorkROFactory::new(db_context);
     let uc = GetFileMultiUseCase::new(Box::new(uow_factory));
@@ -88,5 +116,26 @@ pub fn remove_multi(
     let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = RemoveFileMultiUseCase::new(Box::new(uow_factory));
     uc.execute(ids)?;
+    Ok(())
+}
+
+pub fn get_relationship(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &FileRelationshipField,
+) -> Result<Vec<EntityId>> {
+    let uow_factory = FileUnitOfWorkROFactory::new(db_context);
+    let uc = GetFileRelationshipUseCase::new(Box::new(uow_factory));
+    uc.execute(id, field)
+}
+
+pub fn set_relationship(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    dto: &FileRelationshipDto,
+) -> Result<()> {
+    let uow_factory = FileUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = SetFileRelationshipUseCase::new(Box::new(uow_factory));
+    uc.execute(dto)?;
     Ok(())
 }

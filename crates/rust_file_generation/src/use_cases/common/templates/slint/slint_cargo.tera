@@ -22,6 +22,7 @@ direct_access = { path = "../direct_access" }
 {{ feature.snake_name }} = { path = "../{{ feature.snake_name }}" }
 {%- endfor %}
 anyhow = { workspace = true }
+chrono = { workspace = true }
 
 [build-dependencies]
 slint-build = "1.14"

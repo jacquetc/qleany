@@ -9,6 +9,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct WorkspaceDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
@@ -20,6 +22,8 @@ impl From<WorkspaceDto> for Workspace {
     fn from(dto: WorkspaceDto) -> Self {
         Workspace {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             manifest_absolute_path: dto.manifest_absolute_path,
             global: dto.global,
             entities: dto.entities,
@@ -33,11 +37,13 @@ impl From<&WorkspaceDto> for Workspace {
     fn from(dto: &WorkspaceDto) -> Self {
         Workspace {
             id: dto.id,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global,
+            global: dto.global.clone(),
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface,
+            user_interface: dto.user_interface.clone(),
         }
     }
 }
@@ -46,6 +52,8 @@ impl From<Workspace> for WorkspaceDto {
     fn from(entity: Workspace) -> Self {
         WorkspaceDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             manifest_absolute_path: entity.manifest_absolute_path,
             global: entity.global,
             entities: entity.entities,
@@ -57,6 +65,8 @@ impl From<Workspace> for WorkspaceDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateWorkspaceDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
@@ -68,6 +78,8 @@ impl From<CreateWorkspaceDto> for Workspace {
     fn from(dto: CreateWorkspaceDto) -> Self {
         Workspace {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             manifest_absolute_path: dto.manifest_absolute_path,
             global: dto.global,
             entities: dto.entities,
@@ -81,11 +93,13 @@ impl From<&CreateWorkspaceDto> for Workspace {
     fn from(dto: &CreateWorkspaceDto) -> Self {
         Workspace {
             id: 0,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global,
+            global: dto.global.clone(),
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface,
+            user_interface: dto.user_interface.clone(),
         }
     }
 }
@@ -93,6 +107,8 @@ impl From<&CreateWorkspaceDto> for Workspace {
 impl From<Workspace> for CreateWorkspaceDto {
     fn from(entity: Workspace) -> Self {
         CreateWorkspaceDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             manifest_absolute_path: entity.manifest_absolute_path,
             global: entity.global,
             entities: entity.entities,
@@ -101,7 +117,6 @@ impl From<Workspace> for CreateWorkspaceDto {
         }
     }
 }
-
 pub use common::direct_access::workspace::WorkspaceRelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

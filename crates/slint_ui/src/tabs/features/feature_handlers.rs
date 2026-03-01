@@ -80,7 +80,7 @@ pub fn subscribe_new_manifest_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Create), {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |_event| {
@@ -485,11 +485,13 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
 
                     // Create a new feature with default values
                     let create_dto = direct_access::CreateFeatureDto {
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: "new_feature".to_string(),
                         use_cases: vec![],
                     };
 
-                    match feature_commands::create_feature(&ctx, Some(stack_id), &create_dto) {
+                    match feature_commands::create_orphans_feature(&ctx, Some(stack_id), &create_dto) {
                         Ok(new_feature) => {
                             log::info!("Feature created successfully with id: {}", new_feature.id);
 

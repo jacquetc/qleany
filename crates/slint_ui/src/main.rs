@@ -96,7 +96,7 @@ fn run_slint(app_context: &Arc<AppContext>) {
             {
                 if app.global::<AppState>().get_manifest_is_open() {
                     log::info!("Closing Manifest before exit");
-                    match handling_manifest_commands::close_manifest(&ctx) {
+                    match handling_manifest_commands::close(&ctx) {
                         Ok(()) => {
                             log::info!("Manifest closed successfully");
                         }

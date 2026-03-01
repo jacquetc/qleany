@@ -4,15 +4,16 @@
 // Sub-modules for Entity use cases
 pub(super) mod create_entity_multi_uc;
 pub(super) mod create_entity_uc;
+pub(super) mod create_orphans_entity_multi_uc;
+pub(super) mod create_orphans_entity_uc;
 pub(super) mod get_entity_multi_uc;
+pub(super) mod get_entity_relationship_uc;
 pub(super) mod get_entity_uc;
 pub(super) mod remove_entity_multi_uc;
 pub(super) mod remove_entity_uc;
+pub(super) mod set_entity_relationship_uc;
 pub(super) mod update_entity_multi_uc;
 pub(super) mod update_entity_uc;
-
-pub(super) mod get_entity_relationship_uc;
-pub(super) mod set_entity_relationship_uc;
 
 use anyhow::Result;
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
@@ -31,12 +32,28 @@ pub(in crate::entity) trait EntityUnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "Entity", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Entity", action = "Delete")]
 #[macros::uow_action(entity = "Entity", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Entity", action = "Snapshot")]
+#[macros::uow_action(entity = "Entity", action = "Restore")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationship")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "Entity", action = "SetRelationship")]
 #[macros::uow_action(entity = "Entity", action = "SetRelationshipMulti")]
-
-pub(in crate::entity) trait EntityUnitOfWorkTrait: CommandUnitOfWork {}
+pub(in crate::entity) trait EntityUnitOfWorkTrait: CommandUnitOfWork {
+    fn create_entity_with_owner(
+        &self,
+        entity: &Entity,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Entity>;
+    fn create_entity_multi_with_owner(
+        &self,
+        entities: &[Entity],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<Entity>>;
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>>;
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()>;
+}
 
 pub(in crate::entity) trait EntityUnitOfWorkROFactoryTrait {
     fn create(&self) -> Box<dyn EntityUnitOfWorkROTrait>;
@@ -46,5 +63,4 @@ pub(in crate::entity) trait EntityUnitOfWorkROFactoryTrait {
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIdsRO")]
-
 pub(in crate::entity) trait EntityUnitOfWorkROTrait: QueryUnitOfWork {}

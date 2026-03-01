@@ -4,23 +4,14 @@
 use super::FileUnitOfWorkFactoryTrait;
 use crate::file::dtos::FileDto;
 use anyhow::{Ok, Result};
-use common::{entities::File, undo_redo::UndoRedoCommand};
-use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct UpdateFileMultiUseCase {
     uow_factory: Box<dyn FileUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Vec<File>>,
-    redo_stack: VecDeque<Vec<File>>,
 }
 
 impl UpdateFileMultiUseCase {
     pub fn new(uow_factory: Box<dyn FileUnitOfWorkFactoryTrait>) -> Self {
-        UpdateFileMultiUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        UpdateFileMultiUseCase { uow_factory }
     }
 
     pub fn execute(&mut self, dtos: &[FileDto]) -> Result<Vec<FileDto>> {
@@ -38,45 +29,11 @@ impl UpdateFileMultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
-        // store in undo stack
-        let entities = uow
-            .get_file_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?
-            .iter()
-            .filter_map(|entity| entity.clone())
-            .collect();
-        self.undo_stack.push_back(entities);
 
         let entities =
             uow.update_file_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
-    }
-}
-
-impl UndoRedoCommand for UpdateFileMultiUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_file_multi(&last_entities)?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entities);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(entities) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.update_file_multi(&entities)?;
-            uow.commit()?;
-            self.undo_stack.push_back(entities);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

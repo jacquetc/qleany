@@ -11,6 +11,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct FieldDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
@@ -27,6 +29,8 @@ impl From<FieldDto> for Field {
     fn from(dto: FieldDto) -> Self {
         Field {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             field_type: dto.field_type,
             entity: dto.entity,
@@ -45,13 +49,15 @@ impl From<&FieldDto> for Field {
     fn from(dto: &FieldDto) -> Self {
         Field {
             id: dto.id,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            entity: dto.entity,
+            entity: dto.entity.clone(),
             relationship: dto.relationship.clone(),
-            optional: dto.optional,
-            strong: dto.strong,
-            list_model: dto.list_model,
+            optional: dto.optional.clone(),
+            strong: dto.strong.clone(),
+            list_model: dto.list_model.clone(),
             list_model_displayed_field: dto.list_model_displayed_field.clone(),
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
@@ -63,6 +69,8 @@ impl From<Field> for FieldDto {
     fn from(entity: Field) -> Self {
         FieldDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             field_type: entity.field_type,
             entity: entity.entity,
@@ -79,6 +87,8 @@ impl From<Field> for FieldDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateFieldDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
@@ -95,6 +105,8 @@ impl From<CreateFieldDto> for Field {
     fn from(dto: CreateFieldDto) -> Self {
         Field {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             field_type: dto.field_type,
             entity: dto.entity,
@@ -113,13 +125,15 @@ impl From<&CreateFieldDto> for Field {
     fn from(dto: &CreateFieldDto) -> Self {
         Field {
             id: 0,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            entity: dto.entity,
+            entity: dto.entity.clone(),
             relationship: dto.relationship.clone(),
-            optional: dto.optional,
-            strong: dto.strong,
-            list_model: dto.list_model,
+            optional: dto.optional.clone(),
+            strong: dto.strong.clone(),
+            list_model: dto.list_model.clone(),
             list_model_displayed_field: dto.list_model_displayed_field.clone(),
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
@@ -130,6 +144,8 @@ impl From<&CreateFieldDto> for Field {
 impl From<Field> for CreateFieldDto {
     fn from(entity: Field) -> Self {
         CreateFieldDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             field_type: entity.field_type,
             entity: entity.entity,
@@ -143,7 +159,6 @@ impl From<Field> for CreateFieldDto {
         }
     }
 }
-
 pub use common::direct_access::field::FieldRelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -4,69 +4,35 @@
 use super::SystemUnitOfWorkFactoryTrait;
 use crate::system::dtos::{CreateSystemDto, SystemDto};
 use anyhow::{Ok, Result};
-use common::entities::System;
-use common::undo_redo::UndoRedoCommand;
-use std::any::Any;
-use std::collections::VecDeque;
+use common::types::EntityId;
 
 pub struct CreateSystemMultiUseCase {
     uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Vec<System>>,
-    redo_stack: VecDeque<Vec<System>>,
 }
 
 impl CreateSystemMultiUseCase {
     pub fn new(uow_factory: Box<dyn SystemUnitOfWorkFactoryTrait>) -> Self {
-        CreateSystemMultiUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        CreateSystemMultiUseCase { uow_factory }
     }
-    pub fn execute(&mut self, dtos: &[CreateSystemDto]) -> Result<Vec<SystemDto>> {
-        // create
+
+    pub fn execute(
+        &mut self,
+        dtos: &[CreateSystemDto],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<SystemDto>> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entities =
-            uow.create_system_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+
+        // Create with owner (repository handles junction management internally)
+        let entities = uow.create_system_multi_with_owner(
+            &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
+            owner_id,
+            index,
+        )?;
+
         uow.commit()?;
 
-        //store in undo stack
-        self.undo_stack.push_back(entities.clone());
-        self.redo_stack.clear();
-
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
-    }
-}
-
-impl UndoRedoCommand for CreateSystemMultiUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.delete_system_multi(
-                &last_entities
-                    .iter()
-                    .map(|entity| entity.id)
-                    .collect::<Vec<_>>(),
-            )?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entities);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.create_system_multi(&last_entities)?;
-            uow.commit()?;
-            self.undo_stack.push_back(last_entities);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

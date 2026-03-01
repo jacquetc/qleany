@@ -9,6 +9,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct SystemDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub files: Vec<EntityId>,
 }
 
@@ -16,6 +18,8 @@ impl From<SystemDto> for System {
     fn from(dto: SystemDto) -> Self {
         System {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             files: dto.files,
         }
     }
@@ -25,6 +29,8 @@ impl From<&SystemDto> for System {
     fn from(dto: &SystemDto) -> Self {
         System {
             id: dto.id,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             files: dto.files.clone(),
         }
     }
@@ -34,6 +40,8 @@ impl From<System> for SystemDto {
     fn from(entity: System) -> Self {
         SystemDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             files: entity.files,
         }
     }
@@ -41,6 +49,8 @@ impl From<System> for SystemDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateSystemDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub files: Vec<EntityId>,
 }
 
@@ -48,6 +58,8 @@ impl From<CreateSystemDto> for System {
     fn from(dto: CreateSystemDto) -> Self {
         System {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             files: dto.files,
         }
     }
@@ -57,6 +69,8 @@ impl From<&CreateSystemDto> for System {
     fn from(dto: &CreateSystemDto) -> Self {
         System {
             id: 0,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             files: dto.files.clone(),
         }
     }
@@ -65,11 +79,12 @@ impl From<&CreateSystemDto> for System {
 impl From<System> for CreateSystemDto {
     fn from(entity: System) -> Self {
         CreateSystemDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             files: entity.files,
         }
     }
 }
-
 pub use common::direct_access::system::SystemRelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

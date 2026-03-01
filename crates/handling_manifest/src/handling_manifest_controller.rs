@@ -7,22 +7,22 @@ use crate::LoadReturnDto;
 use crate::NewReturnDto;
 use crate::SaveDto;
 use crate::units_of_work::close_uow::CloseUnitOfWorkFactory;
+use crate::units_of_work::create_uow::CreateUnitOfWorkFactory;
 use crate::units_of_work::export_to_mermaid_uow::ExportToMermaidUnitOfWorkFactory;
 use crate::units_of_work::load_uow::LoadUnitOfWorkFactory;
-use crate::units_of_work::new_uow::NewUnitOfWorkFactory;
 use crate::units_of_work::save_uow::SaveUnitOfWorkFactory;
 use crate::use_cases::close_uc::CloseUseCase;
+use crate::use_cases::create_uc::CreateUseCase;
 use crate::use_cases::export_to_mermaid_uc::ExportToMermaidUseCase;
 use crate::use_cases::load_uc::LoadUseCase;
-use crate::use_cases::new_uc::NewUseCase;
 use crate::use_cases::save_uc::SaveUseCase;
 use anyhow::Result;
 use common::event::{Event, Origin};
 
 use common::event::HandlingManifestEvent::Close;
+use common::event::HandlingManifestEvent::Create;
 use common::event::HandlingManifestEvent::ExportToMermaid;
 use common::event::HandlingManifestEvent::Load;
-use common::event::HandlingManifestEvent::New;
 use common::event::HandlingManifestEvent::Save;
 
 use common::{database::db_context::DbContext, event::EventHub};
@@ -33,7 +33,7 @@ pub fn load(
     event_hub: &Arc<EventHub>,
     dto: &LoadDto,
 ) -> Result<LoadReturnDto> {
-    let uow_context = LoadUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = LoadUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = LoadUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
@@ -46,7 +46,7 @@ pub fn load(
 }
 
 pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) -> Result<()> {
-    let uow_context = SaveUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = SaveUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = SaveUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
@@ -58,13 +58,13 @@ pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) ->
     Ok(return_dto)
 }
 
-pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<NewReturnDto> {
-    let uow_context = NewUnitOfWorkFactory::new(&db_context, &event_hub);
-    let mut uc = NewUseCase::new(Box::new(uow_context));
+pub fn create(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<NewReturnDto> {
+    let uow_context = CreateUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute()?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
-        origin: Origin::HandlingManifest(New),
+        origin: Origin::HandlingManifest(Create),
         ids: vec![return_dto.workspace_id],
         data: None,
     });
@@ -72,7 +72,7 @@ pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<NewRetur
 }
 
 pub fn close(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
-    let uow_context = CloseUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = CloseUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CloseUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute()?;
     // Notify that the handling manifest has been loaded
@@ -88,7 +88,7 @@ pub fn export_to_mermaid(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
 ) -> Result<ExportToMermaidReturnDto> {
-    let uow_context = ExportToMermaidUnitOfWorkFactory::new(&db_context);
+    let uow_context = ExportToMermaidUnitOfWorkFactory::new(db_context);
     let mut uc = ExportToMermaidUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute()?;
     // Notify that the handling manifest has been loaded

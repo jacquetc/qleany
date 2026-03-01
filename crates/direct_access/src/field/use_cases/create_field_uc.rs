@@ -5,58 +5,98 @@ use super::FieldUnitOfWorkFactoryTrait;
 use crate::field::dtos::{CreateFieldDto, FieldDto};
 use anyhow::{Ok, Result};
 use common::entities::Field;
+use common::snapshot::EntityTreeSnapshot;
+use common::types::EntityId;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct CreateFieldUseCase {
     uow_factory: Box<dyn FieldUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Field>,
-    redo_stack: VecDeque<Field>,
+    created_entity: Option<Field>,
+    owner_id: Option<EntityId>,
+    index: i32,
+    old_tree_snapshot: Option<EntityTreeSnapshot>,
+    previous_owner_relationship_ids: Option<Vec<EntityId>>,
 }
 
 impl CreateFieldUseCase {
     pub fn new(uow_factory: Box<dyn FieldUnitOfWorkFactoryTrait>) -> Self {
         CreateFieldUseCase {
             uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
+            created_entity: None,
+            owner_id: None,
+            index: -1,
+            old_tree_snapshot: None,
+            previous_owner_relationship_ids: None,
         }
     }
 
-    pub fn execute(&mut self, dto: CreateFieldDto) -> Result<FieldDto> {
+    pub fn execute(
+        &mut self,
+        dto: CreateFieldDto,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<FieldDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity = uow.create_field(&dto.into())?;
-        uow.commit()?;
+        self.owner_id = Some(owner_id);
+        self.index = index;
+        // Capture owner junction state before create (for undo)
+        self.previous_owner_relationship_ids = Some(uow.get_relationships_from_owner(&owner_id)?);
 
-        // store in undo stack
-        self.undo_stack.push_back(entity.clone());
-        self.redo_stack.clear();
+        // Create with owner (repository handles junction management internally)
+        let entity = uow.create_field_with_owner(&dto.into(), owner_id, index)?;
+
+        uow.commit()?;
+        self.created_entity = Some(entity.clone());
 
         Ok(entity.into())
     }
 }
-
 impl UndoRedoCommand for CreateFieldUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.undo_stack.pop_back() {
+        if let Some(ref created) = self.created_entity {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_field(&last_entity.id)?;
+
+            // Snapshot the created entity tree before removing (for redo)
+            self.old_tree_snapshot = Some(uow.snapshot_field(&[created.id])?);
+
+            // Remove the created entity
+            uow.delete_field(&created.id)?;
+            // Restore owner junction to pre-create state
+            if let Some(ref prev_ids) = self.previous_owner_relationship_ids {
+                uow.set_relationships_in_owner(&owner_id, prev_ids)?;
+            }
+
             uow.commit()?;
-            self.redo_stack.push_back(last_entity);
         }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.redo_stack.pop_back() {
+        if let Some(ref snapshot) = self.old_tree_snapshot {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.create_field(&last_entity)?;
+            // Restore the created entity tree from snapshot
+            uow.restore_field(snapshot)?;
+
+            // Rebuild owner junction: previous IDs + created ID at the correct index
+            if let Some(ref prev_ids) = self.previous_owner_relationship_ids {
+                let mut redo_junction = prev_ids.clone();
+                if let Some(ref created) = self.created_entity {
+                    if self.index >= 0 && (self.index as usize) < redo_junction.len() {
+                        redo_junction.insert(self.index as usize, created.id);
+                    } else {
+                        redo_junction.push(created.id);
+                    }
+                }
+                uow.set_relationships_in_owner(&owner_id, &redo_junction)?;
+            }
+
             uow.commit()?;
-            self.undo_stack.push_back(last_entity);
         }
         Ok(())
     }

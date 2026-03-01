@@ -320,7 +320,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         }
 
         // Snapshot forward junction tables
-        {%- if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{%- else %}let forward_junctions = Vec::new();{%- endif %}
+        {% if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{% else %}let forward_junctions = Vec::new();{% endif %}
         {% for rid, r in s.entities[e].forward_relationships %}
         {
             let junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
@@ -338,7 +338,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         {%- endfor %}
 
         // Snapshot backward junction tables (entries that reference any of the given ids)
-        {%- if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{%- else %}let backward_junctions = Vec::new();{%- endif %}
+        {% if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{% else %}let backward_junctions = Vec::new();{% endif %}
         {% for rid, r in s.entities[e].backward_relationships %}
             {%- if r.inner.left_entity == e %}
         {

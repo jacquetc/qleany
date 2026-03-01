@@ -646,6 +646,8 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
 
                     // Create a new use case with default values
                     let create_dto = direct_access::CreateUseCaseDto {
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: "new_use_case".to_string(),
                         validator: false,
                         undoable: false,
@@ -656,7 +658,7 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
                         entities: vec![],
                     };
 
-                    match use_case_commands::create_use_case(
+                    match use_case_commands::create_orphans_use_case(
                         &ctx,
                         Some(
                             app.global::<FeaturesTabState>()

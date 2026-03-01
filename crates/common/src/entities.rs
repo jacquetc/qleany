@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Dto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub fields: Vec<EntityId>,
 }
@@ -16,6 +18,8 @@ pub struct Dto {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct DtoField {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: DtoFieldType,
     pub optional: bool,
@@ -39,6 +43,8 @@ pub enum DtoFieldType {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Global {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub language: String,
     pub application_name: String,
     pub organisation_name: String,
@@ -49,6 +55,8 @@ pub struct Global {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Relationship {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub left_entity: EntityId,
     pub right_entity: EntityId,
     pub field_name: String,
@@ -101,6 +109,8 @@ pub enum Order {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct UserInterface {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub rust_cli: bool,
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
@@ -110,6 +120,8 @@ pub struct UserInterface {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Root {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub workspace: Option<EntityId>,
     pub system: Option<EntityId>,
 }
@@ -117,6 +129,8 @@ pub struct Root {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Workspace {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub manifest_absolute_path: String,
     pub global: EntityId,
     pub entities: Vec<EntityId>,
@@ -127,12 +141,16 @@ pub struct Workspace {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct System {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub files: Vec<EntityId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Entity {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub inherits_from: Option<EntityId>,
     pub only_for_heritage: bool,
@@ -145,6 +163,8 @@ pub struct Entity {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Field {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub field_type: FieldType,
     pub entity: Option<EntityId>,
@@ -183,6 +203,8 @@ pub enum FieldRelationshipType {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Feature {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub use_cases: Vec<EntityId>,
 }
@@ -200,6 +222,8 @@ pub enum FileStatus {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct File {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub relative_path: String,
     pub group: String,
@@ -215,6 +239,8 @@ pub struct File {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct UseCase {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub validator: bool,
     pub entities: Vec<EntityId>,

@@ -6,6 +6,8 @@ use super::{
     dtos::{CreateUserInterfaceDto, UserInterfaceDto},
     units_of_work::UserInterfaceUnitOfWorkROFactory,
     use_cases::{
+        create_orphans_user_interface_multi_uc::CreateOrphansUserInterfaceMultiUseCase,
+        create_orphans_user_interface_uc::CreateOrphansUserInterfaceUseCase,
         create_user_interface_multi_uc::CreateUserInterfaceMultiUseCase,
         create_user_interface_uc::CreateUserInterfaceUseCase,
         get_user_interface_multi_uc::GetUserInterfaceMultiUseCase,
@@ -17,12 +19,11 @@ use super::{
     },
 };
 use anyhow::{Ok, Result};
-
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -30,12 +31,26 @@ pub fn create(
     entity: &CreateUserInterfaceDto,
 ) -> Result<UserInterfaceDto> {
     let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateUserInterfaceUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansUserInterfaceUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateUserInterfaceDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<UserInterfaceDto> {
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateUserInterfaceUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<UserInterfaceDto>> {
     let uow_factory = UserInterfaceUnitOfWorkROFactory::new(db_context);
     let uc = GetUserInterfaceUseCase::new(Box::new(uow_factory));
@@ -70,7 +85,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -78,12 +93,26 @@ pub fn create_multi(
     entities: &[CreateUserInterfaceDto],
 ) -> Result<Vec<UserInterfaceDto>> {
     let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateUserInterfaceMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansUserInterfaceMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CreateUserInterfaceDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<UserInterfaceDto>> {
+    let uow_factory = UserInterfaceUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateUserInterfaceMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get_multi(
     db_context: &DbContext,
     ids: &[EntityId],

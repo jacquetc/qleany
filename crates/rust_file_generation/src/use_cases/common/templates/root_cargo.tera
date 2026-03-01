@@ -46,6 +46,8 @@ thiserror = "2.0"
 anyhow = "1.0"
 flume = "0.12"
 serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4" , features = ["serde"] }
+
 
 [workspace.lints.rust]
 

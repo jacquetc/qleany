@@ -15,6 +15,8 @@ fn render_direct_access_lib_lists_entities() {
     // Build a snapshot with file.entity = Some(0) and two entities in the map
     let file = File {
         id: 1,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "lib".into(),
         relative_path: "crates/direct_access/src/lib.rs".into(),
         group: "entities".into(),
@@ -29,6 +31,8 @@ fn render_direct_access_lib_lists_entities() {
 
     let global = Global {
         id: 50,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         language: "".to_string(),
         application_name: "".to_string(),
         organisation_name: "".to_string(),
@@ -38,6 +42,8 @@ fn render_direct_access_lib_lists_entities() {
 
     let e1 = Entity {
         id: 10,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Feature".into(),
         only_for_heritage: false,
         inherits_from: None,
@@ -49,6 +55,8 @@ fn render_direct_access_lib_lists_entities() {
     };
     let e2 = Entity {
         id: 11,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
         name: "Field".into(),
         only_for_heritage: false,
         single_model: true,

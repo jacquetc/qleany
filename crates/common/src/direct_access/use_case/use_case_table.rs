@@ -7,6 +7,7 @@ use super::use_case_repository::UseCaseTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::UseCase;
+use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
@@ -25,7 +26,8 @@ const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
 
 const USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("use_case_from_feature_use_cases_junction");
-
+const USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("use_case_from_file_use_case_junction");
 fn get_junction_table_definition(
     field: &'_ UseCaseRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -53,6 +55,7 @@ impl<'a> UseCaseRedbTable<'a> {
         transaction.open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
         transaction.open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+        transaction.open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -114,7 +117,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 let mut iter = dto_in_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = new_entity.dto_in
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
@@ -126,13 +128,11 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     }
                 }
             }
-
             // one-to-one constraint check: ensure dto_out is not already referenced by another use_case
             {
                 let mut iter = dto_out_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = new_entity.dto_out
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
@@ -144,7 +144,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     }
                 }
             }
-
             use_case_table.insert(new_entity.id, new_entity.clone())?;
 
             entities_junction_table.insert(new_entity.id, new_entity.entities.clone())?;
@@ -192,32 +191,24 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 let mut entity = data.value().clone();
 
                 // get entities from junction table
-
                 let fetched_entities = entities_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
-
                 entity.entities = fetched_entities;
-
                 // get dto_in from junction table
-
                 let fetched_dto_in: Option<EntityId> = dto_in_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.dto_in = fetched_dto_in;
-
                 // get dto_out from junction table
-
                 let fetched_dto_out: Option<EntityId> = dto_out_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.dto_out = fetched_dto_out;
 
                 list.push(Some(entity));
@@ -229,34 +220,25 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     let mut entity = guard.value().clone();
 
                     // get entities from junction table
-
                     let fetched_entities = entities_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default();
-
                     entity.entities = fetched_entities;
-
                     // get dto_in from junction table
-
                     let fetched_dto_in: Option<EntityId> = dto_in_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.dto_in = fetched_dto_in;
-
                     // get dto_out from junction table
-
                     let fetched_dto_out: Option<EntityId> = dto_out_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.dto_out = fetched_dto_out;
-
                     Some(entity)
                 } else {
                     None
@@ -288,7 +270,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 let mut iter = dto_in_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = entity.dto_in
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
@@ -300,13 +281,11 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     }
                 }
             }
-
             // one-to-one constraint check: ensure dto_out is not already referenced by another use_case
             {
                 let mut iter = dto_out_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = entity.dto_out
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
@@ -318,16 +297,13 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                     }
                 }
             }
-
             use_case_table.insert(entity.id, entity)?;
 
             entities_junction_table.insert(entity.id, entity.entities.clone())?;
-
             dto_in_junction_table.insert(
                 entity.id,
                 entity.dto_in.into_iter().collect::<Vec<EntityId>>(),
             )?;
-
             dto_out_junction_table.insert(
                 entity.id,
                 entity.dto_out.into_iter().collect::<Vec<EntityId>>(),
@@ -345,11 +321,9 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         let mut entities_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
-
         let mut dto_in_junction_table = self
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
-
         let mut dto_out_junction_table = self
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
@@ -359,6 +333,9 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         let mut backward_feature_use_cases_junction_table = self
             .transaction
             .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+        let mut backward_file_use_case_junction_table = self
+            .transaction
+            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
 
         for id in ids {
             use_case_table.remove(id)?;
@@ -371,10 +348,13 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 &mut backward_feature_use_cases_junction_table,
                 id,
             )?;
+            db_helpers::delete_from_backward_junction_table(
+                &mut backward_file_use_case_junction_table,
+                id,
+            )?;
         }
         Ok(())
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -433,6 +413,204 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
+
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+        let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
+
+        // Snapshot entity rows as bincode bytes
+        let mut rows = Vec::new();
+        for id in ids {
+            if let Some(guard) = use_case_table.get(id)? {
+                let entity = guard.value();
+                let bytes = bincode::serialize(&entity).map_err(|e| {
+                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                })?;
+                rows.push((*id, bytes));
+            }
+        }
+
+        // Snapshot forward junction tables
+let mut forward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "entity_from_use_case_entities_junction".to_string(),
+                entries,
+            });
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "dto_from_use_case_dto_in_junction".to_string(),
+                entries,
+            });
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "dto_from_use_case_dto_out_junction".to_string(),
+                entries,
+            });
+        }
+
+        // Snapshot backward junction tables (entries that reference any of the given ids)
+let mut backward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "use_case_from_feature_use_cases_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "use_case_from_file_use_case_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+
+        Ok(TableLevelSnapshot {
+            entity_rows: TableSnapshot {
+                table_name: "use_case".to_string(),
+                rows,
+            },
+            forward_junctions,
+            backward_junctions,
+        })
+    }
+
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+        let mut use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
+
+        // Restore entity rows from bincode bytes (redb insert is upsert)
+        for (id, bytes) in &snap.entity_rows.rows {
+            let entity: UseCase = bincode::deserialize(bytes).map_err(|e| {
+                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+            })?;
+            use_case_table.insert(*id, entity)?;
+        }
+
+        // Restore forward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "entity_from_use_case_entities_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "dto_from_use_case_dto_in_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "dto_from_use_case_dto_out_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        // Restore backward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "use_case_from_feature_use_cases_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "use_case_from_file_use_case_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct UseCaseRedbTableRO<'a> {
@@ -477,32 +655,24 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
                 let mut entity = data.value().clone();
 
                 // get entities from junction table
-
                 let fetched_entities = entities_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
-
                 entity.entities = fetched_entities;
-
                 // get dto_in from junction table
-
                 let fetched_dto_in: Option<EntityId> = dto_in_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.dto_in = fetched_dto_in;
-
                 // get dto_out from junction table
-
                 let fetched_dto_out: Option<EntityId> = dto_out_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.dto_out = fetched_dto_out;
 
                 list.push(Some(entity));
@@ -514,34 +684,25 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
                     let mut entity = guard.value().clone();
 
                     // get entities from junction table
-
                     let fetched_entities = entities_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default();
-
                     entity.entities = fetched_entities;
-
                     // get dto_in from junction table
-
                     let fetched_dto_in: Option<EntityId> = dto_in_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.dto_in = fetched_dto_in;
-
                     // get dto_out from junction table
-
                     let fetched_dto_out: Option<EntityId> = dto_out_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.dto_out = fetched_dto_out;
-
                     Some(entity)
                 } else {
                     None
@@ -552,7 +713,6 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
 
         Ok(list)
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,

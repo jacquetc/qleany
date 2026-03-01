@@ -38,22 +38,22 @@ impl UpdateGlobalMultiUseCase {
         if !exists {
             return Err(anyhow::anyhow!("One or more ids do not exist"));
         }
-        // store in undo stack
-        let entities = uow
+        // fetch old entities for undo stack
+        let old_entities = uow
             .get_global_multi(&dtos.iter().map(|dto| dto.id).collect::<Vec<_>>())?
             .iter()
             .filter_map(|entity| entity.clone())
             .collect();
-        self.undo_stack.push_back(entities);
 
         let entities =
             uow.update_global_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
+        // store in undo stack only after successful commit
+        self.undo_stack.push_back(old_entities);
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
     }
 }
-
 impl UndoRedoCommand for UpdateGlobalMultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entities) = self.undo_stack.pop_back() {

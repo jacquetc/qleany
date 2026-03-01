@@ -58,7 +58,7 @@ pub fn get_{{ uc.snake_name }}_progress(
 pub fn get_{{ uc.snake_name }}_result(
     ctx: &AppContext,
     operation_id: &str,
-) -> Result<Option<{{ uc.dto_out.pascal_name }}>, String> {
+) -> Result<Option<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}>, String> {
     {{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_result(
         &ctx.long_operation_manager.lock().unwrap(),
         operation_id,

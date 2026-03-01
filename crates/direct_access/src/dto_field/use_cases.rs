@@ -4,6 +4,8 @@
 // Sub-modules for DtoField use cases
 pub(super) mod create_dto_field_multi_uc;
 pub(super) mod create_dto_field_uc;
+pub(super) mod create_orphans_dto_field_multi_uc;
+pub(super) mod create_orphans_dto_field_uc;
 pub(super) mod get_dto_field_multi_uc;
 pub(super) mod get_dto_field_uc;
 pub(super) mod remove_dto_field_multi_uc;
@@ -30,10 +32,25 @@ pub(in crate::dto_field) trait DtoFieldUnitOfWorkFactoryTrait:
 #[macros::uow_action(entity = "DtoField", action = "UpdateMulti")]
 #[macros::uow_action(entity = "DtoField", action = "Delete")]
 #[macros::uow_action(entity = "DtoField", action = "DeleteMulti")]
-
+#[macros::uow_action(entity = "DtoField", action = "Snapshot")]
+#[macros::uow_action(entity = "DtoField", action = "Restore")]
 pub(in crate::dto_field) trait DtoFieldUnitOfWorkTrait:
     CommandUnitOfWork
 {
+    fn create_dto_field_with_owner(
+        &self,
+        entity: &DtoField,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<DtoField>;
+    fn create_dto_field_multi_with_owner(
+        &self,
+        entities: &[DtoField],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<DtoField>>;
+    fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>>;
+    fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()>;
 }
 
 pub(in crate::dto_field) trait DtoFieldUnitOfWorkROFactoryTrait {
@@ -42,7 +59,6 @@ pub(in crate::dto_field) trait DtoFieldUnitOfWorkROFactoryTrait {
 
 #[macros::uow_action(entity = "DtoField", action = "GetRO")]
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
-
 pub(in crate::dto_field) trait DtoFieldUnitOfWorkROTrait:
     QueryUnitOfWork
 {

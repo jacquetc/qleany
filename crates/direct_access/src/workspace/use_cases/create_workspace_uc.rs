@@ -5,58 +5,106 @@ use super::WorkspaceUnitOfWorkFactoryTrait;
 use crate::workspace::dtos::{CreateWorkspaceDto, WorkspaceDto};
 use anyhow::{Ok, Result};
 use common::entities::Workspace;
+use common::snapshot::EntityTreeSnapshot;
+use common::types::EntityId;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct CreateWorkspaceUseCase {
     uow_factory: Box<dyn WorkspaceUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Workspace>,
-    redo_stack: VecDeque<Workspace>,
+    created_entity: Option<Workspace>,
+    owner_id: Option<EntityId>,
+    index: i32,
+    old_tree_snapshot: Option<EntityTreeSnapshot>,
+    existing_child_ids: Vec<EntityId>,
+    displaced_children_snapshot: Option<EntityTreeSnapshot>,
 }
 
 impl CreateWorkspaceUseCase {
     pub fn new(uow_factory: Box<dyn WorkspaceUnitOfWorkFactoryTrait>) -> Self {
         CreateWorkspaceUseCase {
             uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
+            created_entity: None,
+            owner_id: None,
+            index: -1,
+            old_tree_snapshot: None,
+            existing_child_ids: Vec::new(),
+            displaced_children_snapshot: None,
         }
     }
 
-    pub fn execute(&mut self, dto: CreateWorkspaceDto) -> Result<WorkspaceDto> {
+    pub fn execute(
+        &mut self,
+        dto: CreateWorkspaceDto,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<WorkspaceDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity = uow.create_workspace(&dto.into())?;
-        uow.commit()?;
+        self.owner_id = Some(owner_id);
+        self.index = index;
+        // Pre-snapshot existing children that will be displaced by create
+        self.existing_child_ids = uow.get_relationships_from_owner(&owner_id)?;
+        if !self.existing_child_ids.is_empty() {
+            self.displaced_children_snapshot =
+                Some(uow.snapshot_workspace(&self.existing_child_ids)?);
+        }
 
-        // store in undo stack
-        self.undo_stack.push_back(entity.clone());
-        self.redo_stack.clear();
+        // Create with owner (repository handles junction management internally)
+        let entity = uow.create_workspace_with_owner(&dto.into(), owner_id, index)?;
+
+        uow.commit()?;
+        self.created_entity = Some(entity.clone());
 
         Ok(entity.into())
     }
 }
-
 impl UndoRedoCommand for CreateWorkspaceUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.undo_stack.pop_back() {
+        if let Some(ref created) = self.created_entity {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_workspace(&last_entity.id)?;
+
+            // Snapshot the created entity tree before removing (for redo)
+            self.old_tree_snapshot = Some(uow.snapshot_workspace(&[created.id])?);
+
+            // Remove the created entity
+            uow.delete_workspace(&created.id)?;
+            // Restore displaced children and fix owner junction
+            if let Some(ref snap) = self.displaced_children_snapshot {
+                uow.restore_workspace(snap)?;
+                uow.set_relationships_in_owner(&owner_id, &self.existing_child_ids)?;
+            } else {
+                uow.set_relationships_in_owner(&owner_id, &[])?;
+            }
+
             uow.commit()?;
-            self.redo_stack.push_back(last_entity);
         }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.redo_stack.pop_back() {
+        if let Some(ref snapshot) = self.old_tree_snapshot {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.create_workspace(&last_entity)?;
+            // Re-snapshot displaced children for next undo cycle
+            if !self.existing_child_ids.is_empty() {
+                self.displaced_children_snapshot =
+                    Some(uow.snapshot_workspace(&self.existing_child_ids)?);
+                uow.delete_workspace_multi(&self.existing_child_ids)?;
+            }
+
+            // Restore the created entity tree
+            uow.restore_workspace(snapshot)?;
+
+            // Fix owner junction to point to the recreated entity
+            if let Some(ref created) = self.created_entity {
+                uow.set_relationships_in_owner(&owner_id, &[created.id])?;
+            }
+
             uow.commit()?;
-            self.undo_stack.push_back(last_entity);
         }
         Ok(())
     }

@@ -5,5 +5,5 @@ pub(crate) mod close_uc;
 mod common;
 pub(crate) mod export_to_mermaid_uc;
 pub(crate) mod load_uc;
-pub(crate) mod new_uc;
+pub(crate) mod create_uc;
 pub(crate) mod save_uc;

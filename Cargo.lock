@@ -887,6 +887,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link 0.2.1",
 ]
@@ -1007,7 +1008,9 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
+ "chrono",
  "flume",
+ "log",
  "redb",
  "serde",
  "serde_json",
@@ -1450,6 +1453,7 @@ name = "direct_access"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "chrono",
  "common",
  "macros",
  "serde",
@@ -2324,6 +2328,7 @@ name = "handling_app_lifecycle"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "chrono",
  "common",
  "macros",
  "serde",
@@ -2334,6 +2339,7 @@ name = "handling_manifest"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "chrono",
  "common",
  "jsonschema",
  "macros",
@@ -4627,6 +4633,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "arboard",
+ "chrono",
  "clap",
  "common",
  "cpp_qt_file_generation",

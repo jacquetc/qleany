@@ -322,10 +322,12 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                 if enabled {
                     // Create a new DTO In for this use case
                     let create_dto = direct_access::CreateDtoDto {
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: "NewDtoIn".to_string(),
                         fields: vec![],
                     };
-                    match dto_commands::create_dto(&ctx, Some(stack_id), &create_dto) {
+                    match dto_commands::create_orphans_dto(&ctx, Some(stack_id), &create_dto) {
                         Ok(dto) => {
                             // Set the relationship
                             let relationship_dto = UseCaseRelationshipDto {
@@ -662,6 +664,8 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
 
                     // Create a new DTO field with default values
                     let create_dto = direct_access::CreateDtoFieldDto {
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
                         name: "new_field".to_string(),
                         field_type: DtoFieldType::String,
                         optional: false,
@@ -670,7 +674,7 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                         enum_values: None,
                     };
 
-                    match dto_field_commands::create_dto_field(
+                    match dto_field_commands::create_orphans_dto_field(
                         &ctx,
                         Some(
                             app.global::<FeaturesTabState>()

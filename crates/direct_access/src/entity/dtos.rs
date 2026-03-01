@@ -9,6 +9,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct EntityDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub inherits_from: Option<EntityId>,
     pub only_for_heritage: bool,
@@ -22,6 +24,8 @@ impl From<EntityDto> for Entity {
     fn from(dto: EntityDto) -> Self {
         Entity {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             inherits_from: dto.inherits_from,
             only_for_heritage: dto.only_for_heritage,
@@ -37,13 +41,15 @@ impl From<&EntityDto> for Entity {
     fn from(dto: &EntityDto) -> Self {
         Entity {
             id: dto.id,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from,
-            only_for_heritage: dto.only_for_heritage,
+            inherits_from: dto.inherits_from.clone(),
+            only_for_heritage: dto.only_for_heritage.clone(),
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model,
-            undoable: dto.undoable,
+            single_model: dto.single_model.clone(),
+            undoable: dto.undoable.clone(),
         }
     }
 }
@@ -52,6 +58,8 @@ impl From<Entity> for EntityDto {
     fn from(entity: Entity) -> Self {
         EntityDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             inherits_from: entity.inherits_from,
             only_for_heritage: entity.only_for_heritage,
@@ -65,6 +73,8 @@ impl From<Entity> for EntityDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateEntityDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
     pub inherits_from: Option<EntityId>,
     pub only_for_heritage: bool,
@@ -78,6 +88,8 @@ impl From<CreateEntityDto> for Entity {
     fn from(dto: CreateEntityDto) -> Self {
         Entity {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name,
             inherits_from: dto.inherits_from,
             only_for_heritage: dto.only_for_heritage,
@@ -93,13 +105,15 @@ impl From<&CreateEntityDto> for Entity {
     fn from(dto: &CreateEntityDto) -> Self {
         Entity {
             id: 0,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from,
-            only_for_heritage: dto.only_for_heritage,
+            inherits_from: dto.inherits_from.clone(),
+            only_for_heritage: dto.only_for_heritage.clone(),
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model,
-            undoable: dto.undoable,
+            single_model: dto.single_model.clone(),
+            undoable: dto.undoable.clone(),
         }
     }
 }
@@ -107,6 +121,8 @@ impl From<&CreateEntityDto> for Entity {
 impl From<Entity> for CreateEntityDto {
     fn from(entity: Entity) -> Self {
         CreateEntityDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             name: entity.name,
             inherits_from: entity.inherits_from,
             only_for_heritage: entity.only_for_heritage,
@@ -117,7 +133,6 @@ impl From<Entity> for CreateEntityDto {
         }
     }
 }
-
 pub use common::direct_access::entity::EntityRelationshipField;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

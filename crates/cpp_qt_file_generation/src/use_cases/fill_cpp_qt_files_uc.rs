@@ -119,6 +119,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: "".to_string(),
             group: "base".to_string(),
@@ -133,6 +135,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
@@ -147,6 +151,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "InstallHelpers.cmake".to_string(),
             relative_path: "cmake/".to_string(),
             group: "base".to_string(),
@@ -161,6 +167,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "VersionFromGit.cmake".to_string(),
             relative_path: "cmake/".to_string(),
             group: "base".to_string(),
@@ -175,6 +183,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "service_locator.h".to_string(),
             relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
@@ -189,6 +199,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "service_locator.cpp".to_string(),
             relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
@@ -203,6 +215,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "controller_command_helpers.h".to_string(),
             relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
@@ -217,6 +231,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "signal_buffer.h".to_string(),
             relative_path: format!("{}/common/", prefix),
             group: "base".to_string(),
@@ -231,6 +247,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "app_bootstrap.h".to_string(),
             relative_path: format!("{}/common/frontend", prefix),
             group: "base".to_string(),
@@ -245,6 +263,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "app_bootstrap.cpp".to_string(),
             relative_path: format!("{}/common/frontend", prefix),
             group: "base".to_string(),
@@ -259,6 +279,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: format!("{}/common/frontend", prefix),
             group: "base".to_string(),
@@ -275,6 +297,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "db_builder.h".to_string(),
             relative_path: format!("{}/common/database", prefix),
             group: "common_db".to_string(),
@@ -289,6 +313,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "db_context.h".to_string(),
             relative_path: format!("{}/common/database", prefix),
             group: "common_db".to_string(),
@@ -303,6 +329,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "table_cache.h".to_string(),
             relative_path: format!("{}/common/database", prefix),
             group: "common_db".to_string(),
@@ -317,6 +345,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "junction_cache.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -331,6 +361,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "snapshot_types.h".to_string(),
             relative_path: format!("{}/common/database", prefix),
             group: "common_db".to_string(),
@@ -345,6 +377,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "unordered_many_to_many.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -359,6 +393,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "unordered_many_to_many.cpp".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -373,6 +409,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "unordered_one_to_many.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -387,6 +425,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "unordered_one_to_many.cpp".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -401,6 +441,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "ordered_one_to_many.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -415,6 +457,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "ordered_one_to_many.cpp".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -429,6 +473,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "one_to_one.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -443,6 +489,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "one_to_one.cpp".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -456,6 +504,8 @@ impl FillCppQtFilesUseCase {
         });
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "many_to_one.h".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -470,6 +520,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "many_to_one.cpp".to_string(),
             relative_path: format!("{}/common/database/junction_table_ops/", prefix),
             group: "common_db".to_string(),
@@ -486,6 +538,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "group_command.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -500,6 +554,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "group_command.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -514,6 +570,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "group_command_builder.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -528,6 +586,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "group_command_builder.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -542,6 +602,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "query_handler.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -556,6 +618,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "query_handler.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -570,6 +634,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_command.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -584,6 +650,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_command.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -598,6 +666,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_manager.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -612,6 +682,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_manager.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -626,6 +698,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_stack.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -640,6 +714,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_stack.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -654,6 +730,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_system.cpp".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -668,6 +746,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "undo_redo_system.h".to_string(),
             relative_path: format!("{}/common/undo_redo/", prefix),
             group: "common_undo".to_string(),
@@ -683,6 +763,8 @@ impl FillCppQtFilesUseCase {
         // common unit of work macros
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "uow_macros.h".to_string(),
             relative_path: format!("{}/common/unit_of_work/", prefix),
             group: "common_unit_of_work".to_string(),
@@ -697,6 +779,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "unit_of_work.h".to_string(),
             relative_path: format!("{}/common/unit_of_work/", prefix),
             group: "common_unit_of_work".to_string(),
@@ -711,6 +795,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "uow_base.h".to_string(),
             relative_path: format!("{}/common/unit_of_work/", prefix),
             group: "common_unit_of_work".to_string(),
@@ -725,6 +811,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "uow_ops.h".to_string(),
             relative_path: format!("{}/common/unit_of_work/", prefix),
             group: "common_unit_of_work".to_string(),
@@ -741,6 +829,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "event_registry.h".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -755,6 +845,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "repository_factory.cpp".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -769,6 +861,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "repository_factory.h".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -783,6 +877,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "mapper_tools.h".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -797,6 +893,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "converter_registration.h".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -811,6 +909,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "operators.h".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -825,6 +925,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: format!("{}/common/direct_access/", prefix),
             group: "common_direct_access".to_string(),
@@ -839,6 +941,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: format!("{}/common/entities/", prefix),
             group: "common_direct_access".to_string(),
@@ -853,6 +957,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: format!("{}/direct_access/", prefix),
             group: "direct_access".to_string(),
@@ -891,8 +997,10 @@ impl FillCppQtFilesUseCase {
                 );
 
                 files.push(File {
-                    id: 0,
-                    name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "direct_access_entity_cmake".to_string(),
@@ -905,8 +1013,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_controller.cpp", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_controller.cpp", entity_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "entity_controller_cpp".to_string(),
@@ -919,8 +1029,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_controller.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_controller.h", entity_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "entity_controller_h".to_string(),
@@ -933,8 +1045,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_unit_of_work.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_unit_of_work.h", entity_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "entity_unit_of_work_h".to_string(),
@@ -947,8 +1061,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "dtos.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "dtos.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "dtos_h".to_string(),
@@ -983,8 +1099,10 @@ impl FillCppQtFilesUseCase {
                     let field_snake_name = heck::AsSnakeCase(&list_model_field.name);
 
                     files.push(File {
-                        id: 0,
-                        name: format!("{}_{}_list_model.cpp", entity_snake_name, field_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_{}_list_model.cpp", entity_snake_name, field_snake_name),
                         relative_path: relative_path.clone(),
                         group: format!("direct_access: {}", entity_pascal_name),
                         template_name: "entity_field_list_model_cpp".to_string(),
@@ -997,8 +1115,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: format!("{}_{}_list_model.h", entity_snake_name, field_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_{}_list_model.h", entity_snake_name, field_snake_name),
                         relative_path: relative_path.clone(),
                         group: format!("direct_access: {}", entity_pascal_name),
                         template_name: "entity_field_list_model_h".to_string(),
@@ -1015,8 +1135,10 @@ impl FillCppQtFilesUseCase {
 
                 if entity.single_model {
                     files.push(File {
-                        id: 0,
-                        name: format!("single_{}.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("single_{}.h", entity_snake_name),
                         relative_path: relative_path.clone(),
                         group: format!("direct_access: {}", entity_pascal_name),
                         template_name: "single_entity_h".to_string(),
@@ -1029,8 +1151,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: format!("single_{}.cpp", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("single_{}.cpp", entity_snake_name),
                         relative_path: relative_path.clone(),
                         group: format!("direct_access: {}", entity_pascal_name),
                         template_name: "single_entity_cpp".to_string(),
@@ -1052,8 +1176,10 @@ impl FillCppQtFilesUseCase {
                 );
 
                 files.push(File {
-                    id: 0,
-                    name: format!("i_{}_unit_of_work.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("i_{}_unit_of_work.h", entity_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("direct_access: {}", entity_pascal_name),
                     template_name: "i_entity_unit_of_work_h".to_string(),
@@ -1066,8 +1192,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "create_orphans_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "create_orphans_uc.cpp".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "create_orphans_uc_cpp".to_string(),
@@ -1080,8 +1208,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "create_orphans_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "create_orphans_uc.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "create_orphans_uc_h".to_string(),
@@ -1094,8 +1224,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "get_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_uc.cpp".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "get_uc_cpp".to_string(),
@@ -1108,8 +1240,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "get_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_uc.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "get_uc_h".to_string(),
@@ -1122,8 +1256,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "remove_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "remove_uc.cpp".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "remove_uc_cpp".to_string(),
@@ -1136,8 +1272,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "remove_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "remove_uc.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "remove_uc_h".to_string(),
@@ -1150,8 +1288,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "update_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "update_uc.cpp".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "update_uc_cpp".to_string(),
@@ -1164,8 +1304,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "update_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "update_uc.h".to_string(),
                     relative_path: relative_path.clone(),
                     group: "direct_access".to_string(),
                     template_name: "update_uc_h".to_string(),
@@ -1178,8 +1320,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: "dto_mapper.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "dto_mapper.h".to_string(),
                     relative_path: format!("{}{}", relative_path.clone(), "common/"),
                     group: "direct_access".to_string(),
                     template_name: "dto_mapper_h".to_string(),
@@ -1209,8 +1353,10 @@ impl FillCppQtFilesUseCase {
 
                 if has_owner {
                     files.push(File {
-                        id: 0,
-                        name: "create_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "create_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "create_uc_cpp".to_string(),
@@ -1223,8 +1369,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "create_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "create_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "create_uc_h".to_string(),
@@ -1247,8 +1395,10 @@ impl FillCppQtFilesUseCase {
 
                 if has_forward_relationship {
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_count_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_count_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_count_uc_cpp".to_string(),
@@ -1261,8 +1411,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_count_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_count_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_count_uc_h".to_string(),
@@ -1275,8 +1427,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_in_range_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_in_range_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_in_range_uc_cpp".to_string(),
@@ -1289,8 +1443,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_in_range_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_in_range_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_in_range_uc_h".to_string(),
@@ -1303,8 +1459,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_many_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_many_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_many_uc_cpp".to_string(),
@@ -1317,8 +1475,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_many_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_many_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_many_uc_h".to_string(),
@@ -1331,8 +1491,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_uc_cpp".to_string(),
@@ -1345,8 +1507,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "get_relationship_ids_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "get_relationship_ids_uc_h".to_string(),
@@ -1359,8 +1523,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "set_relationship_ids_uc.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "set_relationship_ids_uc.cpp".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "set_relationship_ids_uc_cpp".to_string(),
@@ -1373,8 +1539,10 @@ impl FillCppQtFilesUseCase {
                     });
 
                     files.push(File {
-                        id: 0,
-                        name: "set_relationship_ids_uc.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "set_relationship_ids_uc.h".to_string(),
                         relative_path: relative_path.clone(),
                         group: "direct_access".to_string(),
                         template_name: "set_relationship_ids_uc_h".to_string(),
@@ -1392,8 +1560,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/common/entities/", prefix);
 
             files.push(File {
-                id: 0,
-                name: format!("{}.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}.h", entity_snake_name),
                 relative_path: relative_path.to_string(),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_h".to_string(),
@@ -1409,8 +1579,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/common/direct_access/", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "common_direct_access_entity_cmake".to_string(),
@@ -1422,8 +1594,10 @@ impl FillCppQtFilesUseCase {
                 field: None,
             });
             files.push(File {
-                id: 0,
-                name: format!("i_{}_repository.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("i_{}_repository.h", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "i_entity_repository_h".to_string(),
@@ -1436,8 +1610,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "table_definitions.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "table_definitions.h".to_string(),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "table_definitions_h".to_string(),
@@ -1450,8 +1626,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_events.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_events.h", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_events_h".to_string(),
@@ -1464,8 +1642,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_repository.cpp", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_repository.cpp", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_repository_cpp".to_string(),
@@ -1478,8 +1658,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_repository.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_repository.h", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_repository_h".to_string(),
@@ -1492,8 +1674,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_table.cpp", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_table.cpp", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_table_cpp".to_string(),
@@ -1506,8 +1690,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_table.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_table.h", entity_snake_name),
                 relative_path: format!("{}{}/", relative_path, entity_snake_name),
                 group: format!("entities: {}", entity_pascal_name),
                 template_name: "entity_table_h".to_string(),
@@ -1526,6 +1712,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: relative_path.clone(),
             group: "features".to_string(),
@@ -1540,6 +1728,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "feature_event_registry.h".to_string(),
             relative_path: relative_path.clone(),
             group: "features".to_string(),
@@ -1570,8 +1760,10 @@ impl FillCppQtFilesUseCase {
             let feature_pascal_name = heck::AsPascalCase(&feature.name);
 
             files.push(File {
-                id: 0,
-                name: format!("{}_events.h", feature_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_events.h", feature_snake_name),
                 relative_path: relative_path.clone(),
                 group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_events_h".to_string(),
@@ -1586,8 +1778,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/{}/", prefix, feature_snake_name);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_cmake".to_string(),
@@ -1600,8 +1794,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_dtos.h", feature_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_dtos.h", feature_snake_name),
                 relative_path: relative_path.clone(),
                 group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_dtos_h".to_string(),
@@ -1614,8 +1810,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_controller.h", feature_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_controller.h", feature_snake_name),
                 relative_path: relative_path.clone(),
                 group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_controller_h".to_string(),
@@ -1628,8 +1826,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: format!("{}_controller.cpp", feature_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_controller.cpp", feature_snake_name),
                 relative_path: relative_path.clone(),
                 group: format!("feature: {}", feature_pascal_name),
                 template_name: "feature_controller_cpp".to_string(),
@@ -1652,8 +1852,10 @@ impl FillCppQtFilesUseCase {
                 let relative_path = format!("{}/{}/units_of_work/", prefix, feature_snake_name);
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_uow.h", use_case_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_uow.h", use_case_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("feature: {}", feature_pascal_name),
                     template_name: "feature_uow_h".to_string(),
@@ -1671,8 +1873,10 @@ impl FillCppQtFilesUseCase {
                 );
 
                 files.push(File {
-                    id: 0,
-                    name: format!("i_{}_uow.h", use_case_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("i_{}_uow.h", use_case_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("feature: {}", feature_pascal_name),
                     template_name: "i_feature_uow_h".to_string(),
@@ -1687,8 +1891,10 @@ impl FillCppQtFilesUseCase {
                 let relative_path = format!("{}/{}/use_cases/", prefix, feature_snake_name);
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_uc.h", use_case_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_uc.h", use_case_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("feature: {}", feature_pascal_name),
                     template_name: "feature_uc_h".to_string(),
@@ -1701,8 +1907,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}_uc.cpp", use_case_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}_uc.cpp", use_case_snake_name),
                     relative_path: relative_path.clone(),
                     group: format!("feature: {}", feature_pascal_name),
                     template_name: "feature_uc_cpp".to_string(),
@@ -1722,6 +1930,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "i_long_operation.h".to_string(),
             relative_path: format!("{}/common/long_operation/", prefix),
             group: "base".to_string(),
@@ -1736,6 +1946,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "long_operation_manager.h".to_string(),
             relative_path: format!("{}/common/long_operation/", prefix),
             group: "base".to_string(),
@@ -1750,6 +1962,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "long_operation_manager.cpp".to_string(),
             relative_path: format!("{}/common/long_operation/", prefix),
             group: "base".to_string(),
@@ -1771,8 +1985,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/qtwidgets_app/", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtWidgets UI".to_string(),
                 template_name: "qt_widgets_cmake".to_string(),
@@ -1785,8 +2001,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "main.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "main.cpp".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtWidgets UI".to_string(),
                 template_name: "qt_widgets_main_cpp".to_string(),
@@ -1799,8 +2017,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "main_window.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "main_window.cpp".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtWidgets UI".to_string(),
                 template_name: "qt_widgets_main_window_cpp".to_string(),
@@ -1813,8 +2033,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "main_window.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "main_window.h".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtWidgets UI".to_string(),
                 template_name: "qt_widgets_main_window_h".to_string(),
@@ -1845,8 +2067,10 @@ impl FillCppQtFilesUseCase {
 
         if qml_enabled {
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_presentation_cmake".to_string(),
@@ -1863,8 +2087,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_controllers_cmake".to_string(),
@@ -1877,8 +2103,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "foreign_event_registry.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "foreign_event_registry.h".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_event_registry_h".to_string(),
@@ -1891,8 +2119,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "foreign_feature_event_registry.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "foreign_feature_event_registry.h".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_feature_event_registry_h".to_string(),
@@ -1905,8 +2135,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "foreign_undo_redo_controller.h".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "foreign_undo_redo_controller.h".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_undo_redo_controller_h".to_string(),
@@ -1926,8 +2158,10 @@ impl FillCppQtFilesUseCase {
             );
 
             files.push(File {
-                id: 0,
-                name: "EventRegistry.qml".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "EventRegistry.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "event_registry_qml".to_string(),
@@ -1940,8 +2174,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "QCoroQmlTask.qml".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "QCoroQmlTask.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "qcoro_qml_task_qml".to_string(),
@@ -1954,8 +2190,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "UndoRedoController.qml".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "UndoRedoController.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "undo_redo_controller_qml".to_string(),
@@ -1968,8 +2206,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "qmldir".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "qmldir".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "mock_controllers_qmldir".to_string(),
@@ -1986,8 +2226,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/presentation/real_imports/models", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_models_cmake".to_string(),
@@ -2007,8 +2249,10 @@ impl FillCppQtFilesUseCase {
             );
 
             files.push(File {
-                id: 0,
-                name: "qmldir".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "qmldir".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "mock_models_qmldir".to_string(),
@@ -2025,8 +2269,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/presentation/real_imports/singles", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "foreign_singles_cmake".to_string(),
@@ -2046,8 +2292,10 @@ impl FillCppQtFilesUseCase {
             );
 
             files.push(File {
-                id: 0,
-                name: "qmldir".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "qmldir".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "mock_singles_qmldir".to_string(),
@@ -2080,8 +2328,10 @@ impl FillCppQtFilesUseCase {
                 let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
                 files.push(File {
-                    id: 0,
-                    name: format!("foreign_{}_controller.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("foreign_{}_controller.h", entity_snake_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "foreign_entity_controller_h".to_string(),
@@ -2101,8 +2351,10 @@ impl FillCppQtFilesUseCase {
                 );
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}Controller.qml", entity_pascal_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}Controller.qml", entity_pascal_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "entity_controller_qml".to_string(),
@@ -2115,8 +2367,10 @@ impl FillCppQtFilesUseCase {
                 });
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}Events.qml", entity_pascal_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}Events.qml", entity_pascal_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "entity_events_qml".to_string(),
@@ -2148,8 +2402,10 @@ impl FillCppQtFilesUseCase {
                     let relative_path = format!("{}/presentation/real_imports/models", prefix);
 
                     files.push(File {
-                        id: 0,
-                        name: format!(
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!(
                             "foreign_{}_{}_list_model.h",
                             entity_snake_name, field_snake_name
                         ),
@@ -2172,8 +2428,10 @@ impl FillCppQtFilesUseCase {
                     );
 
                     files.push(File {
-                        id: 0,
-                        name: format!("{}{}ListModel.qml", entity_pascal_name, field_pascal_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}{}ListModel.qml", entity_pascal_name, field_pascal_name),
                         relative_path: relative_path.clone(),
                         group: "QML Presentation".to_string(),
                         template_name: "list_model_qml".to_string(),
@@ -2191,8 +2449,10 @@ impl FillCppQtFilesUseCase {
                     let relative_path = format!("{}/presentation/real_imports/singles", prefix);
 
                     files.push(File {
-                        id: 0,
-                        name: format!("foreign_single_{}.h", entity_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("foreign_single_{}.h", entity_snake_name),
                         relative_path: relative_path.clone(),
                         group: "QML Presentation".to_string(),
                         template_name: "foreign_single_h".to_string(),
@@ -2212,8 +2472,10 @@ impl FillCppQtFilesUseCase {
                     );
 
                     files.push(File {
-                        id: 0,
-                        name: format!("Single{}.qml", entity_pascal_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("Single{}.qml", entity_pascal_name),
                         relative_path: relative_path.clone(),
                         group: "QML Presentation".to_string(),
                         template_name: "single_entity_qml".to_string(),
@@ -2241,8 +2503,10 @@ impl FillCppQtFilesUseCase {
                 let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
                 files.push(File {
-                    id: 0,
-                    name: format!("foreign_{}_controller.h", feature_snake_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("foreign_{}_controller.h", feature_snake_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "foreign_feature_controller_h".to_string(),
@@ -2262,8 +2526,10 @@ impl FillCppQtFilesUseCase {
                 );
 
                 files.push(File {
-                    id: 0,
-                    name: format!("{}Controller.qml", feature_pascal_name),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: format!("{}Controller.qml", feature_pascal_name),
                     relative_path: relative_path.clone(),
                     group: "QML Presentation".to_string(),
                     template_name: "feature_controller_qml".to_string(),
@@ -2285,8 +2551,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/qtquick_app/", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_cmake".to_string(),
@@ -2299,8 +2567,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "main.qml".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "main.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_main_qml".to_string(),
@@ -2313,8 +2583,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "main.cpp".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "main.cpp".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_main_cpp".to_string(),
@@ -2327,8 +2599,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "qtquickcontrols2.conf".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "qtquickcontrols2.conf".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_qtquickcontrols2_conf".to_string(),
@@ -2343,8 +2617,10 @@ impl FillCppQtFilesUseCase {
             let relative_path = format!("{}/qtquick_app/content/", prefix);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_content_cmake".to_string(),
@@ -2357,8 +2633,10 @@ impl FillCppQtFilesUseCase {
             });
 
             files.push(File {
-                id: 0,
-                name: "App.qml".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "App.qml".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_app_qml".to_string(),
@@ -2374,8 +2652,10 @@ impl FillCppQtFilesUseCase {
                 format!("{}/qtquick_app/{}", prefix, application_short_name);
 
             files.push(File {
-                id: 0,
-                name: "CMakeLists.txt".to_string(),
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "CMakeLists.txt".to_string(),
                 relative_path: relative_path.clone(),
                 group: "QtQuick UI".to_string(),
                 template_name: "qt_quick_app_cmake".to_string(),
@@ -2394,6 +2674,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: "tests/".to_string(),
             group: "tests".to_string(),
@@ -2408,6 +2690,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2422,6 +2706,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_many_to_one_junction.cpp".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2436,6 +2722,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_one_to_one_junction.cpp".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2450,6 +2738,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_ordered_one_to_many_junction.cpp".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2464,6 +2754,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_unordered_many_to_many_junction.cpp".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2478,6 +2770,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_unordered_one_to_many_junction.cpp".to_string(),
             relative_path: "tests/database/".to_string(),
             group: "tests".to_string(),
@@ -2492,6 +2786,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "CMakeLists.txt".to_string(),
             relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
@@ -2506,6 +2802,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_enhanced_undo_redo.cpp".to_string(),
             relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
@@ -2520,6 +2818,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_qcoro_integration.cpp".to_string(),
             relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
@@ -2534,6 +2834,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_root_undo_redo.cpp".to_string(),
             relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),
@@ -2548,6 +2850,8 @@ impl FillCppQtFilesUseCase {
 
         files.push(File {
             id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "tst_undo_redo.cpp".to_string(),
             relative_path: "tests/undo_redo/".to_string(),
             group: "tests".to_string(),

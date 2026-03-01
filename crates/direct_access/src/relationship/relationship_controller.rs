@@ -6,6 +6,8 @@ use super::{
     dtos::{CreateRelationshipDto, RelationshipDto},
     units_of_work::RelationshipUnitOfWorkROFactory,
     use_cases::{
+        create_orphans_relationship_multi_uc::CreateOrphansRelationshipMultiUseCase,
+        create_orphans_relationship_uc::CreateOrphansRelationshipUseCase,
         create_relationship_multi_uc::CreateRelationshipMultiUseCase,
         create_relationship_uc::CreateRelationshipUseCase,
         get_relationship_multi_uc::GetRelationshipMultiUseCase,
@@ -16,18 +18,16 @@ use super::{
         update_relationship_uc::UpdateRelationshipUseCase,
     },
 };
-use anyhow::{Ok, Result};
-
 use crate::RelationshipRelationshipDto;
 use crate::relationship::use_cases::get_relationship_relationship_uc::GetRelationshipRelationshipUseCase;
 use crate::relationship::use_cases::set_relationship_relationship_uc::SetRelationshipRelationshipUseCase;
+use anyhow::{Ok, Result};
 use common::direct_access::relationship::RelationshipRelationshipField;
-
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -35,12 +35,26 @@ pub fn create(
     entity: &CreateRelationshipDto,
 ) -> Result<RelationshipDto> {
     let uow_factory = RelationshipUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateRelationshipUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansRelationshipUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateRelationshipDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<RelationshipDto> {
+    let uow_factory = RelationshipUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateRelationshipUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<RelationshipDto>> {
     let uow_factory = RelationshipUnitOfWorkROFactory::new(db_context);
     let uc = GetRelationshipUseCase::new(Box::new(uow_factory));
@@ -75,7 +89,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -83,12 +97,26 @@ pub fn create_multi(
     entities: &[CreateRelationshipDto],
 ) -> Result<Vec<RelationshipDto>> {
     let uow_factory = RelationshipUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateRelationshipMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansRelationshipMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CreateRelationshipDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<RelationshipDto>> {
+    let uow_factory = RelationshipUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateRelationshipMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<RelationshipDto>>> {
     let uow_factory = RelationshipUnitOfWorkROFactory::new(db_context);
     let uc = GetRelationshipMultiUseCase::new(Box::new(uow_factory));

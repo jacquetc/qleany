@@ -4,63 +4,31 @@
 use super::FileUnitOfWorkFactoryTrait;
 use crate::file::dtos::{CreateFileDto, FileDto};
 use anyhow::{Ok, Result};
-use common::entities::File;
-use common::undo_redo::UndoRedoCommand;
-use std::any::Any;
-use std::collections::VecDeque;
+use common::types::EntityId;
 
 pub struct CreateFileUseCase {
     uow_factory: Box<dyn FileUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<File>,
-    redo_stack: VecDeque<File>,
 }
 
 impl CreateFileUseCase {
     pub fn new(uow_factory: Box<dyn FileUnitOfWorkFactoryTrait>) -> Self {
-        CreateFileUseCase {
-            uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
-        }
+        CreateFileUseCase { uow_factory }
     }
 
-    pub fn execute(&mut self, dto: CreateFileDto) -> Result<FileDto> {
+    pub fn execute(
+        &mut self,
+        dto: CreateFileDto,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<FileDto> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entity = uow.create_file(&dto.into())?;
+
+        // Create with owner (repository handles junction management internally)
+        let entity = uow.create_file_with_owner(&dto.into(), owner_id, index)?;
+
         uow.commit()?;
 
-        // store in undo stack
-        self.undo_stack.push_back(entity.clone());
-        self.redo_stack.clear();
-
         Ok(entity.into())
-    }
-}
-
-impl UndoRedoCommand for CreateFileUseCase {
-    fn undo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.undo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.delete_file(&last_entity.id)?;
-            uow.commit()?;
-            self.redo_stack.push_back(last_entity);
-        }
-        Ok(())
-    }
-
-    fn redo(&mut self) -> Result<()> {
-        if let Some(last_entity) = self.redo_stack.pop_back() {
-            let mut uow = self.uow_factory.create();
-            uow.begin_transaction()?;
-            uow.create_file(&last_entity)?;
-            uow.commit()?;
-            self.undo_stack.push_back(last_entity);
-        }
-        Ok(())
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

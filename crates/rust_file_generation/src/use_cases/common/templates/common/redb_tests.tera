@@ -7,7 +7,7 @@
 use anyhow::Result;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::types::Savepoint;
-use redb::{Database, ReadableTable, TableDefinition};
+use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 use std::sync::Arc;
 
 // Define a test table

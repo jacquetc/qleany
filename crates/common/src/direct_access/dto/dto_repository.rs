@@ -2,16 +2,17 @@
 // as changes will be lost.
 
 use std::fmt::Display;
-use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
     direct_access::repository_factory,
     entities::Dto,
-    event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    event::{DirectAccessEntity, EntityEvent, Event, EventBuffer, Origin},
+    snapshot::{EntityTreeSnapshot, TableLevelSnapshot},
     types::EntityId,
 };
 
+use crate::direct_access::use_case::UseCaseRelationshipField;
 use redb::Error;
 use serde::{Deserialize, Serialize};
 
@@ -35,7 +36,6 @@ pub trait DtoTable {
     fn update_multi(&mut self, entities: &[Dto]) -> Result<Vec<Dto>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -57,12 +57,13 @@ pub trait DtoTable {
         field: &DtoRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
 }
 
 pub trait DtoTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error>;
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -88,9 +89,9 @@ impl<'a> DtoRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Arc<EventHub>, entity: &Dto) -> Result<Dto, Error> {
+    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &Dto) -> Result<Dto, Error> {
         let new = self.redb_table.create(entity)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
             ids: vec![new.id],
             data: None,
@@ -100,13 +101,67 @@ impl<'a> DtoRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         entities: &[Dto],
     ) -> Result<Vec<Dto>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
             ids: new_entities.iter().map(|e| e.id).collect(),
+            data: None,
+        });
+        Ok(new_entities)
+    }
+    pub fn create_with_owner(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &Dto,
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Dto, Error> {
+        let new = self.redb_table.create(entity)?;
+        let created_id = new.id;
+
+        let mut relationship_ids = self.get_relationships_from_owner(&owner_id)?;
+        if relationship_ids.is_empty() {
+            relationship_ids = vec![created_id];
+        } else {
+            // Replace existing relationship: cascade-remove old entities first
+            self.delete_multi(event_buffer, &relationship_ids)?;
+            relationship_ids = vec![created_id];
+        }
+
+        self.set_relationships_in_owner(event_buffer, &owner_id, &relationship_ids)?;
+        event_buffer.push(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
+            ids: vec![created_id],
+            data: None,
+        });
+        Ok(new)
+    }
+
+    pub fn create_multi_with_owner(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entities: &[Dto],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<Dto>, Error> {
+        let new_entities = self.redb_table.create_multi(entities)?;
+        let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
+
+        let mut relationship_ids = self.get_relationships_from_owner(&owner_id)?;
+        if relationship_ids.is_empty() {
+            relationship_ids = created_ids.clone();
+        } else {
+            self.delete_multi(event_buffer, &relationship_ids)?;
+            relationship_ids = created_ids.clone();
+        }
+
+        self.set_relationships_in_owner(event_buffer, &owner_id, &relationship_ids)?;
+        event_buffer.push(Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
+            ids: created_ids,
             data: None,
         });
         Ok(new_entities)
@@ -119,9 +174,9 @@ impl<'a> DtoRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Arc<EventHub>, entity: &Dto) -> Result<Dto, Error> {
+    pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Dto) -> Result<Dto, Error> {
         let updated = self.redb_table.update(entity)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
             ids: vec![updated.id],
             data: None,
@@ -131,11 +186,11 @@ impl<'a> DtoRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         entities: &[Dto],
     ) -> Result<Vec<Dto>, Error> {
         let updated = self.redb_table.update_multi(entities)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
             ids: updated.iter().map(|e| e.id).collect(),
             data: None,
@@ -143,7 +198,7 @@ impl<'a> DtoRepository<'a> {
         Ok(updated)
     }
 
-    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -155,11 +210,11 @@ impl<'a> DtoRepository<'a> {
         // delete all strong relationships, initiating a cascade delete
 
         repository_factory::write::create_dto_field_repository(self.transaction)
-            .delete_multi(event_hub, &fields)?;
+            .delete_multi(event_buffer, &fields)?;
 
         // delete entity
         self.redb_table.delete(id)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Removed)),
             ids: vec![*id],
             data: None,
@@ -169,7 +224,7 @@ impl<'a> DtoRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let entities = self.redb_table.get_multi(ids)?;
@@ -191,17 +246,16 @@ impl<'a> DtoRepository<'a> {
         // delete all strong relationships, initiating a cascade delete
 
         repository_factory::write::create_dto_field_repository(self.transaction)
-            .delete_multi(event_hub, &fields_ids)?;
+            .delete_multi(event_buffer, &fields_ids)?;
 
         self.redb_table.delete_multi(ids)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Removed)),
             ids: ids.into(),
             data: None,
         });
         Ok(())
     }
-
     pub fn get_relationship(
         &self,
         id: &EntityId,
@@ -220,14 +274,40 @@ impl<'a> DtoRepository<'a> {
 
     pub fn set_relationship_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         field: &DtoRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        let all_right_ids: Vec<EntityId> = relationships
+            .iter()
+            .flat_map(|(_, ids)| ids.iter().copied())
+            .collect();
+        if !all_right_ids.is_empty() {
+            match field {
+                DtoRelationshipField::Fields => {
+                    let child_repo =
+                        repository_factory::write::create_dto_field_repository(self.transaction);
+                    let found = child_repo.get_multi(&all_right_ids)?;
+                    let missing: Vec<_> = all_right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship_multi: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+            }
+        }
         self.redb_table
             .set_relationship_multi(field, relationships.clone())?;
         for (left_id, right_ids) in relationships {
-            event_hub.send_event(Event {
+            event_buffer.push(Event {
                 origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
                 ids: vec![left_id],
                 data: Some(format!(
@@ -246,13 +326,35 @@ impl<'a> DtoRepository<'a> {
 
     pub fn set_relationship(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         id: &EntityId,
         field: &DtoRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        if !right_ids.is_empty() {
+            match field {
+                DtoRelationshipField::Fields => {
+                    let child_repo =
+                        repository_factory::write::create_dto_field_repository(self.transaction);
+                    let found = child_repo.get_multi(right_ids)?;
+                    let missing: Vec<_> = right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+            }
+        }
         self.redb_table.set_relationship(id, field, right_ids)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
             ids: vec![*id],
             data: Some(format!(
@@ -265,6 +367,104 @@ impl<'a> DtoRepository<'a> {
                     .join(",")
             )),
         });
+        Ok(())
+    }
+    pub fn get_relationships_from_owner(
+        &self,
+        owner_id: &EntityId,
+    ) -> Result<Vec<EntityId>, Error> {
+        let repo = repository_factory::write::create_use_case_repository(self.transaction);
+        repo.get_relationship(owner_id, &UseCaseRelationshipField::DtoIn)
+    }
+
+    pub fn set_relationships_in_owner(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        owner_id: &EntityId,
+        ids: &[EntityId],
+    ) -> Result<(), Error> {
+        let mut repo = repository_factory::write::create_use_case_repository(self.transaction);
+        repo.set_relationship(
+            event_buffer,
+            owner_id,
+            &UseCaseRelationshipField::DtoIn,
+            ids,
+        )
+    }
+
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+        let table_data = self.redb_table.snapshot_rows(ids)?;
+
+        // Recursively snapshot strong children
+        #[allow(unused_mut)]
+        let mut children = Vec::new();
+
+        {
+            // Extract child IDs from the forward junction snapshot for fields
+            let junction_name = "dto_field_from_dto_fields_junction";
+            let child_ids: Vec<EntityId> = table_data
+                .forward_junctions
+                .iter()
+                .filter(|j| j.table_name == junction_name)
+                .flat_map(|j| {
+                    j.entries
+                        .iter()
+                        .flat_map(|(_, right_ids)| right_ids.iter().copied())
+                })
+                .collect();
+            if !child_ids.is_empty() {
+                let child_repo =
+                    repository_factory::write::create_dto_field_repository(self.transaction);
+                children.push(child_repo.snapshot(&child_ids)?);
+            }
+        }
+
+        Ok(EntityTreeSnapshot {
+            table_data,
+            children,
+        })
+    }
+
+    pub fn restore(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        snap: &EntityTreeSnapshot,
+    ) -> Result<(), Error> {
+        // Restore children first (bottom-up)
+
+        for child_snap in &snap.children {
+            if child_snap.table_data.entity_rows.table_name == "dto_field" {
+                repository_factory::write::create_dto_field_repository(self.transaction)
+                    .restore(event_buffer, child_snap)?;
+            }
+        }
+
+        // Restore this entity's rows
+        self.redb_table.restore_rows(&snap.table_data)?;
+
+        // Emit Created events for restored entity IDs
+        let restored_ids: Vec<EntityId> = snap
+            .table_data
+            .entity_rows
+            .rows
+            .iter()
+            .map(|(id, _)| *id)
+            .collect();
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
+                ids: restored_ids.clone(),
+                data: None,
+            });
+        }
+        // Emit Updated events for restored relationships
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
+                ids: restored_ids,
+                data: None,
+            });
+        }
         Ok(())
     }
 }
@@ -282,7 +482,6 @@ impl<'a> DtoRepositoryRO<'a> {
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
         self.redb_table.get_multi(ids)
     }
-
     pub fn get_relationship(
         &self,
         id: &EntityId,

@@ -114,7 +114,7 @@ fn subscribe_new_manifest_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Create), {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |_event| {

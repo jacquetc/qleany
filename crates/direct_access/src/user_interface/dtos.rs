@@ -9,6 +9,8 @@ use std::convert::From;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct UserInterfaceDto {
     pub id: EntityId,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub rust_cli: bool,
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
@@ -19,6 +21,8 @@ impl From<UserInterfaceDto> for UserInterface {
     fn from(dto: UserInterfaceDto) -> Self {
         UserInterface {
             id: dto.id,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             rust_cli: dto.rust_cli,
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
@@ -31,10 +35,12 @@ impl From<&UserInterfaceDto> for UserInterface {
     fn from(dto: &UserInterfaceDto) -> Self {
         UserInterface {
             id: dto.id,
-            rust_cli: dto.rust_cli,
-            rust_slint: dto.rust_slint,
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
-            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
+            rust_cli: dto.rust_cli.clone(),
+            rust_slint: dto.rust_slint.clone(),
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
+            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
         }
     }
 }
@@ -43,6 +49,8 @@ impl From<UserInterface> for UserInterfaceDto {
     fn from(entity: UserInterface) -> Self {
         UserInterfaceDto {
             id: entity.id,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             rust_cli: entity.rust_cli,
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,
@@ -53,6 +61,8 @@ impl From<UserInterface> for UserInterfaceDto {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct CreateUserInterfaceDto {
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub rust_cli: bool,
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
@@ -63,6 +73,8 @@ impl From<CreateUserInterfaceDto> for UserInterface {
     fn from(dto: CreateUserInterfaceDto) -> Self {
         UserInterface {
             id: 0,
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             rust_cli: dto.rust_cli,
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
@@ -75,10 +87,12 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
     fn from(dto: &CreateUserInterfaceDto) -> Self {
         UserInterface {
             id: 0,
-            rust_cli: dto.rust_cli,
-            rust_slint: dto.rust_slint,
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
-            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            created_at: dto.created_at.clone(),
+            updated_at: dto.updated_at.clone(),
+            rust_cli: dto.rust_cli.clone(),
+            rust_slint: dto.rust_slint.clone(),
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
+            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
         }
     }
 }
@@ -86,6 +100,8 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
 impl From<UserInterface> for CreateUserInterfaceDto {
     fn from(entity: UserInterface) -> Self {
         CreateUserInterfaceDto {
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
             rust_cli: entity.rust_cli,
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,

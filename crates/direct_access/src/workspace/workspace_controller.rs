@@ -6,6 +6,8 @@ use super::{
     dtos::{CreateWorkspaceDto, WorkspaceDto},
     units_of_work::WorkspaceUnitOfWorkROFactory,
     use_cases::{
+        create_orphans_workspace_multi_uc::CreateOrphansWorkspaceMultiUseCase,
+        create_orphans_workspace_uc::CreateOrphansWorkspaceUseCase,
         create_workspace_multi_uc::CreateWorkspaceMultiUseCase,
         create_workspace_uc::CreateWorkspaceUseCase,
         get_workspace_multi_uc::GetWorkspaceMultiUseCase, get_workspace_uc::GetWorkspaceUseCase,
@@ -15,18 +17,16 @@ use super::{
         update_workspace_uc::UpdateWorkspaceUseCase,
     },
 };
-use anyhow::{Ok, Result};
-
 use crate::WorkspaceRelationshipDto;
 use crate::workspace::use_cases::get_workspace_relationship_uc::GetWorkspaceRelationshipUseCase;
 use crate::workspace::use_cases::set_workspace_relationship_uc::SetWorkspaceRelationshipUseCase;
+use anyhow::{Ok, Result};
 use common::direct_access::workspace::WorkspaceRelationshipField;
-
 use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create(
+pub fn create_orphans(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -34,12 +34,26 @@ pub fn create(
     entity: &CreateWorkspaceDto,
 ) -> Result<WorkspaceDto> {
     let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateWorkspaceUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansWorkspaceUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CreateWorkspaceDto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<WorkspaceDto> {
+    let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateWorkspaceUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entity.clone(), owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<WorkspaceDto>> {
     let uow_factory = WorkspaceUnitOfWorkROFactory::new(db_context);
     let uc = GetWorkspaceUseCase::new(Box::new(uow_factory));
@@ -74,7 +88,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_multi(
+pub fn create_orphans_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -82,12 +96,26 @@ pub fn create_multi(
     entities: &[CreateWorkspaceDto],
 ) -> Result<Vec<WorkspaceDto>> {
     let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateWorkspaceMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphansWorkspaceMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
 }
-
+pub fn create_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CreateWorkspaceDto],
+    owner_id: EntityId,
+    index: i32,
+) -> Result<Vec<WorkspaceDto>> {
+    let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
+    let mut uc = CreateWorkspaceMultiUseCase::new(Box::new(uow_factory));
+    let result = uc.execute(entities, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result)
+}
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<WorkspaceDto>>> {
     let uow_factory = WorkspaceUnitOfWorkROFactory::new(db_context);
     let uc = GetWorkspaceMultiUseCase::new(Box::new(uow_factory));

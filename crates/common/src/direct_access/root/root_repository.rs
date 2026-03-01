@@ -2,13 +2,13 @@
 // as changes will be lost.
 
 use std::fmt::Display;
-use std::sync::Arc;
 
 use crate::{
     database::transactions::Transaction,
     direct_access::repository_factory,
     entities::Root,
-    event::{DirectAccessEntity, EntityEvent, Event, EventHub, Origin},
+    event::{DirectAccessEntity, EntityEvent, Event, EventBuffer, Origin},
+    snapshot::{EntityTreeSnapshot, TableLevelSnapshot},
     types::EntityId,
 };
 
@@ -36,7 +36,6 @@ pub trait RootTable {
     fn update_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -58,12 +57,13 @@ pub trait RootTable {
         field: &RootRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
 }
 
 pub trait RootTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Root>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error>;
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -89,9 +89,9 @@ impl<'a> RootRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_hub: &Arc<EventHub>, entity: &Root) -> Result<Root, Error> {
+    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &Root) -> Result<Root, Error> {
         let new = self.redb_table.create(entity)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
             ids: vec![new.id],
             data: None,
@@ -101,11 +101,11 @@ impl<'a> RootRepository<'a> {
 
     pub fn create_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         entities: &[Root],
     ) -> Result<Vec<Root>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
             ids: new_entities.iter().map(|e| e.id).collect(),
             data: None,
@@ -120,9 +120,9 @@ impl<'a> RootRepository<'a> {
         self.redb_table.get_multi(ids)
     }
 
-    pub fn update(&mut self, event_hub: &Arc<EventHub>, entity: &Root) -> Result<Root, Error> {
+    pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Root) -> Result<Root, Error> {
         let updated = self.redb_table.update(entity)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
             ids: vec![updated.id],
             data: None,
@@ -132,11 +132,11 @@ impl<'a> RootRepository<'a> {
 
     pub fn update_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         entities: &[Root],
     ) -> Result<Vec<Root>, Error> {
         let updated = self.redb_table.update_multi(entities)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
             ids: updated.iter().map(|e| e.id).collect(),
             data: None,
@@ -144,32 +144,30 @@ impl<'a> RootRepository<'a> {
         Ok(updated)
     }
 
-    pub fn delete(&mut self, event_hub: &Arc<EventHub>, id: &EntityId) -> Result<(), Error> {
+    pub fn delete(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };
         // get all strong forward relationship fields
 
-        let workspace = entity.workspace;
-
-        let system = entity.system;
+        let workspace = entity.workspace.clone();
+        let system = entity.system.clone();
 
         // delete all strong relationships, initiating a cascade delete
 
         if let Some(workspace_id) = workspace {
             repository_factory::write::create_workspace_repository(self.transaction)
-                .delete(event_hub, &workspace_id)?;
+                .delete(event_buffer, &workspace_id)?;
         }
-
         if let Some(system_id) = system {
             repository_factory::write::create_system_repository(self.transaction)
-                .delete(event_hub, &system_id)?;
+                .delete(event_buffer, &system_id)?;
         }
 
         // delete entity
         self.redb_table.delete(id)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Removed)),
             ids: vec![*id],
             data: None,
@@ -179,7 +177,7 @@ impl<'a> RootRepository<'a> {
 
     pub fn delete_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         ids: &[EntityId],
     ) -> Result<(), Error> {
         let entities = self.redb_table.get_multi(ids)?;
@@ -191,31 +189,28 @@ impl<'a> RootRepository<'a> {
 
         let workspace_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.workspace))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.workspace.clone()))
             .collect();
-
         let system_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.system))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.system.clone()))
             .collect();
 
         // delete all strong relationships, initiating a cascade delete
 
         repository_factory::write::create_workspace_repository(self.transaction)
-            .delete_multi(event_hub, &workspace_ids)?;
-
+            .delete_multi(event_buffer, &workspace_ids)?;
         repository_factory::write::create_system_repository(self.transaction)
-            .delete_multi(event_hub, &system_ids)?;
+            .delete_multi(event_buffer, &system_ids)?;
 
         self.redb_table.delete_multi(ids)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Removed)),
             ids: ids.into(),
             data: None,
         });
         Ok(())
     }
-
     pub fn get_relationship(
         &self,
         id: &EntityId,
@@ -234,14 +229,57 @@ impl<'a> RootRepository<'a> {
 
     pub fn set_relationship_multi(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         field: &RootRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
     ) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        let all_right_ids: Vec<EntityId> = relationships
+            .iter()
+            .flat_map(|(_, ids)| ids.iter().copied())
+            .collect();
+        if !all_right_ids.is_empty() {
+            match field {
+                RootRelationshipField::Workspace => {
+                    let child_repo =
+                        repository_factory::write::create_workspace_repository(self.transaction);
+                    let found = child_repo.get_multi(&all_right_ids)?;
+                    let missing: Vec<_> = all_right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship_multi: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+                RootRelationshipField::System => {
+                    let child_repo =
+                        repository_factory::write::create_system_repository(self.transaction);
+                    let found = child_repo.get_multi(&all_right_ids)?;
+                    let missing: Vec<_> = all_right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship_multi: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+            }
+        }
         self.redb_table
             .set_relationship_multi(field, relationships.clone())?;
         for (left_id, right_ids) in relationships {
-            event_hub.send_event(Event {
+            event_buffer.push(Event {
                 origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
                 ids: vec![left_id],
                 data: Some(format!(
@@ -260,13 +298,52 @@ impl<'a> RootRepository<'a> {
 
     pub fn set_relationship(
         &mut self,
-        event_hub: &Arc<EventHub>,
+        event_buffer: &mut EventBuffer,
         id: &EntityId,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error> {
+        // Validate that all right_ids exist
+        if !right_ids.is_empty() {
+            match field {
+                RootRelationshipField::Workspace => {
+                    let child_repo =
+                        repository_factory::write::create_workspace_repository(self.transaction);
+                    let found = child_repo.get_multi(right_ids)?;
+                    let missing: Vec<_> = right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+                RootRelationshipField::System => {
+                    let child_repo =
+                        repository_factory::write::create_system_repository(self.transaction);
+                    let found = child_repo.get_multi(right_ids)?;
+                    let missing: Vec<_> = right_ids
+                        .iter()
+                        .zip(found.iter())
+                        .filter(|(_, entity)| entity.is_none())
+                        .map(|(id, _)| *id)
+                        .collect();
+                    if !missing.is_empty() {
+                        return Err(Error::TableDoesNotExist(format!(
+                            "set_relationship: child entities do not exist: {:?}",
+                            missing
+                        )));
+                    }
+                }
+            }
+        }
         self.redb_table.set_relationship(id, field, right_ids)?;
-        event_hub.send_event(Event {
+        event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
             ids: vec![*id],
             data: Some(format!(
@@ -279,6 +356,107 @@ impl<'a> RootRepository<'a> {
                     .join(",")
             )),
         });
+        Ok(())
+    }
+
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+        let table_data = self.redb_table.snapshot_rows(ids)?;
+
+        // Recursively snapshot strong children
+        #[allow(unused_mut)]
+        let mut children = Vec::new();
+
+        {
+            // Extract child IDs from the forward junction snapshot for workspace
+            let junction_name = "workspace_from_root_workspace_junction";
+            let child_ids: Vec<EntityId> = table_data
+                .forward_junctions
+                .iter()
+                .filter(|j| j.table_name == junction_name)
+                .flat_map(|j| {
+                    j.entries
+                        .iter()
+                        .flat_map(|(_, right_ids)| right_ids.iter().copied())
+                })
+                .collect();
+            if !child_ids.is_empty() {
+                let child_repo =
+                    repository_factory::write::create_workspace_repository(self.transaction);
+                children.push(child_repo.snapshot(&child_ids)?);
+            }
+        }
+        {
+            // Extract child IDs from the forward junction snapshot for system
+            let junction_name = "system_from_root_system_junction";
+            let child_ids: Vec<EntityId> = table_data
+                .forward_junctions
+                .iter()
+                .filter(|j| j.table_name == junction_name)
+                .flat_map(|j| {
+                    j.entries
+                        .iter()
+                        .flat_map(|(_, right_ids)| right_ids.iter().copied())
+                })
+                .collect();
+            if !child_ids.is_empty() {
+                let child_repo =
+                    repository_factory::write::create_system_repository(self.transaction);
+                children.push(child_repo.snapshot(&child_ids)?);
+            }
+        }
+
+        Ok(EntityTreeSnapshot {
+            table_data,
+            children,
+        })
+    }
+
+    pub fn restore(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        snap: &EntityTreeSnapshot,
+    ) -> Result<(), Error> {
+        // Restore children first (bottom-up)
+
+        for child_snap in &snap.children {
+            if child_snap.table_data.entity_rows.table_name == "workspace" {
+                repository_factory::write::create_workspace_repository(self.transaction)
+                    .restore(event_buffer, child_snap)?;
+            }
+        }
+        for child_snap in &snap.children {
+            if child_snap.table_data.entity_rows.table_name == "system" {
+                repository_factory::write::create_system_repository(self.transaction)
+                    .restore(event_buffer, child_snap)?;
+            }
+        }
+
+        // Restore this entity's rows
+        self.redb_table.restore_rows(&snap.table_data)?;
+
+        // Emit Created events for restored entity IDs
+        let restored_ids: Vec<EntityId> = snap
+            .table_data
+            .entity_rows
+            .rows
+            .iter()
+            .map(|(id, _)| *id)
+            .collect();
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
+                ids: restored_ids.clone(),
+                data: None,
+            });
+        }
+        // Emit Updated events for restored relationships
+        if !restored_ids.is_empty() {
+            event_buffer.push(Event {
+                origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
+                ids: restored_ids,
+                data: None,
+            });
+        }
         Ok(())
     }
 }
@@ -296,7 +474,6 @@ impl<'a> RootRepositoryRO<'a> {
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
         self.redb_table.get_multi(ids)
     }
-
     pub fn get_relationship(
         &self,
         id: &EntityId,

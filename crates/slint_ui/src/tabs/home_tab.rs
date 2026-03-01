@@ -91,7 +91,7 @@ fn subscribe_new_manifest_event(
     app: &App,
     app_context: &Arc<AppContext>,
 ) {
-    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::New), {
+    event_hub_client.subscribe(Origin::HandlingManifest(HandlingManifestEvent::Create), {
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
         move |event| {
@@ -131,7 +131,7 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 if app.global::<AppState>().get_manifest_is_open() {
                     log::info!("A manifest is already open, closing it first");
                     // Close any currently open manifest first
-                    match handling_manifest_commands::close_manifest(&ctx) {
+                    match handling_manifest_commands::close(&ctx) {
                         Ok(()) => {
                             log::info!("Manifest closed successfully");
                         }
@@ -144,7 +144,7 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                 // set loading
                 app.global::<AppState>().set_is_loading(true);
 
-                match handling_manifest_commands::new_manifest(&ctx) {
+                match handling_manifest_commands::create(&ctx) {
                     Ok(_result) => {
                         log::info!("New manifest created successfully");
                     }
@@ -168,7 +168,7 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                     log::info!("Selected save path: {}", manifest_path);
 
                     let save_dto = handling_manifest::SaveDto { manifest_path };
-                    match handling_manifest_commands::save_manifest(&ctx, &save_dto) {
+                    match handling_manifest_commands::save(&ctx, &save_dto) {
                         Ok(()) => {
                             log::info!("Manifest saved successfully");
                             if let Some(app) = app_weak.upgrade() {
@@ -240,7 +240,7 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         log::info!("A manifest is already open, closing it first");
 
                         // Close any currently open manifest first
-                        match handling_manifest_commands::close_manifest(&ctx) {
+                        match handling_manifest_commands::close(&ctx) {
                             Ok(()) => {
                                 log::info!("Manifest closed successfully");
                             }
@@ -251,7 +251,7 @@ pub fn setup_open_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         }
                     }
                     let load_dto = LoadDto { manifest_path };
-                    match handling_manifest_commands::load_manifest(&ctx, &load_dto) {
+                    match handling_manifest_commands::load(&ctx, &load_dto) {
                         Ok(result) => {
                             log::info!("Manifest loaded successfully: {:?}", result);
                             if let Some(app) = app_weak.upgrade() {
@@ -300,7 +300,7 @@ pub fn setup_save_manifest_as_callback(app: &App, app_context: &Arc<AppContext>)
                 log::info!("Selected save path: {}", manifest_path);
 
                 let save_dto = handling_manifest::SaveDto { manifest_path };
-                match handling_manifest_commands::save_manifest(&ctx, &save_dto) {
+                match handling_manifest_commands::save(&ctx, &save_dto) {
                     Ok(()) => {
                         log::info!("Manifest saved successfully");
                         if let Some(app) = app_weak.upgrade() {
@@ -381,7 +381,7 @@ pub fn setup_save_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
             let save_dto = handling_manifest::SaveDto {
                 manifest_path: manifest_absolute_path,
             };
-            match handling_manifest_commands::save_manifest(&ctx, &save_dto) {
+            match handling_manifest_commands::save(&ctx, &save_dto) {
                 Ok(()) => {
                     log::info!("Manifest saved successfully");
                     if let Some(app) = app_weak.upgrade() {
@@ -426,7 +426,7 @@ pub fn setup_close_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
         let app_weak = app.as_weak();
         move || {
             log::info!("Close Manifest clicked");
-            match handling_manifest_commands::close_manifest(&ctx) {
+            match handling_manifest_commands::close(&ctx) {
                 Ok(()) => {
                     log::info!("Manifest closed successfully");
                     if let Some(app) = app_weak.upgrade() {
@@ -454,7 +454,7 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                     log::info!("A manifest is already open, closing it first");
 
                     // Close any currently open manifest first
-                    match handling_manifest_commands::close_manifest(&ctx) {
+                    match handling_manifest_commands::close(&ctx) {
                         Ok(()) => {
                             log::info!("Manifest closed successfully");
                         }
@@ -468,7 +468,7 @@ pub fn setup_open_qleany_manifest_callback(app: &App, app_context: &Arc<AppConte
                 let load_dto = LoadDto {
                     manifest_path: "qleany.yaml".to_string(),
                 };
-                match handling_manifest_commands::load_manifest(&ctx, &load_dto) {
+                match handling_manifest_commands::load(&ctx, &load_dto) {
                     Ok(result) => {
                         log::info!("Qleany manifest loaded: {:?}", result);
                         // clear any previous error

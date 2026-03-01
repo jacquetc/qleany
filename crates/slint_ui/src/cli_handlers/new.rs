@@ -34,7 +34,7 @@ pub fn execute(
 
     // Create new workspace via controller
     let return_dto =
-        handling_manifest_controller::new(&app_context.db_context, &app_context.event_hub)?;
+        handling_manifest_controller::create(&app_context.db_context, &app_context.event_hub)?;
     let workspace_id = return_dto.workspace_id;
 
     // Apply language setting if provided

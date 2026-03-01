@@ -5,7 +5,9 @@ use super::root_repository::RootRelationshipField;
 use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
 use crate::database::Bincode;
+use crate::database::db_helpers;
 use crate::entities::Root;
+use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
@@ -101,7 +103,6 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 let mut iter = workspace_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = new_entity.workspace
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
@@ -113,13 +114,11 @@ impl<'a> RootTable for RootRedbTable<'a> {
                     }
                 }
             }
-
             // one-to-one constraint check: ensure system is not already referenced by another root
             {
                 let mut iter = system_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = new_entity.system
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
@@ -131,7 +130,6 @@ impl<'a> RootTable for RootRedbTable<'a> {
                     }
                 }
             }
-
             root_table.insert(new_entity.id, new_entity.clone())?;
 
             workspace_junction_table.insert(
@@ -175,23 +173,18 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 let mut entity = data.value().clone();
 
                 // get workspace from junction table
-
                 let fetched_workspace: Option<EntityId> = workspace_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.workspace = fetched_workspace;
-
                 // get system from junction table
-
                 let fetched_system: Option<EntityId> = system_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.system = fetched_system;
 
                 list.push(Some(entity));
@@ -203,25 +196,19 @@ impl<'a> RootTable for RootRedbTable<'a> {
                     let mut entity = guard.value().clone();
 
                     // get workspace from junction table
-
                     let fetched_workspace: Option<EntityId> = workspace_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.workspace = fetched_workspace;
-
                     // get system from junction table
-
                     let fetched_system: Option<EntityId> = system_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.system = fetched_system;
-
                     Some(entity)
                 } else {
                     None
@@ -250,7 +237,6 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 let mut iter = workspace_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = entity.workspace
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
@@ -262,13 +248,11 @@ impl<'a> RootTable for RootRedbTable<'a> {
                     }
                 }
             }
-
             // one-to-one constraint check: ensure system is not already referenced by another root
             {
                 let mut iter = system_junction_table.iter()?;
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
-
                     if let Some(ref right_id) = entity.system
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
@@ -280,14 +264,12 @@ impl<'a> RootTable for RootRedbTable<'a> {
                     }
                 }
             }
-
             root_table.insert(entity.id, entity)?;
 
             workspace_junction_table.insert(
                 entity.id,
                 entity.workspace.into_iter().collect::<Vec<EntityId>>(),
             )?;
-
             system_junction_table.insert(
                 entity.id,
                 entity.system.into_iter().collect::<Vec<EntityId>>(),
@@ -305,7 +287,6 @@ impl<'a> RootTable for RootRedbTable<'a> {
         let mut workspace_junction_table = self
             .transaction
             .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
-
         let mut system_junction_table = self
             .transaction
             .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
@@ -320,7 +301,6 @@ impl<'a> RootTable for RootRedbTable<'a> {
         }
         Ok(())
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -379,6 +359,111 @@ impl<'a> RootTable for RootRedbTable<'a> {
         table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
+
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+        let root_table = self.transaction.open_table(ROOT_TABLE)?;
+
+        // Snapshot entity rows as bincode bytes
+        let mut rows = Vec::new();
+        for id in ids {
+            if let Some(guard) = root_table.get(id)? {
+                let entity = guard.value();
+                let bytes = bincode::serialize(&entity).map_err(|e| {
+                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                })?;
+                rows.push((*id, bytes));
+            }
+        }
+
+        // Snapshot forward junction tables
+let mut forward_junctions = Vec::new();
+
+        {
+            let junction_table = self
+                .transaction
+                .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "workspace_from_root_workspace_junction".to_string(),
+                entries,
+            });
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            for id in ids {
+                if let Some(guard) = junction_table.get(id)? {
+                    entries.push((*id, guard.value().clone()));
+                }
+            }
+            forward_junctions.push(JunctionSnapshot {
+                table_name: "system_from_root_system_junction".to_string(),
+                entries,
+            });
+        }
+
+        // Snapshot backward junction tables (entries that reference any of the given ids)
+let backward_junctions = Vec::new();
+
+        Ok(TableLevelSnapshot {
+            entity_rows: TableSnapshot {
+                table_name: "root".to_string(),
+                rows,
+            },
+            forward_junctions,
+            backward_junctions,
+        })
+    }
+
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+        let mut root_table = self.transaction.open_table(ROOT_TABLE)?;
+
+        // Restore entity rows from bincode bytes (redb insert is upsert)
+        for (id, bytes) in &snap.entity_rows.rows {
+            let entity: Root = bincode::deserialize(bytes).map_err(|e| {
+                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+            })?;
+            root_table.insert(*id, entity)?;
+        }
+
+        // Restore forward junction entries
+
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "workspace_from_root_workspace_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
+            for junction_snap in &snap.forward_junctions {
+                if junction_snap.table_name == "system_from_root_system_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
+
+        // Restore backward junction entries
+
+        Ok(())
+    }
 }
 
 pub struct RootRedbTableRO<'a> {
@@ -420,23 +505,18 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
                 let mut entity = data.value().clone();
 
                 // get workspace from junction table
-
                 let fetched_workspace: Option<EntityId> = workspace_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.workspace = fetched_workspace;
-
                 // get system from junction table
-
                 let fetched_system: Option<EntityId> = system_junction_table
                     .get(&id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
-
                 entity.system = fetched_system;
 
                 list.push(Some(entity));
@@ -448,25 +528,19 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
                     let mut entity = guard.value().clone();
 
                     // get workspace from junction table
-
                     let fetched_workspace: Option<EntityId> = workspace_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.workspace = fetched_workspace;
-
                     // get system from junction table
-
                     let fetched_system: Option<EntityId> = system_junction_table
                         .get(id)?
                         .map(|g| g.value().clone())
                         .unwrap_or_default()
                         .pop();
-
                     entity.system = fetched_system;
-
                     Some(entity)
                 } else {
                     None
@@ -477,7 +551,6 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
 
         Ok(list)
     }
-
     fn get_relationship(
         &self,
         id: &EntityId,

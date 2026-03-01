@@ -5,64 +5,109 @@ use super::DtoUnitOfWorkFactoryTrait;
 use crate::dto::dtos::{CreateDtoDto, DtoDto};
 use anyhow::{Ok, Result};
 use common::entities::Dto;
+use common::snapshot::EntityTreeSnapshot;
+use common::types::EntityId;
 use common::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use std::collections::VecDeque;
 
 pub struct CreateDtoMultiUseCase {
     uow_factory: Box<dyn DtoUnitOfWorkFactoryTrait>,
-    undo_stack: VecDeque<Vec<Dto>>,
-    redo_stack: VecDeque<Vec<Dto>>,
+    created_entities: Vec<Dto>,
+    owner_id: Option<EntityId>,
+    index: i32,
+    old_tree_snapshot: Option<EntityTreeSnapshot>,
+    existing_child_ids: Vec<EntityId>,
+    displaced_children_snapshot: Option<EntityTreeSnapshot>,
 }
 
 impl CreateDtoMultiUseCase {
     pub fn new(uow_factory: Box<dyn DtoUnitOfWorkFactoryTrait>) -> Self {
         CreateDtoMultiUseCase {
             uow_factory,
-            undo_stack: VecDeque::new(),
-            redo_stack: VecDeque::new(),
+            created_entities: Vec::new(),
+            owner_id: None,
+            index: -1,
+            old_tree_snapshot: None,
+            existing_child_ids: Vec::new(),
+            displaced_children_snapshot: None,
         }
     }
-    pub fn execute(&mut self, dtos: &[CreateDtoDto]) -> Result<Vec<DtoDto>> {
-        // create
+
+    pub fn execute(
+        &mut self,
+        dtos: &[CreateDtoDto],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<DtoDto>> {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entities =
-            uow.create_dto_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
-        uow.commit()?;
+        self.owner_id = Some(owner_id);
+        self.index = index;
+        // Pre-snapshot existing children that will be displaced by create
+        self.existing_child_ids = uow.get_relationships_from_owner(&owner_id)?;
+        if !self.existing_child_ids.is_empty() {
+            self.displaced_children_snapshot = Some(uow.snapshot_dto(&self.existing_child_ids)?);
+        }
 
-        //store in undo stack
-        self.undo_stack.push_back(entities.clone());
-        self.redo_stack.clear();
+        // Create with owner (repository handles junction management internally)
+        let entities = uow.create_dto_multi_with_owner(
+            &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
+            owner_id,
+            index,
+        )?;
+
+        uow.commit()?;
+        self.created_entities = entities.clone();
 
         Ok(entities.into_iter().map(|entity| entity.into()).collect())
     }
 }
-
 impl UndoRedoCommand for CreateDtoMultiUseCase {
     fn undo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.undo_stack.pop_back() {
+        if !self.created_entities.is_empty() {
+            let owner_id = self.owner_id.expect("owner_id not set");
+            let ids_to_remove: Vec<EntityId> = self.created_entities.iter().map(|e| e.id).collect();
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_dto_multi(
-                &last_entities
-                    .iter()
-                    .map(|entity| entity.id)
-                    .collect::<Vec<_>>(),
-            )?;
+
+            // Snapshot the created entity tree before removing (for redo)
+            self.old_tree_snapshot = Some(uow.snapshot_dto(&ids_to_remove)?);
+
+            // Remove the created entities
+            uow.delete_dto_multi(&ids_to_remove)?;
+            // Restore displaced children and fix owner junction
+            if let Some(ref snap) = self.displaced_children_snapshot {
+                uow.restore_dto(snap)?;
+                uow.set_relationships_in_owner(&owner_id, &self.existing_child_ids)?;
+            } else {
+                uow.set_relationships_in_owner(&owner_id, &[])?;
+            }
+
             uow.commit()?;
-            self.redo_stack.push_back(last_entities);
         }
         Ok(())
     }
 
     fn redo(&mut self) -> Result<()> {
-        if let Some(last_entities) = self.redo_stack.pop_back() {
+        if let Some(ref snapshot) = self.old_tree_snapshot {
+            let owner_id = self.owner_id.expect("owner_id not set");
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.create_dto_multi(&last_entities)?;
+            // Re-snapshot displaced children for next undo cycle
+            if !self.existing_child_ids.is_empty() {
+                self.displaced_children_snapshot =
+                    Some(uow.snapshot_dto(&self.existing_child_ids)?);
+                uow.delete_dto_multi(&self.existing_child_ids)?;
+            }
+
+            // Restore the created entity tree
+            uow.restore_dto(snapshot)?;
+
+            // Fix owner junction to point to the recreated entities
+            let created_ids: Vec<EntityId> = self.created_entities.iter().map(|e| e.id).collect();
+            uow.set_relationships_in_owner(&owner_id, &created_ids)?;
+
             uow.commit()?;
-            self.undo_stack.push_back(last_entities);
         }
         Ok(())
     }
