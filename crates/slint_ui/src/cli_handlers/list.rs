@@ -248,7 +248,6 @@ fn list_features(
                             "name": uc.name,
                             "undoable": uc.undoable,
                             "read_only": uc.read_only,
-                            "validator": uc.validator,
                         })).collect::<Vec<_>>()
                     })
                 })

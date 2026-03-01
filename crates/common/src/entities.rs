@@ -242,7 +242,6 @@ pub struct UseCase {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub name: String,
-    pub validator: bool,
     pub entities: Vec<EntityId>,
     pub undoable: bool,
     pub read_only: bool,

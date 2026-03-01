@@ -151,7 +151,6 @@ pub fn fill_use_case_form(app: &App, use_case: &direct_access::UseCaseDto) {
     let state = app.global::<FeaturesTabState>();
     state.set_selected_use_case_id(use_case.id as i32);
     state.set_selected_use_case_name(use_case.name.clone().into());
-    state.set_selected_use_case_validator(use_case.validator);
     state.set_selected_use_case_undoable(use_case.undoable);
     state.set_selected_use_case_read_only(use_case.read_only);
     state.set_selected_use_case_long_operation(use_case.long_operation);
@@ -162,7 +161,6 @@ pub fn clear_use_case_form(app: &App) {
     let state = app.global::<FeaturesTabState>();
     state.set_selected_use_case_id(-1);
     state.set_selected_use_case_name("".into());
-    state.set_selected_use_case_validator(false);
     state.set_selected_use_case_undoable(false);
     state.set_selected_use_case_read_only(false);
     state.set_selected_use_case_long_operation(false);
@@ -482,22 +480,6 @@ pub fn setup_use_case_name_callback(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
-pub fn setup_use_case_validator_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<FeaturesTabState>()
-        .on_use_case_validator_changed({
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move |validator| {
-                if let Some(app) = app_weak.upgrade() {
-                    let use_case_id = app.global::<FeaturesTabState>().get_selected_use_case_id();
-                    update_use_case_helper(&app, &ctx, use_case_id, |uc| {
-                        uc.validator = validator;
-                    });
-                }
-            }
-        });
-}
-
 pub fn setup_use_case_undoable_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<FeaturesTabState>()
         .on_use_case_undoable_changed({
@@ -649,7 +631,6 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
                         created_at: chrono::Utc::now(),
                         updated_at: chrono::Utc::now(),
                         name: "new_use_case".to_string(),
-                        validator: false,
                         undoable: false,
                         read_only: false,
                         long_operation: false,

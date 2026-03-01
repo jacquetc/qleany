@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 3
+  version: 4
 global:
   language: cpp-qt
   application_name: CarLot
@@ -96,7 +96,6 @@ features:
 - name: inventory_management
   use_cases:
   - name: import_inventory
-    validator: false
     entities:
     - Root
     - Car
@@ -107,7 +106,6 @@ features:
       - name: file_path
         type: string
   - name: export_inventory
-    validator: false
     entities:
     - Root
     - Car

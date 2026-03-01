@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 3
+  version: 4
 global:
   language: rust
   application_name: Qleany
@@ -189,8 +189,6 @@ entities:
   fields:
   - name: name
     type: string
-  - name: validator
-    type: boolean
   - name: entities
     type: entity
     entity: Entity
@@ -342,19 +340,16 @@ features:
 - name: handling_app_lifecycle
   use_cases:
   - name: initialize_app
-    validator: false
     entities:
     - Root
     undoable: false
   - name: clean_up_before_exit
-    validator: false
     entities:
     - Root
     undoable: false
 - name: handling_manifest
   use_cases:
   - name: load
-    validator: true
     entities:
     - Root
     - Entity
@@ -379,7 +374,6 @@ features:
       - name: manifest_path
         type: string
   - name: save
-    validator: true
     entities:
     - Root
     - Entity
@@ -397,7 +391,6 @@ features:
       - name: manifest_path
         type: string
   - name: create
-    validator: false
     entities:
     - Entity
     - Field
@@ -409,12 +402,10 @@ features:
       - name: workspace_id
         type: uinteger
   - name: close
-    validator: false
     entities:
     - Root
     undoable: false
   - name: export_to_mermaid
-    validator: false
     entities:
     - Entity
     undoable: false
@@ -427,7 +418,6 @@ features:
 - name: rust_file_generation
   use_cases:
   - name: fill_rust_files
-    validator: true
     entities:
     - Root
     - Entity
@@ -455,7 +445,6 @@ features:
         type: string
         is_list: true
   - name: generate_rust_code
-    validator: true
     entities:
     - Root
     - Entity
@@ -479,7 +468,6 @@ features:
       - name: timestamp
         type: string
   - name: generate_rust_files
-    validator: true
     entities:
     - Root
     - Entity
@@ -517,7 +505,6 @@ features:
 - name: cpp_qt_file_generation
   use_cases:
   - name: fill_cpp_qt_files
-    validator: true
     entities:
     - Root
     - Entity
@@ -545,7 +532,6 @@ features:
         type: string
         is_list: true
   - name: generate_cpp_qt_code
-    validator: true
     entities:
     - Root
     - Entity
@@ -569,7 +555,6 @@ features:
       - name: timestamp
         type: string
   - name: generate_cpp_qt_files
-    validator: true
     entities:
     - Root
     - Entity

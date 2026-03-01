@@ -51,7 +51,6 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
 
     // Use case detail callbacks
     use_case_handlers::setup_use_case_name_callback(app, app_context);
-    use_case_handlers::setup_use_case_validator_callback(app, app_context);
     use_case_handlers::setup_use_case_undoable_callback(app, app_context);
     use_case_handlers::setup_use_case_read_only_callback(app, app_context);
     use_case_handlers::setup_use_case_long_operation_callback(app, app_context);

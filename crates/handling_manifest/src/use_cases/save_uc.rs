@@ -9,6 +9,7 @@ use common::entities::{
     Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, Global, Root, UseCase, Workspace,
 };
 use common::types::EntityId;
+use crate::use_cases::common::CURRENT_SCHEMA_VERSION;
 
 pub trait SaveUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn SaveUnitOfWorkTrait>;
@@ -313,11 +314,6 @@ impl SaveUseCase {
 
                         model_structs::UseCase {
                             name: use_case.name.clone(),
-                            validator: if use_case.validator {
-                                Some(true)
-                            } else {
-                                Some(false)
-                            },
                             entities: if entity_names.is_empty() {
                                 None
                             } else {
@@ -349,7 +345,7 @@ impl SaveUseCase {
 
         // Create the manifest
         let manifest = model_structs::Manifest {
-            schema: model_structs::Schema { version: 3 },
+            schema: model_structs::Schema { version: i32::try_from(CURRENT_SCHEMA_VERSION)? },
             global: model_global,
             entities: model_entities,
             features: model_features,

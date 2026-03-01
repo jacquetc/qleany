@@ -4,6 +4,60 @@ This document covers breaking changes between manifest schema versions and how t
 
 ---
 
+## Schema v3 to v4
+
+**Qleany version**: v1.0.31
+
+### What changed
+
+The `validator` use case property has been removed.
+
+### Reasons for the change
+
+Validation is the responsibility of the developer.
+
+### Automatic migration
+
+Qleany auto-migrates v2 manifests on load. When you open a v3 manifest, the migrator strips all `validator` fields and bumps the version to 4 before validation. No manual editing is required to load an old manifest.
+
+If you save the manifest afterwards (from the UI), the file is written as v4.
+
+From the CLI, it's the same: if you run `qleany generate` on a v3 manifest, it will be auto-migrated to v4 before generation. To only migrate the manifest, use `qleany migrate` instead.
+
+
+### Manual migration
+
+If you prefer to update the file yourself:
+
+1. Change the schema version:
+
+```yaml
+schema:
+  version: 4    # was 3
+```
+
+2. Remove every `validator:` line from your entities:
+
+```diff
+ feature:
+   - name : my_feature
+     use_cases:
+       - name: my_use_case
+-        validator: true
+```
+
+No other manifest changes are needed.
+
+### Behavioral differences
+
+None
+
+### Code generation templates
+
+Never used.²
+
+---
+
 ## Schema v2 to v3
 
 **Qleany version**: v1.0.29

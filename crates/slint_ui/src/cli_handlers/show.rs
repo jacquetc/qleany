@@ -228,9 +228,6 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
                 if uc.read_only {
                     flags.push("read-only");
                 }
-                if uc.validator {
-                    flags.push("validator");
-                }
                 if uc.long_operation {
                     flags.push("async");
                 }
@@ -250,7 +247,6 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
                     "name": uc.name,
                     "undoable": uc.undoable,
                     "read_only": uc.read_only,
-                    "validator": uc.validator,
                     "long_operation": uc.long_operation,
                 })).collect::<Vec<_>>()
             });

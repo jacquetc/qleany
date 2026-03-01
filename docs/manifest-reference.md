@@ -16,7 +16,7 @@ Real-world manifests you can reference:
 
 ```yaml
 schema:
-  version: 3
+  version: 4
 
 global:
   language: cpp-qt          # rust, cpp-qt
@@ -69,7 +69,7 @@ entities:
 
 ```yaml
 schema:
-  version: 3
+  version: 4
 
 global:
   language: cpp-qt

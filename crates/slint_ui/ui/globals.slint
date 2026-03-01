@@ -160,14 +160,12 @@ export global FeaturesTabState {
 
     // Use case details properties
     in-out property <string> selected_use_case_name: "";
-    in-out property <bool> selected_use_case_validator: false;
     in-out property <bool> selected_use_case_undoable: false;
     in-out property <bool> selected_use_case_read_only: false;
     in-out property <bool> selected_use_case_long_operation: false;
 
     // Use case details callbacks
     callback use_case_name_changed(string);
-    callback use_case_validator_changed(bool);
     callback use_case_undoable_changed(bool);
     callback use_case_read_only_changed(bool);
     callback use_case_long_operation_changed(bool);
