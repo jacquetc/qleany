@@ -60,7 +60,8 @@ pub fn get_{{ uc.snake_name }}_progress(
 pub fn get_{{ uc.snake_name }}_result(
     long_operation_manager: &LongOperationManager,
     operation_id: &str,
-) -> Result<Option<{{ uc.dto_out.pascal_name }}>> {
+) ->
+Result<Option<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}>> {
     // Get the operation result as a JSON string
     let result_json = long_operation_manager.get_operation_result(operation_id);
 
@@ -69,10 +70,14 @@ pub fn get_{{ uc.snake_name }}_result(
         return Ok(None);
     }
 
+{%- if uc.dto_out %}
     // Parse the JSON string into a {{ uc.dto_out.pascal_name }}
     let result_dto: {{ uc.dto_out.pascal_name }} = serde_json::from_str(&result_json.unwrap())?;
 
     Ok(Some(result_dto))
+{%- else %}
+    Ok(Some(()))
+{%- endif %}
 }
 
 {%- else %}

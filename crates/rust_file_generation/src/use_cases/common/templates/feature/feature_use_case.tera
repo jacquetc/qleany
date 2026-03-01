@@ -95,6 +95,8 @@ impl {{ uc.pascal_name }}UseCase {
 impl LongOperation for {{ uc.pascal_name }}UseCase {
 {%- if uc.dto_out %}
     type Output = {{ uc.dto_out.pascal_name }};
+{%- else %}
+    type Output = ();
 {%- endif %}
 
     fn execute(

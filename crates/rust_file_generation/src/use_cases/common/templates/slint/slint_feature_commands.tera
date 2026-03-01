@@ -22,6 +22,16 @@ use {{ feature.snake_name }}::{
     {{ feature.snake_name }}_controller,
 };
 
+{%- set_global has_long_operation = false %}
+{% for uc_id, uc in feature.use_cases %}
+{%- if uc.inner.long_operation %}
+{%- set_global has_long_operation = true %}
+{%- endif %}
+{%- endfor %}
+{%- if has_long_operation %}
+use common::long_operation::OperationProgress;
+{%- endif %}
+
 {% for uc_id, uc in feature.use_cases %}
 {%- if uc.inner.long_operation %}
 
