@@ -43,6 +43,7 @@ pub enum LongOperationEvent {
 pub enum DirectAccessEntity {
     All(AllEvent),
 
+    EntityBase(EntityEvent),
     Dto(EntityEvent),
     DtoField(EntityEvent),
     Global(EntityEvent),
@@ -77,8 +78,9 @@ pub enum HandlingManifestEvent {
 pub enum RustFileGenerationEvent {
     GenerateRustCode,
     GenerateRustFiles,
-    FillRustFiles,
     FillCodeInRustFiles,
+    GenerateRustPrompt,
+    FillRustFiles,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -87,6 +89,7 @@ pub enum CppQtFileGenerationEvent {
     GenerateCppQtCode,
     GenerateCppQtFiles,
     FillCodeInCppQtFiles,
+    GenerateCppQtPrompt,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
@@ -121,6 +124,9 @@ impl Event {
             Origin::DirectAccess(entity) => match entity {
                 DirectAccessEntity::All(event) => format!("direct_access_all_{:?}", event),
                 // entities
+                DirectAccessEntity::EntityBase(event) => {
+                    format!("direct_access_entity_base_{:?}", event)
+                }
                 DirectAccessEntity::Dto(event) => format!("direct_access_dto_{:?}", event),
                 DirectAccessEntity::DtoField(event) => {
                     format!("direct_access_dto_field_{:?}", event)

@@ -12,6 +12,8 @@ use common::entities::{
 };
 use common::types::EntityId;
 use std::sync::Mutex;
+use common::direct_access::root::RootRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 
 pub struct GenerateCppQtFilesUnitOfWork {
     context: DbContext,

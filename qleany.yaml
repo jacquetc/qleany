@@ -187,10 +187,36 @@ entities:
     type: enum
     enum_name: FileStatus
     enum_values:
-      - Unknown
-      - Unchanged
-      - Modified
-      - New
+    - Unknown
+    - Unchanged
+    - Modified
+    - New
+  - name: feature
+    type: entity
+    entity: Feature
+    relationship: many_to_one
+    optional: true
+  - name: all_features
+    type: boolean
+  - name: entity
+    type: entity
+    entity: Entity
+    relationship: many_to_one
+    optional: true
+  - name: all_entities
+    type: boolean
+  - name: use_case
+    type: entity
+    entity: UseCase
+    relationship: many_to_one
+    optional: true
+  - name: all_use_cases
+    type: boolean
+  - name: field
+    type: entity
+    entity: Field
+    relationship: many_to_one
+    optional: true
   undoable: false
 - name: UseCase
   inherits_from: EntityBase
@@ -452,6 +478,12 @@ features:
       - name: file_groups
         type: string
         is_list: true
+  - name: fill_code_in_rust_files
+    entities:
+    - System
+    - File
+    undoable: false
+    long_operation: true
   - name: generate_rust_code
     entities:
     - Root
@@ -510,6 +542,25 @@ features:
         type: string
       - name: duration
         type: string
+  - name: generate_rust_prompt
+    undoable: false
+    read_only: true
+    dto_in:
+      name: GenerateRustPromptDto
+      fields:
+        - name: feature_id
+          type: uinteger
+          optional: true
+        - name: use_case_id
+          type: uinteger
+          optional: true
+        - name: context
+          type: boolean
+    dto_out:
+      name: GenerateRustPromptReturnDto
+      fields:
+        - name: prompt_text
+          type: string
 - name: cpp_qt_file_generation
   use_cases:
   - name: fill_cpp_qt_files
@@ -596,6 +647,54 @@ features:
       - name: timestamp
         type: string
       - name: duration
+        type: string
+  - name: fill_code_in_cpp_qt_files
+    entities:
+    - System
+    - File
+    undoable: false
+    long_operation: true
+  - name: generate_cpp_qt_prompt
+    undoable: false
+    read_only: true
+    dto_in:
+      name: GenerateCppQtPromptDto
+      fields:
+      - name: feature_id
+        type: uinteger
+        optional: true
+      - name: use_case_id
+        type: uinteger
+        optional: true
+      - name: context
+        type: boolean
+    dto_out:
+      name: GenerateCppQtPromptReturnDto
+      fields:
+      - name: prompt_text
+        type: string
+- name: file_generation_shared_steps
+  use_cases:
+  - name: fill_status_in_files
+    entities:
+    - System
+    - File
+    undoable: false
+  - name: get_file_diff
+    entities:
+    - System
+    - File
+    undoable: false
+    read_only: true
+    dto_in:
+      name: GetDiffIn
+      fields:
+      - name: file_id
+        type: uinteger
+    dto_out:
+      name: GetDiffOut
+      fields:
+      - name: diff_text
         type: string
 ui:
   rust_cli: true
