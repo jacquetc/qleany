@@ -197,6 +197,8 @@ For C++/Qt:
 - no raw pointers, only smart pointers
 - no multi-level inheritance, be it virtual or polymorphic
 - more copying than strictly necessary, though std::move is used deeper inside the infrastructure
+- helper functions to avoid repetitive boilerplate for controllers.
+- complex helper templates (with C++20 concepts) are used for the entity use cases to avoid the generation of hundreds of nearly identical files. Twenty-two use case .h/.cpp files *per entity* would be a nightmare to maintain, and the code would be mostly boilerplate. The helper templates reduce this to eleven shared use case .h/.cpp files, which are much more manageable. This is infrastructure code not destined to be modified by the user.
 
 This is a deliberate trade-off between approachability and performance. Qleany prioritizes code that intermediate developers can confidently modify over code that squeezes every last microsecond from the CPU. The generated code is clean, readable, and maintainable. You are using Rust or C++, two fast languages, and you are not writing a game engine.
 
