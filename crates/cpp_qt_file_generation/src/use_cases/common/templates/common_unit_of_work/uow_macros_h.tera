@@ -63,6 +63,9 @@
 #define DECLARE_UOW_ENTITY_GET(Name) \
     [[nodiscard]] virtual QList<SCE::Name> get##Name(const QList<int> &ids) = 0
 
+#define DECLARE_UOW_ENTITY_GET_ALL(Name) \
+    [[nodiscard]] virtual QList<SCE::Name> getAll##Name() = 0
+
 #define DECLARE_UOW_ENTITY_UPDATE(Name) \
     [[nodiscard]] virtual QList<SCE::Name> update##Name(const QList<SCE::Name> &items) = 0
 
@@ -75,6 +78,7 @@
     DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(Name);                                                                      \
     DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
+    DECLARE_UOW_ENTITY_GET_ALL(Name);                                                                                 \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_SNAPSHOT(Name)
@@ -82,6 +86,7 @@
 #define DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)                                                                          \
     DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name);                                                                          \
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
+    DECLARE_UOW_ENTITY_GET_ALL(Name);                                                                                 \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_SNAPSHOT(Name)
@@ -150,6 +155,14 @@
         return repo->get(ids);                                                                                        \
     }
 
+#define UOW_ENTITY_GET_ALL(Name)                                                                                      \
+  public:                                                                                                             \
+    [[nodiscard]] QList<SCE::Name> getAll##Name() override                                                            \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
+        return repo->getAll();                                                                                        \
+    }
+
 #define UOW_ENTITY_UPDATE(Name)                                                                                       \
   public:                                                                                                             \
     [[nodiscard]] QList<SCE::Name> update##Name(const QList<SCE::Name> &items) override                               \
@@ -187,6 +200,7 @@
     UOW_ENTITY_GET_REL_FROM_OWNER(Name);                                                                      \
     UOW_ENTITY_SET_REL_IN_OWNER(Name);                                                                        \
     UOW_ENTITY_GET(Name)                                                                                              \
+    UOW_ENTITY_GET_ALL(Name)                                                                                          \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
     UOW_ENTITY_REMOVE(Name)                                                                                           \
     UOW_ENTITY_SNAPSHOT(Name)
@@ -194,6 +208,7 @@
 #define UOW_ORPHAN_ENTITY_CRUD(Name)                                                                                  \
     UOW_ENTITY_CREATE_ORPHANS(Name)                                                                                   \
     UOW_ENTITY_GET(Name)                                                                                              \
+    UOW_ENTITY_GET_ALL(Name)                                                                                          \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
     UOW_ENTITY_REMOVE(Name)                                                                                           \
     UOW_ENTITY_SNAPSHOT(Name)

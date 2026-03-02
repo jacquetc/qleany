@@ -11,6 +11,7 @@
 #include "direct_access/use_case_helpers/create_uc.h"
 {%- endif %}
 #include "direct_access/use_case_helpers/get_uc.h"
+#include "direct_access/use_case_helpers/get_all_uc.h"
 #include "direct_access/use_case_helpers/remove_uc.h"
 #include "direct_access/use_case_helpers/update_uc.h"
 #include "controller_command_helpers.h"
@@ -36,6 +37,7 @@ namespace UCH = {{ s.global.application_pascal_name }}::Common::DirectAccess::Us
 // -- Type aliases for generic use case helpers --------------------------------
 
 using GetUC = UCH::GetUseCase<{{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork>;
+using GetAllUC = UCH::GetAllUseCase<{{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork>;
 using UpdateUC = UCH::UpdateUseCase<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
 using RemoveUC = UCH::RemoveUseCase<I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
 {%- if ent.owner %}
@@ -140,6 +142,18 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::ge
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
             auto useCase = std::make_unique<GetUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Ids);
+        });
+}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::getAll() const
+{
+    co_return co_await Helpers::executeReadQuery<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+        u"GetAll {{ ent.camel_plural_name }} Query"_s,
+        [this]() -> QList<{{ ent.pascal_name }}Dto> {
+            auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+            auto useCase = std::make_unique<GetAllUC>(std::move(uow));
+            return useCase->execute();
         });
 }
 

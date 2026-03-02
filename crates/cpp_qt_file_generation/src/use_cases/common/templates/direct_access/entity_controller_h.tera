@@ -36,6 +36,7 @@ class {{ ent.pascal_name }}Controller : public QObject
         return {};
     }
     QCoro::Task<QList<{{ ent.pascal_name }}Dto>> get(const QList<int> &{{ ent.camel_name }}Ids) const;
+    QCoro::Task<QList<{{ ent.pascal_name }}Dto>> getAll() const;
     QCoro::Task<QList<{{ ent.pascal_name }}Dto>> update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }});
     QCoro::Task<QList<int>> remove(const QList<int> &{{ ent.camel_name }}Ids);
 

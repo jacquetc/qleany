@@ -102,6 +102,11 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
     return m_table->findMany({{ ent.camel_name }}Ids);
 }
 
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getAll() const
+{
+    return m_table->findAll();
+}
+
 QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::update(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
 {
     // Only update entries that already exist

@@ -390,6 +390,128 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
     return result;
 }
 
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::findAll() const
+{
+    QList<SCE::{{ ent.pascal_name }}> result;
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    const QString sql = QStringLiteral("SELECT id,%1 FROM {{ ent.snake_name }}")
+                            .arg(COLUMNS_NO_ID);
+
+    QSqlQuery q(db);
+    q.prepare(sql);
+
+    if (q.exec())
+    {
+        QList<int> foundIds;
+        while (q.next())
+        {
+            const int rowId = q.value(0).toInt();
+            foundIds.append(rowId);
+
+            SCE::{{ ent.pascal_name }} {{ ent.camel_name }};
+            {{ ent.camel_name }}.id = rowId;
+        {%- for f in ent.normal_fields %}
+
+            {%- if f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
+            {
+                const QString dateTimeStr = q.value({{ loop.index }}).toString();
+                {{ ent.camel_name }}.{{ f.camel_name }} = dateTimeStr.isEmpty() ? std::nullopt
+                    : std::optional(QDateTime::fromString(dateTimeStr, Qt::ISODate));
+            }
+            {%- elif f.cpp_qt_type == "QDateTime" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = QDateTime::fromString(q.value({{ loop.index }}).toString(), Qt::ISODate);
+
+            {%- elif f.cpp_qt_base_type == "QUuid" and f.optional == true %}
+            {
+                const QString uuidStr = q.value({{ loop.index }}).toString();
+                {{ ent.camel_name }}.{{ f.camel_name }} = uuidStr.isEmpty() ? std::nullopt
+                    : std::optional(QUuid::fromString(uuidStr));
+            }
+            {%- elif f.cpp_qt_type == "QUuid" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = QUuid::fromString(q.value({{ loop.index }}).toString());
+
+            {%- elif f.inner.field_type == "Enum" and f.optional == true %}
+            {
+                const int enumVal = q.value({{ loop.index }}).toInt();
+                {{ ent.camel_name }}.{{ f.camel_name }} = (enumVal >= 0)
+                    ? std::optional(static_cast<Entities::{{ f.cpp_qt_base_type }}>(enumVal))
+                    : std::nullopt;
+            }
+            {%- elif f.inner.field_type == "Enum" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_type }}>(q.value({{ loop.index }}).toInt());
+
+            {%- elif f.optional == true %}
+            {
+                const auto v = q.value({{ loop.index }});
+                {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull() ? std::nullopt : std::optional(v.value<{{ f.cpp_qt_base_type }}>());
+            }
+
+            {%- elif f.cpp_qt_type == "QString" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toString();
+
+            {%- elif f.cpp_qt_type == "int" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toInt();
+
+            {%- elif f.cpp_qt_type == "uint" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toUInt();
+
+            {%- elif f.cpp_qt_type == "float" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toFloat();
+
+            {%- elif f.cpp_qt_type == "bool" %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).toBool();
+
+            {%- else %}
+            // TODO: check this type conversion
+            {{ ent.camel_name }}.{{ f.camel_name }} = q.value({{ loop.index }}).value<{{ f.cpp_qt_type }}>();
+
+            {%- endif %}
+        {%- endfor %}
+
+            result.append(std::move({{ ent.camel_name }}));
+        }
+
+        // Get relationship data for all found IDs in batch
+        {% for f in ent.fields %}
+        {%- if f.inner.field_type == "Entity" and f.relationship == "OrderedOneToMany" %}
+        const auto {{ f.camel_name }}Map = JunctionTableOps::OrderedOneToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToMany" %}
+        const auto {{ f.camel_name }}Map = JunctionTableOps::UnorderedOneToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
+        const auto {{ f.camel_name }}Map = JunctionTableOps::OneToOne::getRightIdMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToOne" %}
+        const auto {{ f.camel_name }}Map = JunctionTableOps::ManyToOne::getRightIdMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- elif f.inner.field_type == "Entity" and f.relationship == "ManyToMany" %}
+        const auto {{ f.camel_name }}Map = JunctionTableOps::UnorderedManyToMany::getRightIdsMany(db, foundIds, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE);
+        {%- endif %}
+        {%- endfor %}
+
+        // Populate relationships into results
+        for (auto &{{ ent.camel_name }} : result)
+        {
+            {% for f in ent.fields %}
+            {%- if f.inner.field_type == "Entity" %}
+                {%- if f.relationship == "OneToOne" or f.relationship == "ManyToOne" %}
+                    {%- if f.optional == true %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id);
+                    {%- else %}
+            if (auto it = {{ f.camel_name }}Map.find({{ ent.camel_name }}.id); it != {{ f.camel_name }}Map.end() && it->has_value())
+                {{ ent.camel_name }}.{{ f.camel_name }} = it->value();
+            else
+                qCritical() << "Missing required relationship {{ f.camel_name }} for {{ ent.pascal_name }} with ID" << {{ ent.camel_name }}.id;
+                    {%- endif %}
+                {%- else %}
+            {{ ent.camel_name }}.{{ f.camel_name }} = {{ f.camel_name }}Map.value({{ ent.camel_name }}.id);
+                {%- endif %}
+            {%- endif %}
+            {%- endfor %}
+        }
+    }
+    return result;
+}
+
 QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::removeMany(const QList<int> &ids)
 {
     if (ids.isEmpty())

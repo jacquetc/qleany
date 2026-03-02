@@ -28,6 +28,7 @@ class I{{ ent.pascal_name }}Table
 
     // Query/Delete
     [[nodiscard]] virtual QList<SCE::{{ ent.pascal_name }}> findMany(const QList<int> &ids) const = 0;
+    [[nodiscard]] virtual QList<SCE::{{ ent.pascal_name }}> findAll() const = 0;
     virtual QList<int> removeMany(const QList<int> &ids) = 0;
     // Relationship setters/getters
     // Set the relationship value for a given {{ ent.pascal_name }} id
@@ -61,6 +62,7 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     void setRelationshipsInOwner(const QList<int> &itemIds, int ownerId) override;
     {%- endif %}
     QList<SCE::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const override;
+    QList<SCE::{{ ent.pascal_name }}> getAll() const override;
     QList<SCE::{{ ent.pascal_name }}> update(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
     QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) override;
 

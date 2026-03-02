@@ -1007,6 +1007,22 @@ impl FillCppQtFilesUseCase {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
+            name: "get_all_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_all_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "update_uc.h".to_string(),
             relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
             group: "common_direct_access".to_string(),

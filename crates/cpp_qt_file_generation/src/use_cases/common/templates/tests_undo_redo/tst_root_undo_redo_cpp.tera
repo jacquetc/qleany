@@ -96,6 +96,11 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         return result;
     }
 
+    QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> getAll() override
+    {
+        return m_createdRoots;
+    }
+
     QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> update(const QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> &roots) override
     {
         return roots; // Simple mock implementation
