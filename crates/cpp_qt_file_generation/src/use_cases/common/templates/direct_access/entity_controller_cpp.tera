@@ -5,7 +5,7 @@
 #include "{{ ent.snake_name }}_unit_of_work.h"
 #include "entities/{{ ent.snake_name }}.h"
 #include "service_locator.h"
-#include "use_cases/common/dto_mapper.h"
+#include "dto_mapper.h"
 #include "direct_access/use_case_helpers/create_orphans_uc.h"
 {%- if ent.owner %}
 #include "direct_access/use_case_helpers/create_uc.h"

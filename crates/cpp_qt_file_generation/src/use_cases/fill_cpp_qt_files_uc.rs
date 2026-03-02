@@ -1268,6 +1268,39 @@ impl FillCppQtFilesUseCase {
                     field: None,
                 });
 
+
+                files.push(File {
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("i_{}_unit_of_work.h", entity_snake_name),
+                    relative_path: relative_path.clone(),
+                    group: format!("direct_access: {}", entity_pascal_name),
+                    template_name: "i_entity_unit_of_work_h".to_string(),
+                    generated_code: None,
+                    status: FileStatus::Unknown,
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
+                files.push(File {
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: "dto_mapper.h".to_string(),
+                    relative_path: relative_path.clone(),
+                    group: "direct_access".to_string(),
+                    template_name: "dto_mapper_h".to_string(),
+                    generated_code: None,
+                    status: FileStatus::Unknown,
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+
                 let relative_path = format!(
                     "{}/direct_access/{}/models/",
                     prefix,
@@ -1358,46 +1391,6 @@ impl FillCppQtFilesUseCase {
                         field: None,
                     });
                 }
-
-                // for src/direct_access/{}/use_cases/
-
-                let relative_path = format!(
-                    "{}/direct_access/{}/use_cases/",
-                    prefix,
-                    heck::AsSnakeCase(&entity.name)
-                );
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("i_{}_unit_of_work.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "i_entity_unit_of_work_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "dto_mapper.h".to_string(),
-                    relative_path: format!("{}{}", relative_path.clone(), "common/"),
-                    group: "direct_access".to_string(),
-                    template_name: "dto_mapper_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
 
             }
 

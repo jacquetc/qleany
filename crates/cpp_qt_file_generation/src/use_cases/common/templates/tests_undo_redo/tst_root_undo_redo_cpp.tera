@@ -3,8 +3,8 @@
 {%- if ent.pascal_name == "Root" %}{% set_global root_undoable = ent.inner.undoable %}{% endif %}
 {%- endfor %}
 #include "root/dtos.h"
-#include "root/use_cases/i_root_unit_of_work.h"
-#include "root/use_cases/common/dto_mapper.h"
+#include "root/i_root_unit_of_work.h"
+#include "root/dto_mapper.h"
 #include "direct_access/use_case_helpers/create_orphans_uc.h"
 #include "entities/root.h"
 {%- if root_undoable %}
