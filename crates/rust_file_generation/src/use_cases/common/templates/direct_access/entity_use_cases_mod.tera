@@ -6,6 +6,7 @@
 // Sub-modules for {{ s.entities[e].pascal_name }} use cases
 pub(super) mod get_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod get_{{ s.entities[e].snake_name }}_multi_uc;
+pub(super) mod get_all_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod create_orphan_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_orphan_{{ s.entities[e].snake_name }}_uc;
 {%- if s.entities[e].owner -%}
@@ -38,6 +39,7 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 {%- endif %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMulti")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAll")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Update")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
@@ -63,6 +65,7 @@ pub(in crate::{{ s.entities[e].snake_name }}) trait {{ s.entities[e].pascal_name
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAllRO")]
 {%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]

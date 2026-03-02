@@ -92,6 +92,7 @@ impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
 {%- endif %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Get")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMulti")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAll")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Update")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
@@ -171,6 +172,7 @@ impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWorkRO {
 
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
+#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAllRO")]
 {%- if s.entities[e].forward_relationships %}
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]

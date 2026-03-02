@@ -15,6 +15,7 @@ use super::{
 {%- endif %}
         get_{{ s.entities[e].snake_name }}_uc::Get{{ s.entities[e].pascal_name }}UseCase,
         get_{{ s.entities[e].snake_name }}_multi_uc::Get{{ s.entities[e].pascal_name }}MultiUseCase,
+        get_all_{{ s.entities[e].snake_name }}_uc::GetAll{{ s.entities[e].pascal_name }}UseCase,
         update_{{ s.entities[e].snake_name }}_uc::Update{{ s.entities[e].pascal_name }}UseCase,
         update_{{ s.entities[e].snake_name }}_multi_uc::Update{{ s.entities[e].pascal_name }}MultiUseCase,
         remove_{{ s.entities[e].snake_name }}_uc::Remove{{ s.entities[e].pascal_name }}UseCase,
@@ -77,6 +78,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<{{ s.entities
     let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
     let uc = Get{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
+    let uc = GetAll{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(

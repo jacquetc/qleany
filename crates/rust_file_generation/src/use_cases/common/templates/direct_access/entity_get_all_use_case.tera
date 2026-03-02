@@ -6,29 +6,22 @@
 use super::{{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait;
 use crate::{{ s.entities[e].snake_name }}::dtos::{{ s.entities[e].pascal_name }}Dto;
 use anyhow::Result;
-use common::types::EntityId;
 
-pub struct Get{{ s.entities[e].pascal_name }}MultiUseCase {
+pub struct GetAll{{ s.entities[e].pascal_name }}UseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait>,
 }
 
-impl Get{{ s.entities[e].pascal_name }}MultiUseCase {
+impl GetAll{{ s.entities[e].pascal_name }}UseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait>) -> Self {
-        Get{{ s.entities[e].pascal_name }}MultiUseCase { uow_factory }
+        GetAll{{ s.entities[e].pascal_name }}UseCase { uow_factory }
     }
 
-    pub fn execute(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}Dto>>> {
-        if ids.is_empty() {
-            return Ok(Vec::new());
-        }
+    pub fn execute(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
         let uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entities = uow.get_{{ s.entities[e].snake_name }}_multi(ids)?;
+        let entities = uow.get_all_{{ s.entities[e].snake_name }}()?;
         uow.end_transaction()?;
-        Ok(entities
-            .into_iter()
-            .map(|entity| entity.map(|r| r.into()))
-            .collect())
+        Ok(entities.into_iter().map(|entity| entity.into()).collect())
     }
 }
 {%- else %}

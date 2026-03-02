@@ -594,6 +594,22 @@ impl FillRustFilesUseCase {
                 field: None,
             });
 
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: format!("get_all_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path: relative_path.clone(),
+                group: "entities".to_string(),
+                template_name: "entity_get_all_use_case".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: Some(entity.id),
+                use_case: None,
+                field: None,
+            });
+
             // create_orphans use cases (always generated)
             files.push(File {
                 id: 0,
