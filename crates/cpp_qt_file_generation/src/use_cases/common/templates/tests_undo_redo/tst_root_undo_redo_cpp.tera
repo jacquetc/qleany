@@ -3,8 +3,10 @@
 {%- if ent.pascal_name == "Root" %}{% set_global root_undoable = ent.inner.undoable %}{% endif %}
 {%- endfor %}
 #include "root/dtos.h"
-#include "root/use_cases/create_orphans_uc.h"
 #include "root/use_cases/i_root_unit_of_work.h"
+#include "root/use_cases/common/dto_mapper.h"
+#include "direct_access/use_case_helpers/create_orphans_uc.h"
+#include "entities/root.h"
 {%- if root_undoable %}
 #include "undo_redo/undo_redo_command.h"
 {%- endif %}
@@ -17,10 +19,20 @@
 
 using namespace Qt::StringLiterals;
 
+namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
 {%- if root_undoable %}
 namespace SCU = {{ s.global.application_pascal_name }}::Common::UndoRedo;
 {%- endif %}
 namespace SDAR = {{ s.global.application_pascal_name }}::DirectAccess::Root;
+namespace UCH = {{ s.global.application_pascal_name }}::Common::DirectAccess::UseCaseHelpers;
+
+using CreateOrphanRootUseCase = UCH::CreateOrphanUseCase<
+    SCE::Root,
+    SDAR::CreateRootDto,
+    SDAR::RootDto,
+    SDAR::DtoMapper,
+    SDAR::IRootUnitOfWork,
+    {% if root_undoable %}true{% else %}false{% endif %}>;
 
 // Mock unit of work for testing
 class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
@@ -207,7 +219,7 @@ void TestRootUndoRedo::testCreateOrphansUseCaseExecute()
     // Arrange
     auto mockUow = std::make_unique<MockRootUnitOfWork>();
     auto *uowPtr = mockUow.get();
-    SDAR::CreateOrphanRootUseCase useCase(std::move(mockUow));
+    CreateOrphanRootUseCase useCase(std::move(mockUow));
 
     QList<SDAR::CreateRootDto> createDtos;
     SDAR::CreateRootDto dto1;
@@ -230,7 +242,7 @@ void TestRootUndoRedo::testCreateOrphansUseCaseExecuteUndoRedo()
     // Arrange
     auto mockUow = std::make_unique<MockRootUnitOfWork>();
     auto *uowPtr = mockUow.get();
-    SDAR::CreateOrphanRootUseCase useCase(std::move(mockUow));
+    CreateOrphanRootUseCase useCase(std::move(mockUow));
 
     QList<SDAR::CreateRootDto> createDtos;
     SDAR::CreateRootDto dto1;
@@ -265,7 +277,7 @@ void TestRootUndoRedo::testCreateOrphansUseCaseWithCommand()
     // Arrange
     auto mockUow = std::make_unique<MockRootUnitOfWork>();
     auto *uowPtr = mockUow.get();
-    auto useCase = std::make_shared<SDAR::CreateOrphanRootUseCase>(std::move(mockUow));
+    auto useCase = std::make_shared<CreateOrphanRootUseCase>(std::move(mockUow));
 
     QList<SDAR::CreateRootDto> createDtos;
     SDAR::CreateRootDto dto1;
@@ -314,7 +326,7 @@ void TestRootUndoRedo::testCreateOrphansUseCaseUndoWithoutExecute()
 {
     // Arrange
     auto mockUow = std::make_unique<MockRootUnitOfWork>();
-    SDAR::CreateOrphanRootUseCase useCase(std::move(mockUow));
+    CreateOrphanRootUseCase useCase(std::move(mockUow));
 
     // Act - Try to undo without execute
     auto undoResult = useCase.undo();
