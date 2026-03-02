@@ -26,8 +26,10 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 - **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
 - **Reactive QML models** — Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
 - **QML mocks** — JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
+- **Models** — C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
 - **Relationship management** — Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
 - **Event system** — Thread-safe, decoupled communication between features
+- **Event Buffer** — Send events only if the command succeeds
 - **Generated test suite** — Junction table operations, undo/redo behavior, and async integration tests
 
 ## Documentation
@@ -71,7 +73,7 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 ### When to Reconsider
 
-For **simple utilities or single-purpose tools**, Qleany introduces more infrastructure than you need. If your application doesn't have complex entity relationships, doesn't need undo/redo, and won't grow significantly, a hand-written architecture may serve you better.
+For **simple utilities or single-purpose tools**, Qleany introduces more infrastructure than you need. If your application doesn't have complex entity relationships, doesn't need undo/redo, and won't grow significantly, a hand-written architecture may serve you better. Yet since you only have to fill a few blank spots, using Qleany can save you time.
 
 If you're working with a **team that already has established patterns**, introducing Qleany means everyone needs to learn its conventions. The generated code is readable and follows clear patterns, but it represents a specific way of doing things. Discuss with your team before adopting it. Do not antagonize existing workflows. A more professional approach may be to present Qleany's patterns with some open-minded senior devs of your team. Even if they don't want to use Qleany - **which is fairly expected** - they may appreciate some of its ideas and adapt them to their existing architecture. They may even want to use Qleany for prototyping or side projects, or scaffold new subsystems of an existing project without disrupting the main architecture.
 
