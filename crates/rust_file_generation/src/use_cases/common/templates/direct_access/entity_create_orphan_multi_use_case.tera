@@ -35,7 +35,7 @@ impl CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase {
         // create
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
-        let entities = uow.create_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
+        let entities = uow.create_orphan_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>())?;
         uow.commit()?;
 
 {%- if s.entities[e].inner.undoable %}
@@ -67,7 +67,7 @@ impl UndoRedoCommand for CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase
         if let Some(last_entities) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.create_{{ s.entities[e].snake_name }}_multi(&last_entities)?;
+            uow.create_orphan_{{ s.entities[e].snake_name }}_multi(&last_entities)?;
             uow.commit()?;
             self.undo_stack.push_back(last_entities);
         }

@@ -71,20 +71,20 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {{ s.entities[e].pascal_name }}Repository { redb_table, transaction }
     }
 
-    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> {
+    pub fn create_orphan(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: vec![new.id], data: None });
         Ok(new)
     }
 
-    pub fn create_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
+    pub fn create_orphan_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: new_entities.iter().map(|e| e.id).collect(), data: None });
         Ok(new_entities)
     }
 
 {%- if s.entities[e].owner %}
-    pub fn create_with_owner(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}, Error> {
+    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -112,7 +112,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}], owner_id: EntityId, index: i32) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
+    pub fn create_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}], owner_id: EntityId, index: i32) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 

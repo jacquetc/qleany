@@ -70,7 +70,7 @@ impl Create{{ s.entities[e].pascal_name }}UseCase {
 {%- endif %}
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_{{ s.entities[e].snake_name }}_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_{{ s.entities[e].snake_name }}(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
 

@@ -70,7 +70,7 @@ impl Create{{ s.entities[e].pascal_name }}MultiUseCase {
 {%- endif %}
 
         // Create with owner (repository handles junction management internally)
-        let entities = uow.create_{{ s.entities[e].snake_name }}_multi_with_owner(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(), owner_id, index)?;
+        let entities = uow.create_{{ s.entities[e].snake_name }}_multi(&dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(), owner_id, index)?;
 
         uow.commit()?;
 
