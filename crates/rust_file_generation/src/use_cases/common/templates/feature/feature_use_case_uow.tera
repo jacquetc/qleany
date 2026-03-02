@@ -66,9 +66,8 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
         Ok(())
     }
 }
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-// DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-// GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//TODO: adapt entities and actions to real use :
+// GetRO, GetMultiRO, GetRelationshipRO, GetRelationshipsFromRightIdsRO
 //
 // You have here a long operation read-only unit of work.
 //
@@ -166,9 +165,9 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
         Ok(())
     }
 }
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//TODO: adapt entities and actions to real use :
+// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,  DeleteMulti, GetRelationship,
+// GetRelationshipsFromRightIds, SetRelationship, SetRelationshipMulti, Snapshot, Restore
 //
 // You have here a long operation read-write unit of work.
 //
@@ -267,9 +266,8 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//TODO: adapt entities and actions to real use :
+// GetRO, GetMultiRO, GetRelationshipRO, GetRelationshipsFromRightIdsRO
 //
 // You have here a read-only unit of work.
 //
@@ -368,9 +366,9 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
+//TODO: adapt entities and actions to real use :
+// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,  DeleteMulti, GetRelationship,
+// GetRelationshipsFromRightIds, SetRelationship, SetRelationshipMulti, Snapshot, Restore
 //
 // You have here a read-write unit of work.
 //
