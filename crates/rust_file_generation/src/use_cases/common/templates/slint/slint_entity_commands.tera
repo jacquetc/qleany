@@ -14,14 +14,14 @@ use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}D
 use common::types::EntityId;
 
 /// Create a new {{ entity.snake_name }} entity (orphan, no parent)
-pub fn create_orphans_{{ entity.snake_name }}(
+pub fn create_orphan_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dto: &Create{{ entity.pascal_name }}Dto,
 ) -> Result<{{ entity.pascal_name }}Dto, String> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    {{ entity.snake_name }}_controller::create_orphans(
+    {{ entity.snake_name }}_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
@@ -29,7 +29,7 @@ pub fn create_orphans_{{ entity.snake_name }}(
         dto,
     )
     {%- else %}
-    {{ entity.snake_name }}_controller::create_orphans(
+    {{ entity.snake_name }}_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
         dto,
@@ -72,14 +72,14 @@ pub fn create_{{ entity.snake_name }}(
 {%- endif -%}
 
 /// Create multiple {{ entity.snake_name }} entities (orphan, no parent)
-pub fn create_orphans_{{ entity.snake_name }}_multi(
+pub fn create_orphan_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dtos: &[Create{{ entity.pascal_name }}Dto],
 ) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    {{ entity.snake_name }}_controller::create_orphans_multi(
+    {{ entity.snake_name }}_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
@@ -87,7 +87,7 @@ pub fn create_orphans_{{ entity.snake_name }}_multi(
         dtos,
     )
     {%- else %}
-    {{ entity.snake_name }}_controller::create_orphans_multi(
+    {{ entity.snake_name }}_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
         dtos,

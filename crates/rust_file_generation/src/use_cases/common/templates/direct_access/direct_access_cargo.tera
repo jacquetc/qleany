@@ -18,6 +18,7 @@ anyhow = { workspace = true }
 serde = { version = "1", features = ["derive"], workspace = true }
 macros = { path = "../macros" }
 chrono = { workspace = true }
+uuid = { workspace = true }
 
 [lints]
 workspace = true
