@@ -382,6 +382,33 @@ impl SnapshotBuilder {
         })
     }
 
+
+    fn get_dto_field_rust_type(dto_field: &DtoField) -> String {
+        let base_type = Self::get_dto_field_rust_base_type(dto_field);
+        if dto_field.optional {
+            format!("Option<{}>", base_type)
+        } else if dto_field.is_list {
+            format!("Vec<{}>", base_type)
+        } else {
+            base_type
+        }
+    }
+    fn get_dto_field_rust_base_type(dto_field: &DtoField) -> String {
+        match dto_field.field_type {
+            DtoFieldType::Boolean => "bool".to_string(),
+            DtoFieldType::Integer => "i64".to_string(),
+            DtoFieldType::UInteger => "u64".to_string(),
+            DtoFieldType::Float => "f64".to_string(),
+            DtoFieldType::String => "String".to_string(),
+            DtoFieldType::Uuid => "uuid::Uuid".to_string(),
+            DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
+            DtoFieldType::Enum => dto_field
+                .enum_name
+                .clone()
+                .unwrap_or("enum_name not set".to_string()),
+        }
+    }
+
     fn get_entity_owner(uow: &dyn GenerationReadOps, entity_id: &EntityId) -> Option<EntityId> {
         let entity: Option<Entity> = uow.get_entity(entity_id).ok().flatten();
         if let Some(entity) = entity {
@@ -811,30 +838,12 @@ impl SnapshotBuilder {
             let mut df_vec: Vec<DtoFieldVM> = Vec::new();
             for (dfid, df) in &dto_fields {
                 if d.fields.contains(dfid) {
-                    let rust_base_type = match df.field_type {
-                        DtoFieldType::Boolean => "bool".to_string(),
-                        DtoFieldType::Integer => "i64".to_string(),
-                        DtoFieldType::UInteger => "u64".to_string(),
-                        DtoFieldType::Float => "f64".to_string(),
-                        DtoFieldType::String => "String".to_string(),
-                        DtoFieldType::Uuid => "uuid::Uuid".to_string(),
-                        DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                        DtoFieldType::Enum => df
-                            .enum_name
-                            .clone()
-                            .unwrap_or("enum_name not set".to_string()),
-                    };
-                    let rust_type = if df.is_list {
-                        format!("Vec<{}>", &rust_base_type)
-                    } else {
-                        rust_base_type.clone()
-                    };
                     df_vec.push(DtoFieldVM {
                         inner: df.clone(),
                         pascal_name: heck::AsPascalCase(&df.name).to_string(),
                         snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                        rust_base_type,
-                        rust_type,
+                        rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
+                        rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
                     });
                 }
             }
@@ -918,27 +927,13 @@ impl SnapshotBuilder {
                                                     fields: {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {                    let rust_base_type = match df.field_type {
-                                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                                DtoFieldType::Integer => "i64".to_string(),
-                                                                DtoFieldType::UInteger => "u64".to_string(),
-                                                                DtoFieldType::Float => "f64".to_string(),
-                                                                DtoFieldType::String => "String".to_string(),
-                                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
-                                                                DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => df.enum_name.clone().unwrap_or("enum_name not set".to_string()),
-                                                            };
-                                                                let rust_type = if df.is_list {
-                                                                    format!("Vec<{}>", &rust_base_type)
-                                                                } else {
-                                                                    rust_base_type.clone()
-                                                                };
+                                                            if d.fields.contains(dfid) {
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name: heck::AsPascalCase(&df.name).to_string(),
                                                                     snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                                    rust_base_type,
-                                                                    rust_type,
+                                                                    rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
+                                                                    rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
                                                                 });
                                                             }
                                                         }
@@ -954,27 +949,13 @@ impl SnapshotBuilder {
                                                     fields: {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {                    let rust_base_type = match df.field_type {
-                                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                                DtoFieldType::Integer => "i64".to_string(),
-                                                                DtoFieldType::UInteger => "u64".to_string(),
-                                                                DtoFieldType::Float => "f64".to_string(),
-                                                                DtoFieldType::String => "String".to_string(),
-                                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
-                                                                DtoFieldType::DateTime => "chrono::DateTime<chrono::Utc>".to_string(),
-                                                                DtoFieldType::Enum => df.enum_name.clone().unwrap_or("enum_name not set".to_string()),
-                                                            };
-                                                                let rust_type = if df.is_list {
-                                                                    format!("Vec<{}>", &rust_base_type)
-                                                                } else {
-                                                                    rust_base_type.clone()
-                                                                };
+                                                            if d.fields.contains(dfid) {
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name: heck::AsPascalCase(&df.name).to_string(),
                                                                     snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                                    rust_base_type,
-                                                                    rust_type,
+                                                                    rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
+                                                                    rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
                                                                 });
                                                             }
                                                         }
@@ -1046,33 +1027,13 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let rust_base_type = match df.field_type {
-                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                DtoFieldType::Integer => "i64".to_string(),
-                                                DtoFieldType::UInteger => "u64".to_string(),
-                                                DtoFieldType::Float => "f64".to_string(),
-                                                DtoFieldType::String => "String".to_string(),
-                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
-                                                DtoFieldType::DateTime => {
-                                                    "chrono::DateTime<chrono::Utc>".to_string()
-                                                }
-                                                DtoFieldType::Enum => df
-                                                    .enum_name
-                                                    .clone()
-                                                    .unwrap_or("enum_name not set".to_string()),
-                                            };
-                                            let rust_type = if df.is_list {
-                                                format!("Vec<{}>", &rust_base_type)
-                                            } else {
-                                                rust_base_type.clone()
-                                            };
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type,
-                                                rust_type,
+                                                rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
+                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
                                             });
                                         }
                                     }
@@ -1088,33 +1049,13 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for (dfid, df) in &dto_fields {
                                         if d.fields.contains(dfid) {
-                                            let rust_base_type = match df.field_type {
-                                                DtoFieldType::Boolean => "bool".to_string(),
-                                                DtoFieldType::Integer => "i64".to_string(),
-                                                DtoFieldType::UInteger => "u64".to_string(),
-                                                DtoFieldType::Float => "f64".to_string(),
-                                                DtoFieldType::String => "String".to_string(),
-                                                DtoFieldType::Uuid => "uuid::Uuid".to_string(),
-                                                DtoFieldType::DateTime => {
-                                                    "chrono::DateTime<chrono::Utc>".to_string()
-                                                }
-                                                DtoFieldType::Enum => df
-                                                    .enum_name
-                                                    .clone()
-                                                    .unwrap_or("enum_name not set".to_string()),
-                                            };
-                                            let rust_type = if df.is_list {
-                                                format!("Vec<{}>", &rust_base_type)
-                                            } else {
-                                                rust_base_type.clone()
-                                            };
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type,
-                                                rust_type,
+                                                rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
+                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
                                             });
                                         }
                                     }
