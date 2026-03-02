@@ -26,8 +26,6 @@ const DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE: TableDefinition<EntityId, Vec<En
 
 const USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("use_case_from_feature_use_cases_junction");
-const USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("use_case_from_file_use_case_junction");
 fn get_junction_table_definition(
     field: &'_ UseCaseRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -55,7 +53,6 @@ impl<'a> UseCaseRedbTable<'a> {
         transaction.open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
         transaction.open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
-        transaction.open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -165,6 +162,9 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
@@ -178,73 +178,81 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = use_case_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = use_case_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get entities from junction table
                 let fetched_entities = entities_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.entities = fetched_entities;
                 // get dto_in from junction table
                 let fetched_dto_in: Option<EntityId> = dto_in_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.dto_in = fetched_dto_in;
                 // get dto_out from junction table
                 let fetched_dto_out: Option<EntityId> = dto_out_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.dto_out = fetched_dto_out;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = use_case_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get entities from junction table
-                    let fetched_entities = entities_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.entities = fetched_entities;
-                    // get dto_in from junction table
-                    let fetched_dto_in: Option<EntityId> = dto_in_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.dto_in = fetched_dto_in;
-                    // get dto_out from junction table
-                    let fetched_dto_out: Option<EntityId> = dto_out_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.dto_out = fetched_dto_out;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+        let mut list = Vec::new();
+        let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
+
+        let entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        let dto_in_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+        let dto_out_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+
+        let mut iter = use_case_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get entities from junction table
+            let fetched_entities = entities_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.entities = fetched_entities;
+            // get dto_in from junction table
+            let fetched_dto_in: Option<EntityId> = dto_in_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.dto_in = fetched_dto_in;
+            // get dto_out from junction table
+            let fetched_dto_out: Option<EntityId> = dto_out_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.dto_out = fetched_dto_out;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -333,9 +341,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         let mut backward_feature_use_cases_junction_table = self
             .transaction
             .open_table(USE_CASE_FROM_FEATURE_USE_CASES_JUNCTION_TABLE)?;
-        let mut backward_file_use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
 
         for id in ids {
             use_case_table.remove(id)?;
@@ -346,10 +351,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
 
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_feature_use_cases_junction_table,
-                id,
-            )?;
-            db_helpers::delete_from_backward_junction_table(
-                &mut backward_file_use_case_junction_table,
                 id,
             )?;
         }
@@ -501,26 +502,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 });
             }
         }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "use_case_from_file_use_case_junction".to_string(),
-                    entries,
-                });
-            }
-        }
 
         Ok(TableLevelSnapshot {
             entity_rows: TableSnapshot {
@@ -596,18 +577,6 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 }
             }
         }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "use_case_from_file_use_case_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
 
         Ok(())
     }
@@ -629,6 +598,9 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
@@ -642,73 +614,81 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
             .transaction
             .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = use_case_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = use_case_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get entities from junction table
                 let fetched_entities = entities_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.entities = fetched_entities;
                 // get dto_in from junction table
                 let fetched_dto_in: Option<EntityId> = dto_in_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.dto_in = fetched_dto_in;
                 // get dto_out from junction table
                 let fetched_dto_out: Option<EntityId> = dto_out_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.dto_out = fetched_dto_out;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = use_case_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get entities from junction table
-                    let fetched_entities = entities_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.entities = fetched_entities;
-                    // get dto_in from junction table
-                    let fetched_dto_in: Option<EntityId> = dto_in_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.dto_in = fetched_dto_in;
-                    // get dto_out from junction table
-                    let fetched_dto_out: Option<EntityId> = dto_out_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.dto_out = fetched_dto_out;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+        let mut list = Vec::new();
+        let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
+
+        let entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
+        let dto_in_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_IN_JUNCTION_TABLE)?;
+        let dto_out_junction_table = self
+            .transaction
+            .open_table(DTO_FROM_USE_CASE_DTO_OUT_JUNCTION_TABLE)?;
+
+        let mut iter = use_case_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get entities from junction table
+            let fetched_entities = entities_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.entities = fetched_entities;
+            // get dto_in from junction table
+            let fetched_dto_in: Option<EntityId> = dto_in_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.dto_in = fetched_dto_in;
+            // get dto_out from junction table
+            let fetched_dto_out: Option<EntityId> = dto_out_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.dto_out = fetched_dto_out;
+
+            list.push(entity);
         }
 
         Ok(list)

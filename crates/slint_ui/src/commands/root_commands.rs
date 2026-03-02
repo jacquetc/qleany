@@ -10,17 +10,17 @@ use direct_access::RootRelationshipDto;
 use direct_access::{CreateRootDto, RootDto, root_controller};
 
 /// Create a new root entity (orphan, no parent)
-pub fn create_orphans_root(ctx: &AppContext, dto: &CreateRootDto) -> Result<RootDto, String> {
-    root_controller::create_orphans(&ctx.db_context, &ctx.event_hub, dto)
+pub fn create_orphan_root(ctx: &AppContext, dto: &CreateRootDto) -> Result<RootDto, String> {
+    root_controller::create_orphan(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error creating root: {:?}", e))
 }
 /// Create multiple root entities (orphan, no parent)
-pub fn create_orphans_root_multi(
+pub fn create_orphan_root_multi(
     ctx: &AppContext,
 
     dtos: &[CreateRootDto],
 ) -> Result<Vec<RootDto>, String> {
-    root_controller::create_orphans_multi(&ctx.db_context, &ctx.event_hub, dtos)
+    root_controller::create_orphan_multi(&ctx.db_context, &ctx.event_hub, dtos)
         .map_err(|e| format!("Error creating entities: {:?}", e))
 }
 /// Get a root entity by ID

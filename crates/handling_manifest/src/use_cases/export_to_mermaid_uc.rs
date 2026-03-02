@@ -24,7 +24,7 @@ pub trait ExportToMermaidUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Root", action = "GetRO")]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
@@ -51,11 +51,11 @@ impl ExportToMermaidUseCase {
         uow.begin_transaction()?;
 
         // Get root
-        let roots = uow.get_root_multi(&[])?;
+        let roots = uow.get_all_root()?;
         if roots.is_empty() {
             return Err(anyhow!("No root found"));
         }
-        let root = roots[0].as_ref().ok_or(anyhow!("Root is None"))?;
+        let root = roots[0].clone();
 
         // Get workspace
         let workspace = uow

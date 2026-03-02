@@ -130,6 +130,9 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -140,21 +143,13 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = relationship_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = relationship_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get left_entity from junction table
                 let fetched_left_entity: EntityId = left_entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -162,43 +157,56 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
                 entity.left_entity = fetched_left_entity;
                 // get right_entity from junction table
                 let fetched_right_entity: EntityId = right_entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no right_entity");
                 entity.right_entity = fetched_right_entity;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = relationship_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get left_entity from junction table
-                    let fetched_left_entity: EntityId = left_entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Relationship has no left_entity");
-                    entity.left_entity = fetched_left_entity;
-                    // get right_entity from junction table
-                    let fetched_right_entity: EntityId = right_entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Relationship has no right_entity");
-                    entity.right_entity = fetched_right_entity;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+        let mut list = Vec::new();
+        let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
+
+        let left_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
+        let right_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+
+        let mut iter = relationship_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get left_entity from junction table
+            let fetched_left_entity: EntityId = left_entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Relationship has no left_entity");
+            entity.left_entity = fetched_left_entity;
+            // get right_entity from junction table
+            let fetched_right_entity: EntityId = right_entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Relationship has no right_entity");
+            entity.right_entity = fetched_right_entity;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -473,6 +481,9 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -483,21 +494,13 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = relationship_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = relationship_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get left_entity from junction table
                 let fetched_left_entity: EntityId = left_entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -505,43 +508,56 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
                 entity.left_entity = fetched_left_entity;
                 // get right_entity from junction table
                 let fetched_right_entity: EntityId = right_entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Relationship has no right_entity");
                 entity.right_entity = fetched_right_entity;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = relationship_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get left_entity from junction table
-                    let fetched_left_entity: EntityId = left_entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Relationship has no left_entity");
-                    entity.left_entity = fetched_left_entity;
-                    // get right_entity from junction table
-                    let fetched_right_entity: EntityId = right_entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Relationship has no right_entity");
-                    entity.right_entity = fetched_right_entity;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+        let mut list = Vec::new();
+        let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
+
+        let left_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
+        let right_entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+
+        let mut iter = relationship_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get left_entity from junction table
+            let fetched_left_entity: EntityId = left_entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Relationship has no left_entity");
+            entity.left_entity = fetched_left_entity;
+            // get right_entity from junction table
+            let fetched_right_entity: EntityId = right_entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Relationship has no right_entity");
+            entity.right_entity = fetched_right_entity;
+
+            list.push(entity);
         }
 
         Ok(list)

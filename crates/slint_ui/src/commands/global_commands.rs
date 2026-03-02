@@ -8,13 +8,13 @@ use common::types::EntityId;
 use direct_access::{CreateGlobalDto, GlobalDto, global_controller};
 
 /// Create a new global entity (orphan, no parent)
-pub fn create_orphans_global(
+pub fn create_orphan_global(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dto: &CreateGlobalDto,
 ) -> Result<GlobalDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::create_orphans(
+    global_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
@@ -44,13 +44,13 @@ pub fn create_global(
     .map_err(|e| format!("Error creating global: {:?}", e))
 }
 /// Create multiple global entities (orphan, no parent)
-pub fn create_orphans_global_multi(
+pub fn create_orphan_global_multi(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dtos: &[CreateGlobalDto],
 ) -> Result<Vec<GlobalDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    global_controller::create_orphans_multi(
+    global_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,

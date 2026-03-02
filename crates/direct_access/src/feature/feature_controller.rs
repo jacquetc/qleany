@@ -8,10 +8,10 @@ use super::{
     use_cases::{
         create_feature_multi_uc::CreateFeatureMultiUseCase,
         create_feature_uc::CreateFeatureUseCase,
-        create_orphans_feature_multi_uc::CreateOrphansFeatureMultiUseCase,
-        create_orphans_feature_uc::CreateOrphansFeatureUseCase,
-        get_feature_multi_uc::GetFeatureMultiUseCase, get_feature_uc::GetFeatureUseCase,
-        remove_feature_multi_uc::RemoveFeatureMultiUseCase,
+        create_orphan_feature_multi_uc::CreateOrphanFeatureMultiUseCase,
+        create_orphan_feature_uc::CreateOrphanFeatureUseCase,
+        get_all_feature_uc::GetAllFeatureUseCase, get_feature_multi_uc::GetFeatureMultiUseCase,
+        get_feature_uc::GetFeatureUseCase, remove_feature_multi_uc::RemoveFeatureMultiUseCase,
         remove_feature_uc::RemoveFeatureUseCase,
         update_feature_multi_uc::UpdateFeatureMultiUseCase,
         update_feature_uc::UpdateFeatureUseCase,
@@ -26,7 +26,7 @@ use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -34,7 +34,7 @@ pub fn create_orphans(
     entity: &CreateFeatureDto,
 ) -> Result<FeatureDto> {
     let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansFeatureUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanFeatureUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
@@ -58,6 +58,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<FeatureDto>> 
     let uow_factory = FeatureUnitOfWorkROFactory::new(db_context);
     let uc = GetFeatureUseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<FeatureDto>> {
+    let uow_factory = FeatureUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllFeatureUseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(
@@ -88,7 +94,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -96,7 +102,7 @@ pub fn create_orphans_multi(
     entities: &[CreateFeatureDto],
 ) -> Result<Vec<FeatureDto>> {
     let uow_factory = FeatureUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansFeatureMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanFeatureMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)

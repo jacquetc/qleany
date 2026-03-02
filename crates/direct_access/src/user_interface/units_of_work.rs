@@ -80,10 +80,13 @@ impl CommandUnitOfWork for UserInterfaceUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "UserInterface", action = "CreateOrphan")]
+#[macros::uow_action(entity = "UserInterface", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "UserInterface", action = "Create")]
 #[macros::uow_action(entity = "UserInterface", action = "CreateMulti")]
 #[macros::uow_action(entity = "UserInterface", action = "Get")]
 #[macros::uow_action(entity = "UserInterface", action = "GetMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "GetAll")]
 #[macros::uow_action(entity = "UserInterface", action = "Update")]
 #[macros::uow_action(entity = "UserInterface", action = "UpdateMulti")]
 #[macros::uow_action(entity = "UserInterface", action = "Delete")]
@@ -91,32 +94,6 @@ impl CommandUnitOfWork for UserInterfaceUnitOfWork {
 #[macros::uow_action(entity = "UserInterface", action = "Snapshot")]
 #[macros::uow_action(entity = "UserInterface", action = "Restore")]
 impl UserInterfaceUnitOfWorkTrait for UserInterfaceUnitOfWork {
-    fn create_user_interface_with_owner(
-        &self,
-        entity: &UserInterface,
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<UserInterface> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo =
-            repository_factory::write::create_user_interface_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_user_interface_multi_with_owner(
-        &self,
-        entities: &[UserInterface],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<UserInterface>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo =
-            repository_factory::write::create_user_interface_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo =
@@ -183,6 +160,7 @@ impl QueryUnitOfWork for UserInterfaceUnitOfWorkRO {
 
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetAllRO")]
 impl UserInterfaceUnitOfWorkROTrait for UserInterfaceUnitOfWorkRO {}
 
 pub struct UserInterfaceUnitOfWorkROFactory {

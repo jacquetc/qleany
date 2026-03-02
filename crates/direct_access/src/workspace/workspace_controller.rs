@@ -6,10 +6,10 @@ use super::{
     dtos::{CreateWorkspaceDto, WorkspaceDto},
     units_of_work::WorkspaceUnitOfWorkROFactory,
     use_cases::{
-        create_orphans_workspace_multi_uc::CreateOrphansWorkspaceMultiUseCase,
-        create_orphans_workspace_uc::CreateOrphansWorkspaceUseCase,
+        create_orphan_workspace_multi_uc::CreateOrphanWorkspaceMultiUseCase,
+        create_orphan_workspace_uc::CreateOrphanWorkspaceUseCase,
         create_workspace_multi_uc::CreateWorkspaceMultiUseCase,
-        create_workspace_uc::CreateWorkspaceUseCase,
+        create_workspace_uc::CreateWorkspaceUseCase, get_all_workspace_uc::GetAllWorkspaceUseCase,
         get_workspace_multi_uc::GetWorkspaceMultiUseCase, get_workspace_uc::GetWorkspaceUseCase,
         remove_workspace_multi_uc::RemoveWorkspaceMultiUseCase,
         remove_workspace_uc::RemoveWorkspaceUseCase,
@@ -26,7 +26,7 @@ use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -34,7 +34,7 @@ pub fn create_orphans(
     entity: &CreateWorkspaceDto,
 ) -> Result<WorkspaceDto> {
     let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansWorkspaceUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanWorkspaceUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
@@ -58,6 +58,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<WorkspaceDto>
     let uow_factory = WorkspaceUnitOfWorkROFactory::new(db_context);
     let uc = GetWorkspaceUseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<WorkspaceDto>> {
+    let uow_factory = WorkspaceUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllWorkspaceUseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(
@@ -88,7 +94,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -96,7 +102,7 @@ pub fn create_orphans_multi(
     entities: &[CreateWorkspaceDto],
 ) -> Result<Vec<WorkspaceDto>> {
     let uow_factory = WorkspaceUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansWorkspaceMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanWorkspaceMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)

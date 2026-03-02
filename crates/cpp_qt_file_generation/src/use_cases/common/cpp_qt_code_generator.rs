@@ -19,7 +19,7 @@ use anyhow::anyhow;
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]

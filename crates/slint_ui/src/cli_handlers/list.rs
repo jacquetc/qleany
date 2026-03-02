@@ -123,12 +123,11 @@ fn list_entities(
     use direct_access::{entity_controller, workspace_controller};
 
     // Get workspace and entities
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
+    let workspaces = workspace_controller::get_all(&app_context.db_context)?;
     let workspace = workspaces
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
+        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?;
 
     let entity_ids = workspace_controller::get_relationship(
         &app_context.db_context,
@@ -188,12 +187,11 @@ fn list_features(
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{feature_controller, use_case_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
+    let workspaces = workspace_controller::get_all(&app_context.db_context)?;
     let workspace = workspaces
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
+        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?;
 
     let feature_ids = workspace_controller::get_relationship(
         &app_context.db_context,

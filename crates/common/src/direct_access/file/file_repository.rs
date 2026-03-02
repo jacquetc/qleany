@@ -17,12 +17,7 @@ use redb::Error;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum FileRelationshipField {
-    Field,
-    Feature,
-    Entity,
-    UseCase,
-}
+pub enum FileRelationshipField {}
 
 impl Display for FileRelationshipField {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -35,31 +30,11 @@ pub trait FileTable {
     fn create_multi(&mut self, entities: &[File]) -> Result<Vec<File>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<File>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error>;
+    fn get_all(&self) -> Result<Vec<File>, Error>;
     fn update(&mut self, entity: &File) -> Result<File, Error>;
     fn update_multi(&mut self, entities: &[File]) -> Result<Vec<File>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
     fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
-    fn set_relationship_multi(
-        &mut self,
-        field: &FileRelationshipField,
-        relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error>;
-    fn set_relationship(
-        &mut self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error>;
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
 }
@@ -67,16 +42,7 @@ pub trait FileTable {
 pub trait FileTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<File>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error>;
-    fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    fn get_all(&self) -> Result<Vec<File>, Error>;
 }
 
 pub struct FileRepository<'a> {
@@ -92,7 +58,11 @@ impl<'a> FileRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &File) -> Result<File, Error> {
+    pub fn create_orphan(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &File,
+    ) -> Result<File, Error> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::File(EntityEvent::Created)),
@@ -102,7 +72,7 @@ impl<'a> FileRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[File],
@@ -115,7 +85,7 @@ impl<'a> FileRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &File,
@@ -142,7 +112,7 @@ impl<'a> FileRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[File],
@@ -175,6 +145,9 @@ impl<'a> FileRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<File>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &File) -> Result<File, Error> {
@@ -242,221 +215,6 @@ impl<'a> FileRepository<'a> {
         });
         Ok(())
     }
-    pub fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
-        self.redb_table.get_relationship(id, field)
-    }
-    pub fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        self.redb_table
-            .get_relationships_from_right_ids(field, right_ids)
-    }
-
-    pub fn set_relationship_multi(
-        &mut self,
-        event_buffer: &mut EventBuffer,
-        field: &FileRelationshipField,
-        relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
-        // Validate that all right_ids exist
-        let all_right_ids: Vec<EntityId> = relationships
-            .iter()
-            .flat_map(|(_, ids)| ids.iter().copied())
-            .collect();
-        if !all_right_ids.is_empty() {
-            match field {
-                FileRelationshipField::Field => {
-                    let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
-                    let found = child_repo.get_multi(&all_right_ids)?;
-                    let missing: Vec<_> = all_right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::Feature => {
-                    let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
-                    let found = child_repo.get_multi(&all_right_ids)?;
-                    let missing: Vec<_> = all_right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::Entity => {
-                    let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
-                    let found = child_repo.get_multi(&all_right_ids)?;
-                    let missing: Vec<_> = all_right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::UseCase => {
-                    let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
-                    let found = child_repo.get_multi(&all_right_ids)?;
-                    let missing: Vec<_> = all_right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-            }
-        }
-        self.redb_table
-            .set_relationship_multi(field, relationships.clone())?;
-        for (left_id, right_ids) in relationships {
-            event_buffer.push(Event {
-                origin: Origin::DirectAccess(DirectAccessEntity::File(EntityEvent::Updated)),
-                ids: vec![left_id],
-                data: Some(format!(
-                    "{}:{}",
-                    field,
-                    right_ids
-                        .iter()
-                        .map(|id| id.to_string())
-                        .collect::<Vec<_>>()
-                        .join(",")
-                )),
-            });
-        }
-        Ok(())
-    }
-
-    pub fn set_relationship(
-        &mut self,
-        event_buffer: &mut EventBuffer,
-        id: &EntityId,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error> {
-        // Validate that all right_ids exist
-        if !right_ids.is_empty() {
-            match field {
-                FileRelationshipField::Field => {
-                    let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
-                    let found = child_repo.get_multi(right_ids)?;
-                    let missing: Vec<_> = right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::Feature => {
-                    let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
-                    let found = child_repo.get_multi(right_ids)?;
-                    let missing: Vec<_> = right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::Entity => {
-                    let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
-                    let found = child_repo.get_multi(right_ids)?;
-                    let missing: Vec<_> = right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-                FileRelationshipField::UseCase => {
-                    let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
-                    let found = child_repo.get_multi(right_ids)?;
-                    let missing: Vec<_> = right_ids
-                        .iter()
-                        .zip(found.iter())
-                        .filter(|(_, entity)| entity.is_none())
-                        .map(|(id, _)| *id)
-                        .collect();
-                    if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
-                    }
-                }
-            }
-        }
-        self.redb_table.set_relationship(id, field, right_ids)?;
-        event_buffer.push(Event {
-            origin: Origin::DirectAccess(DirectAccessEntity::File(EntityEvent::Updated)),
-            ids: vec![*id],
-            data: Some(format!(
-                "{}:{}",
-                field,
-                right_ids
-                    .iter()
-                    .map(|id| id.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",")
-            )),
-        });
-        Ok(())
-    }
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
@@ -513,14 +271,6 @@ impl<'a> FileRepository<'a> {
                 data: None,
             });
         }
-        // Emit Updated events for restored relationships
-        if !restored_ids.is_empty() {
-            event_buffer.push(Event {
-                origin: Origin::DirectAccess(DirectAccessEntity::File(EntityEvent::Updated)),
-                ids: restored_ids,
-                data: None,
-            });
-        }
         Ok(())
     }
 }
@@ -538,19 +288,7 @@ impl<'a> FileRepositoryRO<'a> {
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
-        self.redb_table.get_relationship(id, field)
-    }
-    pub fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        self.redb_table
-            .get_relationships_from_right_ids(field, right_ids)
+    pub fn get_all(&self) -> Result<Vec<File>, Error> {
+        self.redb_table.get_all()
     }
 }

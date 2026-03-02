@@ -15,7 +15,7 @@ pub trait SaveUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn SaveUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "Update")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
@@ -49,11 +49,11 @@ impl SaveUseCase {
         uow.begin_transaction()?;
 
         // Get all roots
-        let roots = uow.get_root_multi(&[])?;
+        let roots = uow.get_all_root()?;
         if roots.is_empty() {
             return Err(anyhow::anyhow!("No root found"));
         }
-        let root = &roots[0].as_ref().ok_or(anyhow::anyhow!("Root is None"))?;
+        let root = &roots[0].clone();
         // get workspace
         let mut workspace = uow
             .get_workspace(

@@ -33,6 +33,7 @@ pub trait RelationshipTable {
     fn create_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Relationship>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error>;
+    fn get_all(&self) -> Result<Vec<Relationship>, Error>;
     fn update(&mut self, entity: &Relationship) -> Result<Relationship, Error>;
     fn update_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -65,6 +66,7 @@ pub trait RelationshipTable {
 pub trait RelationshipTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Relationship>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error>;
+    fn get_all(&self) -> Result<Vec<Relationship>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -90,7 +92,7 @@ impl<'a> RelationshipRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Relationship,
@@ -104,7 +106,7 @@ impl<'a> RelationshipRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Relationship],
@@ -117,7 +119,7 @@ impl<'a> RelationshipRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Relationship,
@@ -144,7 +146,7 @@ impl<'a> RelationshipRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Relationship],
@@ -177,6 +179,9 @@ impl<'a> RelationshipRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -486,6 +491,9 @@ impl<'a> RelationshipRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

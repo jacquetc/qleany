@@ -32,6 +32,7 @@ pub trait FeatureTable {
     fn create_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error>;
+    fn get_all(&self) -> Result<Vec<Feature>, Error>;
     fn update(&mut self, entity: &Feature) -> Result<Feature, Error>;
     fn update_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -64,6 +65,7 @@ pub trait FeatureTable {
 pub trait FeatureTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error>;
+    fn get_all(&self) -> Result<Vec<Feature>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -89,7 +91,7 @@ impl<'a> FeatureRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Feature,
@@ -103,7 +105,7 @@ impl<'a> FeatureRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Feature],
@@ -116,7 +118,7 @@ impl<'a> FeatureRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Feature,
@@ -143,7 +145,7 @@ impl<'a> FeatureRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Feature],
@@ -176,6 +178,9 @@ impl<'a> FeatureRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Feature>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -489,6 +494,9 @@ impl<'a> FeatureRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Feature>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

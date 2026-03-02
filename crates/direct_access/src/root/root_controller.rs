@@ -6,11 +6,11 @@ use super::{
     dtos::{CreateRootDto, RootDto},
     units_of_work::RootUnitOfWorkROFactory,
     use_cases::{
-        create_orphans_root_multi_uc::CreateOrphansRootMultiUseCase,
-        create_orphans_root_uc::CreateOrphansRootUseCase, get_root_multi_uc::GetRootMultiUseCase,
-        get_root_uc::GetRootUseCase, remove_root_multi_uc::RemoveRootMultiUseCase,
-        remove_root_uc::RemoveRootUseCase, update_root_multi_uc::UpdateRootMultiUseCase,
-        update_root_uc::UpdateRootUseCase,
+        create_orphan_root_multi_uc::CreateOrphanRootMultiUseCase,
+        create_orphan_root_uc::CreateOrphanRootUseCase, get_all_root_uc::GetAllRootUseCase,
+        get_root_multi_uc::GetRootMultiUseCase, get_root_uc::GetRootUseCase,
+        remove_root_multi_uc::RemoveRootMultiUseCase, remove_root_uc::RemoveRootUseCase,
+        update_root_multi_uc::UpdateRootMultiUseCase, update_root_uc::UpdateRootUseCase,
     },
 };
 use crate::RootRelationshipDto;
@@ -22,13 +22,13 @@ use common::direct_access::root::RootRelationshipField;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entity: &CreateRootDto,
 ) -> Result<RootDto> {
     let uow_factory = RootUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansRootUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanRootUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     Ok(result)
 }
@@ -36,6 +36,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<RootDto>> {
     let uow_factory = RootUnitOfWorkROFactory::new(db_context);
     let uc = GetRootUseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<RootDto>> {
+    let uow_factory = RootUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllRootUseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(
@@ -56,13 +62,13 @@ pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) 
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entities: &[CreateRootDto],
 ) -> Result<Vec<RootDto>> {
     let uow_factory = RootUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansRootMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanRootMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
 }

@@ -491,7 +491,7 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         use_cases: vec![],
                     };
 
-                    match feature_commands::create_orphans_feature(
+                    match feature_commands::create_orphan_feature(
                         &ctx,
                         Some(stack_id),
                         &create_dto,

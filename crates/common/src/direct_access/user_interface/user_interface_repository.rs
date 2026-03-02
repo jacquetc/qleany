@@ -30,6 +30,7 @@ pub trait UserInterfaceTable {
     fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error>;
+    fn get_all(&self) -> Result<Vec<UserInterface>, Error>;
     fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, Error>;
     fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -41,6 +42,7 @@ pub trait UserInterfaceTable {
 pub trait UserInterfaceTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error>;
+    fn get_all(&self) -> Result<Vec<UserInterface>, Error>;
 }
 
 pub struct UserInterfaceRepository<'a> {
@@ -56,7 +58,7 @@ impl<'a> UserInterfaceRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UserInterface,
@@ -70,7 +72,7 @@ impl<'a> UserInterfaceRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UserInterface],
@@ -83,7 +85,7 @@ impl<'a> UserInterfaceRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UserInterface,
@@ -111,7 +113,7 @@ impl<'a> UserInterfaceRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UserInterface],
@@ -143,6 +145,9 @@ impl<'a> UserInterfaceRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -293,5 +298,8 @@ impl<'a> UserInterfaceRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+        self.redb_table.get_all()
     }
 }

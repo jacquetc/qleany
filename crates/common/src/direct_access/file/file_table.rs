@@ -15,28 +15,10 @@ const FILE_TABLE: TableDefinition<EntityId, Bincode<File>> = TableDefinition::ne
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 
-const FIELD_FROM_FILE_FIELD_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("field_from_file_field_junction");
-const FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("feature_from_file_feature_junction");
-const ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_file_entity_junction");
-const USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("use_case_from_file_use_case_junction");
 // backward relationships
 
 const FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("file_from_system_files_junction");
-fn get_junction_table_definition(
-    field: &'_ FileRelationshipField,
-) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
-    match field {
-        FileRelationshipField::Field => FIELD_FROM_FILE_FIELD_JUNCTION_TABLE,
-        FileRelationshipField::Feature => FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE,
-        FileRelationshipField::Entity => ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE,
-        FileRelationshipField::UseCase => USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE,
-    }
-}
 
 pub struct FileRedbTable<'a> {
     transaction: &'a WriteTransaction,
@@ -49,11 +31,6 @@ impl<'a> FileRedbTable<'a> {
     pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
         transaction.open_table(FILE_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
-
-        transaction.open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        transaction.open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        transaction.open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        transaction.open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
 
         transaction.open_table(FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE)?;
         Ok(())
@@ -87,19 +64,6 @@ impl<'a> FileTable for FileRedbTable<'a> {
         };
         let mut file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        let mut field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        let mut feature_junction_table = self
-            .transaction
-            .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        let mut entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        let mut use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-
         for entity in entities {
             let new_entity = if entity.id == EntityId::default() {
                 File {
@@ -117,22 +81,6 @@ impl<'a> FileTable for FileRedbTable<'a> {
 
             file_table.insert(new_entity.id, new_entity.clone())?;
 
-            field_junction_table.insert(
-                new_entity.id,
-                new_entity.field.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            feature_junction_table.insert(
-                new_entity.id,
-                new_entity.feature.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            entity_junction_table.insert(
-                new_entity.id,
-                new_entity.entity.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            use_case_junction_table.insert(
-                new_entity.id,
-                new_entity.use_case.into_iter().collect::<Vec<EntityId>>(),
-            )?;
             created.push(new_entity);
             if entity.id == EntityId::default() {
                 counter += 1;
@@ -143,105 +91,36 @@ impl<'a> FileTable for FileRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        let field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        let feature_junction_table = self
-            .transaction
-            .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        let entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        let use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
+        for id in ids {
+            let item = if let Some(guard) = file_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-        if ids.is_empty() {
-            let mut iter = file_table.iter()?;
-            let mut count = 0;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
+        Ok(list)
+    }
 
-                let id = id.value();
-                let mut entity = data.value().clone();
+    fn get_all(&self) -> Result<Vec<File>, Error> {
+        let mut list = Vec::new();
+        let file_table = self.transaction.open_table(FILE_TABLE)?;
 
-                // get feature from junction table
-                let fetched_feature: Option<EntityId> = feature_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.feature = fetched_feature;
-                // get entity from junction table
-                let fetched_entity: Option<EntityId> = entity_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.entity = fetched_entity;
-                // get use_case from junction table
-                let fetched_use_case: Option<EntityId> = use_case_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.use_case = fetched_use_case;
-                // get field from junction table
-                let fetched_field: Option<EntityId> = field_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.field = fetched_field;
+        let mut iter = file_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = file_table.get(id)? {
-                    let mut entity = guard.value().clone();
-
-                    // get feature from junction table
-                    let fetched_feature: Option<EntityId> = feature_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.feature = fetched_feature;
-                    // get entity from junction table
-                    let fetched_entity: Option<EntityId> = entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.entity = fetched_entity;
-                    // get use_case from junction table
-                    let fetched_use_case: Option<EntityId> = use_case_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.use_case = fetched_use_case;
-                    // get field from junction table
-                    let fetched_field: Option<EntityId> = field_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.field = fetched_field;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+            list.push(entity);
         }
 
         Ok(list)
@@ -251,38 +130,9 @@ impl<'a> FileTable for FileRedbTable<'a> {
         let mut updated = Vec::new();
         let mut file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        let mut field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        let mut feature_junction_table = self
-            .transaction
-            .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        let mut entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        let mut use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-
         for entity in entities {
             file_table.insert(entity.id, entity)?;
 
-            feature_junction_table.insert(
-                entity.id,
-                entity.feature.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            entity_junction_table.insert(
-                entity.id,
-                entity.entity.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            use_case_junction_table.insert(
-                entity.id,
-                entity.use_case.into_iter().collect::<Vec<EntityId>>(),
-            )?;
-            field_junction_table.insert(
-                entity.id,
-                entity.field.into_iter().collect::<Vec<EntityId>>(),
-            )?;
             updated.push(entity.clone());
         }
         Ok(updated)
@@ -293,19 +143,6 @@ impl<'a> FileTable for FileRedbTable<'a> {
 
         // forward relationships
 
-        let mut field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        let mut feature_junction_table = self
-            .transaction
-            .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        let mut entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        let mut use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-
         // backward relationships
 
         let mut backward_system_files_junction_table = self
@@ -315,74 +152,11 @@ impl<'a> FileTable for FileRedbTable<'a> {
         for id in ids {
             file_table.remove(id)?;
 
-            feature_junction_table.remove(id)?;
-            entity_junction_table.remove(id)?;
-            use_case_junction_table.remove(id)?;
-            field_junction_table.remove(id)?;
-
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_system_files_junction_table,
                 id,
             )?;
         }
-        Ok(())
-    }
-    fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
-        let table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
-    }
-
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        let mut iter = table.iter()?;
-        let mut rels = vec![];
-        while let Some(Ok((left_id, right_entities))) = iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            if right_ids.iter().any(|eid| right_entities.contains(eid)) {
-                rels.push((left_id, right_entities));
-            }
-        }
-        Ok(rels)
-    }
-
-    fn set_relationship_multi(
-        &mut self,
-        field: &FileRelationshipField,
-        relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
-        let mut table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        for (left_id, entities) in relationships {
-            table.insert(left_id, entities)?;
-        }
-        Ok(())
-    }
-
-    fn set_relationship(
-        &mut self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<(), Error> {
-        let mut table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        table.insert(*id, right_ids.to_vec())?;
         Ok(())
     }
 
@@ -402,68 +176,7 @@ impl<'a> FileTable for FileRedbTable<'a> {
         }
 
         // Snapshot forward junction tables
-        let mut forward_junctions = Vec::new();
-
-        {
-            let junction_table = self
-                .transaction
-                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            for id in ids {
-                if let Some(guard) = junction_table.get(id)? {
-                    entries.push((*id, guard.value().clone()));
-                }
-            }
-            forward_junctions.push(JunctionSnapshot {
-                table_name: "field_from_file_field_junction".to_string(),
-                entries,
-            });
-        }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            for id in ids {
-                if let Some(guard) = junction_table.get(id)? {
-                    entries.push((*id, guard.value().clone()));
-                }
-            }
-            forward_junctions.push(JunctionSnapshot {
-                table_name: "feature_from_file_feature_junction".to_string(),
-                entries,
-            });
-        }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            for id in ids {
-                if let Some(guard) = junction_table.get(id)? {
-                    entries.push((*id, guard.value().clone()));
-                }
-            }
-            forward_junctions.push(JunctionSnapshot {
-                table_name: "entity_from_file_entity_junction".to_string(),
-                entries,
-            });
-        }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            for id in ids {
-                if let Some(guard) = junction_table.get(id)? {
-                    entries.push((*id, guard.value().clone()));
-                }
-            }
-            forward_junctions.push(JunctionSnapshot {
-                table_name: "use_case_from_file_use_case_junction".to_string(),
-                entries,
-            });
-        }
+        let forward_junctions = Vec::new();
 
         // Snapshot backward junction tables (entries that reference any of the given ids)
         let mut backward_junctions = Vec::new();
@@ -512,55 +225,6 @@ impl<'a> FileTable for FileRedbTable<'a> {
 
         // Restore forward junction entries
 
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-            for junction_snap in &snap.forward_junctions {
-                if junction_snap.table_name == "field_from_file_field_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-            for junction_snap in &snap.forward_junctions {
-                if junction_snap.table_name == "feature_from_file_feature_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-            for junction_snap in &snap.forward_junctions {
-                if junction_snap.table_name == "entity_from_file_entity_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
-            for junction_snap in &snap.forward_junctions {
-                if junction_snap.table_name == "use_case_from_file_use_case_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-
         // Restore backward junction entries
 
         {
@@ -596,138 +260,38 @@ impl<'a> FileTableRO for FileRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        let field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-        let feature_junction_table = self
-            .transaction
-            .open_table(FEATURE_FROM_FILE_FEATURE_JUNCTION_TABLE)?;
-        let entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-        let use_case_junction_table = self
-            .transaction
-            .open_table(USE_CASE_FROM_FILE_USE_CASE_JUNCTION_TABLE)?;
+        for id in ids {
+            let item = if let Some(guard) = file_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-        if ids.is_empty() {
-            let mut iter = file_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
-
-                // get feature from junction table
-                let fetched_feature: Option<EntityId> = feature_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.feature = fetched_feature;
-                // get entity from junction table
-                let fetched_entity: Option<EntityId> = entity_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.entity = fetched_entity;
-                // get use_case from junction table
-                let fetched_use_case: Option<EntityId> = use_case_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.use_case = fetched_use_case;
-                // get field from junction table
-                let fetched_field: Option<EntityId> = field_junction_table
-                    .get(&id)?
-                    .map(|g| g.value().clone())
-                    .unwrap_or_default()
-                    .pop();
-                entity.field = fetched_field;
-
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = file_table.get(id)? {
-                    let mut entity = guard.value().clone();
-
-                    // get feature from junction table
-                    let fetched_feature: Option<EntityId> = feature_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.feature = fetched_feature;
-                    // get entity from junction table
-                    let fetched_entity: Option<EntityId> = entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.entity = fetched_entity;
-                    // get use_case from junction table
-                    let fetched_use_case: Option<EntityId> = use_case_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.use_case = fetched_use_case;
-                    // get field from junction table
-                    let fetched_field: Option<EntityId> = field_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.field = fetched_field;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
         }
 
         Ok(list)
     }
-    fn get_relationship(
-        &self,
-        id: &EntityId,
-        field: &FileRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
-        let table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
-    }
 
-    fn get_relationships_from_right_ids(
-        &self,
-        field: &FileRelationshipField,
-        right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
-        let table = self
-            .transaction
-            .open_table(get_junction_table_definition(field))?;
-        let mut iter = table.iter()?;
-        let mut rels = vec![];
-        while let Some(Ok((left_id, right_entities))) = iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            if right_ids.iter().any(|eid| right_entities.contains(eid)) {
-                rels.push((left_id, right_entities));
-            }
+    fn get_all(&self) -> Result<Vec<File>, Error> {
+        let mut list = Vec::new();
+        let file_table = self.transaction.open_table(FILE_TABLE)?;
+
+        let mut iter = file_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            list.push(entity);
         }
-        Ok(rels)
+
+        Ok(list)
     }
 }

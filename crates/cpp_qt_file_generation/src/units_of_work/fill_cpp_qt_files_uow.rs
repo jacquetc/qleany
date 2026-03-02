@@ -94,7 +94,7 @@ impl CommandUnitOfWork for FillCppQtFilesUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/fill_cpp_qt_files_uc.rs
 //
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
@@ -108,8 +108,8 @@ impl CommandUnitOfWork for FillCppQtFilesUnitOfWork {
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
-#[macros::uow_action(entity = "File", action = "Create")]
-#[macros::uow_action(entity = "File", action = "CreateMulti")]
+#[macros::uow_action(entity = "File", action = "CreateOrphan")]
+#[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
 impl FillCppQtFilesUnitOfWorkTrait for FillCppQtFilesUnitOfWork {}
 

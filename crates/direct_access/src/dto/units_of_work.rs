@@ -80,10 +80,13 @@ impl CommandUnitOfWork for DtoUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "Dto", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Dto", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "Dto", action = "Create")]
 #[macros::uow_action(entity = "Dto", action = "CreateMulti")]
 #[macros::uow_action(entity = "Dto", action = "Get")]
 #[macros::uow_action(entity = "Dto", action = "GetMulti")]
+#[macros::uow_action(entity = "Dto", action = "GetAll")]
 #[macros::uow_action(entity = "Dto", action = "Update")]
 #[macros::uow_action(entity = "Dto", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Dto", action = "Delete")]
@@ -95,25 +98,6 @@ impl CommandUnitOfWork for DtoUnitOfWork {
 #[macros::uow_action(entity = "Dto", action = "SetRelationship")]
 #[macros::uow_action(entity = "Dto", action = "SetRelationshipMulti")]
 impl DtoUnitOfWorkTrait for DtoUnitOfWork {
-    fn create_dto_with_owner(&self, entity: &Dto, owner_id: EntityId, index: i32) -> Result<Dto> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_dto_multi_with_owner(
-        &self,
-        entities: &[Dto],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<Dto>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo = repository_factory::write::create_dto_repository(borrowed_transaction);
@@ -178,6 +162,7 @@ impl QueryUnitOfWork for DtoUnitOfWorkRO {
 
 #[macros::uow_action(entity = "Dto", action = "GetRO")]
 #[macros::uow_action(entity = "Dto", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Dto", action = "GetAllRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRelationshipsFromRightIdsRO")]
 impl DtoUnitOfWorkROTrait for DtoUnitOfWorkRO {}

@@ -8,13 +8,13 @@ use common::types::EntityId;
 use direct_access::{CreateDtoFieldDto, DtoFieldDto, dto_field_controller};
 
 /// Create a new dto_field entity (orphan, no parent)
-pub fn create_orphans_dto_field(
+pub fn create_orphan_dto_field(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dto: &CreateDtoFieldDto,
 ) -> Result<DtoFieldDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_field_controller::create_orphans(
+    dto_field_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
@@ -44,13 +44,13 @@ pub fn create_dto_field(
     .map_err(|e| format!("Error creating dto_field: {:?}", e))
 }
 /// Create multiple dto_field entities (orphan, no parent)
-pub fn create_orphans_dto_field_multi(
+pub fn create_orphan_dto_field_multi(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dtos: &[CreateDtoFieldDto],
 ) -> Result<Vec<DtoFieldDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    dto_field_controller::create_orphans_multi(
+    dto_field_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,

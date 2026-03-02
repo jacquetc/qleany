@@ -327,7 +327,7 @@ pub fn setup_dto_in_enabled_callback(app: &App, app_context: &Arc<AppContext>) {
                         name: "NewDtoIn".to_string(),
                         fields: vec![],
                     };
-                    match dto_commands::create_orphans_dto(&ctx, Some(stack_id), &create_dto) {
+                    match dto_commands::create_orphan_dto(&ctx, Some(stack_id), &create_dto) {
                         Ok(dto) => {
                             // Set the relationship
                             let relationship_dto = UseCaseRelationshipDto {
@@ -674,7 +674,7 @@ pub fn setup_dto_in_field_addition_callback(app: &App, app_context: &Arc<AppCont
                         enum_values: None,
                     };
 
-                    match dto_field_commands::create_orphans_dto_field(
+                    match dto_field_commands::create_orphan_dto_field(
                         &ctx,
                         Some(
                             app.global::<FeaturesTabState>()

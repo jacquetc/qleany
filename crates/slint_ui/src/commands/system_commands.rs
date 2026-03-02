@@ -10,8 +10,8 @@ use direct_access::SystemRelationshipDto;
 use direct_access::{CreateSystemDto, SystemDto, system_controller};
 
 /// Create a new system entity (orphan, no parent)
-pub fn create_orphans_system(ctx: &AppContext, dto: &CreateSystemDto) -> Result<SystemDto, String> {
-    system_controller::create_orphans(&ctx.db_context, &ctx.event_hub, dto)
+pub fn create_orphan_system(ctx: &AppContext, dto: &CreateSystemDto) -> Result<SystemDto, String> {
+    system_controller::create_orphan(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error creating system: {:?}", e))
 }
 /// Create a new system entity as child of owner
@@ -26,12 +26,12 @@ pub fn create_system(
         .map_err(|e| format!("Error creating system: {:?}", e))
 }
 /// Create multiple system entities (orphan, no parent)
-pub fn create_orphans_system_multi(
+pub fn create_orphan_system_multi(
     ctx: &AppContext,
 
     dtos: &[CreateSystemDto],
 ) -> Result<Vec<SystemDto>, String> {
-    system_controller::create_orphans_multi(&ctx.db_context, &ctx.event_hub, dtos)
+    system_controller::create_orphan_multi(&ctx.db_context, &ctx.event_hub, dtos)
         .map_err(|e| format!("Error creating entities: {:?}", e))
 }
 /// Create multiple system entities as children of owner

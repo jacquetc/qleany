@@ -34,6 +34,7 @@ pub trait UseCaseTable {
     fn create_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error>;
+    fn get_all(&self) -> Result<Vec<UseCase>, Error>;
     fn update(&mut self, entity: &UseCase) -> Result<UseCase, Error>;
     fn update_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -66,6 +67,7 @@ pub trait UseCaseTable {
 pub trait UseCaseTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error>;
+    fn get_all(&self) -> Result<Vec<UseCase>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -91,7 +93,7 @@ impl<'a> UseCaseRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UseCase,
@@ -105,7 +107,7 @@ impl<'a> UseCaseRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UseCase],
@@ -118,7 +120,7 @@ impl<'a> UseCaseRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UseCase,
@@ -145,7 +147,7 @@ impl<'a> UseCaseRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UseCase],
@@ -178,6 +180,9 @@ impl<'a> UseCaseRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -591,6 +596,9 @@ impl<'a> UseCaseRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

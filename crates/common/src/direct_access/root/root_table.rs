@@ -150,6 +150,9 @@ impl<'a> RootTable for RootRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
@@ -160,61 +163,66 @@ impl<'a> RootTable for RootRedbTable<'a> {
             .transaction
             .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = root_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = root_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get workspace from junction table
                 let fetched_workspace: Option<EntityId> = workspace_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.workspace = fetched_workspace;
                 // get system from junction table
                 let fetched_system: Option<EntityId> = system_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.system = fetched_system;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = root_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get workspace from junction table
-                    let fetched_workspace: Option<EntityId> = workspace_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.workspace = fetched_workspace;
-                    // get system from junction table
-                    let fetched_system: Option<EntityId> = system_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.system = fetched_system;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Root>, Error> {
+        let mut list = Vec::new();
+        let root_table = self.transaction.open_table(ROOT_TABLE)?;
+
+        let workspace_junction_table = self
+            .transaction
+            .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
+        let system_junction_table = self
+            .transaction
+            .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
+
+        let mut iter = root_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get workspace from junction table
+            let fetched_workspace: Option<EntityId> = workspace_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.workspace = fetched_workspace;
+            // get system from junction table
+            let fetched_system: Option<EntityId> = system_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.system = fetched_system;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -482,6 +490,9 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
@@ -492,61 +503,66 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
             .transaction
             .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = root_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = root_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get workspace from junction table
                 let fetched_workspace: Option<EntityId> = workspace_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.workspace = fetched_workspace;
                 // get system from junction table
                 let fetched_system: Option<EntityId> = system_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.system = fetched_system;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = root_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get workspace from junction table
-                    let fetched_workspace: Option<EntityId> = workspace_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.workspace = fetched_workspace;
-                    // get system from junction table
-                    let fetched_system: Option<EntityId> = system_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.system = fetched_system;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Root>, Error> {
+        let mut list = Vec::new();
+        let root_table = self.transaction.open_table(ROOT_TABLE)?;
+
+        let workspace_junction_table = self
+            .transaction
+            .open_table(WORKSPACE_FROM_ROOT_WORKSPACE_JUNCTION_TABLE)?;
+        let system_junction_table = self
+            .transaction
+            .open_table(SYSTEM_FROM_ROOT_SYSTEM_JUNCTION_TABLE)?;
+
+        let mut iter = root_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get workspace from junction table
+            let fetched_workspace: Option<EntityId> = workspace_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.workspace = fetched_workspace;
+            // get system from junction table
+            let fetched_system: Option<EntityId> = system_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.system = fetched_system;
+
+            list.push(entity);
         }
 
         Ok(list)

@@ -66,7 +66,7 @@ impl QueryUnitOfWork for ExportToMermaidUnitOfWork {
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Root", action = "GetRO")]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]

@@ -114,6 +114,9 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let dto_table = self.transaction.open_table(DTO_TABLE)?;
 
@@ -121,45 +124,47 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
             .transaction
             .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = dto_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = dto_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get fields from junction table
                 let fetched_fields = fields_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.fields = fetched_fields;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = dto_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get fields from junction table
-                    let fetched_fields = fields_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.fields = fetched_fields;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Dto>, Error> {
+        let mut list = Vec::new();
+        let dto_table = self.transaction.open_table(DTO_TABLE)?;
+
+        let fields_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
+
+        let mut iter = dto_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get fields from junction table
+            let fetched_fields = fields_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.fields = fetched_fields;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -436,6 +441,9 @@ impl<'a> DtoTableRO for DtoRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let dto_table = self.transaction.open_table(DTO_TABLE)?;
 
@@ -443,45 +451,47 @@ impl<'a> DtoTableRO for DtoRedbTableRO<'a> {
             .transaction
             .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = dto_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = dto_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get fields from junction table
                 let fetched_fields = fields_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.fields = fetched_fields;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = dto_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get fields from junction table
-                    let fetched_fields = fields_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.fields = fetched_fields;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Dto>, Error> {
+        let mut list = Vec::new();
+        let dto_table = self.transaction.open_table(DTO_TABLE)?;
+
+        let fields_junction_table = self
+            .transaction
+            .open_table(DTO_FIELD_FROM_DTO_FIELDS_JUNCTION_TABLE)?;
+
+        let mut iter = dto_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get fields from junction table
+            let fetched_fields = fields_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.fields = fetched_fields;
+
+            list.push(entity);
         }
 
         Ok(list)

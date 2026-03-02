@@ -10,7 +10,7 @@ pub trait CloseUnitOfWorkFactoryTrait {
 
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-#[macros::uow_action(entity = "Workspace", action = "GetMulti")]
+#[macros::uow_action(entity = "Workspace", action = "GetAll")]
 #[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
 pub trait CloseUnitOfWorkTrait: CommandUnitOfWork {}
 
@@ -28,16 +28,16 @@ impl CloseUseCase {
         uow.begin_transaction()?;
 
         // Get all workspaces
-        let workspaces = uow.get_workspace_multi(&[])?;
+        let workspaces = uow.get_all_workspace()?;
         if workspaces.is_empty() {
             return Err(anyhow::anyhow!("No root found"));
         }
 
         // Remove the workspace
-        uow.get_workspace_multi(&[])?;
+        uow.get_all_workspace()?;
         let workspace_ids: Vec<EntityId> = workspaces
             .iter()
-            .filter_map(|w| w.as_ref().map(|ws| ws.id))
+            .map(|workspace| workspace.id)
             .collect();
         uow.delete_workspace_multi(&workspace_ids)?;
 

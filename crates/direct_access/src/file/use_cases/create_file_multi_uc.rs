@@ -25,7 +25,7 @@ impl CreateFileMultiUseCase {
         uow.begin_transaction()?;
 
         // Create with owner (repository handles junction management internally)
-        let entities = uow.create_file_multi_with_owner(
+        let entities = uow.create_file_multi(
             &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
             owner_id,
             index,

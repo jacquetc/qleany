@@ -10,13 +10,13 @@ use direct_access::EntityRelationshipDto;
 use direct_access::{CreateEntityDto, EntityDto, entity_controller};
 
 /// Create a new entity entity (orphan, no parent)
-pub fn create_orphans_entity(
+pub fn create_orphan_entity(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dto: &CreateEntityDto,
 ) -> Result<EntityDto, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    entity_controller::create_orphans(
+    entity_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
@@ -46,13 +46,13 @@ pub fn create_entity(
     .map_err(|e| format!("Error creating entity: {:?}", e))
 }
 /// Create multiple entity entities (orphan, no parent)
-pub fn create_orphans_entity_multi(
+pub fn create_orphan_entity_multi(
     ctx: &AppContext,
     stack_id: Option<u64>,
     dtos: &[CreateEntityDto],
 ) -> Result<Vec<EntityDto>, String> {
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    entity_controller::create_orphans_multi(
+    entity_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,

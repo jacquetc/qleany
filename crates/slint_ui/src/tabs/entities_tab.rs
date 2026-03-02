@@ -1375,7 +1375,7 @@ fn setup_entity_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                         undoable: true,
                     };
 
-                    match entity_commands::create_orphans_entity(
+                    match entity_commands::create_orphan_entity(
                         &ctx,
                         Some(
                             app.global::<EntitiesTabState>()
@@ -1465,7 +1465,7 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     enum_values: None,
                 };
 
-                match field_commands::create_orphans_field(
+                match field_commands::create_orphan_field(
                     &ctx,
                     Some(
                         app.global::<EntitiesTabState>()

@@ -6,11 +6,12 @@ use super::{
     dtos::{CreateUseCaseDto, UseCaseDto},
     units_of_work::UseCaseUnitOfWorkROFactory,
     use_cases::{
-        create_orphans_use_case_multi_uc::CreateOrphansUseCaseMultiUseCase,
-        create_orphans_use_case_uc::CreateOrphansUseCaseUseCase,
+        create_orphan_use_case_multi_uc::CreateOrphanUseCaseMultiUseCase,
+        create_orphan_use_case_uc::CreateOrphanUseCaseUseCase,
         create_use_case_multi_uc::CreateUseCaseMultiUseCase,
-        create_use_case_uc::CreateUseCaseUseCase, get_use_case_multi_uc::GetUseCaseMultiUseCase,
-        get_use_case_uc::GetUseCaseUseCase, remove_use_case_multi_uc::RemoveUseCaseMultiUseCase,
+        create_use_case_uc::CreateUseCaseUseCase, get_all_use_case_uc::GetAllUseCaseUseCase,
+        get_use_case_multi_uc::GetUseCaseMultiUseCase, get_use_case_uc::GetUseCaseUseCase,
+        remove_use_case_multi_uc::RemoveUseCaseMultiUseCase,
         remove_use_case_uc::RemoveUseCaseUseCase,
         update_use_case_multi_uc::UpdateUseCaseMultiUseCase,
         update_use_case_uc::UpdateUseCaseUseCase,
@@ -25,7 +26,7 @@ use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -33,7 +34,7 @@ pub fn create_orphans(
     entity: &CreateUseCaseDto,
 ) -> Result<UseCaseDto> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansUseCaseUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanUseCaseUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
@@ -57,6 +58,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<UseCaseDto>> 
     let uow_factory = UseCaseUnitOfWorkROFactory::new(db_context);
     let uc = GetUseCaseUseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<UseCaseDto>> {
+    let uow_factory = UseCaseUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllUseCaseUseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(
@@ -87,7 +94,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -95,7 +102,7 @@ pub fn create_orphans_multi(
     entities: &[CreateUseCaseDto],
 ) -> Result<Vec<UseCaseDto>> {
     let uow_factory = UseCaseUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansUseCaseMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanUseCaseMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)

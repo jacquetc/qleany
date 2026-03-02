@@ -107,6 +107,9 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<System>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let system_table = self.transaction.open_table(SYSTEM_TABLE)?;
 
@@ -114,45 +117,47 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
             .transaction
             .open_table(FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = system_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = system_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get files from junction table
                 let fetched_files = files_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.files = fetched_files;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = system_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get files from junction table
-                    let fetched_files = files_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.files = fetched_files;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<System>, Error> {
+        let mut list = Vec::new();
+        let system_table = self.transaction.open_table(SYSTEM_TABLE)?;
+
+        let files_junction_table = self
+            .transaction
+            .open_table(FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE)?;
+
+        let mut iter = system_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get files from junction table
+            let fetched_files = files_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.files = fetched_files;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -390,6 +395,9 @@ impl<'a> SystemTableRO for SystemRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<System>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let system_table = self.transaction.open_table(SYSTEM_TABLE)?;
 
@@ -397,45 +405,47 @@ impl<'a> SystemTableRO for SystemRedbTableRO<'a> {
             .transaction
             .open_table(FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = system_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = system_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get files from junction table
                 let fetched_files = files_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.files = fetched_files;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = system_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get files from junction table
-                    let fetched_files = files_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.files = fetched_files;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<System>, Error> {
+        let mut list = Vec::new();
+        let system_table = self.transaction.open_table(SYSTEM_TABLE)?;
+
+        let files_junction_table = self
+            .transaction
+            .open_table(FILE_FROM_SYSTEM_FILES_JUNCTION_TABLE)?;
+
+        let mut iter = system_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get files from junction table
+            let fetched_files = files_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.files = fetched_files;
+
+            list.push(entity);
         }
 
         Ok(list)

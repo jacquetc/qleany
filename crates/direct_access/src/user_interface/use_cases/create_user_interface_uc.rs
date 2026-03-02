@@ -51,7 +51,7 @@ impl CreateUserInterfaceUseCase {
         }
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_user_interface_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_user_interface(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
         self.created_entity = Some(entity.clone());

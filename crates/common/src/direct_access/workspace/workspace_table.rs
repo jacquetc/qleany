@@ -170,6 +170,9 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
@@ -186,21 +189,13 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
             .transaction
             .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = workspace_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = workspace_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get global from junction table
                 let fetched_global: EntityId = global_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -208,67 +203,86 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                 entity.global = fetched_global;
                 // get entities from junction table
                 let fetched_entities = entities_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.entities = fetched_entities;
                 // get features from junction table
                 let fetched_features = features_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.features = fetched_features;
                 // get user_interface from junction table
                 let fetched_user_interface: EntityId = user_interface_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Workspace has no user_interface");
                 entity.user_interface = fetched_user_interface;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = workspace_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get global from junction table
-                    let fetched_global: EntityId = global_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Workspace has no global");
-                    entity.global = fetched_global;
-                    // get entities from junction table
-                    let fetched_entities = entities_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.entities = fetched_entities;
-                    // get features from junction table
-                    let fetched_features = features_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.features = fetched_features;
-                    // get user_interface from junction table
-                    let fetched_user_interface: EntityId = user_interface_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Workspace has no user_interface");
-                    entity.user_interface = fetched_user_interface;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+        let mut list = Vec::new();
+        let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
+
+        let global_junction_table = self
+            .transaction
+            .open_table(GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE)?;
+        let entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+        let features_junction_table = self
+            .transaction
+            .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
+
+        let mut iter = workspace_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get global from junction table
+            let fetched_global: EntityId = global_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Workspace has no global");
+            entity.global = fetched_global;
+            // get entities from junction table
+            let fetched_entities = entities_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.entities = fetched_entities;
+            // get features from junction table
+            let fetched_features = features_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.features = fetched_features;
+            // get user_interface from junction table
+            let fetched_user_interface: EntityId = user_interface_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Workspace has no user_interface");
+            entity.user_interface = fetched_user_interface;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -642,6 +656,9 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
@@ -658,21 +675,13 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
             .transaction
             .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = workspace_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = workspace_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get global from junction table
                 let fetched_global: EntityId = global_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
@@ -680,67 +689,86 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
                 entity.global = fetched_global;
                 // get entities from junction table
                 let fetched_entities = entities_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.entities = fetched_entities;
                 // get features from junction table
                 let fetched_features = features_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.features = fetched_features;
                 // get user_interface from junction table
                 let fetched_user_interface: EntityId = user_interface_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop()
                     .expect("Workspace has no user_interface");
                 entity.user_interface = fetched_user_interface;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = workspace_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get global from junction table
-                    let fetched_global: EntityId = global_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Workspace has no global");
-                    entity.global = fetched_global;
-                    // get entities from junction table
-                    let fetched_entities = entities_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.entities = fetched_entities;
-                    // get features from junction table
-                    let fetched_features = features_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.features = fetched_features;
-                    // get user_interface from junction table
-                    let fetched_user_interface: EntityId = user_interface_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop()
-                        .expect("Workspace has no user_interface");
-                    entity.user_interface = fetched_user_interface;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+        let mut list = Vec::new();
+        let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
+
+        let global_junction_table = self
+            .transaction
+            .open_table(GLOBAL_FROM_WORKSPACE_GLOBAL_JUNCTION_TABLE)?;
+        let entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+        let features_junction_table = self
+            .transaction
+            .open_table(FEATURE_FROM_WORKSPACE_FEATURES_JUNCTION_TABLE)?;
+        let user_interface_junction_table = self
+            .transaction
+            .open_table(USER_INTERFACE_FROM_WORKSPACE_USER_INTERFACE_JUNCTION_TABLE)?;
+
+        let mut iter = workspace_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get global from junction table
+            let fetched_global: EntityId = global_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Workspace has no global");
+            entity.global = fetched_global;
+            // get entities from junction table
+            let fetched_entities = entities_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.entities = fetched_entities;
+            // get features from junction table
+            let fetched_features = features_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.features = fetched_features;
+            // get user_interface from junction table
+            let fetched_user_interface: EntityId = user_interface_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop()
+                .expect("Workspace has no user_interface");
+            entity.user_interface = fetched_user_interface;
+
+            list.push(entity);
         }
 
         Ok(list)

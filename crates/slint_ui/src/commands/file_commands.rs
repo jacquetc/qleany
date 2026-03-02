@@ -4,14 +4,12 @@
 //! File entity commands for Slint UI
 
 use crate::app_context::AppContext;
-use common::direct_access::file::FileRelationshipField;
 use common::types::EntityId;
-use direct_access::FileRelationshipDto;
 use direct_access::{CreateFileDto, FileDto, file_controller};
 
 /// Create a new file entity (orphan, no parent)
-pub fn create_orphans_file(ctx: &AppContext, dto: &CreateFileDto) -> Result<FileDto, String> {
-    file_controller::create_orphans(&ctx.db_context, &ctx.event_hub, dto)
+pub fn create_orphan_file(ctx: &AppContext, dto: &CreateFileDto) -> Result<FileDto, String> {
+    file_controller::create_orphan(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error creating file: {:?}", e))
 }
 /// Create a new file entity as child of owner
@@ -26,12 +24,12 @@ pub fn create_file(
         .map_err(|e| format!("Error creating file: {:?}", e))
 }
 /// Create multiple file entities (orphan, no parent)
-pub fn create_orphans_file_multi(
+pub fn create_orphan_file_multi(
     ctx: &AppContext,
 
     dtos: &[CreateFileDto],
 ) -> Result<Vec<FileDto>, String> {
-    file_controller::create_orphans_multi(&ctx.db_context, &ctx.event_hub, dtos)
+    file_controller::create_orphan_multi(&ctx.db_context, &ctx.event_hub, dtos)
         .map_err(|e| format!("Error creating entities: {:?}", e))
 }
 /// Create multiple file entities as children of owner
@@ -78,20 +76,4 @@ pub fn remove_file(ctx: &AppContext, id: &EntityId) -> Result<(), String> {
 pub fn remove_file_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<(), String> {
     file_controller::remove_multi(&ctx.db_context, &ctx.event_hub, ids)
         .map_err(|e| format!("Error deleting file: {:?}", e))
-}
-
-/// Get a file relationship
-pub fn get_file_relationship(
-    ctx: &AppContext,
-    id: &EntityId,
-    field: &FileRelationshipField,
-) -> Result<Vec<EntityId>, String> {
-    file_controller::get_relationship(&ctx.db_context, id, field)
-        .map_err(|e| format!("Error getting file relationship: {:?}", e))
-}
-
-/// Set a file relationship
-pub fn set_file_relationship(ctx: &AppContext, dto: &FileRelationshipDto) -> Result<(), String> {
-    file_controller::set_relationship(&ctx.db_context, &ctx.event_hub, dto)
-        .map_err(|e| format!("Error setting file relationship: {:?}", e))
 }

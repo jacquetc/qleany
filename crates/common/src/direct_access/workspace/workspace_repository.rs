@@ -35,6 +35,7 @@ pub trait WorkspaceTable {
     fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error>;
+    fn get_all(&self) -> Result<Vec<Workspace>, Error>;
     fn update(&mut self, entity: &Workspace) -> Result<Workspace, Error>;
     fn update_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -67,6 +68,7 @@ pub trait WorkspaceTable {
 pub trait WorkspaceTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error>;
+    fn get_all(&self) -> Result<Vec<Workspace>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -92,7 +94,7 @@ impl<'a> WorkspaceRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Workspace,
@@ -106,7 +108,7 @@ impl<'a> WorkspaceRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Workspace],
@@ -119,7 +121,7 @@ impl<'a> WorkspaceRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Workspace,
@@ -147,7 +149,7 @@ impl<'a> WorkspaceRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Workspace],
@@ -179,6 +181,9 @@ impl<'a> WorkspaceRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -702,6 +707,9 @@ impl<'a> WorkspaceRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

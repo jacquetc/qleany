@@ -25,7 +25,7 @@ impl CreateFileUseCase {
         uow.begin_transaction()?;
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_file_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_file(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
 

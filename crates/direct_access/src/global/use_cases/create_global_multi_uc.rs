@@ -50,7 +50,7 @@ impl CreateGlobalMultiUseCase {
         }
 
         // Create with owner (repository handles junction management internally)
-        let entities = uow.create_global_multi_with_owner(
+        let entities = uow.create_global_multi(
             &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
             owner_id,
             index,

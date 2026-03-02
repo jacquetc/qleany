@@ -51,7 +51,7 @@ impl CreateUserInterfaceMultiUseCase {
         }
 
         // Create with owner (repository handles junction management internally)
-        let entities = uow.create_user_interface_multi_with_owner(
+        let entities = uow.create_user_interface_multi(
             &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
             owner_id,
             index,

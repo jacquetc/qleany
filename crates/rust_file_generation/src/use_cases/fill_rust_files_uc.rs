@@ -16,7 +16,7 @@ pub trait FillRustFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillRustFilesUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
@@ -29,8 +29,8 @@ pub trait FillRustFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
-#[macros::uow_action(entity = "File", action = "Create")]
-#[macros::uow_action(entity = "File", action = "CreateMulti")]
+#[macros::uow_action(entity = "File", action = "CreateOrphan")]
+#[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
 pub trait FillRustFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
@@ -50,10 +50,9 @@ impl FillRustFilesUseCase {
         uow.begin_transaction()?;
 
         use anyhow::anyhow;
-        let roots = uow.get_root_multi(&[])?;
+        let roots = uow.get_all_root()?;
         let root = roots
             .into_iter()
-            .flatten()
             .next()
             .ok_or_else(|| anyhow!("Root entity not found"))?;
 
@@ -1313,7 +1312,7 @@ impl FillRustFilesUseCase {
             .collect::<Vec<File>>();
 
         // create files in db
-        let created_files = uow.create_file_multi(&files)?;
+        let created_files = uow.create_orphan_file_multi(&files)?;
         uow.set_system_relationship(
             &system_id,
             &SystemRelationshipField::Files,

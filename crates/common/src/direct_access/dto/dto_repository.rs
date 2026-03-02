@@ -32,6 +32,7 @@ pub trait DtoTable {
     fn create_multi(&mut self, entities: &[Dto]) -> Result<Vec<Dto>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error>;
+    fn get_all(&self) -> Result<Vec<Dto>, Error>;
     fn update(&mut self, entity: &Dto) -> Result<Dto, Error>;
     fn update_multi(&mut self, entities: &[Dto]) -> Result<Vec<Dto>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -64,6 +65,7 @@ pub trait DtoTable {
 pub trait DtoTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Dto>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error>;
+    fn get_all(&self) -> Result<Vec<Dto>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -89,7 +91,11 @@ impl<'a> DtoRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &Dto) -> Result<Dto, Error> {
+    pub fn create_orphan(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &Dto,
+    ) -> Result<Dto, Error> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Created)),
@@ -99,7 +105,7 @@ impl<'a> DtoRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Dto],
@@ -112,7 +118,7 @@ impl<'a> DtoRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Dto,
@@ -140,7 +146,7 @@ impl<'a> DtoRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Dto],
@@ -172,6 +178,9 @@ impl<'a> DtoRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Dto>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Dto) -> Result<Dto, Error> {
@@ -481,6 +490,9 @@ impl<'a> DtoRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Dto>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Dto>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

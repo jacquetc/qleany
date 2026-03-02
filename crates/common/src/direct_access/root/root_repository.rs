@@ -32,6 +32,7 @@ pub trait RootTable {
     fn create_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Root>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error>;
+    fn get_all(&self) -> Result<Vec<Root>, Error>;
     fn update(&mut self, entity: &Root) -> Result<Root, Error>;
     fn update_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -64,6 +65,7 @@ pub trait RootTable {
 pub trait RootTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Root>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error>;
+    fn get_all(&self) -> Result<Vec<Root>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -89,7 +91,11 @@ impl<'a> RootRepository<'a> {
         }
     }
 
-    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &Root) -> Result<Root, Error> {
+    pub fn create_orphan(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &Root,
+    ) -> Result<Root, Error> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Created)),
@@ -99,7 +105,7 @@ impl<'a> RootRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Root],
@@ -118,6 +124,9 @@ impl<'a> RootRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Root>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Root) -> Result<Root, Error> {
@@ -473,6 +482,9 @@ impl<'a> RootRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Root>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

@@ -80,45 +80,20 @@ impl CommandUnitOfWork for FileUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "File", action = "CreateOrphan")]
+#[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "File", action = "Create")]
 #[macros::uow_action(entity = "File", action = "CreateMulti")]
 #[macros::uow_action(entity = "File", action = "Get")]
 #[macros::uow_action(entity = "File", action = "GetMulti")]
+#[macros::uow_action(entity = "File", action = "GetAll")]
 #[macros::uow_action(entity = "File", action = "Update")]
 #[macros::uow_action(entity = "File", action = "UpdateMulti")]
 #[macros::uow_action(entity = "File", action = "Delete")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
 #[macros::uow_action(entity = "File", action = "Snapshot")]
 #[macros::uow_action(entity = "File", action = "Restore")]
-#[macros::uow_action(entity = "File", action = "GetRelationship")]
-#[macros::uow_action(entity = "File", action = "GetRelationshipsFromRightIds")]
-#[macros::uow_action(entity = "File", action = "SetRelationship")]
-#[macros::uow_action(entity = "File", action = "SetRelationshipMulti")]
 impl FileUnitOfWorkTrait for FileUnitOfWork {
-    fn create_file_with_owner(
-        &self,
-        entity: &File,
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<File> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_file_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_file_multi_with_owner(
-        &self,
-        entities: &[File],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<File>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_file_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo = repository_factory::write::create_file_repository(borrowed_transaction);
@@ -183,8 +158,7 @@ impl QueryUnitOfWork for FileUnitOfWorkRO {
 
 #[macros::uow_action(entity = "File", action = "GetRO")]
 #[macros::uow_action(entity = "File", action = "GetMultiRO")]
-#[macros::uow_action(entity = "File", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "File", action = "GetRelationshipsFromRightIdsRO")]
+#[macros::uow_action(entity = "File", action = "GetAllRO")]
 impl FileUnitOfWorkROTrait for FileUnitOfWorkRO {}
 
 pub struct FileUnitOfWorkROFactory {

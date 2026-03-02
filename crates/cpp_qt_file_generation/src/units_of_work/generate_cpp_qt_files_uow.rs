@@ -42,7 +42,7 @@ impl QueryUnitOfWork for GenerateCppQtFilesUnitOfWork {
 }
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Root", action = "GetAllRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]

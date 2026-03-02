@@ -45,7 +45,7 @@ impl CreateFeatureUseCase {
         self.previous_owner_relationship_ids = Some(uow.get_relationships_from_owner(&owner_id)?);
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_feature_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_feature(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
         self.created_entity = Some(entity.clone());

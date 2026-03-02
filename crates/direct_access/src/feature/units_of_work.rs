@@ -80,10 +80,13 @@ impl CommandUnitOfWork for FeatureUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "Feature", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Feature", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "Feature", action = "Create")]
 #[macros::uow_action(entity = "Feature", action = "CreateMulti")]
 #[macros::uow_action(entity = "Feature", action = "Get")]
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
+#[macros::uow_action(entity = "Feature", action = "GetAll")]
 #[macros::uow_action(entity = "Feature", action = "Update")]
 #[macros::uow_action(entity = "Feature", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Feature", action = "Delete")]
@@ -95,30 +98,6 @@ impl CommandUnitOfWork for FeatureUnitOfWork {
 #[macros::uow_action(entity = "Feature", action = "SetRelationship")]
 #[macros::uow_action(entity = "Feature", action = "SetRelationshipMulti")]
 impl FeatureUnitOfWorkTrait for FeatureUnitOfWork {
-    fn create_feature_with_owner(
-        &self,
-        entity: &Feature,
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Feature> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_feature_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_feature_multi_with_owner(
-        &self,
-        entities: &[Feature],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<Feature>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_feature_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo = repository_factory::write::create_feature_repository(borrowed_transaction);
@@ -183,6 +162,7 @@ impl QueryUnitOfWork for FeatureUnitOfWorkRO {
 
 #[macros::uow_action(entity = "Feature", action = "GetRO")]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Feature", action = "GetAllRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationshipsFromRightIdsRO")]
 impl FeatureUnitOfWorkROTrait for FeatureUnitOfWorkRO {}

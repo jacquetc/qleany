@@ -50,7 +50,7 @@ impl CreateGlobalUseCase {
         }
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_global_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_global(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
         self.created_entity = Some(entity.clone());

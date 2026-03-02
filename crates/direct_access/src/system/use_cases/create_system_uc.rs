@@ -25,7 +25,7 @@ impl CreateSystemUseCase {
         uow.begin_transaction()?;
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_system_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_system(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
 

@@ -86,8 +86,8 @@ impl CommandUnitOfWork for InitializeAppUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/initialize_app_uc.rs
 //
-#[macros::uow_action(entity = "Root", action = "Create")]
-#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphan")]
+#[macros::uow_action(entity = "System", action = "CreateOrphan")]
 impl InitializeAppUnitOfWorkTrait for InitializeAppUnitOfWork {}
 
 pub struct InitializeAppUnitOfWorkFactory {
@@ -114,8 +114,8 @@ pub trait InitializeAppUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn InitializeAppUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "Create")]
-#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphan")]
+#[macros::uow_action(entity = "System", action = "CreateOrphan")]
 pub trait InitializeAppUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct InitializeAppUseCase {
@@ -132,14 +132,14 @@ impl InitializeAppUseCase {
         uow.begin_transaction()?;
 
         // create system
-        let system = uow.create_system(&System {
+        let system = uow.create_orphan_system(&System {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
             files: vec![],
         })?;
 
-        uow.create_root(&Root {
+        uow.create_orphan_root(&Root {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),

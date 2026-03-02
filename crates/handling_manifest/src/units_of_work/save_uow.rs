@@ -93,7 +93,7 @@ impl CommandUnitOfWork for SaveUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/save_uc.rs
 //
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "Workspace", action = "Update")]

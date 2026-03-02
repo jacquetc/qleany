@@ -12,11 +12,11 @@ pub trait CreateUnitOfWorkFactoryTrait {
 }
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "SetRelationship")]
-#[macros::uow_action(entity = "Workspace", action = "CreateMulti")]
-#[macros::uow_action(entity = "Global", action = "CreateMulti")]
-#[macros::uow_action(entity = "Entity", action = "CreateMulti")]
-#[macros::uow_action(entity = "Field", action = "CreateMulti")]
-#[macros::uow_action(entity = "UserInterface", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Global", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Entity", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Field", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "CreateOrphan")]
 pub trait CreateUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct CreateUseCase {
@@ -80,7 +80,7 @@ impl CreateUseCase {
             },
         ];
 
-        let created_fields = uow.create_field_multi(&fields)?;
+        let created_fields = uow.create_orphan_field_multi(&fields)?;
         let created_field_ids: Vec<EntityId> = created_fields.iter().map(|f| f.id).collect();
 
         let entity_base = Entity {
@@ -96,7 +96,7 @@ impl CreateUseCase {
             undoable: false,
         };
 
-        let created_entity = uow.create_entity_multi(&[entity_base])?;
+        let created_entity = uow.create_orphan_entity_multi(&[entity_base])?;
         let root_entity = Entity {
             id: 0,
             created_at: chrono::Utc::now(),
@@ -110,7 +110,7 @@ impl CreateUseCase {
             undoable: false,
         };
 
-        let created_root_entity = uow.create_entity_multi(&[root_entity])?;
+        let created_root_entity = uow.create_orphan_entity_multi(&[root_entity])?;
 
         // create global
         let global = Global {
@@ -124,10 +124,10 @@ impl CreateUseCase {
             prefix_path: "".to_string(),
         };
 
-        let created_global = uow.create_global_multi(&[global])?;
+        let created_global = uow.create_orphan_global_multi(&[global])?;
 
         // create user interface
-        let ui = uow.create_user_interface(&UserInterface {
+        let ui = uow.create_orphan_user_interface(&UserInterface {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
@@ -148,7 +148,7 @@ impl CreateUseCase {
             user_interface: ui.id,
         };
 
-        let created_workspace = uow.create_workspace_multi(&[workspace])?;
+        let created_workspace = uow.create_orphan_workspace_multi(&[workspace])?;
 
         let root = uow.get_root(&1)?.ok_or(anyhow!("Root entity not found"))?;
 

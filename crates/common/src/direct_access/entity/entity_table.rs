@@ -29,14 +29,10 @@ const ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("entity_from_entity_inherits_from_junction");
-const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_use_case_entities_junction");
 const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("entity_from_field_entity_junction");
-const ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_workspace_entities_junction");
-const ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("entity_from_file_entity_junction");
+const ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_use_case_entities_junction");
 const ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE: TableDefinition<
     EntityId,
     Vec<EntityId>,
@@ -45,6 +41,8 @@ const ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE: TableDefinition<
     EntityId,
     Vec<EntityId>,
 > = TableDefinition::new("entity_from_relationship_right_entity_junction");
+const ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
+    TableDefinition::new("entity_from_workspace_entities_junction");
 fn get_junction_table_definition(
     field: &'_ EntityRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -74,12 +72,11 @@ impl<'a> EntityRedbTable<'a> {
         transaction.open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
         transaction.open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE_BACKWARD)?;
-        transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
-        transaction.open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
-        transaction.open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
         transaction.open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+        transaction.open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -157,6 +154,9 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
@@ -170,71 +170,79 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             .transaction
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = entity_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = entity_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get inherits_from from junction table
                 let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.inherits_from = fetched_inherits_from;
                 // get fields from junction table
                 let fetched_fields = fields_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.fields = fetched_fields;
                 // get relationships from junction table
                 let fetched_relationships = relationships_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.relationships = fetched_relationships;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = entity_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get inherits_from from junction table
-                    let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.inherits_from = fetched_inherits_from;
-                    // get fields from junction table
-                    let fetched_fields = fields_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.fields = fetched_fields;
-                    // get relationships from junction table
-                    let fetched_relationships = relationships_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.relationships = fetched_relationships;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Entity>, Error> {
+        let mut list = Vec::new();
+        let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+
+        let inherits_from_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
+        let fields_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+
+        let mut iter = entity_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get inherits_from from junction table
+            let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.inherits_from = fetched_inherits_from;
+            // get fields from junction table
+            let fetched_fields = fields_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.fields = fetched_fields;
+            // get relationships from junction table
+            let fetched_relationships = relationships_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.relationships = fetched_relationships;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -285,24 +293,21 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         // backward relationships
 
-        let mut backward_use_case_entities_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
         let mut backward_field_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
-        let mut backward_workspace_entities_junction_table = self
+        let mut backward_use_case_entities_junction_table = self
             .transaction
-            .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
-        let mut backward_file_entity_junction_table = self
-            .transaction
-            .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
+            .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
         let mut backward_relationship_left_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_LEFT_ENTITY_JUNCTION_TABLE)?;
         let mut backward_relationship_right_entity_junction_table = self
             .transaction
             .open_table(ENTITY_FROM_RELATIONSHIP_RIGHT_ENTITY_JUNCTION_TABLE)?;
+        let mut backward_workspace_entities_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
 
         for id in ids {
             entity_table.remove(id)?;
@@ -314,19 +319,11 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             // special case: backward relationship to self
             db_helpers::delete_from_backward_junction_table(&mut inherits_from_junction_table, id)?;
             db_helpers::delete_from_backward_junction_table(
-                &mut backward_use_case_entities_junction_table,
-                id,
-            )?;
-            db_helpers::delete_from_backward_junction_table(
                 &mut backward_field_entity_junction_table,
                 id,
             )?;
             db_helpers::delete_from_backward_junction_table(
-                &mut backward_workspace_entities_junction_table,
-                id,
-            )?;
-            db_helpers::delete_from_backward_junction_table(
-                &mut backward_file_entity_junction_table,
+                &mut backward_use_case_entities_junction_table,
                 id,
             )?;
             db_helpers::delete_from_backward_junction_table(
@@ -335,6 +332,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             )?;
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_relationship_right_entity_junction_table,
+                id,
+            )?;
+            db_helpers::delete_from_backward_junction_table(
+                &mut backward_workspace_entities_junction_table,
                 id,
             )?;
         }
@@ -489,26 +490,6 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         {
             let junction_table = self
                 .transaction
-                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "entity_from_use_case_entities_junction".to_string(),
-                    entries,
-                });
-            }
-        }
-        {
-            let junction_table = self
-                .transaction
                 .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
             let mut entries = Vec::new();
             let mut iter = junction_table.iter()?;
@@ -529,7 +510,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         {
             let junction_table = self
                 .transaction
-                .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
             let mut entries = Vec::new();
             let mut iter = junction_table.iter()?;
             while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
@@ -541,27 +522,7 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             }
             if !entries.is_empty() {
                 backward_junctions.push(JunctionSnapshot {
-                    table_name: "entity_from_workspace_entities_junction".to_string(),
-                    entries,
-                });
-            }
-        }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "entity_from_file_entity_junction".to_string(),
+                    table_name: "entity_from_use_case_entities_junction".to_string(),
                     entries,
                 });
             }
@@ -602,6 +563,26 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
             if !entries.is_empty() {
                 backward_junctions.push(JunctionSnapshot {
                     table_name: "entity_from_relationship_right_entity_junction".to_string(),
+                    entries,
+                });
+            }
+        }
+        {
+            let junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+            let mut entries = Vec::new();
+            let mut iter = junction_table.iter()?;
+            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
+                let left_id = left_id_guard.value();
+                let right_ids = right_ids_guard.value();
+                if ids.iter().any(|id| right_ids.contains(id)) {
+                    entries.push((left_id, right_ids));
+                }
+            }
+            if !entries.is_empty() {
+                backward_junctions.push(JunctionSnapshot {
+                    table_name: "entity_from_workspace_entities_junction".to_string(),
                     entries,
                 });
             }
@@ -684,18 +665,6 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         {
             let mut junction_table = self
                 .transaction
-                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "entity_from_use_case_entities_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {
-            let mut junction_table = self
-                .transaction
                 .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
             for junction_snap in &snap.backward_junctions {
                 if junction_snap.table_name == "entity_from_field_entity_junction" {
@@ -708,21 +677,9 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         {
             let mut junction_table = self
                 .transaction
-                .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+                .open_table(ENTITY_FROM_USE_CASE_ENTITIES_JUNCTION_TABLE)?;
             for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "entity_from_workspace_entities_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(ENTITY_FROM_FILE_ENTITY_JUNCTION_TABLE)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "entity_from_file_entity_junction" {
+                if junction_snap.table_name == "entity_from_use_case_entities_junction" {
                     for (left_id, right_ids) in &junction_snap.entries {
                         junction_table.insert(*left_id, right_ids.clone())?;
                     }
@@ -753,6 +710,18 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                 }
             }
         }
+        {
+            let mut junction_table = self
+                .transaction
+                .open_table(ENTITY_FROM_WORKSPACE_ENTITIES_JUNCTION_TABLE)?;
+            for junction_snap in &snap.backward_junctions {
+                if junction_snap.table_name == "entity_from_workspace_entities_junction" {
+                    for (left_id, right_ids) in &junction_snap.entries {
+                        junction_table.insert(*left_id, right_ids.clone())?;
+                    }
+                }
+            }
+        }
 
         Ok(())
     }
@@ -774,6 +743,9 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
 
@@ -787,71 +759,79 @@ impl<'a> EntityTableRO for EntityRedbTableRO<'a> {
             .transaction
             .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = entity_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = entity_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get inherits_from from junction table
                 let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.inherits_from = fetched_inherits_from;
                 // get fields from junction table
                 let fetched_fields = fields_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.fields = fetched_fields;
                 // get relationships from junction table
                 let fetched_relationships = relationships_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default();
                 entity.relationships = fetched_relationships;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = entity_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get inherits_from from junction table
-                    let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.inherits_from = fetched_inherits_from;
-                    // get fields from junction table
-                    let fetched_fields = fields_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.fields = fetched_fields;
-                    // get relationships from junction table
-                    let fetched_relationships = relationships_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default();
-                    entity.relationships = fetched_relationships;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Entity>, Error> {
+        let mut list = Vec::new();
+        let entity_table = self.transaction.open_table(ENTITY_TABLE)?;
+
+        let inherits_from_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_ENTITY_INHERITS_FROM_JUNCTION_TABLE)?;
+        let fields_junction_table = self
+            .transaction
+            .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
+        let relationships_junction_table = self
+            .transaction
+            .open_table(RELATIONSHIP_FROM_ENTITY_RELATIONSHIPS_JUNCTION_TABLE)?;
+
+        let mut iter = entity_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get inherits_from from junction table
+            let fetched_inherits_from: Option<EntityId> = inherits_from_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.inherits_from = fetched_inherits_from;
+            // get fields from junction table
+            let fetched_fields = fields_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.fields = fetched_fields;
+            // get relationships from junction table
+            let fetched_relationships = relationships_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default();
+            entity.relationships = fetched_relationships;
+
+            list.push(entity);
         }
 
         Ok(list)

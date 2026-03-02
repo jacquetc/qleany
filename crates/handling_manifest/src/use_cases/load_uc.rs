@@ -17,27 +17,27 @@ pub trait LoadUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn LoadUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "Create")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "Update")]
-#[macros::uow_action(entity = "Workspace", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "Workspace", action = "Update")]
-#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "System", action = "CreateOrphan")]
 #[macros::uow_action(entity = "System", action = "Get")]
 #[macros::uow_action(entity = "System", action = "Update")]
-#[macros::uow_action(entity = "Global", action = "Create")]
-#[macros::uow_action(entity = "Feature", action = "Create")]
-#[macros::uow_action(entity = "UseCase", action = "Create")]
-#[macros::uow_action(entity = "Entity", action = "Create")]
+#[macros::uow_action(entity = "Global", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Feature", action = "CreateOrphan")]
+#[macros::uow_action(entity = "UseCase", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Entity", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Entity", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "Update")]
-#[macros::uow_action(entity = "Field", action = "Create")]
+#[macros::uow_action(entity = "Field", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Field", action = "GetMulti")]
-#[macros::uow_action(entity = "Dto", action = "Create")]
-#[macros::uow_action(entity = "DtoField", action = "Create")]
-#[macros::uow_action(entity = "Relationship", action = "CreateMulti")]
-#[macros::uow_action(entity = "UserInterface", action = "Create")]
+#[macros::uow_action(entity = "Dto", action = "CreateOrphan")]
+#[macros::uow_action(entity = "DtoField", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Relationship", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "CreateOrphan")]
 pub trait LoadUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct LoadUseCase {
@@ -127,7 +127,7 @@ impl LoadUseCase {
         let root_id = 1;
 
         // create global
-        let global = uow.create_global(&Global {
+        let global = uow.create_orphan_global(&Global {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
@@ -140,7 +140,7 @@ impl LoadUseCase {
         let global_id = global.id;
 
         // create user interface
-        let ui = uow.create_user_interface(&UserInterface {
+        let ui = uow.create_orphan_user_interface(&UserInterface {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
@@ -151,7 +151,7 @@ impl LoadUseCase {
         })?;
 
         // create workspace
-        let workspace = uow.create_workspace(&Workspace {
+        let workspace = uow.create_orphan_workspace(&Workspace {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
@@ -167,7 +167,7 @@ impl LoadUseCase {
         let mut entity_ids: Vec<EntityId> = vec![];
         let mut entities = vec![];
         for model_entity in manifest.entities.iter() {
-            let entity = uow.create_entity(&Entity {
+            let entity = uow.create_orphan_entity(&Entity {
                 id: 0,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
@@ -232,7 +232,7 @@ impl LoadUseCase {
                 };
 
                 // create field
-                let field = uow.create_field(&Field {
+                let field = uow.create_orphan_field(&Field {
                     id: 0,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
@@ -298,7 +298,7 @@ impl LoadUseCase {
 
         for (entity_id, relationships) in all_relationships.iter() {
             let new_relationship_ids = uow
-                .create_relationship_multi(relationships)?
+                .create_orphan_relationship_multi(relationships)?
                 .iter()
                 .map(|new_relationship| new_relationship.id)
                 .collect::<Vec<EntityId>>();
@@ -344,7 +344,7 @@ impl LoadUseCase {
                     for model_dto_field in dto_in.fields.iter() {
                         let field_type = tools::str_to_dto_field_type(&model_dto_field.r#type);
 
-                        let dto_field = uow.create_dto_field(&DtoField {
+                        let dto_field = uow.create_orphan_dto_field(&DtoField {
                             id: 0,
                             created_at: chrono::Utc::now(),
                             updated_at: chrono::Utc::now(),
@@ -358,7 +358,7 @@ impl LoadUseCase {
                         dto_field_ids.push(dto_field.id);
                     }
 
-                    let dto_in = uow.create_dto(&Dto {
+                    let dto_in = uow.create_orphan_dto(&Dto {
                         id: 0,
                         created_at: chrono::Utc::now(),
                         updated_at: chrono::Utc::now(),
@@ -376,7 +376,7 @@ impl LoadUseCase {
                     for model_dto_field in dto_out.fields.iter() {
                         let field_type = tools::str_to_dto_field_type(&model_dto_field.r#type);
 
-                        let dto_field = uow.create_dto_field(&DtoField {
+                        let dto_field = uow.create_orphan_dto_field(&DtoField {
                             id: 0,
                             created_at: chrono::Utc::now(),
                             updated_at: chrono::Utc::now(),
@@ -390,7 +390,7 @@ impl LoadUseCase {
                         dto_field_ids.push(dto_field.id);
                     }
 
-                    let dto_out = uow.create_dto(&Dto {
+                    let dto_out = uow.create_orphan_dto(&Dto {
                         id: 0,
                         created_at: chrono::Utc::now(),
                         updated_at: chrono::Utc::now(),
@@ -400,7 +400,7 @@ impl LoadUseCase {
                     dto_out_id = Some(dto_out.id);
                 }
 
-                let use_case = uow.create_use_case(&UseCase {
+                let use_case = uow.create_orphan_use_case(&UseCase {
                     id: 0,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
@@ -415,7 +415,7 @@ impl LoadUseCase {
                 use_case_ids.push(use_case.id);
             }
 
-            let feature = uow.create_feature(&Feature {
+            let feature = uow.create_orphan_feature(&Feature {
                 id: 0,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),

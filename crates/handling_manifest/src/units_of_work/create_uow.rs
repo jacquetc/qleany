@@ -92,11 +92,11 @@ impl CommandUnitOfWork for CreateUnitOfWork {
 //
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "SetRelationship")]
-#[macros::uow_action(entity = "Workspace", action = "CreateMulti")]
-#[macros::uow_action(entity = "Global", action = "CreateMulti")]
-#[macros::uow_action(entity = "Entity", action = "CreateMulti")]
-#[macros::uow_action(entity = "Field", action = "CreateMulti")]
-#[macros::uow_action(entity = "UserInterface", action = "Create")]
+#[macros::uow_action(entity = "Workspace", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Global", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Entity", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "Field", action = "CreateOrphanMulti")]
+#[macros::uow_action(entity = "UserInterface", action = "CreateOrphan")]
 impl CreateUnitOfWorkTrait for CreateUnitOfWork {}
 
 pub struct CreateUnitOfWorkFactory {

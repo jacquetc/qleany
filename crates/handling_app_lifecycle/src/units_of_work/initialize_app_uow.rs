@@ -92,8 +92,8 @@ impl CommandUnitOfWork for InitializeAppUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/initialize_app_uc.rs
 //
-#[macros::uow_action(entity = "Root", action = "Create")]
-#[macros::uow_action(entity = "System", action = "Create")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphan")]
+#[macros::uow_action(entity = "System", action = "CreateOrphan")]
 impl InitializeAppUnitOfWorkTrait for InitializeAppUnitOfWork {}
 
 pub struct InitializeAppUnitOfWorkFactory {

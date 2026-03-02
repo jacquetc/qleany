@@ -639,7 +639,7 @@ pub fn setup_use_case_addition_callback(app: &App, app_context: &Arc<AppContext>
                         entities: vec![],
                     };
 
-                    match use_case_commands::create_orphans_use_case(
+                    match use_case_commands::create_orphan_use_case(
                         &ctx,
                         Some(
                             app.global::<FeaturesTabState>()

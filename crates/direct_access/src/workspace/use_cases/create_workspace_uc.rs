@@ -51,7 +51,7 @@ impl CreateWorkspaceUseCase {
         }
 
         // Create with owner (repository handles junction management internally)
-        let entity = uow.create_workspace_with_owner(&dto.into(), owner_id, index)?;
+        let entity = uow.create_workspace(&dto.into(), owner_id, index)?;
 
         uow.commit()?;
         self.created_entity = Some(entity.clone());

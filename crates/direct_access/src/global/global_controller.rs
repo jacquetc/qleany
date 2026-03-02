@@ -7,8 +7,8 @@ use super::{
     units_of_work::GlobalUnitOfWorkROFactory,
     use_cases::{
         create_global_multi_uc::CreateGlobalMultiUseCase, create_global_uc::CreateGlobalUseCase,
-        create_orphans_global_multi_uc::CreateOrphansGlobalMultiUseCase,
-        create_orphans_global_uc::CreateOrphansGlobalUseCase,
+        create_orphan_global_multi_uc::CreateOrphanGlobalMultiUseCase,
+        create_orphan_global_uc::CreateOrphanGlobalUseCase, get_all_global_uc::GetAllGlobalUseCase,
         get_global_multi_uc::GetGlobalMultiUseCase, get_global_uc::GetGlobalUseCase,
         remove_global_multi_uc::RemoveGlobalMultiUseCase, remove_global_uc::RemoveGlobalUseCase,
         update_global_multi_uc::UpdateGlobalMultiUseCase, update_global_uc::UpdateGlobalUseCase,
@@ -19,7 +19,7 @@ use common::undo_redo::UndoRedoManager;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -27,7 +27,7 @@ pub fn create_orphans(
     entity: &CreateGlobalDto,
 ) -> Result<GlobalDto> {
     let uow_factory = GlobalUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansGlobalUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanGlobalUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)
@@ -51,6 +51,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<GlobalDto>> {
     let uow_factory = GlobalUnitOfWorkROFactory::new(db_context);
     let uc = GetGlobalUseCase::new(Box::new(uow_factory));
     uc.execute(id)
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<GlobalDto>> {
+    let uow_factory = GlobalUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllGlobalUseCase::new(Box::new(uow_factory));
+    uc.execute()
 }
 
 pub fn update(
@@ -81,7 +87,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     undo_redo_manager: &mut UndoRedoManager,
@@ -89,7 +95,7 @@ pub fn create_orphans_multi(
     entities: &[CreateGlobalDto],
 ) -> Result<Vec<GlobalDto>> {
     let uow_factory = GlobalUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansGlobalMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanGlobalMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
     Ok(result)

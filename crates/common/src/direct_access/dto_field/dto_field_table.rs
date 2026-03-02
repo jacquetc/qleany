@@ -92,35 +92,36 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = dto_field_table.iter()?;
-            let mut count = 0;
+        for id in ids {
+            let item = if let Some(guard) = dto_field_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                let id = id.value();
-                let mut entity = data.value().clone();
+        Ok(list)
+    }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = dto_field_table.get(id)? {
-                    let mut entity = guard.value().clone();
+    fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+        let mut list = Vec::new();
+        let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+        let mut iter = dto_field_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -260,35 +261,36 @@ impl<'a> DtoFieldTableRO for DtoFieldRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = dto_field_table.iter()?;
-            let mut count = 0;
+        for id in ids {
+            let item = if let Some(guard) = dto_field_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                let id = id.value();
-                let mut entity = data.value().clone();
+        Ok(list)
+    }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = dto_field_table.get(id)? {
-                    let mut entity = guard.value().clone();
+    fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+        let mut list = Vec::new();
+        let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+        let mut iter = dto_field_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            list.push(entity);
         }
 
         Ok(list)

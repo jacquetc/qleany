@@ -80,10 +80,13 @@ impl CommandUnitOfWork for UseCaseUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "UseCase", action = "CreateOrphan")]
+#[macros::uow_action(entity = "UseCase", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "UseCase", action = "Create")]
 #[macros::uow_action(entity = "UseCase", action = "CreateMulti")]
 #[macros::uow_action(entity = "UseCase", action = "Get")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "UseCase", action = "GetAll")]
 #[macros::uow_action(entity = "UseCase", action = "Update")]
 #[macros::uow_action(entity = "UseCase", action = "UpdateMulti")]
 #[macros::uow_action(entity = "UseCase", action = "Delete")]
@@ -95,30 +98,6 @@ impl CommandUnitOfWork for UseCaseUnitOfWork {
 #[macros::uow_action(entity = "UseCase", action = "SetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "SetRelationshipMulti")]
 impl UseCaseUnitOfWorkTrait for UseCaseUnitOfWork {
-    fn create_use_case_with_owner(
-        &self,
-        entity: &UseCase,
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<UseCase> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_use_case_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_use_case_multi_with_owner(
-        &self,
-        entities: &[UseCase],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<UseCase>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_use_case_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo = repository_factory::write::create_use_case_repository(borrowed_transaction);
@@ -183,6 +162,7 @@ impl QueryUnitOfWork for UseCaseUnitOfWorkRO {
 
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetAllRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetRelationshipsFromRightIdsRO")]
 impl UseCaseUnitOfWorkROTrait for UseCaseUnitOfWorkRO {}

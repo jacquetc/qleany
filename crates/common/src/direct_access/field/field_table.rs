@@ -21,8 +21,6 @@ const ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE: TableDefinition<EntityId, Vec<Ent
 
 const FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
     TableDefinition::new("field_from_entity_fields_junction");
-const FIELD_FROM_FILE_FIELD_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> =
-    TableDefinition::new("field_from_file_field_junction");
 fn get_junction_table_definition(
     field: &'_ FieldRelationshipField,
 ) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
@@ -46,7 +44,6 @@ impl<'a> FieldRedbTable<'a> {
         transaction.open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
         transaction.open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        transaction.open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
         Ok(())
     }
 }
@@ -113,6 +110,9 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let field_table = self.transaction.open_table(FIELD_TABLE)?;
 
@@ -120,47 +120,49 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = field_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = field_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get entity from junction table
                 let fetched_entity: Option<EntityId> = entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.entity = fetched_entity;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = field_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get entity from junction table
-                    let fetched_entity: Option<EntityId> = entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.entity = fetched_entity;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Field>, Error> {
+        let mut list = Vec::new();
+        let field_table = self.transaction.open_table(FIELD_TABLE)?;
+
+        let entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+
+        let mut iter = field_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get entity from junction table
+            let fetched_entity: Option<EntityId> = entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.entity = fetched_entity;
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -200,9 +202,6 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         let mut backward_entity_fields_junction_table = self
             .transaction
             .open_table(FIELD_FROM_ENTITY_FIELDS_JUNCTION_TABLE)?;
-        let mut backward_file_field_junction_table = self
-            .transaction
-            .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
 
         for id in ids {
             field_table.remove(id)?;
@@ -211,10 +210,6 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
 
             db_helpers::delete_from_backward_junction_table(
                 &mut backward_entity_fields_junction_table,
-                id,
-            )?;
-            db_helpers::delete_from_backward_junction_table(
-                &mut backward_file_field_junction_table,
                 id,
             )?;
         }
@@ -336,26 +331,6 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                 });
             }
         }
-        {
-            let junction_table = self
-                .transaction
-                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "field_from_file_field_junction".to_string(),
-                    entries,
-                });
-            }
-        }
 
         Ok(TableLevelSnapshot {
             entity_rows: TableSnapshot {
@@ -407,18 +382,6 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                 }
             }
         }
-        {
-            let mut junction_table = self
-                .transaction
-                .open_table(FIELD_FROM_FILE_FIELD_JUNCTION_TABLE)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "field_from_file_field_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
 
         Ok(())
     }
@@ -440,6 +403,9 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let field_table = self.transaction.open_table(FIELD_TABLE)?;
 
@@ -447,47 +413,49 @@ impl<'a> FieldTableRO for FieldRedbTableRO<'a> {
             .transaction
             .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = field_table.iter()?;
-            let mut count = 0;
-
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
-
-                let id = id.value();
-                let mut entity = data.value().clone();
+        for id in ids {
+            let item = if let Some(guard) = field_table.get(id)? {
+                let mut entity = guard.value().clone();
 
                 // get entity from junction table
                 let fetched_entity: Option<EntityId> = entity_junction_table
-                    .get(&id)?
+                    .get(id)?
                     .map(|g| g.value().clone())
                     .unwrap_or_default()
                     .pop();
                 entity.entity = fetched_entity;
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = field_table.get(id)? {
-                    let mut entity = guard.value().clone();
+        Ok(list)
+    }
 
-                    // get entity from junction table
-                    let fetched_entity: Option<EntityId> = entity_junction_table
-                        .get(id)?
-                        .map(|g| g.value().clone())
-                        .unwrap_or_default()
-                        .pop();
-                    entity.entity = fetched_entity;
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+    fn get_all(&self) -> Result<Vec<Field>, Error> {
+        let mut list = Vec::new();
+        let field_table = self.transaction.open_table(FIELD_TABLE)?;
+
+        let entity_junction_table = self
+            .transaction
+            .open_table(ENTITY_FROM_FIELD_ENTITY_JUNCTION_TABLE)?;
+
+        let mut iter = field_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            // get entity from junction table
+            let fetched_entity: Option<EntityId> = entity_junction_table
+                .get(&id)?
+                .map(|g| g.value().clone())
+                .unwrap_or_default()
+                .pop();
+            entity.entity = fetched_entity;
+
+            list.push(entity);
         }
 
         Ok(list)

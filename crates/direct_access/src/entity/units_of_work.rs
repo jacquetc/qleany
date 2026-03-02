@@ -80,10 +80,13 @@ impl CommandUnitOfWork for EntityUnitOfWork {
     }
 }
 
+#[macros::uow_action(entity = "Entity", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Entity", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "Entity", action = "Create")]
 #[macros::uow_action(entity = "Entity", action = "CreateMulti")]
 #[macros::uow_action(entity = "Entity", action = "Get")]
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "GetAll")]
 #[macros::uow_action(entity = "Entity", action = "Update")]
 #[macros::uow_action(entity = "Entity", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Entity", action = "Delete")]
@@ -95,30 +98,6 @@ impl CommandUnitOfWork for EntityUnitOfWork {
 #[macros::uow_action(entity = "Entity", action = "SetRelationship")]
 #[macros::uow_action(entity = "Entity", action = "SetRelationshipMulti")]
 impl EntityUnitOfWorkTrait for EntityUnitOfWork {
-    fn create_entity_with_owner(
-        &self,
-        entity: &Entity,
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Entity> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_entity_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_with_owner(&mut event_buffer, entity, owner_id, index)?)
-    }
-
-    fn create_entity_multi_with_owner(
-        &self,
-        entities: &[Entity],
-        owner_id: EntityId,
-        index: i32,
-    ) -> Result<Vec<Entity>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_entity_repository(borrowed_transaction);
-        let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.create_multi_with_owner(&mut event_buffer, entities, owner_id, index)?)
-    }
-
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
         let repo = repository_factory::write::create_entity_repository(borrowed_transaction);
@@ -183,6 +162,7 @@ impl QueryUnitOfWork for EntityUnitOfWorkRO {
 
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetAllRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRelationshipsFromRightIdsRO")]
 impl EntityUnitOfWorkROTrait for EntityUnitOfWorkRO {}

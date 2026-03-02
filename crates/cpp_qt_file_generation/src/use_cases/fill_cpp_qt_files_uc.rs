@@ -17,7 +17,7 @@ pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillCppQtFilesUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
@@ -31,8 +31,8 @@ pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Feature", action = "GetMulti")]
 #[macros::uow_action(entity = "Feature", action = "GetRelationship")]
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
-#[macros::uow_action(entity = "File", action = "Create")]
-#[macros::uow_action(entity = "File", action = "CreateMulti")]
+#[macros::uow_action(entity = "File", action = "CreateOrphan")]
+#[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
 pub trait FillCppQtFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
@@ -52,10 +52,9 @@ impl FillCppQtFilesUseCase {
         uow.begin_transaction()?;
 
         use anyhow::anyhow;
-        let roots = uow.get_root_multi(&[])?;
+        let roots = uow.get_all_root()?;
         let root = roots
             .into_iter()
-            .flatten()
             .next()
             .ok_or_else(|| anyhow!("Root entity not found"))?;
 
@@ -2715,7 +2714,7 @@ impl FillCppQtFilesUseCase {
             .collect::<Vec<File>>();
 
         // create files in db
-        let created_files = uow.create_file_multi(&files)?;
+        let created_files = uow.create_orphan_file_multi(&files)?;
         uow.set_system_relationship(
             &system_id,
             &SystemRelationshipField::Files,

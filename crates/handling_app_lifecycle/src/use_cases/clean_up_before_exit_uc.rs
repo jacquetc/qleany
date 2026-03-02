@@ -24,7 +24,7 @@ impl CleanUpBeforeExitUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
-        uow.delete_root(&0)?;
+        uow.delete_root(&1)?;
 
         uow.commit()?;
         Ok(())

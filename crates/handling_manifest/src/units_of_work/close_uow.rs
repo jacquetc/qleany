@@ -92,7 +92,7 @@ impl CommandUnitOfWork for CloseUnitOfWork {
 //
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "File", action = "DeleteMulti")]
-#[macros::uow_action(entity = "Workspace", action = "GetMulti")]
+#[macros::uow_action(entity = "Workspace", action = "GetAll")]
 #[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
 impl CloseUnitOfWorkTrait for CloseUnitOfWork {}
 

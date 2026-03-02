@@ -166,11 +166,8 @@ impl GenerationReadOps for DummyGenerationReadOps {
             .map(|i| self.relationships.get(i).cloned())
             .collect())
     }
-    fn get_root_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>> {
-        if ids.is_empty() {
-            return Ok(self.roots.values().map(|r| Some(r.clone())).collect());
-        }
-        Ok(ids.iter().map(|id| self.roots.get(id).cloned()).collect())
+    fn get_all_root(&self) -> Result<Vec<Root>> {
+        Ok(self.roots.values().cloned().collect())
     }
 }
 

@@ -79,10 +79,11 @@ impl CommandUnitOfWork for RootUnitOfWork {
     }
 }
 
-#[macros::uow_action(entity = "Root", action = "Create")]
-#[macros::uow_action(entity = "Root", action = "CreateMulti")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphan")]
+#[macros::uow_action(entity = "Root", action = "CreateOrphanMulti")]
 #[macros::uow_action(entity = "Root", action = "Get")]
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "Update")]
 #[macros::uow_action(entity = "Root", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Root", action = "Delete")]
@@ -144,6 +145,7 @@ impl QueryUnitOfWork for RootUnitOfWorkRO {
 
 #[macros::uow_action(entity = "Root", action = "GetRO")]
 #[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Root", action = "GetRelationshipsFromRightIdsRO")]
 impl RootUnitOfWorkROTrait for RootUnitOfWorkRO {}

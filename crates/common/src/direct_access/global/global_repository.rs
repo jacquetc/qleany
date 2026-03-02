@@ -30,6 +30,7 @@ pub trait GlobalTable {
     fn create_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error>;
+    fn get_all(&self) -> Result<Vec<Global>, Error>;
     fn update(&mut self, entity: &Global) -> Result<Global, Error>;
     fn update_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -41,6 +42,7 @@ pub trait GlobalTable {
 pub trait GlobalTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error>;
+    fn get_all(&self) -> Result<Vec<Global>, Error>;
 }
 
 pub struct GlobalRepository<'a> {
@@ -56,7 +58,7 @@ impl<'a> GlobalRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Global,
@@ -70,7 +72,7 @@ impl<'a> GlobalRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Global],
@@ -83,7 +85,7 @@ impl<'a> GlobalRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Global,
@@ -111,7 +113,7 @@ impl<'a> GlobalRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Global],
@@ -143,6 +145,9 @@ impl<'a> GlobalRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Global>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -291,5 +296,8 @@ impl<'a> GlobalRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Global>, Error> {
+        self.redb_table.get_all()
     }
 }

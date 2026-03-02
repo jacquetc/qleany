@@ -91,35 +91,36 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = global_table.iter()?;
-            let mut count = 0;
+        for id in ids {
+            let item = if let Some(guard) = global_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                let id = id.value();
-                let mut entity = data.value().clone();
+        Ok(list)
+    }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = global_table.get(id)? {
-                    let mut entity = guard.value().clone();
+    fn get_all(&self) -> Result<Vec<Global>, Error> {
+        let mut list = Vec::new();
+        let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+        let mut iter = global_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            list.push(entity);
         }
 
         Ok(list)
@@ -259,35 +260,36 @@ impl<'a> GlobalTableRO for GlobalRedbTableRO<'a> {
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut list = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-        if ids.is_empty() {
-            let mut iter = global_table.iter()?;
-            let mut count = 0;
+        for id in ids {
+            let item = if let Some(guard) = global_table.get(id)? {
+                let mut entity = guard.value().clone();
 
-            while let Some(Ok((id, data))) = iter.next() {
-                if count >= 1000 {
-                    break;
-                }
+                Some(entity)
+            } else {
+                None
+            };
+            list.push(item);
+        }
 
-                let id = id.value();
-                let mut entity = data.value().clone();
+        Ok(list)
+    }
 
-                list.push(Some(entity));
-                count += 1;
-            }
-        } else {
-            for id in ids {
-                let item = if let Some(guard) = global_table.get(id)? {
-                    let mut entity = guard.value().clone();
+    fn get_all(&self) -> Result<Vec<Global>, Error> {
+        let mut list = Vec::new();
+        let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
-                    Some(entity)
-                } else {
-                    None
-                };
-                list.push(item);
-            }
+        let mut iter = global_table.iter()?;
+        while let Some(Ok((id, data))) = iter.next() {
+            let id = id.value();
+            let mut entity = data.value().clone();
+
+            list.push(entity);
         }
 
         Ok(list)

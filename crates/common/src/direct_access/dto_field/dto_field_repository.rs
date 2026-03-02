@@ -30,6 +30,7 @@ pub trait DtoFieldTable {
     fn create_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error>;
+    fn get_all(&self) -> Result<Vec<DtoField>, Error>;
     fn update(&mut self, entity: &DtoField) -> Result<DtoField, Error>;
     fn update_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -41,6 +42,7 @@ pub trait DtoFieldTable {
 pub trait DtoFieldTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error>;
+    fn get_all(&self) -> Result<Vec<DtoField>, Error>;
 }
 
 pub struct DtoFieldRepository<'a> {
@@ -56,7 +58,7 @@ impl<'a> DtoFieldRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &DtoField,
@@ -70,7 +72,7 @@ impl<'a> DtoFieldRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[DtoField],
@@ -83,7 +85,7 @@ impl<'a> DtoFieldRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &DtoField,
@@ -110,7 +112,7 @@ impl<'a> DtoFieldRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[DtoField],
@@ -143,6 +145,9 @@ impl<'a> DtoFieldRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -286,5 +291,8 @@ impl<'a> DtoFieldRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+        self.redb_table.get_all()
     }
 }

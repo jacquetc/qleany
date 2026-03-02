@@ -50,12 +50,11 @@ fn show_config(app_context: &Arc<AppContext>, args: &ShowArgs) -> Result<()> {
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{global_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
+    let workspaces = workspace_controller::get_all(&app_context.db_context)?;
     let workspace = workspaces
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
+        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?;
 
     let global_ids = workspace_controller::get_relationship(
         &app_context.db_context,
@@ -99,12 +98,11 @@ fn show_entity(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> Re
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{entity_controller, field_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
+    let workspaces = workspace_controller::get_all(&app_context.db_context)?;
     let workspace = workspaces
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
+        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?;
 
     let entity_ids = workspace_controller::get_relationship(
         &app_context.db_context,
@@ -175,12 +173,11 @@ fn show_feature(app_context: &Arc<AppContext>, name: &str, args: &ShowArgs) -> R
     use common::direct_access::workspace::WorkspaceRelationshipField;
     use direct_access::{feature_controller, use_case_controller, workspace_controller};
 
-    let workspaces = workspace_controller::get_multi(&app_context.db_context, &[])?;
+    let workspaces = workspace_controller::get_all(&app_context.db_context)?;
     let workspace = workspaces
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?
-        .ok_or_else(|| anyhow::anyhow!("Workspace data is empty"))?;
+        .ok_or_else(|| anyhow::anyhow!("No workspace loaded"))?;
 
     let feature_ids = workspace_controller::get_relationship(
         &app_context.db_context,

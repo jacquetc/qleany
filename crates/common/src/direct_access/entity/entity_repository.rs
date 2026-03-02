@@ -34,6 +34,7 @@ pub trait EntityTable {
     fn create_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error>;
     fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error>;
+    fn get_all(&self) -> Result<Vec<Entity>, Error>;
     fn update(&mut self, entity: &Entity) -> Result<Entity, Error>;
     fn update_multi(&mut self, entities: &[Entity]) -> Result<Vec<Entity>, Error>;
     fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
@@ -66,6 +67,7 @@ pub trait EntityTable {
 pub trait EntityTableRO {
     fn get(&self, id: &EntityId) -> Result<Option<Entity>, Error>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error>;
+    fn get_all(&self) -> Result<Vec<Entity>, Error>;
     fn get_relationship(
         &self,
         id: &EntityId,
@@ -91,7 +93,7 @@ impl<'a> EntityRepository<'a> {
         }
     }
 
-    pub fn create(
+    pub fn create_orphan(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Entity,
@@ -105,7 +107,7 @@ impl<'a> EntityRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi(
+    pub fn create_orphan_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Entity],
@@ -118,7 +120,7 @@ impl<'a> EntityRepository<'a> {
         });
         Ok(new_entities)
     }
-    pub fn create_with_owner(
+    pub fn create(
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Entity,
@@ -145,7 +147,7 @@ impl<'a> EntityRepository<'a> {
         Ok(new)
     }
 
-    pub fn create_multi_with_owner(
+    pub fn create_multi(
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Entity],
@@ -178,6 +180,9 @@ impl<'a> EntityRepository<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Entity>, Error> {
+        self.redb_table.get_all()
     }
 
     pub fn update(
@@ -597,6 +602,9 @@ impl<'a> EntityRepositoryRO<'a> {
     }
     pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>, Error> {
         self.redb_table.get_multi(ids)
+    }
+    pub fn get_all(&self) -> Result<Vec<Entity>, Error> {
+        self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,

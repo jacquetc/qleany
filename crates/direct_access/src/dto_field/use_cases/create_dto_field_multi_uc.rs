@@ -45,7 +45,7 @@ impl CreateDtoFieldMultiUseCase {
         self.previous_owner_relationship_ids = Some(uow.get_relationships_from_owner(&owner_id)?);
 
         // Create with owner (repository handles junction management internally)
-        let entities = uow.create_dto_field_multi_with_owner(
+        let entities = uow.create_dto_field_multi(
             &dtos.iter().map(|dto| dto.into()).collect::<Vec<_>>(),
             owner_id,
             index,

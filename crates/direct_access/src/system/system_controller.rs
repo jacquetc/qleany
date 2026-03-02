@@ -6,12 +6,13 @@ use super::{
     dtos::{CreateSystemDto, SystemDto},
     units_of_work::SystemUnitOfWorkROFactory,
     use_cases::{
-        create_orphans_system_multi_uc::CreateOrphansSystemMultiUseCase,
-        create_orphans_system_uc::CreateOrphansSystemUseCase,
+        create_orphan_system_multi_uc::CreateOrphanSystemMultiUseCase,
+        create_orphan_system_uc::CreateOrphanSystemUseCase,
         create_system_multi_uc::CreateSystemMultiUseCase, create_system_uc::CreateSystemUseCase,
-        get_system_multi_uc::GetSystemMultiUseCase, get_system_uc::GetSystemUseCase,
-        remove_system_multi_uc::RemoveSystemMultiUseCase, remove_system_uc::RemoveSystemUseCase,
-        update_system_multi_uc::UpdateSystemMultiUseCase, update_system_uc::UpdateSystemUseCase,
+        get_all_system_uc::GetAllSystemUseCase, get_system_multi_uc::GetSystemMultiUseCase,
+        get_system_uc::GetSystemUseCase, remove_system_multi_uc::RemoveSystemMultiUseCase,
+        remove_system_uc::RemoveSystemUseCase, update_system_multi_uc::UpdateSystemMultiUseCase,
+        update_system_uc::UpdateSystemUseCase,
     },
 };
 use crate::SystemRelationshipDto;
@@ -23,13 +24,13 @@ use common::direct_access::system::SystemRelationshipField;
 use common::{database::db_context::DbContext, event::EventHub, types::EntityId};
 use std::sync::Arc;
 
-pub fn create_orphans(
+pub fn create_orphan(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entity: &CreateSystemDto,
 ) -> Result<SystemDto> {
     let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansSystemUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanSystemUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entity.clone())?;
     Ok(result)
 }
@@ -51,6 +52,12 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<SystemDto>> {
     uc.execute(id)
 }
 
+pub fn get_all(db_context: &DbContext) -> Result<Vec<SystemDto>> {
+    let uow_factory = SystemUnitOfWorkROFactory::new(db_context);
+    let uc = GetAllSystemUseCase::new(Box::new(uow_factory));
+    uc.execute()
+}
+
 pub fn update(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
@@ -69,13 +76,13 @@ pub fn remove(db_context: &DbContext, event_hub: &Arc<EventHub>, id: &EntityId) 
     Ok(())
 }
 
-pub fn create_orphans_multi(
+pub fn create_orphan_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     entities: &[CreateSystemDto],
 ) -> Result<Vec<SystemDto>> {
     let uow_factory = SystemUnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphansSystemMultiUseCase::new(Box::new(uow_factory));
+    let mut uc = CreateOrphanSystemMultiUseCase::new(Box::new(uow_factory));
     let result = uc.execute(entities)?;
     Ok(result)
 }
