@@ -15,6 +15,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
+use anyhow::anyhow;
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
@@ -37,7 +38,7 @@ use tera::{Context, Tera};
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
-pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
+pub(crate) trait GenerationReadOps: QueryUnitOfWork{}
 
 #[derive(Debug, Serialize, Clone)]
 pub(crate) struct GenerationSnapshot {
@@ -634,17 +635,25 @@ impl SnapshotBuilder {
         }
         None
     }
-
-    pub(crate) fn for_file(
+    pub(crate) fn for_file_id(
         uow: &dyn GenerationReadOps,
         file_id: EntityId,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {
-        use anyhow::anyhow;
         // Load file
         let file = uow
             .get_file(&file_id)?
             .ok_or_else(|| anyhow!("File not found"))?;
+
+        Self::for_file(uow, &file, generation_snapshot_cache)
+
+    }
+
+    pub(crate) fn for_file(
+        uow: &dyn GenerationReadOps,
+        file: &File,
+        generation_snapshot_cache: &Vec<GenerationSnapshot>,
+    ) -> anyhow::Result<(GenerationSnapshot, bool)> {
 
         // compare with cache
         for cached_snapshot in generation_snapshot_cache {
@@ -669,7 +678,7 @@ impl SnapshotBuilder {
                     dtos: cached_snapshot.dtos.clone(),
                 };
 
-                log::debug!("Snapshot cache hit for file id {}", file_id);
+                log::debug!("Snapshot cache hit for file id {}", file.id);
 
                 return Ok((new_snapshot, true));
             }
@@ -1328,7 +1337,7 @@ impl SnapshotBuilder {
         // compute entity_snake if entity scope
         Ok((
             GenerationSnapshot {
-                file: FileVM { inner: file },
+                file: FileVM { inner: file.clone() },
                 global: global_vm,
                 ui: ui_vm,
                 entities: entities_vm,

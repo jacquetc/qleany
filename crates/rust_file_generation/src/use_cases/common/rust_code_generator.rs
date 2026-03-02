@@ -2,7 +2,7 @@ mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
 use crate::use_cases::common::tools;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
@@ -478,16 +478,26 @@ impl SnapshotBuilder {
         None
     }
 
-    pub(crate) fn for_file(
+    pub(crate) fn for_file_id(
         uow: &dyn GenerationReadOps,
         file_id: EntityId,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {
-        use anyhow::anyhow;
         // Load file
         let file = uow
             .get_file(&file_id)?
             .ok_or_else(|| anyhow!("File not found"))?;
+
+        Self::for_file(uow, &file, generation_snapshot_cache)
+
+    }
+
+    pub(crate) fn for_file(
+        uow: &dyn GenerationReadOps,
+        file: &File,
+        generation_snapshot_cache: &Vec<GenerationSnapshot>,
+    ) -> anyhow::Result<(GenerationSnapshot, bool)> {
+
 
         // compare with cache
         for cached_snapshot in generation_snapshot_cache {
@@ -512,7 +522,7 @@ impl SnapshotBuilder {
                     dtos: cached_snapshot.dtos.clone(),
                 };
 
-                log::debug!("Snapshot cache hit for file id {}", file_id);
+                log::debug!("Snapshot cache hit for file id {}", file.id);
 
                 return Ok((new_snapshot, true));
             }
@@ -644,14 +654,16 @@ impl SnapshotBuilder {
                 features.insert(feature.id, feature);
 
                 for use_case in feature_use_cases {
-                    // Entities for use case
-                    let use_case_entities: Vec<Entity> = uow
-                        .get_entity_multi(&use_case.entities)?
-                        .into_iter()
-                        .flatten()
-                        .collect();
-                    for e in use_case_entities {
-                        entities.insert(e.id, e);
+                    if !use_case.entities.is_empty() {
+                        // Entities for use case
+                        let use_case_entities: Vec<Entity> = uow
+                            .get_entity_multi(&use_case.entities)?
+                            .into_iter()
+                            .flatten()
+                            .collect();
+                        for e in use_case_entities {
+                            entities.insert(e.id, e);
+                        }
                     }
 
                     // DTOs
@@ -694,13 +706,16 @@ impl SnapshotBuilder {
             let use_case = uow
                 .get_use_case(&use_case_id)?
                 .ok_or_else(|| anyhow!("Use case not found"))?;
-            let use_case_entities: Vec<Entity> = uow
-                .get_entity_multi(&use_case.entities)?
-                .into_iter()
-                .flatten()
-                .collect();
-            for e in use_case_entities {
-                entities.insert(e.id, e);
+
+            if !use_case.entities.is_empty() {
+                let use_case_entities: Vec<Entity> = uow
+                    .get_entity_multi(&use_case.entities)?
+                    .into_iter()
+                    .flatten()
+                    .collect();
+                for e in use_case_entities {
+                    entities.insert(e.id, e);
+                }
             }
 
             if let Some(dto_in) = use_case.dto_in {
@@ -876,7 +891,7 @@ impl SnapshotBuilder {
 
                             let use_case_vms: IndexMap<EntityId, UseCaseVM> = use_cases
                                 .into_iter()
-                                .map(|(k, uc)| {
+                                .map(|(k, uc): (EntityId, UseCase)| {
                                     (
                                         k,
                                         UseCaseVM {
@@ -1074,7 +1089,7 @@ impl SnapshotBuilder {
         // compute entity_snake if entity scope
         Ok((
             GenerationSnapshot {
-                file: FileVM { inner: file },
+                file: FileVM { inner: file.clone() },
                 global: global_vm,
                 ui: ui_vm,
                 entities: entities_vm,

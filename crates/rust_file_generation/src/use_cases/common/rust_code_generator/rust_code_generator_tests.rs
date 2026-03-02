@@ -177,7 +177,7 @@ impl GenerationReadOps for DummyGenerationReadOps {
 #[test]
 fn for_file_returns_err_when_file_missing() {
     let uow = DummyGenerationReadOps::new();
-    let res = SnapshotBuilder::for_file(&uow, 1, &Vec::new());
+    let res = SnapshotBuilder::for_file_id(&uow, 1, &Vec::new());
     assert!(res.is_err());
 }
 
@@ -249,7 +249,7 @@ fn for_file_feature_without_use_cases_errors() {
         system: None,
     };
     uow.roots.insert(1, root);
-    let res = SnapshotBuilder::for_file(&uow, 1, &Vec::new());
+    let res = SnapshotBuilder::for_file_id(&uow, 1, &Vec::new());
     assert!(res.is_err());
 }
 
@@ -409,7 +409,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     uow.roots.insert(1, root);
 
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1, &Vec::new()).expect("snapshot");
     assert!(snap.features.contains_key(&10));
     assert!(snap.use_cases.contains_key(&100));
     assert!(snap.entities.contains_key(&300));
@@ -555,7 +555,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1000, file_feature_only);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1000, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1000, &Vec::new()).expect("snapshot");
     assert!(snap.features.contains_key(&200));
     assert!(snap.use_cases.contains_key(&100));
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
@@ -578,7 +578,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1001, file_uc_only);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1001, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1001, &Vec::new()).expect("snapshot");
     assert!(snap.features.is_empty());
     assert!(snap.use_cases.contains_key(&100));
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
@@ -601,7 +601,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1002, file_ent_only);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1002, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1002, &Vec::new()).expect("snapshot");
     assert!(snap.features.is_empty());
     assert!(snap.use_cases.is_empty());
     assert!(snap.entities.contains_key(&1));
@@ -623,7 +623,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1003, file_all_ent);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1003, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1003, &Vec::new()).expect("snapshot");
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
 
     // 5) File with feature + entity: ensure both feature scope (UCs, dtos, uc entities) and explicit entity are included
@@ -643,7 +643,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1004, file_feat_ent);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1004, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1004, &Vec::new()).expect("snapshot");
     assert!(snap.features.contains_key(&200));
     assert!(snap.use_cases.contains_key(&100));
     // must include entity 1 (explicit) and UC entities
@@ -666,7 +666,7 @@ fn for_file_various_combinations_generate_expected_items() {
         field: None,
     };
     uow.files.insert(1005, file_uc_ent);
-    let (snap, _from_cache) = SnapshotBuilder::for_file(&uow, 1005, &Vec::new()).expect("snapshot");
+    let (snap, _from_cache) = SnapshotBuilder::for_file_id(&uow, 1005, &Vec::new()).expect("snapshot");
     assert!(snap.use_cases.contains_key(&100));
     // entities from UC plus explicitly provided entity
     assert!(snap.entities.contains_key(&1) && snap.entities.contains_key(&2));
