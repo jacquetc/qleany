@@ -17,12 +17,12 @@
 
 #pragma once
 
+#include "direct_access/use_case_helpers/uc_concepts.h"
 #include "database/snapshot_types.h"
 #include "undo_redo/undo_redo_command.h"
 
 #include <QDateTime>
 #include <QList>
-#include <concepts>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -34,17 +34,6 @@ namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::UseCaseH
 
 namespace SCDatabase = {{ s.global.application_pascal_name }}::Common::Database;
 namespace SCU = {{ s.global.application_pascal_name }}::Common::UndoRedo;
-
-// =============================================================================
-// Concepts
-// =============================================================================
-
-/// Entity has createdAt/updatedAt timestamp fields
-template <typename E>
-concept HasTimestamps = requires(E e, QDateTime dt) {
-    { e.createdAt = dt };
-    { e.updatedAt = dt };
-};
 
 // =============================================================================
 // Generic CreateOrphan Use Case

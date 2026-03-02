@@ -943,10 +943,170 @@ impl FillCppQtFilesUseCase {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
+            name: "uc_concepts.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_concepts_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "create_orphans_uc.h".to_string(),
             relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
             group: "common_direct_access".to_string(),
             template_name: "uc_helper_create_orphans_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "create_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_create_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "update_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_update_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "remove_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_remove_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_relationship_ids_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_many_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_relationship_ids_many_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_count_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_relationship_ids_count_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "get_relationship_ids_in_range_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_get_relationship_ids_in_range_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "set_relationship_ids_uc.h".to_string(),
+            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
+            group: "common_direct_access".to_string(),
+            template_name: "uc_helper_set_relationship_ids_h".to_string(),
             generated_code: None,
             status: FileStatus::Unknown,
             feature: None,
@@ -1211,102 +1371,6 @@ impl FillCppQtFilesUseCase {
                     id: 0,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
-                    name: "get_uc.cpp".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "get_uc_cpp".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "get_uc.h".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "get_uc_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "remove_uc.cpp".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "remove_uc_cpp".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "remove_uc.h".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "remove_uc_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "update_uc.cpp".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "update_uc_cpp".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "update_uc.h".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "update_uc_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     name: "dto_mapper.h".to_string(),
                     relative_path: format!("{}{}", relative_path.clone(), "common/"),
                     group: "direct_access".to_string(),
@@ -1319,225 +1383,6 @@ impl FillCppQtFilesUseCase {
                     field: None,
                 });
 
-                // only if there is a forward relationship
-                let relationships = uow.get_entity_relationship(
-                    &entity.id,
-                    &common::direct_access::entity::EntityRelationshipField::Relationships,
-                )?;
-                let relationships = uow.get_relationship_multi(&relationships)?;
-
-                let has_owner = relationships.iter().any(|r| {
-                    if let Some(r) = r {
-                        r.direction == common::entities::Direction::Backward
-                            && r.strength == common::entities::Strength::Strong
-                    } else {
-                        false
-                    }
-                });
-
-                if has_owner {
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "create_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "create_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "create_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "create_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-                }
-
-                let has_forward_relationship = relationships.iter().any(|r| {
-                    if let Some(r) = r {
-                        r.direction == common::entities::Direction::Forward
-                    } else {
-                        false
-                    }
-                });
-
-                if has_forward_relationship {
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_count_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_count_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_count_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_count_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_in_range_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_in_range_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_in_range_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_in_range_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_many_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_many_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_many_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_many_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "get_relationship_ids_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "get_relationship_ids_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "set_relationship_ids_uc.cpp".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "set_relationship_ids_uc_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: "set_relationship_ids_uc.h".to_string(),
-                        relative_path: relative_path.clone(),
-                        group: "direct_access".to_string(),
-                        template_name: "set_relationship_ids_uc_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        feature: None,
-                        entity: Some(entity.id),
-                        use_case: None,
-                        field: None,
-                    });
-                } // has forward relationship
             }
 
             // for common/entities/

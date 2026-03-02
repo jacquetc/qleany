@@ -1,0 +1,42 @@
+/******************************************************************************
+ * Generic GetRelationshipIdsMany Use Case
+ *
+ * Header-only C++20 template that replaces per-entity GetRelationshipIdsMany UCs.
+ *
+ * Template parameters:
+ *   DtoMapperT     - Static mapper with toCommonRelationshipField()
+ *   UoWInterfaceT  - Unit of work interface
+ *   RelFieldEnumT  - Entity-specific relationship field enum
+ ******************************************************************************/
+
+#pragma once
+
+#include <QHash>
+#include <QList>
+#include <memory>
+
+namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::UseCaseHelpers
+{
+
+template <typename DtoMapperT,
+          typename UoWInterfaceT,
+          typename RelFieldEnumT>
+class GetRelationshipIdsManyUseCase
+{
+  public:
+    explicit GetRelationshipIdsManyUseCase(std::unique_ptr<UoWInterfaceT> uow)
+        : m_uow(std::move(uow))
+    {
+    }
+    ~GetRelationshipIdsManyUseCase() = default;
+
+    QHash<int, QList<int>> execute(const QList<int> &entityIds, RelFieldEnumT relationship)
+    {
+        return m_uow->getRelationshipMany(entityIds, DtoMapperT::toCommonRelationshipField(relationship));
+    }
+
+  private:
+    std::unique_ptr<UoWInterfaceT> m_uow;
+};
+
+} // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::UseCaseHelpers

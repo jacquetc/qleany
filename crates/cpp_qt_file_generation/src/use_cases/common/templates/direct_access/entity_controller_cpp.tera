@@ -8,20 +8,20 @@
 #include "use_cases/common/dto_mapper.h"
 #include "direct_access/use_case_helpers/create_orphans_uc.h"
 {%- if ent.owner %}
-#include "use_cases/create_uc.h"
+#include "direct_access/use_case_helpers/create_uc.h"
 {%- endif %}
-#include "use_cases/get_uc.h"
-#include "use_cases/remove_uc.h"
-#include "use_cases/update_uc.h"
+#include "direct_access/use_case_helpers/get_uc.h"
+#include "direct_access/use_case_helpers/remove_uc.h"
+#include "direct_access/use_case_helpers/update_uc.h"
 #include "controller_command_helpers.h"
 #include <QCoro/QCoroTask>
 #include <QCoro/QCoroTimer>
 {%- if ent.forward_relationships %}
-#include "use_cases/get_relationship_ids_count_uc.h"
-#include "use_cases/get_relationship_ids_in_range_uc.h"
-#include "use_cases/get_relationship_ids_many_uc.h"
-#include "use_cases/get_relationship_ids_uc.h"
-#include "use_cases/set_relationship_ids_uc.h"
+#include "direct_access/use_case_helpers/get_relationship_ids_count_uc.h"
+#include "direct_access/use_case_helpers/get_relationship_ids_in_range_uc.h"
+#include "direct_access/use_case_helpers/get_relationship_ids_many_uc.h"
+#include "direct_access/use_case_helpers/get_relationship_ids_uc.h"
+#include "direct_access/use_case_helpers/set_relationship_ids_uc.h"
 {%- endif %}
 
 #include <memory>
@@ -31,6 +31,23 @@ namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_na
 namespace SCE = {{ s.global.application_pascal_name }}::Common::Entities;
 namespace SCD{{ ent.pascal_name }} = {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.pascal_name }};
 namespace Helpers = {{ s.global.application_pascal_name }}::Common::ControllerHelpers;
+namespace UCH = {{ s.global.application_pascal_name }}::Common::DirectAccess::UseCaseHelpers;
+
+// -- Type aliases for generic use case helpers --------------------------------
+
+using GetUC = UCH::GetUseCase<{{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork>;
+using UpdateUC = UCH::UpdateUseCase<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
+using RemoveUC = UCH::RemoveUseCase<I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
+{%- if ent.owner %}
+using CreateUC = UCH::CreateUseCase<SCE::{{ ent.pascal_name }}, Create{{ ent.pascal_name }}Dto, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}, {% if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}true{% else %}false{% endif %}>;
+{%- endif %}
+{%- if ent.forward_relationships %}
+using GetRelIdsUC = UCH::GetRelationshipIdsUseCase<DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {{ ent.pascal_name }}RelationshipField>;
+using GetRelIdsManyUC = UCH::GetRelationshipIdsManyUseCase<DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {{ ent.pascal_name }}RelationshipField>;
+using GetRelIdsCountUC = UCH::GetRelationshipIdsCountUseCase<DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {{ ent.pascal_name }}RelationshipField>;
+using GetRelIdsInRangeUC = UCH::GetRelationshipIdsInRangeUseCase<DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {{ ent.pascal_name }}RelationshipField>;
+using SetRelIdsUC = UCH::SetRelationshipIdsUseCase<SCE::{{ ent.pascal_name }}, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {{ ent.pascal_name }}RelationshipField, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
+{%- endif %}
 
 // Default timeout for async command/query execution (ms)
 static constexpr int kDefaultCommandTimeoutMs = 500;
@@ -70,9 +87,7 @@ void {{ ent.pascal_name }}Controller::resolveDependencies()
 QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::create(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }}, int ownerId, int index)
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-    auto useCase = std::make_shared<Create{{ ent.pascal_name }}UseCase>(std::move(uow));
-
-        
+    auto useCase = std::make_shared<CreateUC>(std::move(uow));
 
     co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
@@ -91,10 +106,6 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
 
 QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::createOrphans(const QList<Create{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
 {
-    namespace UCH = Common::DirectAccess::UseCaseHelpers;
-
-    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-
     using CreateOrphanUC = UCH::CreateOrphanUseCase<
         SCE::{{ ent.pascal_name }},
         Create{{ ent.pascal_name }}Dto,
@@ -103,6 +114,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::cr
         I{{ ent.pascal_name }}UnitOfWork,
         {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
 
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<CreateOrphanUC>(std::move(uow));
 
     co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
@@ -126,7 +138,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::ge
         u"Get {{ ent.camel_plural_name }} Query"_s,
         [this, {{ ent.camel_name }}Ids]() -> QList<{{ ent.pascal_name }}Dto> {
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<Get{{ ent.pascal_name }}UseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Ids);
         });
 }
@@ -134,7 +146,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::ge
 QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-    auto useCase = std::make_shared<Update{{ ent.pascal_name }}UseCase>(std::move(uow));
+    auto useCase = std::make_shared<UpdateUC>(std::move(uow));
 
     co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
         m_undoRedoSystem,
@@ -153,7 +165,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::up
 QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::remove(const QList<int> &{{ ent.camel_name }}Ids)
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-    auto useCase = std::make_shared<Remove{{ ent.pascal_name }}UseCase>(std::move(uow));
+    auto useCase = std::make_shared<RemoveUC>(std::move(uow));
 
     co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<int>>(
         m_undoRedoSystem,
@@ -183,7 +195,7 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIds(
         u"Get {{ ent.pascal_name }} Relationship IDs Query"_s,
         [this, {{ ent.camel_name }}Id, relationship]() -> QList<int> {
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetRelationshipIdsUseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetRelIdsUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Id, relationship);
         });
 }
@@ -193,7 +205,7 @@ QCoro::Task<void> {{ ent.pascal_name }}Controller::setRelationshipIds(
     const QList<int> &relatedIds)
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-    auto useCase = std::make_shared<SetRelationshipIdsUseCase>(std::move(uow));
+    auto useCase = std::make_shared<SetRelIdsUC>(std::move(uow));
 
     co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommandVoid(
         m_undoRedoSystem,
@@ -217,7 +229,7 @@ QCoro::Task<QHash<int, QList<int>>> {{ ent.pascal_name }}Controller::getRelation
         u"Get {{ ent.pascal_name }} Relationship IDs Many Query"_s,
         [this, {{ ent.camel_name }}Ids, relationship]() -> QHash<int, QList<int>> {
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetRelationshipIdsManyUseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetRelIdsManyUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Ids, relationship);
         });
 }
@@ -230,7 +242,7 @@ QCoro::Task<int> {{ ent.pascal_name }}Controller::getRelationshipIdsCount(
         u"Get {{ ent.pascal_name }} Relationship IDs Count Query"_s,
         [this, {{ ent.camel_name }}Id, relationship]() -> int {
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetRelationshipIdsCountUseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetRelIdsCountUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Id, relationship);
         });
 }
@@ -244,7 +256,7 @@ QCoro::Task<QList<int>> {{ ent.pascal_name }}Controller::getRelationshipIdsInRan
         u"Get {{ ent.pascal_name }} Relationship IDs In Range Query"_s,
         [this, {{ ent.camel_name }}Id, relationship, offset, limit]() -> QList<int> {
             auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetRelationshipIdsInRangeUseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetRelIdsInRangeUC>(std::move(uow));
             return useCase->execute({{ ent.camel_name }}Id, relationship, offset, limit);
         });
 }
