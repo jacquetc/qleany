@@ -13,7 +13,7 @@ use std::any::Any;
 use std::collections::VecDeque;
 {%- endif %}
 
-pub struct CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
+pub struct CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase {
     uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>,
 {%- if s.entities[e].inner.undoable %}
     undo_stack: VecDeque<Vec<{{ s.entities[e].pascal_name }}>>,
@@ -21,9 +21,9 @@ pub struct CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
 {%- endif %}
 }
 
-impl CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
+impl CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase {
     pub fn new(uow_factory: Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait>) -> Self {
-        CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
+        CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase {
             uow_factory,
 {%- if s.entities[e].inner.undoable %}
             undo_stack: VecDeque::new(),
@@ -49,7 +49,7 @@ impl CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
 }
 
 {%- if s.entities[e].inner.undoable -%}
-impl UndoRedoCommand for CreateOrphans{{ s.entities[e].pascal_name }}MultiUseCase {
+impl UndoRedoCommand for CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase {
     fn undo(&mut self) -> Result<()> {
         if let Some(last_entities) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();

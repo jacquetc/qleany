@@ -6,8 +6,8 @@
 // Sub-modules for {{ s.entities[e].pascal_name }} use cases
 pub(super) mod get_{{ s.entities[e].snake_name }}_uc;
 pub(super) mod get_{{ s.entities[e].snake_name }}_multi_uc;
-pub(super) mod create_orphans_{{ s.entities[e].snake_name }}_multi_uc;
-pub(super) mod create_orphans_{{ s.entities[e].snake_name }}_uc;
+pub(super) mod create_orphan_{{ s.entities[e].snake_name }}_multi_uc;
+pub(super) mod create_orphan_{{ s.entities[e].snake_name }}_uc;
 {%- if s.entities[e].owner -%}
 pub(super) mod create_{{ s.entities[e].snake_name }}_multi_uc;
 pub(super) mod create_{{ s.entities[e].snake_name }}_uc;
