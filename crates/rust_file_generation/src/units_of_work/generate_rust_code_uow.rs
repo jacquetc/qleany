@@ -14,10 +14,10 @@ use common::entities::File;
 use common::entities::Global;
 use common::entities::Relationship;
 use common::entities::Root;
+use common::entities::System;
 use common::entities::UseCase;
 use common::entities::UserInterface;
 use common::entities::Workspace;
-use common::entities::System;
 use common::types::EntityId;
 use std::cell::RefCell;
 

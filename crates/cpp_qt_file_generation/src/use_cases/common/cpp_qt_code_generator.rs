@@ -5,7 +5,11 @@ use crate::use_cases::common::tools;
 use anyhow::Result;
 use anyhow::anyhow;
 use common::database::QueryUnitOfWork;
-use common::entities::{Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File, Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface, Workspace};
+use common::entities::{
+    Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
+    Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface,
+    Workspace,
+};
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -55,10 +59,9 @@ struct FileVM {
     pub inner: File,
 }
 
-
 #[derive(Debug, Serialize, Clone)]
 struct SystemVM {
-    inner: System,
+    pub inner: System,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -687,11 +690,11 @@ impl SnapshotBuilder {
                 return Ok((new_snapshot, true));
             }
         }
-        
+
         // system
 
         let system_id = tools::get_system_id(uow);
-        
+
         let system = uow
             .get_system(&system_id?)?
             .ok_or_else(|| anyhow!("System not found"))?;
@@ -701,14 +704,14 @@ impl SnapshotBuilder {
         };
 
         // global
-        
+
         let workspace_id = tools::get_workspace_id(uow)?;
-        
+
         let global_ids = uow.get_workspace_relationship(
             &workspace_id,
             &common::direct_access::workspace::WorkspaceRelationshipField::Global,
         )?;
-        
+
         let global = uow
             .get_global(
                 global_ids
@@ -1351,7 +1354,7 @@ impl SnapshotBuilder {
                 )
             })
             .collect();
-        
+
         // compute entity_snake if entity scope
         Ok((
             GenerationSnapshot {

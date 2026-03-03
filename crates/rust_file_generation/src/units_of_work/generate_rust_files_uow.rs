@@ -8,7 +8,7 @@ use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::UserInterface;
 use common::entities::Workspace;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase, System
+    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, System, UseCase,
 };
 use common::types::EntityId;
 use std::sync::Mutex;

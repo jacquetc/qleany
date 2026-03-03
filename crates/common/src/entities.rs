@@ -16,7 +16,9 @@ pub struct Dto {
 }
 
 impl HasId for Dto {
-fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -33,7 +35,9 @@ pub struct DtoField {
 }
 
 impl HasId for DtoField {
-fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
@@ -62,7 +66,9 @@ pub struct Global {
 }
 
 impl HasId for Global {
-fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -81,7 +87,9 @@ pub struct Relationship {
 }
 
 impl HasId for Relationship {
-fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
@@ -136,7 +144,9 @@ pub struct UserInterface {
 }
 
 impl HasId for UserInterface {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -149,7 +159,9 @@ pub struct Root {
 }
 
 impl HasId for Root {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -165,7 +177,9 @@ pub struct Workspace {
 }
 
 impl HasId for Workspace {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -178,7 +192,9 @@ pub struct System {
 }
 
 impl HasId for System {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -196,7 +212,9 @@ pub struct Entity {
 }
 
 impl HasId for Entity {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -217,7 +235,9 @@ pub struct Field {
 }
 
 impl HasId for Field {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
@@ -254,7 +274,9 @@ pub struct Feature {
 }
 
 impl HasId for Feature {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
@@ -284,7 +306,9 @@ pub struct File {
 }
 
 impl HasId for File {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -302,5 +326,7 @@ pub struct UseCase {
 }
 
 impl HasId for UseCase {
-    fn id(&self) -> EntityId { self.id }
+    fn id(&self) -> EntityId {
+        self.id
+    }
 }

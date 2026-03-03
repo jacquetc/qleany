@@ -2,8 +2,13 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use super::{DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, UseCaseVM, UserInterfaceVM, get_rust_tera, SystemVM};
-use common::entities::{Entity, Field, FieldType, File, FileStatus, Global, Relationship, System, UserInterface};
+use super::{
+    DtoVM, EntityVM, FeatureVM, FieldVM, FileVM, GenerationSnapshot, GlobalVM, SystemVM, UseCaseVM,
+    UserInterfaceVM, get_rust_tera,
+};
+use common::entities::{
+    Entity, Field, FieldType, File, FileStatus, Global, Relationship, System, UserInterface,
+};
 use indexmap::IndexMap;
 use tera::Context;
 

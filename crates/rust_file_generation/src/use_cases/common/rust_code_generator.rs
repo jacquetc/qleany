@@ -6,7 +6,8 @@ use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface, Workspace,
+    Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface,
+    Workspace,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
