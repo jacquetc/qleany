@@ -2,6 +2,26 @@ use crate::use_cases::common::rust_code_generator::GenerationReadOps;
 use common::entities::Workspace;
 use common::types::EntityId;
 
+pub fn get_system_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
+    use anyhow::anyhow;
+    let roots = uow.get_all_root()?;
+    let root = roots
+        .into_iter()
+        .next()
+        .ok_or_else(|| anyhow!("Root entity not found"))?;
+
+    let all_system_ids = uow.get_root_relationship(
+        &root.id,
+        &common::direct_access::root::RootRelationshipField::System,
+    )?;
+
+    let system_id = all_system_ids
+        .first()
+        .cloned()
+        .ok_or(anyhow!("No system found"))?;
+    Ok(system_id)
+}
+
 pub fn get_workspace_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
     use anyhow::anyhow;
     let roots = uow.get_all_root()?;

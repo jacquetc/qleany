@@ -17,6 +17,7 @@ use common::entities::Root;
 use common::entities::UseCase;
 use common::entities::UserInterface;
 use common::entities::Workspace;
+use common::entities::System;
 use common::types::EntityId;
 use std::cell::RefCell;
 
@@ -49,6 +50,7 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Root", action = "GetAllRO")]
+#[macros::uow_action(entity = "System", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "File", action = "GetRO")]

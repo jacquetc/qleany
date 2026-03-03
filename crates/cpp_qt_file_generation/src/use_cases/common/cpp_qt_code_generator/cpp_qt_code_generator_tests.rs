@@ -87,6 +87,9 @@ impl GenerationReadOps for DummyGenerationReadOps {
             }
         }
     }
+    fn get_system(&self, id: &EntityId) -> Result<Option<System>> {
+        Ok(self.systems.get(id).cloned())
+    }
     fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
         Ok(self.workspaces.get(id).cloned())
     }

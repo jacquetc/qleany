@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
-    Global, Relationship, RelationshipType, Root, Strength, UseCase, UserInterface, Workspace,
+    Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface, Workspace,
 };
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
@@ -19,6 +19,7 @@ use tera::{Context, Tera};
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Root", action = "GetAllRO")]
+#[macros::uow_action(entity = "System", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]
@@ -44,6 +45,7 @@ pub(crate) struct GenerationSnapshot {
     file: FileVM,
     global: GlobalVM,
     ui: UserInterfaceVM,
+    system: SystemVM,
     entities: IndexMap<EntityId, EntityVM>,
     features: IndexMap<EntityId, FeatureVM>,
     use_cases: IndexMap<EntityId, UseCaseVM>,
@@ -53,6 +55,11 @@ pub(crate) struct GenerationSnapshot {
 #[derive(Debug, Serialize, Clone)]
 struct FileVM {
     pub inner: File,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct SystemVM {
+    inner: System,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -512,6 +519,7 @@ impl SnapshotBuilder {
                     file: new_file_vm,
                     global: cached_snapshot.global.clone(),
                     ui: cached_snapshot.ui.clone(),
+                    system: cached_snapshot.system.clone(),
                     entities: cached_snapshot.entities.clone(),
                     features: cached_snapshot.features.clone(),
                     use_cases: cached_snapshot.use_cases.clone(),
@@ -523,6 +531,20 @@ impl SnapshotBuilder {
                 return Ok((new_snapshot, true));
             }
         }
+
+        // system
+
+        let system_id = tools::get_system_id(uow);
+
+        let system = uow
+            .get_system(&system_id?)?
+            .ok_or_else(|| anyhow!("System not found"))?;
+
+        let system_vm = SystemVM {
+            inner: system.clone(),
+        };
+
+        // global
 
         let workspace_id = tools::get_workspace_id(uow)?;
 
@@ -1100,6 +1122,7 @@ impl SnapshotBuilder {
                 },
                 global: global_vm,
                 ui: ui_vm,
+                system: system_vm,
                 entities: entities_vm,
                 features: features_vm,
                 use_cases: use_cases_vm,
@@ -1161,6 +1184,12 @@ mod tests {
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,
                     cpp_qt_qtquick: false,
+                },
+            },
+            system: SystemVM {
+                inner: System {
+                    id: 1,
+                    ..Default::default()
                 },
             },
             entities: IndexMap::new(),
@@ -1264,6 +1293,12 @@ mod tests {
                     rust_slint: false,
                     cpp_qt_qtwidgets: false,
                     cpp_qt_qtquick: false,
+                },
+            },
+            system: SystemVM {
+                inner: System {
+                    id: 1,
+                    ..Default::default()
                 },
             },
             entities: {

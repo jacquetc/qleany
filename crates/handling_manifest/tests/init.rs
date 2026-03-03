@@ -136,6 +136,7 @@ impl InitializeAppUseCase {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
+            version: "0.0.1".to_string(),
             files: vec![],
         })?;
 

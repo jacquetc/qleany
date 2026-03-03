@@ -8,7 +8,7 @@ use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::UserInterface;
 use common::entities::Workspace;
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase,
+    Dto, DtoField, Entity, Feature, Field, File, Global, Relationship, Root, UseCase, System
 };
 use common::types::EntityId;
 use std::sync::Mutex;
@@ -43,6 +43,7 @@ impl QueryUnitOfWork for GenerateRustFilesUnitOfWork {
 
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "Root", action = "GetAllRO", thread_safe = true)]
+#[macros::uow_action(entity = "System", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]

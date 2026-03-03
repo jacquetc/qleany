@@ -70,6 +70,8 @@ entities:
 - name: System
   inherits_from: EntityBase
   fields:
+  - name: version
+    type: string
   - name: files
     type: entity
     entity: File

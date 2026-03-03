@@ -11,6 +11,7 @@ pub struct SystemDto {
     pub id: EntityId,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub version: String,
     pub files: Vec<EntityId>,
 }
 
@@ -20,6 +21,7 @@ impl From<SystemDto> for System {
             id: dto.id,
             created_at: dto.created_at,
             updated_at: dto.updated_at,
+            version: dto.version,
             files: dto.files,
         }
     }
@@ -31,6 +33,7 @@ impl From<&SystemDto> for System {
             id: dto.id,
             created_at: dto.created_at.clone(),
             updated_at: dto.updated_at.clone(),
+            version: dto.version.clone(),
             files: dto.files.clone(),
         }
     }
@@ -42,6 +45,7 @@ impl From<System> for SystemDto {
             id: entity.id,
             created_at: entity.created_at,
             updated_at: entity.updated_at,
+            version: entity.version,
             files: entity.files,
         }
     }
@@ -51,6 +55,7 @@ impl From<System> for SystemDto {
 pub struct CreateSystemDto {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub version: String,
     pub files: Vec<EntityId>,
 }
 
@@ -60,6 +65,7 @@ impl From<CreateSystemDto> for System {
             id: 0,
             created_at: dto.created_at,
             updated_at: dto.updated_at,
+            version: dto.version,
             files: dto.files,
         }
     }
@@ -71,6 +77,7 @@ impl From<&CreateSystemDto> for System {
             id: 0,
             created_at: dto.created_at.clone(),
             updated_at: dto.updated_at.clone(),
+            version: dto.version.clone(),
             files: dto.files.clone(),
         }
     }
@@ -81,6 +88,7 @@ impl From<System> for CreateSystemDto {
         CreateSystemDto {
             created_at: entity.created_at,
             updated_at: entity.updated_at,
+            version: entity.version,
             files: entity.files,
         }
     }

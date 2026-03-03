@@ -173,6 +173,7 @@ pub struct System {
     pub id: EntityId,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub version: String,
     pub files: Vec<EntityId>,
 }
 
