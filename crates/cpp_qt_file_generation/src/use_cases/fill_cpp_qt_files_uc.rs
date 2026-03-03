@@ -2677,7 +2677,7 @@ impl FillCppQtFilesUseCase {
             generated_code: None,
             status: FileStatus::Unknown,
             feature: None,
-            entity: None,
+            entity: Some(0),
             use_case: None,
             field: None,
         });
