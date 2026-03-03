@@ -45,6 +45,7 @@ pub fn execute(
 |`qleany docs qml-integration`|`qml`|QML Integration|
 |`qleany docs generated-code-cpp-qt`|`cpp`|Generated Code — C++/Qt|
 |`qleany docs generated-code-rust`|`rust`|Generated Code — Rust|
+|`qleany docs migration-guide`|`mig`|Migration Guide|
 |`qleany docs troubleshooting`|`trouble`|Troubleshooting|
 |-|-|-|
 
@@ -78,6 +79,7 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
             "qml-integration.md",
             "generated-code-cpp-qt.md",
             "generated-code-rust.md",
+            "migration-guide.md",
             "troubleshooting.md",
         ],
         DocsTarget::Introduction => unreachable!(),
@@ -90,6 +92,7 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
         DocsTarget::QuickStartCppQt => vec!["quick-start-cpp-qt.md"],
         DocsTarget::QuickStartRust => vec!["quick-start-rust.md"],
         DocsTarget::QmlIntegration => vec!["qml-integration.md"],
+        DocsTarget::MigrationGuide => vec!["migration-guide.md"],
         DocsTarget::Troubleshooting => vec!["troubleshooting.md"],
         DocsTarget::RegenerationWorkflow => vec!["regeneration-workflow.md"],
     };

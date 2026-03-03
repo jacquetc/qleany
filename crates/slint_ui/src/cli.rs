@@ -299,6 +299,10 @@ pub enum DocsTarget {
     #[command(visible_alias = "qml")]
     QmlIntegration,
 
+    /// Show migration guide documentation
+    #[command(visible_alias = "mig")]
+    MigrationGuide,
+
     /// Show troubleshooting documentation
     #[command(visible_alias = "trouble")]
     Troubleshooting,
