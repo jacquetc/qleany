@@ -452,11 +452,26 @@ impl FillRustFilesUseCase {
             field: None,
         });
 
-        // Generic direct-access use cases (shared across all entities)
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            name: "use_cases.rs".to_string(),
+            relative_path:  format!("{}/common/src/direct_access/", prefix),
+            group: "entities".to_string(),
+            template_name: "common_da_use_cases_mod".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+
         let uc_relative_path = format!("{}/common/src/direct_access/use_cases/", prefix);
 
         for (file_name, template_name) in [
-            ("mod.rs", "common_da_use_cases_mod"),
             ("traits.rs", "common_da_use_cases_traits"),
             ("get.rs", "common_da_use_cases_get"),
             ("create_orphan.rs", "common_da_use_cases_create_orphan"),
