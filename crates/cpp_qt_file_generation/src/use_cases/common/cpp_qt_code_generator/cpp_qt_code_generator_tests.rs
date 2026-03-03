@@ -402,12 +402,20 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
     };
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![10]);
+    let system = System {
+        id: 4,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+        version: "1.0.0".into(),
+        files: vec![],
+    };
+    uow.systems.insert(4, system);
     let root = Root {
         id: 1,
         created_at: chrono::Utc::now(),
         updated_at: chrono::Utc::now(),
         workspace: Some(2),
-        system: None,
+        system: Some(4),
     };
     uow.roots.insert(1, root);
 
@@ -531,12 +539,20 @@ fn for_file_various_combinations_generate_expected_items() {
     uow.workspaces.insert(2, workspace);
     uow.workspace_features.insert(2, vec![200]);
     uow.workspace_entities.insert(2, vec![1, 2]);
+    let system = System {
+        id: 4,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+        version: "1.0.0".into(),
+        files: vec![],
+    };
+    uow.systems.insert(4, system);
     let root = Root {
         id: 1,
         created_at: chrono::Utc::now(),
         updated_at: chrono::Utc::now(),
         workspace: Some(2),
-        system: None,
+        system: Some(4),
     };
     uow.roots.insert(1, root);
 
