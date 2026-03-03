@@ -416,8 +416,160 @@ Why keep it? If you are not using the undo/redo system, if you have a basic appl
 
 My recommendation: keep your finger away from the big red button.
 
+
+## Command Composition
+
+Command composition groups multiple operations into a single undo/redo unit. The user presses Ctrl+Z once and all grouped operations are undone together.
+
+### Two-Tier Architecture
+
+The undo/redo system has two tiers with different composition capabilities:
+
+**Tier 1 — QML-facing APIs are always pre-composed and atomic.** Each controller method exposed to QML (a `Q_INVOKABLE` returning `QCoro::QmlTask`) is a complete operation: one call equals one undo unit. The monolithic `create` (which bundles `createOrphan` + relationship attachment with snapshot-based undo) is the correct design for QML. QML developers get one call that does the right thing. `QmlTask::then(QJSValue)` returns `void` — there is no way to chain calls, pass values between steps, or intercept commands from JavaScript.
+
+**Tier 2 — C++ feature controllers can compose operations.** When writing a custom feature use case (like `import_inventory` or `load_work`), use `executeDeferredCommand` to run multiple entity operations and collect the resulting commands. Assemble them into a `GroupCommand` and push the group as a single undo unit. The QML caller sees this as one atomic operation.
+
+### Rust: `begin_composite` / `end_composite`
+
+In Rust, controllers execute synchronously. Command composition uses a bracket pattern on `UndoRedoManager`:
+
+```rust
+undo_redo_manager.begin_composite(Some(stack_id));
+
+// All commands added here go into the composite
+workspace_controller::create(..., undo_redo_manager, Some(stack_id), ...)?;
+feature_controller::update(..., undo_redo_manager, Some(stack_id), ...)?;
+
+undo_redo_manager.end_composite();
+// Single undo() now reverses both operations
+```
+
+The `begin_composite` / `end_composite` pattern works because Rust controller calls are blocking — each completes before the next starts. The `UndoRedoManager` routes commands to the in-progress composite instead of the main stack.
+
+### C++/Qt: `executeDeferredCommand` + `GroupCommand`
+
+In C++/Qt, the QCoro coroutine model means each `co_await` suspends the coroutine and returns to the event loop. A global `beginGroupCommand` / `endGroupCommand` flag on `UndoRedoSystem` would be unsafe — between suspension points, other coroutines can run and their commands would be routed to the wrong group.
+
+Instead, C++/Qt uses an explicit command-collection pattern: the `executeDeferredCommand` helper executes a use case on a background thread (same as normal commands) and returns both the result and the command object without pushing to any stack. The caller collects commands locally and assembles a `GroupCommand`.
+
+The three helpers in `controller_command_helpers.h`:
+
+| Helper | Purpose |
+|--------|---------|
+| `executeDeferredCommand<T>(...)` | Execute use case, return `{result, command}` |
+| `executeDeferredCommandVoid(...)` | Same for void use cases, return `{success, command}` |
+| `rollbackDeferredCommands(commands)` | Undo a list of commands in reverse order |
+
+### C++/Qt: Full Implementation Example
+
+This example shows a feature controller method that imports cars with their tag relationships as a single undo unit. If any step fails, previous steps are rolled back.
+
+```cpp
+QCoro::Task<bool> InventoryManagementController::importInventory(
+    const ImportInventoryDto &importInventoryDto)
+{
+    namespace Helpers = Common::ControllerHelpers;
+    namespace UndoRedo = Common::UndoRedo;
+
+    auto onError = [this](const QString &cmd, const QString &msg) {
+        if (m_featureEventRegistry)
+            m_featureEventRegistry->publishError(cmd, msg);
+    };
+
+    // Collect executed commands for GroupCommand assembly or rollback
+    QList<std::shared_ptr<UndoRedo::UndoRedoCommand>> executed;
+
+    // ── Step 1: Create car entities ──────────────────────────────
+
+    auto carUow = std::make_unique<CarUnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto createCarsUC = std::make_shared<CreateCarsUseCase>(std::move(carUow));
+
+    auto [cars, createCmd] = co_await Helpers::executeDeferredCommand<QList<CarDto>>(
+        u"Create cars"_s,
+        createCarsUC,
+        kDefaultCommandTimeoutMs,
+        onError,
+        importInventoryDto.cars(),
+        importInventoryDto.ownerId(),
+        -1 /* append */);
+
+    if (!createCmd)
+    {
+        // Step 1 failed — nothing to roll back
+        co_return false;
+    }
+    executed.append(createCmd);
+
+    // ── Step 2: Set tag relationships (depends on step 1 results) ─
+
+    for (const auto &car : cars)
+    {
+        if (car.tagIds().isEmpty())
+            continue;
+
+        auto tagUow = std::make_unique<CarUnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto setTagsUC = std::make_shared<SetRelationshipIdsUseCase>(std::move(tagUow));
+
+        auto [ok, tagCmd] = co_await Helpers::executeDeferredCommandVoid(
+            u"Set car tags"_s,
+            setTagsUC,
+            kDefaultCommandTimeoutMs,
+            onError,
+            car.id(),
+            CarRelationshipField::Tags,
+            car.tagIds());
+
+        if (!tagCmd)
+        {
+            // Step 2 failed — roll back all previous steps
+            co_await Helpers::rollbackDeferredCommands(executed);
+            co_return false;
+        }
+        executed.append(tagCmd);
+    }
+
+    // ── All steps succeeded — register as a single undo unit ─────
+
+    auto group = std::make_shared<UndoRedo::GroupCommand>(u"Import inventory"_s);
+    for (auto &cmd : executed)
+        group->addCommand(cmd);
+
+    // Push to the undo stack without executing — children already ran
+    m_undoRedoSystem->manager()->pushCommand(group, m_undoRedoStackId);
+
+    co_return true;
+}
+```
+
+Key points:
+
+- **Each `executeDeferredCommand` runs on a background thread** via `QtConcurrent::run`, identical to the normal command path. The UI stays responsive.
+- **Results flow between steps.** Step 2 uses `cars` from step 1 to set relationships. This is natural with sequential `co_await`.
+- **Rollback on failure.** If any step fails, `rollbackDeferredCommands` undoes all previous steps in reverse order. Each undo also runs on a background thread.
+- **No global state.** The `executed` list is local to the coroutine. Multiple feature controllers can run grouped operations concurrently without interference.
+- **The `GroupCommand` is pushed without executing.** The children were already executed by `executeDeferredCommand`. When the user undoes, `GroupCommand::asyncUndo()` undoes all children in reverse order. Redo replays them forward.
+- **QML sees one atomic operation.** The foreign controller wraps this method as a single `Q_INVOKABLE` returning `QCoro::QmlTask`. From QML, it is indistinguishable from any other controller call.
+
+### How `GroupCommand` Handles Undo/Redo
+
+After `pushCommand(group, stackId)`, the `GroupCommand` sits on the undo stack. Here is what happens on undo and redo:
+
+1. **User presses Undo** — `UndoRedoStack::undo()` pops the `GroupCommand`, calls `GroupCommand::asyncUndo()`.
+2. **`asyncUndo()`** iterates children in reverse order: for each child, connects to its `finished` signal, calls `child->asyncUndo()`.
+3. **Each child's undo** runs via `QtConcurrent::run` (the use case's `undo()` function). When done, the child emits `finished`.
+4. **`GroupCommand` advances** to the next child (reverse). After all children complete, emits its own `finished`.
+5. **Stack moves** the `GroupCommand` to the redo stack.
+
+Redo is the mirror image: children are re-executed in forward order via `asyncRedo()`.
+
+If any child's undo fails, `GroupCommand`'s failure strategy kicks in. The default is `StopOnFailure` — it stops and reports failure. You can set `RollbackAll` (undo all successfully undone children back to their pre-undo state) or `ContinueOnFailure` via `GroupCommandBuilder`:
+
+```cpp
+auto group = GroupCommandBuilder(u"Import inventory"_s)
+    .onFailure(FailureStrategy::RollbackAll)
+    .build();
+```
+
 ---
-
-
 
 For implementation details of the undo/redo system including command infrastructure, async execution, and composite commands, see [Generated Infrastructure - C++/Qt](generated-code-cpp-qt.md) or [Generated Infrastructure - Rust](generated-code-rust.md).
