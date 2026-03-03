@@ -1267,7 +1267,6 @@ impl FillCppQtFilesUseCase {
                     field: None,
                 });
 
-
                 files.push(File {
                     id: 0,
                     created_at: chrono::Utc::now(),
@@ -1390,7 +1389,6 @@ impl FillCppQtFilesUseCase {
                         field: None,
                     });
                 }
-
             }
 
             // for common/entities/

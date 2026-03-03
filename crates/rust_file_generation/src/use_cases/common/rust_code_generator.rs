@@ -2,7 +2,7 @@ mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
 use crate::use_cases::common::tools;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
@@ -382,7 +382,6 @@ impl SnapshotBuilder {
         })
     }
 
-
     fn get_dto_field_rust_type(dto_field: &DtoField) -> String {
         let base_type = Self::get_dto_field_rust_base_type(dto_field);
         if dto_field.optional {
@@ -489,7 +488,6 @@ impl SnapshotBuilder {
             .ok_or_else(|| anyhow!("File not found"))?;
 
         Self::for_file(uow, &file, generation_snapshot_cache)
-
     }
 
     pub(crate) fn for_file(
@@ -497,8 +495,6 @@ impl SnapshotBuilder {
         file: &File,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {
-
-
         // compare with cache
         for cached_snapshot in generation_snapshot_cache {
             let cached_file_vm = &cached_snapshot.file;
@@ -1047,8 +1043,13 @@ impl SnapshotBuilder {
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
-                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
+                                                rust_base_type:
+                                                    SnapshotBuilder::get_dto_field_rust_base_type(
+                                                        df,
+                                                    ),
+                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(
+                                                    df,
+                                                ),
                                             });
                                         }
                                     }
@@ -1069,8 +1070,13 @@ impl SnapshotBuilder {
                                                 pascal_name: heck::AsPascalCase(&df.name)
                                                     .to_string(),
                                                 snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
-                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
+                                                rust_base_type:
+                                                    SnapshotBuilder::get_dto_field_rust_base_type(
+                                                        df,
+                                                    ),
+                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(
+                                                    df,
+                                                ),
                                             });
                                         }
                                     }
@@ -1089,7 +1095,9 @@ impl SnapshotBuilder {
         // compute entity_snake if entity scope
         Ok((
             GenerationSnapshot {
-                file: FileVM { inner: file.clone() },
+                file: FileVM {
+                    inner: file.clone(),
+                },
                 global: global_vm,
                 ui: ui_vm,
                 entities: entities_vm,

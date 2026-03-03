@@ -29,7 +29,8 @@ impl GenerateCppQtCodeUseCase {
         uow.begin_transaction()?;
         // Build a snapshot for the file
         let uow_ref: &dyn GenerationReadOps = &*uow;
-        let (snapshot, _from_cache) = SnapshotBuilder::for_file_id(uow_ref, dto.file_id, &Vec::new())?;
+        let (snapshot, _from_cache) =
+            SnapshotBuilder::for_file_id(uow_ref, dto.file_id, &Vec::new())?;
         uow.end_transaction()?;
 
         let generated_code = generate_code_with_snapshot(&snapshot)?;

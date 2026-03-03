@@ -463,8 +463,14 @@ impl FillRustFilesUseCase {
             ("create.rs", "common_da_use_cases_create"),
             ("update.rs", "common_da_use_cases_update"),
             ("remove.rs", "common_da_use_cases_remove"),
-            ("get_relationship.rs", "common_da_use_cases_get_relationship"),
-            ("set_relationship.rs", "common_da_use_cases_set_relationship"),
+            (
+                "get_relationship.rs",
+                "common_da_use_cases_get_relationship",
+            ),
+            (
+                "set_relationship.rs",
+                "common_da_use_cases_set_relationship",
+            ),
         ] {
             files.push(File {
                 id: 0,

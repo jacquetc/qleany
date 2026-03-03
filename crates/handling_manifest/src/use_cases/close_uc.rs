@@ -35,10 +35,8 @@ impl CloseUseCase {
 
         // Remove the workspace
         uow.get_all_workspace()?;
-        let workspace_ids: Vec<EntityId> = workspaces
-            .iter()
-            .map(|workspace| workspace.id)
-            .collect();
+        let workspace_ids: Vec<EntityId> =
+            workspaces.iter().map(|workspace| workspace.id).collect();
         uow.delete_workspace_multi(&workspace_ids)?;
 
         // Get all files

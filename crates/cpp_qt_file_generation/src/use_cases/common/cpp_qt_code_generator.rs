@@ -3,6 +3,7 @@ mod gen_cmake_tests;
 
 use crate::use_cases::common::tools;
 use anyhow::Result;
+use anyhow::anyhow;
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
@@ -15,7 +16,6 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tera::{Context, Tera};
-use anyhow::anyhow;
 
 // Shared read-API for snapshot building across code and files generation
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
@@ -38,7 +38,7 @@ use anyhow::anyhow;
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
-pub(crate) trait GenerationReadOps: QueryUnitOfWork{}
+pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
 
 #[derive(Debug, Serialize, Clone)]
 pub(crate) struct GenerationSnapshot {
@@ -646,7 +646,6 @@ impl SnapshotBuilder {
             .ok_or_else(|| anyhow!("File not found"))?;
 
         Self::for_file(uow, &file, generation_snapshot_cache)
-
     }
 
     pub(crate) fn for_file(
@@ -654,7 +653,6 @@ impl SnapshotBuilder {
         file: &File,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {
-
         // compare with cache
         for cached_snapshot in generation_snapshot_cache {
             let cached_file_vm = &cached_snapshot.file;
@@ -1337,7 +1335,9 @@ impl SnapshotBuilder {
         // compute entity_snake if entity scope
         Ok((
             GenerationSnapshot {
-                file: FileVM { inner: file.clone() },
+                file: FileVM {
+                    inner: file.clone(),
+                },
                 global: global_vm,
                 ui: ui_vm,
                 entities: entities_vm,

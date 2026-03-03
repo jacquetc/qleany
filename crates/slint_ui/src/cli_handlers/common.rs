@@ -15,7 +15,7 @@ pub fn get_target_language(app_context: &Arc<AppContext>) -> Result<TargetLangua
         .into_iter()
         .next()
         .ok_or_else(|| anyhow::anyhow!("No global configuration found"))?;
-    
+
     Ok(match global_dto.language.as_str() {
         "cpp-qt" => TargetLanguage::CppQt,
         "rust" => TargetLanguage::Rust,
