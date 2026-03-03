@@ -1,6 +1,8 @@
 {%- set_global root_undoable = false %}
+{%- set_global root_has_relationships = false %}
 {%- for eid, ent in s.entities %}
 {%- if ent.pascal_name == "Root" %}{% set_global root_undoable = ent.inner.undoable %}{% endif %}
+{%- if ent.forward_relationships %}{% set_global root_has_relationships = true %}{% endif %}
 {%- endfor %}
 #include "root/dtos.h"
 #include "root/i_root_unit_of_work.h"
@@ -149,6 +151,17 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         }
     }
 
+    QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> createdRoots() const
+    {
+        return m_createdRoots;
+    }
+    bool isInTransaction() const
+    {
+        return m_inTransaction;
+    }
+
+    {%- if root_has_relationships %}
+
     QList<int> getRelationship(int rootId,
                                    {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootRelationshipField relationship) override
     {
@@ -165,14 +178,6 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         Q_UNUSED(relatedIds)
     }
 
-    QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> createdRoots() const
-    {
-        return m_createdRoots;
-    }
-    bool isInTransaction() const
-    {
-        return m_inTransaction;
-    }
     QHash<int, QList<int>> getRelationshipMany(
         const QList<int> &rootIds, {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootRelationshipField relationship) override
     {
@@ -197,6 +202,7 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         Q_UNUSED(limit)
         return {};
     }
+    {%- endif %}
 
   private:
     QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> m_createdRoots;
