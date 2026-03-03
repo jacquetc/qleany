@@ -31,6 +31,7 @@ cd "$REPO_ROOT"
 # -----------------------------------------------
 INSTALL_DEPS=false
 GENERATE_ONLY=false
+SEVENTEEN=false
 RUN_RUST=false
 RUN_CPPQT=false
 NO_CLEANUP=false
@@ -43,6 +44,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -g|--generate)
             GENERATE_ONLY=true
+            shift
+            ;;
+        --17)
+            SEVENTEEN=true
             shift
             ;;
         --rust)
@@ -83,6 +88,12 @@ done
 if ! $RUN_RUST && ! $RUN_CPPQT; then
     RUN_RUST=true
     RUN_CPPQT=true
+fi
+
+if $SEVENTEEN; then
+    EXAMPLE_DIR="17"
+else
+    EXAMPLE_DIR="full"
 fi
 
 # -----------------------------------------------
@@ -142,12 +153,12 @@ if ! $GENERATE_ONLY; then
 fi
 
 # -----------------------------------------------
-# 2. Rust example (examples/rust/full)
+# 2. Rust example (examples/rust/$EXAMPLE_DIR/)
 # -----------------------------------------------
 if $RUN_RUST; then
     echo ""
-    echo "--- Rust example: generate ---"
-    cd examples/rust/full
+    echo "--- Rust example: generate examples/rust/$EXAMPLE_DIR/ ---"
+    cd examples/rust/"$EXAMPLE_DIR"
     "$REPO_ROOT/target/debug/qleany" gen --temp
 
     if ! $GENERATE_ONLY; then
@@ -165,12 +176,12 @@ if $RUN_RUST; then
 fi
 
 # -----------------------------------------------
-# 3. C++/Qt example (examples/cpp-qt/full)
+# 3. C++/Qt example (examples/cpp-qt/$EXAMPLE_DIR/)
 # -----------------------------------------------
 if $RUN_CPPQT; then
     echo ""
-    echo "--- C++/Qt example: generate ---"
-    cd examples/cpp-qt/full
+    echo "--- C++/Qt example: generate examples/cpp-qt/$EXAMPLE_DIR/ ---"
+    cd examples/cpp-qt/"$EXAMPLE_DIR"
     "$REPO_ROOT/target/debug/qleany" gen --temp
 
     if ! $GENERATE_ONLY; then
@@ -204,10 +215,10 @@ if ! $NO_CLEANUP; then
     echo ""
     echo "--- Clean up ---"
     if $RUN_RUST; then
-        rm -rf examples/rust/full/temp
+        rm -rf examples/rust/$EXAMPLE_DIR/temp
     fi
     if $RUN_CPPQT; then
-        rm -rf examples/cpp-qt/full/temp
+        rm -rf examples/cpp-qt/$EXAMPLE_DIR/temp
     fi
 fi
 

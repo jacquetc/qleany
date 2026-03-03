@@ -1,0 +1,91 @@
+schema:
+  version: 4
+global:
+  language: cpp-qt
+  application_name: Seventeen
+  organisation:
+    name: FernTech
+    domain: eu.ferntech
+  prefix_path: src
+entities:
+  - name: EntityBase
+    only_for_heritage: true
+    undoable: false
+    fields:
+      - name: id
+        type: uinteger
+      - name: created_at
+        type: datetime
+      - name: updated_at
+        type: datetime
+  - name: Root
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityA
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityB
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityD
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityE
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityF
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityG
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityH
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityI
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityJ
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityK
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityL
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityM
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityN
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityO
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+  - name: EntityP
+    inherits_from: EntityBase
+    undoable: false
+    fields: []
+
+features: []
+ui:
+  rust_cli: true
+  rust_slint: true
+  cpp_qt_qtquick: true
+  cpp_qt_qtwidgets: true

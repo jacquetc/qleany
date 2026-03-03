@@ -40,7 +40,7 @@ entities:
   fields:
   - name: name
     type: string
-  - name: description
+  - name: favorites
     type: entity
     entity: CalendarEvent
     relationship: ordered_one_to_many
@@ -207,3 +207,5 @@ features:
 ui:
   cpp_qt_qtwidgets: true
   cpp_qt_qtquick: true
+  rust_cli: true
+  rust_slint: true
