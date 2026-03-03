@@ -101,7 +101,7 @@ After the third rewrite, I studied architecture patterns seriously. Clean Archit
 
 **Qleany v0** was Python/Jinja2 generating C++/Qt code following pure Clean Architecture. It worked, but the tradeoffs were hard to miss: a 17-entity project produced 1700+ files across 500 folders. Some of my early design choices were dubious in hindsight.
 
-**Qleany v1** is a ground-up rewrite in Rust, aiming to fix those problems while adopting a more robust and easier-to-maintain language. Less sophisticated, more pragmatic, architecture. It adopts Package by Feature (a.k.a. Vertical Slice Architecture) instead of strict layer separation — same Clean Architecture principles, but organized by what the code does rather than what layer it belongs to. The same manifest now generates both C++/Qt and Rust code.
+**Qleany v1** is a ground-up rewrite in Rust, aiming to fix those problems while adopting a more robust and easier-to-maintain language. Less sophisticated, more pragmatic, architecture. It adopts Package by Feature (a.k.a. Vertical Slice Architecture) instead of strict layer separation — same Clean Architecture principles (SOLID), but organized by what the code does rather than what layer it belongs to. The same manifest now generates both C++/Qt and Rust code.
 
 This is the tool I needed when I started Skribisto. If it saves someone else from their fourth rewrite, it's done its job.
 

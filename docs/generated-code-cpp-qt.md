@@ -231,43 +231,104 @@ QCoro::Task<QList<WorkDto>> WorkController::update(const QList<WorkDto> &files, 
 }
 ```
 
-Use cases contain synchronous business logic with state for undo/redo:
+After v1.0.34, use case templates classes in `common/direct_access/use_case_helpers/` were introduced to simplify the code further.
+
+```
+
+using UpdateUC = UCH::UpdateUseCase<SCE::Work, WorkDto, DtoMapper, IWorkUnitOfWork, false>;
+
+QCoro::Task<QList<WorkDto>> WorkController::update(const QList<WorkDto> &works)
+{
+    auto uow = std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<UpdateUC>(std::move(uow));
+
+    co_return co_await Helpers::executeNotUndoableCommand<QList<WorkDto>>(
+        m_undoRedoSystem, u"Update works Command"_s, std::move(useCase), kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry)
+                m_eventRegistry->publishError(cmd, msg);
+        },
+        works);
+}
+
+```
+
+Use cases contain synchronous business logic with state for undo/redo. This code is roughly equivalent of what the helper template classes offer:
 
 ```cpp
 QList<WorkDto> UpdateWorkUseCase::execute(const QList<WorkDto> &works)
 {
-    // Store original state for undo
-    m_uow->beginTransaction();
-    m_originalWorks = DtoMapper::toDtoList(m_uow->getWork(workIds));
+{
+    if (m_hasExecuted)
+        return m_updatedDtos;
 
-    // Perform update
-    auto updatedEntities = m_uow->updateWork(DtoMapper::toEntityList(works));
-    m_uow->commit();
 
-    m_updatedWorks = DtoMapper::toDtoList(updatedEntities);
-    return m_updatedWorks;
+    try
+    {
+    
+        // Store original state for undo
+        m_uow->beginTransaction();
+        m_originalWorks = DtoMapper::toDtoList(m_uow->getWork(workIds));
+    
+        // Perform update
+        auto updatedEntities = m_uow->updateWork(DtoMapper::toEntityList(works));
+        m_uow->commit();
+    
+        m_updatedWorks = DtoMapper::toDtoList(updatedEntities);
+            
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
+     return m_updatedWorks;
+
 }
 
 Result<void> UpdateWorkUseCase::undo()
 {
-    m_uow->beginTransaction();
-    m_uow->updateWork(DtoMapper::toEntityList(m_originalWorks));
-    m_uow->commit();
-    return {};
+
+    try
+    {
+        m_uow->beginTransaction();
+        m_uow->updateWork(DtoMapper::toEntityList(m_originalWorks));
+        m_uow->commit();
+        return {};
+    
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
 }
+
+Result<void> UpdateWorkUseCase::redo()
+{
+...
+}
+
 ```
+
+Note the try/catch blocks in the use case. It ensures that the transaction is rolled back in case of an exception. When rolled back, the SignalBuffer is cleared. When committed, the SignalBuffer emits the events. This ensures that if an exception is thrown, no events are emitted and the UI remains in a consistent state.
+
+Undoable feature use cases are to be customized by the user, following the same pattern. No template classes here.
 
 Queries (read-only operations) also execute asynchronously:
 
 ```cpp
+
+using GetUC = UCH::GetUseCase<WorkDto, DtoMapper, IWorkUnitOfWork>;
+
 QCoro::Task<QList<WorkDto>> WorkController::get(const QList<int> &workIds)
 {
-    co_return co_await Helpers::executeReadQuery<QList<WorkDto>>(
-        m_undoRedoSystem, u"Get works Query"_s, [this, workIds]() -> QList<WorkDto> {
-            auto uow = std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetWorkUseCase>(std::move(uow));
-            return useCase->execute(workIds);
-        });
+
+        co_return co_await Helpers::executeReadQuery<QList<WorkDto>>(
+    m_undoRedoSystem, u"Get works Query"_s, [this, workIds]() -> QList<WorkDto> {
+        auto uow = std::make_unique<WorkUnitOfWork>(*m_dbContext, m_eventRegistry);
+        auto useCase = std::make_unique<GetUC>(std::move(uow));
+        return useCase->execute(workIds);
+    });
+
 }
 ```
 
@@ -275,6 +336,7 @@ Features:
 - Undo stacks (per-document undo)
 - Command grouping (multiple operations as one undo step)
 - Timeout handling for long operations
+- Signal emission only on a successful commit
 
 ### Event Registry
 
@@ -355,14 +417,18 @@ function onInitializeAppSignal() { doSomething() }
 
 Generated repositories are batch-capable interfaces. One repository for each entity type.
 
-| Method                  | Purpose                                            |
-|-------------------------|----------------------------------------------------|
-| `create(QList<Entity>)` | Insert new entities                                |
-| `get(QList<int>)`       | Fetch entities by IDs                              |
-| `update(QList<Entity>)` | Update existing entities                           |
-| `remove(QList<int>)`    | Delete entities (cascade for strong relationships) |
+| Method                                         | Purpose                                            |
+|------------------------------------------------|----------------------------------------------------|
+| `create(QList<Entity>)`                        | Insert new entities                                |
+| `createOrphans(QList<Entity>, ownerId, index)` | Insert new entities and attach them to their owner |
+| `get(QList<int>)`                              | Fetch entities by IDs                              |
+| `getAll()`                                     | Fetch all entities (use with caution)              |
+| `update(QList<Entity>)`                        | Update existing entities                           |
+| `remove(QList<int>)`                           | Delete entities (cascade for strong relationships) |
+| `snapshot(QList<int> ids)`                     | Get a snapshot of the entities for undo/redo       |
+| `restore(EntityTreeSnapshot)`                  | Restore entity from snapshot                       |
 
-Relationship-specific methods:
+Relationship-specific methods (if the entity has relationships):
 
 | Method                                                | Purpose                         |
 |-------------------------------------------------------|---------------------------------|
@@ -379,7 +445,7 @@ C++/Qt offers additional pagination and counting methods for UI scenarios. The g
 
 In C++/Qt, the units of work are helped by macros and inherited classes to generate all the boilerplate for transaction management and repository access. This can be a debatable design choice, since all is already generated by Qleany. The reality is: not all can be generated. The user (developer) has the responsibility to adapt the units of work for each custom use case. The macros are here to ease this task.
 
-**I repeat**: the user is to adapt the macros in custom use cases.
+> The user is to adapt the macros in custom use cases.
 
 No factory for the unit of work here, the controller creates a new unit of work per use case.
 
@@ -449,7 +515,7 @@ class SaveUnitOfWork : public Common::UnitOfWork::UnitOfWorkBase, public ISaveUn
     UOW_ENTITY_UPDATE(DtoField);
     UOW_ENTITY_UPDATE(Global);
     UOW_ENTITY_UPDATE(Relationship);
-    UOW_ENTITY_UPDATE(Root);
+    UOW_ENTITY_UPDATE(Work);
     UOW_ENTITY_UPDATE(Entity);
     UOW_ENTITY_UPDATE(Field);
     UOW_ENTITY_UPDATE(Feature);
@@ -501,10 +567,11 @@ class ISaveUnitOfWork : public virtual Common::UnitOfWork::ITransactional
 
 ### DTO Mapping
 
-DTOs are generated for all boundary crossings:
+DTOs are generated for boundary crossings between UI and use cases. DTO←→Entity conversion is done in the use cases:
 
 ```
-Controller ←→ CreateCarDto ←→ UseCase ←→ Car (Entity) ←→ Repository
+|----------------DTO-------------------|------------------Entity----------|
+UI ←→ Controller ←→ CreateCarDto ←→ UseCase ←→ Car (Entity) ←→ Repository
 ```
 
 The separation ensures:
@@ -522,7 +589,9 @@ CMakeLists.txt are disseminated across the project and are not shown here.
 ```
 src/
 ├── common/
-│   ├── service_locator.h/.cpp
+│   ├── service_locator.h/.cpp          # global access to shared services (DbContext, EventRegistry, etc.)
+│   ├── controller_command_helpers.h    # helper functions for controller command execution
+│   ├── signal_buffer.h                 # SignalBuffer for undo/redo
 │   ├── database/                           # database infrastructure
 │   │   ├── junction_table_ops/...
 │   │   ├── db_builder.h
@@ -539,6 +608,7 @@ src/
 │   │   ├── feature_event_registry.h   # Event registry for feature events
 │   │   └── ...
 │   ├── direct_access/                     # Holds the repositories and tables
+│   │   ├── use_case_helpers/...          # Template classes for direct access use cases
 │   │   ├── repository_factory.h/.cpp
 │   │   ├── event_registry.h
 │   │   └── {entity}/
@@ -550,17 +620,41 @@ src/
 │   └── undo_redo/ ...                      # undo/redo infrastructure
 ├── direct_access/                          # Direct access to entity controllers and use cases
 │   └── {entity}/
-│       ├── {entity}_controller.h/.cpp
+│       ├── {entity}_controller.h/.cpp      # entry point for direct access to this entity
 │       ├── dtos.h
-│       ├── unit_of_work.h
-│       └── use_cases/
-└── {feature}/                              # Custom controllers and use cases
-    ├── {feature}_controller.h/.cpp
-    ├── {feature}_dtos.h
-    ├── units_of_work/                    
-    │   └── {use case}_uow.h                # ← adapt the macros here
-    └── use_cases/              
-        ├── {use case}_uc/                  # store here the use case's companion modules
-        │   └── i_{use case}_uow.h          # ← adapt the macros here too
-        └── {use case}_uc.h/.cpp            # ← You implement the logic here
+│       ├── {entity}_unit_of_work.h
+│       ├── i_{entity}_unit_of_work.h
+│       └── dto_mapper.h
+├── {feature}/                              # Custom controllers and use cases
+│    ├── {feature}_controller.h/.cpp
+│    ├── {feature}_dtos.h
+│    ├── units_of_work/                    
+│    │   └── {use case}_uow.h                # ← adapt the macros here
+│    └── use_cases/              
+│        ├── {use case}_uc/                  # store here the use case's companion modules
+│        │   └── i_{use case}_uow.h          # ← adapt the macros here too
+│       └── {use case}_uc.h/.cpp            # ← You implement the logic here
+│ 
+├── qtwidgets_ui 
+│   ├── main.cpp
+│   └── main_window.h/.cpp                          # ← write your UI here
+│
+├── presentation                                        # generated for all QML-based UIs
+│   ├── CMakeLists.txt
+│   ├── mock_imports                                    # QML mocks
+│   │   └── Car
+│   │       ├── Controllers/ ... 
+│   │       ├── Models/ ... 
+│   │       └── Singles/ ... 
+│   └── real_imports                                 # QML real imports
+│       ├── controllers/ ... 
+│       ├── models/ ... 
+│       └── singles/ ... 
+└── qtquick_app
+    ├── {My App 3 first letters}/ ...               # ← write your UI here
+    ├── content/ ...                                # ← and here
+    ├── main.cpp
+    ├── main.qml
+    └── qtquickcontrols2.conf
 ```
+

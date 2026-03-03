@@ -2,12 +2,12 @@
 schema:
   version: 4
 global:
-  language: cpp-qt
+  language: rust
   application_name: CarLot
   organisation:
     name: MyCompany
     domain: com.mycompany
-  prefix_path: src
+  prefix_path: crates
 entities:
 - name: EntityBase
   only_for_heritage: true
@@ -117,5 +117,5 @@ features:
       - name: export_file_path
         type: string
 ui:
-  cpp_qt_qtquick: true
-  cpp_qt_qtwidgets: true
+  rust_slint: true
+  rust_cli: true

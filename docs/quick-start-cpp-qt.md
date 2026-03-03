@@ -342,6 +342,9 @@ After a generation, your project contains:
     ├── common
     │   ├── CMakeLists.txt
     │   ├── controller_command_helpers.h
+    │   ├── service_locator.h/.cpp     
+    │   ├── controller_command_helpers.h  
+    │   ├── signal_buffer.h                
     │   ├── database
     │   │   ├── db_builder.h
     │   │   ├── db_context.h
@@ -359,6 +362,7 @@ After a generation, your project contains:
     │   │   │   └── unordered_one_to_many.h
     │   │   └── table_cache.h
     │   ├── direct_access                    # Holds the repositories and table implementations
+    │   │   ├── use_case_helpers/...          # Template classes for direct access use cases
     │   │   ├── car
     │   │   │   ├── car_events.h
     │   │   │   ├── car_repository.cpp
@@ -414,7 +418,7 @@ After a generation, your project contains:
     │   │   └── inventory_management_events.h
     │   ├── service_locator.cpp
     │   ├── service_locator.h
-    │   ├── undo_redo                              # undo/redo 
+    │   ├── undo_redo                              
     │   │   ├── group_command_builder.cpp
     │   │   ├── group_command_builder.h
     │   │   ├── group_command.cpp
@@ -441,18 +445,8 @@ After a generation, your project contains:
     │   │   ├── car_unit_of_work.h
     │   │   ├── CMakeLists.txt
     │   │   ├── dtos.h
-    │   │   └── use_cases                 # The logic here is auto-generated
-    │   │       ├── common
-    │   │       │   └── dto_mapper.h
-    │   │       ├── create_uc.cpp
-    │   │       ├── create_uc.h
-    │   │       ├── get_uc.cpp
-    │   │       ├── get_uc.h
-    │   │       ├── i_car_unit_of_work.h
-    │   │       ├── remove_uc.cpp
-    │   │       ├── remove_uc.h
-    │   │       ├── update_uc.cpp
-    │   │       └── update_uc.h
+    │   │   ├── dto_mapper.h
+    │   │   └── i_car_unit_of_work.h
     │   ├── CMakeLists.txt
     │   ├── customer
     │   │   └── ...
@@ -464,28 +458,8 @@ After a generation, your project contains:
     │       ├── sale_controller.cpp
     │       ├── sale_controller.h
     │       ├── sale_unit_of_work.h
-    │       └── use_cases                  # The logic here is auto-generated
-    │           ├── common
-    │           │   └── dto_mapper.h
-    │           ├── create_uc.cpp
-    │           ├── create_uc.h
-    │           ├── get_relationship_ids_count_uc.cpp
-    │           ├── get_relationship_ids_count_uc.h
-    │           ├── get_relationship_ids_in_range_uc.cpp
-    │           ├── get_relationship_ids_in_range_uc.h
-    │           ├── get_relationship_ids_many_uc.cpp
-    │           ├── get_relationship_ids_many_uc.h
-    │           ├── get_relationship_ids_uc.cpp
-    │           ├── get_relationship_ids_uc.h
-    │           ├── get_uc.cpp
-    │           ├── get_uc.h
-    │           ├── i_sale_unit_of_work.h
-    │           ├── remove_uc.cpp
-    │           ├── remove_uc.h
-    │           ├── set_relationship_ids_uc.cpp
-    │           ├── set_relationship_ids_uc.h
-    │           ├── update_uc.cpp
-    │           └── update_uc.h
+    │       ├── dto_mapper.h
+    │       └── i_sale_unit_of_work.h
     ├── inventory_management
     │   ├── CMakeLists.txt
     │   ├── inventory_management_controller.cpp    # Exposes operations to UI
@@ -503,11 +477,88 @@ After a generation, your project contains:
     │       │   └── i_import_inventory_uow.h
     │       ├── import_inventory_uc.cpp      # You implement the logic here
     │       └── import_inventory_uc.h
-    └── qtwidgets_app
+    ├── tests
+    │   ├── CMakeLists.txt
+    │   ├── database
+    │   │   ├── CMakeLists.txt
+    │   │   ├── tst_many_to_one_junction.cpp
+    │   │   ├── tst_one_to_one_junction.cpp
+    │   │   ├── tst_ordered_one_to_many_junction.cpp
+    │   │   ├── tst_unordered_many_to_many_junction.cpp
+    │   │   └── tst_unordered_one_to_many_junction.cpp
+    │   └── undo_redo
+    │       ├── CMakeLists.txt
+    │       ├── tst_enhanced_undo_redo.cpp
+    │       ├── tst_qcoro_integration.cpp
+    │       ├── tst_root_undo_redo.cpp
+    │       └── tst_undo_redo.cpp
+    │
+    └── qtwidgets_ui
         ├── CMakeLists.txt
         ├── main.cpp
-        ├── main_window.cpp
+        ├── main_window.cpp                                  # ← write your UI here
         └── main_window.h
+    
+And/Or
+    
+    ├── presentation                                        # generated for all QML-based UIs
+    │   ├── CMakeLists.txt
+    │   ├── mock_imports                                    # QML mocks
+    │   │   └── Car
+    │   │       ├── Controllers
+    │   │       │   ├── CarController.qml
+    │   │       │   ├── CarEvents.qml
+    │   │       │   ├── CustomerController.qml
+    │   │       │   ├── CustomerEvents.qml
+    │   │       │   ├── EventRegistry.qml
+    │   │       │   ├── InventoryManagementController.qml
+    │   │       │   ├── QCoroQmlTask.qml
+    │   │       │   ├── qmldir
+    │   │       │   ├── RootController.qml
+    │   │       │   ├── RootEvents.qml
+    │   │       │   ├── SaleController.qml
+    │   │       │   ├── SaleEvents.qml
+    │   │       │   └── UndoRedoController.qml
+    │   │       ├── Models
+    │   │       │   ├── qmldir
+    │   │       │   └── RootCustomersListModel.qml
+    │   │       └── Singles
+    │   │           ├── qmldir
+    │   │           ├── SingleCar.qml
+    │   │           ├── SingleCustomer.qml
+    │   │           ├── SingleRoot.qml
+    │   │           └── SingleSale.qml
+    │   └── real_imports                                 # QML real imports
+    │       ├── controllers
+    │       │   ├── CMakeLists.txt
+    │       │   ├── foreign_car_controller.h
+    │       │   ├── foreign_customer_controller.h
+    │       │   ├── foreign_event_registry.h
+    │       │   ├── foreign_feature_event_registry.h
+    │       │   ├── foreign_inventory_management_controller.h
+    │       │   ├── foreign_root_controller.h
+    │       │   ├── foreign_sale_controller.h
+    │       │   └── foreign_undo_redo_controller.h
+    │       ├── models
+    │       │   ├── CMakeLists.txt
+    │       │   └── foreign_root_customers_list_model.h
+    │       └── singles
+    │           ├── CMakeLists.txt
+    │           ├── foreign_single_car.h
+    │           ├── foreign_single_customer.h
+    │           ├── foreign_single_root.h
+    │           └── foreign_single_sale.h
+    └── qtquick_app
+        ├── Car                                    # Car: 3 first letters of CarLot.   ← write your UI here
+        │   └── CMakeLists.txt
+        ├── CMakeLists.txt
+        ├── content                                 # ← write your UI here
+        │   ├── App.qml
+        │   └── CMakeLists.txt
+        ├── main.cpp
+        ├── main.qml
+        └── qtquickcontrols2.conf
+
 
 ```
 

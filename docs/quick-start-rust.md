@@ -336,7 +336,7 @@ Cargo.toml
 crates/
 ├── cli/
 │   ├── src/
-│   │   ├── main.rs    
+│   │   ├── main.rs                 # ← write your UI here
 │   └── Cargo.toml
 ├── common/
 │   ├── src/
@@ -348,6 +348,7 @@ crates/
 │   │   │   └── transactions.rs
 │   │   ├── direct_access.rs
 │   │   ├── direct_access/         # Holds the repository and table implementations for each entity
+│   │   │   ├── use_cases/         # Generics for direct access use cases
 │   │   │   ├── car.rs
 │   │   │   ├── car/
 │   │   │   │   ├── car_repository.rs
@@ -378,14 +379,7 @@ crates/
 │   │   ├── car/
 │   │   │   ├── car_controller.rs   # Exposes CRUD operations to UI or CLI
 │   │   │   ├── dtos.rs
-│   │   │   ├── units_of_work.rs
-│   │   │   ├── use_cases.rs
-│   │   │   └── use_cases/          # The logic here is auto-generated
-│   │   │       ├── create_car_uc.rs
-│   │   │       ├── get_car_uc.rs
-│   │   │       ├── update_car_uc.rs
-│   │   │       ├── remove_car_uc.rs
-│   │   │       └── ...
+│   │   │   └── units_of_work.rs
 │   │   ├── customer.rs
 │   │   ├── customer/
 │   │   │   └── ...
@@ -397,18 +391,38 @@ crates/
 │   │   │   └── ...
 │   │   └── lib.rs
 │   └── Cargo.toml
-└── inventory_management/
-    ├── src/
-    │   ├── inventory_management_controller.rs     # Exposes operations to UI or CLI
-    │   ├── dtos.rs
-    │   ├── units_of_work.rs
-    │   ├── units_of_work/          # adapt the macros here 
-    │   │   └── ...
-    │   ├── use_cases.rs
-    │   ├── use_cases/              # You implement the logic here
-    │   │   └── ...
-    │   └── lib.rs
-    └── Cargo.toml
+├── inventory_management/
+│   ├── src/
+│   │   ├── inventory_management_controller.rs     # Exposes operations to UI or CLI
+│   │   ├── dtos.rs
+│   │   ├── units_of_work.rs
+│   │   ├── units_of_work/          # ← adapt the macros here 
+│   │   │   └── ...
+│   │   ├── use_cases.rs
+│   │   ├── use_cases/              # ← You implement the logic here
+│   │   │   └── ...
+│   │   └── lib.rs
+│   └── Cargo.toml
+└── slint_ui
+    ├── build.rs
+    ├── Cargo.toml
+    ├── src
+    │   ├── app_context.rs
+    │   ├── commands
+    │   │   ├── car_commands.rs
+    │   │   ├── customer_commands.rs
+    │   │   ├── inventory_management_commands.rs
+    │   │   ├── root_commands.rs
+    │   │   ├── sale_commands.rs
+    │   │   └── undo_redo_commands.rs
+    │   ├── commands.rs
+    │   ├── event_hub_client.rs
+    │   └── main.rs
+    └── ui                             # ← write your UI here
+        ├── app.slint
+        └── globals.slint
+
+
 
 ```
 

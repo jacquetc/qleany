@@ -67,7 +67,7 @@ Let's trace an update of a `Calendar` entity, from button press to UI refresh:
 
 The use case stores the original entities before updating them. On `undo()`, it replays the originals. On `redo()`, it replays the updated values. Each undo/redo opens its own transaction and flushes its own signal buffer.
 
-The `SignalBuffer` is the mechanism for **deferred events**. It sits between the repository and Qt's signal system. During a transaction, `emitCreated/Updated/Removed` calls don't emit signals directly. Instead, they push callbacks into the buffer. On `commit()`, the buffer flushes all callbacks. On `rollback()`, it discards them. Simple, effective, and prevents the UI from seeing phantom state from a failed transaction.
+The `SignalBuffer` is the mechanism for **deferred events**. It sits between the repository and Qt's signal system. During a transaction, `emitCreated/Updated/Removed` calls don't emit signals directly. Instead, they push callbacks into the buffer. On `commit()`, the buffer flushes  (=sends) all callbacks. On `rollback()`, it discards them. Simple, effective, and prevents the UI from seeing phantom state from a failed transaction.
 
 Commands are **asynchronous** thanks to QCoro coroutines. The controller `co_await`s the undo/redo system, which does the actual work on its thread and signals back when done. The UI thread is never blocked. But coroutines are cooperative, and this matters: if your use case does CPU-intensive work inside `execute()`, the coroutine won't magically make it non-blocking. That's what long operations are for (see below).
 
@@ -110,7 +110,7 @@ Same architecture, different execution model. Rust is **synchronous**:
 5.  returns CalendarDto
 ```
 
-In Rust, events are deferred via an `EventBuffer` owned by each write unit of work. Repositories push events into the buffer during a transaction. On `commit()`, the buffer flushes all events to the central `EventHub` (a flume channel). On `rollback()`, the buffer is discarded. The event loop runs on a dedicated thread, receiving events from the hub and pushing them into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes.
+In Rust, events are deferred via an `EventBuffer` owned by each write unit of work. Repositories push events into the buffer during a transaction. On `commit()`, the buffer flushes (=sends) all events to the central `EventHub` (a flume channel). On `rollback()`, the buffer is discarded. The event loop runs on a dedicated thread, receiving events from the hub and pushing them into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes.
 
 The `UndoRedoManager` is simpler than the C++/Qt version: no async, no worker thread. Commands implement the `UndoRedoCommand` trait (`undo()`, `redo()`, `as_any()`), and the manager maintains multiple stacks with `HashMap<u64, StackData>`. Each stack has an undo and redo `Vec`. The manager also supports composite commands for grouping multiple operations as one undoable unit (via `begin_composite()` / `end_composite()`), and command merging for operations like continuous typing.
 

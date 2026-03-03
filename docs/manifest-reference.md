@@ -37,7 +37,7 @@ features:
 
 ## Required Base Entity
 
-All entities must have `id`, `created_at`, and `updated_at` fields. These are essential for identity, caching, and change tracking.
+> All entities must have `id`, `created_at`, and `updated_at` fields. These are essential for identity, caching, and change tracking.
 
 To simplify this, Qleany provides `EntityBase` — a heritable entity with these three fields pre-defined. When you create a new manifest, Qleany automatically generates:
 - `EntityBase` with `id`, `created_at`, `updated_at`

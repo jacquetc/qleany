@@ -18,7 +18,7 @@ Validation is the responsibility of the developer.
 
 ### Automatic migration
 
-Qleany auto-migrates v2 manifests on load. When you open a v3 manifest, the migrator strips all `validator` fields and bumps the version to 4 before validation. No manual editing is required to load an old manifest.
+Qleany auto-migrates v2+ manifests on load. When you open a v3 manifest, the migrator strips all `validator` fields and bumps the version to 4 before validation. No manual editing is required to load an old manifest.
 
 If you save the manifest afterwards (from the UI), the file is written as v4.
 
@@ -54,7 +54,7 @@ None
 
 ### Code generation templates
 
-Never used.²
+Never used.
 
 ---
 
@@ -73,7 +73,7 @@ So, from now on, all non-heritage entities always get their `direct_access/` fil
 
 ### Automatic migration
 
-Qleany auto-migrates v2 manifests on load. When you open a v2 manifest, the migrator strips all `allow_direct_access` fields and bumps the version to 3 before validation. No manual editing is required to load an old manifest.
+Qleany auto-migrates v2+ manifests on load. When you open a v2 manifest, the migrator strips all `allow_direct_access` fields and bumps the version to 3 before validation. No manual editing is required to load an old manifest.
 
 If you save the manifest afterwards (from the UI), the file is written as v3.
 

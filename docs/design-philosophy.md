@@ -79,12 +79,14 @@ src/
             └── remove_uc.h
 ```
 
-To modify "Car," you only touch one folder. It's easier to find code, understand features, and make changes. For the same 17-entity project, Qleany now generates **600 files across 80 folders**. Roughly, 33 files per entity instead of 90.
+To modify "Car," you only touch one folder. It's easier to find code, understand features, and make changes. For the same 17-entity project, Qleany v1.0.13 generated 700 C++ files across 80 folders. Roughly, 33 files per entity instead of 90.
+
+Now, since v1.0.35, **64 directories, 410 files.**.
 
 **Benefits:**
 - **Discoverability** — Find all Car code in one place
 - **Cohesion** — Related code changes together
-- **Fewer files** — Same 17-entity project produces ~600 files across ~80 folders
+- **Fewer files** — Same 17-entity project produces 410 files across 64 folders
 - **Easier onboarding** — New developers understand features, not layers
 
 ### Why Vertical Slices?
@@ -188,7 +190,11 @@ In practice, for Rust this means:
 - no unsafe code
 - more cloning than strictly necessary
 - generated traits stay simple
+
+Exceptions:
+*(this is infrastructure code not destined to be modified by the user)*
 - the only macro exists to help the developer with custom units of work
+- complex generics are used for the entity use cases to avoid the generation of hundreds of nearly identical files. Thirteen repetitive files per entity were removed.
 
 For C++/Qt:
 - some C++20 aggregates and std::optional
@@ -197,8 +203,11 @@ For C++/Qt:
 - no raw pointers, only smart pointers
 - no multi-level inheritance, be it virtual or polymorphic
 - more copying than strictly necessary, though std::move is used deeper inside the infrastructure
+
+Exceptions:
+*(this is infrastructure code not destined to be modified by the user)*
 - helper functions to avoid repetitive boilerplate for controllers.
-- complex helper templates (with C++20 concepts) are used for the entity use cases to avoid the generation of hundreds of nearly identical files. Twenty-two use case .h/.cpp files *per entity* would be a nightmare to maintain, and the code would be mostly boilerplate. The helper templates reduce this to eleven shared use case .h/.cpp files, which are much more manageable. This is infrastructure code not destined to be modified by the user.
+- complex helper templates (with C++20 concepts) are used for the entity use cases to avoid the generation of hundreds of nearly identical files. Twenty-two use case .h/.cpp files *per entity* would be a nightmare to maintain, and the code would be mostly boilerplate. The helper templates reduce this to eleven shared use case .h/.cpp files, which are much more manageable.
 
 This is a deliberate trade-off between approachability and performance. Qleany prioritizes code that intermediate developers can confidently modify over code that squeezes every last microsecond from the CPU. The generated code is clean, readable, and maintainable. You are using Rust or C++, two fast languages, and you are not writing a game engine.
 
