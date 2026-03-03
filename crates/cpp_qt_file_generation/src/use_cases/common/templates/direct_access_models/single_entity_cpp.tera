@@ -35,6 +35,8 @@ void Single{{ ent.pascal_name }}::resolveDependencies()
         {
             connect({{ ent.camel_name }}Events.data(), SIGNAL(updated(QList<int>)), this,
                     SLOT(onUpdatedEvent(QList<int>)));
+            connect({{ ent.camel_name }}Events.data(), SIGNAL(removed(QList<int>)), this,
+                    SLOT(onRemovedEvent(QList<int>)));
         }
     }
 }
@@ -62,10 +64,20 @@ void Single{{ ent.pascal_name }}::onUpdatedEvent(const QList<int> &ids)
     }
 }
 
+void Single{{ ent.pascal_name }}::onRemovedEvent(const QList<int> &ids)
+{
+    if (m_id > 0 && ids.contains(m_id))
+    {
+        clearData();
+    }
+}
+
 void Single{{ ent.pascal_name }}::refreshData()
 {
     if (m_id <= 0)
         return;
+
+    setStatus(Status::Loading);
 
     auto get{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_id});
 
@@ -74,14 +86,81 @@ void Single{{ ent.pascal_name }}::refreshData()
             return;
 
         if (items.isEmpty())
+        {
+            setErrorMessage(QStringLiteral("{{ ent.pascal_name }} with id %1 not found").arg(m_id));
+            setStatus(Status::Error);
             return;
+        }
 
         const auto &item = items.first();
+
+        m_isRefreshing = true;
         setId(item.id);
     {%- for f in ent.fields %}
         set{{ f.pascal_name }}(item.{{ f.camel_name }});
     {%- endfor %}
+        m_isRefreshing = false;
+
+        setDirty(false);
+        setErrorMessage({});
+        setStatus(Status::Loaded);
     });
+}
+
+void Single{{ ent.pascal_name }}::clearData()
+{
+    m_isRefreshing = true;
+    m_id = -1;
+    Q_EMIT itemIdChanged();
+    {%- for f in ent.fields %}
+    set{{ f.pascal_name }}({{ f.cpp_qt_type }}{});
+    {%- endfor %}
+    m_isRefreshing = false;
+    setDirty(false);
+    setErrorMessage({});
+    setStatus(Status::Unloaded);
+}
+
+Single{{ ent.pascal_name }}::Status Single{{ ent.pascal_name }}::status() const
+{
+    return m_status;
+}
+
+void Single{{ ent.pascal_name }}::setStatus(Status status)
+{
+    if (m_status != status)
+    {
+        m_status = status;
+        Q_EMIT statusChanged();
+    }
+}
+
+QString Single{{ ent.pascal_name }}::errorMessage() const
+{
+    return m_errorMessage;
+}
+
+void Single{{ ent.pascal_name }}::setErrorMessage(const QString &message)
+{
+    if (m_errorMessage != message)
+    {
+        m_errorMessage = message;
+        Q_EMIT errorMessageChanged();
+    }
+}
+
+bool Single{{ ent.pascal_name }}::dirty() const
+{
+    return m_dirty;
+}
+
+void Single{{ ent.pascal_name }}::setDirty(bool dirty)
+{
+    if (m_dirty != dirty)
+    {
+        m_dirty = dirty;
+        Q_EMIT dirtyChanged();
+    }
 }
 
 int Single{{ ent.pascal_name }}::id() const
@@ -93,7 +172,21 @@ void Single{{ ent.pascal_name }}::setId(int id)
     if (m_id != id)
     {
         m_id = id;
-        refreshData();
+        if (m_id > 0)
+        {
+            refreshData();
+        }
+        else
+        {
+            m_isRefreshing = true;
+    {%- for f in ent.fields %}
+            set{{ f.pascal_name }}({{ f.cpp_qt_type }}{});
+    {%- endfor %}
+            m_isRefreshing = false;
+            setDirty(false);
+            setErrorMessage({});
+            setStatus(Status::Unloaded);
+        }
         Q_EMIT itemIdChanged();
     }
 }
@@ -107,9 +200,61 @@ void Single{{ ent.pascal_name }}::set{{ f.pascal_name }}(const {{ f.cpp_qt_type 
     if (m_{{ f.camel_name }} != {{ f.camel_name }})
     {
         m_{{ f.camel_name }} = {{ f.camel_name }};
+        if (!m_isRefreshing)
+        {
+            setDirty(true);
+        }
         Q_EMIT {{ f.camel_name }}Changed();
     }
 }
     {%- endfor %}
+
+void Single{{ ent.pascal_name }}::save()
+{
+    if (m_id <= 0 || !m_dirty)
+        return;
+
+    if (!m_{{ ent.camel_name }}Controller)
+    {
+        setErrorMessage(QStringLiteral("Controller not available"));
+        setStatus(Status::Error);
+        return;
+    }
+
+    setStatus(Status::Loading);
+
+    {{ ent.pascal_name }}Dto dto;
+    dto.id = m_id;
+    {%- for f in ent.fields %}
+    dto.{{ f.camel_name }} = m_{{ f.camel_name }};
+    {%- endfor %}
+
+    auto updateTask = m_{{ ent.camel_name }}Controller->update({dto});
+
+    QCoro::connect(std::move(updateTask), this, [this](const QList<{{ ent.pascal_name }}Dto> &&result) {
+        if (!m_{{ ent.camel_name }}Controller)
+            return;
+
+        if (result.isEmpty())
+        {
+            setErrorMessage(QStringLiteral("Failed to save {{ ent.pascal_name }}"));
+            setStatus(Status::Error);
+            return;
+        }
+
+        const auto &item = result.first();
+
+        m_isRefreshing = true;
+        setId(item.id);
+    {%- for f in ent.fields %}
+        set{{ f.pascal_name }}(item.{{ f.camel_name }});
+    {%- endfor %}
+        m_isRefreshing = false;
+
+        setDirty(false);
+        setErrorMessage({});
+        setStatus(Status::Loaded);
+    });
+}
 
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}

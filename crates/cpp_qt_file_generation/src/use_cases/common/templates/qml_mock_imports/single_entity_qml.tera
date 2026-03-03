@@ -5,8 +5,17 @@
 import QtQuick
 
 QtObject {
+    // Status enum: 0=Unloaded, 1=Loading, 2=Loaded, 3=Error
+    property int status: 2
+    property string errorMessage: ""
+    property bool dirty: false
     property int id: 1
 {%- for f in ent.fields %}
     property {{ f.qml_type }} {{ f.camel_name }}: {{ f.qml_default_init }}
 {%- endfor %}
+
+    function save() {
+        console.log("Mock save() called for {{ ent.pascal_name }}")
+        dirty = false
+    }
 }
