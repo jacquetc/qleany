@@ -16,12 +16,11 @@ class FeatureEventRegistry : public QObject
     Q_OBJECT
   public:
     explicit FeatureEventRegistry(QObject *parent = nullptr)
-        : QObject(parent),
+        : QObject(parent)
         {%- for fid, feat in s.features %}
-        m_{{ feat.camel_name }}Events(new {{ feat.pascal_name }}Events(parent)){%- if not loop.last %},{% endif %}
+       , m_{{ feat.camel_name }}Events(new {{ feat.pascal_name }}Events(parent))
         {%- endfor %}
 
-    //    , m_undoRedoEvents(new UndoRedo::UndoRedoEvents(parent))
     {
     }
 
