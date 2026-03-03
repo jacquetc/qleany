@@ -183,6 +183,12 @@ entities:
     optional: true
   - name: status
     type: enum
+    enum_name: FileStatus
+    enum_values:
+      - Unknown
+      - Unchanged
+      - Modified
+      - New
   undoable: false
 - name: UseCase
   inherits_from: EntityBase

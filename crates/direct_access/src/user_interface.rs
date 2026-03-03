@@ -3,5 +3,4 @@
 
 pub mod dtos;
 mod units_of_work;
-mod use_cases;
 pub mod user_interface_controller;

@@ -24,9 +24,11 @@ impl HasId for {{ ent.pascal_name }} {
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ f.inner.enum_name }} {
     #[default]
+    {%- if f.inner.enum_values %}
     {%- for ev in f.inner.enum_values %}
     {{ ev }},
     {%- endfor %}
+    {%- endif %}
 }
 
 {%- endif %}

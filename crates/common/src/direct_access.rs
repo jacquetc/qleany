@@ -14,5 +14,6 @@ pub mod root;
 pub(crate) mod setup;
 pub mod system;
 pub mod use_case;
+pub mod use_cases;
 pub mod user_interface;
 pub mod workspace;
