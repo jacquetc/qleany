@@ -9,6 +9,12 @@
  * UnitOfWorkBase inherits ITransactional virtually so that concrete UoW
  * classes automatically satisfy the ITransactional requirement without
  * explicit delegation macros.
+ *
+ * Signal buffering is integrated into the transaction lifecycle:
+ * beginTransaction() starts buffering, commit() flushes signals on success
+ * (or discards on failure), and rollback() discards buffered signals.
+ * Repositories receive the SignalBuffer via m_signalBuffer so that domain
+ * events are deferred until the transaction commits successfully.
  ******************************************************************************/
 
 #pragma once

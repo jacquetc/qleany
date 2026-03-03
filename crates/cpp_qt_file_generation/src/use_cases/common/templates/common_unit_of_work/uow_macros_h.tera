@@ -14,8 +14,9 @@
  *   class ILoadWorkUnitOfWork : public virtual SCUoW::ITransactional {
  *   public:
  *       ~ILoadWorkUnitOfWork() override = default;
- *       DECLARE_UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField);
- *       DECLARE_UOW_ENTITY_CREATE(Content);
+ *       DECLARE_UOW_ENTITY_CRUD(Root);
+ *       DECLARE_UOW_ENTITY_RELATIONSHIPS(Root, SCDRoot::RootRelationshipField);
+ *       DECLARE_UOW_ORPHAN_ENTITY_CRUD(Content);
  *       virtual void publishWorkLoaded(int workId) = 0;
  *   };
  *
@@ -29,8 +30,9 @@
  *           : UnitOfWorkBase(db, er) {}
  *
  *       // Transaction methods are inherited from UnitOfWorkBase (no macro)
- *       UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField)
- *       UOW_ENTITY_CREATE(Content)
+ *       UOW_ENTITY_CRUD(Root)
+ *       UOW_ENTITY_RELATIONSHIPS(Root, SCDRoot::RootRelationshipField)
+ *       UOW_ORPHAN_ENTITY_CRUD(Content)
  *       void publishWorkLoaded(int workId) override { ... }
  *   };
  *

@@ -22,7 +22,7 @@
  *
  *       [[nodiscard]] auto makeRepository() {
  *           return SCD::RepositoryFactory::createPersonRepository(
- *               m_dbSubContext, m_eventRegistry);
+ *               m_dbSubContext, m_eventRegistry, m_signalBuffer);
  *       }
  *   };
  *
@@ -31,8 +31,9 @@
  *   class ILoadWorkUnitOfWork : public virtual SCUoW::ITransactional {
  *   public:
  *       ~ILoadWorkUnitOfWork() override = default;
- *       DECLARE_UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField);
- *       DECLARE_UOW_ENTITY_CREATE(Content);
+ *       DECLARE_UOW_ENTITY_CRUD(Root);
+ *       DECLARE_UOW_ENTITY_RELATIONSHIPS(Root, SCDRoot::RootRelationshipField);
+ *       DECLARE_UOW_ORPHAN_ENTITY_CRUD(Content);
  *       virtual void publishWorkLoaded(int workId) = 0;
  *   };
  *
@@ -44,18 +45,23 @@
  *                          QPointer<SCD::EventRegistry> er)
  *           : UnitOfWorkBase(db, er) {}
  *
- *       UOW_ENTITY_CREATE_WITH_REL(Root, SCDRoot::RootRelationshipField)
- *       UOW_ENTITY_CREATE(Content)
+ *       UOW_ENTITY_CRUD(Root)
+ *       UOW_ENTITY_RELATIONSHIPS(Root, SCDRoot::RootRelationshipField)
+ *       UOW_ORPHAN_ENTITY_CRUD(Content)
  *       void publishWorkLoaded(int workId) override { ... }
  *   };
  *
  * Available Template Interfaces (uow_ops.h):
- *   - IEntityCrud<Entity>                           : CRUD
- *   - IEntityWithRelationships<Entity, RelFieldEnum> : CRUD + relationships
+ *   - IEntityCrud<Entity>                                    : CRUD (with owner ops)
+ *   - IEntityWithRelationships<Entity, RelFieldEnum>         : CRUD + relationships
+ *   - IOrphanEntityCrud<Entity>                              : CRUD (no owner ops)
+ *   - IOrphanEntityWithRelationships<Entity, RelFieldEnum>   : CRUD + relationships (no owner ops)
  *
  * Available CRTP Bases (uow_ops.h):
- *   - EntityCrudImpl<Derived, Entity>                          : CRUD
- *   - EntityFullImpl<Derived, Entity, RelFieldEnum>            : CRUD + relationships
+ *   - EntityCrudImpl<Derived, Entity>                        : CRUD (with owner ops)
+ *   - EntityFullImpl<Derived, Entity, RelFieldEnum>          : CRUD + relationships
+ *   - OrphanEntityCrudImpl<Derived, Entity>                  : CRUD (no owner ops)
+ *   - OrphanEntityFullImpl<Derived, Entity, RelFieldEnum>    : CRUD + relationships (no owner ops)
  *
  * Available Concepts (uow_ops.h):
  *   - EntityCrudCapable<T, Entity>

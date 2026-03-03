@@ -8,13 +8,21 @@
  *
  * Architecture:
  *
- *   IEntityCrud<Entity>                          (pure virtual interface)
- *       ^                                         
- *       |-- IEntityWithRelationships<Entity, Rel> (extends with relationship ops)
- *       |
- *   EntityCrudImpl<Derived, Entity>              (CRTP providing overrides)
+ *   IEntityCrud<Entity>                                    (pure virtual interface)
  *       ^
- *       |-- EntityFullImpl<Derived, Entity, Rel> (CRTP with relationships)
+ *       |-- IEntityWithRelationships<Entity, Rel>          (extends with relationship ops)
+ *
+ *   IOrphanEntityCrud<Entity>                              (pure virtual, no owner ops)
+ *       ^
+ *       |-- IOrphanEntityWithRelationships<Entity, Rel>    (extends with relationship ops)
+ *
+ *   EntityCrudImpl<Derived, Entity>                        (CRTP providing overrides)
+ *       ^
+ *       |-- EntityFullImpl<Derived, Entity, Rel>           (CRTP with relationships)
+ *
+ *   OrphanEntityCrudImpl<Derived, Entity>                  (CRTP, no owner ops)
+ *       ^
+ *       |-- OrphanEntityFullImpl<Derived, Entity, Rel>     (CRTP with relationships)
  *
  * Usage in generated code:
  *
@@ -32,7 +40,7 @@
  *
  *       [[nodiscard]] auto makeRepository() {
  *           return SCD::RepositoryFactory::createPersonRepository(
- *               m_dbSubContext, m_eventRegistry);
+ *               m_dbSubContext, m_eventRegistry, m_signalBuffer);
  *       }
  *   };
  *
