@@ -3,3 +3,7 @@
 
 pub type Savepoint = u64;
 pub type EntityId = u64;
+
+pub trait HasId {
+    fn id(&self) -> EntityId;
+}

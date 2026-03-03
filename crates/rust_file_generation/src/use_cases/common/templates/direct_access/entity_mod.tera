@@ -9,4 +9,3 @@ pub mod {{ s.entities[e].snake_name }}_controller;
 // No entity bound to this file
 {%- endif %}
 mod units_of_work;
-mod use_cases;

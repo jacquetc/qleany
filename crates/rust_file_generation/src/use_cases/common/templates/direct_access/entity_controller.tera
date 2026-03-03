@@ -5,28 +5,14 @@
 {%- if e %}
 use super::{
     dtos::{Create{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto},
-    units_of_work::{{ s.entities[e].pascal_name }}UnitOfWorkROFactory,
-    use_cases::{
-        create_orphan_{{ s.entities[e].snake_name }}_uc::CreateOrphan{{ s.entities[e].pascal_name }}UseCase,
-        create_orphan_{{ s.entities[e].snake_name }}_multi_uc::CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase,
-{%- if s.entities[e].owner %}
-        create_{{ s.entities[e].snake_name }}_uc::Create{{ s.entities[e].pascal_name }}UseCase,
-        create_{{ s.entities[e].snake_name }}_multi_uc::Create{{ s.entities[e].pascal_name }}MultiUseCase,
-{%- endif %}
-        get_{{ s.entities[e].snake_name }}_uc::Get{{ s.entities[e].pascal_name }}UseCase,
-        get_{{ s.entities[e].snake_name }}_multi_uc::Get{{ s.entities[e].pascal_name }}MultiUseCase,
-        get_all_{{ s.entities[e].snake_name }}_uc::GetAll{{ s.entities[e].pascal_name }}UseCase,
-        update_{{ s.entities[e].snake_name }}_uc::Update{{ s.entities[e].pascal_name }}UseCase,
-        update_{{ s.entities[e].snake_name }}_multi_uc::Update{{ s.entities[e].pascal_name }}MultiUseCase,
-        remove_{{ s.entities[e].snake_name }}_uc::Remove{{ s.entities[e].pascal_name }}UseCase,
-        remove_{{ s.entities[e].snake_name }}_multi_uc::Remove{{ s.entities[e].pascal_name }}MultiUseCase,
+    units_of_work::{
+        {{ s.entities[e].pascal_name }}ReadUoWFactory,
+        {{ s.entities[e].pascal_name }}WriteUoWFactory,
     },
 };
-use super::units_of_work::{{ s.entities[e].pascal_name }}UnitOfWorkFactory;
 use anyhow::{Ok, Result};
+use common::direct_access::use_cases;
 {%- if s.entities[e].forward_relationships %}
-use crate::{{ s.entities[e].snake_name }}::use_cases::get_{{ s.entities[e].snake_name }}_relationship_uc::Get{{ s.entities[e].pascal_name }}RelationshipUseCase;
-use crate::{{ s.entities[e].snake_name }}::use_cases::set_{{ s.entities[e].snake_name }}_relationship_uc::Set{{ s.entities[e].pascal_name }}RelationshipUseCase;
 use crate::{{ s.entities[e].pascal_name }}RelationshipDto;
 use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 {%- endif %}
@@ -43,83 +29,19 @@ pub fn create_orphan(
     {%- endif %}
     entity: &Create{{ s.entities[e].pascal_name }}Dto,
 ) -> Result<{{ s.entities[e].pascal_name }}Dto> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphan{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entity.clone())?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableCreateOrphanUseCase::new(uow_factory);
+    let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
+    let result = uc.execute(&entity_in)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(result)
-}
-
-{%- if s.entities[e].owner -%}
-pub fn create(
-    db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager: &mut UndoRedoManager,
-    stack_id: Option<u64>,
-    {%- endif %}
-    entity: &Create{{ s.entities[e].pascal_name }}Dto,
-    owner_id: EntityId,
-    index: i32,
-) -> Result<{{ s.entities[e].pascal_name }}Dto> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Create{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entity.clone(), owner_id, index)?;
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(result)
-}
-{%- endif -%}
-
-pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
-    let uc = Get{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    uc.execute(id)
-}
-
-pub fn get_all(db_context: &DbContext) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
-    let uc = GetAll{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    uc.execute()
-}
-
-pub fn update(
-    db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager: &mut UndoRedoManager,
-    stack_id: Option<u64>,
-    {%- endif %}
-    entity: &{{ s.entities[e].pascal_name }}Dto,
-) -> Result<{{ s.entities[e].pascal_name }}Dto> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Update{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entity)?;
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(result)
-}
-
-pub fn remove(
-    db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager: &mut UndoRedoManager,
-    stack_id: Option<u64>,
-    {%- endif %}
-    id: &EntityId,
-) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Remove{{ s.entities[e].pascal_name }}UseCase::new(Box::new(uow_factory));
-    uc.execute(id)?;
-    {%- if s.entities[e].inner.undoable %}
-    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(())
+    Ok(result.into())
+{%- else %}
+    let mut uc = use_cases::CreateOrphanUseCase::new(uow_factory);
+    let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
+    let result = uc.execute(&entity_in)?;
+    Ok(result.into())
+{%- endif %}
 }
 
 pub fn create_orphan_multi(
@@ -131,16 +53,52 @@ pub fn create_orphan_multi(
     {%- endif %}
     entities: &[Create{{ s.entities[e].pascal_name }}Dto],
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = CreateOrphan{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entities)?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entities_in: Vec<common::entities::{{ s.entities[e].pascal_name }}> = entities.iter().map(|dto| dto.into()).collect();
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableCreateOrphanUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(result)
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- else %}
+    let mut uc = use_cases::CreateOrphanUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- endif %}
 }
 
-{%- if s.entities[e].owner -%}
+{%- if s.entities[e].owner %}
+
+pub fn create(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    {%- if s.entities[e].inner.undoable %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    {%- endif %}
+    entity: &Create{{ s.entities[e].pascal_name }}Dto,
+    owner_id: EntityId,
+    index: i32,
+) -> Result<{{ s.entities[e].pascal_name }}Dto> {
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
+{%- if s.entities[e].inner.undoable %}
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+    let strategy = use_cases::OwnerStrategy::Replacing;
+{%- else %}
+    let strategy = use_cases::OwnerStrategy::Appending;
+{%- endif %}
+    let mut uc = use_cases::UndoableCreateUseCase::new(uow_factory, strategy);
+    let result = uc.execute(&entity_in, owner_id, index)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result.into())
+{%- else %}
+    let mut uc = use_cases::CreateUseCase::new(uow_factory);
+    let result = uc.execute(&entity_in, owner_id, index)?;
+    Ok(result.into())
+{%- endif %}
+}
+
 pub fn create_multi(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
@@ -152,20 +110,66 @@ pub fn create_multi(
     owner_id: EntityId,
     index: i32,
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Create{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entities, owner_id, index)?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entities_in: Vec<common::entities::{{ s.entities[e].pascal_name }}> = entities.iter().map(|dto| dto.into()).collect();
+{%- if s.entities[e].inner.undoable %}
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+    let strategy = use_cases::OwnerStrategy::Replacing;
+{%- else %}
+    let strategy = use_cases::OwnerStrategy::Appending;
+{%- endif %}
+    let mut uc = use_cases::UndoableCreateUseCase::new(uow_factory, strategy);
+    let result = uc.execute_multi(&entities_in, owner_id, index)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
-    Ok(result)
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- else %}
+    let mut uc = use_cases::CreateUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in, owner_id, index)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- endif %}
 }
-{%- endif -%}
+
+{%- endif %}
+
+pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}Dto>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetUseCase::new(uow_factory);
+    Ok(uc.execute(id)?.map(|e| e.into()))
+}
+
+pub fn get_all(db_context: &DbContext) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetUseCase::new(uow_factory);
+    Ok(uc.execute_all()?.into_iter().map(|e| e.into()).collect())
+}
 
 pub fn get_multi(db_context: &DbContext, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}Dto>>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
-    let uc = Get{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
-    uc.execute(ids)
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetUseCase::new(uow_factory);
+    Ok(uc.execute_multi(ids)?.into_iter().map(|o| o.map(|e| e.into())).collect())
+}
+
+pub fn update(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    {%- if s.entities[e].inner.undoable %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    {%- endif %}
+    entity: &{{ s.entities[e].pascal_name }}Dto,
+) -> Result<{{ s.entities[e].pascal_name }}Dto> {
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableUpdateUseCase::new(uow_factory);
+    let result = uc.execute(&entity_in)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result.into())
+{%- else %}
+    let mut uc = use_cases::UpdateUseCase::new(uow_factory);
+    let result = uc.execute(&entity_in)?;
+    Ok(result.into())
+{%- endif %}
 }
 
 pub fn update_multi(
@@ -177,13 +181,40 @@ pub fn update_multi(
     {%- endif %}
     entities: &[{{ s.entities[e].pascal_name }}Dto],
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Update{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
-    let result = uc.execute(entities)?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entities_in: Vec<common::entities::{{ s.entities[e].pascal_name }}> = entities.iter().map(|dto| dto.into()).collect();
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableUpdateUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- else %}
+    let mut uc = use_cases::UpdateUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- endif %}
+}
+
+pub fn remove(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    {%- if s.entities[e].inner.undoable %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
     {%- endif %}
-    Ok(result)
+    id: &EntityId,
+) -> Result<()> {
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableRemoveUseCase::new(uow_factory);
+    uc.execute(id)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(())
+{%- else %}
+    let mut uc = use_cases::RemoveUseCase::new(uow_factory);
+    uc.execute(id)?;
+    Ok(())
+{%- endif %}
 }
 
 pub fn remove_multi(
@@ -195,13 +226,17 @@ pub fn remove_multi(
     {%- endif %}
     ids: &[EntityId],
 ) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Remove{{ s.entities[e].pascal_name }}MultiUseCase::new(Box::new(uow_factory));
-    uc.execute(ids)?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableRemoveUseCase::new(uow_factory);
+    uc.execute_multi(ids)?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
     Ok(())
+{%- else %}
+    let mut uc = use_cases::RemoveUseCase::new(uow_factory);
+    uc.execute_multi(ids)?;
+    Ok(())
+{%- endif %}
 }
 
 {%- if s.entities[e].forward_relationships %}
@@ -211,8 +246,8 @@ pub fn get_relationship(
     id: &EntityId,
     field: &{{ s.entities[e].pascal_name }}RelationshipField,
 ) -> Result<Vec<EntityId>> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkROFactory::new(db_context);
-    let uc = Get{{ s.entities[e].pascal_name }}RelationshipUseCase::new(Box::new(uow_factory));
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetRelationshipUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
     uc.execute(id, field)
 }
 
@@ -225,13 +260,17 @@ pub fn set_relationship(
     {%- endif %}
     dto: &{{ s.entities[e].pascal_name }}RelationshipDto,
 ) -> Result<()> {
-    let uow_factory = {{ s.entities[e].pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-    let mut uc = Set{{ s.entities[e].pascal_name }}RelationshipUseCase::new(Box::new(uow_factory));
-    uc.execute(dto)?;
-    {%- if s.entities[e].inner.undoable %}
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableSetRelationshipUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
+    uc.execute(&dto.id, &dto.field, dto.right_ids.as_slice())?;
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
-    {%- endif %}
     Ok(())
+{%- else %}
+    let mut uc = use_cases::SetRelationshipUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
+    uc.execute(&dto.id, &dto.field, dto.right_ids.as_slice())?;
+    Ok(())
+{%- endif %}
 }
 
 {%- endif %}

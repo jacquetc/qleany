@@ -5,4 +5,5 @@
 pub mod {{ ent.snake_name }};
 {%- endfor %}
 pub mod repository_factory;
+pub mod use_cases;
 pub(crate) mod setup;

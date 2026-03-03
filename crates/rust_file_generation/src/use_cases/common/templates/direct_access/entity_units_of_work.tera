@@ -3,33 +3,36 @@
 
 {% set e = s.file.inner.entity %}
 {%- if e %}
-use super::use_cases::{
-    {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait, {{ s.entities[e].pascal_name }}UnitOfWorkROTrait,
-    {{ s.entities[e].pascal_name }}UnitOfWorkTrait,
-};
 use common::entities::{{ s.entities[e].pascal_name }};
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
+use common::direct_access::repository_factory;
+use common::direct_access::use_cases;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
+use common::snapshot::EntityTreeSnapshot;
 use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
 use std::sync::Arc;
-{%- if s.entities[e].owner %}
-use common::direct_access::repository_factory;
+{%- if s.entities[e].forward_relationships %}
+use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 {%- endif %}
 
-pub struct {{ s.entities[e].pascal_name }}UnitOfWork {
+// ===========================================================================
+// Write UoW
+// ===========================================================================
+
+pub struct {{ s.entities[e].pascal_name }}WriteUoW {
     context: DbContext,
     transaction: Option<Transaction>,
     event_hub: Arc<EventHub>,
     event_buffer: RefCell<EventBuffer>,
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWork {
+impl {{ s.entities[e].pascal_name }}WriteUoW {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        {{ s.entities[e].pascal_name }}UnitOfWork {
+        {{ s.entities[e].pascal_name }}WriteUoW {
             context: db_context.clone(),
             transaction: None,
             event_hub: event_hub.clone(),
@@ -38,7 +41,7 @@ impl {{ s.entities[e].pascal_name }}UnitOfWork {
     }
 }
 
-impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
+impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}WriteUoW {
     fn begin_transaction(&mut self) -> Result<()> {
         self.transaction = Some(Transaction::begin_write_transaction(&self.context)?);
         self.event_buffer.get_mut().begin_buffering();
@@ -84,80 +87,185 @@ impl CommandUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWork {
     }
 }
 
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "CreateOrphan")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "CreateOrphanMulti")]
+impl use_cases::WriteUoW for {{ s.entities[e].pascal_name }}WriteUoW {
+    type Entity = {{ s.entities[e].pascal_name }};
+
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        Ok(repo.get(id)?)
+    }
+
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        Ok(repo.get_multi(ids)?)
+    }
+
+    fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        Ok(repo.get_all()?)
+    }
+
+    fn create_orphan_multi(&self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_orphan_multi(&mut event_buffer, entities)?)
+    }
+
+    fn update_multi(&self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.update_multi(&mut event_buffer, entities)?)
+    }
+
+    fn delete(&self, id: &EntityId) -> Result<()> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.delete(&mut event_buffer, id)?)
+    }
+
+    fn delete_multi(&self, ids: &[EntityId]) -> Result<()> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.delete_multi(&mut event_buffer, ids)?)
+    }
+
+    fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        Ok(repo.snapshot(ids)?)
+    }
+
+    fn restore(&self, snap: &EntityTreeSnapshot) -> Result<()> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.restore(&mut event_buffer, snap)?)
+    }
+}
+
 {%- if s.entities[e].owner %}
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Create")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "CreateMulti")]
-{%- endif %}
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Get")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMulti")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAll")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Update")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "UpdateMulti")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Delete")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "DeleteMulti")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Snapshot")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "Restore")]
-{%- if s.entities[e].forward_relationships %}
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationship")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIds")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationship")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "SetRelationshipMulti")]
-{%- endif %}
-impl {{ s.entities[e].pascal_name }}UnitOfWorkTrait for {{ s.entities[e].pascal_name }}UnitOfWork {
-{%- if s.entities[e].owner %}
+
+impl use_cases::OwnedWriteUoW for {{ s.entities[e].pascal_name }}WriteUoW {
+    fn create_multi(
+        &self,
+        entities: &[{{ s.entities[e].pascal_name }}],
+        owner_id: EntityId,
+        index: i32,
+    ) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.create_multi(&mut event_buffer, entities, owner_id, index)?)
+    }
+
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
         Ok(repo.get_relationships_from_owner(owner_id)?)
     }
 
     fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()> {
-        let borrowed_transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(borrowed_transaction);
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
         let mut event_buffer = self.event_buffer.borrow_mut();
         repo.set_relationships_in_owner(&mut event_buffer, owner_id, ids)?;
         Ok(())
     }
-{%- endif %}
 }
 
-pub struct {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+{%- endif %}
+
+{%- if s.entities[e].forward_relationships %}
+
+impl use_cases::WriteRelUoW<{{ s.entities[e].pascal_name }}RelationshipField> for {{ s.entities[e].pascal_name }}WriteUoW {
+    fn set_relationship(
+        &self,
+        id: &EntityId,
+        field: &{{ s.entities[e].pascal_name }}RelationshipField,
+        right_ids: &[EntityId],
+    ) -> Result<()> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
+        Ok(())
+    }
+}
+
+{%- endif %}
+
+// ---------------------------------------------------------------------------
+// Write UoW Factory
+// ---------------------------------------------------------------------------
+
+pub struct {{ s.entities[e].pascal_name }}WriteUoWFactory {
     context: DbContext,
     event_hub: Arc<EventHub>,
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+impl {{ s.entities[e].pascal_name }}WriteUoWFactory {
     pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
-        {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
+        {{ s.entities[e].pascal_name }}WriteUoWFactory {
             context: db_context.clone(),
             event_hub: event_hub.clone(),
         }
     }
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWorkFactoryTrait for {{ s.entities[e].pascal_name }}UnitOfWorkFactory {
-    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkTrait> {
-        Box::new({{ s.entities[e].pascal_name }}UnitOfWork::new(&self.context, &self.event_hub))
+impl use_cases::WriteUoWFactory for {{ s.entities[e].pascal_name }}WriteUoWFactory {
+    type Entity = {{ s.entities[e].pascal_name }};
+    fn create(&self) -> Box<dyn use_cases::WriteUoW<Entity = {{ s.entities[e].pascal_name }}>> {
+        Box::new({{ s.entities[e].pascal_name }}WriteUoW::new(&self.context, &self.event_hub))
     }
 }
 
-pub struct {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+{%- if s.entities[e].owner %}
+
+impl use_cases::OwnedWriteUoWFactory for {{ s.entities[e].pascal_name }}WriteUoWFactory {
+    type Entity = {{ s.entities[e].pascal_name }};
+    fn create(&self) -> Box<dyn use_cases::OwnedWriteUoW<Entity = {{ s.entities[e].pascal_name }}>> {
+        Box::new({{ s.entities[e].pascal_name }}WriteUoW::new(&self.context, &self.event_hub))
+    }
+}
+
+{%- endif %}
+
+{%- if s.entities[e].forward_relationships %}
+
+impl use_cases::WriteRelUoWFactory<{{ s.entities[e].pascal_name }}RelationshipField> for {{ s.entities[e].pascal_name }}WriteUoWFactory {
+    fn create(&self) -> Box<dyn use_cases::WriteRelUoW<{{ s.entities[e].pascal_name }}RelationshipField>> {
+        Box::new({{ s.entities[e].pascal_name }}WriteUoW::new(&self.context, &self.event_hub))
+    }
+}
+
+{%- endif %}
+
+// ===========================================================================
+// Read-Only UoW
+// ===========================================================================
+
+pub struct {{ s.entities[e].pascal_name }}ReadUoW {
     context: DbContext,
     transaction: RefCell<Option<Transaction>>,
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+impl {{ s.entities[e].pascal_name }}ReadUoW {
     pub fn new(db_context: &DbContext) -> Self {
-        {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+        {{ s.entities[e].pascal_name }}ReadUoW {
             context: db_context.clone(),
             transaction: RefCell::new(None),
         }
     }
 }
 
-impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWorkRO {
+impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}ReadUoW {
     fn begin_transaction(&self) -> Result<()> {
         self.transaction
             .replace(Some(Transaction::begin_read_transaction(&self.context)?));
@@ -170,32 +278,72 @@ impl QueryUnitOfWork for {{ s.entities[e].pascal_name }}UnitOfWorkRO {
     }
 }
 
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRO")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetMultiRO")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetAllRO")]
-{%- if s.entities[e].forward_relationships %}
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "{{ s.entities[e].pascal_name }}", action = "GetRelationshipsFromRightIdsRO")]
-{%- endif %}
-impl {{ s.entities[e].pascal_name }}UnitOfWorkROTrait for {{ s.entities[e].pascal_name }}UnitOfWorkRO {}
+impl use_cases::ReadUoW for {{ s.entities[e].pascal_name }}ReadUoW {
+    type Entity = {{ s.entities[e].pascal_name }};
 
-pub struct {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.borrow();
+        let repo = repository_factory::read::create_{{ s.entities[e].snake_name }}_repository(transaction.as_ref().unwrap());
+        Ok(repo.get(id)?)
+    }
+
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>> {
+        let transaction = self.transaction.borrow();
+        let repo = repository_factory::read::create_{{ s.entities[e].snake_name }}_repository(transaction.as_ref().unwrap());
+        Ok(repo.get_multi(ids)?)
+    }
+
+    fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.borrow();
+        let repo = repository_factory::read::create_{{ s.entities[e].snake_name }}_repository(transaction.as_ref().unwrap());
+        Ok(repo.get_all()?)
+    }
+}
+
+{%- if s.entities[e].forward_relationships %}
+
+impl use_cases::ReadRelUoW<{{ s.entities[e].pascal_name }}RelationshipField> for {{ s.entities[e].pascal_name }}ReadUoW {
+    fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>> {
+        let transaction = self.transaction.borrow();
+        let repo = repository_factory::read::create_{{ s.entities[e].snake_name }}_repository(transaction.as_ref().unwrap());
+        Ok(repo.get_relationship(id, field)?)
+    }
+}
+
+{%- endif %}
+
+// ---------------------------------------------------------------------------
+// Read-Only UoW Factory
+// ---------------------------------------------------------------------------
+
+pub struct {{ s.entities[e].pascal_name }}ReadUoWFactory {
     context: DbContext,
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+impl {{ s.entities[e].pascal_name }}ReadUoWFactory {
     pub fn new(db_context: &DbContext) -> Self {
-        {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
+        {{ s.entities[e].pascal_name }}ReadUoWFactory {
             context: db_context.clone(),
         }
     }
 }
 
-impl {{ s.entities[e].pascal_name }}UnitOfWorkROFactoryTrait for {{ s.entities[e].pascal_name }}UnitOfWorkROFactory {
-    fn create(&self) -> Box<dyn {{ s.entities[e].pascal_name }}UnitOfWorkROTrait> {
-        Box::new({{ s.entities[e].pascal_name }}UnitOfWorkRO::new(&self.context))
+impl use_cases::ReadUoWFactory for {{ s.entities[e].pascal_name }}ReadUoWFactory {
+    type Entity = {{ s.entities[e].pascal_name }};
+    fn create(&self) -> Box<dyn use_cases::ReadUoW<Entity = {{ s.entities[e].pascal_name }}>> {
+        Box::new({{ s.entities[e].pascal_name }}ReadUoW::new(&self.context))
     }
 }
+
+{%- if s.entities[e].forward_relationships %}
+
+impl use_cases::ReadRelUoWFactory<{{ s.entities[e].pascal_name }}RelationshipField> for {{ s.entities[e].pascal_name }}ReadUoWFactory {
+    fn create(&self) -> Box<dyn use_cases::ReadRelUoW<{{ s.entities[e].pascal_name }}RelationshipField>> {
+        Box::new({{ s.entities[e].pascal_name }}ReadUoW::new(&self.context))
+    }
+}
+
+{%- endif %}
 
 {%- else %}
 // No entity bound to this file

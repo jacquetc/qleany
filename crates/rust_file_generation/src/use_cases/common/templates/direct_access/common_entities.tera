@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use crate::types::EntityId;
+use crate::types::HasId;
 
 // Entities
 {% for eid, ent in s.entities %}
@@ -12,6 +13,10 @@ pub struct {{ ent.pascal_name }} {
     {%- for f in ent.fields %}
     pub {{ f.snake_name }}: {{ f.rust_type }},
     {%- endfor %}
+}
+
+impl HasId for {{ ent.pascal_name }} {
+    fn id(&self) -> EntityId { self.id }
 }
 
 {%- for f in ent.fields %}

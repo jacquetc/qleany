@@ -452,6 +452,37 @@ impl FillRustFilesUseCase {
             field: None,
         });
 
+        // Generic direct-access use cases (shared across all entities)
+        let uc_relative_path = format!("{}/common/src/direct_access/use_cases/", prefix);
+
+        for (file_name, template_name) in [
+            ("mod.rs", "common_da_use_cases_mod"),
+            ("traits.rs", "common_da_use_cases_traits"),
+            ("get.rs", "common_da_use_cases_get"),
+            ("create_orphan.rs", "common_da_use_cases_create_orphan"),
+            ("create.rs", "common_da_use_cases_create"),
+            ("update.rs", "common_da_use_cases_update"),
+            ("remove.rs", "common_da_use_cases_remove"),
+            ("get_relationship.rs", "common_da_use_cases_get_relationship"),
+            ("set_relationship.rs", "common_da_use_cases_set_relationship"),
+        ] {
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: file_name.to_string(),
+                relative_path: uc_relative_path.clone(),
+                group: "entities".to_string(),
+                template_name: template_name.to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+        }
+
         // Get entities
         let entities =
             uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Entities)?;
@@ -509,22 +540,6 @@ impl FillRustFilesUseCase {
                 id: 0,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
-                name: "use_cases.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_use_cases_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
                 name: "units_of_work.rs".to_string(),
                 relative_path: relative_path.clone(),
                 group: "entities".to_string(),
@@ -552,253 +567,6 @@ impl FillRustFilesUseCase {
                 use_case: None,
                 field: None,
             });
-
-            // for crates/direct_access/src/{}/use_cases/
-
-            let relative_path = format!(
-                "{}/direct_access/src/{}/use_cases/",
-                prefix,
-                heck::AsSnakeCase(&entity.name)
-            );
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("get_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("get_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_multi_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("get_all_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_get_all_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            // create_orphans use cases (always generated)
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("create_orphan_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_create_orphan_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!(
-                    "create_orphan_{}_multi_uc.rs",
-                    heck::AsSnakeCase(&entity.name)
-                ),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_create_orphan_multi_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("update_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_update_multi_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("update_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_update_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("remove_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_remove_multi_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("remove_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_remove_use_case".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: Some(entity.id),
-                use_case: None,
-                field: None,
-            });
-
-            // only if there is a forward relationship
-            let relationships = uow.get_entity_relationship(
-                &entity.id,
-                &common::direct_access::entity::EntityRelationshipField::Relationships,
-            )?;
-            let relationships = uow.get_relationship_multi(&relationships)?;
-            let has_forward_relationship = relationships.iter().any(|r| {
-                if let Some(r) = r {
-                    r.direction == common::entities::Direction::Forward
-                } else {
-                    false
-                }
-            });
-
-            if has_forward_relationship {
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("get_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_get_relationship_use_case".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("set_{}_relationship_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_set_relationship_use_case".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-            }
-
-            // create use cases with owner (only for owned entities)
-            let has_owner = relationships.iter().any(|r| {
-                if let Some(r) = r {
-                    r.right_entity == entity.id && r.strength == common::entities::Strength::Strong
-                } else {
-                    false
-                }
-            });
-
-            if has_owner {
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("create_{}_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_create_use_case".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("create_{}_multi_uc.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "entities".to_string(),
-                    template_name: "entity_create_multi_use_case".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-            }
 
             // for crates/common/src/direct_access/
             let relative_path = format!("{}/common/src/direct_access/", prefix);
