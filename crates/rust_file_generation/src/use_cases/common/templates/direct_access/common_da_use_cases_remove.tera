@@ -6,7 +6,7 @@ use crate::snapshot::EntityTreeSnapshot;
 use crate::types::{EntityId, HasId};
 use crate::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use super::traits::{WriteUoW, WriteUoWFactory};
+use super::traits::WriteUoWFactory;
 
 // ---------------------------------------------------------------------------
 // Non-undoable remove

@@ -6,7 +6,7 @@ use crate::types::HasId;
 use crate::undo_redo::UndoRedoCommand;
 use std::any::Any;
 use std::collections::VecDeque;
-use super::traits::{WriteUoW, WriteUoWFactory};
+use super::traits::WriteUoWFactory;
 
 // ---------------------------------------------------------------------------
 // Non-undoable create-orphan

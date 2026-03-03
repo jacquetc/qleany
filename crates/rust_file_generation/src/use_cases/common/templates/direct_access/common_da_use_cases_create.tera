@@ -6,7 +6,7 @@ use crate::snapshot::EntityTreeSnapshot;
 use crate::types::{EntityId, HasId};
 use crate::undo_redo::UndoRedoCommand;
 use std::any::Any;
-use super::traits::{OwnedWriteUoW, OwnedWriteUoWFactory};
+use super::traits::OwnedWriteUoWFactory;
 
 /// Strategy for how the owner relationship is managed on create.
 #[derive(Debug, Clone, Copy, PartialEq)]

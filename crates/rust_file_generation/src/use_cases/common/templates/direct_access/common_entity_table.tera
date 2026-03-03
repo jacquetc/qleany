@@ -3,6 +3,13 @@
 
 {% set e = s.file.inner.entity %}
 {%- if e %}
+
+    {%- set_global has_entity_fields = false %}
+    {%- for f in s.entities[e].fields %}
+        {%- if f.inner.field_type == "Entity" %}
+            {%- set_global has_entity_fields = true %}
+        {%- endif %}
+    {%- endfor %}
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}Table;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}TableRO;
@@ -140,7 +147,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
         for id in ids {
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
-                let mut entity = guard.value().clone();
+                let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
@@ -174,7 +181,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
         while let Some(Ok((id, data))) = iter.next() {
             let id = id.value();
-            let mut entity = data.value().clone();
+            let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
 
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
@@ -467,7 +474,7 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
 
         for id in ids {
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
-                let mut entity = guard.value().clone();
+                let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
                 {% for f in s.entities[e].fields %}
                 {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
@@ -501,7 +508,7 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
         while let Some(Ok((id, data))) = iter.next() {
             let id = id.value();
-            let mut entity = data.value().clone();
+            let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
 
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}

@@ -4,6 +4,7 @@
 {%- if e %}
 {% set entity = s.entities[e] %}
 //! {{ entity.pascal_name }} entity commands for Slint UI
+#![allow(unused_imports, dead_code)]
 
 use crate::app_context::AppContext;
 {%- if entity.forward_relationships %}

@@ -24,7 +24,6 @@ use common::entities:: {
 };
 use common::long_operation::LongOperation;
 use common::types::EntityId;
-use std::path::PathBuf;
 use std::sync::Arc;
 {%- if uc.inner.read_only %}
 use common::database::QueryUnitOfWork;
@@ -109,7 +108,6 @@ impl LongOperation for {{ uc.pascal_name }}UseCase {
         progress_callback: Box<dyn Fn(common::long_operation::OperationProgress) + Send>,
         cancel_flag: Arc<std::sync::atomic::AtomicBool>,
     ) -> Result<{% if uc.dto_out %}Self::Output{% else %}(){% endif %}> {
-        use std::fs;
         use std::sync::atomic::Ordering;
 
 

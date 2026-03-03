@@ -5,7 +5,6 @@
 {%- if f_id %}
 {%- set f = s.features[f_id] %}
 
-use common::types::EntityId;
 use serde::{Deserialize, Serialize};
 
 {% for uc_id, uc in f.use_cases %}
