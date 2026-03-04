@@ -7,3 +7,4 @@ pub mod list;
 pub mod new;
 pub mod show;
 pub mod upgrade;
+pub mod prompt;

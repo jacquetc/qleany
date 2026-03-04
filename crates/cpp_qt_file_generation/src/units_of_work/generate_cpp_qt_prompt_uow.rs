@@ -55,7 +55,8 @@ impl QueryUnitOfWork for GenerateCppQtPromptUnitOfWork {
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/generate_cpp_qt_prompt_uc.rs
 //
 #[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
+#[macros::uow_action(entity = "System", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "UserInterface", action = "GetRO")]

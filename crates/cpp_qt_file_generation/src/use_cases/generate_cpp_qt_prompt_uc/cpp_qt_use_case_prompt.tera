@@ -1,0 +1,345 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+# Task: Implement the "{{ uc.pascal_name }}" Use Case
+
+## Context
+
+- **Application**: {{ s.global.inner.application_name }} (C++20/Qt6, Qleany v{{ s.system.inner.version }})
+- **Feature**: {{ feat.pascal_name }} (`{{ s.global.prefix }}/{{ feat.snake_name }}/`)
+- **Namespace**: `{{ s.global.application_pascal_name }}::{{ feat.pascal_name }}`
+- **Use Case**: {{ uc.pascal_name }} (`{{ uc.snake_name }}_uc`)
+{%- if uc.inner.long_operation %}
+- **Type**: Long operation (runs on background thread with progress/cancellation)
+{%- elif uc.inner.read_only %}
+- **Type**: Read-only query
+{%- elif uc.inner.undoable %}
+- **Type**: Undoable command (supports undo/redo via snapshot)
+{%- else %}
+- **Type**: Non-undoable command
+{%- endif %}
+
+## What to Implement
+
+The use case skeleton is already generated. You need to replace the placeholder (`qCritical("Unimplemented code: ...")`) in the `execute()` method with actual business logic.
+{% if uc.dto_in %}
+## Input DTO: `{{ uc.dto_in.pascal_name }}`
+
+```cpp
+struct {{ uc.dto_in.pascal_name }}
+{
+    Q_GADGET
+{%- for df in uc.dto_in.fields %}
+    Q_PROPERTY({{ df.cpp_qt_type }} {{ df.camel_name }} MEMBER {{ df.camel_name }})
+{%- endfor %}
+
+  public:
+{%- for df in uc.dto_in.fields %}
+    {{ df.cpp_qt_type }} {{ df.camel_name }}{{ df.cpp_default_init }};
+{%- endfor %}
+};
+```
+{% endif %}
+{%- if uc.dto_out %}
+
+## Output DTO: `{{ uc.dto_out.pascal_name }}`
+
+```cpp
+struct {{ uc.dto_out.pascal_name }}
+{
+    Q_GADGET
+{%- for df in uc.dto_out.fields %}
+    Q_PROPERTY({{ df.cpp_qt_type }} {{ df.camel_name }} MEMBER {{ df.camel_name }})
+{%- endfor %}
+
+  public:
+{%- for df in uc.dto_out.fields %}
+    {{ df.cpp_qt_type }} {{ df.camel_name }}{{ df.cpp_default_init }};
+{%- endfor %}
+};
+```
+{% endif %}
+{%- if not uc.dto_in and not uc.dto_out %}
+
+## DTOs
+
+No input or output DTO. The use case returns `bool`.
+{% endif %}
+{%- if uc.entities | length > 0 %}
+
+## Entities Involved
+{% for e_id, ent in uc.entities %}
+### {{ ent.pascal_name }}
+
+| Field | C++ Type | Optional | List |
+|-------|----------|----------|------|
+| id | `u64` | false | false |
+{%- for f in ent.fields %}
+| {{ f.camel_name }} | `{{ f.cpp_qt_type }}` | {{ f.optional }} | {{ f.is_list }} |
+{%- endfor %}
+{%- if ent.forward_relationships | length > 0 %}
+
+Relationships:
+{%- for rid, rel in ent.forward_relationships %}
+- {{ rel.field_pascal_name }} → {{ rel.inner.relationship_type }} ({{ rel.inner.strength }})
+{%- endfor %}
+{%- endif %}
+{% endfor %}
+{%- else %}
+
+## Missing Entity Declarations
+
+This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic, then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
+{%- endif %}
+
+## Files to Modify
+
+### 1. Use Case Implementation *(main business logic)*
+
+**File**: `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc.cpp`
+{% if uc.inner.long_operation %}
+Replace the placeholder in `execute()`. The method runs on a background thread:
+
+```cpp
+QJsonObject {{ uc.pascal_name }}UseCase::execute(
+    std::function<void(Common::LongOperation::OperationProgress)> progressCallback,
+    const std::atomic<bool> &cancelFlag)
+{
+    if (!m_uow->beginTransaction())
+        throw std::runtime_error("Failed to begin transaction");
+
+    // YOUR CODE HERE:
+    // - Check cancelFlag.load() periodically in loops
+    // - Call progressCallback({percentage, "description"}) to report progress
+    // - On cancellation: m_uow->rollback(); return early
+    // - Use m_uow-> to access entity operations
+{%- if uc.dto_in %}
+    // - Read input from m_{{ uc.dto_in.camel_name }}
+{%- endif %}
+
+    if (!m_uow->commit())
+        throw std::runtime_error("Failed to commit transaction");
+
+    m_uow->publish{{ uc.pascal_name }}Signal();
+
+{%- if uc.dto_out %}
+    {{ uc.dto_out.pascal_name }} resultDto{};
+    // Populate resultDto with actual results
+    return Common::DirectAccess::gadgetToJson(resultDto);
+{%- else %}
+{% raw %}    return QJsonObject{ {u"success"_s, true} };{% endraw %}
+{%- endif %}
+}
+```
+{%- elif uc.inner.undoable %}
+Replace the placeholder in `execute()`. You must also add `undo()` and `redo()` methods (not generated):
+
+```cpp
+{%- if uc.dto_out %}
+{{ uc.dto_out.pascal_name }}
+{%- else %}
+bool
+{%- endif %} {{ uc.pascal_name }}UseCase::execute(
+{%- if uc.dto_in %}const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }}{% endif %})
+{
+    try
+    {
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
+
+        // YOUR CODE HERE:
+        // 1. Capture state BEFORE mutation for undo:
+        //    m_undoSnapshot = m_uow->snapshotEntityName(ids);
+        // 2. Perform the actual mutation using m_uow->
+{%- if uc.dto_in %}
+        //    Read input from {{ uc.dto_in.camel_name }}
+{%- endif %}
+        // 3. Throw std::runtime_error on errors (catch block handles rollback)
+
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
+    }
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
+
+    m_uow->publish{{ uc.pascal_name }}Signal();
+
+{%- if uc.dto_out %}
+    {{ uc.dto_out.pascal_name }} result{};
+    // Populate result with actual data
+    return result;
+{%- else %}
+    return true;
+{%- endif %}
+}
+
+Common::UndoRedo::Result<void> {{ uc.pascal_name }}UseCase::undo()
+{
+    try
+    {
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
+
+        // Restore the snapshot captured during execute()
+        m_uow->restoreEntityName(m_undoSnapshot);
+
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
+    }
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
+
+    m_uow->publish{{ uc.pascal_name }}Signal();
+    return Common::UndoRedo::Result<void>::ok();
+}
+
+Common::UndoRedo::Result<void> {{ uc.pascal_name }}UseCase::redo()
+{
+    // Re-execute the forward operation (or restore a post-execute snapshot)
+    execute(/* same args */);
+    return Common::UndoRedo::Result<void>::ok();
+}
+```
+
+Add to the `.h` file:
+
+```cpp
+#include "undo_redo/result.h"
+
+// Add to public section:
+Common::UndoRedo::Result<void> undo();
+Common::UndoRedo::Result<void> redo();
+
+// Add to private section:
+Common::Database::EntityTreeSnapshot m_undoSnapshot;
+```
+{%- else %}
+Replace the placeholder in `execute()`:
+
+```cpp
+{%- if uc.dto_out %}
+{{ uc.dto_out.pascal_name }}
+{%- else %}
+bool
+{%- endif %} {{ uc.pascal_name }}UseCase::execute(
+{%- if uc.dto_in %}const {{ uc.dto_in.pascal_name }} &{{ uc.dto_in.camel_name }}{% endif %}) const
+{
+    try
+    {
+        if (!m_uow->beginTransaction())
+            throw std::runtime_error("Failed to begin transaction");
+
+        // YOUR CODE HERE:
+        // - Use m_uow-> to access entity operations
+{%- if uc.dto_in %}
+        // - Read input from {{ uc.dto_in.camel_name }}
+{%- endif %}
+        // - Perform business logic
+        // - Throw std::runtime_error on errors (catch block handles rollback)
+
+        if (!m_uow->commit())
+            throw std::runtime_error("Failed to commit transaction");
+    }
+    catch (...)
+    {
+        m_uow->rollback();
+        throw;
+    }
+
+    m_uow->publish{{ uc.pascal_name }}Signal();
+
+{%- if uc.dto_out %}
+    {{ uc.dto_out.pascal_name }} result{};
+    // Populate result with actual data
+    return result;
+{%- else %}
+    return true;
+{%- endif %}
+}
+```
+{%- endif %}
+
+### 2. Unit of Work Interface
+
+**File**: `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc/i_{{ uc.snake_name }}_uow.h`
+
+Declare which entity operations the use case needs. Available macros (from `uow_macros.h`):
+
+```cpp
+// Granular macros:
+DECLARE_UOW_ENTITY_GET(EntityName)                       // get by ids
+DECLARE_UOW_ENTITY_GET_ALL(EntityName)                   // get all
+DECLARE_UOW_ENTITY_CREATE(EntityName)                    // create with owner
+DECLARE_UOW_ENTITY_CREATE_ORPHANS(EntityName)            // create without owner
+DECLARE_UOW_ENTITY_UPDATE(EntityName)                    // update
+DECLARE_UOW_ENTITY_REMOVE(EntityName)                    // remove
+DECLARE_UOW_ENTITY_SNAPSHOT(EntityName)                  // snapshot + restore (for undo)
+DECLARE_UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)   // relationship get/set/count/range
+DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(EntityName)        // get rel ids from owner
+DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(EntityName)          // set rel ids in owner
+
+// Composite macros:
+DECLARE_UOW_ENTITY_CRUD(EntityName)                      // all of the above
+DECLARE_UOW_ORPHAN_ENTITY_CRUD(EntityName)               // CRUD without owner-based create
+```
+
+### 3. Unit of Work Implementation
+
+**File**: `{{ s.global.prefix }}/{{ feat.snake_name }}/units_of_work/{{ uc.snake_name }}_uow.h`
+
+Mirror the interface declarations with implementation macros (same names, **no** `DECLARE_` prefix):
+
+```cpp
+UOW_ENTITY_CRUD(EntityName)           // or use granular macros as needed
+UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)
+```
+
+**Both files must declare the same set of entity operations.**
+
+## File Rules
+
+**You may only modify these 4 files:**
+
+1. `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc.h` — use case header
+2. `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc.cpp` — use case implementation
+3. `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc/i_{{ uc.snake_name }}_uow.h` — UoW interface
+4. `{{ s.global.prefix }}/{{ feat.snake_name }}/units_of_work/{{ uc.snake_name }}_uow.h` — UoW implementation
+
+**You may create new files only in these locations:**
+
+- `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/{{ uc.snake_name }}_uc/` — modules specific to this use case (helpers, types, etc.)
+- `{{ s.global.prefix }}/{{ feat.snake_name }}/use_cases/common/` — modules shared between use cases of the same feature
+
+**Exception — External service interfaces:** If the use case needs to interact with an external service (API, remote database, terminal commands, specialized library, etc.), you may create an interface (e.g. `IRemoteWhatever`) that abstracts the external dependency. The interface lives alongside the use case; its implementation belongs in the outer layer (typically instantiated in `main.cpp` or the controller, then injected into the use case). **Ask the user for approval before creating any such interface.** Do not put library-specific code directly in the use case.
+
+**Do not modify any other existing file.** Do not touch the controller, DTOs, entities, or any generated infrastructure.
+
+## Implementation Guidelines
+
+1. **Remove placeholder code**: Delete the `qCritical("Unimplemented...")` and `Q_UNIMPLEMENTED()` lines.
+2. **Transaction safety**: The try/catch block with `m_uow->rollback()` is already in place. Keep it.
+3. **Event publishing**: `m_uow->publish{{ uc.pascal_name }}Signal()` is called after the transaction commits. It flushes the `SignalBuffer` so that deferred entity-change events are emitted to the UI. Keep it after the try/catch block.
+4. **Error handling**: Throw `std::runtime_error("message")` for business errors. The catch block handles rollback.
+{%- if uc.inner.undoable %}
+5. **Undo support**: The controller calls `executeUndoableCommand` which invokes `useCase->execute()`, `useCase->undo()`, and `useCase->redo()`. The generated skeleton only has `execute()` — you **must** add `undo()` and `redo()` methods to the use case class:
+   - In `execute()`: capture state before mutation using `m_uow->snapshot*(ids)`, then perform the operation.
+   - In `undo()`: restore the captured snapshot using `m_uow->restore*(snap)`.
+   - In `redo()`: re-capture current state, then re-apply the operation.
+   - Both methods return `Common::UndoRedo::Result<void>`.
+   - Add corresponding declarations in the `.h` file.
+{%- endif %}
+{%- if uc.inner.read_only %}
+5. **Read-only**: This is a query. Do not modify data. The controller executes it via `executeReadQuery`.
+{%- endif %}
+{%- if uc.inner.long_operation %}
+5. **Progress reporting**: Call `progressCallback({percentage, "message"})` regularly.
+6. **Cancellation**: Check `cancelFlag.load()` in loops. On cancel, rollback and return early.
+7. **Result**: Return result as `QJsonObject`. Use `Common::DirectAccess::gadgetToJson(dto)` for DTO serialization.
+{%- endif %}

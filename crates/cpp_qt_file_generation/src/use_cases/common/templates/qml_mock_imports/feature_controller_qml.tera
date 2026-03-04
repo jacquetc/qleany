@@ -23,9 +23,9 @@ QtObject {
 
     function {{ uc.camel_name }}({% if uc.dto_in %}{{ uc.dto_in.camel_name }}{% endif %}) {
 {%- if uc.dto_out %}
-        let returnDto = {};
+        let return_dto = {};
 {%- else %}
-        let returnDto = true;
+        let return_dto = true;
 {%- endif %}
 
         // mocking QCoro::Task
@@ -33,7 +33,7 @@ QtObject {
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
             task = component.createObject(controller);
-            task.setValue(returnDto);
+            task.setValue(return_dto);
             task.setDelay(50);
         }
 

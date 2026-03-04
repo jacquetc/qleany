@@ -51,6 +51,9 @@ pub enum Commands {
 
     /// Upgrade manifest to the latest schema version
     Upgrade,
+
+    /// LLM Prompt
+    Prompt(PromptArgs)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -312,6 +315,25 @@ pub enum DocsTarget {
     RegenerationWorkflow,
 }
 
+// ─────────────────────────────────────────────────────────────
+// Prompt
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct PromptArgs {
+    /// List all use cases grouped by feature
+    #[arg(short, long)]
+    pub list: bool,
+
+    /// Generate a project context
+    #[arg(short, long)]
+    pub context: bool,
+
+    /// Generate a prompt for a specific use case. Write "feature:use_case".
+    #[arg(short, long)]
+    pub use_case: Option<String>,
+}
+
 /// Run the CLI with the given application context.
 /// Returns `Some(())` if the application should continue running as GUI, `None` otherwise.
 pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
@@ -360,6 +382,10 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
         Commands::Upgrade => {
             let path = manifest_path.expect("Upgrade requires a manifest");
             cli_handlers::upgrade::execute(app_context, &path, &output)
+        }
+        Commands::Prompt(args) => {
+            let path = manifest_path.expect("Prompt requires a manifest");
+            cli_handlers::prompt::execute(app_context, &path, &args, &output)
         }
     };
 
