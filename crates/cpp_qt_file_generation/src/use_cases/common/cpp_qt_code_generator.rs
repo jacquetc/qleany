@@ -4,7 +4,7 @@ mod gen_cmake_tests;
 use crate::use_cases::common::tools;
 use anyhow::Result;
 use anyhow::anyhow;
-use common::database::QueryUnitOfWork;
+use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
     Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface,
@@ -32,15 +32,52 @@ use tera::{Context, Tera};
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetRO")]
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Relationship", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
-pub(crate) trait GenerationReadOps: QueryUnitOfWork {}
+pub(crate) trait GenerationReadOps: QueryUnitOfWork + GenerationOps {}
+
+#[macros::uow_action(entity = "Root", action = "GetRelationship")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
+#[macros::uow_action(entity = "System", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "UserInterface", action = "Get")]
+#[macros::uow_action(entity = "File", action = "Get")]
+#[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "Feature", action = "Get")]
+#[macros::uow_action(entity = "Feature", action = "GetMulti")]
+#[macros::uow_action(entity = "UseCase", action = "Get")]
+#[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "Dto", action = "Get")]
+#[macros::uow_action(entity = "DtoField", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "Get")]
+#[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Field", action = "GetMulti")]
+#[macros::uow_action(entity = "Relationship", action = "GetMulti")]
+pub(crate) trait GenerationWriteOps: CommandUnitOfWork + GenerationOps {}
+
+#[macros::uow_action(entity = "Root", action = "GetRelationship")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
+#[macros::uow_action(entity = "System", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "UserInterface", action = "Get")]
+#[macros::uow_action(entity = "File", action = "Get")]
+#[macros::uow_action(entity = "Global", action = "Get")]
+#[macros::uow_action(entity = "Feature", action = "Get")]
+#[macros::uow_action(entity = "Feature", action = "GetMulti")]
+#[macros::uow_action(entity = "UseCase", action = "Get")]
+#[macros::uow_action(entity = "UseCase", action = "GetMulti")]
+#[macros::uow_action(entity = "Dto", action = "Get")]
+#[macros::uow_action(entity = "DtoField", action = "GetMulti")]
+#[macros::uow_action(entity = "Entity", action = "Get")]
+#[macros::uow_action(entity = "Entity", action = "GetMulti")]
+#[macros::uow_action(entity = "Field", action = "GetMulti")]
+#[macros::uow_action(entity = "Relationship", action = "GetMulti")]
+pub(crate) trait GenerationOps {}
 
 #[derive(Debug, Serialize, Clone)]
 pub(crate) struct GenerationSnapshot {
@@ -232,10 +269,7 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
-    fn get_entity_vm(
-        uow: &dyn GenerationReadOps,
-        entity_id: &EntityId,
-    ) -> anyhow::Result<EntityVM> {
+    fn get_entity_vm(uow: &dyn GenerationOps, entity_id: &EntityId) -> anyhow::Result<EntityVM> {
         use anyhow::anyhow;
         // Load the entity
         let entity = uow
@@ -587,7 +621,7 @@ impl SnapshotBuilder {
         }
     }
 
-    fn get_entity_owner(uow: &dyn GenerationReadOps, entity_id: &EntityId) -> Option<EntityId> {
+    fn get_entity_owner(uow: &dyn GenerationOps, entity_id: &EntityId) -> Option<EntityId> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
         if let Some(entity) = entity {
             let relationships = uow
@@ -605,7 +639,7 @@ impl SnapshotBuilder {
     }
 
     fn get_entity_owner_relationship_field_pascal_name(
-        uow: &dyn GenerationReadOps,
+        uow: &dyn GenerationOps,
         entity_id: &EntityId,
     ) -> Option<String> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
@@ -625,7 +659,7 @@ impl SnapshotBuilder {
     }
 
     fn get_entity_owner_relationship_type(
-        uow: &dyn GenerationReadOps,
+        uow: &dyn GenerationOps,
         entity_id: &EntityId,
     ) -> Option<RelationshipType> {
         let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
@@ -644,7 +678,7 @@ impl SnapshotBuilder {
         None
     }
     pub(crate) fn for_file_id(
-        uow: &dyn GenerationReadOps,
+        uow: &dyn GenerationOps,
         file_id: EntityId,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {
@@ -657,7 +691,7 @@ impl SnapshotBuilder {
     }
 
     pub(crate) fn for_file(
-        uow: &dyn GenerationReadOps,
+        uow: &dyn GenerationOps,
         file: &File,
         generation_snapshot_cache: &Vec<GenerationSnapshot>,
     ) -> anyhow::Result<(GenerationSnapshot, bool)> {

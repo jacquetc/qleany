@@ -1,5 +1,6 @@
 use crate::use_cases::common::cpp_qt_code_generator::{
-    GenerationReadOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
+    GenerationOps, GenerationReadOps, GenerationSnapshot, SnapshotBuilder,
+    generate_code_with_snapshot,
 };
 use crate::use_cases::common::cpp_qt_formatter::clang_format_files_batch;
 use crate::use_cases::common::tools;
@@ -93,8 +94,7 @@ impl LongOperation for GenerateCppQtFilesUseCase {
             }
 
             // Load file metadata (name, relative path)
-            let file_meta: File = uow_read
-                .get_file(file_id)?
+            let file_meta: File = GenerationReadOps::get_file(uow_read, file_id)?
                 .ok_or_else(|| anyhow!("File not found"))?;
             // println!("Processing file ID {}: {}", file_id, file_meta.name);
 

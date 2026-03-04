@@ -1,4 +1,4 @@
-use crate::use_cases::common::rust_code_generator::GenerationReadOps;
+use crate::use_cases::common::rust_code_generator::{GenerationOps, GenerationReadOps};
 use crate::use_cases::generate_rust_code_uc::{
     GenerateRustCodeUnitOfWorkFactoryTrait, GenerateRustCodeUnitOfWorkTrait,
 };
@@ -61,17 +61,34 @@ impl QueryUnitOfWork for GenerateRustCodeUnitOfWork {
 #[macros::uow_action(entity = "UseCase", action = "GetRO")]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Dto", action = "GetRO")]
-#[macros::uow_action(entity = "DtoField", action = "GetRO")]
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Field", action = "GetRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
-#[macros::uow_action(entity = "Relationship", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
 impl GenerationReadOps for GenerateRustCodeUnitOfWork {}
 
 impl GenerateRustCodeUnitOfWorkTrait for GenerateRustCodeUnitOfWork {}
+
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
+#[macros::uow_action(entity = "System", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "File", action = "GetRO")]
+#[macros::uow_action(entity = "Global", action = "GetRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetRO")]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetRO")]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Dto", action = "GetRO")]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Entity", action = "GetRO")]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Field", action = "GetMultiRO")]
+#[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
+impl GenerationOps for GenerateRustCodeUnitOfWork {}
 
 pub struct GenerateRustCodeUnitOfWorkFactory {
     context: DbContext,

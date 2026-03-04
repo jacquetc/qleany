@@ -1,4 +1,4 @@
-use crate::use_cases::common::cpp_qt_code_generator::GenerationReadOps;
+use crate::use_cases::common::cpp_qt_code_generator::{GenerationOps, GenerationReadOps};
 use crate::use_cases::generate_cpp_qt_files_uc::{
     GenerateCppQtFilesUnitOfWorkFactoryTrait, GenerateCppQtFilesUnitOfWorkTrait,
 };
@@ -48,28 +48,59 @@ impl QueryUnitOfWork for GenerateCppQtFilesUnitOfWork {
 #[macros::uow_action(entity = "System", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO", thread_safe = true)]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Global", action = "GetRO", thread_safe = true)]
-#[macros::uow_action(entity = "UserInterface", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Feature", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Feature", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "UseCase", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "UseCase", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "Dto", action = "GetRO", thread_safe = true)]
-#[macros::uow_action(entity = "DtoField", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO", thread_safe = true)]
 #[macros::uow_action(entity = "Entity", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO", thread_safe = true)]
-#[macros::uow_action(entity = "Field", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO", thread_safe = true)]
-#[macros::uow_action(entity = "Relationship", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO", thread_safe = true)]
 impl GenerationReadOps for GenerateCppQtFilesUnitOfWork {}
 
-#[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
-#[macros::uow_action(entity = "Root", action = "GetMultiRO", thread_safe = true)]
-#[macros::uow_action(entity = "Global", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(
+    entity = "Root",
+    action = "GetRelationshipRO",
+    thread_safe = true,
+    thread_safe = true
+)]
+#[macros::uow_action(
+    entity = "Root",
+    action = "GetMultiRO",
+    thread_safe = true,
+    thread_safe = true
+)]
+#[macros::uow_action(
+    entity = "Global",
+    action = "GetMultiRO",
+    thread_safe = true,
+    thread_safe = true
+)]
 impl GenerateCppQtFilesUnitOfWorkTrait for GenerateCppQtFilesUnitOfWork {}
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO", thread_safe = true)]
+#[macros::uow_action(entity = "Root", action = "GetAllRO", thread_safe = true)]
+#[macros::uow_action(entity = "System", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Workspace", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO", thread_safe = true)]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "File", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Global", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Feature", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Feature", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "UseCase", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "UseCase", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Dto", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "DtoField", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Entity", action = "GetRO", thread_safe = true)]
+#[macros::uow_action(entity = "Entity", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Field", action = "GetMultiRO", thread_safe = true)]
+#[macros::uow_action(entity = "Relationship", action = "GetMultiRO", thread_safe = true)]
+impl GenerationOps for GenerateCppQtFilesUnitOfWork {}
 
 pub struct GenerateCppQtFilesUnitOfWorkFactory {
     context: DbContext,

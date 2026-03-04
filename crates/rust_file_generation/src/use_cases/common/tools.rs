@@ -1,8 +1,8 @@
-use crate::use_cases::common::rust_code_generator::GenerationReadOps;
+use crate::use_cases::common::rust_code_generator::GenerationOps;
 use common::entities::Workspace;
 use common::types::EntityId;
 
-pub fn get_system_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
+pub fn get_system_id(uow: &dyn GenerationOps) -> anyhow::Result<EntityId> {
     use anyhow::anyhow;
     let roots = uow.get_all_root()?;
     let root = roots
@@ -22,7 +22,7 @@ pub fn get_system_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
     Ok(system_id)
 }
 
-pub fn get_workspace_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId> {
+pub fn get_workspace_id(uow: &dyn GenerationOps) -> anyhow::Result<EntityId> {
     use anyhow::anyhow;
     let roots = uow.get_all_root()?;
     let root = roots
@@ -42,7 +42,7 @@ pub fn get_workspace_id(uow: &dyn GenerationReadOps) -> anyhow::Result<EntityId>
     Ok(workspace_id)
 }
 
-pub fn get_workspace(uow: &dyn GenerationReadOps) -> anyhow::Result<Workspace> {
+pub fn get_workspace(uow: &dyn GenerationOps) -> anyhow::Result<Workspace> {
     use anyhow::anyhow;
     let roots = uow.get_all_root()?;
     let root = roots
