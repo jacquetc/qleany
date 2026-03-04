@@ -121,18 +121,18 @@ impl use_cases::WriteUoW for {{ s.entities[e].pascal_name }}WriteUoW {
         Ok(repo.update_multi(&mut event_buffer, entities)?)
     }
 
-    fn delete(&self, id: &EntityId) -> Result<()> {
+    fn remove(&self, id: &EntityId) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
         let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
         let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.delete(&mut event_buffer, id)?)
+        Ok(repo.remove(&mut event_buffer, id)?)
     }
 
-    fn delete_multi(&self, ids: &[EntityId]) -> Result<()> {
+    fn remove_multi(&self, ids: &[EntityId]) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
         let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
         let mut event_buffer = self.event_buffer.borrow_mut();
-        Ok(repo.delete_multi(&mut event_buffer, ids)?)
+        Ok(repo.remove_multi(&mut event_buffer, ids)?)
     }
 
     fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot> {

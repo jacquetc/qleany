@@ -40,8 +40,8 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error>;
     fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error>;
     fn update_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error>;
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
 {%- if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
@@ -96,7 +96,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
             relationship_ids = vec![created_id];
         } else {
             // Replace existing relationship: cascade-remove old entities first
-            self.delete_multi(event_buffer, &relationship_ids)?;
+            self.remove_multi(event_buffer, &relationship_ids)?;
             relationship_ids = vec![created_id];
         }
 {%- else %}
@@ -132,7 +132,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         if relationship_ids.is_empty() {
             relationship_ids = created_ids.clone();
         } else {
-            self.delete_multi(event_buffer, &relationship_ids)?;
+            self.remove_multi(event_buffer, &relationship_ids)?;
             relationship_ids = created_ids.clone();
         }
 {%- else %}
@@ -167,7 +167,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         Ok(updated)
     }
 
-    pub fn delete(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
         let entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
@@ -176,33 +176,33 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- endif %}
         {%- endfor %}
 
-        // delete all strong relationships, initiating a cascade delete
+        // remove all strong relationships, initiating a cascade remove
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         {%- if f.inner.relationship == "OneToOne" %}
             {%- if f.optional %}
         if let Some({{ f.snake_name }}_id) = {{ f.snake_name }} {
             repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
-                .delete(event_buffer, &{{ f.snake_name }}_id)?;
+                .remove(event_buffer, &{{ f.snake_name }}_id)?;
             }
             {%- else %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
-            .delete(event_buffer, &{{ f.snake_name }})?;
+            .remove(event_buffer, &{{ f.snake_name }})?;
             {%- endif %}
         {%- else %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
-            .delete_multi(event_buffer, &{{ f.snake_name }})?;
+            .remove_multi(event_buffer, &{{ f.snake_name }})?;
         {%- endif %}
         {%- endif %}
         {%- endfor %}
 
-        // delete entity
-        self.redb_table.delete(id)?;
+        // remove entity
+        self.redb_table.remove(id)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![*id], data: None });
         Ok(())
     }
 
-    pub fn delete_multi(&mut self, event_buffer: &mut EventBuffer, ids: &[EntityId]) -> Result<(), Error> {
+    pub fn remove_multi(&mut self, event_buffer: &mut EventBuffer, ids: &[EntityId]) -> Result<(), Error> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) { return Ok(()); }
 
@@ -234,15 +234,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- endif %}
         {%- endfor %}
 
-        // delete all strong relationships, initiating a cascade delete
+        // remove all strong relationships, initiating a cascade remove
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
-            .delete_multi(event_buffer, &{{ f.snake_name }}_ids)?;
+            .remove_multi(event_buffer, &{{ f.snake_name }}_ids)?;
         {%- endif %}
         {%- endfor %}
 
-        self.redb_table.delete_multi(ids)?;
+        self.redb_table.remove_multi(ids)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: ids.into(), data: None });
         Ok(())
     }

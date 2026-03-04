@@ -34,8 +34,8 @@ pub trait WriteUoW: CommandUnitOfWork {
     fn get_all(&self) -> Result<Vec<Self::Entity>>;
     fn create_orphan_multi(&self, entities: &[Self::Entity]) -> Result<Vec<Self::Entity>>;
     fn update_multi(&self, entities: &[Self::Entity]) -> Result<Vec<Self::Entity>>;
-    fn delete(&self, id: &EntityId) -> Result<()>;
-    fn delete_multi(&self, ids: &[EntityId]) -> Result<()>;
+    fn remove(&self, id: &EntityId) -> Result<()>;
+    fn remove_multi(&self, ids: &[EntityId]) -> Result<()>;
     fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot>;
     fn restore(&self, snap: &EntityTreeSnapshot) -> Result<()>;
 }

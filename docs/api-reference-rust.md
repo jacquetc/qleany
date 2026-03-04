@@ -348,25 +348,25 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 
 **Read-write actions** (use with `CommandUnitOfWork`):
 
-| Action                          | Generated method signature                                                        |
-|---------------------------------|-----------------------------------------------------------------------------------|
-| `CreateOrphan`                  | `fn create_orphan_name(&self, entity: &Name) -> Result<Name>`                    |
-| `CreateOrphanMulti`             | `fn create_orphan_name_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`     |
-| `Create`                        | `fn create_name(&self, entity: &Name, owner_id: EntityId, index: i32) -> Result<Name>` |
-| `CreateMulti`                   | `fn create_name_multi(&self, entities: &[Name], owner_id: EntityId, index: i32) -> Result<Vec<Name>>` |
-| `Get`                           | `fn get_name(&self, id: &EntityId) -> Result<Option<Name>>`                      |
-| `GetMulti`                      | `fn get_name_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Name>>>`        |
-| `GetAll`                        | `fn get_all_name(&self) -> Result<Vec<Name>>`                                    |
-| `Update`                        | `fn update_name(&self, entity: &Name) -> Result<Name>`                           |
-| `UpdateMulti`                   | `fn update_name_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`            |
-| `Delete`                        | `fn delete_name(&self, id: &EntityId) -> Result<()>`                             |
-| `DeleteMulti`                   | `fn delete_name_multi(&self, ids: &[EntityId]) -> Result<()>`                    |
-| `GetRelationship`               | `fn get_name_relationship(&self, id: &EntityId, field: &RF) -> Result<Vec<EntityId>>` |
-| `GetRelationshipsFromRightIds`  | `fn get_name_relationships_from_right_ids(&self, field: &RF, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
-| `SetRelationship`               | `fn set_name_relationship(&self, id: &EntityId, field: &RF, right_ids: &[EntityId]) -> Result<()>` |
-| `SetRelationshipMulti`          | `fn set_name_relationship_multi(&self, field: &RF, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>` |
-| `Snapshot`                      | `fn snapshot_name(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot>`        |
-| `Restore`                       | `fn restore_name(&self, snap: &EntityTreeSnapshot) -> Result<()>`                |
+| Action                         | Generated method signature                                                        |
+|--------------------------------|-----------------------------------------------------------------------------------|
+| `CreateOrphan`                 | `fn create_orphan_name(&self, entity: &Name) -> Result<Name>`                    |
+| `CreateOrphanMulti`            | `fn create_orphan_name_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`     |
+| `Create`                       | `fn create_name(&self, entity: &Name, owner_id: EntityId, index: i32) -> Result<Name>` |
+| `CreateMulti`                  | `fn create_name_multi(&self, entities: &[Name], owner_id: EntityId, index: i32) -> Result<Vec<Name>>` |
+| `Get`                          | `fn get_name(&self, id: &EntityId) -> Result<Option<Name>>`                      |
+| `GetMulti`                     | `fn get_name_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Name>>>`        |
+| `GetAll`                       | `fn get_all_name(&self) -> Result<Vec<Name>>`                                    |
+| `Update`                       | `fn update_name(&self, entity: &Name) -> Result<Name>`                           |
+| `UpdateMulti`                  | `fn update_name_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`            |
+| `Remove`                       | `fn remove_name(&self, id: &EntityId) -> Result<()>`                             |
+| `RemoveMulti`                  | `fn remove_name_multi(&self, ids: &[EntityId]) -> Result<()>`                    |
+| `GetRelationship`              | `fn get_name_relationship(&self, id: &EntityId, field: &RF) -> Result<Vec<EntityId>>` |
+| `GetRelationshipsFromRightIds` | `fn get_name_relationships_from_right_ids(&self, field: &RF, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
+| `SetRelationship`              | `fn set_name_relationship(&self, id: &EntityId, field: &RF, right_ids: &[EntityId]) -> Result<()>` |
+| `SetRelationshipMulti`         | `fn set_name_relationship_multi(&self, field: &RF, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>` |
+| `Snapshot`                     | `fn snapshot_name(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot>`        |
+| `Restore`                      | `fn restore_name(&self, snap: &EntityTreeSnapshot) -> Result<()>`                |
 
 **Read-only actions** (use with `QueryUnitOfWork`):
 

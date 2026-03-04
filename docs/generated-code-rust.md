@@ -17,8 +17,8 @@ pub trait WorkspaceTable {
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error>;
     fn update(&mut self, entity: &Workspace) -> Result<Workspace, Error>;
     fn update_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
 
     fn get_relationship(
         &self,
@@ -240,7 +240,7 @@ Both languages generate repositories with batch-capable interfaces:
 | `get(id)` / `get_multi(ids)`                                                  | Fetch entities                                     |
 | `get_all()`                                                                   | Fetch all entities                                 |
 | `update(entity)` / `update_multi(entities)`                                   | Update existing entities                           |
-| `delete(id)` / `delete_multi(ids)`                                            | Delete entities (cascade for strong relationships) |
+| `remove(id)` / `remove_multi(ids)`                                            | remove entities (cascade for strong relationships) |
 
 
 Relationship-specific methods:
@@ -286,7 +286,7 @@ pub fn create(
 #[macros::uow_action(entity = "Workspace", action = "Update")]
 #[macros::uow_action(entity = "Workspace", action = "UpdateMulti")]
 #[macros::uow_action(entity = "Workspace", action = "Delete")]
-#[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "RemoveMulti")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationship")]

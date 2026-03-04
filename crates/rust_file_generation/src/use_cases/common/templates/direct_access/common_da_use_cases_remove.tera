@@ -32,7 +32,7 @@ impl<F: WriteUoWFactory> RemoveUseCase<F> {
                 return Err(anyhow::anyhow!("Entity with id {} does not exist", id));
             }
         }
-        uow.delete_multi(ids)?;
+        uow.remove_multi(ids)?;
         uow.commit()?;
         Ok(())
     }
@@ -70,7 +70,7 @@ impl<F: WriteUoWFactory> UndoableRemoveUseCase<F> {
             }
         }
         self.entity_tree_snapshot = Some(uow.snapshot(ids)?);
-        uow.delete_multi(ids)?;
+        uow.remove_multi(ids)?;
         uow.commit()?;
         self.original_ids = Some(ids.to_vec());
         Ok(())
@@ -96,7 +96,7 @@ where
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
             self.entity_tree_snapshot = Some(uow.snapshot(ids)?);
-            uow.delete_multi(ids)?;
+            uow.remove_multi(ids)?;
             uow.commit()?;
         }
         Ok(())

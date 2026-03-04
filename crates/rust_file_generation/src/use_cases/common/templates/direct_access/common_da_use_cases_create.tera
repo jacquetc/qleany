@@ -143,7 +143,7 @@ where
             uow.begin_transaction()?;
 
             self.old_tree_snapshot = Some(uow.snapshot(&ids_to_remove)?);
-            uow.delete_multi(&ids_to_remove)?;
+            uow.remove_multi(&ids_to_remove)?;
 
             match self.strategy {
                 OwnerStrategy::Replacing => {
@@ -177,7 +177,7 @@ where
                     if !self.existing_child_ids.is_empty() {
                         self.displaced_children_snapshot =
                             Some(uow.snapshot(&self.existing_child_ids)?);
-                        uow.delete_multi(&self.existing_child_ids)?;
+                        uow.remove_multi(&self.existing_child_ids)?;
                     }
                     uow.restore(snapshot)?;
                     let created_ids: Vec<EntityId> =

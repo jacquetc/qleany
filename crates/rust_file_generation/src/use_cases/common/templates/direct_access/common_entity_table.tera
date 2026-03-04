@@ -71,7 +71,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
     fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.create_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
     fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, Error> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
     fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, Error> { let v = self.update_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
-    fn delete(&mut self, id: &EntityId) -> Result<(), Error> { self.delete_multi(std::slice::from_ref(id)) }
+    fn remove(&mut self, id: &EntityId) -> Result<(), Error> { self.remove_multi(std::slice::from_ref(id)) }
 
     fn create_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> {
         let mut created = Vec::new();
@@ -249,7 +249,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         Ok(updated)
     }
 
-    fn delete_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
 
         // forward relationships

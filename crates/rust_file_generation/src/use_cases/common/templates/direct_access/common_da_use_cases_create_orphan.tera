@@ -77,7 +77,7 @@ where
         if let Some(last_entities) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
-            uow.delete_multi(&last_entities.iter().map(|e| e.id()).collect::<Vec<_>>())?;
+            uow.remove_multi(&last_entities.iter().map(|e| e.id()).collect::<Vec<_>>())?;
             uow.commit()?;
             self.redo_stack.push_back(last_entities);
         }

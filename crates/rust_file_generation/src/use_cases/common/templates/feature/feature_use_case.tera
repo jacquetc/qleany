@@ -53,8 +53,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
 {%- endfor %}
 {%- else %}{# read_only #}
 //TODO: adapt entities and actions to real use :
-// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-// DeleteMulti, GetRelationship, GetRelationshipsFromRightIds,
+// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, remove,
+// removeMulti, GetRelationship, GetRelationshipsFromRightIds,
 // SetRelationship, SetRelationshipMulti
 //
 // You have here a read-write unit of work.
@@ -201,8 +201,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait : {
 {%- else %}{# read_only #}
 
 //TODO: adapt entities and actions to real use :
-// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-// DeleteMulti, GetRelationship, GetRelationshipsFromRightIds,
+// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, remove,
+// removeMulti, GetRelationship, GetRelationshipsFromRightIds,
 // SetRelationship, SetRelationshipMulti
 //
 // You have here a read-write unit of work trait.

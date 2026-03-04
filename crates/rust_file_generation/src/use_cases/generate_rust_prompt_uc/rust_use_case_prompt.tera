@@ -254,7 +254,7 @@ pub fn execute(
     uow.begin_transaction()?;
 
     // YOUR CODE HERE:
-    // - Use uow.get_*(), uow.create_*(), uow.update_*(), uow.delete_*() etc.
+    // - Use uow.get_*(), uow.create_*(), uow.update_*(), uow.remove_*() etc.
 {%- if uc.dto_in %}
     // - Read input from dto
 {%- endif %}
@@ -289,7 +289,7 @@ pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 #[macros::uow_action(entity = "EntityName", action = "GetMulti")]
 #[macros::uow_action(entity = "EntityName", action = "Update")]
 // Also available: GetAll, Create, CreateMulti, CreateOrphan, CreateOrphanMulti,
-//   UpdateMulti, Delete, DeleteMulti, GetRelationship, GetRelationshipsFromRightIds,
+//   UpdateMulti, Remove, RemoveMulti, GetRelationship, GetRelationshipsFromRightIds,
 //   SetRelationship, SetRelationshipMulti, Snapshot, Restore
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
 {%- endif %}

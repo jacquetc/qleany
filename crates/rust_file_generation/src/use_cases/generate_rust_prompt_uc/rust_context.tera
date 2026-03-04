@@ -198,8 +198,8 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 | `#[macros::uow_action(entity = "Name", action = "CreateOrphanMulti")]` | `create_orphan_{snake}_multi(entities) -> Result<Vec<Name>>` |
 | `#[macros::uow_action(entity = "Name", action = "Update")]` | `update_{snake}(entity) -> Result<Name>` |
 | `#[macros::uow_action(entity = "Name", action = "UpdateMulti")]` | `update_{snake}_multi(entities) -> Result<Vec<Name>>` |
-| `#[macros::uow_action(entity = "Name", action = "Delete")]` | `delete_{snake}(id) -> Result<()>` |
-| `#[macros::uow_action(entity = "Name", action = "DeleteMulti")]` | `delete_{snake}_multi(ids) -> Result<()>` |
+| `#[macros::uow_action(entity = "Name", action = "Remove")]` | `remove_{snake}(id) -> Result<()>` |
+| `#[macros::uow_action(entity = "Name", action = "RemoveMulti")]` | `remove_{snake}_multi(ids) -> Result<()>` |
 | `#[macros::uow_action(entity = "Name", action = "GetRelationship")]` | `get_{snake}_relationship(id, field) -> Result<Vec<EntityId>>` |
 | `#[macros::uow_action(entity = "Name", action = "GetRelationshipsFromRightIds")]` | `get_{snake}_relationships_from_right_ids(field, right_ids) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
 | `#[macros::uow_action(entity = "Name", action = "SetRelationship")]` | `set_{snake}_relationship(id, field, ids) -> Result<()>` |
@@ -236,7 +236,7 @@ Long-running use cases implement the `LongOperation` trait. They run on a backgr
 - **Entity names**: PascalCase in code, snake_case in file paths
 - **File naming**: `{snake_name}_uc.rs`, `{snake_name}_uow.rs`, `dtos.rs`
 - **One use case per file**: each operation gets its own `.rs` file
-- **Strong relationships**: cascade delete (owner deletes children)
+- **Strong relationships**: cascade remove (owner removes children)
 - **Weak relationships**: reference only (no cascade)
 - **Error handling**: return `anyhow::Result`, use `anyhow!("message")` for business errors
 - **Prefix path**: `{{ s.global.prefix }}`
