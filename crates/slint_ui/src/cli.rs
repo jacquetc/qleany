@@ -53,7 +53,7 @@ pub enum Commands {
     Upgrade,
 
     /// LLM Prompt
-    Prompt(PromptArgs)
+    Prompt(PromptArgs),
 }
 
 // ─────────────────────────────────────────────────────────────

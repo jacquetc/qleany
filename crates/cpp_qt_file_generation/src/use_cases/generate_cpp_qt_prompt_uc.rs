@@ -1,8 +1,8 @@
 use crate::GenerateCppQtPromptDto;
 use crate::GenerateCppQtPromptReturnDto;
+use crate::use_cases::common::cpp_qt_code_generator::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::entities::{File, FileStatus};
-use crate::use_cases::common::cpp_qt_code_generator::{GenerationReadOps, SnapshotBuilder};
 use tera::{Context, Tera};
 
 const CONTEXT_TEMPLATE: &str = include_str!("generate_cpp_qt_prompt_uc/cpp_qt_context.tera");

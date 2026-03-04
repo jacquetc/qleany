@@ -5,6 +5,6 @@ pub mod export;
 pub mod generate;
 pub mod list;
 pub mod new;
+pub mod prompt;
 pub mod show;
 pub mod upgrade;
-pub mod prompt;

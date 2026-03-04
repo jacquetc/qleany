@@ -2,13 +2,13 @@ use crate::app_context::AppContext;
 use crate::cli::{OutputContext, PromptArgs};
 use crate::cli_handlers::common::{TargetLanguage, get_target_language};
 use anyhow::{Result, anyhow, bail};
-use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use cpp_qt_file_generation::GenerateCppQtPromptDto;
-use rust_file_generation::rust_file_generation_controller;
-use rust_file_generation::GenerateRustPromptDto;
+use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use direct_access::{feature_controller, global_controller, use_case_controller};
 use handling_manifest::handling_manifest_controller;
 use heck::AsSnakeCase;
+use rust_file_generation::GenerateRustPromptDto;
+use rust_file_generation::rust_file_generation_controller;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -39,15 +39,11 @@ pub fn execute(
                 }
             } else {
                 // split feature/use_case string to feature and use_case
-                let use_case_arg = args
-                    .use_case
-                    .as_ref()
-                    .ok_or_else(|| {
-                        anyhow!("use_case must be in format feature_name:use_case_name")
-                    })?;
-                let (feature_name, use_case_name) = use_case_arg
-                    .split_once(':')
-                    .ok_or_else(|| {
+                let use_case_arg = args.use_case.as_ref().ok_or_else(|| {
+                    anyhow!("use_case must be in format feature_name:use_case_name")
+                })?;
+                let (feature_name, use_case_name) =
+                    use_case_arg.split_once(':').ok_or_else(|| {
                         anyhow!("use_case must be in format feature_name:use_case_name")
                     })?;
 
@@ -95,15 +91,11 @@ pub fn execute(
                     feature_id: None,
                 }
             } else {
-                let use_case_arg = args
-                    .use_case
-                    .as_ref()
-                    .ok_or_else(|| {
-                        anyhow!("use_case must be in format feature_name:use_case_name")
-                    })?;
-                let (feature_name, use_case_name) = use_case_arg
-                    .split_once(':')
-                    .ok_or_else(|| {
+                let use_case_arg = args.use_case.as_ref().ok_or_else(|| {
+                    anyhow!("use_case must be in format feature_name:use_case_name")
+                })?;
+                let (feature_name, use_case_name) =
+                    use_case_arg.split_once(':').ok_or_else(|| {
                         anyhow!("use_case must be in format feature_name:use_case_name")
                     })?;
 
@@ -200,7 +192,10 @@ fn check_cpp_qt_implementation(
         .join("use_cases")
         .join(format!("{}_uc.cpp", uc_snake));
 
-    check_file_implementation(&path, &["qCritical(\"Unimplemented code:", "Q_UNIMPLEMENTED"])
+    check_file_implementation(
+        &path,
+        &["qCritical(\"Unimplemented code:", "Q_UNIMPLEMENTED"],
+    )
 }
 
 fn check_rust_implementation(

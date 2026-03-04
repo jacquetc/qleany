@@ -457,7 +457,7 @@ impl FillRustFilesUseCase {
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
             name: "use_cases.rs".to_string(),
-            relative_path:  format!("{}/common/src/direct_access/", prefix),
+            relative_path: format!("{}/common/src/direct_access/", prefix),
             group: "entities".to_string(),
             template_name: "common_da_use_cases_mod".to_string(),
             generated_code: None,
@@ -467,7 +467,6 @@ impl FillRustFilesUseCase {
             use_case: None,
             field: None,
         });
-
 
         let uc_relative_path = format!("{}/common/src/direct_access/use_cases/", prefix);
 

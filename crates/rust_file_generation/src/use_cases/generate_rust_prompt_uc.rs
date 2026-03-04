@@ -1,8 +1,8 @@
 use crate::GenerateRustPromptDto;
 use crate::GenerateRustPromptReturnDto;
+use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotBuilder};
 use anyhow::Result;
 use common::entities::{File, FileStatus};
-use crate::use_cases::common::rust_code_generator::{GenerationReadOps, SnapshotBuilder};
 use tera::{Context, Tera};
 
 const CONTEXT_TEMPLATE: &str = include_str!("generate_rust_prompt_uc/rust_context.tera");
@@ -25,10 +25,7 @@ impl GenerateRustPromptUseCase {
         GenerateRustPromptUseCase { uow_factory }
     }
 
-    pub fn execute(
-        &mut self,
-        dto: &GenerateRustPromptDto,
-    ) -> Result<GenerateRustPromptReturnDto> {
+    pub fn execute(&mut self, dto: &GenerateRustPromptDto) -> Result<GenerateRustPromptReturnDto> {
         let (template_name, file) = if dto.context {
             // Context mode: load all features and all entities for a broad overview
             (

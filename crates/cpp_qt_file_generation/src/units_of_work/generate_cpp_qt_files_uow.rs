@@ -5,6 +5,8 @@ use crate::use_cases::generate_cpp_qt_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::direct_access::root::RootRelationshipField;
+use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::UserInterface;
 use common::entities::Workspace;
 use common::entities::{
@@ -12,8 +14,6 @@ use common::entities::{
 };
 use common::types::EntityId;
 use std::sync::Mutex;
-use common::direct_access::root::RootRelationshipField;
-use common::direct_access::workspace::WorkspaceRelationshipField;
 
 pub struct GenerateCppQtFilesUnitOfWork {
     context: DbContext,
