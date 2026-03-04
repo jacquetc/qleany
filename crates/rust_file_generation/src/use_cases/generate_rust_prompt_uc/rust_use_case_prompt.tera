@@ -63,9 +63,9 @@ No input or output DTO. The use case returns `()`.
 
 | Field | Rust Type | Optional | Relationship |
 |-------|-----------|----------|--------------|
-| id | `EntityId` | false | - |
+| id | `EntityId` | false | value |
 {%- for f in ent.fields %}
-| {{ f.snake_name }} | `{{ f.rust_type }}` | {{ f.optional }} | {{ f.relationship }} |
+| {{ f.snake_name }} | `{{ f.rust_type }}` {% if f.inner.field_type == "Enum" %}(enum) {% endif %}| {{ f.optional }} | {% if f.inner.field_type != "Entity" %}value{% else %}{{ f.relationship }}{% endif %} |
 {%- endfor %}
 {%- if ent.forward_relationships | length > 0 %}
 
@@ -74,12 +74,33 @@ Relationships:
 - {{ rel.field_pascal_name }} -> {{ rel.inner.relationship_type }} ({{ rel.inner.strength }})
 {%- endfor %}
 {%- endif %}
-{% endfor %}
+
+{%- set_global has_enum = false %}
+{%- for f in ent.fields %}
+    {%- if f.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+Enums:
+    {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "Enum" %}
+
+enum {{ f.inner.enum_name }} {
+            {%- for v in f.inner.enum_values %}
+    {{ v }},
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
+{%- endfor %}{# end of entities #}
 {%- else %}
 
 ## Missing Entity Declarations
 
-This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic, then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
+This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic (find them in `{{ s.global.prefix }}/common/entities.rs`), then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
 {%- endif %}
 
 ## Files to Modify
@@ -342,13 +363,19 @@ impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
    - In `undo()`: restore the captured snapshot using `uow.restore_{entity_snake}(&snap)?`.
    - In `redo()`: re-execute the forward operation.
    - Implement `as_any(&self) -> &dyn Any` returning `self`.
+4. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.
 {%- elif uc.inner.long_operation %}
 3. **Progress reporting**: Call `progress_callback(OperationProgress::new(pct, Some("message")))` regularly.
 4. **Cancellation**: Check `cancel_flag.load(Ordering::Relaxed)` in loops. On cancel, {% if uc.inner.read_only %}end transaction{% else %}rollback{% endif %} and return error.
 {%- if uc.inner.read_only %}
 5. **Read-only**: Do not modify data -- use only `*RO` action variants from `uow`.
+6. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.
+{%- else %}
+5. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.
 {%- endif %}
 {%- elif uc.inner.read_only %}
 3. **Read-only**: This is a query. Do not modify data. Use `*RO` action variants and `QueryUnitOfWork` (`begin_transaction` / `end_transaction`).
-{%- endif %}
 4. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.
+{%- else %}
+3. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.
+{%- endif %}

@@ -116,7 +116,7 @@ Cargo.toml                                          # Workspace root
 
 Fields (including inherited):
 {%- for f in ent.fields %}
-- `{{ f.snake_name }}`: `{{ f.rust_type }}`
+- `{{ f.snake_name }}`: `{{ f.rust_type }}`{% if f.inner.field_type == "Enum" %} (enum){% endif %}
   {%- if f.optional %} (optional){%- endif %}
   {%- if f.inner.field_type == "Entity" %} -> entity field{%- endif %}
 {%- endfor %}
@@ -127,13 +127,33 @@ Fields (including inherited):
 {%- for rid, rel in ent.forward_relationships %}
 {%- if loop.first %}
 
-Relationships (owns):
+Relationships:
 {%- endif %}
 - {{ rel.field_pascal_name }} -> {{ s.entities[rel.inner.right_entity].pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
 
 {%- for rid, rel in ent.backward_relationships %}
 {%- if loop.first %}
+{%- set_global has_enum = false %}
+{%- for f in ent.fields %}
+    {%- if f.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+Enums:
+    {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "Enum" %}
+
+enum {{ f.inner.enum_name }} {
+            {%- for v in f.inner.enum_values %}
+    {{ v }},
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
 
 Owned by:
 {%- endif %}

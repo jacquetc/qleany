@@ -74,11 +74,11 @@ No input or output DTO. The use case returns `bool`.
 {% for e_id, ent in uc.entities %}
 ### {{ ent.pascal_name }}
 
-| Field | C++ Type | Optional | List |
+| Field | C++ Type | Optional | List | Relationship |
 |-------|----------|----------|------|
-| id | `u64` | false | false |
+| id | `u64` | false | false | value |
 {%- for f in ent.fields %}
-| {{ f.camel_name }} | `{{ f.cpp_qt_type }}` | {{ f.optional }} | {{ f.is_list }} |
+| {{ f.camel_name }} | `{{ f.cpp_qt_type }}` {% if f.inner.field_type == "Enum" %}(enum) {% endif %}| {{ f.optional }} | {{ f.is_list }} | {% if f.inner.field_type != "Entity" %}value{% else %}{{ f.relationship }}{% endif %} |
 {%- endfor %}
 {%- if ent.forward_relationships | length > 0 %}
 
@@ -87,12 +87,33 @@ Relationships:
 - {{ rel.field_pascal_name }} → {{ rel.inner.relationship_type }} ({{ rel.inner.strength }})
 {%- endfor %}
 {%- endif %}
-{% endfor %}
+
+{%- set_global has_enum = false %}
+{%- for f in ent.fields %}
+    {%- if f.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+Enums:
+    {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "Enum" %}
+
+enum {{ f.inner.enum_name }} {
+            {%- for v in f.inner.enum_values %}
+    {{ v }},
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
+{% endfor %}{# end of entities #}
 {%- else %}
 
 ## Missing Entity Declarations
 
-This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic, then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
+This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic (find them in `{{ s.global.prefix }}/common/entities/`), then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
 {%- endif %}
 
 ## Files to Modify

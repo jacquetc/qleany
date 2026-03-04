@@ -101,7 +101,7 @@ CMakeLists.txt
 
 Fields (including inherited):
 {%- for f in ent.fields %}
-- `{{ f.camel_name }}`: `{{ f.cpp_qt_type }}`
+- `{{ f.camel_name }}`: `{{ f.cpp_qt_type }}`{% if f.inner.field_type == "Enum" %} (enum){% endif %}
   {%- if f.optional %} (optional){%- endif %}
   {%- if f.is_list %} (list){%- endif %}
   {%- if f.inner.field_type == "Entity" %} → entity field{%- endif %}
@@ -117,6 +117,27 @@ Relationships (owns):
 {%- endif %}
 - {{ rel.field_pascal_name }} → {{ s.entities[rel.inner.right_entity].pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
+
+{%- set_global has_enum = false %}
+{%- for f in ent.fields %}
+    {%- if f.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+Enums:
+    {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "Enum" %}
+
+enum {{ f.inner.enum_name }} {
+            {%- for v in f.inner.enum_values %}
+    {{ v }},
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
 
 {%- for rid, rel in ent.backward_relationships %}
 {%- if loop.first %}
