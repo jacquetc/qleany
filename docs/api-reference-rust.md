@@ -187,6 +187,44 @@ pub fn get_relationship(
 
 Returns the IDs of related entities for a given relationship field.
 
+#### get_relationship_many
+
+```rust
+pub fn get_relationship_many(
+    db_context: &DbContext,
+    ids: &[EntityId],
+    field: &CarRelationshipField,
+) -> Result<HashMap<EntityId, Vec<EntityId>>>
+```
+
+Batch version of `get_relationship`. Returns a map from each entity ID to its related IDs.
+
+#### get_relationship_count
+
+```rust
+pub fn get_relationship_count(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &CarRelationshipField,
+) -> Result<usize>
+```
+
+Returns the number of related entities without loading them.
+
+#### get_relationship_in_range
+
+```rust
+pub fn get_relationship_in_range(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &CarRelationshipField,
+    offset: usize,
+    limit: usize,
+) -> Result<Vec<EntityId>>
+```
+
+Returns a paginated slice of related entity IDs, starting at `offset` and returning at most `limit` entries.
+
 #### set_relationship
 
 ```rust
@@ -227,6 +265,15 @@ let created = controller::create_orphan(
 // Relationships
 let passenger_ids = controller::get_relationship(
     &db_context, &EntityId::new(1), &CarRelationshipField::Passengers,
+)?;
+let many = controller::get_relationship_many(
+    &db_context, &[EntityId::new(1), EntityId::new(2)], &CarRelationshipField::Passengers,
+)?;
+let count = controller::get_relationship_count(
+    &db_context, &EntityId::new(1), &CarRelationshipField::Passengers,
+)?;
+let page = controller::get_relationship_in_range(
+    &db_context, &EntityId::new(1), &CarRelationshipField::Passengers, 0, 10,
 )?;
 controller::set_relationship(
     &db_context, &event_hub, &relationship_dto,
@@ -362,6 +409,9 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 | `Remove`                       | `fn remove_name(&self, id: &EntityId) -> Result<()>`                             |
 | `RemoveMulti`                  | `fn remove_name_multi(&self, ids: &[EntityId]) -> Result<()>`                    |
 | `GetRelationship`              | `fn get_name_relationship(&self, id: &EntityId, field: &RF) -> Result<Vec<EntityId>>` |
+| `GetRelationshipMany`          | `fn get_name_relationship_many(&self, ids: &[EntityId], field: &RF) -> Result<HashMap<EntityId, Vec<EntityId>>>` |
+| `GetRelationshipCount`         | `fn get_name_relationship_count(&self, id: &EntityId, field: &RF) -> Result<usize>` |
+| `GetRelationshipInRange`       | `fn get_name_relationship_in_range(&self, id: &EntityId, field: &RF, offset: usize, limit: usize) -> Result<Vec<EntityId>>` |
 | `GetRelationshipsFromRightIds` | `fn get_name_relationships_from_right_ids(&self, field: &RF, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
 | `SetRelationship`              | `fn set_name_relationship(&self, id: &EntityId, field: &RF, right_ids: &[EntityId]) -> Result<()>` |
 | `SetRelationshipMulti`         | `fn set_name_relationship_multi(&self, field: &RF, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>` |
@@ -376,6 +426,9 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 | `GetMultiRO`                    | `fn get_name_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Name>>>`        |
 | `GetAllRO`                      | `fn get_all_name(&self) -> Result<Vec<Name>>`                                    |
 | `GetRelationshipRO`             | `fn get_name_relationship(&self, id: &EntityId, field: &RF) -> Result<Vec<EntityId>>` |
+| `GetRelationshipManyRO`         | `fn get_name_relationship_many(&self, ids: &[EntityId], field: &RF) -> Result<HashMap<EntityId, Vec<EntityId>>>` |
+| `GetRelationshipCountRO`        | `fn get_name_relationship_count(&self, id: &EntityId, field: &RF) -> Result<usize>` |
+| `GetRelationshipInRangeRO`      | `fn get_name_relationship_in_range(&self, id: &EntityId, field: &RF, offset: usize, limit: usize) -> Result<Vec<EntityId>>` |
 | `GetRelationshipsFromRightIdsRO`| `fn get_name_relationships_from_right_ids(&self, field: &RF, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
 
 > Do not mix read-only (`*RO`) and write actions in the same unit of work.

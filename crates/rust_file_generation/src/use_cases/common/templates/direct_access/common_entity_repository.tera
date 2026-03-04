@@ -44,6 +44,9 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
 {%- if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
+    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error>;
+    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
     fn set_relationship_multi(&mut self, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
     fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
@@ -58,6 +61,9 @@ pub trait {{ s.entities[e].pascal_name }}TableRO {
     fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error>;
 {%- if s.entities[e].forward_relationships %}
     fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error>;
+    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error>;
+    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
 {%- endif %}
 }
@@ -249,6 +255,9 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
 {%- if s.entities[e].forward_relationships %}
     pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship(id, field) }
+    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> { self.redb_table.get_relationship_many(ids, field) }
+    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error> { self.redb_table.get_relationship_count(id, field) }
+    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship_in_range(id, field, offset, limit) }
     pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
 
     pub fn set_relationship_multi(&mut self, event_buffer: &mut EventBuffer, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error> {
@@ -392,6 +401,9 @@ impl<'a> {{ s.entities[e].pascal_name }}RepositoryRO<'a> {
     pub fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, Error> { self.redb_table.get_all() }
 {%- if s.entities[e].forward_relationships %}
     pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship(id, field) }
+    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> { self.redb_table.get_relationship_many(ids, field) }
+    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error> { self.redb_table.get_relationship_count(id, field) }
+    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error> { self.redb_table.get_relationship_in_range(id, field, offset, limit) }
     pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
 {%- endif %}
 }

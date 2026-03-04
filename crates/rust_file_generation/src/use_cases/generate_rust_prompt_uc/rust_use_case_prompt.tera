@@ -281,7 +281,8 @@ Also in this file, update the UoW **trait** macros to declare which entity opera
 // Read-only actions (use *RO variants):
 #[macros::uow_action(entity = "EntityName", action = "GetRO")]
 #[macros::uow_action(entity = "EntityName", action = "GetMultiRO")]
-// Also available: GetAllRO, GetRelationshipRO, GetRelationshipsFromRightIdsRO
+// Also available: GetAllRO, GetRelationshipRO, GetRelationshipManyRO, GetRelationshipCountRO,
+//   GetRelationshipInRangeRO, GetRelationshipsFromRightIdsRO
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 {%- else %}
 // Read-write actions:
@@ -289,7 +290,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 #[macros::uow_action(entity = "EntityName", action = "GetMulti")]
 #[macros::uow_action(entity = "EntityName", action = "Update")]
 // Also available: GetAll, Create, CreateMulti, CreateOrphan, CreateOrphanMulti,
-//   UpdateMulti, Remove, RemoveMulti, GetRelationship, GetRelationshipsFromRightIds,
+//   UpdateMulti, Remove, RemoveMulti, GetRelationship, GetRelationshipMany,
+//   GetRelationshipCount, GetRelationshipInRange, GetRelationshipsFromRightIds,
 //   SetRelationship, SetRelationshipMulti, Snapshot, Restore
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
 {%- endif %}

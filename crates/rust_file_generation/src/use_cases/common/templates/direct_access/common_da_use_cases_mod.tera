@@ -7,6 +7,9 @@ pub mod create;
 pub mod update;
 pub mod remove;
 pub mod get_relationship;
+pub mod get_relationship_many;
+pub mod get_relationship_count;
+pub mod get_relationship_in_range;
 pub mod set_relationship;
 
 pub use traits::*;
@@ -16,4 +19,7 @@ pub use create::{CreateUseCase, UndoableCreateUseCase, OwnerStrategy};
 pub use update::*;
 pub use remove::*;
 pub use get_relationship::*;
+pub use get_relationship_many::*;
+pub use get_relationship_count::*;
+pub use get_relationship_in_range::*;
 pub use set_relationship::*;

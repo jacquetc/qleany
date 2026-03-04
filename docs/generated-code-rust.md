@@ -25,6 +25,23 @@ pub trait WorkspaceTable {
         id: &EntityId,
         field: &WorkspaceRelationshipField,
     ) -> Result<Vec<EntityId>, Error>;
+    fn get_relationship_many(
+        &self,
+        ids: &[EntityId],
+        field: &WorkspaceRelationshipField,
+    ) -> Result<HashMap<EntityId, Vec<EntityId>>, Error>;
+    fn get_relationship_count(
+        &self,
+        id: &EntityId,
+        field: &WorkspaceRelationshipField,
+    ) -> Result<usize, Error>;
+    fn get_relationship_in_range(
+        &self,
+        id: &EntityId,
+        field: &WorkspaceRelationshipField,
+        offset: usize,
+        limit: usize,
+    ) -> Result<Vec<EntityId>, Error>;
     fn get_relationships_from_right_ids(
         &self,
         field: &WorkspaceRelationshipField,
@@ -245,12 +262,15 @@ Both languages generate repositories with batch-capable interfaces:
 
 Relationship-specific methods:
 
-| Method                                         | Purpose                         |
-|------------------------------------------------|---------------------------------|
-| `get_relationship(id, field)`                  | Get related IDs for one entity  |
-| `get_relationships_from_right_ids(field, ids)` | Reverse lookup                  |
-| `set_relationship(id, field, ids)`             | Set relationship for one entity |
-| `set_relationship_multi(field, relationships)` | Batch relationship updates      |
+| Method                                                | Purpose                                   |
+|-------------------------------------------------------|-------------------------------------------|
+| `get_relationship(id, field)`                         | Get related IDs for one entity            |
+| `get_relationship_many(ids, field)`                   | Get related IDs for multiple entities     |
+| `get_relationship_count(id, field)`                   | Count related entities without loading    |
+| `get_relationship_in_range(id, field, offset, limit)` | Paginated slice of related IDs            |
+| `get_relationships_from_right_ids(field, ids)`        | Reverse lookup                            |
+| `set_relationship(id, field, ids)`                    | Set relationship for one entity           |
+| `set_relationship_multi(field, relationships)`        | Batch relationship updates                |
 
 ### Unit of Work
 
@@ -288,6 +308,9 @@ pub fn create(
 #[macros::uow_action(entity = "Workspace", action = "Delete")]
 #[macros::uow_action(entity = "Workspace", action = "RemoveMulti")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipMany")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipCount")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipInRange")]
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationshipMulti")]

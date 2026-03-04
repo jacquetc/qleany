@@ -291,6 +291,27 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
     }
 
+    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        let mut map = std::collections::HashMap::new();
+        for id in ids {
+            let right_ids = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+            map.insert(*id, right_ids);
+        }
+        Ok(map)
+    }
+
+    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        Ok(table.get(id)?.map(|g| g.value().len()).unwrap_or(0))
+    }
+
+    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        let all = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+        Ok(all.into_iter().skip(offset).take(limit).collect())
+    }
+
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
         let table = self.transaction.open_table(get_junction_table_definition(field))?;
         let mut iter = table.iter()?;
@@ -534,6 +555,27 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         let table = self.transaction.open_table(get_junction_table_definition(field))?;
         let guard = table.get(id)?;
         Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
+    }
+
+    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        let mut map = std::collections::HashMap::new();
+        for id in ids {
+            let right_ids = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+            map.insert(*id, right_ids);
+        }
+        Ok(map)
+    }
+
+    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        Ok(table.get(id)?.map(|g| g.value().len()).unwrap_or(0))
+    }
+
+    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, Error> {
+        let table = self.transaction.open_table(get_junction_table_definition(field))?;
+        let all = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+        Ok(all.into_iter().skip(offset).take(limit).collect())
     }
 
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {

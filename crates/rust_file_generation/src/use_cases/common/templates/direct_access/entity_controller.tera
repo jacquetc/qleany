@@ -250,6 +250,38 @@ pub fn get_relationship(
     uc.execute(id, field)
 }
 
+pub fn get_relationship_many(
+    db_context: &DbContext,
+    ids: &[EntityId],
+    field: &{{ s.entities[e].pascal_name }}RelationshipField,
+) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetRelationshipManyUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
+    uc.execute(ids, field)
+}
+
+pub fn get_relationship_count(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &{{ s.entities[e].pascal_name }}RelationshipField,
+) -> Result<usize> {
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetRelationshipCountUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
+    uc.execute(id, field)
+}
+
+pub fn get_relationship_in_range(
+    db_context: &DbContext,
+    id: &EntityId,
+    field: &{{ s.entities[e].pascal_name }}RelationshipField,
+    offset: usize,
+    limit: usize,
+) -> Result<Vec<EntityId>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}ReadUoWFactory::new(db_context);
+    let uc = use_cases::GetRelationshipInRangeUseCase::<{{ s.entities[e].pascal_name }}RelationshipField, _>::new(uow_factory);
+    uc.execute(id, field, offset, limit)
+}
+
 pub fn set_relationship(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,

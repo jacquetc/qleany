@@ -260,6 +260,38 @@ pub fn get_{{ entity.snake_name }}_relationship(
         .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship: {:?}", e))
 }
 
+/// Get relationship IDs for multiple {{ entity.snake_name }} entities at once
+pub fn get_{{ entity.snake_name }}_relationship_many(
+    ctx: &AppContext,
+    ids: &[EntityId],
+    field: &{{ entity.pascal_name }}RelationshipField,
+) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, String> {
+    {{ entity.snake_name }}_controller::get_relationship_many(&ctx.db_context, ids, field)
+        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship many: {:?}", e))
+}
+
+/// Get relationship count for a {{ entity.snake_name }} entity
+pub fn get_{{ entity.snake_name }}_relationship_count(
+    ctx: &AppContext,
+    id: &EntityId,
+    field: &{{ entity.pascal_name }}RelationshipField,
+) -> Result<usize, String> {
+    {{ entity.snake_name }}_controller::get_relationship_count(&ctx.db_context, id, field)
+        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship count: {:?}", e))
+}
+
+/// Get relationship IDs for a {{ entity.snake_name }} entity with pagination
+pub fn get_{{ entity.snake_name }}_relationship_in_range(
+    ctx: &AppContext,
+    id: &EntityId,
+    field: &{{ entity.pascal_name }}RelationshipField,
+    offset: usize,
+    limit: usize,
+) -> Result<Vec<EntityId>, String> {
+    {{ entity.snake_name }}_controller::get_relationship_in_range(&ctx.db_context, id, field, offset, limit)
+        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship in range: {:?}", e))
+}
+
 /// Set a {{ entity.snake_name }} relationship
 pub fn set_{{ entity.snake_name }}_relationship(
     ctx: &AppContext,

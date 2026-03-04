@@ -483,6 +483,18 @@ impl FillRustFilesUseCase {
                 "common_da_use_cases_get_relationship",
             ),
             (
+                "get_relationship_many.rs",
+                "common_da_use_cases_get_relationship_many",
+            ),
+            (
+                "get_relationship_count.rs",
+                "common_da_use_cases_get_relationship_count",
+            ),
+            (
+                "get_relationship_in_range.rs",
+                "common_da_use_cases_get_relationship_in_range",
+            ),
+            (
                 "set_relationship.rs",
                 "common_da_use_cases_set_relationship",
             ),
