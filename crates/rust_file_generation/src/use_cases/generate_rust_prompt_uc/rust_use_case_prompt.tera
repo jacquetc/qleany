@@ -1,0 +1,352 @@
+{%- set f_id = s.file.inner.feature %}
+{%- set feat = s.features[f_id] %}
+{%- set uc_id = s.file.inner.use_case %}
+{%- set uc = s.use_cases[uc_id] %}
+# Task: Implement the "{{ uc.pascal_name }}" Use Case
+
+## Context
+
+- **Application**: {{ s.global.inner.application_name }} (Rust, Qleany v{{ s.system.inner.version }})
+- **Feature crate**: {{ feat.snake_name }} (`{{ s.global.prefix }}/{{ feat.snake_name }}/`)
+- **Use Case**: {{ uc.pascal_name }} (`{{ uc.snake_name }}_uc`)
+{%- if uc.inner.long_operation and uc.inner.read_only %}
+- **Type**: Read-only long operation (runs on background thread with progress/cancellation, does not modify data)
+{%- elif uc.inner.long_operation %}
+- **Type**: Long operation (runs on background thread with progress/cancellation)
+{%- elif uc.inner.read_only %}
+- **Type**: Read-only query
+{%- elif uc.inner.undoable %}
+- **Type**: Undoable command (supports undo/redo via snapshot)
+{%- else %}
+- **Type**: Non-undoable command
+{%- endif %}
+
+## What to Implement
+
+The use case skeleton is already generated. You need to replace the placeholder (`unimplemented!("...")`) in the `execute()` method with actual business logic.
+{% if uc.dto_in %}
+## Input DTO: `{{ uc.dto_in.pascal_name }}`
+
+```rust
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct {{ uc.dto_in.pascal_name }} {
+{%- for df in uc.dto_in.fields %}
+    pub {{ df.snake_name }}: {{ df.rust_type }},
+{%- endfor %}
+}
+```
+{% endif %}
+{%- if uc.dto_out %}
+
+## Output DTO: `{{ uc.dto_out.pascal_name }}`
+
+```rust
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct {{ uc.dto_out.pascal_name }} {
+{%- for df in uc.dto_out.fields %}
+    pub {{ df.snake_name }}: {{ df.rust_type }},
+{%- endfor %}
+}
+```
+{% endif %}
+{%- if not uc.dto_in and not uc.dto_out %}
+
+## DTOs
+
+No input or output DTO. The use case returns `()`.
+{% endif %}
+{%- if uc.entities | length > 0 %}
+
+## Entities Involved
+{% for e_id, ent in uc.entities %}
+### {{ ent.pascal_name }}
+
+| Field | Rust Type | Optional | Relationship |
+|-------|-----------|----------|--------------|
+| id | `EntityId` | false | - |
+{%- for f in ent.fields %}
+| {{ f.snake_name }} | `{{ f.rust_type }}` | {{ f.optional }} | {{ f.relationship }} |
+{%- endfor %}
+{%- if ent.forward_relationships | length > 0 %}
+
+Relationships:
+{%- for rid, rel in ent.forward_relationships %}
+- {{ rel.field_pascal_name }} -> {{ rel.inner.relationship_type }} ({{ rel.inner.strength }})
+{%- endfor %}
+{%- endif %}
+{% endfor %}
+{%- else %}
+
+## Missing Entity Declarations
+
+This use case has no entities declared in the manifest. Before implementing, determine which entities are needed based on the DTOs and business logic, then ask the user to add them in the manifest at `features.{{ feat.snake_name }}.use_cases.{{ uc.snake_name }}.entities`.
+{%- endif %}
+
+## Files to Modify
+
+### 1. Use Case Implementation *(main business logic + UoW trait)*
+
+**File**: `{{ s.global.prefix }}/{{ feat.snake_name }}/src/use_cases/{{ uc.snake_name }}_uc.rs`
+{% if uc.inner.long_operation %}
+This use case implements the `LongOperation` trait. Replace the placeholder in `execute()`:
+
+```rust
+impl LongOperation for {{ uc.pascal_name }}UseCase {
+{%- if uc.dto_out %}
+    type Output = {{ uc.dto_out.pascal_name }};
+{%- else %}
+    type Output = ();
+{%- endif %}
+
+    fn execute(
+        &self,
+        progress_callback: Box<dyn Fn(OperationProgress) + Send>,
+        cancel_flag: Arc<AtomicBool>,
+    ) -> Result<{% if uc.dto_out %}Self::Output{% else %}(){% endif %}> {
+        use std::sync::atomic::Ordering;
+
+        progress_callback(OperationProgress::new(0.0, Some("Starting...".to_string())));
+
+        let {% if not uc.inner.read_only %}mut {% endif %}uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+
+        // YOUR CODE HERE:
+        // - Check cancel_flag.load(Ordering::Relaxed) periodically in loops
+        // - Call progress_callback(OperationProgress::new(pct, Some("msg"))) to report progress
+        // - On cancellation: {% if uc.inner.read_only %}uow.end_transaction()?{% else %}uow.rollback()?{% endif %}; return Err(anyhow!("cancelled"))
+        // - Use uow.get_*(), uow.update_*(), etc. to access entity operations
+{%- if uc.dto_in %}
+        // - Read input from self.dto
+{%- endif %}
+
+        {% if uc.inner.read_only -%}
+        uow.end_transaction()?;
+        {%- else -%}
+        uow.commit()?;
+        {%- endif %}
+
+        progress_callback(OperationProgress::new(100.0, Some("completed".to_string())));
+
+{%- if uc.dto_out %}
+        Ok({{ uc.dto_out.pascal_name }} {
+            // Populate with actual results
+            ..Default::default()
+        })
+{%- else %}
+        Ok(())
+{%- endif %}
+    }
+}
+```
+{%- elif uc.inner.undoable %}
+Replace the placeholder in `execute()`. You must also implement `UndoRedoCommand` (undo/redo):
+
+```rust
+pub fn execute(
+    &mut self,
+{%- if uc.dto_in %}
+    dto: &{{ uc.dto_in.pascal_name }},
+{%- endif %}
+) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
+    let mut uow = self.uow_factory.create();
+    uow.begin_transaction()?;
+
+    // YOUR CODE HERE:
+    // 1. Capture state BEFORE mutation for undo:
+    //    self.undo_snapshot = Some(uow.snapshot_{entity_snake}(&ids)?);
+    // 2. Perform the actual mutation using uow.*
+{%- if uc.dto_in %}
+    //    Read input from dto
+{%- endif %}
+    // 3. Return Err(anyhow!("...")) on errors (will propagate up)
+
+    uow.commit()?;
+
+{%- if uc.dto_out %}
+    Ok({{ uc.dto_out.pascal_name }} {
+        // Populate with actual data
+        ..Default::default()
+    })
+{%- else %}
+    Ok(())
+{%- endif %}
+}
+```
+
+Implement `UndoRedoCommand`:
+
+```rust
+use std::any::Any;
+use common::undo_redo::UndoRedoCommand;
+use common::snapshot::EntityTreeSnapshot;
+
+// Add to the struct:
+//   undo_snapshot: Option<EntityTreeSnapshot>,
+
+impl UndoRedoCommand for {{ uc.pascal_name }}UseCase {
+    fn undo(&mut self) -> Result<()> {
+        let mut uow = self.uow_factory.create();
+        uow.begin_transaction()?;
+
+        // Restore the snapshot captured during execute()
+        if let Some(ref snap) = self.undo_snapshot {
+            uow.restore_{entity_snake}(snap)?;
+        }
+
+        uow.commit()?;
+        Ok(())
+    }
+
+    fn redo(&mut self) -> Result<()> {
+        // Re-execute the forward operation
+        self.execute(/* same args */)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+```
+{%- elif uc.inner.read_only %}
+Replace the placeholder in `execute()`:
+
+```rust
+pub fn execute(
+    &mut self,
+{%- if uc.dto_in %}
+    dto: &{{ uc.dto_in.pascal_name }},
+{%- endif %}
+) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
+    let uow = self.uow_factory.create();
+    uow.begin_transaction()?;
+
+    // YOUR CODE HERE:
+    // - Use uow.get_*(), uow.get_*_multi() to read entity data
+{%- if uc.dto_in %}
+    // - Read input from dto
+{%- endif %}
+    // - This is read-only: do NOT modify data
+
+    uow.end_transaction()?;
+
+{%- if uc.dto_out %}
+    Ok({{ uc.dto_out.pascal_name }} {
+        // Populate with actual data
+        ..Default::default()
+    })
+{%- else %}
+    Ok(())
+{%- endif %}
+}
+```
+{%- else %}
+Replace the placeholder in `execute()`:
+
+```rust
+pub fn execute(
+    &mut self,
+{%- if uc.dto_in %}
+    dto: &{{ uc.dto_in.pascal_name }},
+{%- endif %}
+) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
+    let mut uow = self.uow_factory.create();
+    uow.begin_transaction()?;
+
+    // YOUR CODE HERE:
+    // - Use uow.get_*(), uow.create_*(), uow.update_*(), uow.delete_*() etc.
+{%- if uc.dto_in %}
+    // - Read input from dto
+{%- endif %}
+    // - Return Err(anyhow!("...")) on business errors
+
+    uow.commit()?;
+
+{%- if uc.dto_out %}
+    Ok({{ uc.dto_out.pascal_name }} {
+        // Populate with actual data
+        ..Default::default()
+    })
+{%- else %}
+    Ok(())
+{%- endif %}
+}
+```
+{%- endif %}
+
+Also in this file, update the UoW **trait** macros to declare which entity operations are needed:
+
+```rust
+{%- if uc.inner.read_only %}
+// Read-only actions (use *RO variants):
+#[macros::uow_action(entity = "EntityName", action = "GetRO")]
+#[macros::uow_action(entity = "EntityName", action = "GetMultiRO")]
+// Also available: GetAllRO, GetRelationshipRO, GetRelationshipsFromRightIdsRO
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
+{%- else %}
+// Read-write actions:
+#[macros::uow_action(entity = "EntityName", action = "Get")]
+#[macros::uow_action(entity = "EntityName", action = "GetMulti")]
+#[macros::uow_action(entity = "EntityName", action = "Update")]
+// Also available: GetAll, Create, CreateMulti, CreateOrphan, CreateOrphanMulti,
+//   UpdateMulti, Delete, DeleteMulti, GetRelationship, GetRelationshipsFromRightIds,
+//   SetRelationship, SetRelationshipMulti, Snapshot, Restore
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
+{%- endif %}
+```
+
+### 2. Unit of Work Implementation
+
+**File**: `{{ s.global.prefix }}/{{ feat.snake_name }}/src/units_of_work/{{ uc.snake_name }}_uow.rs`
+
+Mirror the trait macros with the **same** set of macros on the `impl` block:
+
+```rust
+{%- if uc.inner.read_only %}
+#[macros::uow_action(entity = "EntityName", action = "GetRO")]
+#[macros::uow_action(entity = "EntityName", action = "GetMultiRO")]
+{%- else %}
+#[macros::uow_action(entity = "EntityName", action = "Get")]
+#[macros::uow_action(entity = "EntityName", action = "GetMulti")]
+#[macros::uow_action(entity = "EntityName", action = "Update")]
+{%- endif %}
+{%- if uc.inner.long_operation %}
+// For long operations, add thread_safe = true to each macro:
+// #[macros::uow_action(entity = "EntityName", action = "GetRO", thread_safe = true)]
+{%- endif %}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+```
+
+**Both files must declare the same set of entity operations.**
+
+## File Rules
+
+**You may only modify these 2 files:**
+
+1. `{{ s.global.prefix }}/{{ feat.snake_name }}/src/use_cases/{{ uc.snake_name }}_uc.rs` -- use case implementation + UoW trait
+2. `{{ s.global.prefix }}/{{ feat.snake_name }}/src/units_of_work/{{ uc.snake_name }}_uow.rs` -- UoW implementation
+
+**Do not modify any other existing file.** Do not touch the controller, DTOs, entities, or any generated infrastructure.
+
+**Exception -- External service interfaces:** If the use case needs to interact with an external service (API, remote database, terminal commands, specialized library, etc.), you may create a trait that abstracts the external dependency. The trait lives alongside the use case; its implementation belongs in the outer layer (typically instantiated in `main.rs` or the controller, then injected into the use case). **Ask the user for approval before creating any such interface.** Do not put library-specific code directly in the use case.
+
+## Implementation Guidelines
+
+1. **Remove placeholder code**: Delete the `unimplemented!("...")` line and the placeholder `Err(anyhow!("Not implemented"))`.
+2. **Transaction safety**: Use `uow.begin_transaction()?` / `uow.commit()?` (or `uow.end_transaction()?` for read-only). On error, the `?` operator propagates and the transaction is not committed.
+{%- if uc.inner.undoable %}
+3. **Undo support**: The controller wraps undoable use cases via `UndoRedoManager::add_command_to_stack`. You **must** implement the `UndoRedoCommand` trait on the use case struct:
+   - In `execute()`: capture state before mutation using `uow.snapshot_{entity_snake}(&ids)?`, store in a struct field.
+   - In `undo()`: restore the captured snapshot using `uow.restore_{entity_snake}(&snap)?`.
+   - In `redo()`: re-execute the forward operation.
+   - Implement `as_any(&self) -> &dyn Any` returning `self`.
+{%- elif uc.inner.long_operation %}
+3. **Progress reporting**: Call `progress_callback(OperationProgress::new(pct, Some("message")))` regularly.
+4. **Cancellation**: Check `cancel_flag.load(Ordering::Relaxed)` in loops. On cancel, {% if uc.inner.read_only %}end transaction{% else %}rollback{% endif %} and return error.
+{%- if uc.inner.read_only %}
+5. **Read-only**: Do not modify data -- use only `*RO` action variants from `uow`.
+{%- endif %}
+{%- elif uc.inner.read_only %}
+3. **Read-only**: This is a query. Do not modify data. Use `*RO` action variants and `QueryUnitOfWork` (`begin_transaction` / `end_transaction`).
+{%- endif %}
+4. **Error handling**: Return `Err(anyhow!("message"))` for business errors. The caller handles error propagation.

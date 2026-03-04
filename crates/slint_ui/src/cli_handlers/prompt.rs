@@ -4,6 +4,8 @@ use crate::cli_handlers::common::{TargetLanguage, get_target_language};
 use anyhow::{Result, anyhow, bail};
 use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use cpp_qt_file_generation::GenerateCppQtPromptDto;
+use rust_file_generation::rust_file_generation_controller;
+use rust_file_generation::GenerateRustPromptDto;
 use direct_access::{feature_controller, global_controller, use_case_controller};
 use handling_manifest::handling_manifest_controller;
 use heck::AsSnakeCase;
@@ -85,10 +87,60 @@ pub fn execute(
 
             Ok(())
         }
-        _ => bail!(
-            "Target language {:?} is not supported for prompt generation",
-            target_language
-        ),
+        TargetLanguage::Rust => {
+            let dto = if args.context {
+                GenerateRustPromptDto {
+                    use_case_id: None,
+                    context: true,
+                    feature_id: None,
+                }
+            } else {
+                let use_case_arg = args
+                    .use_case
+                    .as_ref()
+                    .ok_or_else(|| {
+                        anyhow!("use_case must be in format feature_name:use_case_name")
+                    })?;
+                let (feature_name, use_case_name) = use_case_arg
+                    .split_once(':')
+                    .ok_or_else(|| {
+                        anyhow!("use_case must be in format feature_name:use_case_name")
+                    })?;
+
+                let all_features = feature_controller::get_all(&app_context.db_context)?;
+                let feature = all_features
+                    .into_iter()
+                    .find(|f| f.name == feature_name)
+                    .ok_or_else(|| anyhow!("Feature with name {} not found", feature_name))?;
+
+                let use_cases = use_case_controller::get_all(&app_context.db_context)?;
+                let use_case = use_cases
+                    .into_iter()
+                    .find(|uc| uc.name == use_case_name && feature.use_cases.contains(&uc.id))
+                    .ok_or_else(|| {
+                        anyhow!(
+                            "Use case with name {} not found in feature {}",
+                            use_case_name,
+                            feature_name
+                        )
+                    })?;
+
+                GenerateRustPromptDto {
+                    use_case_id: Some(use_case.id),
+                    context: false,
+                    feature_id: Some(feature.id),
+                }
+            };
+
+            let return_dto = rust_file_generation_controller::generate_rust_prompt(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+            println!("{}", &return_dto.prompt_text);
+
+            Ok(())
+        }
     }
 }
 
