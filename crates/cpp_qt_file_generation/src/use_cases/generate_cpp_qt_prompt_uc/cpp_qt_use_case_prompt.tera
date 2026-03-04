@@ -10,7 +10,9 @@
 - **Feature**: {{ feat.pascal_name }} (`{{ s.global.prefix }}/{{ feat.snake_name }}/`)
 - **Namespace**: `{{ s.global.application_pascal_name }}::{{ feat.pascal_name }}`
 - **Use Case**: {{ uc.pascal_name }} (`{{ uc.snake_name }}_uc`)
-{%- if uc.inner.long_operation %}
+{%- if uc.inner.long_operation and uc.inner.read_only %}
+- **Type**: Read-only long operation (runs on background thread with progress/cancellation, does not modify data)
+{%- elif uc.inner.long_operation %}
 - **Type**: Long operation (runs on background thread with progress/cancellation)
 {%- elif uc.inner.read_only %}
 - **Type**: Read-only query
@@ -334,12 +336,13 @@ UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)
    - In `redo()`: re-capture current state, then re-apply the operation.
    - Both methods return `Common::UndoRedo::Result<void>`.
    - Add corresponding declarations in the `.h` file.
-{%- endif %}
-{%- if uc.inner.read_only %}
-5. **Read-only**: This is a query. Do not modify data. The controller executes it via `executeReadQuery`.
-{%- endif %}
-{%- if uc.inner.long_operation %}
+{%- elif uc.inner.long_operation %}
 5. **Progress reporting**: Call `progressCallback({percentage, "message"})` regularly.
 6. **Cancellation**: Check `cancelFlag.load()` in loops. On cancel, rollback and return early.
 7. **Result**: Return result as `QJsonObject`. Use `Common::DirectAccess::gadgetToJson(dto)` for DTO serialization.
+{%- if uc.inner.read_only %}
+8. **Read-only**: Do not modify data — use only read methods from `m_uow`.
+{%- endif %}
+{%- elif uc.inner.read_only %}
+5. **Read-only**: This is a query. Do not modify data. The controller executes it via `executeReadQuery`.
 {%- endif %}
