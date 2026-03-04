@@ -19,6 +19,8 @@
 - [Manifest Reference](manifest-reference.md)
 - [Generated Code — Rust](generated-code-rust.md)
 - [Generated Code — C++/Qt](generated-code-cpp-qt.md)
+- [API Reference — C++/Qt](api-reference-cpp-qt.md)
+- [API Reference — Rust](api-reference-rust.md)
 - [QML Integration](qml-integration.md)
 - [Migration Guide](migration-guide.md)
 - [Troubleshooting](troubleshooting.md)

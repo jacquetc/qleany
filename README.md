@@ -47,6 +47,8 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 | [QML Integration](docs/qml-integration.md)                         | Reactive models, mocks, and event system for C++/Qt                            |
 | [Generated Infrastructure - C++/Qt](docs/generated-code-cpp-qt.md) | Database layer, repositories, and file organization details                    |
 | [Generated Infrastructure - Rust](docs/generated-code-rust.md)     | Database layer, repositories, and file organization details                    |
+| [API Reference - C++/Qt](docs/api-reference-cpp-qt.md)             | Entity controller, feature controller, and custom UoW macros                   |
+| [API Reference - Rust](docs/api-reference-rust.md)                  | Entity controller, feature controller, and custom UoW proc macros              |
 | [Troubleshooting](docs/troubleshooting.md)                         | Common issues and how to fix them                                              |
 
 New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md). Then return here for reference.

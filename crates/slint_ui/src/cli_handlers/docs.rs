@@ -45,6 +45,8 @@ pub fn execute(
 |`qleany docs qml-integration`|`qml`|QML Integration|
 |`qleany docs generated-code-cpp-qt`|`cpp`|Generated Code — C++/Qt|
 |`qleany docs generated-code-rust`|`rust`|Generated Code — Rust|
+|`qleany docs api-reference-cpp-qt`|`api-cpp`|API Reference — C++/Qt|
+|`qleany docs api-reference-rust`|`api-rust`|API Reference — Rust|
 |`qleany docs migration-guide`|`mig`|Migration Guide|
 |`qleany docs troubleshooting`|`trouble`|Troubleshooting|
 |-|-|-|
@@ -79,6 +81,8 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
             "qml-integration.md",
             "generated-code-cpp-qt.md",
             "generated-code-rust.md",
+            "api-reference-cpp-qt.md",
+            "api-reference-rust.md",
             "migration-guide.md",
             "troubleshooting.md",
         ],
@@ -89,6 +93,8 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
         DocsTarget::UndoRedoArchitecture => vec!["undo-redo-architecture.md"],
         DocsTarget::GeneratedCodeCppQt => vec!["generated-code-cpp-qt.md"],
         DocsTarget::GeneratedCodeRust => vec!["generated-code-rust.md"],
+        DocsTarget::ApiReferenceCppQt => vec!["api-reference-cpp-qt.md"],
+        DocsTarget::ApiReferenceRust => vec!["api-reference-rust.md"],
         DocsTarget::QuickStartCppQt => vec!["quick-start-cpp-qt.md"],
         DocsTarget::QuickStartRust => vec!["quick-start-rust.md"],
         DocsTarget::QmlIntegration => vec!["qml-integration.md"],

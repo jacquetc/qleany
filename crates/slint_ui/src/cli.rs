@@ -290,6 +290,14 @@ pub enum DocsTarget {
     #[command(visible_alias = "rust")]
     GeneratedCodeRust,
 
+    /// Show API reference for C++/Qt
+    #[command(visible_alias = "api-cpp")]
+    ApiReferenceCppQt,
+
+    /// Show API reference for Rust
+    #[command(visible_alias = "api-rust")]
+    ApiReferenceRust,
+
     /// Show quick start guide for C++/Qt
     #[command(visible_alias = "start-cpp")]
     QuickStartCppQt,
