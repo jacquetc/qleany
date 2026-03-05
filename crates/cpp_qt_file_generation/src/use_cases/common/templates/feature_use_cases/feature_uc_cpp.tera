@@ -111,6 +111,23 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
 {%- endif %}
 }
 
+{%- if uc.inner.undoable and not uc.inner.read_only %}
+
+{{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void> {{ uc.pascal_name }}UseCase::undo()
+{
+    // TODO: Implement undo logic for {{ uc.pascal_name }}UseCase
+    qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::undo");
+    return {{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void>{};
+}
+
+{{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void> {{ uc.pascal_name }}UseCase::redo()
+{
+    // TODO: Implement redo logic for {{ uc.pascal_name }}UseCase
+    qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::redo");
+    return {{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void>{};
+}
+{%- endif %}
+
 {%- endif %}
 
 } // namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}

@@ -12,6 +12,9 @@
 {%- if uc.inner.long_operation %}
 #include "long_operation/i_long_operation.h"
 {%- endif %}
+{%- if uc.inner.undoable and not uc.inner.read_only and not uc.inner.long_operation %}
+#include "undo_redo/undo_redo_command.h"
+{%- endif %}
 #include <memory>
 
 namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
@@ -59,6 +62,10 @@ class {{ uc.pascal_name }}UseCase
   public:
     explicit {{ uc.pascal_name }}UseCase(std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> uow);
     {% if uc.dto_out %}[[nodiscard]]{% endif %} {{ dto_out_str }} execute({{ dto_in_arg_str }}) const;
+{%- if uc.inner.undoable and not uc.inner.read_only %}
+    {{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void> undo();
+    {{ s.global.application_pascal_name }}::Common::UndoRedo::Result<void> redo();
+{%- endif %}
 
   private:
     std::unique_ptr<I{{ uc.pascal_name }}UnitOfWork> m_uow;
