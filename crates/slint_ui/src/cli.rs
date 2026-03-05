@@ -54,6 +54,9 @@ pub enum Commands {
 
     /// LLM Prompt
     Prompt(PromptArgs),
+
+    /// Show unified diff between generated and on-disk file
+    Diff(DiffArgs),
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -350,6 +353,16 @@ pub struct PromptArgs {
     pub use_case: Option<String>,
 }
 
+// ─────────────────────────────────────────────────────────────
+// DIFF
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct DiffArgs {
+    /// File path (relative to output) or numeric file ID from `list files`
+    pub target: String,
+}
+
 /// Run the CLI with the given application context.
 /// Returns `Some(())` if the application should continue running as GUI, `None` otherwise.
 pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
@@ -402,6 +415,10 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
         Commands::Prompt(args) => {
             let path = manifest_path.expect("Prompt requires a manifest");
             cli_handlers::prompt::execute(app_context, &path, &args, &output)
+        }
+        Commands::Diff(args) => {
+            let path = manifest_path.expect("Diff requires a manifest");
+            cli_handlers::diff::execute(app_context, &path, &args, &output)
         }
     };
 

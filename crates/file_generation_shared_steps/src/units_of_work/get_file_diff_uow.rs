@@ -40,10 +40,10 @@ impl QueryUnitOfWork for GetFileDiffUnitOfWork {
     }
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
-#[macros::uow_action(entity = "Root", action = "GetRelationship")]
-#[macros::uow_action(entity = "Workspace", action = "Get")]
-#[macros::uow_action(entity = "File", action = "Get")]
+#[macros::uow_action(entity = "Root", action = "GetAllRO")]
+#[macros::uow_action(entity = "Root", action = "GetRelationshipRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "File", action = "GetRO")]
 impl GetFileDiffUnitOfWorkTrait for GetFileDiffUnitOfWork {}
 
 pub struct GetFileDiffUnitOfWorkFactory {

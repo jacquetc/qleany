@@ -1,5 +1,6 @@
 pub mod check;
 mod common;
+pub mod diff;
 pub mod docs;
 pub mod export;
 pub mod generate;
