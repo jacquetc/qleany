@@ -73,19 +73,30 @@ impl GenerationOps for DummyGenerationReadOps {
         id: &EntityId,
         field: &RootRelationshipField,
     ) -> Result<Vec<EntityId>> {
-        todo!()
+        let root = self
+            .roots
+            .get(id)
+            .ok_or_else(|| anyhow::anyhow!("Root not found"))?;
+        match field {
+            RootRelationshipField::Workspace => {
+                Ok(root.workspace.map(|id| vec![id]).unwrap_or_default())
+            }
+            RootRelationshipField::System => {
+                Ok(root.system.map(|id| vec![id]).unwrap_or_default())
+            }
+        }
     }
 
     fn get_all_root(&self) -> Result<Vec<Root>> {
-        todo!()
+        Ok(self.roots.values().cloned().collect())
     }
 
     fn get_system(&self, id: &EntityId) -> Result<Option<System>> {
-        todo!()
+        Ok(self.systems.get(id).cloned())
     }
 
     fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
-        todo!()
+        Ok(self.workspaces.get(id).cloned())
     }
 
     fn get_workspace_relationship(
@@ -93,133 +104,54 @@ impl GenerationOps for DummyGenerationReadOps {
         id: &EntityId,
         field: &WorkspaceRelationshipField,
     ) -> Result<Vec<EntityId>> {
-        todo!()
-    }
-
-    fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
-        todo!()
-    }
-
-    fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
-        todo!()
-    }
-
-    fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
-        todo!()
-    }
-
-    fn get_feature(&self, id: &EntityId) -> Result<Option<Feature>> {
-        todo!()
-    }
-
-    fn get_feature_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
-        todo!()
-    }
-
-    fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
-        todo!()
-    }
-
-    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
-        todo!()
-    }
-
-    fn get_dto(&self, id: &EntityId) -> Result<Option<Dto>> {
-        todo!()
-    }
-
-    fn get_dto_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
-        todo!()
-    }
-
-    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
-        todo!()
-    }
-
-    fn get_entity_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>> {
-        todo!()
-    }
-
-    fn get_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
-        todo!()
-    }
-
-    fn get_relationship_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>> {
-        todo!()
-    }
-}
-
-// Implement GenerationReadOps methods (declared via macros on the trait)
-impl GenerationReadOps for DummyGenerationReadOps {
-    fn get_root_relationship(
-        &self,
-        id: &EntityId,
-        field: &common::direct_access::root::RootRelationshipField,
-    ) -> Result<Vec<EntityId>> {
-        let root = self
-            .roots
-            .get(id)
-            .ok_or_else(|| anyhow::anyhow!("Root not found"))?;
         match field {
-            common::direct_access::root::RootRelationshipField::Workspace => {
-                Ok(root.workspace.map(|id| vec![id]).unwrap_or_default())
-            }
-            common::direct_access::root::RootRelationshipField::System => {
-                Ok(root.system.map(|id| vec![id]).unwrap_or_default())
-            }
-        }
-    }
-    fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
-        Ok(self.workspaces.get(id).cloned())
-    }
-    fn get_system(&self, id: &EntityId) -> Result<Option<System>> {
-        Ok(self.systems.get(id).cloned())
-    }
-    fn get_workspace_relationship(
-        &self,
-        id: &EntityId,
-        field: &common::direct_access::workspace::WorkspaceRelationshipField,
-    ) -> Result<Vec<EntityId>> {
-        match field {
-            common::direct_access::workspace::WorkspaceRelationshipField::Entities => {
+            WorkspaceRelationshipField::Entities => {
                 Ok(self.workspace_entities.get(id).cloned().unwrap_or_default())
             }
-            common::direct_access::workspace::WorkspaceRelationshipField::Features => {
+            WorkspaceRelationshipField::Features => {
                 Ok(self.workspace_features.get(id).cloned().unwrap_or_default())
             }
-            common::direct_access::workspace::WorkspaceRelationshipField::Global => Ok(self
+            WorkspaceRelationshipField::Global => Ok(self
                 .workspaces
                 .get(id)
                 .map(|w| vec![w.global])
                 .unwrap_or_default()),
-            common::direct_access::workspace::WorkspaceRelationshipField::UserInterface => Ok(self
+            WorkspaceRelationshipField::UserInterface => Ok(self
                 .workspaces
                 .get(id)
                 .map(|w| vec![w.user_interface])
                 .unwrap_or_default()),
         }
     }
+
     fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
         Ok(self.user_interfaces.get(id).cloned())
     }
+
     fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
         Ok(self.files.get(id).cloned())
     }
+
     fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
         Ok(self.globals.get(id).cloned())
     }
+
     fn get_feature(&self, id: &EntityId) -> Result<Option<Feature>> {
         Ok(self.features.get(id).cloned())
     }
+
     fn get_feature_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
         Ok(ids.iter().map(|i| self.features.get(i).cloned()).collect())
     }
+
     fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
         Ok(self.use_cases.get(id).cloned())
     }
+
     fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
         Ok(ids.iter().map(|i| self.use_cases.get(i).cloned()).collect())
     }
+
     fn get_dto(&self, id: &EntityId) -> Result<Option<Dto>> {
         Ok(self.dtos.get(id).cloned())
     }
@@ -230,12 +162,15 @@ impl GenerationReadOps for DummyGenerationReadOps {
             .map(|i| self.dto_fields.get(i).cloned())
             .collect())
     }
+
     fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
         Ok(self.entities.get(id).cloned())
     }
+
     fn get_entity_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>> {
         Ok(ids.iter().map(|i| self.entities.get(i).cloned()).collect())
     }
+
     fn get_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
         Ok(ids.iter().map(|i| self.fields.get(i).cloned()).collect())
     }
@@ -246,8 +181,71 @@ impl GenerationReadOps for DummyGenerationReadOps {
             .map(|i| self.relationships.get(i).cloned())
             .collect())
     }
+}
+
+// Implement GenerationReadOps methods (declared via macros on the trait)
+impl GenerationReadOps for DummyGenerationReadOps {
+    fn get_root_relationship(
+        &self,
+        id: &EntityId,
+        field: &common::direct_access::root::RootRelationshipField,
+    ) -> Result<Vec<EntityId>> {
+        todo!()
+    }
+    fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
+        todo!()
+    }
+    fn get_system(&self, id: &EntityId) -> Result<Option<System>> {
+        todo!()
+    }
+    fn get_workspace_relationship(
+        &self,
+        id: &EntityId,
+        field: &common::direct_access::workspace::WorkspaceRelationshipField,
+    ) -> Result<Vec<EntityId>> {
+        todo!()
+    }
+    fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
+        todo!()
+    }
+    fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
+        todo!()
+    }
+    fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
+        todo!()
+    }
+    fn get_feature(&self, id: &EntityId) -> Result<Option<Feature>> {
+        todo!()
+    }
+    fn get_feature_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
+        todo!()
+    }
+    fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
+        todo!()
+    }
+    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
+        todo!()
+    }
+    fn get_dto(&self, id: &EntityId) -> Result<Option<Dto>> {
+        todo!()
+    }
+    fn get_dto_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
+        todo!()
+    }
+    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
+        todo!()
+    }
+    fn get_entity_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>> {
+        todo!()
+    }
+    fn get_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
+        todo!()
+    }
+    fn get_relationship_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>> {
+        todo!()
+    }
     fn get_all_root(&self) -> Result<Vec<Root>> {
-        Ok(self.roots.values().cloned().collect())
+        todo!()
     }
 }
 
