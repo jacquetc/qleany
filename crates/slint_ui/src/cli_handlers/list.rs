@@ -5,13 +5,17 @@ use crate::cli::{ListArgs, ListTarget, OutputContext, OutputFormat};
 use crate::cli_handlers::common::{TargetLanguage, get_target_language};
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
+use common::entities::FileStatus;
+use common::long_operation::OperationStatus;
 use cpp_qt_file_generation::cpp_qt_file_generation_controller;
-use direct_access::{EntityDto, UseCaseDto, system_controller};
+use direct_access::{EntityDto, FileDto, UseCaseDto, file_controller, system_controller};
+use file_generation_shared_steps::file_generation_shared_steps_controller;
 use handling_manifest::handling_manifest_controller;
 use rust_file_generation::rust_file_generation_controller;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 /// The root system entity ID (singleton in the database)
 const ROOT_SYSTEM_ID: u64 = 1;
@@ -43,75 +47,229 @@ fn list_files(
     args: &ListArgs,
     output: &OutputContext,
 ) -> Result<()> {
-    let target_language = get_target_language(app_context)?; // Ensure language is supported for file listing
+    let target_language = get_target_language(app_context)?;
 
+    // Step 1: Fill file list in DB
+    output.verbose("Populating file list...");
     match target_language {
         TargetLanguage::Rust => {
             let dto = rust_file_generation::FillRustFilesDto {
-                only_list_already_existing: args.existing_only,
+                only_list_already_existing: false,
             };
-
-            let result = rust_file_generation_controller::fill_rust_files(
+            rust_file_generation_controller::fill_rust_files(
                 &app_context.db_context,
                 &app_context.event_hub,
                 &dto,
             )?;
-
-            match args.format {
-                OutputFormat::Plain => {
-                    for file in &result.file_names {
-                        println!("{}", file);
-                    }
-                    output.info(&format!("\n{} files", result.file_names.len()));
-                }
-                OutputFormat::Json => {
-                    let json = serde_json::json!({
-                        "files": result.file_names,
-                        "count": result.file_names.len()
-                    });
-                    println!("{}", serde_json::to_string_pretty(&json)?);
-                }
-                OutputFormat::Tree => {
-                    file_tree::print_file_tree(&result.file_names);
-                }
-            }
-
-            Ok(())
         }
-
         TargetLanguage::CppQt => {
             let dto = cpp_qt_file_generation::FillCppQtFilesDto {
-                only_list_already_existing: args.existing_only,
+                only_list_already_existing: false,
             };
-
-            let result = cpp_qt_file_generation_controller::fill_cpp_qt_files(
+            cpp_qt_file_generation_controller::fill_cpp_qt_files(
                 &app_context.db_context,
                 &app_context.event_hub,
                 &dto,
             )?;
-
-            match args.format {
-                OutputFormat::Plain => {
-                    for file in &result.file_names {
-                        println!("{}", file);
-                    }
-                    output.info(&format!("\n{} files", result.file_names.len()));
-                }
-                OutputFormat::Json => {
-                    let json = serde_json::json!({
-                        "files": result.file_names,
-                        "count": result.file_names.len()
-                    });
-                    println!("{}", serde_json::to_string_pretty(&json)?);
-                }
-                OutputFormat::Tree => {
-                    file_tree::print_file_tree(&result.file_names);
-                }
-            }
-
-            Ok(())
         }
     }
+
+    // Step 2: Fill code in files (long operation — poll until complete)
+    output.verbose("Generating code for status comparison...");
+    let operation_id = {
+        let mut long_op_manager = app_context
+            .long_operation_manager
+            .lock()
+            .unwrap_or_else(|_| panic!("Failed to acquire lock on long operation manager."));
+        match target_language {
+            TargetLanguage::Rust => rust_file_generation_controller::fill_code_in_rust_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+            )?,
+            TargetLanguage::CppQt => {
+                cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
+                    &app_context.db_context,
+                    &app_context.event_hub,
+                    &mut long_op_manager,
+                )?
+            }
+        }
+    };
+
+    poll_long_operation(app_context, &operation_id, output)?;
+
+    // Step 3: Fill status by comparing generated code vs disk
+    output.verbose("Comparing with files on disk...");
+    file_generation_shared_steps_controller::fill_status_in_files(
+        &app_context.db_context,
+        &app_context.event_hub,
+    )?;
+
+    // Step 4: Retrieve all files and filter by status
+    let file_ids = system_controller::get_relationship(
+        &app_context.db_context,
+        &ROOT_SYSTEM_ID,
+        &SystemRelationshipField::Files,
+    )?;
+
+    let all_files: Vec<FileDto> = file_controller::get_multi(&app_context.db_context, &file_ids)?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    let files: Vec<&FileDto> = all_files
+        .iter()
+        .filter(|f| {
+            if args.all {
+                true
+            } else {
+                matches!(f.status, FileStatus::Modified | FileStatus::New)
+            }
+        })
+        .collect();
+
+    // Step 5: Display results
+    display_file_list(&files, args, output)
+}
+
+/// Polls a long operation until it completes, reporting progress if verbose.
+fn poll_long_operation(
+    app_context: &Arc<AppContext>,
+    operation_id: &str,
+    output: &OutputContext,
+) -> Result<()> {
+    let mut last_percentage: f32 = 0.0;
+
+    loop {
+        std::thread::sleep(Duration::from_millis(100));
+
+        let long_op_manager = app_context.long_operation_manager.lock().unwrap();
+
+        let status = match long_op_manager.get_operation_status(operation_id) {
+            Some(s) => s,
+            None => {
+                output.warn("Operation not found");
+                break;
+            }
+        };
+
+        if output.verbose {
+            if let Some(progress) = long_op_manager.get_operation_progress(operation_id) {
+                if (progress.percentage - last_percentage).abs() >= 10.0 {
+                    output.verbose(&format!("[{:.0}%] {}", progress.percentage, progress.message.as_deref().unwrap_or("")));
+                    last_percentage = progress.percentage;
+                }
+            }
+        }
+
+        match status {
+            OperationStatus::Running => {}
+            OperationStatus::Completed => break,
+            OperationStatus::Cancelled => anyhow::bail!("Operation was cancelled"),
+            OperationStatus::Failed(err) => anyhow::bail!("Operation failed: {}", err),
+        }
+    }
+
+    Ok(())
+}
+
+/// Displays the filtered file list according to the chosen format.
+fn display_file_list(
+    files: &[&FileDto],
+    args: &ListArgs,
+    output: &OutputContext,
+) -> Result<()> {
+    let count_new = files.iter().filter(|f| f.status == FileStatus::New).count();
+    let count_modified = files
+        .iter()
+        .filter(|f| f.status == FileStatus::Modified)
+        .count();
+    let count_unchanged = files
+        .iter()
+        .filter(|f| f.status == FileStatus::Unchanged)
+        .count();
+
+    match args.format {
+        OutputFormat::Plain => {
+            if args.text {
+                // Plain text with status prefix
+                for file in files {
+                    let prefix = match file.status {
+                        FileStatus::New => "[N]",
+                        FileStatus::Modified => "[M]",
+                        FileStatus::Unchanged => "[U]",
+                        FileStatus::Unknown => "[?]",
+                    };
+                    println!("{} {}{}", prefix, file.relative_path, file.name);
+                }
+            } else {
+                // Colored output via termimad
+                let mut md = String::new();
+                for file in files {
+                    let path = format!("{}{}", file.relative_path, file.name);
+                    match file.status {
+                        FileStatus::New => md.push_str(&format!("**~~[N]~~** **{}**\n", path)),
+                        FileStatus::Modified => {
+                            md.push_str(&format!("*[M]* *{}*\n", path))
+                        }
+                        FileStatus::Unchanged => {
+                            md.push_str(&format!("[U] {}\n", path))
+                        }
+                        FileStatus::Unknown => md.push_str(&format!("[?] {}\n", path)),
+                    }
+                }
+                let mut skin = termimad::MadSkin::default();
+                skin.bold.set_fg(termimad::crossterm::style::Color::Green);
+                skin.italic.set_fg(termimad::crossterm::style::Color::Yellow);
+                skin.strikeout.set_fg(termimad::crossterm::style::Color::Green);
+                skin.print_text(&md);
+            }
+            output.info(&format!(
+                "\n{} new, {} modified, {} unchanged — {} total",
+                count_new,
+                count_modified,
+                count_unchanged,
+                files.len()
+            ));
+        }
+        OutputFormat::Json => {
+            let json: Vec<_> = files
+                .iter()
+                .map(|f| {
+                    serde_json::json!({
+                        "path": format!("{}{}", f.relative_path, f.name),
+                        "status": format!("{:?}", f.status),
+                        "group": f.group,
+                    })
+                })
+                .collect();
+            let wrapper = serde_json::json!({
+                "files": json,
+                "count": files.len(),
+                "new": count_new,
+                "modified": count_modified,
+                "unchanged": count_unchanged,
+            });
+            println!("{}", serde_json::to_string_pretty(&wrapper)?);
+        }
+        OutputFormat::Tree => {
+            let paths: Vec<String> = files
+                .iter()
+                .map(|f| format!("{}{}", f.relative_path, f.name))
+                .collect();
+            file_tree::print_file_tree(&paths);
+            output.info(&format!(
+                "\n{} new, {} modified, {} unchanged — {} total",
+                count_new,
+                count_modified,
+                count_unchanged,
+                files.len()
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 fn list_entities(

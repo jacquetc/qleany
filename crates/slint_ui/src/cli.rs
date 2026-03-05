@@ -104,9 +104,13 @@ pub struct ListArgs {
     #[command(subcommand)]
     pub target: Option<ListTarget>,
 
-    /// Only show files that already exist on disk
+    /// Show all files including unchanged (default: only modified and new)
     #[arg(long)]
-    pub existing_only: bool,
+    pub all: bool,
+
+    /// Plain text output without colors
+    #[arg(long)]
+    pub text: bool,
 
     /// Output format
     #[arg(short, long, value_enum, default_value = "plain")]

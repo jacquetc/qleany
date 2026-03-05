@@ -4654,6 +4654,7 @@ dependencies = [
  "direct_access",
  "dirs",
  "env_logger",
+ "file_generation_shared_steps",
  "handling_app_lifecycle",
  "handling_manifest",
  "heck",

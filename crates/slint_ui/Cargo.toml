@@ -38,6 +38,7 @@ handling_manifest = { path = "../handling_manifest" }
 rust_file_generation = { path = "../rust_file_generation" }
 cpp_qt_file_generation = { path = "../cpp_qt_file_generation" }
 handling_app_lifecycle = { path = "../handling_app_lifecycle" }
+file_generation_shared_steps = { path = "../file_generation_shared_steps" }
 
 [build-dependencies]
 slint-build = "1.15"
