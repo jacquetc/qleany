@@ -277,9 +277,9 @@ void MainWindow::setupUi()
         detailColumn->addLayout(detailForm);
 
         // Connect single model signals to update detail labels
-        connect(m_singleDetail, &DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::statusChanged, this,
+        connect(m_singleDetail, &DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::loadingStatusChanged, this,
                 [this, selectHint]() {
-                    bool loaded = m_singleDetail->status() == DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::Status::Loaded;
+                    bool loaded = m_singleDetail->loadingStatus() == DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::LoadingStatus::Loaded;
                     selectHint->setVisible(!loaded);
     {%- for f in demo_ent.normal_fields %}
         {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
@@ -398,7 +398,7 @@ QCoro::Task<void> MainWindow::onAddClicked()
         {%- elif f.inner.field_type == "Float" %}
     dto.{{ f.camel_name }} = m_{{ f.camel_name }}Field->value();
         {%- elif f.inner.field_type == "Enum" %}
-    dto.{{ f.camel_name }} = m_{{ f.camel_name }}Field->currentText();
+    dto.{{ f.camel_name }} = static_cast<DA::{{ demo_ent.pascal_name }}::{{ f.inner.enum_name }}>(m_{{ f.camel_name }}Field->currentIndex());
         {%- elif f.inner.field_type == "Uuid" %}
     dto.{{ f.camel_name }} = QUuid::fromString(m_{{ f.camel_name }}Field->text());
         {%- elif f.inner.field_type == "DateTime" %}
