@@ -31,7 +31,7 @@ pub enum Commands {
     New(NewArgs),
 
     /// Validate the manifest without generating files
-    Check,
+    Check(CheckArgs),
 
     /// List files that would be generated
     List(ListArgs),
@@ -95,6 +95,17 @@ pub enum LanguageOption {
     Rust,
     #[value(alias = "cpp-qt")]
     CppQt,
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHECK
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct CheckArgs {
+    /// List all checked rules instead of running validation
+    #[arg(long)]
+    pub rules: bool,
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -387,7 +398,11 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
 
     let result = match command {
         Commands::New(args) => cli_handlers::new::execute(app_context, &args, &output),
-        Commands::Check => {
+        Commands::Check(args) => {
+            if args.rules {
+                cli_handlers::check::list_rules(&output);
+                return None;
+            }
             let path = manifest_path.expect("Check requires a manifest");
             cli_handlers::check::execute(app_context, &path, &output)
         }

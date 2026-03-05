@@ -5,6 +5,7 @@ use anyhow::{Result, anyhow, bail};
 use cpp_qt_file_generation::GenerateCppQtPromptDto;
 use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use direct_access::{feature_controller, global_controller, use_case_controller};
+use crate::cli_handlers::common::run_checks;
 use handling_manifest::handling_manifest_controller;
 use heck::AsSnakeCase;
 use rust_file_generation::GenerateRustPromptDto;
@@ -16,13 +17,14 @@ pub fn execute(
     app_context: &Arc<AppContext>,
     manifest_path: &Path,
     args: &PromptArgs,
-    _output: &OutputContext,
+    output: &OutputContext,
 ) -> Result<()> {
     // Load manifest
     let load_dto = handling_manifest::LoadDto {
         manifest_path: manifest_path.to_string_lossy().to_string(),
     };
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
+    run_checks(app_context, output)?;
 
     let target_language = get_target_language(app_context)?;
 

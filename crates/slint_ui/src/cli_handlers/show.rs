@@ -1,5 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::{OutputContext, OutputFormat, ShowArgs, ShowTarget};
+use crate::cli_handlers::common::run_checks;
 use anyhow::Result;
 use handling_manifest::handling_manifest_controller;
 use std::path::Path;
@@ -16,6 +17,7 @@ pub fn execute(
         manifest_path: manifest_path.to_string_lossy().to_string(),
     };
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
+    run_checks(app_context, output)?;
 
     output.verbose(&format!("Loaded manifest from {}", manifest_path.display()));
 

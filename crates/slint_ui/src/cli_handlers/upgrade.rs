@@ -1,5 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::OutputContext;
+use crate::cli_handlers::common::run_checks;
 use anyhow::Result;
 use handling_manifest::handling_manifest_controller;
 use std::path::Path;
@@ -18,6 +19,7 @@ pub fn execute(
     };
 
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
+    run_checks(app_context, output)?;
 
     // Save back with current schema version
     let save_dto = handling_manifest::SaveDto {

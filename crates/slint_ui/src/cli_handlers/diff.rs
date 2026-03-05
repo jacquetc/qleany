@@ -1,6 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::{DiffArgs, OutputContext};
-use crate::cli_handlers::common::{TargetLanguage, get_target_language};
+use crate::cli_handlers::common::{TargetLanguage, get_target_language, run_checks};
 use anyhow::Result;
 use common::direct_access::system::SystemRelationshipField;
 use common::long_operation::OperationStatus;
@@ -27,6 +27,7 @@ pub fn execute(
         manifest_path: manifest_path.to_string_lossy().to_string(),
     };
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
+    run_checks(app_context, output)?;
 
     let target_language = get_target_language(app_context)?;
 

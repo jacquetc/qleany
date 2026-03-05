@@ -1,5 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::OutputContext;
+use crate::cli_handlers::common::run_checks;
 use anyhow::Result;
 use handling_manifest::handling_manifest_controller;
 use std::path::Path;
@@ -17,19 +18,41 @@ pub fn execute(
     };
 
     // Load validates the manifest structure
-    let result = handling_manifest_controller::load(
+    handling_manifest_controller::load(
         &app_context.db_context,
         &app_context.event_hub,
         &load_dto,
     )?;
 
-    output.success(&format!(
-        "Manifest is valid (workspace_id: {})",
-        result.workspace_id
-    ));
+    // Run semantic checks
+    run_checks(app_context, output)?;
 
-    // TODO: Additional validation could go here:
-    // - Check for orphaned entity references
+    output.success("Manifest is valid");
 
     Ok(())
+}
+
+pub fn list_rules(output: &OutputContext) {
+    let rules = handling_manifest_controller::get_check_rules();
+
+    let critical: Vec<_> = rules.iter().filter(|r| r.severity == "critical").collect();
+    let warnings: Vec<_> = rules.iter().filter(|r| r.severity == "warning").collect();
+
+    output.info(&format!(
+        "Critical rules ({}) — any violation prevents code generation:\n",
+        critical.len()
+    ));
+    for rule in &critical {
+        println!("  [{}] {}", rule.id, rule.description);
+    }
+
+    println!();
+
+    output.info(&format!(
+        "Warning rules ({}) — non-blocking issues worth reviewing:\n",
+        warnings.len()
+    ));
+    for rule in &warnings {
+        println!("  [{}] {}", rule.id, rule.description);
+    }
 }
