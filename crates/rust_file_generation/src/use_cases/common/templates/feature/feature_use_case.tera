@@ -175,7 +175,7 @@ use common::entities:: {
 {%- endfor %}
 };
 
-pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait : {
+pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
     fn create(&self) -> Box<dyn {{ uc.pascal_name }}UnitOfWorkTrait>;
 }
 
