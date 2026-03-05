@@ -198,12 +198,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
-                                        error-message: (FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "") ? "Field name is required" : "";
+                                        error-message: (FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "") ? "Field name is required" : (CommonTools.check_is_snake_case(FeaturesTabState.selected_dto_in_field_name) ? "" : "DTO field name must be in snake_case");
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_in_field_name;
                                             placeholder: "Enter the field name";
-                                            has-error: FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "";
+                                            has-error: (FeaturesTabState.selected_dto_in_field_id >= 0 && FeaturesTabState.selected_dto_in_field_name == "") || !CommonTools.check_is_snake_case(FeaturesTabState.selected_dto_in_field_name);
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_in_field_name_changed(text);
@@ -446,12 +446,12 @@ export component DtoDetails inherits Rectangle {
                                     FormField {
                                         label: "Name";
                                         required: true;
-                                        error-message: (FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "") ? "Field name is required" : "";
+                                        error-message: (FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "") ? "Field name is required" : (CommonTools.check_is_snake_case(FeaturesTabState.selected_dto_out_field_name) ? "" : "DTO field name must be in snake_case");
 
                                         StyledLineEdit {
                                             text <=> FeaturesTabState.selected_dto_out_field_name;
                                             placeholder: "Enter the field name";
-                                            has-error: FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "";
+                                            has-error: (FeaturesTabState.selected_dto_out_field_id >= 0 && FeaturesTabState.selected_dto_out_field_name == "") || !CommonTools.check_is_snake_case(FeaturesTabState.selected_dto_out_field_name);
 
                                             edited(text) => {
                                                 FeaturesTabState.dto_out_field_name_changed(text);
