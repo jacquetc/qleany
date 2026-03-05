@@ -450,13 +450,20 @@ features:
       - name: mermaid_diagram
         type: string
   - name: check
+    entities:
+    - Root
+    - Entity
+    - Field
+    - Feature
+    - UseCase
+    - Dto
+    - DtoField
+    - Global
+    - Relationship
+    - Workspace
+    - UserInterface
     undoable: false
     read_only: true
-    dto_in:
-      name: CheckDto
-      fields:
-      - name: manifest_path
-        type: string
     dto_out:
       name: CheckReturnDto
       fields:

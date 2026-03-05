@@ -6,3 +6,4 @@ pub(crate) mod create_uow;
 pub(crate) mod export_to_mermaid_uow;
 pub(crate) mod load_uow;
 pub(crate) mod save_uow;
+pub(crate) mod check_uow;
