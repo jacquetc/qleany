@@ -161,11 +161,22 @@ pub fn setup_dto_out_enabled_callback(app: &App, app_context: &Arc<AppContext>) 
                         .get_features_undo_stack_id() as u64;
 
                     if enabled {
+                        // Build default name from use case name
+                        let default_name = match use_case_commands::get_use_case(
+                            &ctx,
+                            &(use_case_id as common::types::EntityId),
+                        ) {
+                            Ok(Some(uc)) => {
+                                format!("{}ReturnDto", heck::AsPascalCase(&uc.name))
+                            }
+                            _ => "NewDtoOut".to_string(),
+                        };
+
                         // Create a new DTO Out for this use case
                         let create_dto = direct_access::CreateDtoDto {
                             created_at: chrono::Utc::now(),
                             updated_at: chrono::Utc::now(),
-                            name: "NewDtoOut".to_string(),
+                            name: default_name,
                             fields: vec![],
                         };
                         match dto_commands::create_orphan_dto(&ctx, Some(stack_id), &create_dto) {
