@@ -8,5 +8,7 @@ singleton {{ ent.pascal_name }}Events 1.0 {{ ent.pascal_name }}Events.qml
 {{ feat.pascal_name }}Controller 1.0 {{ feat.pascal_name }}Controller.qml
 {%- endfor %}
 singleton EventRegistry 1.0 EventRegistry.qml
+singleton FeatureEventRegistry 1.0 FeatureEventRegistry.qml
 QCoroQmlTask 1.0 QCoroQmlTask.qml
 singleton UndoRedoController 1.0 UndoRedoController.qml
+singleton ServiceLocator 1.0 ServiceLocator.qml

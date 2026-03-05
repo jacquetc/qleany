@@ -1985,6 +1985,23 @@ impl FillCppQtFilesUseCase {
                 field: None,
             });
 
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "foreign_service_locator.h".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "foreign_service_locator_h".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
             // mock controllers
 
             let relative_path = format!(
@@ -2032,6 +2049,22 @@ impl FillCppQtFilesUseCase {
                 relative_path: relative_path.clone(),
                 group: "QML Presentation".to_string(),
                 template_name: "undo_redo_controller_qml".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "ServiceLocator.qml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "QML Presentation".to_string(),
+                template_name: "service_locator_qml".to_string(),
                 generated_code: None,
                 status: FileStatus::Unknown,
                 feature: None,
