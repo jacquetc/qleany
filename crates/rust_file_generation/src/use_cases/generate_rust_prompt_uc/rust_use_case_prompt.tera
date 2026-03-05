@@ -24,6 +24,10 @@
 ## What to Implement
 
 The use case skeleton is already generated. You need to replace the placeholder (`unimplemented!("...")`) in the `execute()` method with actual business logic.
+
+[ The user must replace this placeholder with instructions specific to the use case, e.g. "This use case creates a new Order entity based on the input DTO, then updates the related Customer entity's order count." ]
+[ If the user doesn't replace this placeholder, you **must ask the user to provide instructions** ]
+
 {% if uc.dto_in %}
 ## Input DTO: `{{ uc.dto_in.pascal_name }}`
 
@@ -174,7 +178,7 @@ pub fn execute(
 
     // YOUR CODE HERE:
     // 1. Capture state BEFORE mutation for undo:
-    //    self.undo_snapshot = Some(uow.snapshot_{entity_snake}(&ids)?);
+    //    self.undo_snapshot = Some(uow.snapshot_{entity written in snake}(&ids)?);
     // 2. Perform the actual mutation using uow.*
 {%- if uc.dto_in %}
     //    Read input from dto

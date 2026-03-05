@@ -31,7 +31,7 @@ pub struct {{ uc.dto_in.pascal_name }} {
 pub enum {{ df.inner.enum_name }} {
     #[default]
             {%- for v in df.inner.enum_values %}
-    {{ v }}
+    {{ v }},
             {%- endfor %}
 }
         {%- endif %}
@@ -64,7 +64,7 @@ pub struct {{ uc.dto_out.pascal_name }} {
 pub enum {{ df.inner.enum_name }} {
     #[default]
             {%- for v in df.inner.enum_values %}
-    {{ v }}
+    {{ v }},
             {%- endfor %}
 }
         {%- endif %}
