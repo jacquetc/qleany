@@ -328,6 +328,19 @@ export global UserInterfaceTabState {
     callback cpp_qt_qtquick_changed(bool);
 }
 
+export global CheckState {
+    // "none" | "ok" | "warning" | "critical"
+    in-out property <string> check-status: "none";
+    in-out property <int> warning-count: 0;
+    in-out property <int> critical-count: 0;
+    in-out property <[string]> warnings: [];
+    in-out property <[string]> critical-errors: [];
+    // Side panel visibility
+    in-out property <bool> panel-visible: false;
+    // Trigger a re-check
+    callback request-check();
+}
+
 export global CommonTools{
     pure callback check_is_pascal_case(string) -> bool;
     pure callback check_is_snake_case(string) -> bool;
