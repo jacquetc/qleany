@@ -45,17 +45,17 @@ class Single{{ ent.pascal_name }} : public QObject
     Q_OBJECT
 
   public:
-    enum class Status {
+    enum class LoadingStatus {
         Unloaded,
         Loading,
         Loaded,
         Error
     };
-    Q_ENUM(Status)
+    Q_ENUM(LoadingStatus)
 
     Q_PROPERTY(int itemId READ id WRITE setId NOTIFY itemIdChanged)
     Q_PROPERTY(int undoRedoStackId READ undoRedoStackId WRITE setUndoRedoStackId NOTIFY undoRedoStackIdChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(LoadingStatus loadingStatus READ loadingStatus NOTIFY loadingStatusChanged)
     Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged)
     Q_PROPERTY(bool dirty READ dirty NOTIFY dirtyChanged)
     {%- for f in ent.fields %}
@@ -68,7 +68,7 @@ class Single{{ ent.pascal_name }} : public QObject
     void setId(int id);
     int undoRedoStackId() const;
     void setUndoRedoStackId(int undoRedoStackId);
-    Status status() const;
+    LoadingStatus loadingStatus() const;
     QString errorMessage() const;
     bool dirty() const;
     Q_INVOKABLE void save();
@@ -81,7 +81,7 @@ class Single{{ ent.pascal_name }} : public QObject
   Q_SIGNALS:
     void itemIdChanged();
     void undoRedoStackIdChanged();
-    void statusChanged();
+    void loadingStatusChanged();
     void errorMessageChanged();
     void dirtyChanged();
     {%- for f in ent.fields %}
@@ -96,13 +96,13 @@ class Single{{ ent.pascal_name }} : public QObject
     void resolveDependencies();
     void refreshData();
     void clearData();
-    void setStatus(Status status);
+    void setLoadingStatus(LoadingStatus loadingStatus);
     void setErrorMessage(const QString &message);
     void setDirty(bool dirty);
 
     int m_id = -1;
     int m_undoRedoStackId = 0;
-    Status m_status = Status::Unloaded;
+    LoadingStatus m_loadingStatus = LoadingStatus::Unloaded;
     QString m_errorMessage;
     bool m_dirty = false;
     bool m_isRefreshing = false;

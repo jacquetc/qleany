@@ -77,7 +77,7 @@ void Single{{ ent.pascal_name }}::refreshData()
     if (m_id <= 0)
         return;
 
-    setStatus(Status::Loading);
+    setLoadingStatus(LoadingStatus::Loading);
 
     auto get{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_id});
 
@@ -88,7 +88,7 @@ void Single{{ ent.pascal_name }}::refreshData()
         if (items.isEmpty())
         {
             setErrorMessage(QStringLiteral("{{ ent.pascal_name }} with id %1 not found").arg(m_id));
-            setStatus(Status::Error);
+            setLoadingStatus(LoadingStatus::Error);
             return;
         }
 
@@ -103,7 +103,7 @@ void Single{{ ent.pascal_name }}::refreshData()
 
         setDirty(false);
         setErrorMessage({});
-        setStatus(Status::Loaded);
+        setLoadingStatus(LoadingStatus::Loaded);
     });
 }
 
@@ -118,20 +118,20 @@ void Single{{ ent.pascal_name }}::clearData()
     m_isRefreshing = false;
     setDirty(false);
     setErrorMessage({});
-    setStatus(Status::Unloaded);
+    setLoadingStatus(LoadingStatus::Unloaded);
 }
 
-Single{{ ent.pascal_name }}::Status Single{{ ent.pascal_name }}::status() const
+Single{{ ent.pascal_name }}::LoadingStatus Single{{ ent.pascal_name }}::loadingStatus() const
 {
-    return m_status;
+    return m_loadingStatus;
 }
 
-void Single{{ ent.pascal_name }}::setStatus(Status status)
+void Single{{ ent.pascal_name }}::setLoadingStatus(LoadingStatus loadingStatus)
 {
-    if (m_status != status)
+    if (m_loadingStatus != loadingStatus)
     {
-        m_status = status;
-        Q_EMIT statusChanged();
+        m_loadingStatus = loadingStatus;
+        Q_EMIT loadingStatusChanged();
     }
 }
 
@@ -185,7 +185,7 @@ void Single{{ ent.pascal_name }}::setId(int id)
             m_isRefreshing = false;
             setDirty(false);
             setErrorMessage({});
-            setStatus(Status::Unloaded);
+            setLoadingStatus(LoadingStatus::Unloaded);
         }
         Q_EMIT itemIdChanged();
     }
@@ -217,11 +217,11 @@ void Single{{ ent.pascal_name }}::save()
     if (!m_{{ ent.camel_name }}Controller)
     {
         setErrorMessage(QStringLiteral("Controller not available"));
-        setStatus(Status::Error);
+        setLoadingStatus(LoadingStatus::Error);
         return;
     }
 
-    setStatus(Status::Loading);
+    setLoadingStatus(LoadingStatus::Loading);
 
     {{ ent.pascal_name }}Dto dto;
     dto.id = m_id;
@@ -238,7 +238,7 @@ void Single{{ ent.pascal_name }}::save()
         if (result.isEmpty())
         {
             setErrorMessage(QStringLiteral("Failed to save {{ ent.pascal_name }}"));
-            setStatus(Status::Error);
+            setLoadingStatus(LoadingStatus::Error);
             return;
         }
 
@@ -253,7 +253,7 @@ void Single{{ ent.pascal_name }}::save()
 
         setDirty(false);
         setErrorMessage({});
-        setStatus(Status::Loaded);
+        setLoadingStatus(LoadingStatus::Loaded);
     });
 }
 
