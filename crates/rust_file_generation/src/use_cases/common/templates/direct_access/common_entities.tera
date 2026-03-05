@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use crate::types::EntityId;
 use crate::types::HasId;
 
-// Entities
 {% for eid, ent in s.entities %}
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct {{ ent.pascal_name }} {

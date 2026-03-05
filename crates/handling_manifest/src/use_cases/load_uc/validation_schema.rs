@@ -203,8 +203,14 @@ pub fn json_validation_schema() -> serde_json::Value {
                                                         "type": {
                                                             "type": "string"
                                                         },
+                                                        "optional": {
+                                                            "type": "boolean"
+                                                        },
                                                         "is_list": {
                                                             "type": "boolean"
+                                                        },
+                                                        "enum_name": {
+                                                            "type": "string"
                                                         },
                                                         "enum_values": {
                                                             "type": "array",

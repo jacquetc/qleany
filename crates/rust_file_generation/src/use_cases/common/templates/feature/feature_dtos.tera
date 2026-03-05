@@ -9,21 +9,68 @@ use serde::{Deserialize, Serialize};
 {% for uc_id, uc in f.use_cases %}
 
 {%- if uc.dto_in %}
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct {{ uc.dto_in.pascal_name }} {
 {% for dto_field in uc.dto_in.fields %}
     pub {{ dto_field.snake_name }}: {{ dto_field.rust_type }},
 {%- endfor %}
 }
+
+{%- set_global has_enum = false %}
+{%- for df in uc.dto_in.fields %}
+    {%- if df.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+    {%- for df in uc.dto_in.fields %}
+        {%- if df.inner.field_type == "Enum" %}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum {{ df.inner.enum_name }} {
+    #[default]
+            {%- for v in df.inner.enum_values %}
+    {{ v }}
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
+
+
 {%- endif %}
 
 {%- if uc.dto_out %}
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct {{ uc.dto_out.pascal_name }} {
 {% for dto_field in uc.dto_out.fields %}
     pub {{ dto_field.snake_name }}: {{ dto_field.rust_type }},
 {%- endfor %}
 }
+
+{%- set_global has_enum = false %}
+{%- for df in uc.dto_out.fields %}
+    {%- if df.inner.field_type == "Enum" %}
+        {% set_global has_enum = true %}
+    {%- endif %}
+{%- endfor %}
+
+{%- if has_enum %}
+    {%- for df in uc.dto_out.fields %}
+        {%- if df.inner.field_type == "Enum" %}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum {{ df.inner.enum_name }} {
+    #[default]
+            {%- for v in df.inner.enum_values %}
+    {{ v }}
+            {%- endfor %}
+}
+        {%- endif %}
+    {%- endfor %}
+{%- endif %}{# end of has_enum #}
+
 {%- endif %}
 
 {%- endfor %}
