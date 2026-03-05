@@ -9,13 +9,15 @@
 
 > **No framework. No runtime. No Qleany dependencies in your code.**
 >
-> The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on.
+> The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
 Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application. Rust's GUI ecosystem is growing fast, but there's nothing to help you structure what sits behind the UI. Qleany fills that gap. Write a YAML manifest describing your entities, relationships, and features. Qleany generates the rest: the database layer, the repository infrastructure, the event system, the controller wiring, and — if you need it — a multi-stack undo/redo system with cascade snapshot/restore for entity trees. For C++/Qt, it also generates reactive QML models that update themselves, and JavaScript mock controllers so your UI developer can work without waiting for the backend.
 
 Once the code is generated, your work is two things: fill in the use case bodies where the TODOs are, and build your UI. The rest is done. Think of it as getting the framework without adopting one.
 
-For a 13-entity project, that's roughly 600 files in C++/Qt or 300 in Rust, all compiling, all internally consistent, with a generated test suite that validates the infrastructure before you write a single line of business logic. The generated code is deliberately straightforward — readable and modifiable by a developer with a few years of experience, not a showcase of advanced language features.
+Qleany is not a scaffolding tool, it's an architecture materializer.
+
+For a 17-entity project, that's roughly 410 files in C++/Qt or 175 in Rust, all compiling, all internally consistent, with a generated test suite that validates the infrastructure before you write a single line of business logic. The generated code is deliberately straightforward, readable and modifiable by a developer with a few years of experience, not a showcase of advanced language features.
 
 Qleany follows Package by Feature (Vertical Slice Architecture) principles. Define your entities and features once, generate consistent architecture across Rust and C++/Qt with baked-in (empty) UIs. Qleany's own Slint-based tool is built using the same patterns it generates.
 
@@ -196,22 +198,20 @@ For more details, see the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.m
 # Show help
 qleany -h
 
-
 # Show an option help
 qleany generate -h
 
-
 # show the list of available documentation
-qleany doc -h
+qleany docs -h
 
-# show all documentation
-qleany doc
+# show all documentation in Markdown format
+qleany docs all --md
 
 # new qleany.yaml manifest
 qleany new --language cpp-qt (or rust)
 
 # Generate all files
-qleany generate
+qleany generate (or gen)
 
 # Dry run (list files that would be generated without writing)
 qleany generate --dry-run
@@ -225,11 +225,32 @@ qleany generate --temp
 # Generate specific feature
 qleany generate feature my_feature_name
 
-# List files that would be generated
+# List files that would be generated (only the new and modified ones)
 qleany list
+
+# List files that would be generated (including the unchanged ones)
+qleany list --all
 
 # List features that would be generated
 qleany list features
+
+# Verify the manifest
+qleany check
+
+# Display the enforced rules
+qleany check --rules
+
+# Diff the generated code for a file against the existing code
+qleany diff file_path/file.rs
+
+# Create a context for LLM-based code generation
+qleany prompt --context
+
+# List the use cases and the unimplemented ones
+qleany prompt --list
+
+# generate a task prompt tailored for a use case
+qleany prompt --use-case feature:my_feature_name 
 ```
 
 ---
