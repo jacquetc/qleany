@@ -24,6 +24,15 @@ use common::long_operation::{LongOperationManager, OperationProgress};
 {%- break %}
 {%- endif %}
 {%- endfor %}
+{%- set_global has_undoable = false %}
+{%- for uc_id, uc in f.use_cases %}
+{%- if uc.inner.undoable and not uc.inner.read_only and not uc.inner.long_operation %}
+{%- set_global has_undoable = true %}
+{%- endif %}
+{%- endfor %}
+{%- if has_undoable %}
+use common::undo_redo::UndoRedoManager;
+{%- endif %}
 use common::{database::db_context::DbContext, event::EventHub};
 use std::sync::Arc;
 
@@ -84,6 +93,10 @@ Result<Option<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endi
 pub fn {{ uc.snake_name }} (
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
+{%- if uc.inner.undoable and not uc.inner.read_only %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+{%- endif %}
 {%- if uc.dto_in %}
     dto: &{{ uc.dto_in.pascal_name }},
 {%- endif %}
@@ -95,6 +108,9 @@ pub fn {{ uc.snake_name }} (
 {%- endif %}{# read_only #}
     let mut uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context));
     let return_dto = uc.execute({% if uc.dto_in %} dto {% endif %})?;
+{%- if uc.inner.undoable and not uc.inner.read_only %}
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+{%- endif %}
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
