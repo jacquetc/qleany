@@ -22,6 +22,7 @@ pub fn rustfmt_files_batch(files: &[PathBuf]) {
 
     for chunk in files.chunks(BATCH_SIZE) {
         let mut cmd = Command::new(&rustfmt_path);
+        cmd.arg("--edition").arg("2024");
 
         // Add all file paths as arguments
         for file in chunk {
@@ -61,6 +62,7 @@ pub(crate) fn rustfmt_string<'a>(source: &'a str, config_path: Option<&'a str>) 
 
     let mut cmd = Command::new(rustfmt_path);
     cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
+    cmd.arg("--edition").arg("2024");
 
     if let Some(path) = config_path {
         cmd.args(["--config-path", path]);

@@ -80,7 +80,7 @@ impl CommandUnitOfWork for FillStatusInFilesUnitOfWork {
     }
 }
 
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "System", action = "Get")]

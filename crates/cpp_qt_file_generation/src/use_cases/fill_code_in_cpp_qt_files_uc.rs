@@ -79,7 +79,8 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
 
         let total = files.len().max(1);
 
-        // Create a temp directory for batch formatting
+        // Create a temp directory that mirrors the real folder structure so
+        // clang-format works correctly with includes.
         let tmp_dir = std::env::temp_dir().join(format!("qleany_fill_code_cpp_qt_{}", std::process::id()));
         fs::create_dir_all(&tmp_dir)?;
 
@@ -88,8 +89,7 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
         generation_snapshot_cache.reserve(files.len());
 
         // Map of file_id -> (generated code, temp file path)
-        let mut generated: Vec<(EntityId, String, Option<PathBuf>)> =
-            Vec::with_capacity(files.len());
+        let mut generated: Vec<(EntityId, String, PathBuf)> = Vec::with_capacity(files.len());
         let mut cpp_qt_files_to_format: Vec<PathBuf> = Vec::new();
 
         for (idx, file) in files.iter().enumerate() {
@@ -108,31 +108,17 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
                 generation_snapshot_cache.push(snapshot);
             }
 
-            // Determine temp file extension based on file name
-            let ext = if file.name.ends_with(".h") {
-                "h"
-            } else if file.name.ends_with(".cpp") {
-                "cpp"
-            } else if file.name.ends_with(".cmake") || file.name.ends_with("CMakeLists.txt") {
-                "cmake"
-            } else if file.name.ends_with(".qml") {
-                "qml"
-            } else if file.name.ends_with(".pri") {
-                "pri"
-            } else if file.name.ends_with(".pro") {
-                "pro"
-            } else {
-                "txt"
-            };
-
-            let temp_path = tmp_dir.join(format!("{}.{}", file.id, ext));
+            // Recreate the real directory structure: tmp_dir/relative_path/name
+            let file_dir = tmp_dir.join(&file.relative_path);
+            fs::create_dir_all(&file_dir)?;
+            let temp_path = file_dir.join(&file.name);
             fs::write(&temp_path, code.as_bytes())?;
 
-            if ext == "h" || ext == "cpp" {
+            if file.name.ends_with(".h") || file.name.ends_with(".cpp") {
                 cpp_qt_files_to_format.push(temp_path.clone());
             }
 
-            generated.push((file.id, code, Some(temp_path)));
+            generated.push((file.id, code, temp_path));
 
             // Progress: generation phase is 0-80%
             let percentage = ((idx + 1) as f32 / total as f32) * 80.0;
@@ -175,11 +161,8 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
             }
 
             // Read back the (potentially formatted) content
-            let final_code = if let Some(path) = temp_path {
-                fs::read_to_string(path).unwrap_or_else(|_| fallback_code.clone())
-            } else {
-                fallback_code.clone()
-            };
+            let final_code =
+                fs::read_to_string(temp_path).unwrap_or_else(|_| fallback_code.clone());
 
             // Update file entity with the generated code
             let mut file = files
@@ -206,7 +189,7 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
         uow.commit()?;
 
         let duration = start_time.elapsed();
-        println!(
+        eprintln!(
             "Fill code in C++/Qt files completed in {:?}, total files: {}",
             duration,
             files.len()

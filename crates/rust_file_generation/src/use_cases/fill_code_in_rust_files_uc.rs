@@ -79,7 +79,8 @@ impl LongOperation for FillCodeInRustFilesUseCase {
 
         let total = files.len().max(1);
 
-        // Create a temp directory for batch formatting
+        // Create a temp directory that mirrors the real folder structure so
+        // rustfmt can resolve `mod` references when formatting.
         let tmp_dir = std::env::temp_dir().join(format!("qleany_fill_code_{}", std::process::id()));
         fs::create_dir_all(&tmp_dir)?;
 
@@ -88,8 +89,7 @@ impl LongOperation for FillCodeInRustFilesUseCase {
         generation_snapshot_cache.reserve(files.len());
 
         // Map of file_id -> (generated code, temp file path)
-        let mut generated: Vec<(EntityId, String, Option<PathBuf>)> =
-            Vec::with_capacity(files.len());
+        let mut generated: Vec<(EntityId, String, PathBuf)> = Vec::with_capacity(files.len());
         let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
 
         for (idx, file) in files.iter().enumerate() {
@@ -108,25 +108,17 @@ impl LongOperation for FillCodeInRustFilesUseCase {
                 generation_snapshot_cache.push(snapshot);
             }
 
-            // Determine temp file extension based on file name
-            let ext = if file.name.ends_with(".rs") {
-                "rs"
-            } else if file.name.ends_with(".toml") {
-                "toml"
-            } else if file.name.ends_with(".slint") {
-                "slint"
-            } else {
-                "txt"
-            };
-
-            let temp_path = tmp_dir.join(format!("{}.{}", file.id, ext));
+            // Recreate the real directory structure: tmp_dir/relative_path/name
+            let file_dir = tmp_dir.join(&file.relative_path);
+            fs::create_dir_all(&file_dir)?;
+            let temp_path = file_dir.join(&file.name);
             fs::write(&temp_path, code.as_bytes())?;
 
-            if ext == "rs" {
+            if file.name.ends_with(".rs") {
                 rust_files_to_format.push(temp_path.clone());
             }
 
-            generated.push((file.id, code, Some(temp_path)));
+            generated.push((file.id, code, temp_path));
 
             // Progress: generation phase is 0-80%
             let percentage = ((idx + 1) as f32 / total as f32) * 80.0;
@@ -159,8 +151,7 @@ impl LongOperation for FillCodeInRustFilesUseCase {
             90.0,
             Some("Updating file entities with generated code...".to_string()),
         ));
-        
-        
+
         let mut files_to_update: Vec<File> = Vec::new();
         for (idx, (file_id, fallback_code, temp_path)) in generated.iter().enumerate() {
             if cancel_flag.load(Ordering::Relaxed) {
@@ -170,11 +161,8 @@ impl LongOperation for FillCodeInRustFilesUseCase {
             }
 
             // Read back the (potentially formatted) content
-            let final_code = if let Some(path) = temp_path {
-                fs::read_to_string(path).unwrap_or_else(|_| fallback_code.clone())
-            } else {
-                fallback_code.clone()
-            };
+            let final_code =
+                fs::read_to_string(temp_path).unwrap_or_else(|_| fallback_code.clone());
 
             // Update file entity with the generated code
             let mut file = files
@@ -201,7 +189,7 @@ impl LongOperation for FillCodeInRustFilesUseCase {
         uow.commit()?;
 
         let duration = start_time.elapsed();
-        println!(
+        eprintln!(
             "Fill code in Rust files completed in {:?}, total files: {}",
             duration,
             files.len()

@@ -9,7 +9,7 @@ use std::path::PathBuf;
 pub trait FillStatusInFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillStatusInFilesUnitOfWorkTrait>;
 }
-#[macros::uow_action(entity = "Root", action = "GetMulti")]
+#[macros::uow_action(entity = "Root", action = "GetAll")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "System", action = "Get")]
@@ -46,10 +46,9 @@ impl FillStatusInFilesUseCase {
         uow.begin_transaction()?;
 
         // Get root entity
-        let roots = uow.get_root_multi(&[])?;
+        let roots = uow.get_all_root()?;
         let root = roots
             .into_iter()
-            .flatten()
             .next()
             .ok_or_else(|| anyhow!("Root entity not found"))?;
 
