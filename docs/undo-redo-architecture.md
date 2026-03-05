@@ -80,11 +80,15 @@ The undo-redo system follows strict inheritance rules through the entity tree:
 
 These rules ensure that when you undo an operation on a parent entity, all its strongly-owned children can be consistently rolled back.
 
-> **What happens if you violate these rules?** The code will generate, compile, and run — Qleany does not enforce these rules at generation time. However, undo/redo stacks will become inconsistent. For example, if you place non-undoable persistent settings as a child of an undoable entity, those settings could be unexpectedly undone by cascade when the user undoes the parent. You do not want application settings disappearing because the user undid an unrelated action.
+> *Qleany enforces these rules, among other rules, at loading time generation time and in the GUI.*
+>
+> Type `qleany check -rules` to see the full list of rules.
+> 
+> **What happens if you violate these rules?** Undo/redo stacks will become inconsistent. For example, if you place non-undoable persistent settings as a child of an undoable entity, those settings could be unexpectedly undone by cascade when the user undoes the parent. You do not want application settings disappearing because the user undid an unrelated action.
 >
 > Follow these rules strictly. If data should not participate in undo (like settings), place it in a separate non-undoable trunk — do not nest it under undoable entities.
 >
-> *A basic validation system checks some of these rules at generation time. It is being improved to perform checks at load time as well.*
+
 
 ## Entity Tree Configurations
 
