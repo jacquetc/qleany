@@ -3,8 +3,8 @@ use crate::CheckReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Direction, Dto, DtoField, Entity, Feature, Field, FieldType, Global, Relationship, Root,
-    Strength, UseCase, UserInterface, Workspace,
+    Direction, Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, Global,
+    Relationship, Root, Strength, UseCase, UserInterface, Workspace,
 };
 use common::types::EntityId;
 use std::collections::{HashMap, HashSet};
@@ -69,6 +69,8 @@ pub const CRITICAL_RULES: &[Rule] = &[
     Rule { id: "C28", severity: "critical", description: "DtoField names must not be reserved keywords (Rust, C++, Qt)" },
     Rule { id: "C29", severity: "critical", description: "A DtoField must not be both 'optional' and 'is_list'" },
     // Rule { id: "C30", severity: "critical", description: "A Field must not be both 'optional' and 'is_list'" },  // TODO: enable when Field gets is_list
+    Rule { id: "C31", severity: "critical", description: "Field: list_model or list_model_displayed_field require field_type=Entity and relationship in {OneToMany, OrderedOneToMany, ManyToMany}" },
+    Rule { id: "C32", severity: "critical", description: "Field: relationship in {OneToMany, OrderedOneToMany, ManyToMany} cannot be optional" },
 ];
 
 /// Warning rules – non-blocking issues worth reviewing.
@@ -323,6 +325,33 @@ impl CheckUseCase {
                     //         entity.name, field.name
                     //     ));
                     // }
+
+                    // list_model / list_model_displayed_field require Entity type + to-many relationship
+                    let is_to_many = matches!(
+                        field.relationship,
+                        FieldRelationshipType::OneToMany
+                            | FieldRelationshipType::OrderedOneToMany
+                            | FieldRelationshipType::ManyToMany
+                    );
+                    if (field.list_model || field.list_model_displayed_field.is_some())
+                        && !(field.field_type == FieldType::Entity && is_to_many)
+                    {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': list_model or list_model_displayed_field \
+                             requires field_type=Entity and relationship in \
+                             {{OneToMany, OrderedOneToMany, ManyToMany}}",
+                            entity.name, field.name
+                        ));
+                    }
+
+                    // To-many relationships cannot be optional
+                    if is_to_many && field.optional {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': a to-many relationship \
+                             (OneToMany, OrderedOneToMany, ManyToMany) cannot be optional",
+                            entity.name, field.name
+                        ));
+                    }
 
                     // Entity-type fields must reference valid entities
                     if field.field_type == FieldType::Entity {

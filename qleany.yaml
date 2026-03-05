@@ -49,7 +49,6 @@ entities:
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -57,7 +56,6 @@ entities:
     type: entity
     entity: Feature
     relationship: ordered_one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -76,7 +74,6 @@ entities:
     type: entity
     entity: File
     relationship: one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -97,7 +94,6 @@ entities:
     type: entity
     entity: Field
     relationship: ordered_one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -105,7 +101,6 @@ entities:
     type: entity
     entity: Relationship
     relationship: one_to_many
-    optional: true
     strong: true
   - name: single_model
     type: boolean
@@ -164,7 +159,6 @@ entities:
     type: entity
     entity: UseCase
     relationship: ordered_one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
@@ -227,7 +221,6 @@ entities:
     type: entity
     entity: Entity
     relationship: ordered_one_to_many
-    optional: true
     list_model: true
     list_model_displayed_field: name
   - name: undoable
@@ -258,7 +251,6 @@ entities:
     type: entity
     entity: DtoField
     relationship: ordered_one_to_many
-    optional: true
     strong: true
     list_model: true
     list_model_displayed_field: name
