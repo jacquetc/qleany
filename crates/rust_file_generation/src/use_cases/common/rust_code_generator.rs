@@ -344,15 +344,18 @@ impl SnapshotBuilder {
 
         if !all_entity_ids.is_empty() {
             let all_entities = uow.get_entity_multi(&all_entity_ids)?;
-            let mut extra_rel_ids: HashSet<EntityId> = HashSet::new();
+            let mut extra_rel_ids: Vec<EntityId> = Vec::new();
             for e_opt in all_entities.into_iter().flatten() {
                 for rid in e_opt.relationships {
-                    extra_rel_ids.insert(rid);
+                    if !extra_rel_ids.contains(&rid) {
+                        extra_rel_ids.push(rid);
+                    }
                 }
             }
+            extra_rel_ids.sort();
             if !extra_rel_ids.is_empty() {
                 let extra_rels =
-                    uow.get_relationship_multi(&extra_rel_ids.iter().copied().collect::<Vec<_>>())?;
+                    uow.get_relationship_multi(&extra_rel_ids)?;
                 for rel_opt in extra_rels.into_iter().flatten() {
                     if rel_opt.left_entity == entity.id || rel_opt.right_entity == entity.id {
                         relationships_map.entry(rel_opt.id).or_insert(rel_opt);
@@ -360,6 +363,33 @@ impl SnapshotBuilder {
                 }
             }
         }
+
+        // Sort relationships by (field_name, left_entity_name) for deterministic output
+        // (IDs may vary between runs, and multiple relationships can share the same field_name)
+        let mut entity_names_cache: std::collections::HashMap<EntityId, String> =
+            std::collections::HashMap::new();
+        for rel in relationships_map.values() {
+            for eid in [rel.left_entity, rel.right_entity] {
+                entity_names_cache.entry(eid).or_insert_with(|| {
+                    uow.get_entity(&eid)
+                        .ok()
+                        .flatten()
+                        .map(|e| e.name.clone())
+                        .unwrap_or_default()
+                });
+            }
+        }
+        relationships_map.sort_by(|_ka, va, _kb, vb| {
+            let a_left = entity_names_cache
+                .get(&va.left_entity)
+                .map(|s| s.as_str())
+                .unwrap_or("");
+            let b_left = entity_names_cache
+                .get(&vb.left_entity)
+                .map(|s| s.as_str())
+                .unwrap_or("");
+            (&va.field_name, a_left).cmp(&(&vb.field_name, b_left))
+        });
 
         // Now split into all/forward/backward with deduplication strategy used in for_file
         let mut rel_all: IndexMap<EntityId, RelationshipVM> = IndexMap::new();
@@ -895,17 +925,22 @@ impl SnapshotBuilder {
 
         // Now wrap into snapshot similarly to adapter
         let mut entities_vm: IndexMap<EntityId, EntityVM> = IndexMap::new();
-        for eid in entities.keys() {
+        let mut entity_keys: Vec<EntityId> = entities.keys().copied().collect();
+        entity_keys.sort();
+        for eid in &entity_keys {
             // Use the unified entity view model builder
             let evm = SnapshotBuilder::get_entity_vm(uow, eid)?;
             entities_vm.insert(*eid, evm);
         }
 
         let mut dtos_vm: IndexMap<EntityId, DtoVM> = IndexMap::new();
-        for (did, d) in &dtos {
+        let mut dto_keys: Vec<EntityId> = dtos.keys().copied().collect();
+        dto_keys.sort();
+        for did in &dto_keys {
+            let d = &dtos[did];
             let mut df_vec: Vec<DtoFieldVM> = Vec::new();
-            for (dfid, df) in &dto_fields {
-                if d.fields.contains(dfid) {
+            for dfid in &d.fields {
+                if let Some(df) = dto_fields.get(dfid) {
                     df_vec.push(DtoFieldVM {
                         inner: df.clone(),
                         pascal_name: heck::AsPascalCase(&df.name).to_string(),
@@ -925,7 +960,9 @@ impl SnapshotBuilder {
             );
         }
 
-        let features_vm: IndexMap<EntityId, FeatureVM> = features
+        let mut sorted_features: Vec<(EntityId, Feature)> = features.into_iter().collect();
+        sorted_features.sort_by_key(|(k, _)| *k);
+        let features_vm: IndexMap<EntityId, FeatureVM> = sorted_features
             .into_iter()
             .map(|(k, v)| {
                 (
@@ -994,8 +1031,8 @@ impl SnapshotBuilder {
                                                     inner: d.clone(),
                                                     fields: {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
-                                                        for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {
+                                                        for dfid in &d.fields {
+                                                            if let Some(df) = dto_fields.get(dfid) {
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name: heck::AsPascalCase(&df.name).to_string(),
@@ -1016,8 +1053,8 @@ impl SnapshotBuilder {
                                                     inner: d.clone(),
                                                     fields: {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
-                                                        for (dfid, df) in &dto_fields {
-                                                            if d.fields.contains(dfid) {
+                                                        for dfid in &d.fields {
+                                                            if let Some(df) = dto_fields.get(dfid) {
                                                                 df_vec.push(DtoFieldVM {
                                                                     inner: df.clone(),
                                                                     pascal_name: heck::AsPascalCase(&df.name).to_string(),
@@ -1047,7 +1084,9 @@ impl SnapshotBuilder {
                 )
             })
             .collect();
-        let use_cases_vm: IndexMap<EntityId, UseCaseVM> = use_cases
+        let mut sorted_use_cases: Vec<(EntityId, UseCase)> = use_cases.into_iter().collect();
+        sorted_use_cases.sort_by_key(|(k, _)| *k);
+        let use_cases_vm: IndexMap<EntityId, UseCaseVM> = sorted_use_cases
             .into_iter()
             .map(|(k, uc)| {
                 (
@@ -1093,8 +1132,8 @@ impl SnapshotBuilder {
                                 inner: d.clone(),
                                 fields: {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
-                                    for (dfid, df) in &dto_fields {
-                                        if d.fields.contains(dfid) {
+                                    for dfid in &d.fields {
+                                        if let Some(df) = dto_fields.get(dfid) {
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)
@@ -1120,8 +1159,8 @@ impl SnapshotBuilder {
                                 inner: d.clone(),
                                 fields: {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
-                                    for (dfid, df) in &dto_fields {
-                                        if d.fields.contains(dfid) {
+                                    for dfid in &d.fields {
+                                        if let Some(df) = dto_fields.get(dfid) {
                                             df_vec.push(DtoFieldVM {
                                                 inner: df.clone(),
                                                 pascal_name: heck::AsPascalCase(&df.name)

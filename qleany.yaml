@@ -449,6 +449,23 @@ features:
       fields:
       - name: mermaid_diagram
         type: string
+  - name: check
+    undoable: false
+    read_only: true
+    dto_in:
+      name: CheckDto
+      fields:
+      - name: manifest_path
+        type: string
+    dto_out:
+      name: CheckReturnDto
+      fields:
+      - name: warnings
+        type: string
+        is_list: true
+      - name: critical_errors
+        type: string
+        is_list: true
 - name: rust_file_generation
   use_cases:
   - name: fill_rust_files
@@ -548,19 +565,19 @@ features:
     dto_in:
       name: GenerateRustPromptDto
       fields:
-        - name: feature_id
-          type: uinteger
-          optional: true
-        - name: use_case_id
-          type: uinteger
-          optional: true
-        - name: context
-          type: boolean
+      - name: feature_id
+        type: uinteger
+        optional: true
+      - name: use_case_id
+        type: uinteger
+        optional: true
+      - name: context
+        type: boolean
     dto_out:
       name: GenerateRustPromptReturnDto
       fields:
-        - name: prompt_text
-          type: string
+      - name: prompt_text
+        type: string
 - name: cpp_qt_file_generation
   use_cases:
   - name: fill_cpp_qt_files

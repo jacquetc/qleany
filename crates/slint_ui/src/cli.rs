@@ -157,6 +157,10 @@ pub struct GenerateArgs {
     #[arg(long)]
     pub dry_run: bool,
 
+    /// Write all files including unchanged (default: only modified and new)
+    #[arg(long)]
+    pub all: bool,
+
     /// What to generate
     #[command(subcommand)]
     pub target: Option<GenerateTarget>,
