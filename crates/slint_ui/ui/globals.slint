@@ -310,6 +310,15 @@ export global AppState {
     // Select/Unselect all files
     callback select_all_files();
     callback unselect_all_files();
+
+    // Show all files (including unchanged)
+    in-out property <bool> show_all_files: false;
+    callback show_all_files_changed(bool);
+
+    // Fill code pipeline state (for computing file status)
+    in-out property <bool> fill_code_is_running: false;
+    in-out property <float> fill_code_progress: 0;
+    in-out property <string> fill_code_message: "";
 }
 
 export global UserInterfaceTabState {

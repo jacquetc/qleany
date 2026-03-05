@@ -76,7 +76,16 @@ export component GenerateTab inherits Rectangle {
                 text: "in temp/";
                 checked <=> AppState.generate_in_temp;
             }
-            
+
+            CheckBox {
+                text: "show all";
+                checked: AppState.show_all_files;
+                toggled => {
+                    AppState.show_all_files = self.checked;
+                    AppState.show_all_files_changed(self.checked);
+                }
+            }
+
             StyledButton {
                 text: AppState.generate_is_running ? "Generating..." : "Generate (" + AppState.selected_files_count + ")";
                 enabled: !AppState.generate_is_running && AppState.selected_files_count > 0;
@@ -246,6 +255,22 @@ export component GenerateTab inherits Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // Fill Code Progress Modal
+    if AppState.fill_code_is_running : Modal {
+        title: "Computing File Status";
+        show-modal: AppState.fill_code_is_running;
+
+        ProgressIndicator {
+            progress: AppState.fill_code_progress;
+        }
+
+        Text {
+            text: AppState.fill_code_message != "" ? AppState.fill_code_message : "Processing...";
+            font-size: 14px;
+            color: #868e96;
         }
     }
 
