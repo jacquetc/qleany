@@ -536,7 +536,14 @@ pub fn setup_dto_in_field_optional_callback(app: &App, app_context: &Arc<AppCont
                         .get_selected_dto_in_field_id();
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.optional = optional;
+                        if optional {
+                            field.is_list = false;
+                        }
                     });
+                    if optional {
+                        app.global::<FeaturesTabState>()
+                            .set_selected_dto_in_field_is_list(false);
+                    }
                 }
             }
         });
@@ -554,7 +561,14 @@ pub fn setup_dto_in_field_is_list_callback(app: &App, app_context: &Arc<AppConte
                         .get_selected_dto_in_field_id();
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
                         field.is_list = is_list;
+                        if is_list {
+                            field.optional = false;
+                        }
                     });
+                    if is_list {
+                        app.global::<FeaturesTabState>()
+                            .set_selected_dto_in_field_optional(false);
+                    }
                 }
             }
         });
