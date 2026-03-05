@@ -7,8 +7,7 @@ use crate::use_cases::get_file_diff_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{File, System};
-use common::types;
+use common::entities::{File, Root, Workspace};
 use common::types::EntityId;
 use std::cell::RefCell;
 
@@ -41,23 +40,10 @@ impl QueryUnitOfWork for GetFileDiffUnitOfWork {
     }
 }
 
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
-//
-// You have here a read-only unit of work.
-//
-// RO means Read Only, so *RO actions should be used here.
-// Do not mix read-only and write actions in the same unit of work.
-//
-// Exactly the same macros must be set in the use case uow trait file in ../use_cases/get_file_diff_uc.rs
-//
-
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
-#[macros::uow_action(entity = "System", action = "Get")]
-#[macros::uow_action(entity = "System", action = "GetRelationship")]
-#[macros::uow_action(entity = "File", action = "GetMulti")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
+#[macros::uow_action(entity = "File", action = "Get")]
 impl GetFileDiffUnitOfWorkTrait for GetFileDiffUnitOfWork {}
 
 pub struct GetFileDiffUnitOfWorkFactory {
