@@ -2,208 +2,479 @@ schema:
   version: 4
 global:
   language: cpp-qt
-  application_name: CalendarApp
+  application_name: FullCppQtApp
   organisation:
     name: FernTech
     domain: eu.ferntech
   prefix_path: src
 entities:
-- name: EntityBase
-  only_for_heritage: true
-  undoable: false
-  fields:
-  - name: id
-    type: uinteger
-  - name: created_at
-    type: datetime
-  - name: updated_at
-    type: datetime
-- name: Root
-  inherits_from: EntityBase
-  undoable: false
-  fields:
-  - name: workspace
-    type: entity
-    entity: Workspace
-    relationship: one_to_one
-    optional: true
-    strong: true
-  - name: system
-    type: entity
-    entity: System
-    relationship: one_to_one
-    optional: true
-    strong: true
-- name: System
-  inherits_from: EntityBase
-  undoable: false
-  fields:
-  - name: name
-    type: string
-  - name: favorites
-    type: entity
-    entity: CalendarEvent
-    relationship: ordered_one_to_many
-    strong: false
-- name: Workspace
-  inherits_from: EntityBase
-  undoable: true
-  fields:
-  - name: calendars
-    type: entity
-    entity: Calendar
-    relationship: ordered_one_to_many
-    strong: true
-    list_model: true
-    list_model_displayed_field: name
-  - name: tags
-    type: entity
-    entity: Tag
-    relationship: one_to_many
-    strong: true
-- name: Calendar
-  inherits_from: EntityBase
-  undoable: true
-  single_model: true
-  fields:
-  - name: name
-    type: string
-  - name: uuid
-    type: uuid
-  - name: description
-    type: string
-  - name: color
-    type: string
-  - name: events
-    type: entity
-    entity: CalendarEvent
-    relationship: ordered_one_to_many
-    strong: true
-    list_model: true
-    list_model_displayed_field: title
-- name: CalendarEvent
-  inherits_from: EntityBase
-  undoable: true
-  single_model: true
-  fields:
-  - name: title
-    type: string
-  - name: description
-    type: string
-  - name: start_time
-    type: datetime
-  - name: end_time
-    type: datetime
-  - name: is_all_day
-    type: boolean
-  - name: location
-    type: string
-  - name: is_recurring
-    type: boolean
-  - name: recurrence_rule
-    type: string
-  - name: reminders
-    type: entity
-    entity: Reminder
-    relationship: one_to_many
-    strong: true
-  - name: tags
-    type: entity
-    entity: Tag
-    relationship: many_to_many
-- name: Reminder
-  inherits_from: EntityBase
-  undoable: true
-  single_model: true
-  fields:
-  - name: minutes_before
-    type: uinteger
-  - name: reminder_type
-    type: enum
-    enum_name: ReminderType
-    enum_values:
-    - Notification
-    - Email
-    - Alarm
-- name: Tag
-  inherits_from: EntityBase
-  undoable: true
-  single_model: true
-  fields:
-  - name: name
-    type: string
-  - name: color
-    type: string
-features:
-- name: calendar_management
-  use_cases:
-  - name: get_events_in_range
+  # Heritage-only base entity (only_for_heritage: true, undoable: false)
+  - name: EntityBase
+    only_for_heritage: true
     undoable: false
-    read_only: true
-    long_operation: true
-    entities: [Root, Calendar, CalendarEvent]
-    dto_in:
-      name: GetEventsInRangeDto
-      fields:
-      - name: calendar_id
+    fields:
+      - name: id
         type: uinteger
-      - name: start_date
-        type: string
-      - name: end_date
-        type: string
-    dto_out:
-      name: EventListDto
-      fields:
-      - name: event_ids
-        type: uinteger
-        is_list: true
-  - name: create_recurring_event
+      - name: created_at
+        type: datetime
+      - name: updated_at
+        type: datetime
+  # Root entity (undoable: false)
+  # Covers: one_to_one optional+strong
+  - name: Root
+    inherits_from: EntityBase
     undoable: false
-    long_operation: true
-    entities: [Calendar, CalendarEvent, Reminder]
-    dto_in:
-      name: CreateRecurringEventDto
-      fields:
-      - name: calendar_id
-        type: uinteger
+    fields:
+      - name: workspace
+        type: entity
+        entity: Workspace
+        relationship: one_to_one
+        optional: true
+        strong: true
+      - name: system
+        type: entity
+        entity: System
+        relationship: one_to_one
+        optional: true
+        strong: true
+  # Non-undoable entity with weak references
+  # Covers: ordered_one_to_many strong:false, one_to_many strong:false
+  - name: System
+    inherits_from: EntityBase
+    undoable: false
+    fields:
+      - name: name
+        type: string
+      - name: favorite_projects
+        type: entity
+        entity: Project
+        relationship: ordered_one_to_many
+        strong: false
+      - name: pinned_tags
+        type: entity
+        entity: Tag
+        relationship: one_to_many
+        strong: false
+  # Undoable entity (no single_model)
+  # Covers: ordered_one_to_many strong+list_model, one_to_many strong+list_model,
+  #         one_to_many strong (no list_model)
+  - name: Workspace
+    inherits_from: EntityBase
+    undoable: true
+    fields:
+      - name: projects
+        type: entity
+        entity: Project
+        relationship: ordered_one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: title
+      - name: categories
+        type: entity
+        entity: Category
+        relationship: one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: name
+      - name: tags
+        type: entity
+        entity: Tag
+        relationship: one_to_many
+        strong: true
+      - name: team_members
+        type: entity
+        entity: TeamMember
+        relationship: one_to_many
+        strong: true
+  # Undoable entity with single_model, all primitive field types, all relationship types
+  # Covers: string, uuid, boolean, integer, float, datetime, enum
+  #         one_to_one required+strong, one_to_one optional+weak,
+  #         ordered_one_to_many strong+list_model, many_to_many
+  - name: Project
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
       - name: title
         type: string
       - name: description
         type: string
-      - name: start_time
-        type: string
-      - name: end_time
-        type: string
-      - name: location
-        type: string
-      - name: recurrence_rule
-        type: string
-      - name: reminder_minutes
-        type: uinteger
+      - name: uuid
+        type: uuid
+      - name: is_active
+        type: boolean
+      - name: priority
+        type: integer
+      - name: budget
+        type: float
+      - name: deadline
+        type: datetime
+      - name: status
+        type: enum
+        enum_name: ProjectStatus
+        enum_values:
+          - Active
+          - OnHold
+          - Completed
+          - Archived
+      - name: settings
+        type: entity
+        entity: ProjectSettings
+        relationship: one_to_one
+        optional: false
+        strong: true
+      - name: lead
+        type: entity
+        entity: TeamMember
+        relationship: one_to_one
         optional: true
-    dto_out:
-      name: CreateRecurringEventResultDto
-      fields:
-      - name: event_id
+        strong: false
+      - name: tasks
+        type: entity
+        entity: Task
+        relationship: ordered_one_to_many
+        strong: true
+        list_model: true
+        list_model_displayed_field: title
+      - name: tags
+        type: entity
+        entity: Tag
+        relationship: many_to_many
+  # Undoable entity with single_model, simple fields only
+  - name: ProjectSettings
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
+      - name: notifications_enabled
+        type: boolean
+      - name: default_priority
+        type: integer
+      - name: color_theme
+        type: string
+  # Undoable entity with single_model
+  # Covers: uinteger, enum, many_to_one optional:true,
+  #         ordered_one_to_many strong (no list_model), many_to_many
+  - name: Task
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
+      - name: title
+        type: string
+      - name: content
+        type: string
+      - name: is_done
+        type: boolean
+      - name: due_date
+        type: datetime
+      - name: weight
+        type: float
+      - name: effort_points
         type: uinteger
-  - name: get_upcoming_reminders
-    undoable: false
-    read_only: true
-    entities: [Root, Calendar, CalendarEvent, Reminder]
-    dto_in:
-      name: GetUpcomingRemindersDto
-      fields:
-      - name: within_minutes
-        type: uinteger
-    dto_out:
-      name: UpcomingRemindersDto
-      fields:
-      - name: event_ids
-        type: uinteger
-        is_list: true
-      - name: reminder_ids
-        type: uinteger
-        is_list: true
+      - name: difficulty
+        type: enum
+        enum_name: TaskDifficulty
+        enum_values:
+          - Easy
+          - Medium
+          - Hard
+          - Expert
+      - name: category
+        type: entity
+        entity: Category
+        relationship: many_to_one
+        optional: true
+      - name: comments
+        type: entity
+        entity: Comment
+        relationship: ordered_one_to_many
+        strong: true
+      - name: tags
+        type: entity
+        entity: Tag
+        relationship: many_to_many
+  # Undoable entity without single_model
+  - name: Comment
+    inherits_from: EntityBase
+    undoable: true
+    fields:
+      - name: text
+        type: string
+      - name: author_name
+        type: string
+  # Undoable entity with single_model
+  # Covers: many_to_one optional:false (required back-reference)
+  - name: TeamMember
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
+      - name: name
+        type: string
+      - name: email
+        type: string
+      - name: role
+        type: enum
+        enum_name: MemberRole
+        enum_values:
+          - Developer
+          - Designer
+          - Manager
+          - Tester
+      - name: department
+        type: entity
+        entity: Category
+        relationship: many_to_one
+        optional: false
+  # Undoable entity with single_model
+  - name: Category
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
+      - name: name
+        type: string
+      - name: description
+        type: string
+      - name: icon
+        type: string
+  # Undoable entity with single_model
+  - name: Tag
+    inherits_from: EntityBase
+    undoable: true
+    single_model: true
+    fields:
+      - name: name
+        type: string
+      - name: color
+        type: string
+features:
+  - name: project_management
+    use_cases:
+      # Undoable command with dto_in + dto_out
+      # DTO covers: string, string optional, boolean, integer, float optional,
+      #             datetime, enum optional, uinteger is_list, uinteger optional,
+      #             uuid, datetime result
+      - name: create_project
+        undoable: true
+        entities: [Workspace, Project, ProjectSettings]
+        dto_in:
+          name: CreateProjectDto
+          fields:
+            - name: title
+              type: string
+            - name: description
+              type: string
+              optional: true
+            - name: is_active
+              type: boolean
+            - name: priority
+              type: integer
+            - name: budget
+              type: float
+              optional: true
+            - name: deadline
+              type: datetime
+            - name: initial_status
+              type: enum
+              enum_name: ProjectStatus
+              enum_values:
+                - Active
+                - OnHold
+                - Completed
+                - Archived
+              optional: true
+            - name: tag_ids
+              type: uinteger
+              is_list: true
+            - name: parent_project_id
+              type: uinteger
+              optional: true
+        dto_out:
+          name: CreateProjectResultDto
+          fields:
+            - name: project_id
+              type: uinteger
+            - name: project_uuid
+              type: uuid
+            - name: created_at
+              type: datetime
+      # Read-only query with dto_in + dto_out
+      # DTO covers: enum simple, enum is_list, float is_list,
+      #             string is_list, datetime is_list, uinteger simple
+      - name: get_project_stats
+        read_only: true
+        entities: [Project, Task]
+        dto_in:
+          name: GetProjectStatsDto
+          fields:
+            - name: project_id
+              type: uinteger
+        dto_out:
+          name: ProjectStatsResultDto
+          fields:
+            - name: total_tasks
+              type: integer
+            - name: completed_tasks
+              type: integer
+            - name: completion_rate
+              type: float
+            - name: member_names
+              type: string
+              is_list: true
+            - name: status
+              type: enum
+              enum_name: ProjectStatus
+              enum_values:
+                - Active
+                - OnHold
+                - Completed
+                - Archived
+            - name: difficulty_breakdown
+              type: enum
+              enum_name: TaskDifficulty
+              enum_values:
+                - Easy
+                - Medium
+                - Hard
+                - Expert
+              is_list: true
+            - name: task_weights
+              type: float
+              is_list: true
+            - name: milestone_dates
+              type: datetime
+              is_list: true
+      # Regular command (no flags) with dto_in + dto_out
+      # DTO covers: string optional, integer optional, boolean result, datetime result
+      - name: archive_project
+        entities: [Project]
+        dto_in:
+          name: ArchiveProjectDto
+          fields:
+            - name: project_id
+              type: uinteger
+            - name: reason
+              type: string
+              optional: true
+            - name: archive_priority
+              type: integer
+              optional: true
+        dto_out:
+          name: ArchiveProjectResultDto
+          fields:
+            - name: archived
+              type: boolean
+            - name: archived_at
+              type: datetime
+      # Read-only + long operation with dto_in + dto_out
+      # DTO covers: uuid optional, boolean input, integer is_list result
+      - name: export_project_data
+        read_only: true
+        long_operation: true
+        entities: [Project, Task, Comment]
+        dto_in:
+          name: ExportProjectDataDto
+          fields:
+            - name: project_id
+              type: uinteger
+            - name: format
+              type: string
+            - name: include_comments
+              type: boolean
+            - name: project_uuid
+              type: uuid
+              optional: true
+        dto_out:
+          name: ExportResultDto
+          fields:
+            - name: data
+              type: string
+            - name: total_exported
+              type: integer
+            - name: exported_task_priorities
+              type: integer
+              is_list: true
+      # Long operation (not read-only) with dto_in + dto_out
+      # DTO covers: string is_list, uuid is_list result
+      - name: import_project
+        long_operation: true
+        entities: [Workspace, Project, Task]
+        dto_in:
+          name: ImportProjectDto
+          fields:
+            - name: data
+              type: string
+            - name: target_workspace_id
+              type: uinteger
+            - name: tag_names
+              type: string
+              is_list: true
+        dto_out:
+          name: ImportProjectResultDto
+          fields:
+            - name: project_id
+              type: uinteger
+            - name: imported_tasks
+              type: integer
+            - name: created_uuids
+              type: uuid
+              is_list: true
+  - name: task_management
+    use_cases:
+      # Regular command with dto_in only (no dto_out)
+      # DTO covers: uinteger is_list, enum optional
+      - name: batch_assign_tasks
+        entities: [Task, TeamMember]
+        dto_in:
+          name: BatchAssignTasksDto
+          fields:
+            - name: task_ids
+              type: uinteger
+              is_list: true
+            - name: team_member_id
+              type: uinteger
+            - name: difficulty_filter
+              type: enum
+              enum_name: TaskDifficulty
+              enum_values:
+                - Easy
+                - Medium
+                - Hard
+                - Expert
+              optional: true
+      # Read-only query with dto_out only (no dto_in)
+      # DTO covers: enum is_list, float simple
+      - name: get_task_summary
+        read_only: true
+        entities: [Task, Category]
+        dto_out:
+          name: TaskSummaryDto
+          fields:
+            - name: total
+              type: integer
+            - name: done_count
+              type: integer
+            - name: overdue_count
+              type: integer
+            - name: categories
+              type: string
+              is_list: true
+            - name: difficulties
+              type: enum
+              enum_name: TaskDifficulty
+              enum_values:
+                - Easy
+                - Medium
+                - Hard
+                - Expert
+              is_list: true
+            - name: average_weight
+              type: float
+      # Regular command with no dto_in and no dto_out
+      - name: cleanup_completed
+        entities: [Task, Comment]
 ui:
   cpp_qt_qtwidgets: true
   cpp_qt_qtquick: true
