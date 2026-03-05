@@ -6,6 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 
+{%- set_global emitted_enums = "" %}
+
 {% for uc_id, uc in f.use_cases %}
 
 {%- if uc.dto_in %}
@@ -16,16 +18,10 @@ pub struct {{ uc.dto_in.pascal_name }} {
 {%- endfor %}
 }
 
-{%- set_global has_enum = false %}
 {%- for df in uc.dto_in.fields %}
     {%- if df.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-    {%- for df in uc.dto_in.fields %}
-        {%- if df.inner.field_type == "Enum" %}
+        {%- if not emitted_enums is containing(df.inner.enum_name) %}
+            {%- set_global emitted_enums = emitted_enums ~ "," ~ df.inner.enum_name %}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {
@@ -35,8 +31,8 @@ pub enum {{ df.inner.enum_name }} {
             {%- endfor %}
 }
         {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
+    {%- endif %}
+{%- endfor %}
 
 
 {%- endif %}
@@ -49,16 +45,10 @@ pub struct {{ uc.dto_out.pascal_name }} {
 {%- endfor %}
 }
 
-{%- set_global has_enum = false %}
 {%- for df in uc.dto_out.fields %}
     {%- if df.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-    {%- for df in uc.dto_out.fields %}
-        {%- if df.inner.field_type == "Enum" %}
+        {%- if not emitted_enums is containing(df.inner.enum_name) %}
+            {%- set_global emitted_enums = emitted_enums ~ "," ~ df.inner.enum_name %}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {
@@ -68,8 +58,8 @@ pub enum {{ df.inner.enum_name }} {
             {%- endfor %}
 }
         {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
+    {%- endif %}
+{%- endfor %}
 
 {%- endif %}
 
