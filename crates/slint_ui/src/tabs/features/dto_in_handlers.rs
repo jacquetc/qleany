@@ -44,6 +44,34 @@ pub fn subscribe_dto_updated_event(
     )
 }
 
+pub fn subscribe_dto_field_updated_event(
+    event_hub_client: &EventHubClient,
+    app: &App,
+    app_context: &Arc<AppContext>,
+) {
+    event_hub_client.subscribe(
+        Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Updated)),
+        {
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |event| {
+                log::info!("Dto field updated event received: {:?}", event);
+                let ctx = Arc::clone(&ctx);
+                let app_weak = app_weak.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(app) = app_weak.upgrade()
+                        && app.global::<AppState>().get_manifest_is_open()
+                    {
+                        fill_dto_in_field_list(&app, &ctx);
+                        app.global::<AppState>().set_manifest_is_saved(false);
+                    }
+                });
+            }
+        },
+    )
+}
+
 pub fn subscribe_use_case_updated_event(
     event_hub_client: &EventHubClient,
     app: &App,
