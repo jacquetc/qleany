@@ -7,7 +7,7 @@ use crate::use_cases::fill_status_in_files_uc::{
 use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::entities::{File, System};
+use common::entities::{File, Root, System, Workspace};
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;
 use common::types::EntityId;
@@ -80,24 +80,13 @@ impl CommandUnitOfWork for FillStatusInFilesUnitOfWork {
     }
 }
 
-//TODO: adapt entities and actions to real use : Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, Delete,
-//DeleteMulti, GetRO, GetMultiRO, GetRelationship, GetRelationshipRO, GetRelationshipsFromRightIds,
-//GetRelationshipsFromRightIdsRO, SetRelationship, SetRelationshipMulti
-//
-// You have here a read-write unit of work.
-//
-// RO means Read Only, so *RO actions should not used be here.
-// Don't forget to set thread_safe = true for long operation's unit of work.
-// Do not mix read-only and write actions in the same unit of work.²
-//
-// Exactly the same macros must be set in the use case uow trait file in ../use_cases/fill_status_in_files_uc.rs
-//
-
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "System", action = "Get")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "File", action = "GetMulti")]
+#[macros::uow_action(entity = "File", action = "UpdateMulti")]
 impl FillStatusInFilesUnitOfWorkTrait for FillStatusInFilesUnitOfWork {}
 
 pub struct FillStatusInFilesUnitOfWorkFactory {

@@ -7,6 +7,7 @@ members = [
     "crates/cpp_qt_file_generation",
     "crates/rust_file_generation",
     "crates/handling_app_lifecycle",
+    "crates/file_generation_shared_steps",
     "crates/slint_ui",
     "crates/macros",
 ]

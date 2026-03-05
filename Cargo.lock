@@ -1819,6 +1819,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "file_generation_shared_steps"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "common",
+ "macros",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "filetime"
 version = "0.2.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"

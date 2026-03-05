@@ -2,18 +2,20 @@
 // as changes will be lost.
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
-use common::entities::{File, System};
+use common::entities::{File, FileStatus, Root, System, Workspace};
 use common::types::EntityId;
-use anyhow::anyhow;
+use std::path::PathBuf;
 
 pub trait FillStatusInFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillStatusInFilesUnitOfWorkTrait>;
 }
 #[macros::uow_action(entity = "Root", action = "GetMulti")]
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]
+#[macros::uow_action(entity = "Workspace", action = "Get")]
 #[macros::uow_action(entity = "System", action = "Get")]
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "File", action = "GetMulti")]
+#[macros::uow_action(entity = "File", action = "UpdateMulti")]
 pub trait FillStatusInFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct FillStatusInFilesUseCase {
@@ -29,7 +31,7 @@ impl FillStatusInFilesUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
-
+        // Get root entity
         let roots = uow.get_root_multi(&[])?;
         let root = roots
             .into_iter()
@@ -37,15 +39,84 @@ impl FillStatusInFilesUseCase {
             .next()
             .ok_or_else(|| anyhow!("Root entity not found"))?;
 
-        let all_system_ids = uow.get_root_relationship(
+        // Get workspace for manifest_absolute_path (= root path on disk)
+        let workspace_ids = uow.get_root_relationship(
+            &root.id,
+            &common::direct_access::root::RootRelationshipField::Workspace,
+        )?;
+        let workspace_id = workspace_ids
+            .first()
+            .cloned()
+            .ok_or_else(|| anyhow!("No workspace found"))?;
+        let workspace: Workspace = uow
+            .get_workspace(&workspace_id)?
+            .ok_or_else(|| anyhow!("Workspace entity not found"))?;
+        let root_path = PathBuf::from(&workspace.manifest_absolute_path);
+
+        // Get system and its file IDs
+        let system_ids = uow.get_root_relationship(
             &root.id,
             &common::direct_access::root::RootRelationshipField::System,
         )?;
-
-        let system_id = all_system_ids
+        let system_id = system_ids
             .first()
             .cloned()
-            .ok_or(anyhow!("No system found"))?;
+            .ok_or_else(|| anyhow!("No system found"))?;
+        let file_ids = uow.get_system_relationship(
+            &system_id,
+            &common::direct_access::system::SystemRelationshipField::Files,
+        )?;
+
+        if file_ids.is_empty() {
+            uow.commit()?;
+            return Ok(());
+        }
+
+        // Load all file entities
+        let files: Vec<File> = uow
+            .get_file_multi(&file_ids)?
+            .into_iter()
+            .flatten()
+            .collect();
+
+        // Compare each file's generated_code with the actual file on disk
+        let mut files_to_update: Vec<File> = Vec::new();
+        for file in &files {
+            let Some(ref generated_code) = file.generated_code else {
+                // No generated code yet — skip (status stays Unknown)
+                continue;
+            };
+
+            // Build full disk path: root_path / relative_path / name
+            let mut disk_path = root_path.clone();
+            if !file.relative_path.is_empty() {
+                disk_path = disk_path.join(&file.relative_path);
+            }
+            disk_path = disk_path.join(&file.name);
+
+            let new_status = match std::fs::read_to_string(&disk_path) {
+                Ok(disk_content) => {
+                    if disk_content == *generated_code {
+                        FileStatus::Unchanged
+                    } else {
+                        FileStatus::Modified
+                    }
+                }
+                Err(_) => FileStatus::New,
+            };
+
+            if file.status != new_status {
+                let mut updated = file.clone();
+                updated.status = new_status;
+                updated.updated_at = chrono::Utc::now();
+                files_to_update.push(updated);
+            }
+        }
+
+        if !files_to_update.is_empty() {
+            uow.update_file_multi(&files_to_update)?;
+        }
+
         uow.commit()?;
         Ok(())
     }
