@@ -189,7 +189,7 @@ impl LongOperation for FillCodeInRustFilesUseCase {
         uow.commit()?;
 
         let duration = start_time.elapsed();
-        eprintln!(
+        log::debug!(
             "Fill code in Rust files completed in {:?}, total files: {}",
             duration,
             files.len()

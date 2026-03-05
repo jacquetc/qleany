@@ -189,7 +189,7 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
         uow.commit()?;
 
         let duration = start_time.elapsed();
-        eprintln!(
+        log::debug!(
             "Fill code in C++/Qt files completed in {:?}, total files: {}",
             duration,
             files.len()
