@@ -66,9 +66,7 @@ fn clear_check(app: &App) {
     state.set_check_status("none".into());
     state.set_warning_count(0);
     state.set_critical_count(0);
-    state.set_warnings(
-        Rc::new(slint::VecModel::from(Vec::<slint::SharedString>::new())).into(),
-    );
+    state.set_warnings(Rc::new(slint::VecModel::from(Vec::<slint::SharedString>::new())).into());
     state.set_critical_errors(
         Rc::new(slint::VecModel::from(Vec::<slint::SharedString>::new())).into(),
     );

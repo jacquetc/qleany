@@ -81,7 +81,8 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
 
         // Create a temp directory that mirrors the real folder structure so
         // clang-format works correctly with includes.
-        let tmp_dir = std::env::temp_dir().join(format!("qleany_fill_code_cpp_qt_{}", std::process::id()));
+        let tmp_dir =
+            std::env::temp_dir().join(format!("qleany_fill_code_cpp_qt_{}", std::process::id()));
         fs::create_dir_all(&tmp_dir)?;
 
         // Build snapshots and generate code for each file

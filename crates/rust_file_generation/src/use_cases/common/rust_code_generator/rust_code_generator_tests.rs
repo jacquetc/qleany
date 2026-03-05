@@ -81,9 +81,7 @@ impl GenerationOps for DummyGenerationReadOps {
             RootRelationshipField::Workspace => {
                 Ok(root.workspace.map(|id| vec![id]).unwrap_or_default())
             }
-            RootRelationshipField::System => {
-                Ok(root.system.map(|id| vec![id]).unwrap_or_default())
-            }
+            RootRelationshipField::System => Ok(root.system.map(|id| vec![id]).unwrap_or_default()),
         }
     }
 

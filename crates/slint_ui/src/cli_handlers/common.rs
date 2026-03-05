@@ -28,10 +28,8 @@ pub fn get_target_language(app_context: &Arc<AppContext>) -> Result<TargetLangua
 /// Run semantic checks on the loaded manifest. Prints warnings/errors and
 /// returns an error if any critical errors are found.
 pub fn run_checks(app_context: &Arc<AppContext>, output: &OutputContext) -> Result<()> {
-    let check_result = handling_manifest_controller::check(
-        &app_context.db_context,
-        &app_context.event_hub,
-    )?;
+    let check_result =
+        handling_manifest_controller::check(&app_context.db_context, &app_context.event_hub)?;
 
     for warning in &check_result.warnings {
         output.warn(&format!("Warning: {}", warning));

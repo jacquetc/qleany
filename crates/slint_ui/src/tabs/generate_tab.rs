@@ -82,7 +82,7 @@ fn read_files_from_db(app_context: &Arc<AppContext>) -> Result<Vec<FileDisplayDa
 fn status_to_color(status: &FileStatus) -> slint::Color {
     match status {
         FileStatus::Modified => slint::Color::from_rgb_u8(255, 152, 0), // orange
-        FileStatus::New => slint::Color::from_rgb_u8(76, 175, 80),     // green
+        FileStatus::New => slint::Color::from_rgb_u8(76, 175, 80),      // green
         FileStatus::Unchanged => slint::Color::from_rgb_u8(158, 158, 158), // grey
         FileStatus::Unknown => slint::Color::default(),                 // transparent
     }
@@ -223,9 +223,7 @@ fn update_file_display_from_db(app: &App, app_context: &Arc<AppContext>) {
                 )
         })
         .filter(|f| selected_group == "All" || f.group == selected_group)
-        .filter(|f| {
-            text_filter.is_empty() || f.display_name.to_lowercase().contains(&text_filter)
-        })
+        .filter(|f| text_filter.is_empty() || f.display_name.to_lowercase().contains(&text_filter))
         .collect();
 
     set_file_ui_models(app, &filtered);
@@ -343,12 +341,10 @@ fn get_fill_code_progress(
             app_context,
             operation_id,
         ),
-        Language::CppQt => {
-            cpp_qt_file_generation_commands::get_fill_code_in_cpp_qt_files_progress(
-                app_context,
-                operation_id,
-            )
-        }
+        Language::CppQt => cpp_qt_file_generation_commands::get_fill_code_in_cpp_qt_files_progress(
+            app_context,
+            operation_id,
+        ),
     }
 }
 
@@ -363,21 +359,15 @@ fn get_fill_code_result(
             app_context,
             operation_id,
         ),
-        Language::CppQt => {
-            cpp_qt_file_generation_commands::get_fill_code_in_cpp_qt_files_result(
-                app_context,
-                operation_id,
-            )
-        }
+        Language::CppQt => cpp_qt_file_generation_commands::get_fill_code_in_cpp_qt_files_result(
+            app_context,
+            operation_id,
+        ),
     }
 }
 
 /// Poll fill_code operation, then fill status and update display when done
-fn poll_fill_code_result(
-    app_weak: slint::Weak<App>,
-    ctx: Arc<AppContext>,
-    operation_id: String,
-) {
+fn poll_fill_code_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, operation_id: String) {
     if let Some(app) = app_weak.upgrade() {
         if !app.global::<AppState>().get_fill_code_is_running() {
             return;
@@ -413,12 +403,9 @@ fn poll_fill_code_result(
                 let app_weak_clone = app.as_weak();
                 let ctx_clone = Arc::clone(&ctx);
                 let op_id = operation_id.clone();
-                slint::Timer::single_shot(
-                    std::time::Duration::from_millis(200),
-                    move || {
-                        poll_fill_code_result(app_weak_clone, ctx_clone, op_id);
-                    },
-                );
+                slint::Timer::single_shot(std::time::Duration::from_millis(200), move || {
+                    poll_fill_code_result(app_weak_clone, ctx_clone, op_id);
+                });
             }
             Err(e) => {
                 log::error!("Error checking fill code result: {}", e);

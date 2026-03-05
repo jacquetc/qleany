@@ -39,95 +39,355 @@ pub struct Rule {
 
 /// Critical rules – any violation prevents code generation.
 pub const CRITICAL_RULES: &[Rule] = &[
-    Rule { id: "C01", severity: "critical", description: "Global: language must not be empty" },
-    Rule { id: "C02", severity: "critical", description: "Global settings must exist" },
-    Rule { id: "C03", severity: "critical", description: "Entity names must not be empty" },
-    Rule { id: "C04", severity: "critical", description: "Entity names must be globally unique" },
-    Rule { id: "C05", severity: "critical", description: "Entity names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C06", severity: "critical", description: "Inheritance must not reference a non-existent entity" },
-    Rule { id: "C07", severity: "critical", description: "Inheritance chains must not form cycles" },
-    Rule { id: "C08", severity: "critical", description: "Field names must be unique within their owning entity" },
-    Rule { id: "C09", severity: "critical", description: "Field names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C10", severity: "critical", description: "Entity-type fields must reference an existing entity" },
-    Rule { id: "C11", severity: "critical", description: "Entity-type fields must have an entity reference set" },
-    Rule { id: "C12", severity: "critical", description: "Every entity must have 'id' (UInteger), 'created_at' (DateTime), and 'updated_at' (DateTime) fields — directly or via inheritance" },
-    Rule { id: "C13", severity: "critical", description: "Relationship endpoints must reference existing entities" },
-    Rule { id: "C14", severity: "critical", description: "An undoable entity must not have a non-undoable strong child" },
-    Rule { id: "C15", severity: "critical", description: "An entity must not have more than one strong parent entity type" },
-    Rule { id: "C16", severity: "critical", description: "Weak references (except 'inherits_from') must not point to heritage-only entities" },
-    Rule { id: "C17", severity: "critical", description: "Strong ownership graph must not contain cycles" },
-    Rule { id: "C18", severity: "critical", description: "Feature names must not be empty" },
-    Rule { id: "C19", severity: "critical", description: "Feature names must be globally unique" },
-    Rule { id: "C20", severity: "critical", description: "Feature names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C21", severity: "critical", description: "Use case names must be globally unique" },
-    Rule { id: "C22", severity: "critical", description: "Use case names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C23", severity: "critical", description: "Use cases must not reference non-existent entities" },
-    Rule { id: "C24", severity: "critical", description: "DTO references in use cases must point to existing DTOs" },
-    Rule { id: "C25", severity: "critical", description: "DTO names must be globally unique" },
-    Rule { id: "C26", severity: "critical", description: "DTO names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C27", severity: "critical", description: "DtoField names must be unique within their owning DTO" },
-    Rule { id: "C28", severity: "critical", description: "DtoField names must not be reserved keywords (Rust, C++, Qt)" },
-    Rule { id: "C29", severity: "critical", description: "A DtoField must not be both 'optional' and 'is_list'" },
+    Rule {
+        id: "C01",
+        severity: "critical",
+        description: "Global: language must not be empty",
+    },
+    Rule {
+        id: "C02",
+        severity: "critical",
+        description: "Global settings must exist",
+    },
+    Rule {
+        id: "C03",
+        severity: "critical",
+        description: "Entity names must not be empty",
+    },
+    Rule {
+        id: "C04",
+        severity: "critical",
+        description: "Entity names must be globally unique",
+    },
+    Rule {
+        id: "C05",
+        severity: "critical",
+        description: "Entity names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C06",
+        severity: "critical",
+        description: "Inheritance must not reference a non-existent entity",
+    },
+    Rule {
+        id: "C07",
+        severity: "critical",
+        description: "Inheritance chains must not form cycles",
+    },
+    Rule {
+        id: "C08",
+        severity: "critical",
+        description: "Field names must be unique within their owning entity",
+    },
+    Rule {
+        id: "C09",
+        severity: "critical",
+        description: "Field names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C10",
+        severity: "critical",
+        description: "Entity-type fields must reference an existing entity",
+    },
+    Rule {
+        id: "C11",
+        severity: "critical",
+        description: "Entity-type fields must have an entity reference set",
+    },
+    Rule {
+        id: "C12",
+        severity: "critical",
+        description: "Every entity must have 'id' (UInteger), 'created_at' (DateTime), and 'updated_at' (DateTime) fields — directly or via inheritance",
+    },
+    Rule {
+        id: "C13",
+        severity: "critical",
+        description: "Relationship endpoints must reference existing entities",
+    },
+    Rule {
+        id: "C14",
+        severity: "critical",
+        description: "An undoable entity must not have a non-undoable strong child",
+    },
+    Rule {
+        id: "C15",
+        severity: "critical",
+        description: "An entity must not have more than one strong parent entity type",
+    },
+    Rule {
+        id: "C16",
+        severity: "critical",
+        description: "Weak references (except 'inherits_from') must not point to heritage-only entities",
+    },
+    Rule {
+        id: "C17",
+        severity: "critical",
+        description: "Strong ownership graph must not contain cycles",
+    },
+    Rule {
+        id: "C18",
+        severity: "critical",
+        description: "Feature names must not be empty",
+    },
+    Rule {
+        id: "C19",
+        severity: "critical",
+        description: "Feature names must be globally unique",
+    },
+    Rule {
+        id: "C20",
+        severity: "critical",
+        description: "Feature names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C21",
+        severity: "critical",
+        description: "Use case names must be globally unique",
+    },
+    Rule {
+        id: "C22",
+        severity: "critical",
+        description: "Use case names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C23",
+        severity: "critical",
+        description: "Use cases must not reference non-existent entities",
+    },
+    Rule {
+        id: "C24",
+        severity: "critical",
+        description: "DTO references in use cases must point to existing DTOs",
+    },
+    Rule {
+        id: "C25",
+        severity: "critical",
+        description: "DTO names must be globally unique",
+    },
+    Rule {
+        id: "C26",
+        severity: "critical",
+        description: "DTO names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C27",
+        severity: "critical",
+        description: "DtoField names must be unique within their owning DTO",
+    },
+    Rule {
+        id: "C28",
+        severity: "critical",
+        description: "DtoField names must not be reserved keywords (Rust, C++, Qt)",
+    },
+    Rule {
+        id: "C29",
+        severity: "critical",
+        description: "A DtoField must not be both 'optional' and 'is_list'",
+    },
     // Rule { id: "C30", severity: "critical", description: "A Field must not be both 'optional' and 'is_list'" },  // TODO: enable when Field gets is_list
-    Rule { id: "C31", severity: "critical", description: "Field: list_model or list_model_displayed_field require field_type=Entity and relationship in {OneToMany, OrderedOneToMany, ManyToMany}" },
-    Rule { id: "C32", severity: "critical", description: "Field: relationship in {OneToMany, OrderedOneToMany, ManyToMany} cannot be optional" },
+    Rule {
+        id: "C31",
+        severity: "critical",
+        description: "Field: list_model or list_model_displayed_field require field_type=Entity and relationship in {OneToMany, OrderedOneToMany, ManyToMany}",
+    },
+    Rule {
+        id: "C32",
+        severity: "critical",
+        description: "Field: relationship in {OneToMany, OrderedOneToMany, ManyToMany} cannot be optional",
+    },
 ];
 
 /// Warning rules – non-blocking issues worth reviewing.
 pub const WARNING_RULES: &[Rule] = &[
-    Rule { id: "W01", severity: "warning", description: "Global: application_name should not be empty" },
-    Rule { id: "W02", severity: "warning", description: "Non-heritage entity should have at least one field" },
-    Rule { id: "W03", severity: "warning", description: "Feature should have at least one use case" },
-    Rule { id: "W04", severity: "warning", description: "DTO should have at least one field" },
+    Rule {
+        id: "W01",
+        severity: "warning",
+        description: "Global: application_name should not be empty",
+    },
+    Rule {
+        id: "W02",
+        severity: "warning",
+        description: "Non-heritage entity should have at least one field",
+    },
+    Rule {
+        id: "W03",
+        severity: "warning",
+        description: "Feature should have at least one use case",
+    },
+    Rule {
+        id: "W04",
+        severity: "warning",
+        description: "DTO should have at least one field",
+    },
 ];
 
 // Rust reserved keywords (2024 edition) + reserved for future use
 const RUST_RESERVED: &[&str] = &[
-    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum",
-    "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move",
-    "mut", "pub", "ref", "return", "self", "static", "struct", "super", "trait", "true", "type",
-    "union", "unsafe", "use", "where", "while", "yield",
-    // Reserved for future use
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
+    "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub",
+    "ref", "return", "self", "static", "struct", "super", "trait", "true", "type", "union",
+    "unsafe", "use", "where", "while", "yield", // Reserved for future use
     "abstract", "become", "box", "do", "final", "macro", "override", "priv", "try", "typeof",
-    "unsized", "virtual",
-    // Primitive types and special identifiers
-    "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128", "isize", "str", "u8",
-    "u16", "u32", "u64", "u128", "usize",
+    "unsized", "virtual", // Primitive types and special identifiers
+    "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128", "isize", "str", "u8", "u16",
+    "u32", "u64", "u128", "usize",
     // Common standard library names that would conflict
-    "Self", "String", "Vec", "Option", "Result", "Box", "Rc", "Arc", "HashMap", "HashSet",
-    "Ok", "Err", "Some", "None",
+    "Self", "String", "Vec", "Option", "Result", "Box", "Rc", "Arc", "HashMap", "HashSet", "Ok",
+    "Err", "Some", "None",
 ];
 
 // C++20 reserved keywords
 const CPP_RESERVED: &[&str] = &[
-    "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break",
-    "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept",
-    "const", "consteval", "constexpr", "constinit", "const_cast", "continue", "co_await",
-    "co_return", "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast",
-    "else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto",
-    "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq",
-    "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "register",
-    "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static",
-    "static_assert", "static_cast", "struct", "switch", "template", "this", "thread_local",
-    "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using",
-    "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq",
+    "alignas",
+    "alignof",
+    "and",
+    "and_eq",
+    "asm",
+    "auto",
+    "bitand",
+    "bitor",
+    "bool",
+    "break",
+    "case",
+    "catch",
+    "char",
+    "char8_t",
+    "char16_t",
+    "char32_t",
+    "class",
+    "compl",
+    "concept",
+    "const",
+    "consteval",
+    "constexpr",
+    "constinit",
+    "const_cast",
+    "continue",
+    "co_await",
+    "co_return",
+    "co_yield",
+    "decltype",
+    "default",
+    "delete",
+    "do",
+    "double",
+    "dynamic_cast",
+    "else",
+    "enum",
+    "explicit",
+    "export",
+    "extern",
+    "false",
+    "float",
+    "for",
+    "friend",
+    "goto",
+    "if",
+    "inline",
+    "int",
+    "long",
+    "mutable",
+    "namespace",
+    "new",
+    "noexcept",
+    "not",
+    "not_eq",
+    "nullptr",
+    "operator",
+    "or",
+    "or_eq",
+    "private",
+    "protected",
+    "public",
+    "register",
+    "reinterpret_cast",
+    "requires",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "static_assert",
+    "static_cast",
+    "struct",
+    "switch",
+    "template",
+    "this",
+    "thread_local",
+    "throw",
+    "true",
+    "try",
+    "typedef",
+    "typeid",
+    "typename",
+    "union",
+    "unsigned",
+    "using",
+    "virtual",
+    "void",
+    "volatile",
+    "wchar_t",
+    "while",
+    "xor",
+    "xor_eq",
     // C++23 additions
-    "if consteval", "static_operator",
+    "if consteval",
+    "static_operator",
     // Common C types that conflict
-    "size_t", "ptrdiff_t", "intptr_t", "uintptr_t", "int8_t", "int16_t", "int32_t", "int64_t",
-    "uint8_t", "uint16_t", "uint32_t", "uint64_t",
+    "size_t",
+    "ptrdiff_t",
+    "intptr_t",
+    "uintptr_t",
+    "int8_t",
+    "int16_t",
+    "int32_t",
+    "int64_t",
+    "uint8_t",
+    "uint16_t",
+    "uint32_t",
+    "uint64_t",
 ];
 
 // Qt reserved macros/identifiers
 const QT_RESERVED: &[&str] = &[
-    "emit", "signals", "slots", "foreach", "forever", "connect", "disconnect",
-    "Q_OBJECT", "Q_GADGET", "Q_PROPERTY", "Q_SIGNAL", "Q_SLOT", "Q_EMIT", "Q_INVOKABLE",
-    "Q_ENUM", "Q_FLAG", "Q_NAMESPACE", "Q_DECLARE_METATYPE", "Q_DECLARE_FLAGS",
-    "Q_INTERFACES", "Q_CLASSINFO", "Q_DISABLE_COPY", "Q_DISABLE_MOVE",
-    "SIGNAL", "SLOT",
+    "emit",
+    "signals",
+    "slots",
+    "foreach",
+    "forever",
+    "connect",
+    "disconnect",
+    "Q_OBJECT",
+    "Q_GADGET",
+    "Q_PROPERTY",
+    "Q_SIGNAL",
+    "Q_SLOT",
+    "Q_EMIT",
+    "Q_INVOKABLE",
+    "Q_ENUM",
+    "Q_FLAG",
+    "Q_NAMESPACE",
+    "Q_DECLARE_METATYPE",
+    "Q_DECLARE_FLAGS",
+    "Q_INTERFACES",
+    "Q_CLASSINFO",
+    "Q_DISABLE_COPY",
+    "Q_DISABLE_MOVE",
+    "SIGNAL",
+    "SLOT",
     // Common Qt class names that would conflict
-    "QObject", "QWidget", "QString", "QList", "QMap", "QVariant", "QMetaObject",
-    "QThread", "QTimer", "QEvent", "QApplication", "QCoreApplication",
+    "QObject",
+    "QWidget",
+    "QString",
+    "QList",
+    "QMap",
+    "QVariant",
+    "QMetaObject",
+    "QThread",
+    "QTimer",
+    "QEvent",
+    "QApplication",
+    "QCoreApplication",
 ];
 
 fn is_forbidden_name(name: &str) -> Option<&'static str> {
@@ -230,8 +490,7 @@ impl CheckUseCase {
         }
 
         // Build entity lookup by id
-        let entity_by_id: HashMap<EntityId, &Entity> =
-            entities.iter().map(|e| (e.id, e)).collect();
+        let entity_by_id: HashMap<EntityId, &Entity> = entities.iter().map(|e| (e.id, e)).collect();
 
         // Check inheritance cycles
         for entity in &entities {
@@ -261,12 +520,10 @@ impl CheckUseCase {
 
         // ── Fields ──
 
-        let all_field_ids: Vec<EntityId> =
-            entities.iter().flat_map(|e| e.fields.clone()).collect();
+        let all_field_ids: Vec<EntityId> = entities.iter().flat_map(|e| e.fields.clone()).collect();
         let fields = uow.get_field_multi(&all_field_ids)?;
         let fields: Vec<Field> = fields.into_iter().flatten().collect();
-        let field_by_id: HashMap<EntityId, &Field> =
-            fields.iter().map(|f| (f.id, f)).collect();
+        let field_by_id: HashMap<EntityId, &Field> = fields.iter().map(|f| (f.id, f)).collect();
 
         for entity in &entities {
             if entity.fields.is_empty() && !entity.only_for_heritage {
@@ -408,12 +665,13 @@ impl CheckUseCase {
 
         // ── Relationships ──
 
-        let all_relationship_ids: Vec<EntityId> =
-            entities.iter().flat_map(|e| e.relationships.clone()).collect();
+        let all_relationship_ids: Vec<EntityId> = entities
+            .iter()
+            .flat_map(|e| e.relationships.clone())
+            .collect();
         if !all_relationship_ids.is_empty() {
             let relationships = uow.get_relationship_multi(&all_relationship_ids)?;
-            let relationships: Vec<Relationship> =
-                relationships.into_iter().flatten().collect();
+            let relationships: Vec<Relationship> = relationships.into_iter().flatten().collect();
 
             // Track distinct strong parent entity types per child entity
             let mut strong_parents: HashMap<EntityId, HashMap<&str, Vec<&str>>> = HashMap::new();
@@ -433,9 +691,7 @@ impl CheckUseCase {
                 }
 
                 // Only check Forward relationships to avoid double-counting
-                if rel.strength == Strength::Strong
-                    && rel.direction == Direction::Forward
-                {
+                if rel.strength == Strength::Strong && rel.direction == Direction::Forward {
                     // Undoable parent cannot have non-undoable strong child
                     if let (Some(parent), Some(child)) = (
                         entity_by_id.get(&rel.left_entity),
@@ -471,9 +727,7 @@ impl CheckUseCase {
                         .unwrap_or("?");
                     let parent_list: Vec<String> = parent_types
                         .iter()
-                        .map(|(name, rels)| {
-                            format!("'{}' (via {})", name, rels.join(", "))
-                        })
+                        .map(|(name, rels)| format!("'{}' (via {})", name, rels.join(", ")))
                         .collect();
                     critical_errors.push(format!(
                         "Entity '{}' has multiple strong parents: {}. \
@@ -536,15 +790,11 @@ impl CheckUseCase {
                         *idx += 1;
                         if in_stack.contains(&child) {
                             // Found a cycle — report it
-                            let cycle_start_pos = stack
-                                .iter()
-                                .position(|(id, _)| *id == child)
-                                .unwrap_or(0);
+                            let cycle_start_pos =
+                                stack.iter().position(|(id, _)| *id == child).unwrap_or(0);
                             let cycle_names: Vec<&str> = stack[cycle_start_pos..]
                                 .iter()
-                                .filter_map(|(id, _)| {
-                                    entity_by_id.get(id).map(|e| e.name.as_str())
-                                })
+                                .filter_map(|(id, _)| entity_by_id.get(id).map(|e| e.name.as_str()))
                                 .collect();
                             critical_errors.push(format!(
                                 "Cyclic strong dependency detected: {} -> {}",
@@ -580,10 +830,7 @@ impl CheckUseCase {
         let mut feature_names: HashSet<String> = HashSet::new();
         for feature in &features {
             if feature.name.is_empty() {
-                critical_errors.push(format!(
-                    "Feature with id {} has an empty name",
-                    feature.id
-                ));
+                critical_errors.push(format!("Feature with id {} has an empty name", feature.id));
             } else if !feature_names.insert(feature.name.clone()) {
                 critical_errors.push(format!("Duplicate feature name: '{}'", feature.name));
             }
@@ -663,9 +910,7 @@ impl CheckUseCase {
                         }
 
                         // Unique DTO names (globally)
-                        if !dto.name.is_empty()
-                            && !dto_global_names.insert(dto.name.clone())
-                        {
+                        if !dto.name.is_empty() && !dto_global_names.insert(dto.name.clone()) {
                             critical_errors.push(format!(
                                 "Duplicate DTO name: '{}' (must be unique across all use cases)",
                                 dto.name

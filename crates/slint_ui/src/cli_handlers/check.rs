@@ -18,11 +18,7 @@ pub fn execute(
     };
 
     // Load validates the manifest structure
-    handling_manifest_controller::load(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &load_dto,
-    )?;
+    handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
 
     // Run semantic checks
     run_checks(app_context, output)?;

@@ -354,8 +354,7 @@ impl SnapshotBuilder {
             }
             extra_rel_ids.sort();
             if !extra_rel_ids.is_empty() {
-                let extra_rels =
-                    uow.get_relationship_multi(&extra_rel_ids)?;
+                let extra_rels = uow.get_relationship_multi(&extra_rel_ids)?;
                 for rel_opt in extra_rels.into_iter().flatten() {
                     if rel_opt.left_entity == entity.id || rel_opt.right_entity == entity.id {
                         relationships_map.entry(rel_opt.id).or_insert(rel_opt);

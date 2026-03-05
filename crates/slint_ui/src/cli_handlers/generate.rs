@@ -70,13 +70,11 @@ pub fn execute(
                 &app_context.event_hub,
                 &mut long_op_manager,
             )?,
-            TargetLanguage::CppQt => {
-                cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
-                    &app_context.db_context,
-                    &app_context.event_hub,
-                    &mut long_op_manager,
-                )?
-            }
+            TargetLanguage::CppQt => cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+            )?,
         }
     };
 
@@ -173,7 +171,11 @@ pub fn execute(
         return Ok(());
     }
 
-    output.info(&format!("Writing {} files to {}...", files.len(), output_path.display()));
+    output.info(&format!(
+        "Writing {} files to {}...",
+        files.len(),
+        output_path.display()
+    ));
 
     // Step 7: Write generated_code to disk
     let mut written = 0;
@@ -182,7 +184,10 @@ pub fn execute(
     for file in &files {
         let Some(ref code) = file.generated_code else {
             skipped += 1;
-            output.verbose(&format!("  [skip] {}{} (no generated code)", file.relative_path, file.name));
+            output.verbose(&format!(
+                "  [skip] {}{} (no generated code)",
+                file.relative_path, file.name
+            ));
             continue;
         };
 

@@ -88,13 +88,11 @@ fn list_files(
                 &app_context.event_hub,
                 &mut long_op_manager,
             )?,
-            TargetLanguage::CppQt => {
-                cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
-                    &app_context.db_context,
-                    &app_context.event_hub,
-                    &mut long_op_manager,
-                )?
-            }
+            TargetLanguage::CppQt => cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+            )?,
         }
     };
 
@@ -158,7 +156,11 @@ fn poll_long_operation(
         if output.verbose {
             if let Some(progress) = long_op_manager.get_operation_progress(operation_id) {
                 if (progress.percentage - last_percentage).abs() >= 10.0 {
-                    output.verbose(&format!("[{:.0}%] {}", progress.percentage, progress.message.as_deref().unwrap_or("")));
+                    output.verbose(&format!(
+                        "[{:.0}%] {}",
+                        progress.percentage,
+                        progress.message.as_deref().unwrap_or("")
+                    ));
                     last_percentage = progress.percentage;
                 }
             }
@@ -176,11 +178,7 @@ fn poll_long_operation(
 }
 
 /// Displays the filtered file list according to the chosen format.
-fn display_file_list(
-    files: &[&FileDto],
-    args: &ListArgs,
-    output: &OutputContext,
-) -> Result<()> {
+fn display_file_list(files: &[&FileDto], args: &ListArgs, output: &OutputContext) -> Result<()> {
     let count_new = files.iter().filter(|f| f.status == FileStatus::New).count();
     let count_modified = files
         .iter()
@@ -211,19 +209,17 @@ fn display_file_list(
                     let path = format!("{}{}", file.relative_path, file.name);
                     match file.status {
                         FileStatus::New => md.push_str(&format!("**~~[N]~~** **{}**\n", path)),
-                        FileStatus::Modified => {
-                            md.push_str(&format!("*[M]* *{}*\n", path))
-                        }
-                        FileStatus::Unchanged => {
-                            md.push_str(&format!("[U] {}\n", path))
-                        }
+                        FileStatus::Modified => md.push_str(&format!("*[M]* *{}*\n", path)),
+                        FileStatus::Unchanged => md.push_str(&format!("[U] {}\n", path)),
                         FileStatus::Unknown => md.push_str(&format!("[?] {}\n", path)),
                     }
                 }
                 let mut skin = termimad::MadSkin::default();
                 skin.bold.set_fg(termimad::crossterm::style::Color::Green);
-                skin.italic.set_fg(termimad::crossterm::style::Color::Yellow);
-                skin.strikeout.set_fg(termimad::crossterm::style::Color::Green);
+                skin.italic
+                    .set_fg(termimad::crossterm::style::Color::Yellow);
+                skin.strikeout
+                    .set_fg(termimad::crossterm::style::Color::Green);
                 skin.print_text(&md);
             }
             output.info(&format!(

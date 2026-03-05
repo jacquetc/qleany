@@ -69,13 +69,11 @@ pub fn execute(
                 &app_context.event_hub,
                 &mut long_op_manager,
             )?,
-            TargetLanguage::CppQt => {
-                cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
-                    &app_context.db_context,
-                    &app_context.event_hub,
-                    &mut long_op_manager,
-                )?
-            }
+            TargetLanguage::CppQt => cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+            )?,
         }
     };
 
