@@ -310,6 +310,7 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                                     text: slint::SharedString::from(e.name),
                                     subtitle: slint::SharedString::from(""),
                                     checked: false,
+                                    gradient_color: slint::Color::default(),
                                 });
                             }
 
@@ -384,6 +385,7 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                                     text: slint::SharedString::from(e.name),
                                     subtitle: slint::SharedString::from(""),
                                     checked: false,
+                                    gradient_color: slint::Color::default(),
                                 });
                             }
 

@@ -124,6 +124,7 @@ pub fn fill_dto_out_field_list(app: &App, app_context: &Arc<AppContext>) {
                             text: slint::SharedString::from(f.name),
                             subtitle: slint::SharedString::from(""),
                             checked: false,
+                            gradient_color: slint::Color::default(),
                         });
                     }
                     let model = std::rc::Rc::new(slint::VecModel::from(list));

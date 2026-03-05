@@ -3,7 +3,7 @@ import { VerticalBox, HorizontalBox, ScrollView, Button, CheckBox } from "std-wi
 // Reusable checkable reorderable list component
 //
 // API
-// - ListItem: struct describing one row (id:int, text:string, subtitle:string, checked:bool)
+// - ListItem: struct describing one row (id:int, text:string, subtitle:string, checked:bool, gradient_color:color)
 // - CheckableReorderableList: embeddable component that shows a draggable list
 //
 // Properties:
@@ -65,6 +65,8 @@ export struct ListItem {
     subtitle: string,
     // Checkbox state (only used when enable-checkbox is true)
     checked: bool,
+    // Optional gradient color on the left edge of the item (default: transparent = no gradient)
+    gradient_color: color,
 }
 
 component DraggableItem inherits Rectangle {
@@ -166,6 +168,15 @@ component DraggableItem inherits Rectangle {
     // Add elevation while dragging for visual clarity
     drop-shadow-blur: is-dragging ? 8px : 0px;
     drop-shadow-color: #00000026;
+
+    // Optional left-to-right gradient overlay (invisible when gradient_color is transparent)
+    Rectangle {
+        x: 0; y: 0;
+        width: parent.width;
+        height: parent.height;
+        border-radius: parent.border-radius;
+        background: @linear-gradient(90deg, item.gradient_color, transparent);
+    }
 
     // Selected item accent bar on the left edge
     if selected-id == item.id && !is-dragging: Rectangle {
@@ -396,6 +407,7 @@ export component CheckableReorderableList inherits Rectangle {
     private property <int> dragging-id: -1;
     private property <string> dragging-text: "";
     private property <string> dragging-subtitle: "";
+    private property <color> dragging-gradient-color: #00000000;
     // Which item's context menu is open (-1 = none)
     private property <int> open-menu-index: -1;
     private property <int> open-menu-id: -1;
@@ -559,6 +571,7 @@ export component CheckableReorderableList inherits Rectangle {
                         root.dragging-id = item.id;
                         root.dragging-text = item.text;
                         root.dragging-subtitle = item.subtitle;
+                        root.dragging-gradient-color = item.gradient_color;
                     }
 
                     drag-moved(delta) => {
@@ -595,6 +608,7 @@ export component CheckableReorderableList inherits Rectangle {
                         root.dragging-id = -1;
                         root.dragging-text = "";
                         root.dragging-subtitle = "";
+                        root.dragging-gradient-color = #00000000;
                     }
                 }
                 // Note: Do NOT place a full-screen overlay TouchArea during drag.
@@ -608,7 +622,7 @@ export component CheckableReorderableList inherits Rectangle {
                     x: 4px + drag-offset-x;
                     width: parent.width - 8px;
                     index: dragging-index;
-                    item: { id: dragging-id, text: dragging-text, subtitle: dragging-subtitle };
+                    item: { id: dragging-id, text: dragging-text, subtitle: dragging-subtitle, gradient_color: dragging-gradient-color };
 
                     // Bind styling
                     visual-height: root.item-height - 4px;

@@ -112,6 +112,7 @@ pub fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
                                     text: slint::SharedString::from(uc.name),
                                     subtitle: slint::SharedString::from(""),
                                     checked: false,
+                                    gradient_color: slint::Color::default(),
                                 });
                             }
 
@@ -327,6 +328,7 @@ pub fn fill_use_case_entity_list(app: &App, app_context: &Arc<AppContext>) {
                         text: slint::SharedString::from(&entity.name),
                         subtitle: slint::SharedString::from(""),
                         checked: is_checked,
+                        gradient_color: slint::Color::default(),
                     }
                 })
                 .collect();

@@ -256,6 +256,7 @@ pub fn fill_feature_list(app: &App, app_context: &Arc<AppContext>) {
                                     text: slint::SharedString::from(f.name),
                                     subtitle: slint::SharedString::from(""),
                                     checked: false,
+                                    gradient_color: slint::Color::default(),
                                 });
                             }
 

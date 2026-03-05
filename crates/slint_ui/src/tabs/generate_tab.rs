@@ -121,6 +121,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                 text: SharedString::from("All"),
                 subtitle: SharedString::default(),
                 checked: true,
+                gradient_color: slint::Color::default(),
             }];
 
             // Add actual groups starting from id 1 (unchecked by default)
@@ -130,6 +131,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                     text: SharedString::from(group_name.as_str()),
                     subtitle: SharedString::default(),
                     checked: false,
+                    gradient_color: slint::Color::default(),
                 });
             }
 
@@ -143,6 +145,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
                     text: SharedString::from(file_name.as_str()),
                     subtitle: SharedString::default(),
                     checked: true,
+                    gradient_color: slint::Color::default(),
                 })
                 .collect();
 
@@ -338,6 +341,7 @@ fn filter_files_by_group(app: &App, app_context: &Arc<AppContext>, group_index: 
                     text: SharedString::from(file_list.file_names[idx].as_str()),
                     subtitle: SharedString::default(),
                     checked: true,
+                    gradient_color: slint::Color::default(),
                 })
                 .collect();
 
@@ -884,6 +888,7 @@ fn setup_file_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) 
                                 text: SharedString::from(file_name.as_str()),
                                 subtitle: SharedString::default(),
                                 checked: is_checked,
+                                gradient_color: slint::Color::default(),
                             }
                         })
                         .collect();
