@@ -228,8 +228,34 @@ export component GenerateTab inherits Rectangle {
                 with-border: true;
 
                 VerticalLayout {
-                    SectionHeader {
-                        title: "Code Preview";
+                    Rectangle {
+                        height: 48px;
+                        background: #f8f9fa;
+
+                        HorizontalLayout {
+                            padding: 8px;
+                            spacing: 8px;
+                            alignment: center;
+
+                            Text {
+                                text: "Code Preview";
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #212529;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle { horizontal-stretch: 1; }
+
+                            CheckBox {
+                                text: "view diff";
+                                checked: AppState.view_diff;
+                                toggled => {
+                                    AppState.view_diff = self.checked;
+                                    AppState.view_diff_changed(self.checked);
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {

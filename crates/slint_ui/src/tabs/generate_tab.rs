@@ -24,6 +24,7 @@ use common::entities::FileStatus;
 use common::long_operation::OperationProgress;
 use common::types::EntityId;
 use cpp_qt_file_generation::{FillCppQtFilesDto, GenerateCppQtFilesDto};
+use file_generation_shared_steps::GetDiffDto;
 use rust_file_generation::{FillRustFilesDto, GenerateRustCodeDto, GenerateRustFilesDto};
 
 const ROOT_SYSTEM_ID: u64 = 1;
@@ -460,7 +461,7 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
 
 // ─── Code preview ───────────────────────────────────────────────────────────
 
-/// Load code preview for selected file
+/// Load code preview for selected file (generated code or diff depending on view_diff)
 fn load_code_preview(app: &App, app_context: &Arc<AppContext>, file_id: i32) {
     if file_id < 0 {
         app.global::<AppState>()
@@ -468,6 +469,41 @@ fn load_code_preview(app: &App, app_context: &Arc<AppContext>, file_id: i32) {
         return;
     }
 
+    let view_diff = app.global::<AppState>().get_view_diff();
+
+    if view_diff {
+        load_diff_preview(app, app_context, file_id);
+    } else {
+        load_generated_code_preview(app, app_context, file_id);
+    }
+}
+
+/// Load unified diff for the selected file
+fn load_diff_preview(app: &App, app_context: &Arc<AppContext>, file_id: i32) {
+    let dto = GetDiffDto {
+        file_id: file_id as u64,
+    };
+
+    match file_generation_shared_steps_commands::get_file_diff(app_context, &dto) {
+        Ok(result) => {
+            let text = if result.diff_text.is_empty() {
+                "No differences".to_string()
+            } else {
+                result.diff_text
+            };
+            app.global::<AppState>()
+                .set_code_preview(SharedString::from(text.as_str()));
+        }
+        Err(e) => {
+            log::error!("Failed to get file diff: {}", e);
+            app.global::<AppState>()
+                .set_code_preview(SharedString::from(format!("Error: {}", e).as_str()));
+        }
+    }
+}
+
+/// Load generated code preview for the selected file
+fn load_generated_code_preview(app: &App, app_context: &Arc<AppContext>, file_id: i32) {
     match determine_language(app, app_context) {
         Ok(Language::Rust) => {
             let dto = GenerateRustCodeDto {
@@ -934,6 +970,21 @@ fn setup_show_all_files_changed_callback(app: &App, app_context: &Arc<AppContext
     });
 }
 
+fn setup_view_diff_changed_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_view_diff_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |_view_diff| {
+            if let Some(app) = app_weak.upgrade() {
+                let file_id = app.global::<AppState>().get_selected_file_index();
+                if file_id >= 0 {
+                    load_code_preview(&app, &ctx, file_id);
+                }
+            }
+        }
+    });
+}
+
 /// Initialize all generate tab related subscriptions and callbacks
 pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppContext>) {
     // Setup command callbacks
@@ -952,4 +1003,5 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_select_all_files_callback(app, app_context);
     setup_unselect_all_files_callback(app, app_context);
     setup_show_all_files_changed_callback(app, app_context);
+    setup_view_diff_changed_callback(app, app_context);
 }

@@ -703,12 +703,12 @@ features:
     undoable: false
     read_only: true
     dto_in:
-      name: GetDiffIn
+      name: GetDiffDto
       fields:
       - name: file_id
         type: uinteger
     dto_out:
-      name: GetDiffOut
+      name: GetDiffReturnDto
       fields:
       - name: diff_text
         type: string

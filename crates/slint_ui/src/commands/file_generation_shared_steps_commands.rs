@@ -4,7 +4,7 @@
 
 use crate::app_context::AppContext;
 use file_generation_shared_steps::{
-    GetDiffIn, GetDiffOut, file_generation_shared_steps_controller,
+    GetDiffDto, GetDiffReturnDto, file_generation_shared_steps_controller,
 };
 
 pub fn fill_status_in_files(ctx: &AppContext) -> Result<(), String> {
@@ -12,7 +12,7 @@ pub fn fill_status_in_files(ctx: &AppContext) -> Result<(), String> {
         .map_err(|e| format!("Error while fill_status_in_files: {:?}", e))
 }
 
-pub fn get_file_diff(ctx: &AppContext, dto: &GetDiffIn) -> Result<GetDiffOut, String> {
+pub fn get_file_diff(ctx: &AppContext, dto: &GetDiffDto) -> Result<GetDiffReturnDto, String> {
     file_generation_shared_steps_controller::get_file_diff(&ctx.db_context, &ctx.event_hub, dto)
         .map_err(|e| format!("Error while get_file_diff: {:?}", e))
 }

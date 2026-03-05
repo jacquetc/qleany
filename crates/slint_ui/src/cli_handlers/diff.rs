@@ -131,7 +131,7 @@ pub fn execute(
     let file = matches[0];
 
     // Step 6: Compute and display the diff
-    let diff_dto = file_generation_shared_steps::GetDiffIn { file_id: file.id };
+    let diff_dto = file_generation_shared_steps::GetDiffDto { file_id: file.id };
     let diff_out = file_generation_shared_steps_controller::get_file_diff(
         &app_context.db_context,
         &app_context.event_hub,

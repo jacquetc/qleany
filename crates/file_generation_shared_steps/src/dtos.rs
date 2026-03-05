@@ -5,10 +5,10 @@ use common::types::EntityId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GetDiffIn {
+pub struct GetDiffDto {
     pub file_id: u64,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GetDiffOut {
+pub struct GetDiffReturnDto {
     pub diff_text: String,
 }
