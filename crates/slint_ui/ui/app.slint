@@ -134,7 +134,10 @@ export component App inherits Window {
                             label: "Home";
                             icon: @image-url("icons/home.svg");
                             active: AppState.current_tab == 0;
-                            clicked => { AppState.current_tab = 0; }
+                            clicked => {
+                                if (AppState.current_tab == 5) { GenerateCommands.cancel_fill_code(); }
+                                AppState.current_tab = 0;
+                            }
                         }
 
                         NavItem {
@@ -142,7 +145,10 @@ export component App inherits Window {
                             icon: @image-url("icons/tag.svg");
                             active: AppState.current_tab == 1 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
-                            clicked => { AppState.current_tab = 1; }
+                            clicked => {
+                                if (AppState.current_tab == 5) { GenerateCommands.cancel_fill_code(); }
+                                AppState.current_tab = 1;
+                            }
                         }
 
                         NavItem {
@@ -150,7 +156,10 @@ export component App inherits Window {
                             icon: @image-url("icons/entities.svg");
                             active: AppState.current_tab == 2 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
-                            clicked => { AppState.current_tab = 2; }
+                            clicked => {
+                                if (AppState.current_tab == 5) { GenerateCommands.cancel_fill_code(); }
+                                AppState.current_tab = 2;
+                            }
                         }
 
                         NavItem {
@@ -158,7 +167,10 @@ export component App inherits Window {
                             icon: @image-url("icons/features.svg");
                             active: AppState.current_tab == 3 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
-                            clicked => { AppState.current_tab = 3; }
+                            clicked => {
+                                if (AppState.current_tab == 5) { GenerateCommands.cancel_fill_code(); }
+                                AppState.current_tab = 3;
+                            }
                         }
 
                         NavItem {
@@ -166,7 +178,10 @@ export component App inherits Window {
                             icon: @image-url("icons/user_interface.svg");
                             active: AppState.current_tab == 4 && AppState.manifest_is_open;
                             enable: AppState.manifest_is_open;
-                            clicked => { AppState.current_tab = 4; }
+                            clicked => {
+                                if (AppState.current_tab == 5) { GenerateCommands.cancel_fill_code(); }
+                                AppState.current_tab = 4;
+                            }
                         }
 
                         NavItem {

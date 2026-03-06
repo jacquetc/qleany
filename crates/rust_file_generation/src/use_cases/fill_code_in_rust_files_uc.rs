@@ -22,6 +22,7 @@ pub trait FillCodeInRustFilesUnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
 #[macros::uow_action(entity = "File", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "UpdateMulti")]
+#[macros::uow_action(entity = "File", action = "DeleteMulti")]
 pub trait FillCodeInRustFilesUnitOfWorkTrait:
     CommandUnitOfWork + GenerationOps + Send + Sync
 {
@@ -96,6 +97,12 @@ impl LongOperation for FillCodeInRustFilesUseCase {
             if cancel_flag.load(Ordering::Relaxed) {
                 let _ = fs::remove_dir_all(&tmp_dir);
                 uow.rollback()?;
+                // Delete all File entities created by the prior fill_files step
+                uow.begin_transaction()?;
+                if !file_ids.is_empty() {
+                    uow.delete_file_multi(&file_ids)?;
+                }
+                uow.commit()?;
                 return Err(anyhow!("Operation was cancelled"));
             }
 
@@ -157,6 +164,12 @@ impl LongOperation for FillCodeInRustFilesUseCase {
             if cancel_flag.load(Ordering::Relaxed) {
                 let _ = fs::remove_dir_all(&tmp_dir);
                 uow.rollback()?;
+                // Delete all File entities created by the prior fill_files step
+                uow.begin_transaction()?;
+                if !file_ids.is_empty() {
+                    uow.delete_file_multi(&file_ids)?;
+                }
+                uow.commit()?;
                 return Err(anyhow!("Operation was cancelled"));
             }
 

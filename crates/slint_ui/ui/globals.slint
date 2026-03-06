@@ -37,6 +37,7 @@ export global GenerateCommands {
     callback list_files();
     callback start_generate();
     callback cancel_generate();
+    callback cancel_fill_code();
 }
 export global ProjectTabState {
     in-out property <int> project_undo_stack_id: -1;
@@ -331,6 +332,7 @@ export global AppState {
     in-out property <bool> fill_code_is_running: false;
     in-out property <float> fill_code_progress: 0;
     in-out property <string> fill_code_message: "";
+    in-out property <string> fill_code_operation_id: "";
 }
 
 export global UserInterfaceTabState {

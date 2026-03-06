@@ -435,6 +435,8 @@ fn refresh_file_lists(app: &App, app_context: &Arc<AppContext>) {
 
     match start_fill_code(app, app_context) {
         Ok(operation_id) => {
+            app.global::<AppState>()
+                .set_fill_code_operation_id(SharedString::from(operation_id.as_str()));
             poll_fill_code_result(app.as_weak(), Arc::clone(app_context), operation_id);
         }
         Err(e) => {
@@ -784,6 +786,31 @@ fn setup_cancel_generate_callback(app: &App, app_context: &Arc<AppContext>) {
     });
 }
 
+fn setup_cancel_fill_code_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<GenerateCommands>().on_cancel_fill_code({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move || {
+            if let Some(app) = app_weak.upgrade() {
+                let state = app.global::<AppState>();
+                if !state.get_fill_code_is_running() {
+                    return;
+                }
+                log::info!("Cancelling fill_code operation (leaving generate tab)");
+
+                let op_id = state.get_fill_code_operation_id().to_string();
+                state.set_fill_code_is_running(false);
+                state.set_fill_code_operation_id(SharedString::default());
+
+                if !op_id.is_empty() {
+                    let lom = ctx.long_operation_manager.lock().unwrap();
+                    lom.cancel_operation(&op_id);
+                }
+            }
+        }
+    });
+}
+
 fn setup_group_selected_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<AppState>().on_group_selected({
         let ctx = Arc::clone(app_context);
@@ -978,6 +1005,7 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_list_files_callback(app, app_context);
     setup_start_generate_callback(app, app_context);
     setup_cancel_generate_callback(app, app_context);
+    setup_cancel_fill_code_callback(app, app_context);
 
     // Setup selection callbacks
     setup_group_selected_callback(app, app_context);
