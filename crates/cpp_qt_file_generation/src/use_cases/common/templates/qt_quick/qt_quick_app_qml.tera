@@ -40,27 +40,22 @@ ApplicationWindow {
     visible: true
     width: 900
 
-    property int workspaceId: 1
     property int undoRedoStackId: 1
     property int selectedItemId: -1
+{% if list_ent %}
+    property int {{ list_ent.camel_name }}Id: 1
+{% endif %}
 
-
-    // Entity controller
-    RootController {
-        id: rootController
+{% if list_ent %}
+    // Entity controllers
+    {{ list_ent.pascal_name }}Controller {
+        id: {{ list_ent.camel_name }}Controller
     }
-
-    WorkspaceController {
-        id: workspaceController
-    }
-
-
+{% endif %}
 {% if demo_ent %}
-    // Entity controller
     {{ demo_ent.pascal_name }}Controller {
         id: {{ demo_ent.camel_name }}Controller
         undoRedoStackId: applicationWindow.undoRedoStackId
-
     }
 {% endif %}
     ColumnLayout {
@@ -273,7 +268,7 @@ ApplicationWindow {
             {%- endif %}
         {%- endif %}
     {%- endfor %}
-                        {{ demo_ent.camel_name }}Controller.create([dto], workspaceId, -1).then(function(result) {
+                        {{ demo_ent.camel_name }}Controller.create([dto], {{ list_ent.camel_name }}Id, -1).then(function(result) {
                             console.log("{{ demo_ent.pascal_name }} created:", JSON.stringify(result));
     {%- for f in demo_ent.normal_fields %}
         {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
@@ -323,7 +318,7 @@ ApplicationWindow {
                     clip: true
 
                     model: {{ list_ent.pascal_name }}{{ list_field.pascal_name }}ListModel {
-                        {{ list_ent.camel_name }}Id: 1
+                        {{ list_ent.camel_name }}Id: applicationWindow.{{ list_ent.camel_name }}Id
                     }
 
                     delegate: ItemDelegate {
@@ -486,20 +481,13 @@ ApplicationWindow {
         }
     }
 
+{% if list_ent %}
     Component.onCompleted: {
-
-        var dto =  rootController.getCreateDto();
-        rootController.createOrphans([dto]).then(function(result) {
-            console.log("Root created:", JSON.stringify(result));
-
-            var dto = workspaceController.getCreateDto();
-            workspaceController.create([dto], result.id, 0).then(function(result) {
-                console.log("Workspace created:", JSON.stringify(result));
-
-                workspaceId = result.id;
-            });
-
-        }
-        )
+        var dto = {{ list_ent.camel_name }}Controller.getCreateDto();
+        {{ list_ent.camel_name }}Controller.createOrphans([dto]).then(function(result) {
+            console.log("{{ list_ent.pascal_name }} created:", JSON.stringify(result));
+            {{ list_ent.camel_name }}Id = result.id;
+        });
     }
+{% endif %}
 }
