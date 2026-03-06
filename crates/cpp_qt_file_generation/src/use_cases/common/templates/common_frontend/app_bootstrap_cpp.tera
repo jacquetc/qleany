@@ -9,6 +9,7 @@
 
 #ifndef {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS
 #include "database/db_context.h"
+#include "direct_access/converter_registration.h"
 #include "direct_access/event_registry.h"
 #include "service_locator.h"
 #include "long_operation/long_operation_manager.h"
@@ -32,6 +33,9 @@ auto bootstrapBackend(QObject *parent) -> BootstrapResult
     qDebug() << "Backend bootstrap skipped ({{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS)";
     return {.success = true};
 #else
+
+    DirectAccess::registerConverters();
+
     // Database
     auto *db = new Database::DbContext(parent);
 

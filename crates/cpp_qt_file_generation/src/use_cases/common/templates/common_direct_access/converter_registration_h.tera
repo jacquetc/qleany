@@ -19,6 +19,8 @@ void registerOptionalConverters(Convert toValue)
         [](const std::optional<T> &opt) -> QVariant {
             return opt ? QVariant(*opt) : QVariant();
         });
+    QMetaType::registerConverter<T, std::optional<T>>(
+            [](const T &val) -> std::optional<T> { return val; });
 }
 
 inline void registerConverters()
