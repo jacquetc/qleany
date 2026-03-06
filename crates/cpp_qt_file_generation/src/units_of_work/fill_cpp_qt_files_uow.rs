@@ -110,7 +110,7 @@ impl CommandUnitOfWork for FillCppQtFilesUnitOfWork {
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "CreateOrphan")]
 #[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
-#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "File", action = "RemoveMulti")]
 impl FillCppQtFilesUnitOfWorkTrait for FillCppQtFilesUnitOfWork {}
 
 pub struct FillCppQtFilesUnitOfWorkFactory {

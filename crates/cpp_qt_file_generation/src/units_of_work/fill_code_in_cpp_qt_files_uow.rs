@@ -100,7 +100,7 @@ impl CommandUnitOfWork for FillCodeInCppQtFilesUnitOfWork {
 #[macros::uow_action(entity = "System", action = "GetRelationship", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "GetMulti", thread_safe = true)]
 #[macros::uow_action(entity = "File", action = "UpdateMulti", thread_safe = true)]
-#[macros::uow_action(entity = "File", action = "DeleteMulti", thread_safe = true)]
+#[macros::uow_action(entity = "File", action = "RemoveMulti", thread_safe = true)]
 impl FillCodeInCppQtFilesUnitOfWorkTrait for FillCodeInCppQtFilesUnitOfWork {}
 
 #[macros::uow_action(entity = "Root", action = "GetRelationship", thread_safe = true)]

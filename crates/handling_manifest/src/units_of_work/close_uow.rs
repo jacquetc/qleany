@@ -91,9 +91,9 @@ impl CommandUnitOfWork for CloseUnitOfWork {
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/close_uc.rs
 //
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
-#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "File", action = "RemoveMulti")]
 #[macros::uow_action(entity = "Workspace", action = "GetAll")]
-#[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "RemoveMulti")]
 impl CloseUnitOfWorkTrait for CloseUnitOfWork {}
 
 pub struct CloseUnitOfWorkFactory {

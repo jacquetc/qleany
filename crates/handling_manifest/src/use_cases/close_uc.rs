@@ -9,9 +9,9 @@ pub trait CloseUnitOfWorkFactoryTrait {
 }
 
 #[macros::uow_action(entity = "System", action = "GetRelationship")]
-#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "File", action = "RemoveMulti")]
 #[macros::uow_action(entity = "Workspace", action = "GetAll")]
-#[macros::uow_action(entity = "Workspace", action = "DeleteMulti")]
+#[macros::uow_action(entity = "Workspace", action = "RemoveMulti")]
 pub trait CloseUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct CloseUseCase {
@@ -37,11 +37,11 @@ impl CloseUseCase {
         uow.get_all_workspace()?;
         let workspace_ids: Vec<EntityId> =
             workspaces.iter().map(|workspace| workspace.id).collect();
-        uow.delete_workspace_multi(&workspace_ids)?;
+        uow.remove_workspace_multi(&workspace_ids)?;
 
         // Get all files
         let file_ids = uow.get_system_relationship(&1, &SystemRelationshipField::Files)?;
-        uow.delete_file_multi(&file_ids)?;
+        uow.remove_file_multi(&file_ids)?;
 
         uow.commit()?;
 

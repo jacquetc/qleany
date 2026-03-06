@@ -33,7 +33,7 @@ pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "CreateOrphan")]
 #[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
-#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "File", action = "RemoveMulti")]
 pub trait FillCppQtFilesUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct FillCppQtFilesUseCase {
@@ -113,7 +113,7 @@ impl FillCppQtFilesUseCase {
         let all_previous_files =
             uow.get_system_relationship(&root.id, &SystemRelationshipField::Files)?;
         if !all_previous_files.is_empty() {
-            uow.delete_file_multi(&all_previous_files)?;
+            uow.remove_file_multi(&all_previous_files)?;
         }
 
         files.push(File {

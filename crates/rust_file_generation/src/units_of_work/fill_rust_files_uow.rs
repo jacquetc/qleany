@@ -109,7 +109,7 @@ impl CommandUnitOfWork for FillRustFilesUnitOfWork {
 #[macros::uow_action(entity = "UseCase", action = "GetMulti")]
 #[macros::uow_action(entity = "File", action = "CreateOrphan")]
 #[macros::uow_action(entity = "File", action = "CreateOrphanMulti")]
-#[macros::uow_action(entity = "File", action = "DeleteMulti")]
+#[macros::uow_action(entity = "File", action = "RemoveMulti")]
 impl FillRustFilesUnitOfWorkTrait for FillRustFilesUnitOfWork {}
 
 pub struct FillRustFilesUnitOfWorkFactory {

@@ -92,7 +92,7 @@ impl CommandUnitOfWork for CleanUpBeforeExitUnitOfWork {
 //
 // Exactly the same macros must be set in the use case uow trait file in ../use_cases/clean_up_before_exit_uc.rs
 //
-#[macros::uow_action(entity = "Root", action = "Delete")]
+#[macros::uow_action(entity = "Root", action = "Remove")]
 impl CleanUpBeforeExitUnitOfWorkTrait for CleanUpBeforeExitUnitOfWork {}
 
 pub struct CleanUpBeforeExitUnitOfWorkFactory {

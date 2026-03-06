@@ -8,7 +8,7 @@ pub trait CleanUpBeforeExitUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn CleanUpBeforeExitUnitOfWorkTrait>;
 }
 
-#[macros::uow_action(entity = "Root", action = "Delete")]
+#[macros::uow_action(entity = "Root", action = "Remove")]
 pub trait CleanUpBeforeExitUnitOfWorkTrait: CommandUnitOfWork {}
 
 pub struct CleanUpBeforeExitUseCase {
@@ -24,7 +24,7 @@ impl CleanUpBeforeExitUseCase {
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
 
-        uow.delete_root(&1)?;
+        uow.remove_root(&1)?;
 
         uow.commit()?;
         Ok(())
