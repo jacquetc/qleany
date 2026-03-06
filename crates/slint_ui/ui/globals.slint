@@ -13,6 +13,29 @@ export global ManifestCommands {
     callback close_manifest();
     callback open_qleany_manifest();
     callback exit_app();
+    // New manifest wizard: confirmed with collected values
+    callback create_wizard_confirmed();
+}
+
+// New manifest wizard state
+export global NewManifestWizardState {
+    in-out property <bool> visible: false;
+    // Wizard step (0 = language, 1 = names, 2 = template, 3 = options)
+    in-out property <int> step: 0;
+
+    // Collected values
+    in-out property <int> language_index: 0;  // 0 = C++/Qt, 1 = Rust
+    in-out property <string> application_name: "";
+    in-out property <string> organization_name: "";
+    in-out property <int> template_index: 0;  // 0 = Blank, 1 = Minimal, 2 = DocumentEditor, 3 = DataManagement
+    in-out property <bool> opt_rust_cli: false;
+    in-out property <bool> opt_rust_slint: false;
+    in-out property <bool> opt_cpp_qt_qtwidgets: false;
+    in-out property <bool> opt_cpp_qt_qtquick: true;
+
+    // Validation
+    in-out property <string> name_error: "";
+    in-out property <string> org_error: "";
 }
 
 // Undo/Redo commands

@@ -11,7 +11,7 @@ use common::{
     database::CommandUnitOfWork, entities::Feature, entities::Field, entities::File,
     entities::Global, entities::Relationship, entities::Root, entities::UseCase,
 };
-use heck::ToPascalCase;
+use heck::{ToPascalCase, ToTitleCase};
 
 pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillCppQtFilesUnitOfWorkTrait>;
@@ -1894,7 +1894,7 @@ impl FillCppQtFilesUseCase {
             .chars()
             .take(3)
             .collect::<String>()
-            .to_pascal_case();
+            .to_lowercase().to_title_case();
 
         let relative_path = format!("{}/presentation/", prefix);
 

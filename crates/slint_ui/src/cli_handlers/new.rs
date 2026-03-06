@@ -90,13 +90,20 @@ pub fn execute(
     output.success(&format!("Created {}", return_dto.manifest_path));
 
     if !output.quiet {
+
+        output.info("");
+        output.info("If not already done, create a git repository and commit the initial manifest, and tag:");
+        output.info("'git init && git add . && git commit -m\"initial commit\" && git tag v0.0.1'");
+        output.info("(A git tag is mandatory with a C++/Qt manifest)");
+        output.info("");
         output.info("Next steps:");
         output.info("  1. Edit qleany.yaml to define your entities and features");
         output.info("  2. Run 'qleany check' to validate the manifest");
         output.info("  3. Run 'qleany list' to see the list of files to be generated");
-        output.info("  4. Run 'qleany generate --temp' to preview generated files");
-        output.info("  5. Run 'qleany diff [file]' to see offered changes to specific files");
-        output.info("  6. Run 'qleany prompt' if you are using LLMs");
+        output.info("  4. Run 'qleany generate --temp' to preview generated files in ./temp/");
+        output.info("  5. Run 'qleany generate' to generate files");
+        output.info("  6. Run 'qleany diff [file]' to see offered changes to specific files");
+        output.info("  7. Run 'qleany prompt' if you are using LLMs");
         output.info("");
         output.info("Or run 'qleany' to start the UI");
     }

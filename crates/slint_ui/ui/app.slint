@@ -6,12 +6,13 @@ import { FeaturesTab } from "tabs/FeaturesTab.slint";
 import { UserInterfaceTab } from "tabs/UserInterfaceTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
+import { NewManifestWizard } from "components/new_manifest_wizard.slint";
 import { StyledButton } from "components/misc.slint";
 import { CheckWidget } from "components/check_widget.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools }
+import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -270,6 +271,21 @@ export component App inherits Window {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 indeterminate: true;
+            }
+        }
+
+        // New manifest wizard dialog
+        if NewManifestWizardState.visible : NewManifestWizard {
+            width: parent.width;
+            height: parent.height;
+            cancelled => {
+                NewManifestWizardState.visible = false;
+                NewManifestWizardState.step = 0;
+            }
+            confirmed => {
+                NewManifestWizardState.visible = false;
+                NewManifestWizardState.step = 0;
+                ManifestCommands.create_wizard_confirmed();
             }
         }
 
