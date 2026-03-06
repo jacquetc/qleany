@@ -3,10 +3,11 @@ use crate::CheckReturnDto;
 use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
-    Direction, Dto, DtoField, Entity, Feature, Field, FieldRelationshipType, FieldType, Global,
-    Relationship, Root, Strength, UseCase, UserInterface, Workspace,
+    Direction, Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType,
+    FieldType, Global, Relationship, Root, Strength, UseCase, UserInterface, Workspace,
 };
 use common::types::EntityId;
+use heck::{ToSnakeCase, ToUpperCamelCase};
 use std::collections::{HashMap, HashSet};
 
 pub trait CheckUnitOfWorkFactoryTrait: Send + Sync {
@@ -195,15 +196,50 @@ pub const CRITICAL_RULES: &[Rule] = &[
         severity: "critical",
         description: "Field: relationship in {OneToMany, OrderedOneToMany, ManyToMany} cannot be optional",
     },
+    Rule {
+        id: "C33",
+        severity: "critical",
+        description: "Global: application_name must not be empty",
+    },
+    Rule {
+        id: "C34",
+        severity: "critical",
+        description: "Global: application_name must be PascalCase",
+    },
+    Rule {
+        id: "C35",
+        severity: "critical",
+        description: "Global: organisation_name must not be empty",
+    },
+    Rule {
+        id: "C36",
+        severity: "critical",
+        description: "Global: organisation_domain must not be empty",
+    },
+    Rule {
+        id: "C37",
+        severity: "critical",
+        description: "Entity and DTO names must be PascalCase",
+    },
+    Rule {
+        id: "C38",
+        severity: "critical",
+        description: "Field, DtoField, Feature, and UseCase names must be snake_case",
+    },
+    Rule {
+        id: "C39",
+        severity: "critical",
+        description: "Field/DtoField with field_type=Enum: enum_name must not be empty and must be PascalCase",
+    },
+    Rule {
+        id: "C40",
+        severity: "critical",
+        description: "Field/DtoField with field_type=Enum: enum_values must not be empty and each value must be PascalCase",
+    },
 ];
 
 /// Warning rules – non-blocking issues worth reviewing.
 pub const WARNING_RULES: &[Rule] = &[
-    Rule {
-        id: "W01",
-        severity: "warning",
-        description: "Global: application_name should not be empty",
-    },
     Rule {
         id: "W02",
         severity: "warning",
@@ -390,6 +426,14 @@ const QT_RESERVED: &[&str] = &[
     "QCoreApplication",
 ];
 
+fn is_pascal_case(name: &str) -> bool {
+    !name.is_empty() && name == name.to_upper_camel_case()
+}
+
+fn is_snake_case(name: &str) -> bool {
+    !name.is_empty() && name == name.to_snake_case()
+}
+
 fn is_forbidden_name(name: &str) -> Option<&'static str> {
     let lower = name.to_lowercase();
     for &kw in RUST_RESERVED {
@@ -458,7 +502,19 @@ impl CheckUseCase {
         let global = uow.get_global(&workspace.global)?;
         if let Some(global) = &global {
             if global.application_name.is_empty() {
-                warnings.push("Global: application_name is empty".to_string());
+                critical_errors.push("Global: application_name is empty".to_string());
+            } else if !is_pascal_case(&global.application_name) {
+                critical_errors.push(format!(
+                    "Global: application_name '{}' must be PascalCase (expected '{}')",
+                    global.application_name,
+                    global.application_name.to_upper_camel_case()
+                ));
+            }
+            if global.organisation_name.is_empty() {
+                critical_errors.push("Global: organisation_name is empty".to_string());
+            }
+            if global.organisation_domain.is_empty() {
+                critical_errors.push("Global: organisation_domain is empty".to_string());
             }
             if global.language.is_empty() {
                 critical_errors.push("Global: language is empty".to_string());
@@ -485,6 +541,14 @@ impl CheckUseCase {
                 critical_errors.push(format!(
                     "Entity '{}': name is a {} and cannot be used",
                     entity.name, reason
+                ));
+            }
+            // PascalCase check
+            if !entity.name.is_empty() && !is_pascal_case(&entity.name) {
+                critical_errors.push(format!(
+                    "Entity '{}': name must be PascalCase (expected '{}')",
+                    entity.name,
+                    entity.name.to_upper_camel_case()
                 ));
             }
         }
@@ -573,6 +637,15 @@ impl CheckUseCase {
                             entity.name, field.name, reason
                         ));
                     }
+                    // snake_case check
+                    if !field.name.is_empty() && !is_snake_case(&field.name) {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': name must be snake_case (expected '{}')",
+                            entity.name,
+                            field.name,
+                            field.name.to_snake_case()
+                        ));
+                    }
 
                     // TODO: uncomment when Field gets an `is_list` property
                     // // A field cannot be both optional and is_list
@@ -608,6 +681,43 @@ impl CheckUseCase {
                              (OneToMany, OrderedOneToMany, ManyToMany) cannot be optional",
                             entity.name, field.name
                         ));
+                    }
+
+                    // Enum-type fields must have a valid enum_name and enum_values
+                    if field.field_type == FieldType::Enum {
+                        let en = field.enum_name.as_deref().unwrap_or("");
+                        if en.is_empty() {
+                            critical_errors.push(format!(
+                                "Entity '{}', field '{}': field_type is Enum but enum_name is empty",
+                                entity.name, field.name
+                            ));
+                        } else if !is_pascal_case(en) {
+                            critical_errors.push(format!(
+                                "Entity '{}', field '{}': enum_name '{}' must be PascalCase (expected '{}')",
+                                entity.name, field.name, en, en.to_upper_camel_case()
+                            ));
+                        }
+                        let vals = field.enum_values.as_deref().unwrap_or(&[]);
+                        if vals.is_empty() {
+                            critical_errors.push(format!(
+                                "Entity '{}', field '{}': field_type is Enum but enum_values is empty",
+                                entity.name, field.name
+                            ));
+                        } else {
+                            for val in vals {
+                                if val.is_empty() {
+                                    critical_errors.push(format!(
+                                        "Entity '{}', field '{}': enum_values contains an empty value",
+                                        entity.name, field.name
+                                    ));
+                                } else if !is_pascal_case(val) {
+                                    critical_errors.push(format!(
+                                        "Entity '{}', field '{}': enum value '{}' must be PascalCase (expected '{}')",
+                                        entity.name, field.name, val, val.to_upper_camel_case()
+                                    ));
+                                }
+                            }
+                        }
                     }
 
                     // Entity-type fields must reference valid entities
@@ -841,6 +951,14 @@ impl CheckUseCase {
                     feature.name, reason
                 ));
             }
+            // snake_case check
+            if !feature.name.is_empty() && !is_snake_case(&feature.name) {
+                critical_errors.push(format!(
+                    "Feature '{}': name must be snake_case (expected '{}')",
+                    feature.name,
+                    feature.name.to_snake_case()
+                ));
+            }
         }
 
         // ── Use cases ──
@@ -865,6 +983,14 @@ impl CheckUseCase {
                     critical_errors.push(format!(
                         "Use case '{}': name is a {} and cannot be used",
                         uc.name, reason
+                    ));
+                }
+                // snake_case check
+                if !uc.name.is_empty() && !is_snake_case(&uc.name) {
+                    critical_errors.push(format!(
+                        "Use case '{}': name must be snake_case (expected '{}')",
+                        uc.name,
+                        uc.name.to_snake_case()
                     ));
                 }
             }
@@ -924,6 +1050,14 @@ impl CheckUseCase {
                                 dto.name, reason
                             ));
                         }
+                        // PascalCase check
+                        if !dto.name.is_empty() && !is_pascal_case(&dto.name) {
+                            critical_errors.push(format!(
+                                "DTO '{}': name must be PascalCase (expected '{}')",
+                                dto.name,
+                                dto.name.to_upper_camel_case()
+                            ));
+                        }
 
                         // DtoField checks
                         if !dto.fields.is_empty() {
@@ -947,12 +1081,57 @@ impl CheckUseCase {
                                         dto.name, df.name, reason
                                     ));
                                 }
+                                // snake_case check
+                                if !df.name.is_empty() && !is_snake_case(&df.name) {
+                                    critical_errors.push(format!(
+                                        "DTO '{}', field '{}': name must be snake_case (expected '{}')",
+                                        dto.name,
+                                        df.name,
+                                        df.name.to_snake_case()
+                                    ));
+                                }
                                 // A DtoField cannot be both optional and is_list
                                 if df.optional && df.is_list {
                                     critical_errors.push(format!(
                                         "DTO '{}', field '{}': cannot be both optional and is_list",
                                         dto.name, df.name
                                     ));
+                                }
+                                // Enum-type DtoFields must have a valid enum_name and enum_values
+                                if df.field_type == DtoFieldType::Enum {
+                                    let en = df.enum_name.as_deref().unwrap_or("");
+                                    if en.is_empty() {
+                                        critical_errors.push(format!(
+                                            "DTO '{}', field '{}': field_type is Enum but enum_name is empty",
+                                            dto.name, df.name
+                                        ));
+                                    } else if !is_pascal_case(en) {
+                                        critical_errors.push(format!(
+                                            "DTO '{}', field '{}': enum_name '{}' must be PascalCase (expected '{}')",
+                                            dto.name, df.name, en, en.to_upper_camel_case()
+                                        ));
+                                    }
+                                    let vals = df.enum_values.as_deref().unwrap_or(&[]);
+                                    if vals.is_empty() {
+                                        critical_errors.push(format!(
+                                            "DTO '{}', field '{}': field_type is Enum but enum_values is empty",
+                                            dto.name, df.name
+                                        ));
+                                    } else {
+                                        for val in vals {
+                                            if val.is_empty() {
+                                                critical_errors.push(format!(
+                                                    "DTO '{}', field '{}': enum_values contains an empty value",
+                                                    dto.name, df.name
+                                                ));
+                                            } else if !is_pascal_case(val) {
+                                                critical_errors.push(format!(
+                                                    "DTO '{}', field '{}': enum value '{}' must be PascalCase (expected '{}')",
+                                                    dto.name, df.name, val, val.to_upper_camel_case()
+                                                ));
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
