@@ -19,6 +19,20 @@ pub fn execute(
     args: &PromptArgs,
     output: &OutputContext,
 ) -> Result<()> {
+    // No flags provided → show help
+    if !args.list && !args.context && args.use_case.is_none() {
+        use clap::CommandFactory;
+        let mut cmd = crate::cli::Cli::command();
+        // Print help for the "prompt" subcommand
+        for sub in cmd.get_subcommands_mut() {
+            if sub.get_name() == "prompt" {
+                sub.print_help()?;
+                println!();
+                return Ok(());
+            }
+        }
+    }
+
     // Load manifest
     let load_dto = handling_manifest::LoadDto {
         manifest_path: manifest_path.to_string_lossy().to_string(),
