@@ -82,7 +82,7 @@ These rules ensure that when you undo an operation on a parent entity, all its s
 
 > *Qleany enforces these rules, among other rules, at loading time generation time and in the GUI.*
 >
-> Type `qleany check -rules` to see the full list of rules.
+> Type `qleany check --rules` to see the full list of rules.
 > 
 > **What happens if you violate these rules?** Undo/redo stacks will become inconsistent. For example, if you place non-undoable persistent settings as a child of an undoable entity, those settings could be unexpectedly undone by cascade when the user undoes the parent. You do not want application settings disappearing because the user undid an unrelated action.
 >
