@@ -31,11 +31,37 @@ The Generate tab shows all files that would be generated. You select which ones 
 
 Inside the project folder, run:
 ```bash
-# Generate all files (dangerous if you've modified any)
+# See what would change (only modified and new files are shown by default)
+qleany list files
+
+# Show all files including unchanged ones
+qleany list files --all
+
+# Show output as a tree
+qleany list files --format tree
+
+# Show a unified diff for a specific file
+qleany diff src/entities.rs
+
+# Generate all modified and new files
 qleany generate
 
 # Generate to temp folder first (safe)
 qleany generate --temp
+
+# Dry run — see what would be written without writing
+qleany generate --dry-run
+
+# Generate only files for a specific feature, entity, or group
+qleany generate feature MyFeature
+qleany generate entity Car
+qleany generate group "use_cases"
+
+# Generate a specific file by path
+qleany generate file src/entities.rs
+
+# Generate all files including unchanged ones
+qleany generate --all
 
 # Then compare and merge manually
 diff -r ./temp/crates ./crates
@@ -49,8 +75,11 @@ code --diff ./temp/file ./file
 - **Selected files are overwritten** — Your modifications are lost
 - **Unselected files are untouched** — Even if the manifest changed
 - **No files are deleted** — If you rename an entity, the old files remain; clean them up manually
+- **By default, only modified and new files are written** — Use `--all` to include unchanged files
 
 From the GUI (recommended), the "in temp" checkbox is checked by default to avoid accidental overwrites.
+
+In the CLI, `qleany generate` only writes files whose generated code differs from what's on disk (status `[M]` modified or `[N]` new). Use `--all` to force-write everything, or `--dry-run` to preview without writing.
 
 ## Files That Must Stay in Sync
 
@@ -93,6 +122,10 @@ The safest workflow when you've modified generated files:
 2. Generate all files to the temp location
 3. Compare temp output against your current files:
    ```bash
+   # Use the built-in diff command for individual files
+   qleany diff src/entities.rs
+
+   # Or compare entire directories
    diff -r ./temp/crates ./crates
 
    # or for VS Code users:
