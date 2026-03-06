@@ -45,8 +45,8 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
     m_eventRegistry = locator->eventRegistry();
 
     // Create controllers
-    m_{{ target_ent.camel_name }}Controller = new {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Controller(this);
-    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}Controller(this);
+    m_{{ target_ent.camel_name }}Controller = new {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Controller(this, m_undoRedoStackId);
+    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}Controller(this, m_undoRedoStackId);
 
     // Connect to events
     if (m_eventRegistry)
@@ -81,6 +81,10 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::setUndoRedoStackId(i
         return;
 
     m_undoRedoStackId = undoRedoStackId;
+    if (m_{{ target_ent.camel_name }}Controller)
+        m_{{ target_ent.camel_name }}Controller->setUndoRedoStackId(undoRedoStackId);
+    if (m_{{ ent.camel_name }}Controller)
+        m_{{ ent.camel_name }}Controller->setUndoRedoStackId(undoRedoStackId);
     Q_EMIT undoRedoStackIdChanged();
 }
 

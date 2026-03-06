@@ -25,7 +25,7 @@ void Single{{ ent.pascal_name }}::resolveDependencies()
     m_eventRegistry = locator->eventRegistry();
 
     // Create controllers
-    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}::{{ ent.pascal_name }}Controller(this);
+    m_{{ ent.camel_name }}Controller = new {{ ent.pascal_name }}::{{ ent.pascal_name }}Controller(this, m_undoRedoStackId);
 
     // Connect to events
     if (m_eventRegistry)
@@ -53,6 +53,8 @@ void Single{{ ent.pascal_name }}::setUndoRedoStackId(int undoRedoStackId)
         return;
 
     m_undoRedoStackId = undoRedoStackId;
+    if (m_{{ ent.camel_name }}Controller)
+        m_{{ ent.camel_name }}Controller->setUndoRedoStackId(undoRedoStackId);
     Q_EMIT undoRedoStackIdChanged();
 }
 
