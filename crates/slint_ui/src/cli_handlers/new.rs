@@ -1,10 +1,8 @@
 use crate::app_context::AppContext;
-use crate::cli::{LanguageOption, NewArgs, OutputContext};
+use crate::cli::{LanguageOption, ManifestTemplateOption, NewArgs, OutputContext};
 use anyhow::{Result, bail};
-use common::direct_access::workspace::WorkspaceRelationshipField;
-use common::types::EntityId;
-use direct_access::{global_controller, workspace_controller};
-use handling_manifest::handling_manifest_controller;
+use handling_manifest::{CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller};
+use std::io::{self, Write};
 use std::sync::Arc;
 
 pub fn execute(
@@ -22,6 +20,43 @@ pub fn execute(
         );
     }
 
+    // Resolve language (interactive if missing)
+    let language = match &args.language {
+        Some(lang) => *lang,
+        None => prompt_language()?,
+    };
+
+    // Resolve application name (interactive if missing)
+    let application_name = match &args.name {
+        Some(name) => name.clone(),
+        None => prompt_string(
+            "Application name (PascalCase, e.g. MyApp)",
+            "MyApp",
+        )?,
+    };
+
+    // Resolve organisation name (interactive if missing)
+    let organization_name = match &args.org_name {
+        Some(name) => name.clone(),
+        None => prompt_string(
+            "Organisation name (e.g. FernTech)",
+            "MyOrganization",
+        )?,
+    };
+
+    // Resolve manifest template (interactive if missing)
+    let template = match &args.template {
+        Some(t) => *t,
+        None => prompt_template()?,
+    };
+
+    // Resolve options (interactive if missing)
+    let options = if args.options.is_empty() {
+        prompt_options(&language)?
+    } else {
+        args.options.clone()
+    };
+
     output.verbose(&format!(
         "Creating new manifest at {}",
         manifest_path.display()
@@ -32,119 +67,114 @@ pub fn execute(
         std::fs::create_dir_all(parent)?;
     }
 
-    // Create new workspace via controller
-    let return_dto =
-        handling_manifest_controller::create(&app_context.db_context, &app_context.event_hub)?;
-    let workspace_id = return_dto.workspace_id;
-
-    // Apply language setting if provided
-    if let Some(lang) = &args.language {
-        apply_language_setting(app_context, workspace_id, lang)?;
-    }
-
-    // Apply other settings if provided
-    apply_project_settings(app_context, workspace_id, args)?;
-
-    // Save the manifest
-    let save_dto = handling_manifest::SaveDto {
+    let create_dto = CreateDto {
         manifest_path: manifest_path.to_string_lossy().to_string(),
+        language: match language {
+            LanguageOption::Rust => CreateLanguage::Rust,
+            LanguageOption::CppQt => CreateLanguage::CppQt,
+        },
+        application_name,
+        organization_name,
+        manifest_template: match template {
+            ManifestTemplateOption::Blank => ManifestTemplate::Blank,
+            ManifestTemplateOption::Minimal => ManifestTemplate::Minimal,
+            ManifestTemplateOption::DocumentEditor => ManifestTemplate::DocumentEditor,
+            ManifestTemplateOption::DataManagement => ManifestTemplate::DataManagement,
+        },
+        options,
     };
-    handling_manifest_controller::save(&app_context.db_context, &app_context.event_hub, &save_dto)?;
 
-    output.success(&format!("Created {}", manifest_path.display()));
+    let return_dto =
+        handling_manifest_controller::create(&app_context.db_context, &create_dto)?;
 
-    if output.verbose {
+    output.success(&format!("Created {}", return_dto.manifest_path));
+
+    if !output.quiet {
         output.info("Next steps:");
         output.info("  1. Edit qleany.yaml to define your entities and features");
         output.info("  2. Run 'qleany check' to validate the manifest");
-        output.info("  3. Run 'qleany generate --temp' to preview generated files");
+        output.info("  3. Run 'qleany list' to see the list of files to be generated");
+        output.info("  4. Run 'qleany generate --temp' to preview generated files");
+        output.info("  5. Run 'qleany diff [file]' to see offered changes to specific files");
+        output.info("  6. Run 'qleany prompt' if you are using LLMs");
+        output.info("");
+        output.info("Or run 'qleany' to start the UI");
     }
 
     Ok(())
 }
 
-fn apply_language_setting(
-    app_context: &Arc<AppContext>,
-    workspace_id: EntityId,
-    lang: &LanguageOption,
-) -> Result<()> {
-    let lang_str = match lang {
-        LanguageOption::Rust => "rust",
-        LanguageOption::CppQt => "cpp-qt",
+fn prompt_string(prompt: &str, example: &str) -> Result<String> {
+    print!("{} [{}]: ", prompt, example);
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    let input = input.trim().to_string();
+    if input.is_empty() {
+        Ok(example.to_string())
+    } else {
+        Ok(input)
+    }
+}
+
+fn prompt_language() -> Result<LanguageOption> {
+    println!("Target language:");
+    println!("  1. C++/Qt - C++ 20 and Qt 6");
+    println!("  2. Rust   - 2024 edition)");
+    print!("Choose [1]: ");
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    match input.trim() {
+        "" | "1" | "cpp-qt" | "cpp_qt" => Ok(LanguageOption::CppQt),
+        "2" | "rust" => Ok(LanguageOption::Rust),
+        other => bail!("Invalid language choice: '{}'", other),
+    }
+}
+
+fn prompt_template() -> Result<ManifestTemplateOption> {
+    println!("Manifest template:");
+    println!("  1. blank          - EntityBase + empty Root");
+    println!("  2. minimal        - Root with one entity (Item with title). Hello world equivalent");
+    println!("  3. document-editor - Root > Documents > Sections with load/save use cases");
+    println!("  4. data-management - Items, Categories, Tags with import/export use cases");
+    print!("Choose [1]: ");
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    match input.trim() {
+        "" | "1" | "blank" => Ok(ManifestTemplateOption::Blank),
+        "2" | "minimal" => Ok(ManifestTemplateOption::Minimal),
+        "3" | "document-editor" => Ok(ManifestTemplateOption::DocumentEditor),
+        "4" | "data-management" => Ok(ManifestTemplateOption::DataManagement),
+        other => bail!("Invalid template choice: '{}'", other),
+    }
+}
+
+fn prompt_options(language: &LanguageOption) -> Result<Vec<String>> {
+    let (available, default) = match language {
+        LanguageOption::Rust => (vec!["rust_cli", "rust_slint"], "rust_cli"),
+        LanguageOption::CppQt => (vec!["cpp_qt_qtquick", "cpp_qt_qtwidgets"], "cpp_qt_qtquick"),
     };
-
-    let global_id = get_global_id(app_context, workspace_id)?;
-    let mut global = global_controller::get(&app_context.db_context, &global_id)?
-        .ok_or_else(|| anyhow::anyhow!("Global not found for id {}", global_id))?;
-
-    global.language = lang_str.to_string();
-
-    // set sensible defaults for prefix_path based on language
-    if lang_str == "cpp-qt" {
-        global.prefix_path = "src".to_string();
-    } else if lang_str == "rust" {
-        global.prefix_path = "crates".to_string();
+    println!("UI options (comma-separated, or 'none' for no UI):");
+    for opt in &available {
+        let marker = if *opt == default { " (default)" } else { "" };
+        println!("  - {}{}", opt, marker);
     }
-
-    let mut undo_redo_manager = app_context.undo_redo_manager.lock().unwrap();
-    global_controller::update(
-        &app_context.db_context,
-        &app_context.event_hub,
-        &mut undo_redo_manager,
-        None,
-        &global,
-    )?;
-
-    Ok(())
-}
-
-fn apply_project_settings(
-    app_context: &Arc<AppContext>,
-    workspace_id: EntityId,
-    args: &NewArgs,
-) -> Result<()> {
-    let global_id = get_global_id(app_context, workspace_id)?;
-    let mut global = global_controller::get(&app_context.db_context, &global_id)?
-        .ok_or_else(|| anyhow::anyhow!("Global not found for id {}", global_id))?;
-
-    let mut modified = false;
-
-    if let Some(name) = &args.name {
-        global.application_name = name.clone();
-        modified = true;
+    print!("Choose [{}]: ", default);
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    let input = input.trim();
+    if input.is_empty() {
+        Ok(vec![default.to_string()])
+    } else if input.eq_ignore_ascii_case("none") {
+        Ok(vec![])
+    } else {
+        Ok(input
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect())
     }
-    if let Some(org_name) = &args.org_name {
-        global.organisation_name = org_name.clone();
-        modified = true;
-    }
-    if let Some(org_domain) = &args.org_domain {
-        global.organisation_domain = org_domain.clone();
-        modified = true;
-    }
-
-    if modified {
-        let mut undo_redo_manager = app_context.undo_redo_manager.lock().unwrap();
-        global_controller::update(
-            &app_context.db_context,
-            &app_context.event_hub,
-            &mut undo_redo_manager,
-            None,
-            &global,
-        )?;
-    }
-
-    Ok(())
-}
-
-fn get_global_id(app_context: &Arc<AppContext>, workspace_id: EntityId) -> Result<EntityId> {
-    let global_ids = workspace_controller::get_relationship(
-        &app_context.db_context,
-        &workspace_id,
-        &WorkspaceRelationshipField::Global,
-    )?;
-
-    global_ids
-        .first()
-        .copied()
-        .ok_or_else(|| anyhow::anyhow!("No global found for workspace {}", workspace_id))
 }

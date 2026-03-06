@@ -16,8 +16,33 @@ pub struct SaveDto {
     pub manifest_path: String,
 }
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-pub struct NewReturnDto {
-    pub workspace_id: u64,
+pub struct CreateDto {
+    pub manifest_path: String,
+    pub language: CreateLanguage,
+    pub application_name: String,
+    pub organization_name: String,
+    pub manifest_template: ManifestTemplate,
+    pub options: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum CreateLanguage {
+    #[default]
+    Rust,
+    CppQt,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum ManifestTemplate {
+    #[default]
+    Blank,
+    Minimal,
+    DocumentEditor,
+    DataManagement,
+}
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct CreateReturnDto {
+    pub manifest_path: String,
 }
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct ExportToMermaidReturnDto {

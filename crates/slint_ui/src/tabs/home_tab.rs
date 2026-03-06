@@ -130,7 +130,6 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
             if let Some(app) = app_weak.upgrade() {
                 if app.global::<AppState>().get_manifest_is_open() {
                     log::info!("A manifest is already open, closing it first");
-                    // Close any currently open manifest first
                     match handling_manifest_commands::close(&ctx) {
                         Ok(()) => {
                             log::info!("Manifest closed successfully");
@@ -141,73 +140,83 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
                         }
                     }
                 }
-                // set loading
-                app.global::<AppState>().set_is_loading(true);
 
-                match handling_manifest_commands::create(&ctx) {
-                    Ok(_result) => {
-                        log::info!("New manifest created successfully");
-                    }
-                    Err(e) => {
-                        log::error!("Failed to create new manifest: {}", e);
-                        app.global::<AppState>().set_is_loading(false);
-                    }
-                }
-
-                // Get the user's home directory as the default path
+                // Step 1: Save file dialog first
                 let default_path = dirs::home_dir().unwrap_or_default();
-
-                // Open save file dialog using rfd
                 let file_dialog = rfd::FileDialog::new()
                     .add_filter("YAML files", &["yaml", "yml"])
                     .set_directory(&default_path)
                     .set_file_name("qleany.yaml");
 
-                if let Some(path) = file_dialog.save_file() {
-                    let manifest_path = path.to_string_lossy().to_string();
-                    log::info!("Selected save path: {}", manifest_path);
+                let path = match file_dialog.save_file() {
+                    Some(path) => path,
+                    None => {
+                        log::info!("Save file dialog cancelled");
+                        return;
+                    }
+                };
 
-                    let save_dto = handling_manifest::SaveDto { manifest_path };
-                    match handling_manifest_commands::save(&ctx, &save_dto) {
-                        Ok(()) => {
-                            log::info!("Manifest saved successfully");
-                            if let Some(app) = app_weak.upgrade() {
-                                app.global::<AppState>()
-                                    .set_error_message(slint::SharedString::from(""));
-                                app.global::<AppState>().set_manifest_is_saved(true);
-                                app.global::<AppState>().set_manifest_path(
-                                    slint::SharedString::from(save_dto.manifest_path),
-                                );
+                let manifest_path = path.to_string_lossy().to_string();
+                log::info!("Selected save path: {}", manifest_path);
 
-                                // Show success message
-                                app.global::<AppState>().set_success_message(
-                                    slint::SharedString::from(
-                                        "Manifest created and saved successfully",
-                                    ),
-                                );
-                                app.global::<AppState>().set_success_message_visible(true);
+                app.global::<AppState>().set_is_loading(true);
 
-                                // Hide after 3 seconds
-                                let app_weak_timer = app.as_weak();
-                                Timer::single_shot(std::time::Duration::from_secs(3), move || {
-                                    if let Some(app) = app_weak_timer.upgrade() {
-                                        app.global::<AppState>().set_success_message_visible(false);
-                                    }
-                                });
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("Failed to save manifest: {}", e);
-                            if let Some(app) = app_weak.upgrade() {
-                                app.global::<AppState>()
-                                    .set_error_message(slint::SharedString::from(e));
-                            }
-                            return;
+                // Step 2: Create manifest via use case (writes file to disk)
+                let create_dto = handling_manifest::CreateDto {
+                    manifest_path: manifest_path.clone(),
+                    ..Default::default()
+                };
+                match handling_manifest_commands::create(&ctx, &create_dto) {
+                    Ok(_result) => {
+                        log::info!("New manifest created successfully at {}", manifest_path);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to create new manifest: {}", e);
+                        app.global::<AppState>().set_is_loading(false);
+                        app.global::<AppState>()
+                            .set_error_message(slint::SharedString::from(e));
+                        return;
+                    }
+                }
+
+                // Step 3: Open the newly created manifest
+                let load_dto = LoadDto {
+                    manifest_path: manifest_path.clone(),
+                };
+                match handling_manifest_commands::load(&ctx, &load_dto) {
+                    Ok(result) => {
+                        log::info!("Manifest loaded successfully: {:?}", result);
+                        if let Some(app) = app_weak.upgrade() {
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(""));
+                            app.global::<AppState>().set_manifest_is_saved(true);
+                            app.global::<AppState>().set_manifest_path(
+                                slint::SharedString::from(manifest_path),
+                            );
+
+                            app.global::<AppState>().set_success_message(
+                                slint::SharedString::from(
+                                    "Manifest created and loaded successfully",
+                                ),
+                            );
+                            app.global::<AppState>().set_success_message_visible(true);
+
+                            let app_weak_timer = app.as_weak();
+                            Timer::single_shot(std::time::Duration::from_secs(3), move || {
+                                if let Some(app) = app_weak_timer.upgrade() {
+                                    app.global::<AppState>().set_success_message_visible(false);
+                                }
+                            });
                         }
                     }
-                } else {
-                    log::info!("Save file dialog cancelled");
-                    return;
+                    Err(e) => {
+                        log::error!("Failed to load created manifest: {}", e);
+                        app.global::<AppState>().set_is_loading(false);
+                        if let Some(app) = app_weak.upgrade() {
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(e));
+                        }
+                    }
                 }
             }
         }

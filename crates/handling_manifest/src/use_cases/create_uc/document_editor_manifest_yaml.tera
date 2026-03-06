@@ -1,0 +1,110 @@
+---
+schema:
+  version: 4
+global:
+  language: {{ language }}
+  application_name: {{ application_name }}
+  organisation:
+    name: {{ organization_name }}
+    domain: {{ organization_domain }}
+  prefix_path: {{ prefix_path }}
+entities:
+- name: EntityBase
+  only_for_heritage: true
+  fields:
+  - name: id
+    type: uinteger
+  - name: created_at
+    type: datetime
+  - name: updated_at
+    type: datetime
+  undoable: false
+- name: Root
+  inherits_from: EntityBase
+  fields:
+  - name: workspace
+    type: entity
+    entity: Workspace
+    relationship: one_to_one
+    optional: true
+    strong: true
+  - name: system
+    type: entity
+    entity: System
+    relationship: one_to_one
+    optional: true
+    strong: true
+  undoable: false
+- name: System
+  inherits_from: EntityBase
+  fields:
+  - name: version
+    type: string
+  undoable: false
+- name: Workspace
+  inherits_from: EntityBase
+  fields:
+  - name: documents
+    type: entity
+    entity: Document
+    relationship: ordered_one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: title
+  undoable: true
+- name: Document
+  inherits_from: EntityBase
+  single_model: true
+  fields:
+  - name: title
+    type: string
+  - name: sections
+    type: entity
+    entity: Section
+    relationship: ordered_one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: title
+  undoable: true
+- name: Section
+  inherits_from: EntityBase
+  fields:
+  - name: title
+    type: string
+  - name: content
+    type: string
+  undoable: true
+features:
+- name: handling_document
+  use_cases:
+  - name: load_document
+    entities:
+    - Document
+    - Section
+    undoable: false
+    read_only: true
+    dto_in:
+      name: LoadDocumentDto
+      fields:
+      - name: document_id
+        type: uinteger
+    dto_out:
+      name: LoadDocumentReturnDto
+      fields:
+      - name: document_id
+        type: uinteger
+  - name: save_document
+    entities:
+    - Document
+    - Section
+    undoable: false
+    dto_in:
+      name: SaveDocumentDto
+      fields:
+      - name: document_id
+        type: uinteger
+ui:
+  rust_cli: {{ rust_cli }}
+  rust_slint: {{ rust_slint }}
+  cpp_qt_qtwidgets: {{ cpp_qt_qtwidgets }}
+  cpp_qt_qtquick: {{ cpp_qt_qtquick }}

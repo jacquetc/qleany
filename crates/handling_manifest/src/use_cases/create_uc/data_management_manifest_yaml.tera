@@ -1,0 +1,120 @@
+---
+schema:
+  version: 4
+global:
+  language: {{ language }}
+  application_name: {{ application_name }}
+  organisation:
+    name: {{ organization_name }}
+    domain: {{ organization_domain }}
+  prefix_path: {{ prefix_path }}
+entities:
+- name: EntityBase
+  only_for_heritage: true
+  fields:
+  - name: id
+    type: uinteger
+  - name: created_at
+    type: datetime
+  - name: updated_at
+    type: datetime
+  undoable: false
+- name: Root
+  inherits_from: EntityBase
+  fields:
+  - name: workspace
+    type: entity
+    entity: Workspace
+    relationship: one_to_one
+    optional: true
+    strong: true
+  - name: system
+    type: entity
+    entity: System
+    relationship: one_to_one
+    optional: true
+    strong: true
+  undoable: false
+- name: System
+  inherits_from: EntityBase
+  fields:
+  - name: version
+    type: string
+  undoable: false
+- name: Workspace
+  inherits_from: EntityBase
+  fields:
+  - name: items
+    type: entity
+    entity: Item
+    relationship: ordered_one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: name
+  - name: categories
+    type: entity
+    entity: Category
+    relationship: ordered_one_to_many
+    strong: true
+    list_model: true
+    list_model_displayed_field: name
+  undoable: true
+- name: Item
+  inherits_from: EntityBase
+  single_model: true
+  fields:
+  - name: name
+    type: string
+  - name: description
+    type: string
+    optional: true
+  - name: tags
+    type: entity
+    entity: Tag
+    relationship: many_to_many
+    list_model: true
+    list_model_displayed_field: name
+  undoable: true
+- name: Category
+  inherits_from: EntityBase
+  fields:
+  - name: name
+    type: string
+  undoable: true
+- name: Tag
+  inherits_from: EntityBase
+  fields:
+  - name: name
+    type: string
+  undoable: true
+features:
+- name: handling_data
+  use_cases:
+  - name: import_data
+    entities:
+    - Item
+    - Category
+    - Tag
+    undoable: false
+    dto_in:
+      name: ImportDataDto
+      fields:
+      - name: file_path
+        type: string
+  - name: export_data
+    entities:
+    - Item
+    - Category
+    - Tag
+    undoable: false
+    read_only: true
+    dto_in:
+      name: ExportDataDto
+      fields:
+      - name: file_path
+        type: string
+ui:
+  rust_cli: {{ rust_cli }}
+  rust_slint: {{ rust_slint }}
+  cpp_qt_qtwidgets: {{ cpp_qt_qtwidgets }}
+  cpp_qt_qtquick: {{ cpp_qt_qtquick }}

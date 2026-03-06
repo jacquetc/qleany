@@ -4,8 +4,8 @@
 
 use crate::app_context::AppContext;
 use handling_manifest::{
-    CheckReturnDto, ExportToMermaidReturnDto, LoadDto, LoadReturnDto, NewReturnDto, SaveDto,
-    handling_manifest_controller,
+    CheckReturnDto, CreateDto, ExportToMermaidReturnDto, LoadDto, LoadReturnDto, CreateReturnDto,
+    SaveDto, handling_manifest_controller,
 };
 
 pub fn load(ctx: &AppContext, dto: &LoadDto) -> Result<LoadReturnDto, String> {
@@ -18,8 +18,8 @@ pub fn save(ctx: &AppContext, dto: &SaveDto) -> Result<(), String> {
         .map_err(|e| format!("Error while save: {:?}", e))
 }
 
-pub fn create(ctx: &AppContext) -> Result<NewReturnDto, String> {
-    handling_manifest_controller::create(&ctx.db_context, &ctx.event_hub)
+pub fn create(ctx: &AppContext, dto: &CreateDto) -> Result<CreateReturnDto, String> {
+    handling_manifest_controller::create(&ctx.db_context, dto)
         .map_err(|e| format!("Error while create: {:?}", e))
 }
 

@@ -417,16 +417,39 @@ features:
       - name: manifest_path
         type: string
   - name: create
-    entities:
-    - Entity
-    - Field
-    - Global
     undoable: false
-    dto_out:
-      name: NewReturnDto
+    read_only: true
+    dto_in:
+      name: CreateDto
       fields:
-      - name: workspace_id
-        type: uinteger
+      - name: manifest_path
+        type: string
+      - name: language
+        type: enum
+        enum_name: CreateLanguage
+        enum_values:
+        - Rust
+        - CppQt
+      - name: application_name
+        type: string
+      - name: organization_name
+        type: string
+      - name: manifest_template
+        type: enum
+        enum_name: ManifestTemplate
+        enum_values:
+        - Blank
+        - Minimal
+        - DocumentEditor
+        - DataManagement
+      - name: options
+        type: string
+        is_list: true
+    dto_out:
+      name: CreateReturnDto
+      fields:
+      - name: manifest_path
+        type: string
   - name: close
     entities:
     - Root
@@ -444,6 +467,7 @@ features:
   - name: check
     entities:
     - Root
+    - Workspace
     - Entity
     - Field
     - Feature
@@ -452,7 +476,6 @@ features:
     - DtoField
     - Global
     - Relationship
-    - Workspace
     - UserInterface
     undoable: false
     read_only: true

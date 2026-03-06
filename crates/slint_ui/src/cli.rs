@@ -73,21 +73,33 @@ pub struct NewArgs {
     #[arg(short, long, value_enum)]
     pub language: Option<LanguageOption>,
 
-    /// Application name
+    /// Application name (PascalCase, e.g. MyApp)
     #[arg(short, long)]
     pub name: Option<String>,
 
-    /// Organisation name
+    /// Organisation name (e.g. FernTech)
     #[arg(long)]
     pub org_name: Option<String>,
 
-    /// Organisation domain (e.g., com.example)
-    #[arg(long)]
-    pub org_domain: Option<String>,
+    /// Manifest template to use
+    #[arg(short, long, value_enum)]
+    pub template: Option<ManifestTemplateOption>,
+
+    /// UI options: rust_cli, rust_slint, cpp_qt_qtquick, cpp_qt_qtwidgets
+    #[arg(short, long)]
+    pub options: Vec<String>,
 
     /// Overwrite existing manifest without prompting
     #[arg(long)]
     pub force: bool,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
+pub enum ManifestTemplateOption {
+    Blank,
+    Minimal,
+    DocumentEditor,
+    DataManagement,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
