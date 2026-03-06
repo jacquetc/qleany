@@ -126,28 +126,50 @@ erDiagram
 
 ## Step 2: Create a New Manifest
 
+### Using the GUI
+
 Launch Qleany. You'll land on the **Home** tab.
 
-1. Click **New Manifest**
-2. Choose where to save `qleany.yaml` (your project root)
+1. Click **New Manifest** — a creation wizard opens
+2. **Step 1 — Language**: Select **Rust**
+3. **Step 2 — Project**: Enter your application name (PascalCase, e.g. `CarLot`) and organisation name (e.g. `MyCompany`)
+4. **Step 3 — Template**: Choose a starting template:
+   - **Blank** — EntityBase + empty Root (start from scratch)
+   - **Minimal** — Root with one entity (Item). Hello world equivalent
+   - **Document Editor** — Documents > Sections with load/save use cases
+   - **Data Management** — Items, Categories, Tags with import/export use cases
+5. **Step 4 — UI Options**: Enable **CLI** and/or **Slint (Desktop GUI)**
+6. Click **Create**, then choose where to save `qleany.yaml` (your project root)
 
-Qleany creates a minimal manifest with:
+### Using the CLI
+
+```bash
+qleany new /path/to/project \
+  --language rust \
+  --name CarLot \
+  --org-name MyCompany \
+  --template blank \
+  --options rust_cli
+```
+
+All flags are optional — if omitted, the CLI prompts interactively. Use `--force` to overwrite an existing manifest.
+
+### What gets created
+
+Qleany creates a manifest pre-configured with:
+- Your chosen language, application name, and organisation
 - `EntityBase` (provides id, created_at, updated_at)
-- Empty `Root` entity inheriting from EntityBase
+- `Root` entity inheriting from EntityBase (plus more entities if you chose a template other than Blank)
+- Your selected UI options
 
 ---
 
 ## Step 3: Configure Project Settings
 
-Click **Project** in the sidebar.
-
-Fill in the form:
+Click **Project** in the sidebar to review and adjust settings. The wizard already filled in the language, application name, and organisation name. You can still change:
 
 | Field               | Value         |
 |---------------------|---------------|
-| Language            | Rust          |
-| Application Name    | CarLot        |
-| Organisation Name   | MyCompany     |
 | Organisation Domain | com.mycompany |
 | Prefix Path         | crates        |
 
@@ -280,13 +302,11 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 5. **Entities**: Check `Root`, `Car`
 
-### 5.4 Choose your UI
+### 5.4 UI Options
 
-For Rust, choose between CLI, Slint UI, or both. These options scaffold basic UI or CLI code that interacts with the generated controllers. You can skip this and build your own UI later if you prefer.
+You already chose your UI frontends (CLI, Slint, or both) during manifest creation. You can change these later in the **User Interface** tab.
 
-For Slint, Qleany generates a basic Slint UI, event system integration and generates command files to bind the UI to the generated controllers.
-
-CLI uses clap for you to build a command line interface.
+For Slint, Qleany generates a basic Slint UI, event system integration and generates command files to bind the UI to the generated controllers. CLI uses clap for you to build a command line interface.
 
 ### 5.5 Save the Manifest
 

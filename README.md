@@ -207,20 +207,20 @@ qleany docs -h
 # show all documentation in Markdown format
 qleany docs all --md
 
-# new qleany.yaml manifest
-qleany new --language cpp-qt (or rust)
+# new qleany.yaml manifest, questions will guide you through the process
+qleany new
 
 # Generate all files
 qleany generate (or gen)
+
+# Generate to ./temp/ folder (recommended)
+qleany generate --temp
 
 # Dry run (list files that would be generated without writing)
 qleany generate --dry-run
 
 # Dry run (list files that would be generated without writing)
 qleany generate --dry-run entity MyEntity
-
-# Generate to temp folder (recommended)
-qleany generate --temp
 
 # Generate specific feature
 qleany generate feature my_feature_name

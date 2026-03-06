@@ -6,6 +6,11 @@ For Rust, see [Qleany Quick Start - Rust](quick-start-rust.md). The differences 
 
 The qleany.yaml of this example is available [here](../examples/cpp-qt/quick_start_carlot/qleany.yaml).
 
+**Mandatory step**:
+
+If not already done, create a git repository and commit the initial manifest, and tag in the pattern `vX.X.X`:
+`git init && git add . && git commit -m"initial commit" && git tag v0.0.1`
+
 ---
 
 ## Step 1: Think About Your Domain
@@ -126,28 +131,50 @@ erDiagram
 
 ## Step 2: Create a New Manifest
 
+### Using the GUI
+
 Launch Qleany. You'll land on the **Home** tab.
 
-1. Click **New Manifest**
-2. Choose where to save `qleany.yaml` (your project root)
+1. Click **New Manifest** — a creation wizard opens
+2. **Step 1 — Language**: Select **C++/Qt**
+3. **Step 2 — Project**: Enter your application name (PascalCase, e.g. `CarLot`) and organisation name (e.g. `MyCompany`)
+4. **Step 3 — Template**: Choose a starting template:
+   - **Blank** — EntityBase + empty Root (start from scratch)
+   - **Minimal** — Root with one entity (Item). Hello world equivalent
+   - **Document Editor** — Documents > Sections with load/save use cases
+   - **Data Management** — Items, Categories, Tags with import/export use cases
+5. **Step 4 — UI Options**: Enable **Qt Quick (QML)** and/or **Qt Widgets**
+6. Click **Create**, then choose where to save `qleany.yaml` (your project root)
 
-Qleany creates a minimal manifest with:
+### Using the CLI
+
+```bash
+qleany new /path/to/project \
+  --language cpp-qt \
+  --name CarLot \
+  --org-name MyCompany \
+  --template blank \
+  --options cpp_qt_qtquick
+```
+
+All flags are optional — if omitted, the CLI prompts interactively. Use `--force` to overwrite an existing manifest.
+
+### What gets created
+
+Qleany creates a manifest pre-configured with:
+- Your chosen language, application name, and organisation
 - `EntityBase` (provides id, created_at, updated_at)
-- Empty `Root` entity inheriting from EntityBase
+- `Root` entity inheriting from EntityBase (plus more entities if you chose a template other than Blank)
+- Your selected UI options
 
 ---
 
 ## Step 3: Configure Project Settings
 
-Click **Project** in the sidebar.
-
-Fill in the form:
+Click **Project** in the sidebar to review and adjust settings. The wizard already filled in the language, application name, and organisation name. You can still change:
 
 | Field               | Value         |
 |---------------------|---------------|
-| Language            | C++/Qt        |
-| Application Name    | CarLot        |
-| Organisation Name   | MyCompany     |
 | Organisation Domain | com.mycompany |
 | Prefix Path         | src           |
 
@@ -284,11 +311,11 @@ Click **Features** in the sidebar. You'll see a four-column layout.
 
 5. **Entities**: Check `Root`, `Car`
 
-### 5.4 Choose your UI
+### 5.4 UI Options
 
-For C++ / Qt6, several GUI are available. QtQuick, QtWidgets, Lomiri, ... These options scaffold basic UI code that interacts with the generated controllers.
+You already chose your UI frontends (Qt Quick, Qt Widgets, or both) during manifest creation. You can change these later in the **User Interface** tab.
 
-The controllers, models, and "singles" (like in "Single model") C++ wrappers for integration with QML are generated for you. Also, mock implementations for each of these files are generated for you to allow developing the UI without the backend.
+For C++/Qt, the controllers, models, and "singles" (like in "Single model") C++ wrappers for integration with QML are generated for you. Also, mock implementations for each of these files are generated for you to allow developing the UI without the backend.
 
 ### 5.5 Save the Manifest
 
@@ -309,6 +336,8 @@ Yes, you can change the manifest and regenerate later. But it's better to get a 
 ### Commit to Git
 
 Before generating, commit your current state to Git. This isn't optional advice — it's how Qleany is meant to be used. If you accidentally overwrite files you've modified, you can restore them.
+
+For a C++/Qt project, the generated CMakeLists.txt needs a git tag "vX.X.X". It is mandatory (or modify yourself the CMakeLists.txt to remove the tag system)
 
 ```bash
 git add .
