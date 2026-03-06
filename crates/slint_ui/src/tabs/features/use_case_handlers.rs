@@ -424,6 +424,8 @@ pub fn setup_use_case_deletion_callback(app: &App, app_context: &Arc<AppContext>
                             log::info!("Use case deleted successfully");
                             // Clear use case form
                             clear_use_case_form(&app);
+                            // Refresh use case list
+                            fill_use_case_list(&app, &ctx);
                         }
                         Err(e) => {
                             log::error!("Failed to delete use case: {}", e);

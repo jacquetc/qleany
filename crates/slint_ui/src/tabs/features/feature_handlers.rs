@@ -387,6 +387,8 @@ pub fn setup_feature_deletion_callback(app: &App, app_context: &Arc<AppContext>)
                             // Clear use case list and form
                             clear_use_case_list(&app, &ctx);
                             clear_use_case_form(&app);
+                            // Refresh feature list
+                            fill_feature_list(&app, &ctx);
                         }
                         Err(e) => {
                             log::error!("Failed to delete feature: {}", e);
