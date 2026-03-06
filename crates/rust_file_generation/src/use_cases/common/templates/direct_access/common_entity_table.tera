@@ -147,20 +147,28 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         for id in ids {
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
                 let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
+                let mut _junction_complete = true;
                 {% for f in s.entities[e].fields %}
                 {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
                     {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                     {%- elif f.optional %}
                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                    {%- else %}
-                let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                    {%- endif %}
                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
+                    {%- else %}
+                match {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
+                    Some(val) => entity.{{ f.snake_name }} = val,
+                    None => {
+                        log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), treating as not found", id);
+                        _junction_complete = false;
+                    }
+                }
+                    {%- endif %}
                 {%- endif %}
                 {%- endfor %}
-                Some(entity)
+                if _junction_complete { Some(entity) } else { None }
             } else {
                 None
             };
@@ -181,22 +189,32 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         while let Some(Ok((id, data))) = iter.next() {
             let id = id.value();
             let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
+            let mut _junction_complete = true;
 
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
             // get {{ f.snake_name }} from junction table
                 {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
             let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
+            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                 {%- elif f.optional %}
             let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                {%- else %}
-            let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                {%- endif %}
             entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
+                {%- else %}
+            match {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
+                Some(val) => entity.{{ f.snake_name }} = val,
+                None => {
+                    log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), skipping", id);
+                    _junction_complete = false;
+                }
+            }
+                {%- endif %}
             {%- endif %}
             {%- endfor %}
 
-            list.push(entity);
+            if _junction_complete {
+                list.push(entity);
+            }
         }
 
         Ok(list)
@@ -495,20 +513,28 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         for id in ids {
             let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
                 let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
+                let mut _junction_complete = true;
                 {% for f in s.entities[e].fields %}
                 {%- if f.inner.field_type == "Entity" %}
                 // get {{ f.snake_name }} from junction table
                     {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
                 let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
+                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                     {%- elif f.optional %}
                 let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                    {%- else %}
-                let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                    {%- endif %}
                 entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
+                    {%- else %}
+                match {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
+                    Some(val) => entity.{{ f.snake_name }} = val,
+                    None => {
+                        log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), treating as not found", id);
+                        _junction_complete = false;
+                    }
+                }
+                    {%- endif %}
                 {%- endif %}
                 {%- endfor %}
-                Some(entity)
+                if _junction_complete { Some(entity) } else { None }
             } else {
                 None
             };
@@ -529,22 +555,32 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
         while let Some(Ok((id, data))) = iter.next() {
             let id = id.value();
             let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
+            let mut _junction_complete = true;
 
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
             // get {{ f.snake_name }} from junction table
                 {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
             let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
+            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
                 {%- elif f.optional %}
             let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                {%- else %}
-            let fetched_{{ f.snake_name }}: EntityId = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop().expect("{{ s.entities[e].pascal_name }} has no {{ f.snake_name }}");
-                {%- endif %}
             entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
+                {%- else %}
+            match {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
+                Some(val) => entity.{{ f.snake_name }} = val,
+                None => {
+                    log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), skipping", id);
+                    _junction_complete = false;
+                }
+            }
+                {%- endif %}
             {%- endif %}
             {%- endfor %}
 
-            list.push(entity);
+            if _junction_complete {
+                list.push(entity);
+            }
         }
 
         Ok(list)
