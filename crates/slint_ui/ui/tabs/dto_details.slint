@@ -1,4 +1,4 @@
-import { ScrollView, CheckBox, ComboBox, TabWidget } from "std-widgets.slint";
+import { ScrollView, CheckBox, ComboBox, TabWidget, TextEdit } from "std-widgets.slint";
 import { AppState, CRListItem, FeaturesTabState, CommonTools } from "../globals.slint";
 import {
     ListItem,
@@ -224,11 +224,39 @@ export component DtoDetails inherits Rectangle {
                                         }
                                     }
 
+                                    // Enum Name (only visible when type is Enum)
+                                    if FeaturesTabState.selected_dto_in_field_type_index == 7: FormField {
+                                        label: "Enum Name";
+                                        error-message: FeaturesTabState.selected_dto_in_field_enum_name == "" ? "Enum name is required" : (CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_in_field_enum_name) ? "" : "Enum name must be in PascalCase");
+
+                                        StyledLineEdit {
+                                            text <=> FeaturesTabState.selected_dto_in_field_enum_name;
+                                            placeholder: "Enter enum name";
+                                            has-error: FeaturesTabState.selected_dto_in_field_enum_name == "" || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_in_field_enum_name);
+                                            edited(text) => {
+                                                FeaturesTabState.dto_in_field_enum_name_changed(text);
+                                            }
+                                        }
+                                    }
+
+                                    // Enum Values (only visible when type is Enum)
+                                    if FeaturesTabState.selected_dto_in_field_type_index == 7: FormField {
+                                        label: "Enum Values (one per line in PascalCase)";
+
+                                        TextEdit {
+                                            height: 100px;
+                                            text <=> FeaturesTabState.selected_dto_in_field_enum_values;
+                                            edited(text) => {
+                                                FeaturesTabState.dto_in_field_enum_values_changed(text);
+                                            }
+                                        }
+                                    }
+
                                     HorizontalLayout {
                                         spacing: 16px;
 
                                         CheckBox {
-                                            text: "Nullable";
+                                            text: "Optional";
                                             checked <=> FeaturesTabState.selected_dto_in_field_optional;
 
                                             toggled => {
@@ -468,6 +496,34 @@ export component DtoDetails inherits Rectangle {
 
                                             selected(value) => {
                                                 FeaturesTabState.dto_out_field_type_changed(value);
+                                            }
+                                        }
+                                    }
+
+                                    // Enum Name (only visible when type is Enum)
+                                    if FeaturesTabState.selected_dto_out_field_type_index == 7: FormField {
+                                        label: "Enum Name";
+                                        error-message: FeaturesTabState.selected_dto_out_field_enum_name == "" ? "Enum name is required" : (CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_out_field_enum_name) ? "" : "Enum name must be in PascalCase");
+
+                                        StyledLineEdit {
+                                            text <=> FeaturesTabState.selected_dto_out_field_enum_name;
+                                            placeholder: "Enter enum name";
+                                            has-error: FeaturesTabState.selected_dto_out_field_enum_name == "" || !CommonTools.check_is_pascal_case(FeaturesTabState.selected_dto_out_field_enum_name);
+                                            edited(text) => {
+                                                FeaturesTabState.dto_out_field_enum_name_changed(text);
+                                            }
+                                        }
+                                    }
+
+                                    // Enum Values (only visible when type is Enum)
+                                    if FeaturesTabState.selected_dto_out_field_type_index == 7: FormField {
+                                        label: "Enum Values (one per line in PascalCase)";
+
+                                        TextEdit {
+                                            height: 100px;
+                                            text <=> FeaturesTabState.selected_dto_out_field_enum_values;
+                                            edited(text) => {
+                                                FeaturesTabState.dto_out_field_enum_values_changed(text);
                                             }
                                         }
                                     }

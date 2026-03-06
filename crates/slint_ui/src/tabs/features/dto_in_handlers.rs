@@ -196,6 +196,17 @@ pub fn fill_dto_in_field_form(app: &App, dto_field: &direct_access::DtoFieldDto)
     state.set_selected_dto_in_field_type_index(dto_field_type_to_index(&dto_field.field_type));
     state.set_selected_dto_in_field_optional(dto_field.optional);
     state.set_selected_dto_in_field_is_list(dto_field.is_list);
+    state.set_selected_dto_in_field_enum_name(
+        dto_field.enum_name.clone().unwrap_or_default().into(),
+    );
+    state.set_selected_dto_in_field_enum_values(
+        dto_field
+            .enum_values
+            .clone()
+            .map(|v| v.join("\n"))
+            .unwrap_or_default()
+            .into(),
+    );
 }
 
 /// Helper function to clear DTO In field form
@@ -206,6 +217,8 @@ pub fn clear_dto_in_field_form(app: &App) {
     state.set_selected_dto_in_field_type_index(4); // Default to String
     state.set_selected_dto_in_field_optional(false);
     state.set_selected_dto_in_field_is_list(false);
+    state.set_selected_dto_in_field_enum_name("".into());
+    state.set_selected_dto_in_field_enum_values("".into());
 }
 
 /// Helper function to fill DTO In field list
@@ -695,6 +708,61 @@ pub fn setup_dto_in_field_deletion_callback(app: &App, app_context: &Arc<AppCont
                             log::error!("Failed to delete DTO In field: {}", e);
                         }
                     }
+                }
+            }
+        });
+}
+
+pub fn setup_dto_in_field_enum_name_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_dto_in_field_enum_name_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |name| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
+                    let name_str = name.to_string();
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
+                        field.enum_name = if name_str.is_empty() {
+                            None
+                        } else {
+                            Some(name_str)
+                        };
+                    });
+                }
+            }
+        });
+}
+
+pub fn setup_dto_in_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<FeaturesTabState>()
+        .on_dto_in_field_enum_values_changed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move |values| {
+                if let Some(app) = app_weak.upgrade() {
+                    let field_id = app
+                        .global::<FeaturesTabState>()
+                        .get_selected_dto_in_field_id();
+                    let values_str = values.to_string();
+                    update_dto_field_helper(&app, &ctx, field_id, |field| {
+                        if values_str.is_empty() {
+                            field.enum_values = None;
+                        } else {
+                            let values: Vec<String> = values_str
+                                .lines()
+                                .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
+                                .collect();
+                            field.enum_values = if values.is_empty() {
+                                None
+                            } else {
+                                Some(values)
+                            };
+                        }
+                    });
                 }
             }
         });

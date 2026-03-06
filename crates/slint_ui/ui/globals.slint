@@ -199,12 +199,16 @@ export global FeaturesTabState {
     in-out property <int> selected_dto_in_field_type_index: 4; // Default to String
     in-out property <bool> selected_dto_in_field_optional: false;
     in-out property <bool> selected_dto_in_field_is_list: false;
+    in-out property <string> selected_dto_in_field_enum_name: "";
+    in-out property <string> selected_dto_in_field_enum_values: "";
 
     // DTO In field details callbacks
     callback dto_in_field_name_changed(string);
     callback dto_in_field_type_changed(string);
     callback dto_in_field_optional_changed(bool);
     callback dto_in_field_is_list_changed(bool);
+    callback dto_in_field_enum_name_changed(string);
+    callback dto_in_field_enum_values_changed(string);
 
     // DTO Out properties
     in-out property <int> selected_dto_out_id: -1;
@@ -224,12 +228,16 @@ export global FeaturesTabState {
     in-out property <int> selected_dto_out_field_type_index: 4; // Default to String
     in-out property <bool> selected_dto_out_field_optional: false;
     in-out property <bool> selected_dto_out_field_is_list: false;
+    in-out property <string> selected_dto_out_field_enum_name: "";
+    in-out property <string> selected_dto_out_field_enum_values: "";
 
     // DTO Out field details callbacks
     callback dto_out_field_name_changed(string);
     callback dto_out_field_type_changed(string);
     callback dto_out_field_optional_changed(bool);
     callback dto_out_field_is_list_changed(bool);
+    callback dto_out_field_enum_name_changed(string);
+    callback dto_out_field_enum_values_changed(string);
 
     // Use case entities list (checkable list of all entities, checked = associated with use case)
     in-out property <[CRListItem]> use_case_entity_cr_list: [];
