@@ -9,12 +9,14 @@
 {%- endfor %}
 
 import QtQuick
+import {{ s.global.application_short_name | capitalize }}.Controllers
 
 ListModel {
+    id: listModel
     property int {{ ent.camel_name }}Id: 1
 {%- if list_field.inner.entity %}
 {%- set target_ent = s.entities[list_field.inner.entity] %}
-{%- for i in range(end=5) %}
+{%- for i in range(end=3) %}
 
     ListElement {
         itemId: {{ i + 1 }}
@@ -23,8 +25,55 @@ ListModel {
 {%- endfor %}
     }
 {%- endfor %}
+
+    function _findIndexById(id) {
+        for (var i = 0; i < listModel.count; i++) {
+            if (listModel.get(i).itemId === id) return i;
+        }
+        return -1;
+    }
+
+    Connections {
+        target: EventRegistry.{{ target_ent.camel_name }}Events()
+
+        function onCreated(dtos) {
+            for (var i = 0; i < dtos.length; i++) {
+                var dto = dtos[i];
+                listModel.append({
+                    itemId: dto.id,
+{%- for tf in target_ent.normal_fields %}
+                    {{ tf.camel_name }}: dto.{{ tf.camel_name }} || {{ tf.qml_default_init }}{{ "," if not loop.last else "" }}
+{%- endfor %}
+                });
+            }
+        }
+
+        function onRemoved(ids) {
+            for (var i = 0; i < ids.length; i++) {
+                var idx = listModel._findIndexById(ids[i]);
+                if (idx !== -1) {
+                    listModel.remove(idx);
+                }
+            }
+        }
+
+        function onUpdated(dtos) {
+            for (var i = 0; i < dtos.length; i++) {
+                var dto = dtos[i];
+                var idx = listModel._findIndexById(dto.id);
+                if (idx !== -1) {
+                    listModel.set(idx, {
+                        itemId: dto.id,
+{%- for tf in target_ent.normal_fields %}
+                        {{ tf.camel_name }}: dto.{{ tf.camel_name }} || {{ tf.qml_default_init }}{{ "," if not loop.last else "" }}
+{%- endfor %}
+                    });
+                }
+            }
+        }
+    }
 {%- else %}
-{%- for i in range(end=5) %}
+{%- for i in range(end=3) %}
 
     ListElement {
         itemId: {{ i + 1 }}
