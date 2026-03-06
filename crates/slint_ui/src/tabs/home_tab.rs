@@ -163,126 +163,129 @@ pub fn setup_new_manifest_callback(app: &App, app_context: &Arc<AppContext>) {
 
 /// Wire up the create_wizard_confirmed callback — save dialog + create + load
 pub fn setup_create_wizard_confirmed_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<ManifestCommands>().on_create_wizard_confirmed({
-        let ctx = Arc::clone(app_context);
-        let app_weak = app.as_weak();
-        move || {
-            log::info!("Wizard confirmed — proceeding to create manifest");
+    app.global::<ManifestCommands>()
+        .on_create_wizard_confirmed({
+            let ctx = Arc::clone(app_context);
+            let app_weak = app.as_weak();
+            move || {
+                log::info!("Wizard confirmed — proceeding to create manifest");
 
-            let Some(app) = app_weak.upgrade() else {
-                return;
-            };
-
-            // Read wizard state
-            let wiz = app.global::<NewManifestWizardState>();
-            let language = if wiz.get_language_index() == 0 {
-                CreateLanguage::CppQt
-            } else {
-                CreateLanguage::Rust
-            };
-            let application_name = wiz.get_application_name().to_string();
-            let organization_name = wiz.get_organization_name().to_string();
-            let manifest_template = match wiz.get_template_index() {
-                1 => ManifestTemplate::Minimal,
-                2 => ManifestTemplate::DocumentEditor,
-                3 => ManifestTemplate::DataManagement,
-                _ => ManifestTemplate::Blank,
-            };
-
-            let mut options = Vec::new();
-            if wiz.get_opt_rust_cli() {
-                options.push("rust_cli".to_string());
-            }
-            if wiz.get_opt_rust_slint() {
-                options.push("rust_slint".to_string());
-            }
-            if wiz.get_opt_cpp_qt_qtwidgets() {
-                options.push("cpp_qt_qtwidgets".to_string());
-            }
-            if wiz.get_opt_cpp_qt_qtquick() {
-                options.push("cpp_qt_qtquick".to_string());
-            }
-
-            // Step 1: Save file dialog
-            let default_path = dirs::home_dir().unwrap_or_default();
-            let file_dialog = rfd::FileDialog::new()
-                .add_filter("YAML files", &["yaml", "yml"])
-                .set_directory(&default_path)
-                .set_file_name("qleany.yaml");
-
-            let path = match file_dialog.save_file() {
-                Some(path) => path,
-                None => {
-                    log::info!("Save file dialog cancelled");
+                let Some(app) = app_weak.upgrade() else {
                     return;
+                };
+
+                // Read wizard state
+                let wiz = app.global::<NewManifestWizardState>();
+                let language = if wiz.get_language_index() == 0 {
+                    CreateLanguage::CppQt
+                } else {
+                    CreateLanguage::Rust
+                };
+                let application_name = wiz.get_application_name().to_string();
+                let organization_name = wiz.get_organization_name().to_string();
+                let manifest_template = match wiz.get_template_index() {
+                    1 => ManifestTemplate::Minimal,
+                    2 => ManifestTemplate::DocumentEditor,
+                    3 => ManifestTemplate::DataManagement,
+                    _ => ManifestTemplate::Blank,
+                };
+
+                let mut options = Vec::new();
+                if wiz.get_opt_rust_cli() {
+                    options.push("rust_cli".to_string());
                 }
-            };
-
-            let manifest_path = path.to_string_lossy().to_string();
-            log::info!("Selected save path: {}", manifest_path);
-
-            app.global::<AppState>().set_is_loading(true);
-
-            // Step 2: Create manifest via use case
-            let create_dto = handling_manifest::CreateDto {
-                manifest_path: manifest_path.clone(),
-                language,
-                application_name,
-                organization_name,
-                manifest_template,
-                options,
-            };
-            match handling_manifest_commands::create(&ctx, &create_dto) {
-                Ok(_result) => {
-                    log::info!("New manifest created successfully at {}", manifest_path);
+                if wiz.get_opt_rust_slint() {
+                    options.push("rust_slint".to_string());
                 }
-                Err(e) => {
-                    log::error!("Failed to create new manifest: {}", e);
-                    app.global::<AppState>().set_is_loading(false);
-                    app.global::<AppState>()
-                        .set_error_message(slint::SharedString::from(e));
-                    return;
+                if wiz.get_opt_cpp_qt_qtwidgets() {
+                    options.push("cpp_qt_qtwidgets".to_string());
                 }
-            }
+                if wiz.get_opt_cpp_qt_qtquick() {
+                    options.push("cpp_qt_qtquick".to_string());
+                }
 
-            // Step 3: Open the newly created manifest
-            let load_dto = LoadDto {
-                manifest_path: manifest_path.clone(),
-            };
-            match handling_manifest_commands::load(&ctx, &load_dto) {
-                Ok(result) => {
-                    log::info!("Manifest loaded successfully: {:?}", result);
-                    if let Some(app) = app_weak.upgrade() {
-                        app.global::<AppState>()
-                            .set_error_message(slint::SharedString::from(""));
-                        app.global::<AppState>().set_manifest_is_saved(true);
-                        app.global::<AppState>()
-                            .set_manifest_path(slint::SharedString::from(manifest_path));
+                // Step 1: Save file dialog
+                let default_path = dirs::home_dir().unwrap_or_default();
+                let file_dialog = rfd::FileDialog::new()
+                    .add_filter("YAML files", &["yaml", "yml"])
+                    .set_directory(&default_path)
+                    .set_file_name("qleany.yaml");
 
-                        app.global::<AppState>().set_success_message(
-                            slint::SharedString::from("Manifest created and loaded successfully"),
-                        );
-                        app.global::<AppState>().set_success_message_visible(true);
-
-                        let app_weak_timer = app.as_weak();
-                        Timer::single_shot(std::time::Duration::from_secs(3), move || {
-                            if let Some(app) = app_weak_timer.upgrade() {
-                                app.global::<AppState>().set_success_message_visible(false);
-                            }
-                        });
+                let path = match file_dialog.save_file() {
+                    Some(path) => path,
+                    None => {
+                        log::info!("Save file dialog cancelled");
+                        return;
                     }
-                }
-                Err(e) => {
-                    log::error!("Failed to load created manifest: {}", e);
-                    app.global::<AppState>().set_is_loading(false);
-                    if let Some(app) = app_weak.upgrade() {
+                };
+
+                let manifest_path = path.to_string_lossy().to_string();
+                log::info!("Selected save path: {}", manifest_path);
+
+                app.global::<AppState>().set_is_loading(true);
+
+                // Step 2: Create manifest via use case
+                let create_dto = handling_manifest::CreateDto {
+                    manifest_path: manifest_path.clone(),
+                    language,
+                    application_name,
+                    organization_name,
+                    manifest_template,
+                    options,
+                };
+                match handling_manifest_commands::create(&ctx, &create_dto) {
+                    Ok(_result) => {
+                        log::info!("New manifest created successfully at {}", manifest_path);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to create new manifest: {}", e);
+                        app.global::<AppState>().set_is_loading(false);
                         app.global::<AppState>()
                             .set_error_message(slint::SharedString::from(e));
+                        return;
+                    }
+                }
+
+                // Step 3: Open the newly created manifest
+                let load_dto = LoadDto {
+                    manifest_path: manifest_path.clone(),
+                };
+                match handling_manifest_commands::load(&ctx, &load_dto) {
+                    Ok(result) => {
+                        log::info!("Manifest loaded successfully: {:?}", result);
+                        if let Some(app) = app_weak.upgrade() {
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(""));
+                            app.global::<AppState>().set_manifest_is_saved(true);
+                            app.global::<AppState>()
+                                .set_manifest_path(slint::SharedString::from(manifest_path));
+
+                            app.global::<AppState>().set_success_message(
+                                slint::SharedString::from(
+                                    "Manifest created and loaded successfully",
+                                ),
+                            );
+                            app.global::<AppState>().set_success_message_visible(true);
+
+                            let app_weak_timer = app.as_weak();
+                            Timer::single_shot(std::time::Duration::from_secs(3), move || {
+                                if let Some(app) = app_weak_timer.upgrade() {
+                                    app.global::<AppState>().set_success_message_visible(false);
+                                }
+                            });
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to load created manifest: {}", e);
+                        app.global::<AppState>().set_is_loading(false);
+                        if let Some(app) = app_weak.upgrade() {
+                            app.global::<AppState>()
+                                .set_error_message(slint::SharedString::from(e));
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 }
 
 /// Wire up the on_open_manifest callback

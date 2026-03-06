@@ -1894,7 +1894,8 @@ impl FillCppQtFilesUseCase {
             .chars()
             .take(3)
             .collect::<String>()
-            .to_lowercase().to_title_case();
+            .to_lowercase()
+            .to_title_case();
 
         let relative_path = format!("{}/presentation/", prefix);
 

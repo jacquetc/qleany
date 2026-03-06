@@ -88,10 +88,7 @@ impl CreateUseCase {
         context.insert("organization_name", &dto.organization_name);
         context.insert("organization_domain", &organization_domain);
         context.insert("prefix_path", prefix_path);
-        context.insert(
-            "rust_cli",
-            &dto.options.contains(&"rust_cli".to_string()),
-        );
+        context.insert("rust_cli", &dto.options.contains(&"rust_cli".to_string()));
         context.insert(
             "rust_slint",
             &dto.options.contains(&"rust_slint".to_string()),

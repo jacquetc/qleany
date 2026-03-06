@@ -1,7 +1,9 @@
 use crate::app_context::AppContext;
 use crate::cli::{LanguageOption, ManifestTemplateOption, NewArgs, OutputContext};
 use anyhow::{Result, bail};
-use handling_manifest::{CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller};
+use handling_manifest::{
+    CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller,
+};
 use std::io::{self, Write};
 use std::sync::Arc;
 
@@ -29,19 +31,13 @@ pub fn execute(
     // Resolve application name (interactive if missing)
     let application_name = match &args.name {
         Some(name) => name.clone(),
-        None => prompt_string(
-            "Application name (PascalCase, e.g. MyApp)",
-            "MyApp",
-        )?,
+        None => prompt_string("Application name (PascalCase, e.g. MyApp)", "MyApp")?,
     };
 
     // Resolve organisation name (interactive if missing)
     let organization_name = match &args.org_name {
         Some(name) => name.clone(),
-        None => prompt_string(
-            "Organisation name (e.g. FernTech)",
-            "MyOrganization",
-        )?,
+        None => prompt_string("Organisation name (e.g. FernTech)", "MyOrganization")?,
     };
 
     // Resolve manifest template (interactive if missing)
@@ -84,13 +80,11 @@ pub fn execute(
         options,
     };
 
-    let return_dto =
-        handling_manifest_controller::create(&app_context.db_context, &create_dto)?;
+    let return_dto = handling_manifest_controller::create(&app_context.db_context, &create_dto)?;
 
     output.success(&format!("Created {}", return_dto.manifest_path));
 
     if !output.quiet {
-
         output.info("");
         output.info("If not already done, create a git repository and commit the initial manifest, and tag:");
         output.info("'git init && git add . && git commit -m\"initial commit\" && git tag v0.0.1'");
@@ -142,7 +136,9 @@ fn prompt_language() -> Result<LanguageOption> {
 fn prompt_template() -> Result<ManifestTemplateOption> {
     println!("Manifest template:");
     println!("  1. blank          - EntityBase + empty Root");
-    println!("  2. minimal        - Root with one entity (Item with title). Hello world equivalent");
+    println!(
+        "  2. minimal        - Root with one entity (Item with title). Hello world equivalent"
+    );
     println!("  3. document-editor - Root > Documents > Sections with load/save use cases");
     println!("  4. data-management - Items, Categories, Tags with import/export use cases");
     print!("Choose [1]: ");
