@@ -178,6 +178,7 @@ fn subscribe_entity_updated_event(
                     {
                         fill_entity_list(&app, &ctx);
                         fill_entity_options(&app, &ctx);
+                        fill_field_list(&app, &ctx);
                         app.global::<AppState>().set_manifest_is_saved(false);
                     }
                 });
