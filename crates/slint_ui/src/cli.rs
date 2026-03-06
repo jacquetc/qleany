@@ -197,10 +197,10 @@ pub enum GenerateTarget {
         name: String,
     },
 
-    /// Generate specific file by path or ID
+    /// Generate specific file(s) by path or ID
     File {
-        /// File path relative to output, or numeric file ID from `list files`
-        target: String,
+        /// File path(s) relative to output, or numeric file ID(s) from `list files`
+        targets: Vec<String>,
     },
 
     /// Generate files matching a group

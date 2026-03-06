@@ -121,19 +121,19 @@ pub fn execute(
             .iter()
             .filter(|f| f.group.eq_ignore_ascii_case(name))
             .collect(),
-        GenerateTarget::File { target } => {
-            if let Ok(id) = target.parse::<u64>() {
-                all_files.iter().filter(|f| f.id == id).collect()
-            } else {
-                all_files
-                    .iter()
-                    .filter(|f| {
+        GenerateTarget::File { targets } => all_files
+            .iter()
+            .filter(|f| {
+                targets.iter().any(|target| {
+                    if let Ok(id) = target.parse::<u64>() {
+                        f.id == id
+                    } else {
                         let path = format!("{}{}", f.relative_path, f.name);
                         path.ends_with(target) || path == *target
-                    })
-                    .collect()
-            }
-        }
+                    }
+                })
+            })
+            .collect(),
     };
 
     // Step 6: Filter by status (default: Modified + New; --all: everything)
