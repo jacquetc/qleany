@@ -56,6 +56,8 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
         {
             connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::updated, this,
                     &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Updated);
+            connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::removed, this,
+                    &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Removed);
         }
 
         const auto {{ ent.camel_name }}Events = m_eventRegistry->{{ ent.camel_name }}Events();
@@ -349,6 +351,23 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
             }
         }
     });
+}
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Removed(const QList<int> &ids)
+{
+    for (const int id : ids)
+    {
+        for (int i = 0; i < m_{{ target_ent.camel_plural_name }}.size(); ++i)
+        {
+            if (m_{{ target_ent.camel_plural_name }}[i].id == id)
+            {
+                beginRemoveRows(QModelIndex(), i, i);
+                m_{{ target_ent.camel_plural_name }}.removeAt(i);
+                endRemoveRows();
+                break;
+            }
+        }
+    }
 }
 
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated(const QList<int> &ids)
