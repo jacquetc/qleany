@@ -197,6 +197,16 @@ pub const CRITICAL_RULES: &[Rule] = &[
         description: "Field: relationship in {OneToMany, OrderedOneToMany, ManyToMany} cannot be optional",
     },
     Rule {
+        id: "C41",
+        severity: "critical",
+        description: "Field: if list_model is true, list_model_displayed_field must not be empty",
+    },
+    Rule {
+        id: "C42",
+        severity: "critical",
+        description: "Field: if list_model is true, list_model_displayed_field must reference an existing field of the target entity",
+    },
+    Rule {
         id: "C33",
         severity: "critical",
         description: "Global: application_name must not be empty",
@@ -681,6 +691,37 @@ impl CheckUseCase {
                              (OneToMany, OrderedOneToMany, ManyToMany) cannot be optional",
                             entity.name, field.name
                         ));
+                    }
+
+                    // list_model requires a non-empty list_model_displayed_field
+                    // that references an existing field of the target entity
+                    if field.list_model {
+                        let displayed = field.list_model_displayed_field.as_deref().unwrap_or("");
+                        if displayed.is_empty() {
+                            critical_errors.push(format!(
+                                "Entity '{}', field '{}': list_model is true but \
+                                 list_model_displayed_field is empty",
+                                entity.name, field.name
+                            ));
+                        } else {
+                            // Check that the target entity has a field with this name
+                            if let Some(target_entity_id) = field.entity {
+                                if let Some(target_entity) = entity_by_id.get(&target_entity_id) {
+                                    let target_field_names: Vec<&str> = target_entity
+                                        .fields
+                                        .iter()
+                                        .filter_map(|fid| field_by_id.get(fid).map(|f| f.name.as_str()))
+                                        .collect();
+                                    if !target_field_names.contains(&displayed) {
+                                        critical_errors.push(format!(
+                                            "Entity '{}', field '{}': list_model_displayed_field '{}' \
+                                             does not exist in target entity '{}'",
+                                            entity.name, field.name, displayed, target_entity.name
+                                        ));
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // Enum-type fields must have a valid enum_name and enum_values
