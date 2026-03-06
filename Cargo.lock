@@ -2354,6 +2354,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "common",
+ "heck",
  "jsonschema",
  "macros",
  "serde",
