@@ -321,6 +321,7 @@ pub fn fill_use_case_entity_list(app: &App, app_context: &Arc<AppContext>) {
             let items: Vec<ListItem> = entities_options
                 .iter()
                 .filter_map(|opt| opt.as_ref())
+                .filter(|opt| !opt.only_for_heritage )
                 .map(|entity| {
                     let is_checked = use_case_entity_ids.contains(&entity.id);
                     ListItem {
