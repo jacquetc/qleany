@@ -77,65 +77,42 @@ void UndoRedoSystem::shutdown()
     // Step 1: Block all new queries and commands
     m_isShuttingDown = true;
 
-    // Step 2: Clear all undo/redo stacks to release stored commands and their database connections
-    if (m_manager)
-    {
-        m_manager->clearAllStacks();
-        qDebug() << "UndoRedoSystem: Cleared all undo/redo stacks";
-    }
-
-    // Step 3: Wait for active operations to complete (if any)
-    if (m_activeOperations.load() == 0)
-    {
-        qDebug() << "UndoRedoSystem: No active operations, shutdown complete.";
-        return;
-    }
-
-    // Wait for existing operations with detailed progress
-    const int maxWaitTime = 2000;
-    const int pollInterval = 100;
-    int elapsed = 0;
-    int lastOperationCount = m_activeOperations.load();
-
-    qDebug() << "UndoRedoSystem: Waiting for" << lastOperationCount << "operations to complete...";
-
-    while (m_activeOperations.load() > 0 && elapsed < maxWaitTime)
-    {
-        // Process events so that QFutureWatcher::finished signals
-        // can be delivered, allowing coroutines to complete.
-        if (auto *app = QCoreApplication::instance())
-            app->processEvents(QEventLoop::AllEvents, pollInterval);
-        else
-            QThread::msleep(pollInterval);
-        elapsed += pollInterval;
-
-        int currentCount = m_activeOperations.load();
-        if (currentCount != lastOperationCount)
-        {
-            qDebug() << "UndoRedoSystem: Operations remaining:" << currentCount << "("
-                     << (lastOperationCount - currentCount) << "completed)";
-            lastOperationCount = currentCount;
-        }
-    }
-
+    // Step 2: Wait for background worker threads to finish their actual work.
+    // We intentionally do NOT call processEvents() here because:
+    //   (a) Qt's QSqlDatabase has internal contention that blocks worker-thread
+    //       SQL commits while the main thread processes events.
+    //   (b) Processing events would resume coroutines whose co_await timeout
+    //       expired, potentially accessing destroyed QML controllers.
+    // The m_activeOperations counter is managed by coroutines (which need
+    // event processing to resume), so it won't decrement here. But the
+    // worker threads' actual database work will complete, which is what
+    // matters for a clean shutdown.
     if (m_activeOperations.load() > 0)
     {
-        qWarning() << "UndoRedoSystem: Timeout after" << elapsed << "ms. Forcefully cancelling"
-                   << m_activeOperations.load() << "remaining operations.";
+        const int maxWaitTime = 500;
+        const int pollInterval = 50;
+        int elapsed = 0;
 
-        // Brutal cancellation
-        if (m_queryHandler)
+        qDebug() << "UndoRedoSystem: Waiting for background work to complete...";
+
+        while (m_activeOperations.load() > 0 && elapsed < maxWaitTime)
         {
-            m_queryHandler->cancelAllQueries();
+            QThread::msleep(pollInterval);
+            elapsed += pollInterval;
         }
-        if (m_manager)
-        {
-            m_manager->cancelAllCommands();
-        }
+
+        qDebug() << "UndoRedoSystem: Wait finished after" << elapsed << "ms.";
     }
     else
     {
-        qDebug() << "UndoRedoSystem: All operations completed gracefully in" << elapsed << "ms.";
+        qDebug() << "UndoRedoSystem: No active operations.";
+    }
+
+    // Step 3: Clear all undo/redo stacks
+    if (m_manager)
+    {
+        m_manager->clearAllStacks();
+        qDebug() << "UndoRedoSystem: Cleared all undo/redo stacks. Shutdown complete.";
     }
 }
 
