@@ -62,6 +62,7 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
     void undoRedoStackIdChanged();
 
   private Q_SLOTS:
+    void on{{ target_ent.pascal_name }}Created(const QList<int> &ids);
     void on{{ target_ent.pascal_name }}Updated(const QList<int> &ids);
     void on{{ target_ent.pascal_name }}Removed(const QList<int> &ids);
     void on{{ ent.pascal_name }}Updated(const QList<int> &ids);

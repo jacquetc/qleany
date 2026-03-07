@@ -54,6 +54,8 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
         const auto {{ target_ent.camel_name }}Events = m_eventRegistry->{{ target_ent.camel_name }}Events();
         if ({{ target_ent.camel_name }}Events)
         {
+            connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::created, this,
+                    &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Created);
             connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::updated, this,
                     &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Updated);
             connect({{ target_ent.camel_name }}Events.data(), &Common::DirectAccess::{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Events::removed, this,
@@ -352,6 +354,65 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
         }
     });
 }
+
+
+void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Created(const QList<int> &ids)
+{
+    if (!m_{{ ent.camel_name }}Controller || !m_{{ target_ent.camel_name }}Controller || m_{{ ent.camel_name }}Id <= 0)
+        return;
+
+    // Fetch the {{ ent.camel_name }}'s current event relationship to find which created
+    // {{ target_ent.camel_plural_name }} belong to us (e.g. after undo-delete restores the junction row).
+    QCoro::Task<QList<int>> relTask =
+        m_{{ ent.camel_name }}Controller->getRelationshipIds(m_{{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField::{{ field.pascal_name }});
+
+    QCoro::connect(std::move(relTask), this, [this, ids](auto &&relatedIds) {
+        if (!m_{{ target_ent.camel_name }}Controller)
+            return;
+
+        // Build set of IDs already in the model
+        QSet<int> currentIds;
+        for (const auto &item : m_{{ target_ent.camel_plural_name }})
+            currentIds.insert(item.id);
+
+        // Find which created IDs belong to this {{ ent.camel_name }} and are not yet in the model
+        QList<int> addedIds;
+        for (const int id : ids)
+        {
+            if (relatedIds.contains(id) && !currentIds.contains(id))
+                addedIds.append(id);
+        }
+
+        if (addedIds.isEmpty())
+            return;
+
+        QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> fetchTask = m_{{ target_ent.camel_name }}Controller->get(addedIds);
+
+        QCoro::connect(std::move(fetchTask), this, [this, relatedIds](auto &&fetchResult) {
+            if (!m_{{ target_ent.camel_name }}Controller || fetchResult.isEmpty())
+                return;
+
+            // Build a lookup from id to fetched dto
+            QHash<int, {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> fetchedById;
+            for (const {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto &dto : fetchResult)
+                fetchedById.insert(dto.id, dto);
+
+            // Insert each new item at its correct position according to relatedIds ordering
+            for (int targetPos = 0; targetPos < relatedIds.size(); ++targetPos)
+            {
+                const int id = relatedIds[targetPos];
+                if (!fetchedById.contains(id))
+                    continue;
+
+                const int insertPos = qMin(targetPos, m_{{ target_ent.camel_plural_name }}.size());
+                beginInsertRows(QModelIndex(), insertPos, insertPos);
+                m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
+                endInsertRows();
+            }
+        });
+    });
+}
+
 
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pascal_name }}Removed(const QList<int> &ids)
 {
