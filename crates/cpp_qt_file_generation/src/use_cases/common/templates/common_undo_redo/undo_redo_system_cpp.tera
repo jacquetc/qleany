@@ -3,6 +3,7 @@
 #include <QCoro/QCoroSignal>
 #include <QElapsedTimer>
 #include <QScopeGuard>
+#include <QCoreApplication>
 #include <QThread>
 #include <atomic>
 
@@ -100,7 +101,12 @@ void UndoRedoSystem::shutdown()
 
     while (m_activeOperations.load() > 0 && elapsed < maxWaitTime)
     {
-        QThread::msleep(pollInterval);
+        // Process events so that QFutureWatcher::finished signals
+        // can be delivered, allowing coroutines to complete.
+        if (auto *app = QCoreApplication::instance())
+            app->processEvents(QEventLoop::AllEvents, pollInterval);
+        else
+            QThread::msleep(pollInterval);
         elapsed += pollInterval;
 
         int currentCount = m_activeOperations.load();
