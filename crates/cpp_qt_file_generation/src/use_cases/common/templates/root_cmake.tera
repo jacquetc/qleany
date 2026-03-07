@@ -36,6 +36,12 @@ else ()
     target_compile_definitions(project_options INTERFACE {{ s.global.application_short_name | upper }}_DEBUG=false)
 endif ()
 
+# On Windows, build internal libraries as static to avoid DLL export issues
+# (Qleany-generated code does not use __declspec(dllexport) annotations)
+if(WIN32)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+endif()
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
