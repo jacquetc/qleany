@@ -262,3 +262,143 @@ Long-running use cases implement `ILongOperation`. They run on a background thre
 - **Weak relationships**: reference only (no cascade)
 - **Error handling**: throw `std::runtime_error`, catch block handles rollback
 - **Prefix path**: `{{ s.global.prefix }}`
+{%- if s.ui.inner.cpp_qt_qtquick %}
+
+## QML Integration
+
+### QML Modules
+
+| Module | Contents |
+|---|---|
+| `{{ s.global.application_short_name | capitalize }}.Controllers` | Entity controllers, feature controllers, EventRegistry, FeatureEventRegistry, UndoRedoController, ServiceLocator |
+| `{{ s.global.application_short_name | capitalize }}.Models` | List models (`{Entity}{Field}ListModel`) |
+| `{{ s.global.application_short_name | capitalize }}.Singles` | Single entity models (`Single{Entity}`) |
+
+```qml
+import {{ s.global.application_short_name | capitalize }}.Controllers
+import {{ s.global.application_short_name | capitalize }}.Models
+import {{ s.global.application_short_name | capitalize }}.Singles
+```
+
+### List Models
+{%- set_global has_list_model = false %}
+{%- for eid, ent in s.entities %}
+  {%- for f in ent.fields %}
+    {%- if f.inner.list_model %}
+      {%- set_global has_list_model = true %}
+    {%- endif %}
+  {%- endfor %}
+{%- endfor %}
+
+`{Entity}{Field}ListModel` provides a `QAbstractListModel` that auto-updates when entities change (via EventRegistry), refreshes only affected rows, supports inline editing through `setData` with async persistence, and exposes all target entity fields as roles plus `itemId` for the primary key.
+
+Properties:
+- `{entity}Id` — selects the parent entity whose relationship is displayed
+- `undoRedoStackId` — routes undo/redo to a specific stack
+{%- if has_list_model %}
+
+Generated list models:
+{%- for eid, ent in s.entities %}
+  {%- for f in ent.fields %}
+    {%- if f.inner.list_model %}
+- `{{ ent.pascal_name }}{{ f.pascal_name }}ListModel` — displays {{ ent.pascal_name }}.{{ f.camel_name }} relationship
+      {%- if f.list_model_display_field_camel_name %} (display field: `{{ f.list_model_display_field_camel_name }}`){% endif %}
+    {%- endif %}
+  {%- endfor %}
+{%- endfor %}
+{%- endif %}
+
+Event subscriptions: target entity `updated` (refreshes affected rows), parent entity `updated` (detects relationship changes), parent entity `relationshipChanged` (handles direct relationship mutations). Additions, removals, and reordering apply minimal changes (no full reset).
+
+Inline editing: `setData` persists changes asynchronously through the entity controller. After the backend confirms, the local row refreshes.
+
+### Single Entity Models
+{%- set_global has_single_model = false %}
+{%- for eid, ent in s.entities %}
+  {%- if ent.inner.single_model %}
+    {%- set_global has_single_model = true %}
+  {%- endif %}
+{%- endfor %}
+
+`Single{Entity}` wraps one entity instance for detail views and editor panels.
+
+Properties and features:
+- `itemId` — selects which entity to display (auto-fetch on change)
+- All fields exposed as writable `Q_PROPERTY`s with change signals
+- `dirty` — marks the model as modified when fields change outside of a refresh
+- `save()` — persists local edits via the entity controller
+- `loadingStatus` — `Unloaded`, `Loading`, `Loaded`, `Error`
+- `errorMessage` — error reporting
+- `undoRedoStackId` — routes undo/redo to a specific stack
+- Auto-clear when the entity is removed
+{%- if has_single_model %}
+
+Generated single models:
+{%- for eid, ent in s.entities %}
+  {%- if ent.inner.single_model %}
+- `Single{{ ent.pascal_name }}` — fields:
+    {%- for f in ent.fields %} `{{ f.camel_name }}`{% if not loop.last %},{% endif %}{%- endfor %}
+  {%- endif %}
+{%- endfor %}
+{%- endif %}
+
+### Real Imports
+
+C++ types exposed to QML via `QML_FOREIGN` + `QML_NAMED_ELEMENT` in `{{ s.global.prefix }}/presentation/real_imports/`:
+
+- **Entity controllers** (`Foreign{Entity}Controller`) — `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(dtos)`, `remove(ids)` returning `QCoro::QmlTask`; `getCreateDto()` (static); `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)`, `getRelationshipIdsCount(id, field)`, `getRelationshipIdsInRange(id, field, offset, limit)`; `undoRedoStackId` property
+- **Feature controllers** (`Foreign{Feature}Controller`) — per use case: `useCaseName(inputDto)` returning `QCoro::QmlTask`; `getInputDtoName()` (static); long operations return operation ID with `getUseCaseNameProgress(opId)`, `hasUseCaseNameResult(opId)`, `getUseCaseNameResult(opId)` for polling
+- **Singletons** — `EventRegistry`, `FeatureEventRegistry`, `UndoRedoController`, `ServiceLocator` via `QML_SINGLETON` with `create()` from ServiceLocator
+
+### Mock Imports
+
+Pure-QML mocks in `{{ s.global.prefix }}/presentation/mock_imports/` mirror the real C++ API for UI development without backend compilation. Build with `{{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS`.
+
+- **Mock entity controllers** — `get(ids)` returns mock DTOs, `create`/`update`/`remove` emit events, all return `QCoroQmlTask` (mock Promise resolving after configurable delay)
+- **Mock feature controllers** — `getInputDtoName()` returns template DTO, `useCaseName(dto)` returns mock QCoroQmlTask
+- **Mock list models** — QML `ListModel` with 5 pre-populated entries, `itemId` + all target entity fields
+- **Mock single entity models** — all fields as properties + `status`, `errorMessage`, `dirty`, `id`, `save()`
+
+### Event System in QML
+
+```qml
+import {{ s.global.application_short_name | capitalize }}.Controllers
+
+Connections {
+    target: EventRegistry.{entityCamelName}Events()
+    function onCreated(ids) { /* ... */ }
+    function onUpdated(ids) { /* ... */ }
+    function onRemoved(ids) { /* ... */ }
+    function onRelationshipChanged(id, relationship, relatedIds) { /* ... */ }
+}
+```
+
+Note: `QCoro::QmlTask` is not a JavaScript Promise — you cannot chain `.then(...)` directly. Use the callback form:
+```qml
+controller.useCaseName(dto).then(function(result) { /* ... */ });
+```
+
+### Undo/Redo in QML
+
+```qml
+import {{ s.global.application_short_name | capitalize }}.Controllers
+
+Button {
+    text: "Undo: " + UndoRedoController.undoText()
+    enabled: UndoRedoController.canUndo()
+    onClicked: UndoRedoController.undo()
+}
+```
+
+### Errors:
+
+ServiceLocator singleton offers errorOccurred(string commandName, string errorMessage) signal.
+
+### QML Best Practices
+
+- **Prefer list models over manual fetching** — generated models handle caching, updates, and memory management
+- **Use Single models for detail views** — reactive properties with dirty tracking and save support
+- **Keep model instances alive** — declare at component level, don't recreate on navigation
+- **Use QCoro for direct commands** — for custom features/use cases, await results instead of relying on events
+- **Use dirty + save for editable forms** — bind fields to `Single{Entity}`, check `dirty` for save button, call `save()`
+{%- endif %}
