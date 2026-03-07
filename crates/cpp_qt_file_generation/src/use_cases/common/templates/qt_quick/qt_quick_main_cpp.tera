@@ -40,26 +40,29 @@ int main(int argc, char *argv[])
     }
 
     {{ s.global.application_pascal_name }}::Common::Frontend::registerQmlTypes();
-    {{ s.global.application_pascal_name }}::Common::Frontend::connectCleanupHandler(app);
 
-    // --- QML engine ---
-    QQmlApplicationEngine engine;
-    {{ s.global.application_pascal_name }}::Common::Frontend::configureEngine(engine);
+    // --- QML engine (heap-allocated so the cleanup handler can destroy it
+    //     before backend shutdown, allowing Component.onDestruction
+    //     handlers to fire while the backend is still alive) ---
+    auto *engine = new QQmlApplicationEngine;
+    {{ s.global.application_pascal_name }}::Common::Frontend::configureEngine(*engine);
+    {{ s.global.application_pascal_name }}::Common::Frontend::connectCleanupHandler(app, engine);
 
     // Each frontend only differs in its QML entry point
     const QUrl url(u"qrc:/qt/qml/Main/main.qml"_s);
     QObject::connect(
-        &engine, &QQmlApplicationEngine::objectCreated, &app,
+        engine, &QQmlApplicationEngine::objectCreated, &app,
         [url](QObject *obj, const QUrl &objUrl) {
             if (!obj && (url == objUrl))
                 QCoreApplication::exit(-1);
         },
         Qt::QueuedConnection);
 
-    engine.load(url);
+    engine->load(url);
 
-    if (engine.rootObjects().isEmpty())
+    if (engine->rootObjects().isEmpty())
     {
+        delete engine;
         return -1;
     }
 

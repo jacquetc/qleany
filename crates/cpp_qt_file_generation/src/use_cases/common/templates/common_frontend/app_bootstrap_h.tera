@@ -51,6 +51,17 @@ void connectCleanupHandler(QCoreApplication &app);
 
 {%- if qml_enabled %}
 
+/// Overload for QtQuick applications. The QML engine is destroyed
+/// BEFORE the backend shutdown so that Component.onDestruction
+/// handlers can still call backend commands while the event loop
+/// is still running.
+///
+/// When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined this is a no-op.
+void connectCleanupHandler(QCoreApplication &app, QQmlApplicationEngine *engine);
+{%- endif %}
+
+{%- if qml_enabled %}
+
 /// Configure the QML engine with common import paths.
 /// Adds the application-dir-relative "qml" path and ":/" for
 /// resource-based imports. When {{ s.global.application_short_name | upper }}_BUILD_WITH_MOCKS is defined,
