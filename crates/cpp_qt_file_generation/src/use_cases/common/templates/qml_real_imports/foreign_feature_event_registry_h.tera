@@ -5,48 +5,26 @@
 #include "service_locator.h"
 #include <QQmlEngine>
 
-struct ForeignFeatureEventRegistry
+struct ForeignFeatureEventRegistry : public QObject
 {
-    Q_GADGET
-    QML_FOREIGN({{ s.global.application_pascal_name }}::Common::Features::FeatureEventRegistry)
+    Q_OBJECT
     QML_SINGLETON
     QML_NAMED_ELEMENT(FeatureEventRegistry)
 
   public:
-    // Initialize this singleton instance with the given engine.
-
-    inline static {{ s.global.application_pascal_name }}::Common::Features::FeatureEventRegistry *s_singletonInstance = nullptr;
-
-    static {{ s.global.application_pascal_name }}::Common::Features::FeatureEventRegistry *create(QQmlEngine *, QJSEngine *engine)
+    explicit ForeignFeatureEventRegistry(QObject *parent = nullptr)
+        : QObject(parent),
+          m_registry({{ s.global.application_pascal_name }}::Common::ServiceLocator::instance()->featureEventRegistry())
     {
-        s_singletonInstance = {{ s.global.application_pascal_name }}::Common::ServiceLocator::instance()->featureEventRegistry();
-
-        // The instance has to exist before it is used. We cannot replace it.
-        Q_ASSERT(s_singletonInstance);
-
-        // The engine has to have the same thread affinity as the singleton.
-        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
-
-        // There can only be one engine accessing the singleton.
-        if (s_engine)
-            Q_ASSERT(engine == s_engine);
-        else
-            s_engine = engine;
-
-        // Explicitly specify C++ ownership so that the engine doesn't delete
-        // the instance.
-        QJSEngine::setObjectOwnership(s_singletonInstance, QJSEngine::CppOwnership);
-
-        return s_singletonInstance;
     }
 
 {%- for fid, feat in s.features %}
     Q_INVOKABLE {{ s.global.application_pascal_name }}::Common::Features::{{ feat.pascal_name }}Events *{{ feat.camel_name }}Events() const
     {
-        return s_singletonInstance->{{ feat.camel_name }}Events();
+        return m_registry->{{ feat.camel_name }}Events();
     }
 {%- endfor %}
 
   private:
-    inline static QJSEngine *s_engine = nullptr;
+    {{ s.global.application_pascal_name }}::Common::Features::FeatureEventRegistry *m_registry;
 };
