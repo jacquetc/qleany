@@ -21,6 +21,9 @@ void registerOptionalConverters(Convert toValue)
         });
     QMetaType::registerConverter<T, std::optional<T>>(
             [](const T &val) -> std::optional<T> { return val; });
+    QMetaType::registerConverter<std::optional<T>, T>(
+            [](const std::optional<T> &opt) -> T { return opt.value_or(T{}); });
+
 }
 
 inline void registerConverters()
