@@ -811,3 +811,58 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::restoreRows(const Tab
     JunctionTableOps::JunctionCache::instance().invalidateTable({{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %});
     {%- endfor %}
 }
+
+{%- if ent.owner %}
+
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getOwnerIds(const QList<int> &childIds) const
+{
+    if (childIds.isEmpty())
+        return {};
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+    QSet<int> ownerIdSet;
+
+    {% for rid, r in s.entities[e].backward_relationships -%}
+    {%- if r.field_pascal_name == ent.owner_relationship_field_pascal_name and s.entities[r.inner.left_entity].pascal_name == ent.owner_pascal_name -%}
+
+    {%- if r.inner.relationship_type == "OrderedOneToMany" %}
+    {
+        const auto map = JunctionTableOps::OrderedOneToMany::getLeftIdMany(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, childIds);
+        for (auto it = map.cbegin(); it != map.cend(); ++it)
+            ownerIdSet.insert(it.value());
+    }
+    {%- elif r.inner.relationship_type == "OneToMany" %}
+    {
+        const auto map = JunctionTableOps::UnorderedOneToMany::getLeftIdMany(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, childIds);
+        for (auto it = map.cbegin(); it != map.cend(); ++it)
+            ownerIdSet.insert(it.value());
+    }
+    {%- elif r.inner.relationship_type == "OneToOne" %}
+    {
+        const auto map = JunctionTableOps::OneToOne::getLeftIdMany(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, childIds);
+        for (auto it = map.cbegin(); it != map.cend(); ++it)
+            ownerIdSet.insert(it.value());
+    }
+    {%- elif r.inner.relationship_type == "ManyToOne" %}
+    {
+        const auto map = JunctionTableOps::ManyToOne::getLeftIdsMany(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, childIds);
+        for (auto it = map.cbegin(); it != map.cend(); ++it)
+            for (int id : it.value())
+                ownerIdSet.insert(id);
+    }
+    {%- elif r.inner.relationship_type == "ManyToMany" %}
+    {
+        const auto map = JunctionTableOps::UnorderedManyToMany::getLeftIdsMany(db, {{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE{% if r.inner.left_entity == e %}_BACKWARD{% endif %}, childIds);
+        for (auto it = map.cbegin(); it != map.cend(); ++it)
+            for (int id : it.value())
+                ownerIdSet.insert(id);
+    }
+    {%- endif %}
+
+    {%- endif -%}
+    {%- endfor %}
+
+    return ownerIdSet.values();
+}
+
+{%- endif %}

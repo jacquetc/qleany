@@ -149,8 +149,35 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::remove(con
     {%- endif %}
     {%- endfor %}
 
+    {%- if ent.owner %}
+    // Before removal, find which owner(s) reference these entities and save their current relationship IDs
+    const auto affectedOwnerIds = m_table->getOwnerIds({{ ent.camel_name }}Ids);
+    QHash<int, QList<int>> ownerRelBefore;
+    for (int ownerId : affectedOwnerIds)
+        ownerRelBefore[ownerId] = getRelationshipsFromOwner(ownerId);
+    {%- endif %}
+
     auto removed = m_table->removeMany({{ ent.camel_name }}Ids);
     emitRemoved(removed);
+
+    {%- if ent.owner %}
+    // Update each affected owner's relationship to exclude removed IDs (emits relationshipChanged)
+    if (!removed.isEmpty() && !affectedOwnerIds.isEmpty())
+    {
+        QSet<int> removedSet(removed.begin(), removed.end());
+        for (int ownerId : affectedOwnerIds)
+        {
+            QList<int> updatedRelIds;
+            for (int id : ownerRelBefore.value(ownerId))
+            {
+                if (!removedSet.contains(id))
+                    updatedRelIds.append(id);
+            }
+            setRelationshipsInOwner(updatedRelIds, ownerId);
+        }
+    }
+    {%- endif %}
+
     return removed;
 }
 

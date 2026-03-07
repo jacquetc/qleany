@@ -45,6 +45,11 @@ class I{{ ent.pascal_name }}Table
     // Snapshot / Restore (table level)
     virtual Database::TableLevelSnapshot snapshotRows(const QList<int> &ids) = 0;
     virtual void restoreRows(const Database::TableLevelSnapshot &snap) = 0;
+
+    {%- if ent.owner %}
+    // Reverse lookup: find owner IDs that reference the given child IDs via the owner junction
+    [[nodiscard]] virtual QList<int> getOwnerIds(const QList<int> &childIds) const = 0;
+    {%- endif %}
 };
 
 class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository

@@ -35,6 +35,10 @@ class {{ ent.pascal_name }}Table final : public I{{ ent.pascal_name }}Table
     Database::TableLevelSnapshot snapshotRows(const QList<int> &ids) override;
     void restoreRows(const Database::TableLevelSnapshot &snap) override;
 
+    {%- if ent.owner %}
+    [[nodiscard]] QList<int> getOwnerIds(const QList<int> &childIds) const override;
+    {%- endif %}
+
   private:
     Database::DbSubContext &m_dbSubContext;
 };
