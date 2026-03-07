@@ -2516,7 +2516,7 @@ impl FillCppQtFilesUseCase {
                 field: None,
             });
 
-            let relative_path = format!("{}/qtquick_app/{}", prefix, application_short_name);
+            let relative_path = format!("{}/qtquick_app/{}/", prefix, application_short_name);
 
             files.push(File {
                 id: 0,
