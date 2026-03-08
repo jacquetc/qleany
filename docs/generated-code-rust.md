@@ -377,7 +377,20 @@ crates/
 │   │   ├── types.rs         
 │   │   └── undo_redo.rs        # undo/redo infrastructure
 │   └── Cargo.toml
-├── direct_access/                   # a direct access point for UI or CLI to interact with entities
+├── frontend/                    # entry point for UI or CLI to interact with entities and features
+│   ├── src/
+│   │   ├── lib.rs
+│   │   ├── event_hub_client.rs
+│   │   ├── app_context.rs
+│   │   ├── commands.rs
+│   │   └── commands/           
+│   │       ├── undo_redo_commands.rs
+│   │       ├── car_commands.rs
+│   │       ├── customer_commands.rs
+│   │       ├── sale_commands.rs
+│   │       └── root_commands.rs
+│   └── Cargo.toml
+├── direct_access/               # group feature CRUD operations
 │   ├── src/
 │   │   ├── car.rs
 │   │   ├── car/
@@ -394,7 +407,7 @@ crates/
 │   │   │   └── ...
 │   │   └── lib.rs
 │   └── Cargo.toml
-└── inventory_management/
+└── inventory_management/           # custom feature ( = group of use cases)
     ├── src/
     │   ├── inventory_management_controller.rs
     │   ├── dtos.rs

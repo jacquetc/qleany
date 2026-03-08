@@ -423,20 +423,23 @@ crates/
 │   │   │   └── ...
 │   │   └── lib.rs
 │   └── Cargo.toml
+├── frontend/                    # entry point for UI or CLI to interact with entities and features
+│   ├── src/
+│   │   ├── lib.rs
+│   │   ├── event_hub_client.rs         # event hub client
+│   │   ├── app_context.rs              # holds the instances needed by the backend
+│   │   ├── commands.rs
+│   │   └── commands/                   # convenient wrappers for controller APIs
+│   │       ├── undo_redo_commands.rs
+│   │       ├── car_commands.rs
+│   │       ├── customer_commands.rs
+│   │       ├── sale_commands.rs
+│   │       └── root_commands.rs
+│   └── Cargo.toml
 └── slint_ui
     ├── build.rs
     ├── Cargo.toml
     ├── src
-    │   ├── app_context.rs
-    │   ├── commands
-    │   │   ├── car_commands.rs
-    │   │   ├── customer_commands.rs
-    │   │   ├── inventory_management_commands.rs
-    │   │   ├── root_commands.rs
-    │   │   ├── sale_commands.rs
-    │   │   └── undo_redo_commands.rs
-    │   ├── commands.rs
-    │   ├── event_hub_client.rs
     │   └── main.rs
     └── ui                             # ← write your UI here
         ├── app.slint

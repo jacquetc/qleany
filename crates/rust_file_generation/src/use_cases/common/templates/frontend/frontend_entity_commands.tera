@@ -2,10 +2,11 @@
 {% set e = s.file.inner.entity %}
 {%- if e %}
 {% set entity = s.entities[e] %}
-//! {{ entity.pascal_name }} entity commands for Slint UI
+//! {{ entity.pascal_name }} entity commands
 #![allow(unused_imports, dead_code)]
 
 use crate::app_context::AppContext;
+use anyhow::{Result, Context};
 {%- if entity.forward_relationships %}
 use common::direct_access::{{ entity.snake_name }}::{{ entity.pascal_name }}RelationshipField;
 use direct_access::{{ entity.pascal_name }}RelationshipDto;
@@ -18,7 +19,7 @@ pub fn create_orphan_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dto: &Create{{ entity.pascal_name }}Dto,
-) -> Result<{{ entity.pascal_name }}Dto, String> {
+) -> Result<{{ entity.pascal_name }}Dto> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::create_orphan(
@@ -35,7 +36,7 @@ pub fn create_orphan_{{ entity.snake_name }}(
         dto,
     )
     {%- endif %}
-    .map_err(|e| format!("Error creating {{ entity.snake_name }}: {:?}", e))
+    .context("creating {{ entity.snake_name }}")
 }
 
 {%- if entity.owner -%}
@@ -46,7 +47,7 @@ pub fn create_{{ entity.snake_name }}(
     dto: &Create{{ entity.pascal_name }}Dto,
     owner_id: EntityId,
     index: i32,
-) -> Result<{{ entity.pascal_name }}Dto, String> {
+) -> Result<{{ entity.pascal_name }}Dto> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::create(
@@ -67,7 +68,7 @@ pub fn create_{{ entity.snake_name }}(
         index,
     )
     {%- endif %}
-    .map_err(|e| format!("Error creating {{ entity.snake_name }}: {:?}", e))
+    .context("creating {{ entity.snake_name }}")
 }
 {%- endif -%}
 
@@ -76,7 +77,7 @@ pub fn create_orphan_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dtos: &[Create{{ entity.pascal_name }}Dto],
-) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::create_orphan_multi(
@@ -93,7 +94,7 @@ pub fn create_orphan_{{ entity.snake_name }}_multi(
         dtos,
     )
     {%- endif %}
-    .map_err(|e| format!("Error creating entities: {:?}", e))
+    .context("creating {{ entity.snake_name }} entities")
 }
 
 {%- if entity.owner -%}
@@ -104,7 +105,7 @@ pub fn create_{{ entity.snake_name }}_multi(
     dtos: &[Create{{ entity.pascal_name }}Dto],
     owner_id: EntityId,
     index: i32,
-) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::create_multi(
@@ -125,19 +126,19 @@ pub fn create_{{ entity.snake_name }}_multi(
         index,
     )
     {%- endif %}
-    .map_err(|e| format!("Error creating entities: {:?}", e))
+    .context("creating {{ entity.snake_name }} entities")
 }
 {%- endif -%}
 
 /// Get a {{ entity.snake_name }} entity by ID
-pub fn get_{{ entity.snake_name }}(ctx: &AppContext, id: &EntityId) -> Result<Option<{{ entity.pascal_name }}Dto>, String> {
-    {{ entity.snake_name }}_controller::get(&ctx.db_context, id).map_err(|e| format!("Error getting {{ entity.snake_name }}: {:?}", e))
+pub fn get_{{ entity.snake_name }}(ctx: &AppContext, id: &EntityId) -> Result<Option<{{ entity.pascal_name }}Dto>> {
+    {{ entity.snake_name }}_controller::get(&ctx.db_context, id).context("getting {{ entity.snake_name }}")
 }
 
 /// Get multiple {{ entity.snake_name }} entities by IDs
-pub fn get_{{ entity.snake_name }}_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<{{ entity.pascal_name }}Dto>>, String> {
+pub fn get_{{ entity.snake_name }}_multi(ctx: &AppContext, ids: &[EntityId]) -> Result<Vec<Option<{{ entity.pascal_name }}Dto>>> {
     {{ entity.snake_name }}_controller::get_multi(&ctx.db_context, ids)
-        .map_err(|e| format!("Error getting entities: {:?}", e))
+        .context("getting {{ entity.snake_name }} entities")
 }
 
 /// Update a {{ entity.snake_name }} entity
@@ -145,7 +146,7 @@ pub fn update_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dto: &{{ entity.pascal_name }}Dto,
-) -> Result<{{ entity.pascal_name }}Dto, String> {
+) -> Result<{{ entity.pascal_name }}Dto> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::update(
@@ -162,7 +163,7 @@ pub fn update_{{ entity.snake_name }}(
         dto,
     )
     {%- endif %}
-    .map_err(|e| format!("Error updating {{ entity.snake_name }}: {:?}", e))
+    .context("updating {{ entity.snake_name }}")
 }
 
 /// Update multiple {{ entity.snake_name }} entities
@@ -170,7 +171,7 @@ pub fn update_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dtos: &[{{ entity.pascal_name }}Dto],
-) -> Result<Vec<{{ entity.pascal_name }}Dto>, String> {
+) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::update_multi(
@@ -187,7 +188,7 @@ pub fn update_{{ entity.snake_name }}_multi(
         dtos,
     )
     {%- endif %}
-    .map_err(|e| format!("Error updating entities: {:?}", e))
+    .context("updating {{ entity.snake_name }} entities")
 }
 
 /// Remove a {{ entity.snake_name }} entity by ID
@@ -195,27 +196,24 @@ pub fn remove_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     id: &EntityId,
-) -> Result<(), String> {
+) -> Result<()> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    let result = {{ entity.snake_name }}_controller::remove(
+    {{ entity.snake_name }}_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         id,
     )
-    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e));
-
-    undo_redo_manager.clear_all_stacks();
-    result
+    .context("removing {{ entity.snake_name }}")
     {% else %}
     {{ entity.snake_name }}_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
         id,
     )
-    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e))
+    .context("removing {{ entity.snake_name }}")
     {% endif %}
 }
 
@@ -224,27 +222,24 @@ pub fn remove_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     ids: &[EntityId],
-) -> Result<(), String> {
+) -> Result<()> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
-    let result = {{ entity.snake_name }}_controller::remove_multi(
+    {{ entity.snake_name }}_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         &mut *undo_redo_manager,
         stack_id,
         ids,
     )
-    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e));
-
-    undo_redo_manager.clear_all_stacks();
-    result
+    .context("removing {{ entity.snake_name }} entities")
     {% else %}
     {{ entity.snake_name }}_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
         ids,
     )
-    .map_err(|e| format!("Error deleting {{ entity.snake_name }}: {:?}", e))
+    .context("removing {{ entity.snake_name }} entities")
     {% endif %}
 }
 
@@ -255,9 +250,9 @@ pub fn get_{{ entity.snake_name }}_relationship(
     ctx: &AppContext,
     id: &EntityId,
     field: &{{ entity.pascal_name }}RelationshipField,
-) -> Result<Vec<EntityId>, String> {
+) -> Result<Vec<EntityId>> {
     {{ entity.snake_name }}_controller::get_relationship(&ctx.db_context, id, field)
-        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship: {:?}", e))
+        .context("getting {{ entity.snake_name }} relationship")
 }
 
 /// Get relationship IDs for multiple {{ entity.snake_name }} entities at once
@@ -265,9 +260,9 @@ pub fn get_{{ entity.snake_name }}_relationship_many(
     ctx: &AppContext,
     ids: &[EntityId],
     field: &{{ entity.pascal_name }}RelationshipField,
-) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, String> {
+) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>> {
     {{ entity.snake_name }}_controller::get_relationship_many(&ctx.db_context, ids, field)
-        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship many: {:?}", e))
+        .context("getting {{ entity.snake_name }} relationships (many)")
 }
 
 /// Get relationship count for a {{ entity.snake_name }} entity
@@ -275,9 +270,9 @@ pub fn get_{{ entity.snake_name }}_relationship_count(
     ctx: &AppContext,
     id: &EntityId,
     field: &{{ entity.pascal_name }}RelationshipField,
-) -> Result<usize, String> {
+) -> Result<usize> {
     {{ entity.snake_name }}_controller::get_relationship_count(&ctx.db_context, id, field)
-        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship count: {:?}", e))
+        .context("getting {{ entity.snake_name }} relationship count")
 }
 
 /// Get relationship IDs for a {{ entity.snake_name }} entity with pagination
@@ -287,9 +282,9 @@ pub fn get_{{ entity.snake_name }}_relationship_in_range(
     field: &{{ entity.pascal_name }}RelationshipField,
     offset: usize,
     limit: usize,
-) -> Result<Vec<EntityId>, String> {
+) -> Result<Vec<EntityId>> {
     {{ entity.snake_name }}_controller::get_relationship_in_range(&ctx.db_context, id, field, offset, limit)
-        .map_err(|e| format!("Error getting {{ entity.snake_name }} relationship in range: {:?}", e))
+        .context("getting {{ entity.snake_name }} relationship range")
 }
 
 /// Set a {{ entity.snake_name }} relationship
@@ -297,7 +292,7 @@ pub fn set_{{ entity.snake_name }}_relationship(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
     dto: &{{ entity.pascal_name }}RelationshipDto,
-) -> Result<(), String> {
+) -> Result<()> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ entity.snake_name }}_controller::set_relationship(
@@ -314,7 +309,7 @@ pub fn set_{{ entity.snake_name }}_relationship(
         dto,
     )
     {% endif %}
-    .map_err(|e| format!("Error setting {{ entity.snake_name }} relationship: {:?}", e))
+    .context("setting {{ entity.snake_name }} relationship")
 }
 
 {% endif %}

@@ -2,9 +2,10 @@
 {% set f_id = s.file.inner.feature %}
 {%- if f_id %}
 {% set feature = s.features[f_id] %}
-//! {{ feature.pascal_name }} feature commands for Slint UI
+//! {{ feature.pascal_name }} feature commands
 
 use crate::app_context::AppContext;
+use anyhow::{Result, Context};
 use {{ feature.snake_name }}::{
     {%- set dtos = [] %}
     {%- for uc_id, uc in feature.use_cases %}
@@ -40,7 +41,7 @@ pub fn {{ uc.snake_name }}(
     {%- if uc.dto_in %}
     dto: &{{ uc.dto_in.pascal_name }},
     {%- endif %}
-) -> Result<String, String> {
+) -> Result<String> {
     {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
         &ctx.db_context,
         &ctx.event_hub,
@@ -49,30 +50,30 @@ pub fn {{ uc.snake_name }}(
         dto,
         {%- endif %}
     )
-    .map_err(|e| format!("Error while {{ uc.snake_name }}: {:?}", e))
+    .context("{{ uc.snake_name }}")
 }
 
-/// Get the progress of a generate rust files operation
+/// Get the progress of a {{ uc.snake_name }} operation
 pub fn get_{{ uc.snake_name }}_progress(
     ctx: &AppContext,
     operation_id: &str,
-) -> Result<Option<OperationProgress>, String> {
-    Ok({{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_progress(
+) -> Option<OperationProgress> {
+    {{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_progress(
         &ctx.long_operation_manager.lock().unwrap(),
         operation_id,
-    ))
+    )
 }
 
 /// Get the result of a {{ uc.snake_name }} operation
 pub fn get_{{ uc.snake_name }}_result(
     ctx: &AppContext,
     operation_id: &str,
-) -> Result<Option<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}>, String> {
+) -> Result<Option<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}>> {
     {{ feature.snake_name }}_controller::get_{{ uc.snake_name }}_result(
         &ctx.long_operation_manager.lock().unwrap(),
         operation_id,
     )
-    .map_err(|e| format!("Error while getting {{ uc.snake_name }} result: {:?}", e))
+    .context("getting {{ uc.snake_name }} result")
 }
 
 {%- else %}
@@ -85,7 +86,7 @@ pub fn {{ uc.snake_name }}(
     {%- if uc.dto_in %}
     dto: &{{ uc.dto_in.pascal_name }},
     {%- endif %}
-) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}, String> {
+) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
     {%- if uc.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
     {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
@@ -106,7 +107,7 @@ pub fn {{ uc.snake_name }}(
         {%- endif %}
     )
     {%- endif %}
-    .map_err(|e| format!("Error while {{ uc.snake_name }}: {:?}", e))
+    .context("{{ uc.snake_name }}")
 }
 
 {%- endif %}

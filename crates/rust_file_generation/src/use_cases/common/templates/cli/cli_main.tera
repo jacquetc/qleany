@@ -3,6 +3,8 @@
 use anyhow::Result;
 use clap::Arg;
 use clap::{Parser, Subcommand};
+use frontend::AppContext;
+use std::sync::Arc;
 
 /// The main CLI struct that represents the command-line interface.
 #[derive(Parser)]
@@ -39,6 +41,9 @@ enum ProjectCommands {
 }
 
 fn main() {
+    // Create the application context (backend state)
+    let app_context = Arc::new(AppContext::new());
+
     let cli = Cli::parse();
 
     // You can check for the existence of subcommands, and if found use their
@@ -48,9 +53,12 @@ fn main() {
              ProjectCommands::Create { file } => {
                  println!("Creating project with file: {}", file);
                  // Add your project creation logic here, call for a feature controller, etc...
+                 // Example: frontend::commands::some_feature_commands::some_use_case(&app_context, &dto);
              }
              // Handle other subcommands here
          },
 
     }
+
+    app_context.shutdown();
 }

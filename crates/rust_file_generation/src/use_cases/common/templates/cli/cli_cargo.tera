@@ -11,5 +11,4 @@ license.workspace = true
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 anyhow = { workspace = true }
-common = { path = "../common" }
-direct_access = { path = "../direct_access" }
+frontend = { path = "../frontend" }

@@ -870,6 +870,155 @@ impl FillRustFilesUseCase {
             field: None,
         });
 
+        // Frontend crate (always generated)
+        {
+            let relative_path = format!("{}/frontend/", prefix);
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "Cargo.toml".to_string(),
+                relative_path: relative_path.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_cargo".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: Some(0),
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            let relative_path_src = format!("{}/frontend/src/", prefix);
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "lib.rs".to_string(),
+                relative_path: relative_path_src.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_lib".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: Some(0),
+                entity: Some(0),
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "app_context.rs".to_string(),
+                relative_path: relative_path_src.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_app_context".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "event_hub_client.rs".to_string(),
+                relative_path: relative_path_src.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_event_hub_client".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: None,
+                entity: None,
+                use_case: None,
+                field: None,
+            });
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "commands.rs".to_string(),
+                relative_path: relative_path_src.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_commands_mod".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: Some(0),
+                entity: Some(0),
+                use_case: None,
+                field: None,
+            });
+
+            // commands:
+            let relative_path_commands = format!("{}/frontend/src/commands/", prefix);
+
+            files.push(File {
+                id: 0,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+                name: "undo_redo_commands.rs".to_string(),
+                relative_path: relative_path_commands.clone(),
+                group: "frontend".to_string(),
+                template_name: "frontend_undo_redo_commands".to_string(),
+                generated_code: None,
+                status: FileStatus::Unknown,
+                feature: Some(0),
+                entity: Some(0),
+                use_case: None,
+                field: None,
+            });
+
+            for entity in &entities {
+                let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
+                if entity.only_for_heritage {
+                    continue;
+                }
+
+                files.push(File {
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path: relative_path_commands.clone(),
+                    group: "frontend".to_string(),
+                    template_name: "frontend_entity_commands".to_string(),
+                    generated_code: None,
+                    status: FileStatus::Unknown,
+                    feature: None,
+                    entity: Some(entity.id),
+                    use_case: None,
+                    field: None,
+                });
+            }
+
+            for feature in &features {
+                let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
+
+                files.push(File {
+                    id: 0,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
+                    relative_path: relative_path_commands.clone(),
+                    group: "frontend".to_string(),
+                    template_name: "frontend_feature_commands".to_string(),
+                    generated_code: None,
+                    status: FileStatus::Unknown,
+                    feature: Some(feature.id),
+                    entity: None,
+                    use_case: None,
+                    field: None,
+                });
+            }
+        }
+
         if ui.rust_cli {
             files.push(File {
                 id: 0,
@@ -959,38 +1108,6 @@ impl FillRustFilesUseCase {
                 id: 0,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
-                name: "app_context.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "slint".to_string(),
-                template_name: "slint_app_context".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: None,
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "event_hub_client.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "slint".to_string(),
-                template_name: "slint_event_hub_client".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: None,
-                entity: None,
-                use_case: None,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
                 name: "app.slint".to_string(),
                 relative_path: format!("{}/slint_ui/ui/", prefix),
                 group: "slint".to_string(),
@@ -1018,84 +1135,6 @@ impl FillRustFilesUseCase {
                 use_case: None,
                 field: None,
             });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "commands.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "slint".to_string(),
-                template_name: "slint_commands_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: Some(0),
-                entity: Some(0),
-                use_case: None,
-                field: None,
-            });
-
-            // commands:
-            let relative_path = format!("{}/slint_ui/src/commands/", prefix);
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "undo_redo_commands.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "slint".to_string(),
-                template_name: "slint_undo_redo_commands".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                feature: Some(0),
-                entity: Some(0),
-                use_case: None,
-                field: None,
-            });
-
-            for entity in &entities {
-                let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
-                if entity.only_for_heritage {
-                    continue;
-                }
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path.clone(),
-                    group: "slint".to_string(),
-                    template_name: "slint_entity_commands".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: None,
-                    entity: Some(entity.id),
-                    use_case: None,
-                    field: None,
-                });
-            }
-
-            for feature in &features {
-                let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
-                    relative_path: relative_path.clone(),
-                    group: "slint".to_string(),
-                    template_name: "slint_feature_commands".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    feature: Some(feature.id),
-                    entity: None,
-                    use_case: None,
-                    field: None,
-                });
-            }
         }
 
         // Keep only the files already existing

@@ -9,6 +9,7 @@ members = [
 {%- for fid, feature in s.features %}
     "{{ s.global.prefix }}/{{ feature.snake_name }}",
 {%- endfor %}
+    "{{ s.global.prefix }}/frontend",
 {%- if s.ui.inner.rust_cli %}
     "{{ s.global.prefix }}/cli",
 {%- endif %}

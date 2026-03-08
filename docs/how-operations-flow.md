@@ -698,7 +698,19 @@ src/
 │   ├── undo_redo.rs                 # UndoRedoManager, multi-stack, composites
 │   ├── long_operation.rs            # threaded execution with progress
 │   └── database/                    # DbContext, transactions
-└── macros/src/                      # procedural macros for UoW boilerplate
+├── macros/src/                      # procedural macros for UoW boilerplate
+├── frontend/src/                    # entry point for UI or CLI to interact with entities and features
+│   ├── src/
+        ├── event_hub_client.rs         # event hub client
+        ├── app_context.rs              # holds the instances needed by the backend
+        ├── commands.rs
+        └── commands/                   # convenient wrappers for controller APIs
+            ├── undo_redo_commands.rs
+            ├── calendar_commands.rs
+            ├── calendar_management_commands.rs
+            ├── event_commands.rs
+            └── root_commands.rs
+
 ```
 
 ## Summary of Differences
