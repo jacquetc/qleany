@@ -11,6 +11,17 @@
 >
 > The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
+## Rapid test
+
+Run:
+`pipx install qleany && qleany demo`
+
+And follow the instructions.
+
+Deps: `clang-format` for C++/Qt, or `cargo-fmt` for Rust. If you are missing a dependency, it will tell you.
+
+## Intro
+
 Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application. Rust's GUI ecosystem is growing fast, but there's nothing to help you structure what sits behind the UI. Qleany fills that gap. Write a YAML manifest describing your entities, relationships, and features. Qleany generates the rest: the database layer, the repository infrastructure, the event system, the controller wiring, and — if you need it — a multi-stack undo/redo system with cascade snapshot/restore for entity trees. For C++/Qt, it also generates reactive QML models that update themselves, and JavaScript mock controllers so your UI developer can work without waiting for the backend.
 
 Once the code is generated, your work is two things: fill in the use case bodies where the TODOs are, and build your UI. The rest is done. Think of it as getting the framework without adopting one.
@@ -120,8 +131,6 @@ This is the tool I needed when I started Skribisto. If it saves someone else fro
 
 **Supported deployment targets for C++/Qt:**
 - Desktop Linux (KDE Plasma, GNOME, etc.)
-- Plasma Mobile
-- Ubuntu Touch
 - Windows, macOS (Qt's cross-platform support)
 
 **Supported deployment targets for Rust:**
@@ -186,8 +195,9 @@ cargo run --release
 The Slint-based UI provides:
 - Form-based manifest editing
 - Entity and relationship management
+- Feature/use case orchestration
 - Selective file generation
-- Code preview before writing
+- Code preview and diff before generation
 
 For more details, see the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md).
 
@@ -197,6 +207,9 @@ For more details, see the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.m
 
 # Show help
 qleany -h
+
+# Create, generate a demo project in a qleany-demo folder
+qleany demo
 
 # Show an option help
 qleany generate -h

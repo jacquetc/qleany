@@ -710,7 +710,9 @@ impl CheckUseCase {
                                     let target_field_names: Vec<&str> = target_entity
                                         .fields
                                         .iter()
-                                        .filter_map(|fid| field_by_id.get(fid).map(|f| f.name.as_str()))
+                                        .filter_map(|fid| {
+                                            field_by_id.get(fid).map(|f| f.name.as_str())
+                                        })
                                         .collect();
                                     if !target_field_names.contains(&displayed) {
                                         critical_errors.push(format!(

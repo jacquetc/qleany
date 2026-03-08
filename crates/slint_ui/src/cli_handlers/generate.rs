@@ -32,6 +32,12 @@ pub fn execute(
 
     let target_language = get_target_language(app_context)?;
 
+    crate::cli_handlers::common::detect_and_warn_of_missing_formatters(
+        &target_language,
+        output,
+        true,
+    )?;
+
     // Step 1: Fill file list in DB
     output.verbose("Populating file list...");
     match target_language {

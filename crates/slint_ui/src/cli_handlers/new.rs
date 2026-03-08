@@ -1,5 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::{LanguageOption, ManifestTemplateOption, NewArgs, OutputContext};
+use crate::cli_handlers::common::prompt_language;
 use anyhow::{Result, bail};
 use handling_manifest::{
     CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller,
@@ -115,21 +116,6 @@ fn prompt_string(prompt: &str, example: &str) -> Result<String> {
         Ok(example.to_string())
     } else {
         Ok(input)
-    }
-}
-
-fn prompt_language() -> Result<LanguageOption> {
-    println!("Target language:");
-    println!("  1. C++/Qt - C++ 20 and Qt 6");
-    println!("  2. Rust   - 2024 edition)");
-    print!("Choose [1]: ");
-    io::stdout().flush()?;
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    match input.trim() {
-        "" | "1" | "cpp-qt" | "cpp_qt" => Ok(LanguageOption::CppQt),
-        "2" | "rust" => Ok(LanguageOption::Rust),
-        other => bail!("Invalid language choice: '{}'", other),
     }
 }
 

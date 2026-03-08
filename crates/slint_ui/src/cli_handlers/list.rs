@@ -75,6 +75,12 @@ fn list_files(
         }
     }
 
+    crate::cli_handlers::common::detect_and_warn_of_missing_formatters(
+        &target_language,
+        output,
+        true,
+    )?;
+
     // Step 2: Fill code in files (long operation — poll until complete)
     output.verbose("Generating code for status comparison...");
     let operation_id = {

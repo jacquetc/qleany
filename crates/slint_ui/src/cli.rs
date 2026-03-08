@@ -40,6 +40,9 @@ pub enum Commands {
     #[command(visible_alias = "gen")]
     Generate(GenerateArgs),
 
+    /// Generate a project from a demo manifest
+    Demo(DemoArgs),
+
     /// Display manifest information
     Show(ShowArgs),
 
@@ -57,6 +60,9 @@ pub enum Commands {
 
     /// Show unified diff between generated and on-disk file
     Diff(DiffArgs),
+
+    /// Run Slint GUI to edit manifests
+    Gui,
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -107,6 +113,29 @@ pub enum LanguageOption {
     Rust,
     #[value(alias = "cpp-qt")]
     CppQt,
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEMO
+// ─────────────────────────────────────────────────────────────
+
+#[derive(Args)]
+pub struct DemoArgs {
+    /// Directory where qleany.yaml will be created
+    #[arg(default_value = ".")]
+    pub path: PathBuf,
+
+    /// Target Rust language for the demo project
+    #[arg(long)]
+    pub rust: bool,
+
+    /// Target C++ Qt language for the demo project
+    #[arg(long)]
+    pub cpp_qt: bool,
+
+    /// force overwrite the existing qleany-demo folder
+    #[arg(long)]
+    pub force: bool,
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -447,6 +476,8 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
             let path = manifest_path.expect("Diff requires a manifest");
             cli_handlers::diff::execute(app_context, &path, &args, &output)
         }
+        Commands::Demo(args) => cli_handlers::demo::execute(app_context, &args, &output),
+        Commands::Gui => return Some(()),
     };
 
     if let Err(e) = result {

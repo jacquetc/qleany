@@ -1,13 +1,38 @@
 use crate::app_context::AppContext;
-use crate::cli::OutputContext;
-use anyhow::Result;
+use crate::cli::{LanguageOption, OutputContext};
+use anyhow::{Result, bail};
 use handling_manifest::handling_manifest_controller;
+use std::io::{self, Write};
 use std::sync::Arc;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TargetLanguage {
     Rust,
     CppQt,
+}
+
+impl From<LanguageOption> for TargetLanguage {
+    fn from(lang: LanguageOption) -> Self {
+        match lang {
+            LanguageOption::Rust => TargetLanguage::Rust,
+            LanguageOption::CppQt => TargetLanguage::CppQt,
+        }
+    }
+}
+
+pub fn prompt_language() -> Result<LanguageOption> {
+    println!("Target language:");
+    println!("  1. C++/Qt - C++ 20 and Qt 6");
+    println!("  2. Rust   - 2024 edition");
+    print!("Choose [1]: ");
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    match input.trim() {
+        "" | "1" | "cpp-qt" | "cpp_qt" => Ok(LanguageOption::CppQt),
+        "2" | "rust" => Ok(LanguageOption::Rust),
+        other => bail!("Invalid language choice: '{}'", other),
+    }
 }
 pub fn get_target_language(app_context: &Arc<AppContext>) -> Result<TargetLanguage> {
     use direct_access::global_controller;
@@ -46,4 +71,147 @@ pub fn run_checks(app_context: &Arc<AppContext>, output: &OutputContext) -> Resu
     }
 
     Ok(())
+}
+
+pub fn detect_and_warn_of_missing_formatters(
+    target_language: &TargetLanguage,
+    output: &OutputContext,
+    bailing_out_if_missing: bool,
+) -> Result<()> {
+    use std::process::Command;
+
+    let missing = if *target_language == TargetLanguage::Rust {
+        let ok = Command::new("rustfmt")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        if !ok {
+            output.warn("rustfmt is not installed or not in PATH.");
+            output.warn("The generated code may not be formatted correctly.");
+            output.warn("Install rustup from https://rustup.rs/ and follow the instructions. This will install Rust and rustfmt.");
+            true
+        } else {
+            false
+        }
+    } else if *target_language == TargetLanguage::CppQt {
+        let ok = Command::new("clang-format")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        if !ok {
+            output.warn("clang-format is not installed or not in PATH.");
+            output.warn("The generated code may not be formatted correctly.");
+            match detect_distro_family() {
+                DistroFamily::Debian => output.warn("Install: sudo apt install clang-format"),
+                DistroFamily::Fedora => output.warn("Install: sudo dnf install clang-tools-extra"),
+                DistroFamily::Arch => output.warn("Install: sudo pacman -S clang"),
+                DistroFamily::Unknown => output.warn(
+                    "Install clang-format from your package manager or https://releases.llvm.org",
+                ),
+            }
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    if missing && bailing_out_if_missing {
+        anyhow::bail!("Required formatter is missing");
+    }
+
+    Ok(())
+}
+
+pub fn detect_and_warn_of_missing_qcoro(output: &OutputContext) -> Result<()> {
+    // Look for QCoro6Config.cmake in standard cmake search paths
+    let cmake_search_dirs = [
+        "/usr/lib/cmake",
+        "/usr/lib/x86_64-linux-gnu/cmake",
+        "/usr/lib/aarch64-linux-gnu/cmake",
+        "/usr/lib64/cmake",
+        "/usr/local/lib/cmake",
+        "/usr/local/lib64/cmake",
+        "/usr/share/cmake",
+    ];
+
+    let found = cmake_search_dirs.iter().any(|dir| {
+        std::path::Path::new(dir)
+            .join("QCoro6")
+            .join("QCoro6Config.cmake")
+            .exists()
+    });
+
+    if found {
+        return Ok(());
+    }
+
+    output.warn("QCoro6 does not appear to be installed.");
+    output.warn("QCoro is required to build the generated C++/Qt code.");
+
+    // Detect distro family from /etc/os-release
+    let distro_family = detect_distro_family();
+
+    match distro_family {
+        DistroFamily::Debian => {
+            output.warn("Install on Debian/Ubuntu:");
+            output.warn("  sudo apt install qcoro-qt6-dev");
+        }
+        DistroFamily::Fedora => {
+            output.warn("Install on Fedora:");
+            output.warn("  sudo dnf install qcoro-qt6-devel");
+        }
+        DistroFamily::Arch => {
+            output.warn("Install on Arch:");
+            output.warn("  sudo pacman -S qcoro-qt6");
+        }
+        DistroFamily::Unknown => {
+            output.warn("Install QCoro from source: https://github.com/danvratil/qcoro");
+        }
+    }
+
+    Ok(())
+}
+
+enum DistroFamily {
+    Debian,
+    Fedora,
+    Arch,
+    Unknown,
+}
+
+fn detect_distro_family() -> DistroFamily {
+    let os_release = std::fs::read_to_string("/etc/os-release").unwrap_or_default();
+
+    for line in os_release.lines() {
+        if let Some(value) = line.strip_prefix("ID_LIKE=") {
+            let value = value.trim_matches('"').to_lowercase();
+            if value.contains("debian") || value.contains("ubuntu") {
+                return DistroFamily::Debian;
+            }
+            if value.contains("fedora") || value.contains("rhel") || value.contains("centos") {
+                return DistroFamily::Fedora;
+            }
+            if value.contains("arch") {
+                return DistroFamily::Arch;
+            }
+        }
+        if let Some(value) = line.strip_prefix("ID=") {
+            let value = value.trim_matches('"').to_lowercase();
+            if value == "debian" || value == "ubuntu" {
+                return DistroFamily::Debian;
+            }
+            if value == "fedora" || value == "rhel" || value == "centos" {
+                return DistroFamily::Fedora;
+            }
+            if value == "arch" || value == "manjaro" || value == "endeavouros" {
+                return DistroFamily::Arch;
+            }
+        }
+    }
+
+    DistroFamily::Unknown
 }
