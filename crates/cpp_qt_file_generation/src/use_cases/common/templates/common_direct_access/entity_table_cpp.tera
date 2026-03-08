@@ -385,6 +385,17 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {%- endfor %}
         }
 
+        // Reorder results to match input ID order (SQL IN does not guarantee order)
+        {
+            QHash<int, int> idToIndex;
+            idToIndex.reserve(ids.size());
+            for (int i = 0; i < ids.size(); ++i)
+                idToIndex[ids[i]] = i;
+            std::sort(result.begin(), result.end(), [&idToIndex](const auto &a, const auto &b) {
+                return idToIndex.value(a.id) < idToIndex.value(b.id);
+            });
+        }
+
         // Cache the result
         {{ ent.pascal_name }}Cache::instance().setCachedEntities(ids, result);
     }
