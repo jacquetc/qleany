@@ -9,6 +9,7 @@ use anyhow::{Result, anyhow};
 use common::entities::{File, Global, Root};
 use common::long_operation::LongOperation;
 use common::types::EntityId;
+use rayon::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -83,9 +84,12 @@ impl LongOperation for GenerateCppQtFilesUseCase {
         //     prefix_path.display()
         // );
 
-        // create a cache for GenerationSnapshot if needed in the future
+        // Phase 1 (sequential): Load file metadata + build snapshots via UoW (DB-bound)
         let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
         generation_snapshot_cache.reserve(self.dto.file_ids.len());
+
+        let mut file_snapshots: Vec<(File, GenerationSnapshot)> =
+            Vec::with_capacity(self.dto.file_ids.len());
 
         for (idx, file_id) in self.dto.file_ids.iter().enumerate() {
             if cancel_flag.load(Ordering::Relaxed) {
@@ -93,81 +97,78 @@ impl LongOperation for GenerateCppQtFilesUseCase {
                 return Err(anyhow!("Operation was cancelled"));
             }
 
-            // Load file metadata (name, relative path)
             let file_meta: File = GenerationReadOps::get_file(uow_read, file_id)?
                 .ok_or_else(|| anyhow!("File not found"))?;
-            // println!("Processing file ID {}: {}", file_id, file_meta.name);
 
-            // Build snapshot and generate code for the file
             let (snapshot, from_cache) =
                 SnapshotBuilder::for_file_id(uow_read, *file_id, &generation_snapshot_cache)?;
-            let code = generate_code_with_snapshot(&snapshot)?;
             if !from_cache {
-                generation_snapshot_cache.push(snapshot);
+                generation_snapshot_cache.push(snapshot.clone());
             }
+            file_snapshots.push((file_meta, snapshot));
 
-            let file_name = &file_meta.name;
-            // println!("Generated code for file {}:\ncode omitted", file_name);
-
-            // Compute destination path: root_path/prefix/relative_path/name
-            let mut out_dir = root_path.clone();
-            if !prefix_path.as_os_str().is_empty() {
-                out_dir = out_dir.join(&prefix_path);
-            }
-            if !file_meta.relative_path.is_empty() {
-                out_dir = out_dir.join(&file_meta.relative_path);
-            }
-
-            fs::create_dir_all(&out_dir)?;
-            let out_path = out_dir.join(file_name);
-
-            // Collect CppQt source files for batch formatting later
-            if file_name.ends_with(".h") || file_name.ends_with(".cpp") {
-                cpp_qt_files_to_format.push(out_path.clone());
-            }
-
-            // Write file content
-            fs::write(&out_path, code.as_bytes())?;
-            // ensure that the file was written
-            if !out_path.exists() {
-                return Err(anyhow!("Failed to write file: {}", out_path.display()));
-            }
-
-            // Record written file path as string
-            if let Some(s) = out_path.to_str() {
-                written_files.push(s.to_string());
-            } else {
-                written_files.push(out_path.display().to_string());
-            }
-
-            // Progress update
-            let percentage = ((idx + 1) as f32 / total as f32) * 100.0;
-            let rel_display = format!(
-                "{}{}{}",
-                self.dto.prefix,
-                if self.dto.prefix.is_empty() || file_meta.relative_path.is_empty() {
-                    ""
-                } else {
-                    "/"
-                },
-                format!(
-                    "{}{}{}",
-                    file_meta.relative_path,
-                    if file_meta.relative_path.is_empty() {
-                        ""
-                    } else {
-                        "/"
-                    },
-                    file_name
-                )
-            );
+            let percentage = ((idx + 1) as f32 / total as f32) * 40.0;
             progress_callback(common::long_operation::OperationProgress::new(
                 percentage,
-                Some(format!("Generated {}/{}: {}", idx + 1, total, rel_display)),
+                Some(format!("Snapshot {}/{}", idx + 1, total)),
             ));
         }
 
         uow.end_transaction()?;
+
+        // Phase 2 (parallel): Render templates + write files (CPU+IO-bound)
+        let results: Vec<(String, PathBuf)> = file_snapshots
+            .par_iter()
+            .map(|(file_meta, snapshot)| {
+                if cancel_flag.load(Ordering::Relaxed) {
+                    return Err(anyhow!("Operation was cancelled"));
+                }
+
+                let code = generate_code_with_snapshot(snapshot)?;
+
+                let mut out_dir = root_path.clone();
+                if !prefix_path.as_os_str().is_empty() {
+                    out_dir = out_dir.join(&prefix_path);
+                }
+                if !file_meta.relative_path.is_empty() {
+                    out_dir = out_dir.join(&file_meta.relative_path);
+                }
+
+                fs::create_dir_all(&out_dir)?;
+                let out_path = out_dir.join(&file_meta.name);
+
+                fs::write(&out_path, code.as_bytes())?;
+                if !out_path.exists() {
+                    return Err(anyhow!("Failed to write file: {}", out_path.display()));
+                }
+
+                let path_str = out_path
+                    .to_str()
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| out_path.display().to_string());
+
+                Ok((path_str, out_path))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        for (path_str, out_path) in &results {
+            written_files.push(path_str.clone());
+            if out_path
+                .extension()
+                .is_some_and(|ext| ext == "h" || ext == "cpp")
+            {
+                cpp_qt_files_to_format.push(out_path.clone());
+            }
+        }
+
+        progress_callback(common::long_operation::OperationProgress::new(
+            90.0,
+            Some(format!(
+                "Generated {}/{} files",
+                written_files.len(),
+                total
+            )),
+        ));
 
         // Batch format all CppQt files at once (much faster than per-file formatting)
         if !cpp_qt_files_to_format.is_empty() {

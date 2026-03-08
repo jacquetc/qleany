@@ -11,6 +11,7 @@ use common::direct_access::system::SystemRelationshipField;
 use common::entities::File;
 use common::long_operation::LongOperation;
 use common::types::EntityId;
+use rayon::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -85,19 +86,16 @@ impl LongOperation for FillCodeInRustFilesUseCase {
         let tmp_dir = std::env::temp_dir().join(format!("qleany_fill_code_{}", std::process::id()));
         fs::create_dir_all(&tmp_dir)?;
 
-        // Build snapshots and generate code for each file
+        // Phase 1 (sequential): Build all snapshots via UoW (DB-bound)
         let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
         generation_snapshot_cache.reserve(files.len());
 
-        // Map of file_id -> (generated code, temp file path)
-        let mut generated: Vec<(EntityId, String, PathBuf)> = Vec::with_capacity(files.len());
-        let mut rust_files_to_format: Vec<PathBuf> = Vec::new();
+        let mut file_snapshots: Vec<(&File, GenerationSnapshot)> = Vec::with_capacity(files.len());
 
         for (idx, file) in files.iter().enumerate() {
             if cancel_flag.load(Ordering::Relaxed) {
                 let _ = fs::remove_dir_all(&tmp_dir);
                 uow.rollback()?;
-                // Delete all File entities created by the prior fill_files step
                 uow.begin_transaction()?;
                 if !file_ids.is_empty() {
                     uow.remove_file_multi(&file_ids)?;
@@ -106,33 +104,19 @@ impl LongOperation for FillCodeInRustFilesUseCase {
                 return Err(anyhow!("Operation was cancelled"));
             }
 
-            // Build snapshot and generate code
             let uow_ops: &dyn GenerationOps = &*uow;
             let (snapshot, from_cache) =
                 SnapshotBuilder::for_file_id(uow_ops, file.id, &generation_snapshot_cache)?;
-            let code = generate_code_with_snapshot(&snapshot)?;
             if !from_cache {
-                generation_snapshot_cache.push(snapshot);
+                generation_snapshot_cache.push(snapshot.clone());
             }
+            file_snapshots.push((file, snapshot));
 
-            // Recreate the real directory structure: tmp_dir/relative_path/name
-            let file_dir = tmp_dir.join(&file.relative_path);
-            fs::create_dir_all(&file_dir)?;
-            let temp_path = file_dir.join(&file.name);
-            fs::write(&temp_path, code.as_bytes())?;
-
-            if file.name.ends_with(".rs") {
-                rust_files_to_format.push(temp_path.clone());
-            }
-
-            generated.push((file.id, code, temp_path));
-
-            // Progress: generation phase is 0-80%
-            let percentage = ((idx + 1) as f32 / total as f32) * 80.0;
+            let percentage = ((idx + 1) as f32 / total as f32) * 40.0;
             progress_callback(common::long_operation::OperationProgress::new(
                 percentage,
                 Some(format!(
-                    "Generated {}/{}: {}{}",
+                    "Snapshot {}/{}: {}{}",
                     idx + 1,
                     total,
                     file.relative_path,
@@ -140,6 +124,48 @@ impl LongOperation for FillCodeInRustFilesUseCase {
                 )),
             ));
         }
+
+        // Phase 2 (parallel): Render templates + write files (CPU+IO-bound)
+        let generated: Vec<(EntityId, String, PathBuf)> = file_snapshots
+            .par_iter()
+            .map(|(file, snapshot)| {
+                if cancel_flag.load(Ordering::Relaxed) {
+                    return Err(anyhow!("Operation was cancelled"));
+                }
+
+                let code = generate_code_with_snapshot(snapshot)?;
+
+                let file_dir = tmp_dir.join(&file.relative_path);
+                fs::create_dir_all(&file_dir)?;
+                let temp_path = file_dir.join(&file.name);
+                fs::write(&temp_path, code.as_bytes())?;
+
+                Ok((file.id, code, temp_path))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        // If cancelled during parallel phase, clean up
+        if cancel_flag.load(Ordering::Relaxed) {
+            let _ = fs::remove_dir_all(&tmp_dir);
+            uow.rollback()?;
+            uow.begin_transaction()?;
+            if !file_ids.is_empty() {
+                uow.remove_file_multi(&file_ids)?;
+            }
+            uow.commit()?;
+            return Err(anyhow!("Operation was cancelled"));
+        }
+
+        let rust_files_to_format: Vec<PathBuf> = generated
+            .iter()
+            .filter(|(_, _, path)| path.extension().is_some_and(|ext| ext == "rs"))
+            .map(|(_, _, path)| path.clone())
+            .collect();
+
+        progress_callback(common::long_operation::OperationProgress::new(
+            80.0,
+            Some(format!("Generated {}/{} files", generated.len(), total)),
+        ));
 
         // Batch format all Rust files at once
         if !rust_files_to_format.is_empty() {
