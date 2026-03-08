@@ -53,6 +53,10 @@ class I{{ ent.pascal_name }}Repository
     virtual QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                                  int limit) const = 0;
 
+    // Move specific related IDs to a new position (only meaningful for ordered relationships)
+    virtual QList<int> moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                           const QList<int> &idsToMove, int newIndex) = 0;
+
     {%- endif %}
 
     // Snapshot / Restore

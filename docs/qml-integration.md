@@ -188,7 +188,7 @@ Mock entity controllers provide:
 - `create(dtos)` / `createOrphans(dtos)` -- assigns random IDs, emits `created` event
 - `update(dtos)` -- emits `updated` and `allRelationsInvalidated` events
 - `remove(ids)` -- emits `removed` event
-- `getRelationshipIds(id)` / `setRelationshipIds(id, ids)` -- per relationship field
+- `getRelationshipIds(id)` / `setRelationshipIds(id, ids)` / `moveRelationshipIds(id, idsToMove, newIndex)` -- per relationship field
 
 All async methods return `QCoroQmlTask`, a mock Promise-like object that resolves after a configurable delay (default 50ms).
 
@@ -255,7 +255,7 @@ real_imports/
 **Entity controllers** (`ForeignEntityNameController : QObject`) wrap the backend controller and expose:
 - `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(dtos)`, `remove(ids)` -- all return `QCoro::QmlTask`
 - `getCreateDto()` -- static, returns template DTO
-- `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)` -- relationship access
+- `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)`, `moveRelationshipIds(id, field, idsToMove, newIndex)` -- relationship access
 - `getRelationshipIdsCount(id, field)`, `getRelationshipIdsInRange(id, field, offset, limit)` -- for paginated relationships
 - `undoRedoStackId` property
 

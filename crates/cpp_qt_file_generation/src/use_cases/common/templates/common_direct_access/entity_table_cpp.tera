@@ -771,6 +771,34 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::getRelationship
     }
 }
 
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                                         const QList<int> &idsToMove, int newIndex)
+{
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    switch (relationship)
+    {
+    {% for f in ent.fields %}
+    {%- if f.inner.field_type == "Entity" %}
+    case {{ ent.pascal_name }}RelationshipField::{{ f.pascal_name }}:
+        {%- if f.relationship == "OrderedOneToMany" %}
+        {
+            auto reordered = JunctionTableOps::OrderedOneToMany::moveRightIds(db, {{ ent.camel_name }}Id, {{ ent.snake_name | upper }}_{{ f.snake_name | upper }}_JUNCTION_TABLE, idsToMove, newIndex);
+            {{ ent.pascal_name }}Cache::instance().invalidateEntity({{ ent.camel_name }}Id);
+            {{ ent.pascal_name }}Cache::instance().invalidateRelationships({{ ent.camel_name }}Id);
+            return reordered;
+        }
+        {%- else %}
+        throw std::invalid_argument("moveRelationshipIds is only supported for OrderedOneToMany relationships");
+        {%- endif %}
+    {%- endif %}
+    {%- endfor %}
+
+    default:
+        throw std::invalid_argument("Unhandled relationship type");
+    }
+}
+
 TableLevelSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::snapshotRows(const QList<int> &ids)
 {
     TableLevelSnapshot snap;

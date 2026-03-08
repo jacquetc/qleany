@@ -30,6 +30,8 @@ class {{ ent.pascal_name }}Table final : public I{{ ent.pascal_name }}Table
     int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const override;
     QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                          int limit) const override;
+    QList<int> moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                   const QList<int> &idsToMove, int newIndex) override;
 
     // Snapshot / Restore (table level)
     Database::TableLevelSnapshot snapshotRows(const QList<int> &ids) override;

@@ -203,6 +203,16 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         Q_UNUSED(limit)
         return {};
     }
+    QList<int> moveRelationship(int rootId,
+                                    {{ s.global.application_pascal_name }}::Common::DirectAccess::Root::RootRelationshipField relationship,
+                                    const QList<int> &idsToMove, int newIndex) override
+    {
+        Q_UNUSED(rootId)
+        Q_UNUSED(relationship)
+        Q_UNUSED(idsToMove)
+        Q_UNUSED(newIndex)
+        return {};
+    }
     {%- endif %}
 
   private:

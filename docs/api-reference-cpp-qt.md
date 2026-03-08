@@ -153,6 +153,19 @@ QCoro::Task<QList<int>> getRelationshipIdsInRange(
 
 Paginated access to related entity IDs.
 
+#### moveRelationshipIds
+
+```cpp
+QCoro::Task<QList<int>> moveRelationshipIds(
+    int carId,
+    CarRelationshipField relationship,
+    const QList<int> &idsToMove,
+    int newIndex     // -1 = append at end
+);
+```
+
+Moves specific related IDs to a new position within an ordered relationship. Returns the reordered list of IDs. Supports undo/redo.
+
 ### Usage Examples
 
 All controller methods return `QCoro::Task<T>`. Use `QCoro::connect()` to handle the result from non-coroutine code (slots, UI handlers), or `.then()` to chain dependent operations.
@@ -368,7 +381,7 @@ Use in `i_{use_case}_uow.h`. All declared methods are pure virtual.
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------|
 | `DECLARE_UOW_ENTITY_CRUD(Name)`                         | CREATE + CREATE_ORPHANS + GET_REL_FROM_OWNER + SET_REL_IN_OWNER + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT |
 | `DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)`                   | CREATE_ORPHANS + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT                             |
-| `DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)`   | getNameRelationship, setNameRelationship, getNameRelationshipMany, getNameRelationshipCount, getNameRelationshipInRange |
+| `DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)`   | getNameRelationship, setNameRelationship, moveNameRelationship, getNameRelationshipMany, getNameRelationshipCount, getNameRelationshipInRange |
 
 ### Implementation Macros
 

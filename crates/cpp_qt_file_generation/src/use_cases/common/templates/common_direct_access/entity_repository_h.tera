@@ -42,6 +42,10 @@ class I{{ ent.pascal_name }}Table
     virtual QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                                  int limit) const = 0;
 
+    // Move specific related IDs to a new position (only meaningful for ordered relationships)
+    virtual QList<int> moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                           const QList<int> &idsToMove, int newIndex) = 0;
+
     // Snapshot / Restore (table level)
     virtual Database::TableLevelSnapshot snapshotRows(const QList<int> &ids) = 0;
     virtual void restoreRows(const Database::TableLevelSnapshot &snap) = 0;
@@ -86,6 +90,8 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     int getRelationshipIdsCount(int rootId, {{ ent.pascal_name }}RelationshipField relationship) const override;
     QList<int> getRelationshipIdsInRange(int rootId, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                          int limit) const override;
+    QList<int> moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                   const QList<int> &idsToMove, int newIndex) override;
 
 {%- endif %}
 

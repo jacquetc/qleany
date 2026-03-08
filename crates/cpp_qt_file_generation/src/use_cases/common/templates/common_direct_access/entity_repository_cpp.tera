@@ -240,6 +240,15 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::getRelatio
     return m_table->getRelationshipIdsInRange(rootId, relationship, offset, limit);
 }
 
+QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                                          const QList<int> &idsToMove, int newIndex)
+{
+    auto reordered = m_table->moveRelationshipIds({{ ent.camel_name }}Id, relationship, idsToMove, newIndex);
+    emitRelationshipChanged({{ ent.camel_name }}Id, relationship, reordered);
+    emitUpdated(QList<int>{ {{ ent.camel_name }}Id });
+    return reordered;
+}
+
 {%- endif %}
 
 SCDatabase::EntityTreeSnapshot SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::snapshot(const QList<int> &ids)

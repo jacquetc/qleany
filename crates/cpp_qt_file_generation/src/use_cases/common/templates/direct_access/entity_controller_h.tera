@@ -50,6 +50,8 @@ class {{ ent.pascal_name }}Controller : public QObject
     QCoro::Task<int> getRelationshipIdsCount(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship) const;
     QCoro::Task<QList<int>> getRelationshipIdsInRange(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship, int offset,
                                                       int limit) const;
+    QCoro::Task<QList<int>> moveRelationshipIds(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField relationship,
+                                                const QList<int> &idsToMove, int newIndex = -1);
 {%- endif %}
 
   private:

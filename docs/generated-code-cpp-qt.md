@@ -435,6 +435,7 @@ Relationship-specific methods (if the entity has relationships):
 | `getRelationshipIds(id, field)`                       | Get related IDs for one entity  |
 | `getRelationshipIdsMany(ids, field)`                  | Batch lookup                    |
 | `setRelationshipIds(id, field, ids)`                  | Set relationship for one entity |
+| `moveRelationshipIds(id, field, idsToMove, newIndex)` | Move IDs to a new position within an ordered relationship |
 | `getRelationshipIdsCount(id, field)`                  | Count related items             |
 | `getRelationshipIdsInRange(id, field, offset, limit)` | Paginated access                |
 

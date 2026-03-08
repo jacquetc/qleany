@@ -350,7 +350,7 @@ DECLARE_UOW_ENTITY_CREATE_ORPHANS(EntityName)            // create without owner
 DECLARE_UOW_ENTITY_UPDATE(EntityName)                    // update
 DECLARE_UOW_ENTITY_REMOVE(EntityName)                    // remove
 DECLARE_UOW_ENTITY_SNAPSHOT(EntityName)                  // snapshot + restore (for undo)
-DECLARE_UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)   // relationship get/set/count/range
+DECLARE_UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)   // relationship get/set/move/count/range
 DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(EntityName)        // get rel ids from owner
 DECLARE_UOW_ENTITY_SET_REL_IN_OWNER(EntityName)          // set rel ids in owner
 

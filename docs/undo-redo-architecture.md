@@ -27,7 +27,7 @@ Think about interactions from the user's perspective: they expect undo and redo 
 
 Instead, each context should have its own undo-redo stack. The question is how to define "context." Qleany supports two approaches, described below, suited to different application types. Both use the same generated infrastructure; they differ only in when and where stacks are created and destroyed.
 
-For destructive operations such as deleting entities, Qleany supports cascading deletions and their undoing. If you delete a parent entity, all its strongly-owned children are also deleted, and you can undo that. At first, I used a database savepoint to be restored on undo, but the savepoint impacted non-undoable data as well, leading to confusion and unexpected behavior. Now, the `create`, `createOrphans`, `remove` and `setRelationshipsIds` commands use cascading snapshots of the individual tables to restore the database state before the operation.
+For destructive operations such as deleting entities, Qleany supports cascading deletions and their undoing. If you delete a parent entity, all its strongly-owned children are also deleted, and you can undo that. At first, I used a database savepoint to be restored on undo, but the savepoint impacted non-undoable data as well, leading to confusion and unexpected behavior. Now, the `create`, `createOrphans`, `remove`, `setRelationshipsIds` and `moveRelationshipIds` commands use cascading snapshots of the individual tables to restore the database state before the operation.
 
 Yet this behavior may be not what the user expects. Instead, you can use soft-deletion with timed recovery, described in the Soft Deletion section below.
 
@@ -402,7 +402,7 @@ Before a destructive command runs, the use case walks the ownership tree downwar
 
 How expensive is this? A Calendar with 200 events, each having 2 reminders and 3 tags, produces a snapshot of 1,801 rows. One calendar row, 200 event rows, 200 ordering entries, 400 reminder rows, 400 reminder junction entries, 600 event-tag junction entries. All serialized into memory before the deletion even starts. Weak references (the Tag entities themselves) are not captured — only the junction entries pointing to them.
 
-The generated CRUD use cases handle all of this for you. `create` snapshots after insertion so undo can delete. `remove` snapshots before deletion so undo can restore. `setRelationshipIds` snapshots affected relationships before modification. `update` is the exception — no relationship changes, so it just stores a before/after pair. Cheaper.
+The generated CRUD use cases handle all of this for you. `create` snapshots after insertion so undo can delete. `remove` snapshots before deletion so undo can restore. `setRelationshipIds` and `moveRelationshipIds` snapshot affected relationships before modification. `update` is the exception — no relationship changes, so it just stores a before/after pair. Cheaper.
 
 **Your feature use cases get none of this.** The snapshot methods are available on the unit of work (`snapshotCalendar(ids)`, `restoreCalendar(snap)`), but nobody calls them for you. If your feature use case is undoable and you skip the snapshot calls, undo will do nothing. Silently. I've been there. Non-undoable use cases and long operations don't need snapshots — the transaction rollback handles failures.
 

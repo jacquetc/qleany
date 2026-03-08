@@ -346,7 +346,7 @@ In both cases, the unit of work owns the transaction lifecycle. `beginTransactio
 
 ### Why Snapshots, Not Savepoints
 
-Early versions of Qleany used database savepoints to handle undo for destructive operations. This turned out to be a trap: savepoints restore *everything*, including non-undoable data. Now, `create`, `createOrphans`, `remove`, and `setRelationshipIds` use **cascading table-level snapshots** that only touch the affected entities.
+Early versions of Qleany used database savepoints to handle undo for destructive operations. This turned out to be a trap: savepoints restore *everything*, including non-undoable data. Now, `create`, `createOrphans`, `remove`, `setRelationshipIds`, and `moveRelationshipIds` use **cascading table-level snapshots** that only touch the affected entities.
 
 For the full story, see the [Undo-Redo Architecture](undo-redo-architecture.md#savepoints) documentation.
 

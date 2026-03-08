@@ -56,29 +56,36 @@ struct Foreign{{ ent.pascal_name }}Controller : public QObject
 {%- if ent.forward_relationships %}
 
     Q_INVOKABLE QCoro::QmlTask getRelationshipIds(
-        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
+        const int entityId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
     {
-        return m_controller->getRelationshipIds(binderItemId, relationship);
+        return m_controller->getRelationshipIds(entityId, relationship);
     }
 
     Q_INVOKABLE QCoro::QmlTask setRelationshipIds(
-        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
+        const int entityId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
         const QList<int> &relatedIds) const
     {
-        return m_controller->setRelationshipIds(binderItemId, relationship, relatedIds);
+        return m_controller->setRelationshipIds(entityId, relationship, relatedIds);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask moveRelationshipIds(
+        const int entityId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
+        const QList<int> &relatedIds, int newIndex) const
+    {
+        return m_controller->moveRelationshipIds(entityId, relationship, relatedIds, newIndex);
     }
 
     Q_INVOKABLE QCoro::QmlTask getRelationshipIdsCount(
-        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
+        const int entityId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship) const
     {
-        return m_controller->getRelationshipIdsCount(binderItemId, relationship);
+        return m_controller->getRelationshipIdsCount(entityId, relationship);
     }
 
     Q_INVOKABLE QCoro::QmlTask getRelationshipIdsInRange(
-        const int binderItemId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
+        const int entityId, const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField relationship,
         const int offset, const int limit) const
     {
-        return m_controller->getRelationshipIdsInRange(binderItemId, relationship, offset, limit);
+        return m_controller->getRelationshipIdsInRange(entityId, relationship, offset, limit);
     }
 {%- endif %}
 

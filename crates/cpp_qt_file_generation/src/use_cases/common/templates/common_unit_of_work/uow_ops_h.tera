@@ -126,6 +126,7 @@ class IEntityWithRelationships : public IEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
+    [[nodiscard]] virtual QList<int> moveRelationship(int id, RelFieldEnum rel, const QList<int> &idsToMove, int newIndex) = 0;
 };
 
 /**
@@ -142,6 +143,7 @@ class IOrphanEntityWithRelationships : public IOrphanEntityCrud<EntityType>
     [[nodiscard]] virtual QHash<int, QList<int>> getRelationshipMany(const QList<int> &ids, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual int getRelationshipCount(int id, RelFieldEnum rel) = 0;
     [[nodiscard]] virtual QList<int> getRelationshipInRange(int id, RelFieldEnum rel, int offset, int limit) = 0;
+    [[nodiscard]] virtual QList<int> moveRelationship(int id, RelFieldEnum rel, const QList<int> &idsToMove, int newIndex) = 0;
 };
 
 // =============================================================================
@@ -171,6 +173,7 @@ concept EntityRelationshipCapable =
         { t.getRelationshipMany(ids, rel) } -> std::same_as<QHash<int, QList<int>>>;
         { t.getRelationshipCount(id, rel) } -> std::same_as<int>;
         { t.getRelationshipInRange(id, rel, offset, limit) } -> std::same_as<QList<int>>;
+        { t.moveRelationship(id, rel, ids, offset) } -> std::same_as<QList<int>>;
     };
 
 /**
@@ -427,6 +430,12 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);
     }
 
+    [[nodiscard]] QList<int> moveRelationship(int id, RelFieldEnum rel, const QList<int> &idsToMove, int newIndex) override
+    {
+        auto repo = self().makeRepository();
+        return repo->moveRelationshipIds(id, rel, idsToMove, newIndex);
+    }
+
     // Snapshot / Restore
     Database::EntityTreeSnapshot snapshot(const QList<int> &ids) override
     {
@@ -516,6 +525,12 @@ class OrphanEntityFullImpl : public virtual IOrphanEntityWithRelationships<Entit
     {
         auto repo = self().makeRepository();
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);
+    }
+
+    [[nodiscard]] QList<int> moveRelationship(int id, RelFieldEnum rel, const QList<int> &idsToMove, int newIndex) override
+    {
+        auto repo = self().makeRepository();
+        return repo->moveRelationshipIds(id, rel, idsToMove, newIndex);
     }
 
     // Snapshot / Restore

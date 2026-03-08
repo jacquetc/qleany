@@ -109,7 +109,9 @@
                                                                              RelFieldEnum rel) = 0;                   \
     [[nodiscard]] virtual int get##Name##RelationshipCount(int id, RelFieldEnum rel) = 0;                             \
     [[nodiscard]] virtual QList<int> get##Name##RelationshipInRange(int id, RelFieldEnum rel,                         \
-                                                                     int offset, int limit) = 0
+                                                                     int offset, int limit) = 0;                      \
+    [[nodiscard]] virtual QList<int> move##Name##Relationship(int id, RelFieldEnum rel,                               \
+                                                               const QList<int> &idsToMove, int newIndex) = 0
 
 
 // #############################################################################
@@ -246,5 +248,11 @@
     {                                                                                                                 \
         auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
         return repo->getRelationshipIdsInRange(id, rel, offset, limit);                                               \
+    }                                                                                                                 \
+    [[nodiscard]] QList<int> move##Name##Relationship(int id, RelFieldEnum rel,                                       \
+                                                       const QList<int> &idsToMove, int newIndex) override            \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);                \
+        return repo->moveRelationshipIds(id, rel, idsToMove, newIndex);                                               \
     }
 

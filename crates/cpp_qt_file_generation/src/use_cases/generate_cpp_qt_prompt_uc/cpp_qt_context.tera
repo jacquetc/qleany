@@ -204,7 +204,7 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 
 | Macro | Generated methods |
 |-------|-------------------|
-| `DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)` | `getNameRelationship(id, rel) → QList<int>`, `setNameRelationship(id, rel, relatedIds)`, `getNameRelationshipMany(ids, rel) → QHash<int, QList<int>>`, `getNameRelationshipCount(id, rel) → int`, `getNameRelationshipInRange(id, rel, offset, limit) → QList<int>` |
+| `DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)` | `getNameRelationship(id, rel) → QList<int>`, `setNameRelationship(id, rel, relatedIds)`, `getNameRelationshipMany(ids, rel) → QHash<int, QList<int>>`, `getNameRelationshipCount(id, rel) → int`, `getNameRelationshipInRange(id, rel, offset, limit) → QList<int>`, `moveNameRelationship(id, rel, idsToMove, newIndex) → QList<int>` |
 
 #### Only when entity is undoable
 
@@ -346,7 +346,7 @@ Generated single models:
 
 C++ types exposed to QML via `QML_FOREIGN` + `QML_NAMED_ELEMENT` in `{{ s.global.prefix }}/presentation/real_imports/`:
 
-- **Entity controllers** (`Foreign{Entity}Controller`) — `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(dtos)`, `remove(ids)` returning `QCoro::QmlTask`; `getCreateDto()` (static); `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)`, `getRelationshipIdsCount(id, field)`, `getRelationshipIdsInRange(id, field, offset, limit)`; `undoRedoStackId` property
+- **Entity controllers** (`Foreign{Entity}Controller`) — `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(dtos)`, `remove(ids)` returning `QCoro::QmlTask`; `getCreateDto()` (static); `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)`, `moveRelationshipIds(id, field, idsToMove, newIndex)`, `getRelationshipIdsCount(id, field)`, `getRelationshipIdsInRange(id, field, offset, limit)`; `undoRedoStackId` property
 - **Feature controllers** (`Foreign{Feature}Controller`) — per use case: `useCaseName(inputDto)` returning `QCoro::QmlTask`; `getInputDtoName()` (static); long operations return operation ID with `getUseCaseNameProgress(opId)`, `hasUseCaseNameResult(opId)`, `getUseCaseNameResult(opId)` for polling
 - **Singletons** — `EventRegistry`, `FeatureEventRegistry`, `UndoRedoController`, `ServiceLocator` via `QML_SINGLETON` with `create()` from ServiceLocator
 

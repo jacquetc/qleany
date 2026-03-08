@@ -401,4 +401,40 @@ QList<int> OrderedOneToMany::getRightIdsInRange(const QSqlDatabase &db, int left
     return result;
 }
 
+QList<int> OrderedOneToMany::moveRightIds(QSqlDatabase &db, int leftId, const QString &junctionTableName,
+                                          const QList<int> &idsToMove, int newIndex)
+{
+    if (idsToMove.isEmpty())
+        return getRightIds(db, leftId, junctionTableName);
+
+    // Invalidate cache
+    JunctionCache::instance().invalidateLeftId(junctionTableName, leftId);
+
+    // Get current ordered list
+    auto currentIds = getRightIdsMany(db, {leftId}, junctionTableName).value(leftId);
+
+    // Remove the IDs to move from their current positions
+    QSet<int> moveSet(idsToMove.begin(), idsToMove.end());
+    QList<int> remaining;
+    remaining.reserve(currentIds.size());
+    for (int id : currentIds)
+    {
+        if (!moveSet.contains(id))
+            remaining.append(id);
+    }
+
+    // Clamp newIndex
+    if (newIndex < 0 || newIndex > remaining.size())
+        newIndex = remaining.size();
+
+    // Insert at new position
+    for (int i = 0; i < idsToMove.size(); ++i)
+        remaining.insert(newIndex + i, idsToMove.at(i));
+
+    // Write back the reordered list
+    upsertRightIds(db, leftId, junctionTableName, remaining);
+
+    return remaining;
+}
+
 } // namespace {{ s.global.application_pascal_name }}::Common::Database::JunctionTableOps
