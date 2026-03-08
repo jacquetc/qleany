@@ -11,7 +11,7 @@
 >
 > The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
-## Rapid test
+## Try it now
 
 Run:
 `pipx install qleany && qleany demo`
