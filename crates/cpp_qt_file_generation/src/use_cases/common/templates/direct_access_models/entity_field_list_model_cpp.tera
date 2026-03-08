@@ -409,6 +409,9 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
                 m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
                 endInsertRows();
             }
+
+            // Fix ordering after insertions since existing items may not be at target positions
+            reorderToMatch(relatedIds);
         });
     });
 }
@@ -433,10 +436,16 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ target_ent.pasc
 
 void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}Updated(const QList<int> &ids)
 {
-
     // Check if our {{ ent.camel_name }} was updated
     if (!ids.contains(m_{{ ent.camel_name }}Id))
         return;
+
+    // Skip if relationshipChanged already handled this update
+    if (m_lastRelationshipChangeHandled)
+    {
+        m_lastRelationshipChangeHandled = false;
+        return;
+    }
 
     QCoro::Task<QList<{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto>> fetch{{ ent.pascal_name }}Task = m_{{ ent.camel_name }}Controller->get({m_{{ ent.camel_name }}Id});
 
@@ -526,6 +535,9 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
                 m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
                 endInsertRows();
             }
+
+            // Fix ordering after insertions since existing items may not be at target positions
+            reorderToMatch(relatedIds);
         });
     });
 }
@@ -540,6 +552,9 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
     if (relationshipField !=
     Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}RelationshipField::{{ field.pascal_name }})
         return;
+
+    // Mark as handled so the subsequent updated signal skips duplicate processing
+    m_lastRelationshipChangeHandled = true;
 
     // Build set of current IDs
     QSet<int> currentIds;
@@ -615,6 +630,9 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name
             m_{{ target_ent.camel_plural_name }}.insert(insertPos, fetchedById.value(id));
             endInsertRows();
         }
+
+        // Fix ordering after insertions since existing items may not be at target positions
+        reorderToMatch(relatedIds);
     });
 }
 

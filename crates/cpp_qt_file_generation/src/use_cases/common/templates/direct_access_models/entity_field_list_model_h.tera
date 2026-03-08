@@ -77,6 +77,7 @@ class {{ ent.pascal_name }}{{ field.pascal_name }}ListModel : public QAbstractLi
     int m_{{ ent.camel_name }}Id = -1;
     int m_undoRedoStackId = 0;
     QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto> m_{{ target_ent.camel_plural_name }};
+    bool m_lastRelationshipChangeHandled = false;
 
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Controller> m_{{ target_ent.camel_name }}Controller;
