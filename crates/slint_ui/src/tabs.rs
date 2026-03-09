@@ -4,6 +4,7 @@
 //! including event subscriptions and callback handlers.
 pub mod check_widget;
 mod common;
+pub mod demo_wizard;
 pub mod entities_tab;
 pub mod features;
 pub mod generate_tab;

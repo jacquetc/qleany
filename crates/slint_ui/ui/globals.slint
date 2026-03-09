@@ -387,6 +387,32 @@ export global CheckState {
     callback request-check();
 }
 
+// Demo wizard state
+export global DemoWizardState {
+    in-out property <bool> visible: false;
+    // Step 0: setup (language + path), Step 1: running/done
+    in-out property <int> step: 0;
+    in-out property <int> language_index: 0;  // 0 = C++/Qt, 1 = Rust
+    in-out property <string> output_path: "";
+    in-out property <bool> is_running: false;
+    in-out property <float> progress: 0;
+    in-out property <string> progress_message: "";
+    in-out property <string> error_message: "";
+    in-out property <bool> completed: false;
+    in-out property <string> result_path: "";
+    // Summary set by Rust on completion
+    in-out property <string> summary_stats: "";       // e.g. "Generated 142 files"
+    in-out property <string> summary_ui_line: "";     // e.g. "Scaffolds for CLI and Slint"
+    in-out property <string> next_step_command: "";    // e.g. "cd ~/qleany-demo && cargo run --bin demo"
+    in-out property <bool> copied_to_clipboard: false;
+
+    callback browse_path();
+    callback start_demo();
+    callback cancel_demo();
+    callback open_result_folder();
+    callback copy_next_step();
+}
+
 export global CommonTools{
     pure callback check_is_pascal_case(string) -> bool;
     pure callback check_is_snake_case(string) -> bool;

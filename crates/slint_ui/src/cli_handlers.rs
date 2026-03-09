@@ -1,5 +1,5 @@
 pub mod check;
-mod common;
+pub(crate) mod common;
 pub mod demo;
 pub mod diff;
 pub mod docs;

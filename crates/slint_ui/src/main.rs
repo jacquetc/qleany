@@ -64,6 +64,9 @@ fn run_slint(app_context: &Arc<AppContext>) {
     // Initialize home tab callbacks (manifest operations)
     tabs::home_tab::init(&event_hub_client, &app, app_context);
 
+    // Initialize demo wizard callbacks
+    tabs::demo_wizard::init(&app, app_context);
+
     // Initialize entities tab subscriptions and callbacks
     tabs::entities_tab::init(&event_hub_client, &app, app_context);
 

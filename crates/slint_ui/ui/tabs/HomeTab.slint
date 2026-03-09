@@ -1,5 +1,5 @@
 import { Button, VerticalBox, HorizontalBox, ProgressIndicator, AboutSlint } from "std-widgets.slint";
-import { ManifestCommands, AppState, CommonTools } from "../globals.slint";
+import { ManifestCommands, AppState, CommonTools, DemoWizardState } from "../globals.slint";
 import { Paper, Alert, StyledButton, DocLink } from "../components/misc.slint";
 
 
@@ -104,6 +104,29 @@ export component HomeTab inherits Rectangle {
                             }
                         }
                         primary: false;
+                    }
+
+                    Rectangle { width: 16px; }
+
+                    StyledButton {
+                        text: "Run Demo";
+                        enabled: !AppState.is_loading;
+                        clicked => {
+                            DemoWizardState.step = 0;
+                            DemoWizardState.language_index = 0;
+                            DemoWizardState.output_path = "";
+                            DemoWizardState.is_running = false;
+                            DemoWizardState.progress = 0;
+                            DemoWizardState.progress_message = "";
+                            DemoWizardState.error_message = "";
+                            DemoWizardState.completed = false;
+                            DemoWizardState.result_path = "";
+                            DemoWizardState.visible = true;
+                        }
+                        primary: false;
+                        bg-color: #40c057;
+                        btn-border-color: #40c057;
+                        text-color: #ffffff;
                     }
                 }
 

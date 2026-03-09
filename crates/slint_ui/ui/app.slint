@@ -7,12 +7,13 @@ import { UserInterfaceTab } from "tabs/UserInterfaceTab.slint";
 import { GenerateTab } from "tabs/GenerateTab.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
 import { NewManifestWizard } from "components/new_manifest_wizard.slint";
+import { DemoWizard } from "components/demo_wizard.slint";
 import { StyledButton } from "components/misc.slint";
 import { CheckWidget } from "components/check_widget.slint";
 
 // Import and export globals for Rust access
-import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState } from "globals.slint";
-export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState }
+import { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState, DemoWizardState } from "globals.slint";
+export { ManifestCommands, UndoRedoCommands, GenerateCommands, ProjectTabState, EntitiesTabState, FeaturesTabState, UserInterfaceTabState, AppState, CheckState, CommonTools, NewManifestWizardState, DemoWizardState }
 
 // Custom NavItem component for sidebar navigation
 component NavItem inherits Rectangle {
@@ -286,6 +287,18 @@ export component App inherits Window {
                 NewManifestWizardState.visible = false;
                 NewManifestWizardState.step = 0;
                 ManifestCommands.create_wizard_confirmed();
+            }
+        }
+
+        // Demo wizard dialog
+        if DemoWizardState.visible : DemoWizard {
+            width: parent.width;
+            height: parent.height;
+            cancelled => {
+                DemoWizardState.visible = false;
+                DemoWizardState.step = 0;
+                DemoWizardState.completed = false;
+                DemoWizardState.error_message = "";
             }
         }
 

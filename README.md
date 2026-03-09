@@ -20,6 +20,8 @@ And follow the instructions.
 
 Deps: `clang-format` for C++/Qt, or `cargo-fmt` for Rust. If you are missing a dependency, it will tell you.
 
+Or type `qleany` to launch the GUI and click on the green "Run demo" button. 
+
 ## Intro
 
 Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application. Rust's GUI ecosystem is growing fast, but there's nothing to help you structure what sits behind the UI. Qleany fills that gap. Write a YAML manifest describing your entities, relationships, and features. Qleany generates the rest: the database layer, the repository infrastructure, the event system, the controller wiring, and — if you need it — a multi-stack undo/redo system with cascade snapshot/restore for entity trees. For C++/Qt, it also generates reactive QML models that update themselves, and JavaScript mock controllers so your UI developer can work without waiting for the backend.

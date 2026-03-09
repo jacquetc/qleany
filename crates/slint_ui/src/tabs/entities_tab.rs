@@ -1612,19 +1612,10 @@ fn setup_export_to_mermaid_clipboard_callback(app: &App, app_context: &Arc<AppCo
 
                     match handling_manifest_commands::export_to_mermaid(&ctx) {
                         Ok(return_dto) => {
-                            // Copy to clipboard
-                            let mut clipboard = match arboard::Clipboard::new() {
-                                Ok(cb) => cb,
-                                Err(e) => {
-                                    log::error!("Failed to access clipboard: {}", e);
-                                    return;
-                                }
-                            };
-                            clipboard.set_text(return_dto.mermaid_diagram).unwrap();
+                            super::common::set_clipboard_text(return_dto.mermaid_diagram);
                             log::info!(
                                 "Entities exported to mermaid markdown and copied to clipboard"
                             );
-                            std::thread::sleep(std::time::Duration::from_millis(100));
                             // Show success message
                             app.global::<AppState>().set_success_message(
                                 slint::SharedString::from(
