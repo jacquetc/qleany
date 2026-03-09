@@ -493,8 +493,8 @@ pub fn run_cli(app_context: &Arc<AppContext>) -> Option<()> {
 
 /// Resolves the manifest path from CLI arguments or discovers it in the current directory.
 fn resolve_manifest_path(explicit: &Option<PathBuf>, command: &Commands) -> Option<PathBuf> {
-    // New and Doc commands don't need an existing manifest
-    if matches!(command, Commands::New(_) | Commands::Docs(_)) {
+    // New, Demo, and Doc commands don't need an existing manifest
+    if matches!(command, Commands::New(_) | Commands::Demo(_) | Commands::Docs(_)) {
         return None;
     }
 
