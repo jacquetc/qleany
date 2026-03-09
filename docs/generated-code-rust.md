@@ -58,6 +58,13 @@ pub trait WorkspaceTable {
         field: &WorkspaceRelationshipField,
         right_ids: &[EntityId],
     ) -> Result<(), Error>;
+    fn move_relationship_ids(
+        &mut self,
+        id: &EntityId,
+        field: &WorkspaceRelationshipField,
+        ids_to_move: &[EntityId],
+        new_index: i32,
+    ) -> Result<Vec<EntityId>, Error>;
 }
 
 // Repository wraps table with event emission
@@ -271,6 +278,7 @@ Relationship-specific methods:
 | `get_relationships_from_right_ids(field, ids)`        | Reverse lookup                            |
 | `set_relationship(id, field, ids)`                    | Set relationship for one entity           |
 | `set_relationship_multi(field, relationships)`        | Batch relationship updates                |
+| `move_relationship_ids(id, field, ids_to_move, new_index)` | Reorder IDs within an ordered relationship |
 
 ### Unit of Work
 
@@ -314,6 +322,7 @@ pub fn create(
 #[macros::uow_action(entity = "Workspace", action = "GetRelationshipsFromRightIds")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationship")]
 #[macros::uow_action(entity = "Workspace", action = "SetRelationshipMulti")]
+#[macros::uow_action(entity = "Workspace", action = "MoveRelationship")]
 impl WorkspaceUnitOfWorkTrait for WorkspaceUnitOfWork {}
 ```
 

@@ -312,6 +312,40 @@ pub fn set_{{ entity.snake_name }}_relationship(
     .context("setting {{ entity.snake_name }} relationship")
 }
 
+/// Move (reorder) IDs within a {{ entity.snake_name }} relationship
+pub fn move_{{ entity.snake_name }}_relationship(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    id: &EntityId,
+    field: &{{ entity.pascal_name }}RelationshipField,
+    ids_to_move: &[EntityId],
+    new_index: i32,
+) -> Result<Vec<EntityId>> {
+    {%- if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::move_relationship(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut *undo_redo_manager,
+        stack_id,
+        id,
+        field,
+        ids_to_move,
+        new_index,
+    )
+    {% else %}
+    {{ entity.snake_name }}_controller::move_relationship(
+        &ctx.db_context,
+        &ctx.event_hub,
+        id,
+        field,
+        ids_to_move,
+        new_index,
+    )
+    {% endif %}
+    .context("moving {{ entity.snake_name }} relationship")
+}
+
 {% endif %}
 
 {% else %}

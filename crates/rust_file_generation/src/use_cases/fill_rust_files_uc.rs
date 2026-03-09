@@ -497,6 +497,10 @@ impl FillRustFilesUseCase {
                 "set_relationship.rs",
                 "common_da_use_cases_set_relationship",
             ),
+            (
+                "move_relationship.rs",
+                "common_da_use_cases_move_relationship",
+            ),
         ] {
             files.push(File {
                 id: 0,

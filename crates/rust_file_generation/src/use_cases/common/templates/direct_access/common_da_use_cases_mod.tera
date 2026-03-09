@@ -11,6 +11,7 @@ pub mod get_relationship_many;
 pub mod get_relationship_count;
 pub mod get_relationship_in_range;
 pub mod set_relationship;
+pub mod move_relationship;
 
 pub use traits::*;
 pub use get::*;
@@ -23,3 +24,4 @@ pub use get_relationship_many::*;
 pub use get_relationship_count::*;
 pub use get_relationship_in_range::*;
 pub use set_relationship::*;
+pub use move_relationship::*;

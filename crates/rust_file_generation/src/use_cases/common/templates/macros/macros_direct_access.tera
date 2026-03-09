@@ -1181,6 +1181,77 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
+    fn move_relationship_action(
+        entity_ident: &syn::Ident,
+        entity_snake_ident: &syn::Ident,
+        function_ident: &syn::Ident,
+        item_type: &ItemType,
+        thread_safe: bool,
+    ) -> proc_macro2::TokenStream {
+        let create_entity_repo = format_ident!("create_{}_repository", entity_snake_ident);
+        let relationship_field_type = format_ident!("{}RelationshipField", entity_ident);
+
+        match item_type {
+            ItemType::Trait(_) => {
+                quote! {
+                    fn #function_ident(
+                        &self,
+                        id: &EntityId,
+                        field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                        ids_to_move: &[EntityId],
+                        new_index: i32,
+                    ) -> Result<Vec<EntityId>>;
+                }
+            }
+            ItemType::Impl(_) => {
+                if thread_safe {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            ids_to_move: &[EntityId],
+                            new_index: i32,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+
+                            let borrowed_transaction = self.transaction.lock().unwrap();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let mut event_buffer = self.event_buffer.lock().unwrap();
+                            Ok(repo.move_relationship_ids(&mut event_buffer, id, field, ids_to_move, new_index)?)
+                        }
+                    }
+                } else {
+                    quote! {
+                        fn #function_ident(
+                            &self,
+                            id: &EntityId,
+                            field: &common::direct_access::#entity_snake_ident::#relationship_field_type,
+                            ids_to_move: &[EntityId],
+                            new_index: i32,
+                        ) -> Result<Vec<EntityId>> {
+                            use common::types::EntityId;
+                            use common::direct_access::repository_factory;
+                            use common::direct_access::#entity_snake_ident::#relationship_field_type;
+                            use std::borrow::Borrow;
+
+                            let borrowed_transaction = self.transaction.borrow();
+                            let mut repo = repository_factory::write::#create_entity_repo(
+                                &borrowed_transaction.as_ref().expect("Transaction not started"),
+                            );
+                            let mut event_buffer = self.event_buffer.borrow_mut();
+                            Ok(repo.move_relationship_ids(&mut event_buffer, id, field, ids_to_move, new_index)?)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fn snapshot_action(
         _entity_ident: &syn::Ident,
         entity_snake_ident: &syn::Ident,
@@ -1377,6 +1448,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
         "SetRelationship" => format!("set_{}_relationship", entity_name_snake_case),
         "SetRelationshipMulti" => format!("set_{}_relationship_multi", entity_name_snake_case),
+        "MoveRelationship" => format!("move_{}_relationship", entity_name_snake_case),
         "Snapshot" => format!("snapshot_{}", entity_name_snake_case),
         "Restore" => format!("restore_{}", entity_name_snake_case),
         _ => {
@@ -1526,6 +1598,13 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
             thread_safe,
         ),
         "SetRelationshipMulti" => set_relationship_multi_action(
+            &entity_ident,
+            &entity_snake_ident,
+            &function_ident,
+            &item_type,
+            thread_safe,
+        ),
+        "MoveRelationship" => move_relationship_action(
             &entity_ident,
             &entity_snake_ident,
             &function_ident,

@@ -317,7 +317,7 @@ pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 // Also available: GetAll, Create, CreateMulti, CreateOrphan, CreateOrphanMulti,
 //   UpdateMulti, Remove, RemoveMulti, GetRelationship, GetRelationshipMany,
 //   GetRelationshipCount, GetRelationshipInRange, GetRelationshipsFromRightIds,
-//   SetRelationship, SetRelationshipMulti, Snapshot, Restore
+//   SetRelationship, SetRelationshipMulti, MoveRelationship, Snapshot, Restore
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
 {%- endif %}
 ```

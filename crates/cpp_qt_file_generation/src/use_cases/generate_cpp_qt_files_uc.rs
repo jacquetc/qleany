@@ -163,11 +163,7 @@ impl LongOperation for GenerateCppQtFilesUseCase {
 
         progress_callback(common::long_operation::OperationProgress::new(
             90.0,
-            Some(format!(
-                "Generated {}/{} files",
-                written_files.len(),
-                total
-            )),
+            Some(format!("Generated {}/{} files", written_files.len(), total)),
         ));
 
         // Batch format all CppQt files at once (much faster than per-file formatting)

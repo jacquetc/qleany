@@ -240,6 +240,24 @@ pub fn set_relationship(
 
 Replaces the relationship. The `CarRelationshipDto` contains the entity ID, the relationship field, and the new list of related IDs.
 
+#### move_relationship
+
+```rust
+pub fn move_relationship(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    // only if entity is undoable:
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    id: &EntityId,
+    field: &CarRelationshipField,
+    ids_to_move: &[EntityId],
+    new_index: i32,
+) -> Result<Vec<EntityId>>
+```
+
+Reorders specific related IDs within an ordered relationship. Takes the entity ID, the relationship field, the IDs to move, and the new index (`-1` means append at end). Returns the reordered list of related IDs.
+
 ### Usage Examples
 
 ```rust
@@ -277,6 +295,10 @@ let page = controller::get_relationship_in_range(
 )?;
 controller::set_relationship(
     &db_context, &event_hub, &relationship_dto,
+)?;
+let reordered = controller::move_relationship(
+    &db_context, &event_hub, &EntityId::new(1),
+    &CarRelationshipField::Passengers, &[EntityId::new(3), EntityId::new(5)], -1,
 )?;
 ```
 
@@ -415,6 +437,7 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 | `GetRelationshipsFromRightIds` | `fn get_name_relationships_from_right_ids(&self, field: &RF, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
 | `SetRelationship`              | `fn set_name_relationship(&self, id: &EntityId, field: &RF, right_ids: &[EntityId]) -> Result<()>` |
 | `SetRelationshipMulti`         | `fn set_name_relationship_multi(&self, field: &RF, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<()>` |
+| `MoveRelationship`             | `fn move_name_relationship(&self, id: &EntityId, field: &RF, ids_to_move: &[EntityId], new_index: i32) -> Result<Vec<EntityId>>` |
 | `Snapshot`                     | `fn snapshot_name(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot>`        |
 | `Restore`                      | `fn restore_name(&self, snap: &EntityTreeSnapshot) -> Result<()>`                |
 

@@ -50,6 +50,7 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
     fn set_relationship_multi(&mut self, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), Error>;
     fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), Error>;
+    fn move_relationship_ids(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, ids_to_move: &[EntityId], new_index: i32) -> Result<Vec<EntityId>, Error>;
 {%- endif %}
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
@@ -376,6 +377,12 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         self.redb_table.set_relationship(id, field, right_ids)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(())
+    }
+
+    pub fn move_relationship_ids(&mut self, event_buffer: &mut EventBuffer, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, ids_to_move: &[EntityId], new_index: i32) -> Result<Vec<EntityId>, Error> {
+        let reordered = self.redb_table.move_relationship_ids(id, field, ids_to_move, new_index)?;
+        event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, reordered.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
+        Ok(reordered)
     }
 {%- endif %}
 

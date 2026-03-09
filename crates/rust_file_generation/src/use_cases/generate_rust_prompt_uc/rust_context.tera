@@ -230,6 +230,7 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 | `#[macros::uow_action(entity = "Name", action = "GetRelationshipsFromRightIds")]` | `get_{snake}_relationships_from_right_ids(field, right_ids) -> Result<Vec<(EntityId, Vec<EntityId>)>>` |
 | `#[macros::uow_action(entity = "Name", action = "SetRelationship")]` | `set_{snake}_relationship(id, field, ids) -> Result<()>` |
 | `#[macros::uow_action(entity = "Name", action = "SetRelationshipMulti")]` | `set_{snake}_relationship_multi(field, relationships) -> Result<()>` |
+| `#[macros::uow_action(entity = "Name", action = "MoveRelationship")]` | `move_{snake}_relationship(id, field, ids_to_move, new_index) -> Result<Vec<EntityId>>` |
 | `#[macros::uow_action(entity = "Name", action = "Snapshot")]` | `snapshot_{snake}(ids) -> Result<EntityTreeSnapshot>` |
 | `#[macros::uow_action(entity = "Name", action = "Restore")]` | `restore_{snake}(snap) -> Result<()>` |
 

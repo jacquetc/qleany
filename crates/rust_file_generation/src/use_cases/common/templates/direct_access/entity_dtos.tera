@@ -100,6 +100,7 @@ pub struct {{ s.entities[e].pascal_name }}RelationshipDto {
     pub field: {{ s.entities[e].pascal_name }}RelationshipField,
     pub right_ids: Vec<EntityId>,
 }
+
 {%- endif %}
 
 {%- else %}

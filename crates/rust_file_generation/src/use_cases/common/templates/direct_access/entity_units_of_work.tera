@@ -196,6 +196,19 @@ impl use_cases::WriteRelUoW<{{ s.entities[e].pascal_name }}RelationshipField> fo
         repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
         Ok(())
     }
+
+    fn move_relationship(
+        &self,
+        id: &EntityId,
+        field: &{{ s.entities[e].pascal_name }}RelationshipField,
+        ids_to_move: &[EntityId],
+        new_index: i32,
+    ) -> Result<Vec<EntityId>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.move_relationship_ids(&mut event_buffer, id, field, ids_to_move, new_index)?)
+    }
 }
 
 {%- endif %}

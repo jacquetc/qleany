@@ -92,6 +92,13 @@ pub trait WriteRelUoW<RF>: CommandUnitOfWork {
         field: &RF,
         right_ids: &[EntityId],
     ) -> Result<()>;
+    fn move_relationship(
+        &self,
+        id: &EntityId,
+        field: &RF,
+        ids_to_move: &[EntityId],
+        new_index: i32,
+    ) -> Result<Vec<EntityId>>;
 }
 
 pub trait WriteRelUoWFactory<RF>: Send + Sync {
