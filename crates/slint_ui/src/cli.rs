@@ -7,6 +7,7 @@ use std::sync::Arc;
 #[derive(Parser)]
 #[command(author, version)]
 #[command(about = "Architecture generator for C++/Qt6 and Rust applications")]
+#[command(before_help = concat!("Qleany v", env!("CARGO_PKG_VERSION"), " - made by FernTech"))]
 #[command(propagate_version = true)]
 pub struct Cli {
     #[command(subcommand)]

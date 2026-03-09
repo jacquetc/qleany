@@ -250,28 +250,25 @@ export component HomeTab inherits Rectangle {
 
         HorizontalLayout {
             alignment: center;
-            spacing: 24px;
-
-            AboutSlint {
-                width: 200px;
-            }
+            height: 180px;
 
             HorizontalLayout {
-                spacing: 4px;
-
-                Text {
-                    text: "Made by";
-                    color: #868e96;
-                    font-size: 12px;
-                    vertical-alignment: center;
+            vertical-stretch: 1;
+            alignment: center;
+            max-width: 600px;
+            padding-top: 30px;
+                spacing: 24px;
+                AboutSlint {
+                    height: 180px;
+                    preferred-height: 200px;
+                    preferred-width: 200px;
+                    width: 200px;
                 }
 
-                Text {
-                    text: "FernTech";
-                    color: #495057;
-                    font-size: 12px;
-                    font-weight: 500;
+                Image {
                     vertical-alignment: center;
+                    source: @image-url("../icons/made-by-ferntech.png");
+                    height: 120px;
                 }
             }
         }
