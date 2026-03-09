@@ -25,29 +25,27 @@ pub fn get_global_id(app: &App, app_context: &Arc<AppContext>) -> Option<EntityI
 /// grab the contents. We use `SetExtLinux::wait_until` on a background thread
 /// to serve clipboard requests for a few seconds without blocking the UI.
 pub fn set_clipboard_text(text: String) {
-    std::thread::spawn(move || {
-        match arboard::Clipboard::new() {
-            Ok(mut clipboard) => {
-                #[cfg(target_os = "linux")]
-                {
-                    use arboard::SetExtLinux;
-                    use std::time::{Duration, Instant};
+    std::thread::spawn(move || match arboard::Clipboard::new() {
+        Ok(mut clipboard) => {
+            #[cfg(target_os = "linux")]
+            {
+                use arboard::SetExtLinux;
+                use std::time::{Duration, Instant};
 
-                    let deadline = Instant::now() + Duration::from_secs(5);
-                    if let Err(e) = clipboard.set().wait_until(deadline).text(text) {
-                        log::error!("Failed to set clipboard text: {}", e);
-                    }
-                }
-                #[cfg(not(target_os = "linux"))]
-                {
-                    if let Err(e) = clipboard.set_text(text) {
-                        log::error!("Failed to set clipboard text: {}", e);
-                    }
+                let deadline = Instant::now() + Duration::from_secs(5);
+                if let Err(e) = clipboard.set().wait_until(deadline).text(text) {
+                    log::error!("Failed to set clipboard text: {}", e);
                 }
             }
-            Err(e) => {
-                log::error!("Failed to access clipboard: {}", e);
+            #[cfg(not(target_os = "linux"))]
+            {
+                if let Err(e) = clipboard.set_text(text) {
+                    log::error!("Failed to set clipboard text: {}", e);
+                }
             }
+        }
+        Err(e) => {
+            log::error!("Failed to access clipboard: {}", e);
         }
     });
 }

@@ -12,7 +12,9 @@ use common::long_operation::OperationStatus;
 use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use direct_access::{FileDto, file_controller, system_controller};
 use file_generation_shared_steps::file_generation_shared_steps_controller;
-use handling_manifest::{CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller};
+use handling_manifest::{
+    CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller,
+};
 use rust_file_generation::rust_file_generation_controller;
 use slint::ComponentHandle;
 
@@ -161,7 +163,10 @@ fn setup_open_result_folder_callback(app: &App) {
         let app_weak = app.as_weak();
         move || {
             if let Some(app) = app_weak.upgrade() {
-                let path = app.global::<DemoWizardState>().get_result_path().to_string();
+                let path = app
+                    .global::<DemoWizardState>()
+                    .get_result_path()
+                    .to_string();
                 if !path.is_empty() {
                     let _ = open::that(&path);
                 }
@@ -240,10 +245,7 @@ fn run_demo_generation(
     let options = match target_language {
         LanguageOption::Rust => vec!["rust_cli".to_string(), "rust_slint".to_string()],
         LanguageOption::CppQt => {
-            vec![
-                "cpp_qt_qtquick".to_string(),
-                "cpp_qt_qtwidgets".to_string(),
-            ]
+            vec!["cpp_qt_qtquick".to_string(), "cpp_qt_qtwidgets".to_string()]
         }
     };
 
@@ -262,9 +264,7 @@ fn run_demo_generation(
     set_progress(app_weak, 10.0, "Creating manifest...");
     handling_manifest_controller::create(&app_context.db_context, &create_dto)?;
 
-    let manifest_lines = std::fs::read_to_string(&manifest_path)?
-        .lines()
-        .count();
+    let manifest_lines = std::fs::read_to_string(&manifest_path)?.lines().count();
 
     set_progress(app_weak, 15.0, "Loading manifest...");
     let load_dto = handling_manifest::LoadDto {
@@ -317,13 +317,11 @@ fn run_demo_generation(
                 &app_context.event_hub,
                 &mut long_op_manager,
             )?,
-            LanguageOption::CppQt => {
-                cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
-                    &app_context.db_context,
-                    &app_context.event_hub,
-                    &mut long_op_manager,
-                )?
-            }
+            LanguageOption::CppQt => cpp_qt_file_generation_controller::fill_code_in_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &mut long_op_manager,
+            )?,
         }
     };
 
@@ -339,10 +337,7 @@ fn run_demo_generation(
 
         if let Some(progress) = long_op_manager.get_operation_progress(&operation_id) {
             let mapped = 30.0 + progress.percentage * 0.5; // 30 -> 80
-            let msg = progress
-                .message
-                .as_deref()
-                .unwrap_or("Generating code...");
+            let msg = progress.message.as_deref().unwrap_or("Generating code...");
             set_progress(app_weak, mapped, msg);
         }
 

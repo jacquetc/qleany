@@ -143,7 +143,7 @@ pub const CRITICAL_RULES: &[Rule] = &[
     Rule {
         id: "C21",
         severity: "critical",
-        description: "Use case names must be globally unique",
+        description: "Use case names must be unique within their feature",
     },
     Rule {
         id: "C22",
@@ -163,7 +163,7 @@ pub const CRITICAL_RULES: &[Rule] = &[
     Rule {
         id: "C25",
         severity: "critical",
-        description: "DTO names must be globally unique",
+        description: "DTO names must be unique within their feature",
     },
     Rule {
         id: "C26",
@@ -1011,16 +1011,30 @@ impl CheckUseCase {
         if !all_use_case_ids.is_empty() {
             let use_cases = uow.get_use_case_multi(&all_use_case_ids)?;
             let use_cases: Vec<UseCase> = use_cases.into_iter().flatten().collect();
+            let uc_by_id: HashMap<EntityId, &UseCase> =
+                use_cases.iter().map(|uc| (uc.id, uc)).collect();
 
-            // Unique use case names (globally)
-            let mut uc_global_names: HashSet<String> = HashSet::new();
-            for uc in &use_cases {
-                if !uc.name.is_empty() && !uc_global_names.insert(uc.name.clone()) {
-                    critical_errors.push(format!(
-                        "Duplicate use case name: '{}' (must be unique across all features)",
-                        uc.name
-                    ));
+            // Unique use case names within each feature
+            for feature in &features {
+                if feature.use_cases.is_empty() {
+                    warnings.push(format!("Feature '{}' has no use cases", feature.name));
+                    continue;
                 }
+                let mut uc_names_in_feature: HashSet<String> = HashSet::new();
+                for uc_id in &feature.use_cases {
+                    if let Some(uc) = uc_by_id.get(uc_id) {
+                        if !uc.name.is_empty() && !uc_names_in_feature.insert(uc.name.clone()) {
+                            critical_errors.push(format!(
+                                "Feature '{}': duplicate use case name '{}' \
+                                 (must be unique within its feature)",
+                                feature.name, uc.name
+                            ));
+                        }
+                    }
+                }
+            }
+
+            for uc in &use_cases {
                 // Forbidden names
                 if let Some(reason) = is_forbidden_name(&uc.name) {
                     critical_errors.push(format!(
@@ -1038,12 +1052,6 @@ impl CheckUseCase {
                 }
             }
 
-            for feature in &features {
-                if feature.use_cases.is_empty() {
-                    warnings.push(format!("Feature '{}' has no use cases", feature.name));
-                }
-            }
-
             // Check use case entity references
             for uc in &use_cases {
                 for entity_id in &uc.entities {
@@ -1058,11 +1066,23 @@ impl CheckUseCase {
 
             // ── DTOs and DtoFields ──
 
-            let mut dto_global_names: HashSet<String> = HashSet::new();
+            // Build mapping: use case id -> feature name
+            let uc_to_feature: HashMap<EntityId, &str> = features
+                .iter()
+                .flat_map(|f| {
+                    f.use_cases
+                        .iter()
+                        .map(move |&uc_id| (uc_id, f.name.as_str()))
+                })
+                .collect();
+
+            // Unique DTO names per feature
+            let mut dto_names_per_feature: HashMap<&str, HashSet<String>> = HashMap::new();
 
             for uc in &use_cases {
                 let dto_ids: Vec<EntityId> =
                     [uc.dto_in, uc.dto_out].iter().flatten().copied().collect();
+                let feature_name = uc_to_feature.get(&uc.id).copied().unwrap_or("?");
 
                 for dto_id in dto_ids {
                     if let Some(dto) = uow.get_dto(&dto_id)? {
@@ -1078,12 +1098,16 @@ impl CheckUseCase {
                             ));
                         }
 
-                        // Unique DTO names (globally)
-                        if !dto.name.is_empty() && !dto_global_names.insert(dto.name.clone()) {
-                            critical_errors.push(format!(
-                                "Duplicate DTO name: '{}' (must be unique across all use cases)",
-                                dto.name
-                            ));
+                        // Unique DTO names within their feature
+                        if !dto.name.is_empty() {
+                            let names = dto_names_per_feature.entry(feature_name).or_default();
+                            if !names.insert(dto.name.clone()) {
+                                critical_errors.push(format!(
+                                    "Feature '{}': duplicate DTO name '{}' \
+                                     (must be unique within its feature)",
+                                    feature_name, dto.name
+                                ));
+                            }
                         }
 
                         // Forbidden DTO names
