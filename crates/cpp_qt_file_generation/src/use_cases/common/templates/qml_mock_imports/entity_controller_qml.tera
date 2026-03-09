@@ -9,7 +9,30 @@ QtObject {
 
     property int undoRedoStackId: 0
 
-    function create(dtos) {
+{%- if ent.owner %}
+    function create(dtos, ownerId, index) {
+        for (var i = 0; i < dtos.length; i++) {
+            const dto = dtos[i];
+            // create random id
+            dto["id"] = Math.floor(Math.random() * 1000000);
+        }
+
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue(dtos);
+            task.setDelay(50);
+            task.setSignalFn(function () {
+                EventRegistry.{{ ent.camel_name }}Events().created(dtos);
+            });
+        }
+
+        return task;
+    }
+{%- endif %}
+    function createOrphans(dtos) {
         for (var i = 0; i < dtos.length; i++) {
             const dto = dtos[i];
             // create random id
@@ -47,6 +70,18 @@ QtObject {
         if (component.status === Component.Ready) {
             task = component.createObject(controller);
             task.setValue(dtos);
+            task.setDelay(50);
+        }
+
+        return task;
+    }
+    function getAll() {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue([]);
             task.setDelay(50);
         }
 
@@ -95,9 +130,9 @@ QtObject {
 
         return task;
     }
-{%- for rid, rel in ent.forward_relationships %}
+{%- if ent.forward_relationships %}
 
-    function get{{ rel.field_pascal_name }}Ids(entityId) {
+    function getRelationshipIds(entityId, relationship) {
         // mocking QCoro::Task
         let task;
         var component = Qt.createComponent("QCoroQmlTask.qml");
@@ -108,19 +143,66 @@ QtObject {
         }
         return task;
     }
-    function set{{ rel.field_pascal_name }}Ids(entityId, relatedIds) {
+    function setRelationshipIds(entityId, relationship, relatedIds) {
         // mocking QCoro::Task
         let task;
         var component = Qt.createComponent("QCoroQmlTask.qml");
         if (component.status === Component.Ready) {
             task = component.createObject(controller);
-            task.setValue(true);
+            task.setValue(undefined);
             task.setDelay(50);
             task.setSignalFn(function () {
-                EventRegistry.{{ ent.camel_name }}Events().relationshipChanged(entityId, "{{ rel.field_camel_name }}", relatedIds);
+                EventRegistry.{{ ent.camel_name }}Events().relationshipChanged(entityId, relationship, relatedIds);
             });
         }
         return task;
     }
-{%- endfor %}
+    function getRelationshipIdsMany(entityIds, relationship) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue({});
+            task.setDelay(50);
+        }
+        return task;
+    }
+    function getRelationshipIdsCount(entityId, relationship) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue(0);
+            task.setDelay(50);
+        }
+        return task;
+    }
+    function getRelationshipIdsInRange(entityId, relationship, offset, limit) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue([]);
+            task.setDelay(50);
+        }
+        return task;
+    }
+    function moveRelationshipIds(entityId, relationship, idsToMove, newIndex) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue([]);
+            task.setDelay(50);
+            task.setSignalFn(function () {
+                EventRegistry.{{ ent.camel_name }}Events().relationshipChanged(entityId, relationship, idsToMove);
+            });
+        }
+        return task;
+    }
+{%- endif %}
 }
