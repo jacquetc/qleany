@@ -16,6 +16,7 @@ use crate::use_cases::{{ uc.snake_name }}_uc::{
 };
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
+#[allow(unused_imports)]
 use common::entities:: {
 {%- for e_id, entity in uc.entities  %}
 {{ entity.pascal_name }},
@@ -28,7 +29,9 @@ use std::sync::Arc;
 use common::database::CommandUnitOfWork;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 {%- endif %}
+#[allow(unused_imports)]
 use common::types;
+#[allow(unused_imports)]
 use common::types::EntityId;
 use std::sync::Mutex;
 
@@ -215,6 +218,7 @@ use crate::use_cases::{{ uc.snake_name }}_uc::{
 };
 use anyhow::{Ok, Result};
 use common::database::{db_context::DbContext, transactions::Transaction};
+#[allow(unused_imports)]
 use common::entities:: {
 {%- for e_id, entity in uc.entities  %}
 {{ entity.pascal_name }},
@@ -229,7 +233,9 @@ use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, 
 use std::cell::RefCell;
 use std::sync::Arc;
 {%- endif %}
+#[allow(unused_imports)]
 use common::types;
+#[allow(unused_imports)]
 use common::types::EntityId;
 
 // Unit of work for {{ uc.pascal_name }}

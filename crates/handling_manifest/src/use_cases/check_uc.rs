@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Direction, Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType,
-    FieldType, Global, Relationship, Root, Strength, UseCase, UserInterface, Workspace,
+    FieldType, Global, Relationship, Root, Strength, UseCase, Workspace,
 };
 use common::types::EntityId;
 use heck::{ToSnakeCase, ToUpperCamelCase};

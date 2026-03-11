@@ -7,7 +7,6 @@ use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
     Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, Workspace,
 };
-use common::types;
 use common::types::EntityId;
 use std::cell::RefCell;
 

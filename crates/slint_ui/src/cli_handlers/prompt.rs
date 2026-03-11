@@ -2,7 +2,7 @@ use crate::app_context::AppContext;
 use crate::cli::{OutputContext, PromptArgs};
 use crate::cli_handlers::common::run_checks;
 use crate::cli_handlers::common::{TargetLanguage, get_target_language};
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, anyhow};
 use cpp_qt_file_generation::GenerateCppQtPromptDto;
 use cpp_qt_file_generation::cpp_qt_file_generation_controller;
 use direct_access::{feature_controller, global_controller, use_case_controller};

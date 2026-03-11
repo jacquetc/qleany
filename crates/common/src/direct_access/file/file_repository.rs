@@ -244,7 +244,7 @@ impl<'a> FileRepository<'a> {
     }
 
     pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
-        let entity = match self.redb_table.get(id)? {
+        let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };

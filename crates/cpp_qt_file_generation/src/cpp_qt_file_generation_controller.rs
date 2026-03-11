@@ -22,10 +22,8 @@ use crate::use_cases::generate_cpp_qt_prompt_uc::GenerateCppQtPromptUseCase;
 use anyhow::Result;
 use common::event::{Event, Origin};
 
-use common::event::CppQtFileGenerationEvent::FillCodeInCppQtFiles;
 use common::event::CppQtFileGenerationEvent::FillCppQtFiles;
 use common::event::CppQtFileGenerationEvent::GenerateCppQtCode;
-use common::event::CppQtFileGenerationEvent::GenerateCppQtFiles;
 use common::event::CppQtFileGenerationEvent::GenerateCppQtPrompt;
 
 use common::long_operation::{LongOperationManager, OperationProgress};
@@ -55,7 +53,7 @@ pub fn generate_cpp_qt_code(
     dto: &GenerateCppQtCodeDto,
 ) -> Result<GenerateCppQtCodeReturnDto> {
     let uow_context = GenerateCppQtCodeUnitOfWorkFactory::new(db_context);
-    let mut uc = GenerateCppQtCodeUseCase::new(Box::new(uow_context));
+    let uc = GenerateCppQtCodeUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
@@ -68,7 +66,7 @@ pub fn generate_cpp_qt_code(
 
 pub fn generate_cpp_qt_files(
     db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
+    _event_hub: &Arc<EventHub>,
     long_operation_manager: &mut LongOperationManager,
     dto: &GenerateCppQtFilesDto,
 ) -> Result<String> {

@@ -11,7 +11,7 @@ use common::{
     database::CommandUnitOfWork, entities::Feature, entities::Field, entities::File,
     entities::Global, entities::Relationship, entities::Root, entities::UseCase,
 };
-use heck::{ToPascalCase, ToTitleCase};
+use heck::ToTitleCase;
 
 pub trait FillCppQtFilesUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn FillCppQtFilesUnitOfWorkTrait>;

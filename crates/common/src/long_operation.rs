@@ -117,7 +117,6 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use std::thread;
-use std::time::Duration;
 
 // Status of a long operation
 #[derive(Debug, Clone, PartialEq)]

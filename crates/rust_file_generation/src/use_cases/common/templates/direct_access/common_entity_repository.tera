@@ -92,7 +92,11 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
 {%- if s.entities[e].owner %}
+{%- if s.entities[e].owner_relationship_type == "OneToOne" or s.entities[e].owner_relationship_type == "ManyToOne" %}
+    pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, _index: i32) -> Result<{{ s.entities[e].pascal_name }}, Error> {
+{%- else %}
     pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}, Error> {
+{%- endif %}
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -175,7 +179,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
     pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
-        let entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
+        {%- set_global has_strong_entity_fields = false %}
+        {%- for f in s.entities[e].fields %}
+            {%- if f.inner.field_type == "Entity" and f.inner.strong %}
+                {%- set_global has_strong_entity_fields = true %}
+            {%- endif %}
+        {%- endfor %}
+        let {% if not has_strong_entity_fields %}_{% endif %}entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}

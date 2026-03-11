@@ -2,7 +2,7 @@
 
 use super::traits::WriteUoWFactory;
 use crate::snapshot::EntityTreeSnapshot;
-use crate::types::{EntityId, HasId};
+use crate::types::EntityId;
 use crate::undo_redo::UndoRedoCommand;
 use anyhow::{Ok, Result};
 use std::any::Any;

@@ -71,6 +71,7 @@ pub fn strip_leading_and_trailing_slashes(path: &str) -> String {
     trimmed.to_string()
 }
 /// Transforms an English word to its plural form following English language rules.
+#[allow(dead_code)]
 pub fn to_plural(word: &str) -> String {
     if word.is_empty() {
         return String::new();

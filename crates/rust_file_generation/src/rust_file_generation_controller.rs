@@ -20,8 +20,7 @@ use common::event::{Event, Origin};
 
 use common::event::RustFileGenerationEvent::FillRustFiles;
 use common::event::RustFileGenerationEvent::GenerateRustCode;
-use common::event::RustFileGenerationEvent::GenerateRustFiles;
-use common::event::RustFileGenerationEvent::{FillCodeInRustFiles, GenerateRustPrompt};
+use common::event::RustFileGenerationEvent::GenerateRustPrompt;
 
 use crate::units_of_work::generate_rust_prompt_uow::GenerateRustPromptUnitOfWorkFactory;
 use crate::use_cases::generate_rust_prompt_uc::GenerateRustPromptUseCase;
@@ -35,7 +34,7 @@ pub fn generate_rust_code(
     dto: &GenerateRustCodeDto,
 ) -> Result<GenerateRustCodeReturnDto> {
     let uow_context = GenerateRustCodeUnitOfWorkFactory::new(db_context);
-    let mut uc = GenerateRustCodeUseCase::new(Box::new(uow_context));
+    let uc = GenerateRustCodeUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
@@ -48,7 +47,7 @@ pub fn generate_rust_code(
 
 pub fn generate_rust_files(
     db_context: &DbContext,
-    event_hub: &Arc<EventHub>,
+    _event_hub: &Arc<EventHub>,
     long_operation_manager: &mut LongOperationManager,
     dto: &GenerateRustFilesDto,
 ) -> Result<String> {

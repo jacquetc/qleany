@@ -313,7 +313,9 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                             let mut list: Vec<ListItem> = Vec::new();
                             for e in &entities {
                                 let mut flags: Vec<String> = Vec::new();
-                                if e.only_for_heritage { flags.push("abstract".into()); }
+                                if e.only_for_heritage {
+                                    flags.push("abstract".into());
+                                }
                                 if let Some(parent_id) = e.inherits_from {
                                     let parent = name_of(parent_id).unwrap_or("?".into());
                                     flags.push(format!("extends {}", parent));
@@ -1064,7 +1066,7 @@ fn setup_field_entity_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_entity_changed({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
-        move |field_entity_index| {
+        move |_field_entity_index| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 // Get the entity id from the index

@@ -144,7 +144,12 @@ pub fn fill_dto_out_field_list(app: &App, app_context: &Arc<AppContext>) {
                                 list_flag
                             )
                         } else {
-                            format!("{}{}{}", dto_field_type_to_string(&f.field_type), opt, list_flag)
+                            format!(
+                                "{}{}{}",
+                                dto_field_type_to_string(&f.field_type),
+                                opt,
+                                list_flag
+                            )
                         };
                         list.push(ListItem {
                             id: f.id as i32,

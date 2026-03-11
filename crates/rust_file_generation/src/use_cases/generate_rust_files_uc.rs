@@ -1,6 +1,5 @@
 use crate::use_cases::common::rust_code_generator::{
-    GenerationOps, GenerationReadOps, GenerationSnapshot, SnapshotBuilder,
-    generate_code_with_snapshot,
+    GenerationReadOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
 };
 use crate::use_cases::common::rust_formatter::rustfmt_files_batch;
 use crate::use_cases::common::tools;

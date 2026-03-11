@@ -9,10 +9,14 @@
             {%- set_global has_entity_fields = true %}
         {%- endif %}
     {%- endfor %}
+{%- if s.entities[e].forward_relationships | length > 0 %}
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
+{%- endif %}
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}Table;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}TableRO;
+{%- if s.entities[e].backward_relationships | length > 0 %}
 use crate::database::db_helpers;
+{%- endif %}
 use crate::database::Bincode;
 use crate::entities::{{ s.entities[e].pascal_name }};
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
@@ -187,7 +191,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
 
         let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
         while let Some(Ok((id, data))) = iter.next() {
-            let id = id.value();
+            let {% if not has_entity_fields %}_{% endif %}id = id.value();
             let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
             let mut _junction_complete = true;
 
@@ -573,7 +577,7 @@ impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name
 
         let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
         while let Some(Ok((id, data))) = iter.next() {
-            let id = id.value();
+            let {% if not has_entity_fields %}_{% endif %}id = id.value();
             let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
             let mut _junction_complete = true;
 

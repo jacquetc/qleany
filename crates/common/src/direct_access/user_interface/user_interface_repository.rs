@@ -89,7 +89,7 @@ impl<'a> UserInterfaceRepository<'a> {
         event_buffer: &mut EventBuffer,
         entity: &UserInterface,
         owner_id: EntityId,
-        index: i32,
+        _index: i32,
     ) -> Result<UserInterface, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
@@ -178,7 +178,7 @@ impl<'a> UserInterfaceRepository<'a> {
     }
 
     pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
-        let entity = match self.redb_table.get(id)? {
+        let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
         };

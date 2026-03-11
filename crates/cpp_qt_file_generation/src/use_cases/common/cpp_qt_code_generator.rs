@@ -57,6 +57,7 @@ pub(crate) trait GenerationReadOps: QueryUnitOfWork + GenerationOps {}
 #[macros::uow_action(entity = "Entity", action = "GetMulti")]
 #[macros::uow_action(entity = "Field", action = "GetMulti")]
 #[macros::uow_action(entity = "Relationship", action = "GetMulti")]
+#[allow(dead_code)]
 pub(crate) trait GenerationWriteOps: CommandUnitOfWork + GenerationOps {}
 
 #[macros::uow_action(entity = "Root", action = "GetRelationship")]

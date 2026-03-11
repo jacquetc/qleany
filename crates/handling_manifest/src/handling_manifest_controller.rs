@@ -24,7 +24,6 @@ use common::event::{Event, Origin};
 
 use common::event::HandlingManifestEvent::Check;
 use common::event::HandlingManifestEvent::Close;
-use common::event::HandlingManifestEvent::Create;
 use common::event::HandlingManifestEvent::ExportToMermaid;
 use common::event::HandlingManifestEvent::Load;
 use common::event::HandlingManifestEvent::Save;

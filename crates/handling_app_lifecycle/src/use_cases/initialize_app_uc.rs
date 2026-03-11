@@ -3,7 +3,6 @@
 use anyhow::Result;
 use common::database::CommandUnitOfWork;
 use common::entities::{Root, System};
-use common::types::EntityId;
 
 pub trait InitializeAppUnitOfWorkFactoryTrait {
     fn create(&self) -> Box<dyn InitializeAppUnitOfWorkTrait>;

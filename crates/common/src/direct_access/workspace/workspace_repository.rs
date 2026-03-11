@@ -159,7 +159,7 @@ impl<'a> WorkspaceRepository<'a> {
         event_buffer: &mut EventBuffer,
         entity: &Workspace,
         owner_id: EntityId,
-        index: i32,
+        _index: i32,
     ) -> Result<Workspace, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;

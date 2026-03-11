@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use crate::app_context::AppContext;
-use crate::commands::{global_commands, workspace_commands};
+use crate::commands::global_commands;
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, ProjectTabState};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};

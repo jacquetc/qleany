@@ -12,7 +12,6 @@ use common::direct_access::use_case::UseCaseRelationshipField;
 use common::entities::DtoFieldType;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
-use log::log;
 use slint::ComponentHandle;
 use std::sync::Arc;
 
@@ -73,9 +72,9 @@ pub fn subscribe_dto_field_updated_event(
 }
 
 pub fn subscribe_use_case_updated_event(
-    event_hub_client: &EventHubClient,
-    app: &App,
-    app_context: &Arc<AppContext>,
+    _event_hub_client: &EventHubClient,
+    _app: &App,
+    _app_context: &Arc<AppContext>,
 ) {
     // event_hub_client.subscribe(
     //     Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Updated)),
@@ -278,7 +277,12 @@ pub fn fill_dto_in_field_list(app: &App, app_context: &Arc<AppContext>) {
                                 list_flag
                             )
                         } else {
-                            format!("{}{}{}", dto_field_type_to_string(&f.field_type), opt, list_flag)
+                            format!(
+                                "{}{}{}",
+                                dto_field_type_to_string(&f.field_type),
+                                opt,
+                                list_flag
+                            )
                         };
                         list.push(ListItem {
                             id: f.id as i32,

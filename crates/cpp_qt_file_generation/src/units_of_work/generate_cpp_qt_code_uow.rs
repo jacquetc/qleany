@@ -5,8 +5,6 @@ use crate::use_cases::generate_cpp_qt_code_uc::{
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::direct_access::root::RootRelationshipField;
-use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::Dto;
 use common::entities::DtoField;
 use common::entities::Entity;

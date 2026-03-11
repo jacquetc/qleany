@@ -6,8 +6,7 @@ use anyhow::{Ok, Result};
 use common::database::CommandUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, UserInterface,
-    Workspace,
+    Dto, DtoField, Entity, Feature, Field, Global, Root, UseCase, UserInterface, Workspace,
 };
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use common::types;

@@ -156,7 +156,7 @@ impl<'a> DtoRepository<'a> {
         event_buffer: &mut EventBuffer,
         entity: &Dto,
         owner_id: EntityId,
-        index: i32,
+        _index: i32,
     ) -> Result<Dto, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;

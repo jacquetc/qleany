@@ -117,7 +117,6 @@ use std::sync::{
     Arc, Mutex,
 };
 use std::thread;
-use std::time::Duration;
 use crate::event::{EventHub, Event, Origin, LongOperationEvent};
 
 // Status of a long operation

@@ -4,8 +4,6 @@ use crate::use_cases::create_uc::{CreateUnitOfWorkFactoryTrait, CreateUnitOfWork
 use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
-use common::types;
-use common::types::EntityId;
 use std::cell::RefCell;
 
 // Unit of work for Create

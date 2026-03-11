@@ -649,8 +649,6 @@ fn setup_start_generate_callback(app: &App, app_context: &Arc<AppContext>) {
 fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, operation_id: String) {
     struct GenerateFilesReturnDto {
         pub files: Vec<String>,
-        pub timestamp: String,
-        pub duration: String,
     }
 
     fn get_generate_files_result_helper(
@@ -666,8 +664,6 @@ fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, oper
                 ) {
                     Ok(Some(result)) => Ok(Some(GenerateFilesReturnDto {
                         files: result.files,
-                        timestamp: result.timestamp,
-                        duration: result.duration,
                     })),
                     Ok(None) => Ok(None),
                     Err(e) => Err(format!("Error getting rust generation result: {}", e)),
@@ -680,8 +676,6 @@ fn poll_generation_result(app_weak: slint::Weak<App>, ctx: Arc<AppContext>, oper
                 ) {
                     Ok(Some(result)) => Ok(Some(GenerateFilesReturnDto {
                         files: result.files,
-                        timestamp: result.timestamp,
-                        duration: result.duration,
                     })),
                     Ok(None) => Ok(None),
                     Err(e) => Err(format!("Error getting C++/Qt generation result: {}", e)),

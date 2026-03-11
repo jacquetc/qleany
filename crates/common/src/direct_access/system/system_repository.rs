@@ -156,7 +156,7 @@ impl<'a> SystemRepository<'a> {
         event_buffer: &mut EventBuffer,
         entity: &System,
         owner_id: EntityId,
-        index: i32,
+        _index: i32,
     ) -> Result<System, Error> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
