@@ -1352,7 +1352,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    // Parse les arguments de l'attribut avec syn v2
+    // Parse the attribute arguments with syn v2
     let args = parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
 
     let mut entity_name = None;
@@ -1406,17 +1406,17 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     };
 
-    // Parse l'impl ou le trait d'entrée
+    // Parse the input impl or trait
     let item_type = if let Ok(item_trait) = syn::parse::<ItemTrait>(input.clone()) {
         ItemType::Trait(item_trait)
     } else {
         ItemType::Impl(parse_macro_input!(input as ItemImpl))
     };
 
-    // Convertit le nom d'entité en snake_case
+    // Convert entity name to snake_case
     let entity_name_snake_case = heck::AsSnakeCase(&entity_name).to_string();
 
-    // Nom de la fonction à générer
+    // Name of the function to generate
     let function_name = match action.as_str() {
         "CreateOrphan" => format!("create_orphan_{}", entity_name_snake_case),
         "CreateOrphanMulti" => format!("create_orphan_{}_multi", entity_name_snake_case),
@@ -1644,6 +1644,6 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     };
 
-    // Retourne le code modifié
+    // Return the modified code
     quote!(#item_impl).into()
 }
