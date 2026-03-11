@@ -115,10 +115,14 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
 
         auto it = m_entityCache.find(key);
 
-        if (it != m_entityCache.end() && it->isValid && !isExpired(it->timestamp, 30))
+        if (it != m_entityCache.end())
         {
-            result = it->entities;
-            return true;
+            if (it->isValid && !isExpired(it->timestamp, 30))
+            {
+                result = it->entities;
+                return true;
+            }
+            m_entityCache.erase(it);
         }
 
         return false;
@@ -160,10 +164,14 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
 
         auto it = m_relationshipCache.find(key);
 
-        if (it != m_relationshipCache.end() && it->isValid && !isExpired(it->timestamp, 30))
+        if (it != m_relationshipCache.end())
         {
-            result = it->relationshipData;
-            return true;
+            if (it->isValid && !isExpired(it->timestamp, 30))
+            {
+                result = it->relationshipData;
+                return true;
+            }
+            m_relationshipCache.erase(it);
         }
 
         return false;
@@ -202,10 +210,14 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
 
         auto it = m_relationshipCache.find(key);
 
-        if (it != m_relationshipCache.end() && it->isValid && !isExpired(it->timestamp, 30))
+        if (it != m_relationshipCache.end())
         {
-            result = it->count;
-            return true;
+            if (it->isValid && !isExpired(it->timestamp, 30))
+            {
+                result = it->count;
+                return true;
+            }
+            m_relationshipCache.erase(it);
         }
 
         return false;
@@ -242,10 +254,14 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
 
         auto it = m_relationshipCache.find(key);
 
-        if (it != m_relationshipCache.end() && it->isValid && !isExpired(it->timestamp, 30))
+        if (it != m_relationshipCache.end())
         {
-            result = it->rangeData;
-            return true;
+            if (it->isValid && !isExpired(it->timestamp, 30))
+            {
+                result = it->rangeData;
+                return true;
+            }
+            m_relationshipCache.erase(it);
         }
 
         return false;
@@ -381,40 +397,6 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
         QMutexLocker locker(&m_mutex);
         m_entityCache.clear();
         m_relationshipCache.clear();
-    }
-
-    // Cleanup methods
-    void cleanupExpired(int maxAgeMinutes = 30)
-    {
-        QMutexLocker locker(&m_mutex);
-
-        // Clean up expired entity cache entries
-        auto entityIt = m_entityCache.begin();
-        while (entityIt != m_entityCache.end())
-        {
-            if (isExpired(entityIt->timestamp, maxAgeMinutes))
-            {
-                entityIt = m_entityCache.erase(entityIt);
-            }
-            else
-            {
-                ++entityIt;
-            }
-        }
-
-        // Clean up expired relationship cache entries
-        auto relationshipIt = m_relationshipCache.begin();
-        while (relationshipIt != m_relationshipCache.end())
-        {
-            if (isExpired(relationshipIt->timestamp, maxAgeMinutes))
-            {
-                relationshipIt = m_relationshipCache.erase(relationshipIt);
-            }
-            else
-            {
-                ++relationshipIt;
-            }
-        }
     }
 
     void clear()
