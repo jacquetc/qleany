@@ -2,8 +2,22 @@ use crate::app_context::AppContext;
 use crate::cli::{LanguageOption, OutputContext};
 use anyhow::{Result, bail};
 use handling_manifest::handling_manifest_controller;
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::sync::Arc;
+
+/// Check that stdin is a terminal. Call this before any interactive prompt
+/// so that non-interactive callers (CI, LLMs) get a clear error instead of
+/// hanging forever on a blocking `read_line`.
+pub fn require_interactive(missing_flag_hint: &str) -> Result<()> {
+    if !io::stdin().is_terminal() {
+        bail!(
+            "Interactive input required but stdin is not a terminal. \
+             Use {} to run non-interactively.",
+            missing_flag_hint
+        );
+    }
+    Ok(())
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TargetLanguage {
@@ -21,6 +35,7 @@ impl From<LanguageOption> for TargetLanguage {
 }
 
 pub fn prompt_language() -> Result<LanguageOption> {
+    require_interactive("--language (or --rust / --cpp-qt for demo)")?;
     println!("Target language:");
     println!("  1. C++/Qt - C++ 20 and Qt 6");
     println!("  2. Rust   - 2024 edition");

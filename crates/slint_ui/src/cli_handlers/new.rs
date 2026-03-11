@@ -1,6 +1,6 @@
 use crate::app_context::AppContext;
 use crate::cli::{LanguageOption, ManifestTemplateOption, NewArgs, OutputContext};
-use crate::cli_handlers::common::prompt_language;
+use crate::cli_handlers::common::{prompt_language, require_interactive};
 use anyhow::{Result, bail};
 use handling_manifest::{
     CreateDto, CreateLanguage, ManifestTemplate, handling_manifest_controller,
@@ -107,6 +107,7 @@ pub fn execute(
 }
 
 fn prompt_string(prompt: &str, example: &str) -> Result<String> {
+    require_interactive(&format!("the appropriate CLI flag (default: {})", example))?;
     print!("{} [{}]: ", prompt, example);
     io::stdout().flush()?;
     let mut input = String::new();
@@ -120,6 +121,7 @@ fn prompt_string(prompt: &str, example: &str) -> Result<String> {
 }
 
 fn prompt_template() -> Result<ManifestTemplateOption> {
+    require_interactive("--template")?;
     println!("Manifest template:");
     println!("  1. blank          - EntityBase + empty Root");
     println!(
@@ -141,6 +143,7 @@ fn prompt_template() -> Result<ManifestTemplateOption> {
 }
 
 fn prompt_options(language: &LanguageOption) -> Result<Vec<String>> {
+    require_interactive("--options")?;
     let (available, default) = match language {
         LanguageOption::Rust => (vec!["rust_cli", "rust_slint"], "rust_cli"),
         LanguageOption::CppQt => (vec!["cpp_qt_qtquick", "cpp_qt_qtwidgets"], "cpp_qt_qtquick"),
