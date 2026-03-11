@@ -15,6 +15,7 @@
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
 
+#include "database/cache_registry.h"
 #include "database/db_builder.h"
 
 using namespace Qt::Literals::StringLiterals;
@@ -322,6 +323,9 @@ struct DbSubContext
                 ok = false;
             }
         }
+        // Invalidate all caches: any read that occurred during the now-reverted
+        // transaction may have populated a cache with uncommitted data.
+        CacheRegistry::instance().invalidateAll();
         if (m_holdsWriteLock)
         {
             m_parentDbContext.releaseWriteLock();
@@ -368,6 +372,9 @@ struct DbSubContext
         {
             qWarning() << "ROLLBACK TO SAVEPOINT failed:" << q.lastError().text();
         }
+        // Invalidate all caches: any read that occurred since the savepoint
+        // may have populated a cache with now-reverted data.
+        CacheRegistry::instance().invalidateAll();
     }
 
     void releaseSavepoint()

@@ -314,6 +314,22 @@ impl FillCppQtFilesUseCase {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
+            name: "cache_registry.h".to_string(),
+            relative_path: format!("{}/common/database", prefix),
+            group: "common_db".to_string(),
+            template_name: "cache_registry_h".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "db_context.h".to_string(),
             relative_path: format!("{}/common/database", prefix),
             group: "common_db".to_string(),

@@ -582,13 +582,26 @@ QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::removeMany(cons
         }
         else
         {
-            // Some ids may not have existed — verify which ones were actually removed
-            QSet<int> requestedIds(ids.begin(), ids.end());
-            auto remaining = findMany(ids);
+            // Some ids may not have existed — verify which ones were actually removed.
+            // Use a direct SQL SELECT instead of findMany() to avoid populating the
+            // global cache with uncommitted transaction state (the DELETE above has not
+            // been committed yet; if the caller later rolls back, cached data would be stale).
+            QStringList selectPlaceholders;
+            selectPlaceholders.fill("?"_L1, ids.size());
+            const QString selectSql = "SELECT id FROM {{ ent.snake_name }} WHERE id IN (%1)"_L1
+                .arg(selectPlaceholders.join(","_L1));
+
+            QSqlQuery selectQ(db);
+            selectQ.prepare(selectSql);
+            for (int id : ids)
+                selectQ.addBindValue(id);
+
             QSet<int> remainingIds;
-            remainingIds.reserve(remaining.size());
-            for (const auto &r : remaining)
-                remainingIds.insert(r.id);
+            if (selectQ.exec())
+            {
+                while (selectQ.next())
+                    remainingIds.insert(selectQ.value(0).toInt());
+            }
 
             for (int id : ids)
             {
