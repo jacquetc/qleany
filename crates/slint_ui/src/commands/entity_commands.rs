@@ -20,7 +20,7 @@ pub fn create_orphan_entity(
     entity_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -38,7 +38,7 @@ pub fn create_entity(
     entity_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
         owner_id,
@@ -56,7 +56,7 @@ pub fn create_orphan_entity_multi(
     entity_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -74,7 +74,7 @@ pub fn create_entity_multi(
     entity_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
         owner_id,
@@ -107,7 +107,7 @@ pub fn update_entity(
     entity_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -124,7 +124,7 @@ pub fn update_entity_multi(
     entity_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -137,7 +137,7 @@ pub fn remove_entity(ctx: &AppContext, stack_id: Option<u64>, id: &EntityId) -> 
     let result = entity_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -157,7 +157,7 @@ pub fn remove_entity_multi(
     let result = entity_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )
@@ -187,7 +187,7 @@ pub fn set_entity_relationship(
     entity_controller::set_relationship(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )

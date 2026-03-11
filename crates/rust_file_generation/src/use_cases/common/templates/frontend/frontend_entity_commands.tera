@@ -25,7 +25,7 @@ pub fn create_orphan_{{ entity.snake_name }}(
     {{ entity.snake_name }}_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -53,7 +53,7 @@ pub fn create_{{ entity.snake_name }}(
     {{ entity.snake_name }}_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
         owner_id,
@@ -83,7 +83,7 @@ pub fn create_orphan_{{ entity.snake_name }}_multi(
     {{ entity.snake_name }}_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -111,7 +111,7 @@ pub fn create_{{ entity.snake_name }}_multi(
     {{ entity.snake_name }}_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
         owner_id,
@@ -152,7 +152,7 @@ pub fn update_{{ entity.snake_name }}(
     {{ entity.snake_name }}_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -177,7 +177,7 @@ pub fn update_{{ entity.snake_name }}_multi(
     {{ entity.snake_name }}_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -202,7 +202,7 @@ pub fn remove_{{ entity.snake_name }}(
     {{ entity.snake_name }}_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -228,7 +228,7 @@ pub fn remove_{{ entity.snake_name }}_multi(
     {{ entity.snake_name }}_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )
@@ -298,7 +298,7 @@ pub fn set_{{ entity.snake_name }}_relationship(
     {{ entity.snake_name }}_controller::set_relationship(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -326,7 +326,7 @@ pub fn move_{{ entity.snake_name }}_relationship(
     {{ entity.snake_name }}_controller::move_relationship(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
         field,

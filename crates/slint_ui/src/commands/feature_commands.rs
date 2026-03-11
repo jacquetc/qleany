@@ -20,7 +20,7 @@ pub fn create_orphan_feature(
     feature_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -38,7 +38,7 @@ pub fn create_feature(
     feature_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
         owner_id,
@@ -56,7 +56,7 @@ pub fn create_orphan_feature_multi(
     feature_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -74,7 +74,7 @@ pub fn create_feature_multi(
     feature_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
         owner_id,
@@ -107,7 +107,7 @@ pub fn update_feature(
     feature_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -124,7 +124,7 @@ pub fn update_feature_multi(
     feature_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -141,7 +141,7 @@ pub fn remove_feature(
     let result = feature_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -161,7 +161,7 @@ pub fn remove_feature_multi(
     let result = feature_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )
@@ -191,7 +191,7 @@ pub fn set_feature_relationship(
     feature_controller::set_relationship(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )

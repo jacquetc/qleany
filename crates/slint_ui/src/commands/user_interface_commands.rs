@@ -17,7 +17,7 @@ pub fn create_orphan_user_interface(
     user_interface_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -35,7 +35,7 @@ pub fn create_user_interface(
     user_interface_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
         owner_id,
@@ -53,7 +53,7 @@ pub fn create_orphan_user_interface_multi(
     user_interface_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -71,7 +71,7 @@ pub fn create_user_interface_multi(
     user_interface_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
         owner_id,
@@ -107,7 +107,7 @@ pub fn update_user_interface(
     user_interface_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -124,7 +124,7 @@ pub fn update_user_interface_multi(
     user_interface_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -141,7 +141,7 @@ pub fn remove_user_interface(
     let result = user_interface_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -161,7 +161,7 @@ pub fn remove_user_interface_multi(
     let result = user_interface_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )

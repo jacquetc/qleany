@@ -17,7 +17,7 @@ pub fn create_orphan_dto_field(
     dto_field_controller::create_orphan(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -35,7 +35,7 @@ pub fn create_dto_field(
     dto_field_controller::create(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
         owner_id,
@@ -53,7 +53,7 @@ pub fn create_orphan_dto_field_multi(
     dto_field_controller::create_orphan_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -71,7 +71,7 @@ pub fn create_dto_field_multi(
     dto_field_controller::create_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
         owner_id,
@@ -104,7 +104,7 @@ pub fn update_dto_field(
     dto_field_controller::update(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dto,
     )
@@ -121,7 +121,7 @@ pub fn update_dto_field_multi(
     dto_field_controller::update_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         dtos,
     )
@@ -138,7 +138,7 @@ pub fn remove_dto_field(
     let result = dto_field_controller::remove(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         id,
     )
@@ -158,7 +158,7 @@ pub fn remove_dto_field_multi(
     let result = dto_field_controller::remove_multi(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         ids,
     )

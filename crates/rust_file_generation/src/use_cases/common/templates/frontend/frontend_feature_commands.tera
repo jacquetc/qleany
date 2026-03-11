@@ -92,7 +92,7 @@ pub fn {{ uc.snake_name }}(
     {{ feature.snake_name }}_controller::{{ uc.snake_name }}(
         &ctx.db_context,
         &ctx.event_hub,
-        &mut *undo_redo_manager,
+        &mut undo_redo_manager,
         stack_id,
         {%- if uc.dto_in %}
         dto,
