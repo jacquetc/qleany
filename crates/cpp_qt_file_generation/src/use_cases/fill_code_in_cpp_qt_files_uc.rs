@@ -4,6 +4,7 @@ use crate::use_cases::common::cpp_qt_code_generator::{
     GenerationOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
 };
 use crate::use_cases::common::cpp_qt_formatter::clang_format_files_batch;
+use crate::use_cases::common::qml_formatter::qml_format_files_batch;
 use crate::use_cases::common::tools;
 use anyhow::{Result, anyhow};
 use common::database::CommandUnitOfWork;
@@ -166,6 +167,12 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
             .map(|(_, _, path)| path.clone())
             .collect();
 
+        let qml_files_to_format: Vec<PathBuf> = generated
+            .iter()
+            .filter(|(_, _, path)| path.extension().is_some_and(|ext| ext == "qml"))
+            .map(|(_, _, path)| path.clone())
+            .collect();
+
         progress_callback(common::long_operation::OperationProgress::new(
             80.0,
             Some(format!("Generated {}/{} files", generated.len(), total)),
@@ -181,6 +188,18 @@ impl LongOperation for FillCodeInCppQtFilesUseCase {
                 )),
             ));
             clang_format_files_batch(&cpp_qt_files_to_format);
+        }
+
+        // Batch format all QML files
+        if !qml_files_to_format.is_empty() {
+            progress_callback(common::long_operation::OperationProgress::new(
+                85.0,
+                Some(format!(
+                    "Formatting {} QML files...",
+                    qml_files_to_format.len()
+                )),
+            ));
+            qml_format_files_batch(&qml_files_to_format);
         }
 
         // Read back formatted files and update entities

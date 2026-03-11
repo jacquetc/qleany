@@ -2,6 +2,7 @@ use crate::use_cases::common::cpp_qt_code_generator::{
     GenerationReadOps, SnapshotBuilder, generate_code_with_snapshot,
 };
 use crate::use_cases::common::cpp_qt_formatter::clang_format_string;
+use crate::use_cases::common::qml_formatter::qml_format_string;
 use crate::{GenerateCppQtCodeDto, GenerateCppQtCodeReturnDto};
 use anyhow::Result;
 
@@ -29,13 +30,19 @@ impl GenerateCppQtCodeUseCase {
         uow.begin_transaction()?;
         // Build a snapshot for the file
         let uow_ref: &dyn GenerationReadOps = &*uow;
+        let file = GenerationReadOps::get_file(uow_ref, &dto.file_id)?;
         let (snapshot, _from_cache) =
             SnapshotBuilder::for_file_id(uow_ref, dto.file_id, &Vec::new())?;
         uow.end_transaction()?;
 
         let generated_code = generate_code_with_snapshot(&snapshot)?;
 
-        let formatted_code = clang_format_string(generated_code.as_str(), None);
+        let is_qml = file.as_ref().is_some_and(|f| f.name.ends_with(".qml"));
+        let formatted_code = if is_qml {
+            qml_format_string(generated_code.as_str())
+        } else {
+            clang_format_string(generated_code.as_str(), None)
+        };
 
         Ok(GenerateCppQtCodeReturnDto {
             generated_code: formatted_code.to_string(),

@@ -2,6 +2,7 @@ use crate::use_cases::common::cpp_qt_code_generator::{
     GenerationReadOps, GenerationSnapshot, SnapshotBuilder, generate_code_with_snapshot,
 };
 use crate::use_cases::common::cpp_qt_formatter::clang_format_files_batch;
+use crate::use_cases::common::qml_formatter::qml_format_files_batch;
 use crate::use_cases::common::tools;
 use crate::{GenerateCppQtFilesDto, GenerateCppQtFilesReturnDto};
 use anyhow::{Result, anyhow};
@@ -150,6 +151,8 @@ impl LongOperation for GenerateCppQtFilesUseCase {
             })
             .collect::<Result<Vec<_>>>()?;
 
+        let mut qml_files_to_format: Vec<PathBuf> = Vec::new();
+
         for (path_str, out_path) in &results {
             written_files.push(path_str.clone());
             if out_path
@@ -157,6 +160,8 @@ impl LongOperation for GenerateCppQtFilesUseCase {
                 .is_some_and(|ext| ext == "h" || ext == "cpp")
             {
                 cpp_qt_files_to_format.push(out_path.clone());
+            } else if out_path.extension().is_some_and(|ext| ext == "qml") {
+                qml_files_to_format.push(out_path.clone());
             }
         }
 
@@ -168,13 +173,25 @@ impl LongOperation for GenerateCppQtFilesUseCase {
         // Batch format all CppQt files at once (much faster than per-file formatting)
         if !cpp_qt_files_to_format.is_empty() {
             progress_callback(common::long_operation::OperationProgress::new(
-                99.0,
+                95.0,
                 Some(format!(
                     "Formatting {} CppQt files...",
                     cpp_qt_files_to_format.len()
                 )),
             ));
             clang_format_files_batch(&cpp_qt_files_to_format);
+        }
+
+        // Batch format all QML files
+        if !qml_files_to_format.is_empty() {
+            progress_callback(common::long_operation::OperationProgress::new(
+                98.0,
+                Some(format!(
+                    "Formatting {} QML files...",
+                    qml_files_to_format.len()
+                )),
+            ));
+            qml_format_files_batch(&qml_files_to_format);
         }
 
         // Final progress

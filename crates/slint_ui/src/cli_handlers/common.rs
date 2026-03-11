@@ -110,14 +110,14 @@ pub fn detect_and_warn_of_missing_formatters(
             false
         }
     } else if *target_language == TargetLanguage::CppQt {
-        let ok = Command::new("clang-format")
+        let clang_ok = Command::new("clang-format")
             .arg("--version")
             .output()
             .map(|o| o.status.success())
             .unwrap_or(false);
-        if !ok {
+        if !clang_ok {
             output.warn("clang-format is not installed or not in PATH.");
-            output.warn("The generated code may not be formatted correctly.");
+            output.warn("The generated C++/Qt code may not be formatted correctly.");
             match detect_distro_family() {
                 DistroFamily::Debian => output.warn("Install: sudo apt install clang-format"),
                 DistroFamily::Fedora => output.warn("Install: sudo dnf install clang-tools-extra"),
@@ -126,10 +126,32 @@ pub fn detect_and_warn_of_missing_formatters(
                     "Install clang-format from your package manager or https://releases.llvm.org",
                 ),
             }
-            true
-        } else {
-            false
         }
+
+        let qml_ok = Command::new("qmlformat")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+            || Command::new("/usr/lib/qt6/bin/qmlformat")
+                .arg("--version")
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false);
+        if !qml_ok {
+            output.warn("qmlformat is not installed or not in PATH.");
+            output.warn("The generated QML code may not be formatted correctly.");
+            match detect_distro_family() {
+                DistroFamily::Debian => output.warn("Install: sudo apt install qt6-declarative-dev-tools"),
+                DistroFamily::Fedora => output.warn("Install: sudo dnf install qt6-qtdeclarative-devel"),
+                DistroFamily::Arch => output.warn("Install: sudo pacman -S qt6-declarative"),
+                DistroFamily::Unknown => output.warn(
+                    "Install qmlformat from your package manager (part of Qt6 declarative tools)",
+                ),
+            }
+        }
+
+        !clang_ok || !qml_ok
     } else {
         false
     };
