@@ -272,7 +272,9 @@ impl EventHub {
 
     /// Send an event to the queue
     pub fn send_event(&self, event: Event) {
-        self.sender.send(event).unwrap();
+        if let Err(e) = self.sender.send(event) {
+            eprintln!("EventHub: failed to send event (receiver dropped): {e}");
+        }
     }
 
     pub fn get_queue(&self) -> Queue {
