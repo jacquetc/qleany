@@ -37,9 +37,14 @@ class EventRegistry : public QObject
     {
         Q_EMIT errorOccurred(commandName, errorMessage);
     }
+    void publishReset()
+    {
+        Q_EMIT reset();
+    }
 
   Q_SIGNALS:
     void errorOccurred(const QString &commandName, const QString &errorMessage);
+    void reset();
 
   private:
         {%- for eid, ent in s.entities %}

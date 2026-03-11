@@ -4,6 +4,7 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    signal reset()
 {%- for eid, ent in s.entities %}
     function {{ ent.camel_name }}Events() {
         return {{ ent.pascal_name }}Events;

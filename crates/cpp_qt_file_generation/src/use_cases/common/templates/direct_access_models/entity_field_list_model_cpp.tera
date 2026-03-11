@@ -70,6 +70,8 @@ void {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::resolveDependencies(
             connect({{ ent.camel_name }}Events.data(), &Common::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Events::relationshipChanged,
              this, &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::on{{ ent.pascal_name }}RelationshipChanged);
         }
+        connect(m_eventRegistry.data(), &Common::DirectAccess::EventRegistry::reset, this,
+                &{{ ent.pascal_name }}{{ field.pascal_name }}ListModel::refreshData);
     }
 }
 

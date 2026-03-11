@@ -38,6 +38,8 @@ void Single{{ ent.pascal_name }}::resolveDependencies()
             connect({{ ent.camel_name }}Events.data(), SIGNAL(removed(QList<int>)), this,
                     SLOT(onRemovedEvent(QList<int>)));
         }
+        connect(m_eventRegistry.data(), &Common::DirectAccess::EventRegistry::reset, this,
+                &Single{{ ent.pascal_name }}::refreshData);
     }
 }
 

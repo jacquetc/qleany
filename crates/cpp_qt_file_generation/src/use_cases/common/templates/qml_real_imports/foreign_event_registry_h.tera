@@ -17,6 +17,8 @@ struct ForeignEventRegistry : public QObject
         : QObject(parent),
           m_registry({{ s.global.application_pascal_name }}::Common::ServiceLocator::instance()->eventRegistry())
     {
+        connect(m_registry, &{{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry::reset,
+                this, &ForeignEventRegistry::reset);
     }
 
 {%- for eid, ent in s.entities %}
@@ -25,6 +27,9 @@ struct ForeignEventRegistry : public QObject
         return m_registry->{{ ent.camel_name }}Events();
     }
 {%- endfor %}
+
+  Q_SIGNALS:
+    void reset();
 
   private:
     {{ s.global.application_pascal_name }}::Common::DirectAccess::EventRegistry *m_registry;

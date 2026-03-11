@@ -8,5 +8,4 @@ QtObject {
     signal removed(var ids)
     signal updated(var dtos)
     signal relationshipChanged(int id, string relationship, var relatedIds)
-    signal allRelationsInvalidated(int id)
 }

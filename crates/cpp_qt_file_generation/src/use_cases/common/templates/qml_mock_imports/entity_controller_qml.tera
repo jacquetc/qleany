@@ -119,12 +119,6 @@ QtObject {
             task.setDelay(50);
             task.setSignalFn(function () {
                 EventRegistry.{{ ent.camel_name }}Events().updated(dtos);
-                for (var i = 0; i < dtos.length; i++) {
-                    const dto = dtos[i];
-                    if (dto && dto.id !== undefined) {
-                        EventRegistry.{{ ent.camel_name }}Events().allRelationsInvalidated(dto.id);
-                    }
-                }
             });
         }
 

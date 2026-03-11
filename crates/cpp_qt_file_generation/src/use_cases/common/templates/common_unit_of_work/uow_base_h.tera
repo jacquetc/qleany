@@ -105,7 +105,15 @@ class UnitOfWorkBase : public virtual ITransactional
         return true;
     }
     void createSavepoint() override { m_dbSubContext.createSavepoint(); }
-    void rollbackToSavepoint() override { m_dbSubContext.rollbackToSavepoint(); }
+    void rollbackToSavepoint() override
+    {
+        m_dbSubContext.rollbackToSavepoint();
+        // Discard buffered events — savepoint restore invalidated them
+        m_signalBuffer->discard();
+        // Send Reset immediately (not buffered — UI must refresh now)
+        if (m_eventRegistry)
+            QMetaObject::invokeMethod(m_eventRegistry, "publishReset", Qt::QueuedConnection);
+    }
     void releaseSavepoint() override { m_dbSubContext.releaseSavepoint(); }
 
   protected:
