@@ -63,8 +63,8 @@ class DbContext : public QObject
         if (!db.open())
         {
             qCritical() << "DbContext: failed to open database:" << db.lastError().text();
-            m_connections.insert(id, connName);
-            return id;
+            QSqlDatabase::removeDatabase(connName);
+            return -1;
         }
 
         // Apply per-connection PRAGMAs (these are NOT persisted to the file)
