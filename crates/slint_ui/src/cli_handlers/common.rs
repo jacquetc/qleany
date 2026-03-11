@@ -142,8 +142,12 @@ pub fn detect_and_warn_of_missing_formatters(
             output.warn("qmlformat is not installed or not in PATH.");
             output.warn("The generated QML code may not be formatted correctly.");
             match detect_distro_family() {
-                DistroFamily::Debian => output.warn("Install: sudo apt install qt6-declarative-dev-tools"),
-                DistroFamily::Fedora => output.warn("Install: sudo dnf install qt6-qtdeclarative-devel"),
+                DistroFamily::Debian => {
+                    output.warn("Install: sudo apt install qt6-declarative-dev-tools")
+                }
+                DistroFamily::Fedora => {
+                    output.warn("Install: sudo dnf install qt6-qtdeclarative-devel")
+                }
                 DistroFamily::Arch => output.warn("Install: sudo pacman -S qt6-declarative"),
                 DistroFamily::Unknown => output.warn(
                     "Install qmlformat from your package manager (part of Qt6 declarative tools)",
