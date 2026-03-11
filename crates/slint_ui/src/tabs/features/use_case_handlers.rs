@@ -107,10 +107,17 @@ pub fn fill_use_case_list(app: &App, app_context: &Arc<AppContext>) {
                         Ok(use_cases_opt) => {
                             let mut list: Vec<ListItem> = Vec::new();
                             for uc in use_cases_opt.into_iter().flatten() {
+                                let mut flags: Vec<&str> = Vec::new();
+                                if uc.read_only { flags.push("RO"); }
+                                if uc.long_operation { flags.push("long"); }
+                                if uc.undoable { flags.push("undo"); }
+                                if uc.dto_in.is_some() { flags.push("input"); }
+                                if uc.dto_out.is_some() { flags.push("output"); }
+                                let subtitle = flags.join(" · ");
                                 list.push(ListItem {
                                     id: uc.id as i32,
                                     text: slint::SharedString::from(uc.name),
-                                    subtitle: slint::SharedString::from(""),
+                                    subtitle: slint::SharedString::from(subtitle),
                                     checked: false,
                                     gradient_color: slint::Color::default(),
                                 });

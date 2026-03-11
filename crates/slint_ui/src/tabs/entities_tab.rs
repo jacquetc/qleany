@@ -303,13 +303,26 @@ fn fill_entity_list(app: &App, app_context: &Arc<AppContext>) {
                     // Fetch entities details to obtain names
                     match entity_commands::get_entity_multi(&ctx, &entity_ids) {
                         Ok(entities_opt) => {
+                            // Build a name lookup for inherits_from resolution
+                            let entities: Vec<_> = entities_opt.into_iter().flatten().collect();
+                            let name_of = |id: common::types::EntityId| -> Option<String> {
+                                entities.iter().find(|e| e.id == id).map(|e| e.name.clone())
+                            };
+
                             // Map to ListItem (id + text)
                             let mut list: Vec<ListItem> = Vec::new();
-                            for e in entities_opt.into_iter().flatten() {
+                            for e in &entities {
+                                let mut flags: Vec<String> = Vec::new();
+                                if e.only_for_heritage { flags.push("abstract".into()); }
+                                if let Some(parent_id) = e.inherits_from {
+                                    let parent = name_of(parent_id).unwrap_or("?".into());
+                                    flags.push(format!("extends {}", parent));
+                                }
+                                let subtitle = flags.join(" · ");
                                 list.push(ListItem {
                                     id: e.id as i32,
-                                    text: slint::SharedString::from(e.name),
-                                    subtitle: slint::SharedString::from(""),
+                                    text: slint::SharedString::from(e.name.clone()),
+                                    subtitle: slint::SharedString::from(subtitle),
                                     checked: false,
                                     gradient_color: slint::Color::default(),
                                 });
@@ -381,10 +394,28 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                             // Map to ListItem (id + text)
                             let mut list: Vec<ListItem> = Vec::new();
                             for e in fields_opt.into_iter().flatten() {
+                                let opt = if e.optional { " (opt)" } else { "" };
+                                let subtitle = if e.field_type == FieldType::Entity {
+                                    format!(
+                                        "{} ({}){}",
+                                        field_type_to_string(&e.field_type),
+                                        field_relationship_type_to_string(&e.relationship),
+                                        opt
+                                    )
+                                } else if e.field_type == FieldType::Enum {
+                                    format!(
+                                        "{}: {}{}",
+                                        field_type_to_string(&e.field_type),
+                                        e.enum_name.as_deref().unwrap_or("?"),
+                                        opt
+                                    )
+                                } else {
+                                    format!("{}{}", field_type_to_string(&e.field_type), opt)
+                                };
                                 list.push(ListItem {
                                     id: e.id as i32,
                                     text: slint::SharedString::from(e.name),
-                                    subtitle: slint::SharedString::from(""),
+                                    subtitle: slint::SharedString::from(subtitle),
                                     checked: false,
                                     gradient_color: slint::Color::default(),
                                 });

@@ -6,7 +6,8 @@
 use std::sync::Arc;
 
 use super::dto_in_handlers::{
-    dto_field_type_to_index, index_to_dto_field_type, update_dto_field_helper, update_dto_helper,
+    dto_field_type_to_index, dto_field_type_to_string, index_to_dto_field_type,
+    update_dto_field_helper, update_dto_helper,
 };
 use crate::app_context::AppContext;
 use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
@@ -132,10 +133,23 @@ pub fn fill_dto_out_field_list(app: &App, app_context: &Arc<AppContext>) {
                 Ok(fields_opt) => {
                     let mut list: Vec<ListItem> = Vec::new();
                     for f in fields_opt.into_iter().flatten() {
+                        let opt = if f.optional { " (opt)" } else { "" };
+                        let list_flag = if f.is_list { " (list)" } else { "" };
+                        let subtitle = if f.field_type == common::entities::DtoFieldType::Enum {
+                            format!(
+                                "{}: {}{}{}",
+                                dto_field_type_to_string(&f.field_type),
+                                f.enum_name.as_deref().unwrap_or("?"),
+                                opt,
+                                list_flag
+                            )
+                        } else {
+                            format!("{}{}{}", dto_field_type_to_string(&f.field_type), opt, list_flag)
+                        };
                         list.push(ListItem {
                             id: f.id as i32,
                             text: slint::SharedString::from(f.name),
-                            subtitle: slint::SharedString::from(""),
+                            subtitle: slint::SharedString::from(subtitle),
                             checked: false,
                             gradient_color: slint::Color::default(),
                         });

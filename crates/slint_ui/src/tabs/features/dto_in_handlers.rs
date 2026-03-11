@@ -138,6 +138,20 @@ pub fn subscribe_dto_deleted_event(
     )
 }
 
+/// Convert DtoFieldType to display string
+pub fn dto_field_type_to_string(field_type: &DtoFieldType) -> &'static str {
+    match field_type {
+        DtoFieldType::Boolean => "Boolean",
+        DtoFieldType::Integer => "Integer",
+        DtoFieldType::UInteger => "UInteger",
+        DtoFieldType::Float => "Float",
+        DtoFieldType::String => "String",
+        DtoFieldType::Uuid => "Uuid",
+        DtoFieldType::DateTime => "DateTime",
+        DtoFieldType::Enum => "Enum",
+    }
+}
+
 /// Convert DtoFieldType to ComboBox index
 pub fn dto_field_type_to_index(field_type: &DtoFieldType) -> i32 {
     match field_type {
@@ -253,10 +267,23 @@ pub fn fill_dto_in_field_list(app: &App, app_context: &Arc<AppContext>) {
                 Ok(fields_opt) => {
                     let mut list: Vec<ListItem> = Vec::new();
                     for f in fields_opt.into_iter().flatten() {
+                        let opt = if f.optional { " (opt)" } else { "" };
+                        let list_flag = if f.is_list { " (list)" } else { "" };
+                        let subtitle = if f.field_type == DtoFieldType::Enum {
+                            format!(
+                                "{}: {}{}{}",
+                                dto_field_type_to_string(&f.field_type),
+                                f.enum_name.as_deref().unwrap_or("?"),
+                                opt,
+                                list_flag
+                            )
+                        } else {
+                            format!("{}{}{}", dto_field_type_to_string(&f.field_type), opt, list_flag)
+                        };
                         list.push(ListItem {
                             id: f.id as i32,
                             text: slint::SharedString::from(f.name),
-                            subtitle: slint::SharedString::from(""),
+                            subtitle: slint::SharedString::from(subtitle),
                             checked: false,
                             gradient_color: slint::Color::default(),
                         });
