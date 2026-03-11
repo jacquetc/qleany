@@ -2,6 +2,7 @@
 // as changes will be lost.
 
 //! Dto entity commands for Slint UI
+#![allow(unused_imports, dead_code)]
 
 use crate::app_context::AppContext;
 use common::direct_access::dto::DtoRelationshipField;

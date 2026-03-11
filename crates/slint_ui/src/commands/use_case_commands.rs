@@ -2,6 +2,7 @@
 // as changes will be lost.
 
 //! UseCase entity commands for Slint UI
+#![allow(unused_imports, dead_code)]
 
 use crate::app_context::AppContext;
 use common::direct_access::use_case::UseCaseRelationshipField;
