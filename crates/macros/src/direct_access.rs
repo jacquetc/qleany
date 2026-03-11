@@ -1390,7 +1390,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     let entity_snake_ident =
         syn::Ident::new(&entity_name_snake_case, proc_macro2::Span::call_site());
 
-    // Génère la méthode correspondante
+    // Generate the corresponding method
     let method_tokens = match action.as_str() {
         "CreateOrphan" => create_orphan_action(
             &entity_ident,
@@ -1549,17 +1549,17 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => unreachable!(),
     };
 
-    // Ajoute la méthode au trait ou à l'implémentation
+    // Add the method to the trait or implementation
     let item_impl = match item_type {
         ItemType::Trait(mut item_trait) => {
-            // Ajoute la méthode au trait
+            // Add the method to the trait
             item_trait
                 .items
                 .push(syn::TraitItem::Verbatim(method_tokens));
             quote!(#item_trait)
         }
         ItemType::Impl(mut item_impl) => {
-            // Ajoute la méthode à l'implémentation
+            // Add the method to the implementation
             item_impl.items.push(syn::ImplItem::Verbatim(method_tokens));
             quote!(#item_impl)
         }
