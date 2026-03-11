@@ -207,6 +207,11 @@ pub const CRITICAL_RULES: &[Rule] = &[
         description: "Field: if list_model is true, list_model_displayed_field must reference an existing field of the target entity",
     },
     Rule {
+        id: "C43",
+        severity: "critical",
+        description: "Field: a weak OneToOne or ManyToOne relationship must be optional (dangling pointer risk on delete)",
+    },
+    Rule {
         id: "C33",
         severity: "critical",
         description: "Global: application_name must not be empty",
@@ -690,6 +695,24 @@ impl CheckUseCase {
                             "Entity '{}', field '{}': a to-many relationship \
                              (OneToMany, OrderedOneToMany, ManyToMany) cannot be optional",
                             entity.name, field.name
+                        ));
+                    }
+
+                    // Weak OneToOne/ManyToOne must be optional (dangling pointer on delete)
+                    let is_to_one = matches!(
+                        field.relationship,
+                        FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne
+                    );
+                    if field.field_type == FieldType::Entity
+                        && is_to_one
+                        && !field.strong
+                        && !field.optional
+                    {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': a weak {:?} relationship \
+                             must be optional (risk of dangling pointer when the \
+                             referenced entity is deleted)",
+                            entity.name, field.name, field.relationship
                         ));
                     }
 

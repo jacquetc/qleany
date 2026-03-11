@@ -226,7 +226,7 @@ entities:
         type: entity
         entity: Category
         relationship: many_to_one
-        optional: false
+        optional: true
   # Undoable entity with single_model
   - name: Category
     inherits_from: EntityBase

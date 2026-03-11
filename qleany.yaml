@@ -304,10 +304,12 @@ entities:
     type: entity
     entity: Entity
     relationship: many_to_one
+    optional: true
   - name: right_entity
     type: entity
     entity: Entity
     relationship: many_to_one
+    optional: true
   - name: field_name
     type: string
   - name: relationship_type
