@@ -198,6 +198,22 @@ impl FillRustFilesUseCase {
             id: 0,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
+            name: "error.rs".to_string(),
+            relative_path: format!("{}/common/src/", prefix),
+            group: "base".to_string(),
+            template_name: "error".to_string(),
+            generated_code: None,
+            status: FileStatus::Unknown,
+            feature: None,
+            entity: None,
+            use_case: None,
+            field: None,
+        });
+
+        files.push(File {
+            id: 0,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             name: "repository_factory.rs".to_string(),
             relative_path: format!("{}/common/src/direct_access/", prefix),
             group: "base".to_string(),
