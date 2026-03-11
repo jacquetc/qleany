@@ -149,7 +149,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
         if (!q.exec())
         {
             qCritical() << "Failed to insert {{ ent.pascal_name }}:" << q.lastError().text();
-            continue;
+            return {};
         }
 
         // Retrieve the auto-generated id
