@@ -7,7 +7,8 @@ use crate::database::db_helpers;
 use crate::entities::DtoField;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const DTO_FIELD_TABLE: TableDefinition<EntityId, Bincode<DtoField>> =
     TableDefinition::new("dto_field");
@@ -27,7 +28,7 @@ impl<'a> DtoFieldRedbTable<'a> {
         DtoFieldRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(DTO_FIELD_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -37,23 +38,23 @@ impl<'a> DtoFieldRedbTable<'a> {
 }
 
 impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
-    fn create(&mut self, entity: &DtoField) -> Result<DtoField, Error> {
+    fn create(&mut self, entity: &DtoField) -> Result<DtoField, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &DtoField) -> Result<DtoField, Error> {
+    fn update(&mut self, entity: &DtoField) -> Result<DtoField, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error> {
+    fn create_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"dto_field".to_string())? {
@@ -71,9 +72,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
                 }
             } else {
                 if dto_field_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "DtoField", id: entity.id });
                 }
                 entity.clone()
             };
@@ -89,7 +88,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -115,7 +114,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+    fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError> {
         let mut list = Vec::new();
         let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
@@ -133,7 +132,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error> {
+    fn update_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, RepositoryError> {
         let mut updated = Vec::new();
         let mut dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
@@ -145,7 +144,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
         // forward relationships
@@ -167,7 +166,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -176,7 +175,7 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
             if let Some(guard) = dto_field_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -219,13 +218,13 @@ impl<'a> DtoFieldTable for DtoFieldRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: DtoField = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             dto_field_table.insert(*id, entity)?;
         }
@@ -261,12 +260,12 @@ impl<'a> DtoFieldRedbTableRO<'a> {
 }
 
 impl<'a> DtoFieldTableRO for DtoFieldRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -292,7 +291,7 @@ impl<'a> DtoFieldTableRO for DtoFieldRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+    fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError> {
         let mut list = Vec::new();
         let dto_field_table = self.transaction.open_table(DTO_FIELD_TABLE)?;
 

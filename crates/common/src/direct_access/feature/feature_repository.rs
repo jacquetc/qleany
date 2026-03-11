@@ -12,7 +12,7 @@ use crate::{
 };
 
 use crate::direct_access::workspace::WorkspaceRelationshipField;
-use redb::Error;
+use crate::error::RepositoryError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -27,88 +27,88 @@ impl Display for FeatureRelationshipField {
 }
 
 pub trait FeatureTable {
-    fn create(&mut self, entity: &Feature) -> Result<Feature, Error>;
-    fn create_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error>;
-    fn get_all(&self) -> Result<Vec<Feature>, Error>;
-    fn update(&mut self, entity: &Feature) -> Result<Feature, Error>;
-    fn update_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error>;
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+    fn create(&mut self, entity: &Feature) -> Result<Feature, RepositoryError>;
+    fn create_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, RepositoryError>;
+    fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<Feature>, RepositoryError>;
+    fn update(&mut self, entity: &Feature) -> Result<Feature, RepositoryError>;
+    fn update_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, RepositoryError>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
     fn get_relationship(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError>;
     fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error>;
+    ) -> Result<usize, RepositoryError>;
     fn get_relationship_in_range(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationships_from_right_ids(
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError>;
     fn set_relationship_multi(
         &mut self,
         field: &FeatureRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), RepositoryError>;
     fn set_relationship(
         &mut self,
         id: &EntityId,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error>;
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
+    ) -> Result<(), RepositoryError>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError>;
 }
 
 pub trait FeatureTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error>;
-    fn get_all(&self) -> Result<Vec<Feature>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<Feature>, RepositoryError>;
     fn get_relationship(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError>;
     fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error>;
+    ) -> Result<usize, RepositoryError>;
     fn get_relationship_in_range(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationships_from_right_ids(
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError>;
 }
 
 pub struct FeatureRepository<'a> {
@@ -128,7 +128,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Feature,
-    ) -> Result<Feature, Error> {
+    ) -> Result<Feature, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Feature(EntityEvent::Created)),
@@ -142,7 +142,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Feature],
-    ) -> Result<Vec<Feature>, Error> {
+    ) -> Result<Vec<Feature>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Feature(EntityEvent::Created)),
@@ -157,7 +157,7 @@ impl<'a> FeatureRepository<'a> {
         entity: &Feature,
         owner_id: EntityId,
         index: i32,
-    ) -> Result<Feature, Error> {
+    ) -> Result<Feature, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -184,7 +184,7 @@ impl<'a> FeatureRepository<'a> {
         entities: &[Feature],
         owner_id: EntityId,
         index: i32,
-    ) -> Result<Vec<Feature>, Error> {
+    ) -> Result<Vec<Feature>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
@@ -206,13 +206,13 @@ impl<'a> FeatureRepository<'a> {
         Ok(new_entities)
     }
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<Feature>, Error> {
+    pub fn get_all(&self) -> Result<Vec<Feature>, RepositoryError> {
         self.redb_table.get_all()
     }
 
@@ -220,7 +220,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Feature,
-    ) -> Result<Feature, Error> {
+    ) -> Result<Feature, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Feature(EntityEvent::Updated)),
@@ -234,7 +234,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Feature],
-    ) -> Result<Vec<Feature>, Error> {
+    ) -> Result<Vec<Feature>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Feature(EntityEvent::Updated)),
@@ -244,7 +244,7 @@ impl<'a> FeatureRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -272,7 +272,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) {
             return Ok(());
@@ -306,21 +306,21 @@ impl<'a> FeatureRepository<'a> {
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table.get_relationship(id, field)
     }
     pub fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         self.redb_table.get_relationship_many(ids, field)
     }
     pub fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         self.redb_table.get_relationship_count(id, field)
     }
     pub fn get_relationship_in_range(
@@ -329,7 +329,7 @@ impl<'a> FeatureRepository<'a> {
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table
             .get_relationship_in_range(id, field, offset, limit)
     }
@@ -337,7 +337,7 @@ impl<'a> FeatureRepository<'a> {
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         self.redb_table
             .get_relationships_from_right_ids(field, right_ids)
     }
@@ -347,7 +347,7 @@ impl<'a> FeatureRepository<'a> {
         event_buffer: &mut EventBuffer,
         field: &FeatureRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Validate that all right_ids exist
         let all_right_ids: Vec<EntityId> = relationships
             .iter()
@@ -366,10 +366,7 @@ impl<'a> FeatureRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
                     }
                 }
             }
@@ -400,7 +397,7 @@ impl<'a> FeatureRepository<'a> {
         id: &EntityId,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Validate that all right_ids exist
         if !right_ids.is_empty() {
             match field {
@@ -415,10 +412,7 @@ impl<'a> FeatureRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
                     }
                 }
             }
@@ -442,7 +436,7 @@ impl<'a> FeatureRepository<'a> {
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::Features)
     }
@@ -452,7 +446,7 @@ impl<'a> FeatureRepository<'a> {
         event_buffer: &mut EventBuffer,
         owner_id: &EntityId,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.set_relationship(
             event_buffer,
@@ -462,7 +456,7 @@ impl<'a> FeatureRepository<'a> {
         )
     }
 
-    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, RepositoryError> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
 
         // Recursively snapshot strong children
@@ -499,7 +493,7 @@ impl<'a> FeatureRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         snap: &EntityTreeSnapshot,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Restore children first (bottom-up)
 
         for child_snap in &snap.children {
@@ -546,34 +540,34 @@ impl<'a> FeatureRepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn FeatureTableRO + 'a>) -> Self {
         FeatureRepositoryRO { redb_table }
     }
-    pub fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<Feature>, Error> {
+    pub fn get_all(&self) -> Result<Vec<Feature>, RepositoryError> {
         self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table.get_relationship(id, field)
     }
     pub fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         self.redb_table.get_relationship_many(ids, field)
     }
     pub fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         self.redb_table.get_relationship_count(id, field)
     }
     pub fn get_relationship_in_range(
@@ -582,7 +576,7 @@ impl<'a> FeatureRepositoryRO<'a> {
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table
             .get_relationship_in_range(id, field, offset, limit)
     }
@@ -590,7 +584,7 @@ impl<'a> FeatureRepositoryRO<'a> {
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         self.redb_table
             .get_relationships_from_right_ids(field, right_ids)
     }

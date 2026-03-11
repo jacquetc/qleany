@@ -7,7 +7,8 @@ use crate::database::db_helpers;
 use crate::entities::Global;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const GLOBAL_TABLE: TableDefinition<EntityId, Bincode<Global>> = TableDefinition::new("global");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
@@ -26,7 +27,7 @@ impl<'a> GlobalRedbTable<'a> {
         GlobalRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(GLOBAL_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -36,23 +37,23 @@ impl<'a> GlobalRedbTable<'a> {
 }
 
 impl<'a> GlobalTable for GlobalRedbTable<'a> {
-    fn create(&mut self, entity: &Global) -> Result<Global, Error> {
+    fn create(&mut self, entity: &Global) -> Result<Global, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &Global) -> Result<Global, Error> {
+    fn update(&mut self, entity: &Global) -> Result<Global, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error> {
+    fn create_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"global".to_string())? {
@@ -70,9 +71,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
                 }
             } else {
                 if global_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "Global", id: entity.id });
                 }
                 entity.clone()
             };
@@ -88,7 +87,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -114,7 +113,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Global>, Error> {
+    fn get_all(&self) -> Result<Vec<Global>, RepositoryError> {
         let mut list = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
@@ -132,7 +131,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error> {
+    fn update_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, RepositoryError> {
         let mut updated = Vec::new();
         let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
@@ -144,7 +143,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
         // forward relationships
@@ -166,7 +165,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -175,7 +174,7 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
             if let Some(guard) = global_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -218,13 +217,13 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: Global = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             global_table.insert(*id, entity)?;
         }
@@ -260,12 +259,12 @@ impl<'a> GlobalRedbTableRO<'a> {
 }
 
 impl<'a> GlobalTableRO for GlobalRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -291,7 +290,7 @@ impl<'a> GlobalTableRO for GlobalRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Global>, Error> {
+    fn get_all(&self) -> Result<Vec<Global>, RepositoryError> {
         let mut list = Vec::new();
         let global_table = self.transaction.open_table(GLOBAL_TABLE)?;
 

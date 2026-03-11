@@ -8,7 +8,8 @@ use crate::database::db_helpers;
 use crate::entities::Workspace;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const WORKSPACE_TABLE: TableDefinition<EntityId, Bincode<Workspace>> =
     TableDefinition::new("workspace");
@@ -50,7 +51,7 @@ impl<'a> WorkspaceRedbTable<'a> {
         WorkspaceRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(WORKSPACE_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -65,23 +66,23 @@ impl<'a> WorkspaceRedbTable<'a> {
 }
 
 impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
-    fn create(&mut self, entity: &Workspace) -> Result<Workspace, Error> {
+    fn create(&mut self, entity: &Workspace) -> Result<Workspace, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Workspace>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &Workspace) -> Result<Workspace, Error> {
+    fn update(&mut self, entity: &Workspace) -> Result<Workspace, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error> {
+    fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"workspace".to_string())? {
@@ -112,9 +113,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                 }
             } else {
                 if workspace_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "Workspace", id: entity.id });
                 }
                 entity.clone()
             };
@@ -168,7 +167,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -251,7 +250,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+    fn get_all(&self) -> Result<Vec<Workspace>, RepositoryError> {
         let mut list = Vec::new();
         let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
@@ -327,7 +326,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error> {
+    fn update_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, RepositoryError> {
         let mut updated = Vec::new();
         let mut workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
@@ -385,7 +384,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
         // forward relationships
@@ -428,7 +427,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &WorkspaceRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -440,7 +439,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         &self,
         ids: &[EntityId],
         field: &WorkspaceRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -459,7 +458,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &WorkspaceRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -472,7 +471,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         field: &WorkspaceRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -487,7 +486,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         &self,
         field: &WorkspaceRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -507,7 +506,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         &mut self,
         field: &WorkspaceRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -522,7 +521,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         id: &EntityId,
         field: &WorkspaceRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -530,7 +529,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -539,7 +538,7 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
             if let Some(guard) = workspace_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -643,13 +642,13 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: Workspace = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             workspace_table.insert(*id, entity)?;
         }
@@ -736,12 +735,12 @@ impl<'a> WorkspaceRedbTableRO<'a> {
 }
 
 impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<Workspace>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Workspace>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Workspace>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -824,7 +823,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Workspace>, Error> {
+    fn get_all(&self) -> Result<Vec<Workspace>, RepositoryError> {
         let mut list = Vec::new();
         let workspace_table = self.transaction.open_table(WORKSPACE_TABLE)?;
 
@@ -903,7 +902,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &WorkspaceRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -915,7 +914,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         &self,
         ids: &[EntityId],
         field: &WorkspaceRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -934,7 +933,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &WorkspaceRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -947,7 +946,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         field: &WorkspaceRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -962,7 +961,7 @@ impl<'a> WorkspaceTableRO for WorkspaceRedbTableRO<'a> {
         &self,
         field: &WorkspaceRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;

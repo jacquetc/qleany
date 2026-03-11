@@ -2,7 +2,8 @@
 // as changes will be lost.
 
 use crate::direct_access::setup::initialize_all_tables;
-use redb::{Database, Error};
+use crate::error::RepositoryError;
+use redb::Database;
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
@@ -11,7 +12,7 @@ pub struct DbContext {
 }
 
 impl DbContext {
-    pub fn new() -> Result<Self, Error> {
+    pub fn new() -> Result<Self, RepositoryError> {
         let db = DbContext::create_db_in_memory()?;
 
         // Initialize all necessary tables
@@ -24,7 +25,7 @@ impl DbContext {
         })
     }
 
-    fn create_db_in_memory() -> Result<Database, Error> {
+    fn create_db_in_memory() -> Result<Database, RepositoryError> {
         let redb_builder = redb::Builder::new();
         let in_memory_backend = redb::backends::InMemoryBackend::new();
         let db = redb_builder.create_with_backend(in_memory_backend)?;

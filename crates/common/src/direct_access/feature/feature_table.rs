@@ -8,7 +8,8 @@ use crate::database::db_helpers;
 use crate::entities::Feature;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const FEATURE_TABLE: TableDefinition<EntityId, Bincode<Feature>> = TableDefinition::new("feature");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
@@ -38,7 +39,7 @@ impl<'a> FeatureRedbTable<'a> {
         FeatureRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(FEATURE_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -51,23 +52,23 @@ impl<'a> FeatureRedbTable<'a> {
 }
 
 impl<'a> FeatureTable for FeatureRedbTable<'a> {
-    fn create(&mut self, entity: &Feature) -> Result<Feature, Error> {
+    fn create(&mut self, entity: &Feature) -> Result<Feature, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &Feature) -> Result<Feature, Error> {
+    fn update(&mut self, entity: &Feature) -> Result<Feature, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error> {
+    fn create_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"feature".to_string())? {
@@ -89,9 +90,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
                 }
             } else {
                 if feature_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "Feature", id: entity.id });
                 }
                 entity.clone()
             };
@@ -108,7 +107,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -144,7 +143,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Feature>, Error> {
+    fn get_all(&self) -> Result<Vec<Feature>, RepositoryError> {
         let mut list = Vec::new();
         let feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
@@ -173,7 +172,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, Error> {
+    fn update_multi(&mut self, entities: &[Feature]) -> Result<Vec<Feature>, RepositoryError> {
         let mut updated = Vec::new();
         let mut feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
@@ -190,7 +189,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
         // forward relationships
@@ -228,7 +227,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -240,7 +239,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -259,7 +258,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -272,7 +271,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -287,7 +286,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -307,7 +306,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         &mut self,
         field: &FeatureRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -322,7 +321,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         id: &EntityId,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -330,7 +329,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -339,7 +338,7 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
             if let Some(guard) = feature_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -418,13 +417,13 @@ impl<'a> FeatureTable for FeatureRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: Feature = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             feature_table.insert(*id, entity)?;
         }
@@ -485,12 +484,12 @@ impl<'a> FeatureRedbTableRO<'a> {
 }
 
 impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<Feature>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Feature>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -526,7 +525,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Feature>, Error> {
+    fn get_all(&self) -> Result<Vec<Feature>, RepositoryError> {
         let mut list = Vec::new();
         let feature_table = self.transaction.open_table(FEATURE_TABLE)?;
 
@@ -558,7 +557,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -570,7 +569,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         &self,
         ids: &[EntityId],
         field: &FeatureRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -589,7 +588,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &FeatureRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -602,7 +601,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         field: &FeatureRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -617,7 +616,7 @@ impl<'a> FeatureTableRO for FeatureRedbTableRO<'a> {
         &self,
         field: &FeatureRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;

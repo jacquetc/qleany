@@ -12,7 +12,7 @@ use crate::{
 };
 
 use crate::direct_access::feature::FeatureRelationshipField;
-use redb::Error;
+use crate::error::RepositoryError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -29,88 +29,88 @@ impl Display for UseCaseRelationshipField {
 }
 
 pub trait UseCaseTable {
-    fn create(&mut self, entity: &UseCase) -> Result<UseCase, Error>;
-    fn create_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error>;
-    fn get_all(&self) -> Result<Vec<UseCase>, Error>;
-    fn update(&mut self, entity: &UseCase) -> Result<UseCase, Error>;
-    fn update_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error>;
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
+    fn create(&mut self, entity: &UseCase) -> Result<UseCase, RepositoryError>;
+    fn create_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, RepositoryError>;
+    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError>;
+    fn update(&mut self, entity: &UseCase) -> Result<UseCase, RepositoryError>;
+    fn update_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, RepositoryError>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
     fn get_relationship(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError>;
     fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error>;
+    ) -> Result<usize, RepositoryError>;
     fn get_relationship_in_range(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError>;
     fn set_relationship_multi(
         &mut self,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), RepositoryError>;
     fn set_relationship(
         &mut self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error>;
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
+    ) -> Result<(), RepositoryError>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError>;
 }
 
 pub trait UseCaseTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error>;
-    fn get_all(&self) -> Result<Vec<UseCase>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError>;
     fn get_relationship(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error>;
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError>;
     fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error>;
+    ) -> Result<usize, RepositoryError>;
     fn get_relationship_in_range(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error>;
+    ) -> Result<Vec<EntityId>, RepositoryError>;
     fn get_relationships_from_right_ids(
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error>;
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError>;
 }
 
 pub struct UseCaseRepository<'a> {
@@ -130,7 +130,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UseCase,
-    ) -> Result<UseCase, Error> {
+    ) -> Result<UseCase, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Created)),
@@ -144,7 +144,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UseCase],
-    ) -> Result<Vec<UseCase>, Error> {
+    ) -> Result<Vec<UseCase>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Created)),
@@ -159,7 +159,7 @@ impl<'a> UseCaseRepository<'a> {
         entity: &UseCase,
         owner_id: EntityId,
         index: i32,
-    ) -> Result<UseCase, Error> {
+    ) -> Result<UseCase, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -186,7 +186,7 @@ impl<'a> UseCaseRepository<'a> {
         entities: &[UseCase],
         owner_id: EntityId,
         index: i32,
-    ) -> Result<Vec<UseCase>, Error> {
+    ) -> Result<Vec<UseCase>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
@@ -208,13 +208,13 @@ impl<'a> UseCaseRepository<'a> {
         Ok(new_entities)
     }
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+    pub fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError> {
         self.redb_table.get_all()
     }
 
@@ -222,7 +222,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UseCase,
-    ) -> Result<UseCase, Error> {
+    ) -> Result<UseCase, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Updated)),
@@ -236,7 +236,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UseCase],
-    ) -> Result<Vec<UseCase>, Error> {
+    ) -> Result<Vec<UseCase>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UseCase(EntityEvent::Updated)),
@@ -246,7 +246,7 @@ impl<'a> UseCaseRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -281,7 +281,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) {
             return Ok(());
@@ -317,21 +317,21 @@ impl<'a> UseCaseRepository<'a> {
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table.get_relationship(id, field)
     }
     pub fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         self.redb_table.get_relationship_many(ids, field)
     }
     pub fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         self.redb_table.get_relationship_count(id, field)
     }
     pub fn get_relationship_in_range(
@@ -340,7 +340,7 @@ impl<'a> UseCaseRepository<'a> {
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table
             .get_relationship_in_range(id, field, offset, limit)
     }
@@ -348,7 +348,7 @@ impl<'a> UseCaseRepository<'a> {
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         self.redb_table
             .get_relationships_from_right_ids(field, right_ids)
     }
@@ -358,7 +358,7 @@ impl<'a> UseCaseRepository<'a> {
         event_buffer: &mut EventBuffer,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Validate that all right_ids exist
         let all_right_ids: Vec<EntityId> = relationships
             .iter()
@@ -377,10 +377,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
                     }
                 }
                 UseCaseRelationshipField::DtoOut => {
@@ -394,10 +391,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
                     }
                 }
                 UseCaseRelationshipField::Entities => {
@@ -411,10 +405,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship_multi: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
                     }
                 }
             }
@@ -445,7 +436,7 @@ impl<'a> UseCaseRepository<'a> {
         id: &EntityId,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Validate that all right_ids exist
         if !right_ids.is_empty() {
             match field {
@@ -460,10 +451,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
                     }
                 }
                 UseCaseRelationshipField::DtoOut => {
@@ -477,10 +465,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
                     }
                 }
                 UseCaseRelationshipField::Entities => {
@@ -494,10 +479,7 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(Error::TableDoesNotExist(format!(
-                            "set_relationship: child entities do not exist: {:?}",
-                            missing
-                        )));
+                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
                     }
                 }
             }
@@ -521,7 +503,7 @@ impl<'a> UseCaseRepository<'a> {
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let repo = repository_factory::write::create_feature_repository(self.transaction);
         repo.get_relationship(owner_id, &FeatureRelationshipField::UseCases)
     }
@@ -531,7 +513,7 @@ impl<'a> UseCaseRepository<'a> {
         event_buffer: &mut EventBuffer,
         owner_id: &EntityId,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut repo = repository_factory::write::create_feature_repository(self.transaction);
         repo.set_relationship(
             event_buffer,
@@ -541,7 +523,7 @@ impl<'a> UseCaseRepository<'a> {
         )
     }
 
-    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, RepositoryError> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
 
         // Recursively snapshot strong children
@@ -595,7 +577,7 @@ impl<'a> UseCaseRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         snap: &EntityTreeSnapshot,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Restore children first (bottom-up)
 
         for child_snap in &snap.children {
@@ -648,34 +630,34 @@ impl<'a> UseCaseRepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn UseCaseTableRO + 'a>) -> Self {
         UseCaseRepositoryRO { redb_table }
     }
-    pub fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+    pub fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError> {
         self.redb_table.get_all()
     }
     pub fn get_relationship(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table.get_relationship(id, field)
     }
     pub fn get_relationship_many(
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         self.redb_table.get_relationship_many(ids, field)
     }
     pub fn get_relationship_count(
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         self.redb_table.get_relationship_count(id, field)
     }
     pub fn get_relationship_in_range(
@@ -684,7 +666,7 @@ impl<'a> UseCaseRepositoryRO<'a> {
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         self.redb_table
             .get_relationship_in_range(id, field, offset, limit)
     }
@@ -692,7 +674,7 @@ impl<'a> UseCaseRepositoryRO<'a> {
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         self.redb_table
             .get_relationships_from_right_ids(field, right_ids)
     }

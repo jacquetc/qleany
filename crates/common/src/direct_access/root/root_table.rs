@@ -7,7 +7,8 @@ use crate::database::Bincode;
 use crate::entities::Root;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const ROOT_TABLE: TableDefinition<EntityId, Bincode<Root>> = TableDefinition::new("root");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
@@ -36,7 +37,7 @@ impl<'a> RootRedbTable<'a> {
         RootRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(ROOT_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -48,23 +49,23 @@ impl<'a> RootRedbTable<'a> {
 }
 
 impl<'a> RootTable for RootRedbTable<'a> {
-    fn create(&mut self, entity: &Root) -> Result<Root, Error> {
+    fn create(&mut self, entity: &Root) -> Result<Root, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Root>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &Root) -> Result<Root, Error> {
+    fn update(&mut self, entity: &Root) -> Result<Root, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error> {
+    fn create_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"root".to_string())? {
@@ -89,9 +90,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 }
             } else {
                 if root_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "Root", id: entity.id });
                 }
                 entity.clone()
             };
@@ -147,7 +146,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -194,7 +193,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Root>, Error> {
+    fn get_all(&self) -> Result<Vec<Root>, RepositoryError> {
         let mut list = Vec::new();
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
@@ -234,7 +233,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, Error> {
+    fn update_multi(&mut self, entities: &[Root]) -> Result<Vec<Root>, RepositoryError> {
         let mut updated = Vec::new();
         let mut root_table = self.transaction.open_table(ROOT_TABLE)?;
 
@@ -293,7 +292,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut root_table = self.transaction.open_table(ROOT_TABLE)?;
 
         // forward relationships
@@ -319,7 +318,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &RootRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -331,7 +330,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         &self,
         ids: &[EntityId],
         field: &RootRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -350,7 +349,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &RootRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -363,7 +362,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         field: &RootRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -378,7 +377,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         &self,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -398,7 +397,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         &mut self,
         field: &RootRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -413,7 +412,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         id: &EntityId,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -421,7 +420,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -430,7 +429,7 @@ impl<'a> RootTable for RootRedbTable<'a> {
             if let Some(guard) = root_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -483,13 +482,13 @@ impl<'a> RootTable for RootRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut root_table = self.transaction.open_table(ROOT_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: Root = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             root_table.insert(*id, entity)?;
         }
@@ -537,12 +536,12 @@ impl<'a> RootRedbTableRO<'a> {
 }
 
 impl<'a> RootTableRO for RootRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<Root>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Root>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Root>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -589,7 +588,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Root>, Error> {
+    fn get_all(&self) -> Result<Vec<Root>, RepositoryError> {
         let mut list = Vec::new();
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
@@ -632,7 +631,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &RootRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -644,7 +643,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         &self,
         ids: &[EntityId],
         field: &RootRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -663,7 +662,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &RootRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -676,7 +675,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         field: &RootRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -691,7 +690,7 @@ impl<'a> RootTableRO for RootRedbTableRO<'a> {
         &self,
         field: &RootRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;

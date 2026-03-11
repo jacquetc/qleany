@@ -7,7 +7,8 @@ use crate::database::db_helpers;
 use crate::entities::UserInterface;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const USER_INTERFACE_TABLE: TableDefinition<EntityId, Bincode<UserInterface>> =
     TableDefinition::new("user_interface");
@@ -29,7 +30,7 @@ impl<'a> UserInterfaceRedbTable<'a> {
         UserInterfaceRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(USER_INTERFACE_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -39,23 +40,23 @@ impl<'a> UserInterfaceRedbTable<'a> {
 }
 
 impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
-    fn create(&mut self, entity: &UserInterface) -> Result<UserInterface, Error> {
+    fn create(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, Error> {
+    fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error> {
+    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"user_interface".to_string())? {
@@ -73,9 +74,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
                 }
             } else {
                 if user_interface_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "UserInterface", id: entity.id });
                 }
                 entity.clone()
             };
@@ -91,7 +90,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -117,7 +116,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+    fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut list = Vec::new();
         let user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
@@ -135,7 +134,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error> {
+    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut updated = Vec::new();
         let mut user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
@@ -147,7 +146,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
         // forward relationships
@@ -169,7 +168,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -178,7 +177,7 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
             if let Some(guard) = user_interface_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -221,13 +220,13 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: UserInterface = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             user_interface_table.insert(*id, entity)?;
         }
@@ -265,12 +264,12 @@ impl<'a> UserInterfaceRedbTableRO<'a> {
 }
 
 impl<'a> UserInterfaceTableRO for UserInterfaceRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -296,7 +295,7 @@ impl<'a> UserInterfaceTableRO for UserInterfaceRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+    fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut list = Vec::new();
         let user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 

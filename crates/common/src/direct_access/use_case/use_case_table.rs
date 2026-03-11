@@ -8,7 +8,8 @@ use crate::database::db_helpers;
 use crate::entities::UseCase;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const USE_CASE_TABLE: TableDefinition<EntityId, Bincode<UseCase>> =
     TableDefinition::new("use_case");
@@ -45,7 +46,7 @@ impl<'a> UseCaseRedbTable<'a> {
         UseCaseRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(USE_CASE_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -60,23 +61,23 @@ impl<'a> UseCaseRedbTable<'a> {
 }
 
 impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
-    fn create(&mut self, entity: &UseCase) -> Result<UseCase, Error> {
+    fn create(&mut self, entity: &UseCase) -> Result<UseCase, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &UseCase) -> Result<UseCase, Error> {
+    fn update(&mut self, entity: &UseCase) -> Result<UseCase, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error> {
+    fn create_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"use_case".to_string())? {
@@ -104,9 +105,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                 }
             } else {
                 if use_case_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "UseCase", id: entity.id });
                 }
                 entity.clone()
             };
@@ -163,7 +162,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -219,7 +218,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+    fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError> {
         let mut list = Vec::new();
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
@@ -268,7 +267,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, Error> {
+    fn update_multi(&mut self, entities: &[UseCase]) -> Result<Vec<UseCase>, RepositoryError> {
         let mut updated = Vec::new();
         let mut use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
@@ -331,7 +330,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
         // forward relationships
@@ -377,7 +376,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -389,7 +388,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -408,7 +407,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -421,7 +420,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -436,7 +435,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -456,7 +455,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         &mut self,
         field: &UseCaseRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -471,7 +470,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         id: &EntityId,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -479,7 +478,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -488,7 +487,7 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
             if let Some(guard) = use_case_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -597,13 +596,13 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: UseCase = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             use_case_table.insert(*id, entity)?;
         }
@@ -688,12 +687,12 @@ impl<'a> UseCaseRedbTableRO<'a> {
 }
 
 impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<UseCase>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -749,7 +748,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<UseCase>, Error> {
+    fn get_all(&self) -> Result<Vec<UseCase>, RepositoryError> {
         let mut list = Vec::new();
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
@@ -801,7 +800,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -813,7 +812,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         &self,
         ids: &[EntityId],
         field: &UseCaseRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -832,7 +831,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &UseCaseRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -845,7 +844,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         field: &UseCaseRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -860,7 +859,7 @@ impl<'a> UseCaseTableRO for UseCaseRedbTableRO<'a> {
         &self,
         field: &UseCaseRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;

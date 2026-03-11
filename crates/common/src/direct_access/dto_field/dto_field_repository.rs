@@ -12,7 +12,7 @@ use crate::{
 };
 
 use crate::direct_access::dto::DtoRelationshipField;
-use redb::Error;
+use crate::error::RepositoryError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,23 +25,23 @@ impl Display for DtoFieldRelationshipField {
 }
 
 pub trait DtoFieldTable {
-    fn create(&mut self, entity: &DtoField) -> Result<DtoField, Error>;
-    fn create_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error>;
-    fn get_all(&self) -> Result<Vec<DtoField>, Error>;
-    fn update(&mut self, entity: &DtoField) -> Result<DtoField, Error>;
-    fn update_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, Error>;
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
+    fn create(&mut self, entity: &DtoField) -> Result<DtoField, RepositoryError>;
+    fn create_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, RepositoryError>;
+    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError>;
+    fn update(&mut self, entity: &DtoField) -> Result<DtoField, RepositoryError>;
+    fn update_multi(&mut self, entities: &[DtoField]) -> Result<Vec<DtoField>, RepositoryError>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError>;
 }
 
 pub trait DtoFieldTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error>;
-    fn get_all(&self) -> Result<Vec<DtoField>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError>;
 }
 
 pub struct DtoFieldRepository<'a> {
@@ -61,7 +61,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &DtoField,
-    ) -> Result<DtoField, Error> {
+    ) -> Result<DtoField, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Created)),
@@ -75,7 +75,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[DtoField],
-    ) -> Result<Vec<DtoField>, Error> {
+    ) -> Result<Vec<DtoField>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Created)),
@@ -90,7 +90,7 @@ impl<'a> DtoFieldRepository<'a> {
         entity: &DtoField,
         owner_id: EntityId,
         index: i32,
-    ) -> Result<DtoField, Error> {
+    ) -> Result<DtoField, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -117,7 +117,7 @@ impl<'a> DtoFieldRepository<'a> {
         entities: &[DtoField],
         owner_id: EntityId,
         index: i32,
-    ) -> Result<Vec<DtoField>, Error> {
+    ) -> Result<Vec<DtoField>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
@@ -139,13 +139,13 @@ impl<'a> DtoFieldRepository<'a> {
         Ok(new_entities)
     }
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+    pub fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError> {
         self.redb_table.get_all()
     }
 
@@ -153,7 +153,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &DtoField,
-    ) -> Result<DtoField, Error> {
+    ) -> Result<DtoField, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Updated)),
@@ -167,7 +167,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[DtoField],
-    ) -> Result<Vec<DtoField>, Error> {
+    ) -> Result<Vec<DtoField>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::DtoField(EntityEvent::Updated)),
@@ -177,7 +177,7 @@ impl<'a> DtoFieldRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -200,7 +200,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) {
             return Ok(());
@@ -221,7 +221,7 @@ impl<'a> DtoFieldRepository<'a> {
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let repo = repository_factory::write::create_dto_repository(self.transaction);
         repo.get_relationship(owner_id, &DtoRelationshipField::Fields)
     }
@@ -231,12 +231,12 @@ impl<'a> DtoFieldRepository<'a> {
         event_buffer: &mut EventBuffer,
         owner_id: &EntityId,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut repo = repository_factory::write::create_dto_repository(self.transaction);
         repo.set_relationship(event_buffer, owner_id, &DtoRelationshipField::Fields, ids)
     }
 
-    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, RepositoryError> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
 
         // Recursively snapshot strong children
@@ -253,7 +253,7 @@ impl<'a> DtoFieldRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         snap: &EntityTreeSnapshot,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Restore children first (bottom-up)
 
         // Restore this entity's rows
@@ -285,13 +285,13 @@ impl<'a> DtoFieldRepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn DtoFieldTableRO + 'a>) -> Self {
         DtoFieldRepositoryRO { redb_table }
     }
-    pub fn get(&self, id: &EntityId) -> Result<Option<DtoField>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<DtoField>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<DtoField>, Error> {
+    pub fn get_all(&self) -> Result<Vec<DtoField>, RepositoryError> {
         self.redb_table.get_all()
     }
 }

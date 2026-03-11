@@ -12,7 +12,7 @@ use crate::{
 };
 
 use crate::direct_access::workspace::WorkspaceRelationshipField;
-use redb::Error;
+use crate::error::RepositoryError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,23 +25,23 @@ impl Display for UserInterfaceRelationshipField {
 }
 
 pub trait UserInterfaceTable {
-    fn create(&mut self, entity: &UserInterface) -> Result<UserInterface, Error>;
-    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error>;
-    fn get_all(&self) -> Result<Vec<UserInterface>, Error>;
-    fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, Error>;
-    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, Error>;
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
+    fn create(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError>;
+    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError>;
+    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError>;
+    fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError>;
+    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError>;
 }
 
 pub trait UserInterfaceTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error>;
-    fn get_all(&self) -> Result<Vec<UserInterface>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError>;
 }
 
 pub struct UserInterfaceRepository<'a> {
@@ -61,7 +61,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UserInterface,
-    ) -> Result<UserInterface, Error> {
+    ) -> Result<UserInterface, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UserInterface(EntityEvent::Created)),
@@ -75,7 +75,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UserInterface],
-    ) -> Result<Vec<UserInterface>, Error> {
+    ) -> Result<Vec<UserInterface>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UserInterface(EntityEvent::Created)),
@@ -90,7 +90,7 @@ impl<'a> UserInterfaceRepository<'a> {
         entity: &UserInterface,
         owner_id: EntityId,
         _index: i32,
-    ) -> Result<UserInterface, Error> {
+    ) -> Result<UserInterface, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -118,7 +118,7 @@ impl<'a> UserInterfaceRepository<'a> {
         entities: &[UserInterface],
         owner_id: EntityId,
         _index: i32,
-    ) -> Result<Vec<UserInterface>, Error> {
+    ) -> Result<Vec<UserInterface>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
@@ -139,13 +139,13 @@ impl<'a> UserInterfaceRepository<'a> {
         Ok(new_entities)
     }
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+    pub fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {
         self.redb_table.get_all()
     }
 
@@ -153,7 +153,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &UserInterface,
-    ) -> Result<UserInterface, Error> {
+    ) -> Result<UserInterface, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UserInterface(EntityEvent::Updated)),
@@ -167,7 +167,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[UserInterface],
-    ) -> Result<Vec<UserInterface>, Error> {
+    ) -> Result<Vec<UserInterface>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::UserInterface(EntityEvent::Updated)),
@@ -177,7 +177,7 @@ impl<'a> UserInterfaceRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -200,7 +200,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) {
             return Ok(());
@@ -221,7 +221,7 @@ impl<'a> UserInterfaceRepository<'a> {
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::UserInterface)
     }
@@ -231,7 +231,7 @@ impl<'a> UserInterfaceRepository<'a> {
         event_buffer: &mut EventBuffer,
         owner_id: &EntityId,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.set_relationship(
             event_buffer,
@@ -241,7 +241,7 @@ impl<'a> UserInterfaceRepository<'a> {
         )
     }
 
-    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, RepositoryError> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
 
         // Recursively snapshot strong children
@@ -258,7 +258,7 @@ impl<'a> UserInterfaceRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         snap: &EntityTreeSnapshot,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Restore children first (bottom-up)
 
         // Restore this entity's rows
@@ -292,13 +292,13 @@ impl<'a> UserInterfaceRepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn UserInterfaceTableRO + 'a>) -> Self {
         UserInterfaceRepositoryRO { redb_table }
     }
-    pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<UserInterface>, Error> {
+    pub fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {
         self.redb_table.get_all()
     }
 }

@@ -12,7 +12,7 @@ use crate::{
 };
 
 use crate::direct_access::workspace::WorkspaceRelationshipField;
-use redb::Error;
+use crate::error::RepositoryError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,23 +25,23 @@ impl Display for GlobalRelationshipField {
 }
 
 pub trait GlobalTable {
-    fn create(&mut self, entity: &Global) -> Result<Global, Error>;
-    fn create_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error>;
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error>;
-    fn get_all(&self) -> Result<Vec<Global>, Error>;
-    fn update(&mut self, entity: &Global) -> Result<Global, Error>;
-    fn update_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, Error>;
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error>;
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error>;
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error>;
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error>;
+    fn create(&mut self, entity: &Global) -> Result<Global, RepositoryError>;
+    fn create_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, RepositoryError>;
+    fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<Global>, RepositoryError>;
+    fn update(&mut self, entity: &Global) -> Result<Global, RepositoryError>;
+    fn update_multi(&mut self, entities: &[Global]) -> Result<Vec<Global>, RepositoryError>;
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError>;
 }
 
 pub trait GlobalTableRO {
-    fn get(&self, id: &EntityId) -> Result<Option<Global>, Error>;
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error>;
-    fn get_all(&self) -> Result<Vec<Global>, Error>;
+    fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError>;
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError>;
+    fn get_all(&self) -> Result<Vec<Global>, RepositoryError>;
 }
 
 pub struct GlobalRepository<'a> {
@@ -61,7 +61,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Global,
-    ) -> Result<Global, Error> {
+    ) -> Result<Global, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Created)),
@@ -75,7 +75,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Global],
-    ) -> Result<Vec<Global>, Error> {
+    ) -> Result<Vec<Global>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Created)),
@@ -90,7 +90,7 @@ impl<'a> GlobalRepository<'a> {
         entity: &Global,
         owner_id: EntityId,
         _index: i32,
-    ) -> Result<Global, Error> {
+    ) -> Result<Global, RepositoryError> {
         let new = self.redb_table.create(entity)?;
         let created_id = new.id;
 
@@ -118,7 +118,7 @@ impl<'a> GlobalRepository<'a> {
         entities: &[Global],
         owner_id: EntityId,
         _index: i32,
-    ) -> Result<Vec<Global>, Error> {
+    ) -> Result<Vec<Global>, RepositoryError> {
         let new_entities = self.redb_table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
@@ -139,13 +139,13 @@ impl<'a> GlobalRepository<'a> {
         Ok(new_entities)
     }
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<Global>, Error> {
+    pub fn get_all(&self) -> Result<Vec<Global>, RepositoryError> {
         self.redb_table.get_all()
     }
 
@@ -153,7 +153,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entity: &Global,
-    ) -> Result<Global, Error> {
+    ) -> Result<Global, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
@@ -167,7 +167,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         entities: &[Global],
-    ) -> Result<Vec<Global>, Error> {
+    ) -> Result<Vec<Global>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Global(EntityEvent::Updated)),
@@ -177,7 +177,7 @@ impl<'a> GlobalRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), Error> {
+    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -200,7 +200,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let entities = self.redb_table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) {
             return Ok(());
@@ -221,7 +221,7 @@ impl<'a> GlobalRepository<'a> {
     pub fn get_relationships_from_owner(
         &self,
         owner_id: &EntityId,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::Global)
     }
@@ -231,7 +231,7 @@ impl<'a> GlobalRepository<'a> {
         event_buffer: &mut EventBuffer,
         owner_id: &EntityId,
         ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
         repo.set_relationship(
             event_buffer,
@@ -241,7 +241,7 @@ impl<'a> GlobalRepository<'a> {
         )
     }
 
-    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, Error> {
+    pub fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot, RepositoryError> {
         let table_data = self.redb_table.snapshot_rows(ids)?;
 
         // Recursively snapshot strong children
@@ -258,7 +258,7 @@ impl<'a> GlobalRepository<'a> {
         &mut self,
         event_buffer: &mut EventBuffer,
         snap: &EntityTreeSnapshot,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         // Restore children first (bottom-up)
 
         // Restore this entity's rows
@@ -290,13 +290,13 @@ impl<'a> GlobalRepositoryRO<'a> {
     pub fn new(redb_table: Box<dyn GlobalTableRO + 'a>) -> Self {
         GlobalRepositoryRO { redb_table }
     }
-    pub fn get(&self, id: &EntityId) -> Result<Option<Global>, Error> {
+    pub fn get(&self, id: &EntityId) -> Result<Option<Global>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, Error> {
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Global>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
-    pub fn get_all(&self) -> Result<Vec<Global>, Error> {
+    pub fn get_all(&self) -> Result<Vec<Global>, RepositoryError> {
         self.redb_table.get_all()
     }
 }

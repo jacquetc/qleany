@@ -8,7 +8,8 @@ use crate::database::db_helpers;
 use crate::entities::Relationship;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use redb::{Error, ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
+use crate::error::RepositoryError;
+use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const RELATIONSHIP_TABLE: TableDefinition<EntityId, Bincode<Relationship>> =
     TableDefinition::new("relationship");
@@ -50,7 +51,7 @@ impl<'a> RelationshipRedbTable<'a> {
         RelationshipRedbTable { transaction }
     }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), Error> {
+    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
         transaction.open_table(RELATIONSHIP_TABLE)?;
         transaction.open_table(COUNTER_TABLE)?;
 
@@ -63,23 +64,23 @@ impl<'a> RelationshipRedbTable<'a> {
 }
 
 impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
-    fn create(&mut self, entity: &Relationship) -> Result<Relationship, Error> {
+    fn create(&mut self, entity: &Relationship) -> Result<Relationship, RepositoryError> {
         let v = self.create_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn get(&self, id: &EntityId) -> Result<Option<Relationship>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Relationship>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn update(&mut self, entity: &Relationship) -> Result<Relationship, Error> {
+    fn update(&mut self, entity: &Relationship) -> Result<Relationship, RepositoryError> {
         let v = self.update_multi(std::slice::from_ref(entity))?;
         Ok(v.into_iter().next().unwrap())
     }
-    fn remove(&mut self, id: &EntityId) -> Result<(), Error> {
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, Error> {
+    fn create_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"relationship".to_string())? {
@@ -104,9 +105,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
                 }
             } else {
                 if relationship_table.get(&entity.id)?.is_some() {
-                    return Err(Error::TableDoesNotExist(
-                        format!("UseCase id {} already in use", &entity.id).to_string(),
-                    ));
+                    return Err(RepositoryError::DuplicateId { entity: "Relationship", id: entity.id });
                 }
                 entity.clone()
             };
@@ -128,7 +127,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(created)
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -193,7 +192,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+    fn get_all(&self) -> Result<Vec<Relationship>, RepositoryError> {
         let mut list = Vec::new();
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -251,7 +250,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, Error> {
+    fn update_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError> {
         let mut updated = Vec::new();
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -274,7 +273,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(updated)
     }
 
-    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), Error> {
+    fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
         // forward relationships
@@ -309,7 +308,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &RelationshipRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -321,7 +320,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         &self,
         ids: &[EntityId],
         field: &RelationshipRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -340,7 +339,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         &self,
         id: &EntityId,
         field: &RelationshipRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -353,7 +352,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         field: &RelationshipRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -368,7 +367,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         &self,
         field: &RelationshipRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -388,7 +387,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         &mut self,
         field: &RelationshipRelationshipField,
         relationships: Vec<(EntityId, Vec<EntityId>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -403,7 +402,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         id: &EntityId,
         field: &RelationshipRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<(), Error> {
+    ) -> Result<(), RepositoryError> {
         let mut table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -411,7 +410,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(())
     }
 
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, Error> {
+    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
         // Snapshot entity rows as bincode bytes
@@ -420,7 +419,7 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
             if let Some(guard) = relationship_table.get(id)? {
                 let entity = guard.value();
                 let bytes = bincode::serialize(&entity).map_err(|e| {
-                    Error::TableDoesNotExist(format!("bincode serialize error: {}", e))
+                    RepositoryError::Serialization(e.to_string())
                 })?;
                 rows.push((*id, bytes));
             }
@@ -494,13 +493,13 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         })
     }
 
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), Error> {
+    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
             let entity: Relationship = bincode::deserialize(bytes).map_err(|e| {
-                Error::TableDoesNotExist(format!("bincode deserialize error: {}", e))
+                RepositoryError::Serialization(e.to_string())
             })?;
             relationship_table.insert(*id, entity)?;
         }
@@ -561,12 +560,12 @@ impl<'a> RelationshipRedbTableRO<'a> {
 }
 
 impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<Relationship>, Error> {
+    fn get(&self, id: &EntityId) -> Result<Option<Relationship>, RepositoryError> {
         let v = self.get_multi(std::slice::from_ref(id))?;
         Ok(v.into_iter().next().unwrap())
     }
 
-    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, Error> {
+    fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, RepositoryError> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -631,7 +630,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         Ok(list)
     }
 
-    fn get_all(&self) -> Result<Vec<Relationship>, Error> {
+    fn get_all(&self) -> Result<Vec<Relationship>, RepositoryError> {
         let mut list = Vec::new();
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -692,7 +691,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &RelationshipRelationshipField,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -704,7 +703,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         &self,
         ids: &[EntityId],
         field: &RelationshipRelationshipField,
-    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, Error> {
+    ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -723,7 +722,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         &self,
         id: &EntityId,
         field: &RelationshipRelationshipField,
-    ) -> Result<usize, Error> {
+    ) -> Result<usize, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -736,7 +735,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         field: &RelationshipRelationshipField,
         offset: usize,
         limit: usize,
-    ) -> Result<Vec<EntityId>, Error> {
+    ) -> Result<Vec<EntityId>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
@@ -751,7 +750,7 @@ impl<'a> RelationshipTableRO for RelationshipRedbTableRO<'a> {
         &self,
         field: &RelationshipRelationshipField,
         right_ids: &[EntityId],
-    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, Error> {
+    ) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
         let table = self
             .transaction
             .open_table(get_junction_table_definition(field))?;
