@@ -132,7 +132,7 @@ QCoro::Task<QList<CalendarDto>> CalendarController::get(const QList<int> &calend
         u"Get calendars Query"_s,
         [this, calendarIds]() -> QList<CalendarDto> {
             auto uow = std::make_unique<CalendarUnitOfWork>(*m_dbContext, m_eventRegistry);
-            auto useCase = std::make_unique<GetCalendarUseCase>(std::move(uow));
+            auto useCase = std::make_unique<GetUC>(std::move(uow));
             return useCase->execute(calendarIds);
         });
 }
@@ -142,13 +142,13 @@ The query lambda creates its own UoW and use case, executes synchronously inside
 
 ### Rust
 
-Queries use a **read-only unit of work** (`CalendarUnitOfWorkRO`) that opens a read transaction on the redb database. No event hub is needed, no undo manager involved.
+Queries use a **read-only unit of work** (`CalendarReadUoW`) that opens a read transaction on the redb database. No event hub is needed, no undo manager involved.
 
 ```rust
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<CalendarDto>> {
-    let uow_factory = CalendarUnitOfWorkROFactory::new(db_context);
-    let uc = GetCalendarUseCase::new(Box::new(uow_factory));
-    uc.execute(id)
+    let uow_factory = CalendarReadUoWFactory::new(db_context);
+    let uc = use_cases::GetUseCase::new(uow_factory);
+    Ok(uc.execute(id)?.map(|e| e.into()))
 }
 ```
 
@@ -308,7 +308,8 @@ pub enum Origin {
     DirectAccess(DirectAccessEntity),  // Calendar(Created), Tag(Updated), ...
     UndoRedo(UndoRedoEvent),           // Undone, Redone, ...
     LongOperation(LongOperationEvent), // Started, Progress, Completed, ...
-    CalendarManagement(CalendarManagementEvent), // per-feature events
+    CalendarManagement(CalendarManagementEvent), // one variant per feature group
+    // ... additional feature groups from the manifest ...
 }
 ```
 
@@ -640,7 +641,7 @@ On failure, no result is stored. The controller's `get_*_result()` returns `Ok(N
 
 ## Where the Code Lives
 
-### C++/Qt (251 files for this manifest)
+### C++/Qt (file count varies by manifest)
 
 ```
 src/
@@ -673,7 +674,7 @@ src/
     └── database/                     # DbContext, junction tables, caches
 ```
 
-### Rust (120 files for this manifest)
+### Rust (file count varies by manifest)
 
 ```
 src/
