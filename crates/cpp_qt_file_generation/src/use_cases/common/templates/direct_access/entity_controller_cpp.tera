@@ -28,6 +28,7 @@
 {%- endif %}
 
 #include <memory>
+#include <stdexcept>
 
 namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 {
@@ -75,10 +76,7 @@ void {{ ent.pascal_name }}Controller::resolveDependencies()
 {
     auto *locator = Common::ServiceLocator::instance();
     if (!locator) [[unlikely]]
-    {
-        qCritical() << "ServiceLocator not initialized";
-        return;
-    }
+        throw std::runtime_error("ServiceLocator not initialized — cannot construct {{ ent.pascal_name }}Controller");
     m_dbContext = locator->dbContext();
     m_eventRegistry = locator->eventRegistry();
     m_undoRedoSystem = locator->undoRedoSystem();
