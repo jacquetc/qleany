@@ -79,7 +79,7 @@ class {{ feat.pascal_name }}Controller : public QObject
 
   private:
     void resolveDependencies();
-    SCDatabase::DbContext *m_dbContext = nullptr;
+    QPointer<SCDatabase::DbContext> m_dbContext;
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Common::Features::FeatureEventRegistry> m_featureEventRegistry;
     QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;

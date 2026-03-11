@@ -56,7 +56,7 @@ class {{ ent.pascal_name }}Controller : public QObject
 
   private:
     void resolveDependencies();
-    SCDatabase::DbContext *m_dbContext = nullptr;
+    QPointer<SCDatabase::DbContext> m_dbContext;
     QPointer<Common::DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Common::UndoRedo::UndoRedoSystem> m_undoRedoSystem;
     int m_undoRedoStackId = 0;

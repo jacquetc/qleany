@@ -44,7 +44,7 @@ void SC::ServiceLocator::setLongOperationManager(SC::LongOperation::LongOperatio
     m_longOperationManager = lom;
 }
 
-SC::Database::DbContext *SC::ServiceLocator::dbContext() const
+QPointer<SC::Database::DbContext> SC::ServiceLocator::dbContext() const
 {
     return m_dbContext;
 }

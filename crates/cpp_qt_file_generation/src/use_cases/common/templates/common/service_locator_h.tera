@@ -25,7 +25,7 @@ class ServiceLocator : public QObject
     void setUndoRedoSystem(UndoRedo::UndoRedoSystem *urs);
     void setLongOperationManager(LongOperation::LongOperationManager *lom);
 
-    Database::DbContext *dbContext() const;
+    QPointer<Database::DbContext> dbContext() const;
     QPointer<DirectAccess::EventRegistry> eventRegistry() const;
     QPointer<Features::FeatureEventRegistry> featureEventRegistry() const;
     QPointer<UndoRedo::UndoRedoSystem> undoRedoSystem() const;
@@ -41,7 +41,7 @@ class ServiceLocator : public QObject
 
   private:
     inline static ServiceLocator *s_instance = nullptr;
-    Database::DbContext *m_dbContext;
+    QPointer<Database::DbContext> m_dbContext;
     QPointer<DirectAccess::EventRegistry> m_eventRegistry;
     QPointer<Features::FeatureEventRegistry> m_featureEventRegistry;
     QPointer<UndoRedo::UndoRedoSystem> m_undoRedoSystem;
