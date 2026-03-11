@@ -44,7 +44,7 @@ jobs:
         uses: crate-ci/typos@v1.44.0  # Pin to specific version for reproducibility
         with:
           # Optional: specify config file location
-          # config: .typos.toml
+          config: .github/typos.toml
           
           # Optional: only check changed files in PRs
           # This is faster but may miss errors in unchanged files

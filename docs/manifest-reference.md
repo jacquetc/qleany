@@ -406,7 +406,7 @@ There is no `ordered_many_to_many` because I'm not mad enough to handle that com
 
 ### Weak Relationships
 
-Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true`. In Qleany, the owning side (with a `strong` relationship) controls cascade deletion. For `many_to_one` and `many_to_many`, theorically, it would mean that a child would be deleted only if there was no parent left to "own" it. Too difficult to implement, so no.
+Both `many_to_one` and `many_to_many` are always weak — they reference entities owned elsewhere. They cannot have `strong: true`. In Qleany, the owning side (with a `strong` relationship) controls cascade deletion. For `many_to_one` and `many_to_many`, theoretically, it would mean that a child would be deleted only if there was no parent left to "own" it. Too difficult to implement, so no.
 
 Dev note: theoretically, you can play with the junction table code base to support many_to_one with strong ownership, but that would be a nightmare to maintain and reason about.
 

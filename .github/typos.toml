@@ -1,0 +1,11 @@
+files.extend-exclude = [
+  "CHANGELOG.md",
+  "tests",
+  "examples"
+]
+[default.extend-words]
+# Qt macros (Q_INVOKABLE, Q_PROPERTY are real Qt keywords)
+INVOKABLE = "INVOKABLE"
+
+# Rust variable name
+criticals = "criticals"

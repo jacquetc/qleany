@@ -338,9 +338,9 @@ Thread safety lives at the UoW level, not the repository level. The repositories
 
 Both targets use transactions to guarantee atomicity:
 
-- **C++/Qt**: SQLite transactions with WAL mode. The `DbSubContext` manages `BEGIN/COMMIT/ROLLBACK`. Savepoints are available in the API just in case the developer really needs them, but Qleany doesn't use them internally (see below). Snaphots are better.
+- **C++/Qt**: SQLite transactions with WAL mode. The `DbSubContext` manages `BEGIN/COMMIT/ROLLBACK`. Savepoints are available in the API just in case the developer really needs them, but Qleany doesn't use them internally (see below). Snapshots are better.
 
-- **Rust**: redb write transactions. The `Transaction` struct wraps redb's `WriteTransaction` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`), but same story: Qleany doesn't rely on them, as snaphots are better.
+- **Rust**: redb write transactions. The `Transaction` struct wraps redb's `WriteTransaction` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`), but same story: Qleany doesn't rely on them, as snapshots are better.
 
 In both cases, the unit of work owns the transaction lifecycle. `beginTransaction()` opens it (and arms the event buffer), `commit()` closes it successfully (and flushes buffered events), `rollback()` aborts it (and discards buffered events).
 

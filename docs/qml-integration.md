@@ -67,7 +67,7 @@ Features:
 - `itemId` property to select which entity to display
 - Auto-fetch on ID change
 - Reactive updates when the entity changes elsewhere in the application
-- All fields exposed as writable Q_PROPERTYs with change signals
+- All fields exposed as writable Q_PROPERTY declarations with change signals
 - `dirty` tracking -- marks the model as modified when fields change outside of a refresh
 - `save()` method to persist local edits via the entity controller
 - `loadingStatus` enum: `Unloaded`, `Loading`, `Loaded`, `Error`
