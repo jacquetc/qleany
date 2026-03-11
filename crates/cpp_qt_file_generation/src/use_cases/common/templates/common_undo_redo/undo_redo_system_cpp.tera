@@ -5,6 +5,7 @@
 #include <QScopeGuard>
 #include <QCoreApplication>
 #include <QThread>
+#include <QThreadPool>
 #include <atomic>
 
 namespace {{ s.global.application_pascal_name }}::Common::UndoRedo
@@ -83,25 +84,14 @@ void UndoRedoSystem::shutdown()
     //       SQL commits while the main thread processes events.
     //   (b) Processing events would resume coroutines whose co_await timeout
     //       expired, potentially accessing destroyed QML controllers.
-    // The m_activeOperations counter is managed by coroutines (which need
-    // event processing to resume), so it won't decrement here. But the
-    // worker threads' actual database work will complete, which is what
-    // matters for a clean shutdown.
+    // Instead of polling m_activeOperations (which can only decrement when
+    // coroutines resume via processEvents), we wait on the thread pool
+    // directly — that's the actual resource we need to drain.
     if (m_activeOperations.load() > 0)
     {
-        const int maxWaitTime = 500;
-        const int pollInterval = 50;
-        int elapsed = 0;
-
-        qDebug() << "UndoRedoSystem: Waiting for background work to complete...";
-
-        while (m_activeOperations.load() > 0 && elapsed < maxWaitTime)
-        {
-            QThread::msleep(pollInterval);
-            elapsed += pollInterval;
-        }
-
-        qDebug() << "UndoRedoSystem: Wait finished after" << elapsed << "ms.";
+        qDebug() << "UndoRedoSystem: Waiting for thread pool to finish...";
+        QThreadPool::globalInstance()->waitForDone(5000);
+        qDebug() << "UndoRedoSystem: Thread pool drained.";
     }
     else
     {
