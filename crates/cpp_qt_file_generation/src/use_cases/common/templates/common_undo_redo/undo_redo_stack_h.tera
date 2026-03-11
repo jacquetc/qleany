@@ -26,6 +26,7 @@ class UndoRedoStack : public QObject
     void undo();
     void redo();
     void clear();
+    bool popCommand(const std::shared_ptr<UndoRedoCommand> &command);
 
     int undoCount() const;
     int redoCount() const;

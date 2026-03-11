@@ -272,6 +272,17 @@ bool UndoRedoManager::isAutoCleanupEnabled(int stackId) const
     return it != m_stacks.end() ? it.value()->isAutoCleanupEnabled() : false;
 }
 
+bool UndoRedoManager::popCommand(const std::shared_ptr<UndoRedoCommand> &command, int stackId)
+{
+    QMutexLocker locker(&m_mutex);
+    auto it = m_stacks.find(stackId);
+    if (it != m_stacks.end())
+    {
+        return it.value()->popCommand(command);
+    }
+    return false;
+}
+
 void UndoRedoManager::cancelAllCommands()
 {
     QMutexLocker locker(&m_mutex);

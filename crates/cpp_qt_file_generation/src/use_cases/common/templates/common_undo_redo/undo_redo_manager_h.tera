@@ -68,6 +68,9 @@ class UndoRedoManager : public QObject
     Q_INVOKABLE void setAutoCleanupEnabled(int stackId, bool enabled);
     Q_INVOKABLE bool isAutoCleanupEnabled(int stackId) const;
 
+    // Remove a specific command from a stack (used on timeout)
+    bool popCommand(const std::shared_ptr<UndoRedoCommand> &command, int stackId);
+
     // Cancel all running commands in all stacks
     Q_INVOKABLE void cancelAllCommands();
 

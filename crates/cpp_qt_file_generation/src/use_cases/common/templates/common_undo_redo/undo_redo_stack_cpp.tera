@@ -141,6 +141,42 @@ void UndoRedoStack::clear()
     updateState();
 }
 
+bool UndoRedoStack::popCommand(const std::shared_ptr<UndoRedoCommand> &command)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (!command)
+    {
+        return false;
+    }
+
+    // Disconnect the command so its late finished signal doesn't interfere
+    disconnect(command.get(), &UndoRedoCommand::finished, this, &UndoRedoStack::onCommandFinished);
+
+    if (m_currentCommand == command)
+    {
+        m_currentCommand.reset();
+    }
+
+    // Remove from undo stack
+    if (!m_undoStack.isEmpty() && m_undoStack.top() == command)
+    {
+        m_undoStack.pop();
+        updateState();
+        return true;
+    }
+
+    // Remove from redo stack (in case undo was attempted and timed out)
+    if (!m_redoStack.isEmpty() && m_redoStack.top() == command)
+    {
+        m_redoStack.pop();
+        updateState();
+        return true;
+    }
+
+    return false;
+}
+
 int UndoRedoStack::undoCount() const
 {
     QMutexLocker locker(&m_mutex);

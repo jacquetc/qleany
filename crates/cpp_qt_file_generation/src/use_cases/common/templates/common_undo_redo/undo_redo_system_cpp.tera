@@ -173,6 +173,12 @@ QCoro::Task<std::optional<bool>> UndoRedoSystem::executeCommandAsync(std::shared
     {
         qWarning() << "Timeout reached while waiting for command to finish:" << command->text();
         qDebug() << "The command could not be completed in the allotted time.";
+
+        // Remove the timed-out command from the undo stack and disconnect it.
+        // The thread pool task may still be running, but without the stack
+        // connection its late finished signal won't interfere with subsequent
+        // commands. The database write lock prevents concurrent DB access.
+        m_manager->popCommand(command, stackId);
     }
 
     // decrementOnExit will automatically decrement m_activeOperations
