@@ -41,8 +41,8 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
         // TODO: Implement long operation logic.
         // Check cancelFlag.load() periodically and call progressCallback() to report progress.
         // On cancellation, call m_uow->rollback() and return early.
-        qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
         Q_UNIMPLEMENTED();
+        throw std::runtime_error("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
 
         if (!m_uow->commit())
             throw std::runtime_error("Failed to commit transaction");
@@ -91,7 +91,8 @@ QJsonObject {{ uc.pascal_name }}UseCase::execute(
         if (!m_uow->beginTransaction())
             throw std::runtime_error("Failed to begin transaction");
 
-        qCritical("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
+        Q_UNIMPLEMENTED();
+        throw std::runtime_error("Unimplemented code: {{ feat.pascal_name }}::{{ uc.pascal_name }}UseCase::execute");
 
         if (!m_uow->commit())
             throw std::runtime_error("Failed to commit transaction");
