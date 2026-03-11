@@ -52,7 +52,7 @@ class JunctionCache
     {
         static JunctionCache cache;
         static bool registered = [&] {
-            CacheRegistry::instance().registerCache(&cache, [&cache] { cache.clear(); });
+            CacheRegistry::instance().registerCache(&cache, [ptr = &cache] { ptr->clear(); });
             return true;
         }();
         Q_UNUSED(registered)

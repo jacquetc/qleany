@@ -94,7 +94,7 @@ template <typename EntityType, typename RelationshipFieldType> class TableCache
     {
         static TableCache cache;
         static bool registered = [&] {
-            CacheRegistry::instance().registerCache(&cache, [&cache] { cache.invalidateAll(); });
+            CacheRegistry::instance().registerCache(&cache, [ptr = &cache] { ptr->invalidateAll(); });
             return true;
         }();
         Q_UNUSED(registered)
