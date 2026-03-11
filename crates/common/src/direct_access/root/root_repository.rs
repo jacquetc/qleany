@@ -162,7 +162,11 @@ impl<'a> RootRepository<'a> {
         self.redb_table.get_all()
     }
 
-    pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Root) -> Result<Root, RepositoryError> {
+    pub fn update(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &Root,
+    ) -> Result<Root, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Root(EntityEvent::Updated)),
@@ -186,7 +190,11 @@ impl<'a> RootRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -317,7 +325,10 @@ impl<'a> RootRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 RootRelationshipField::Workspace => {
@@ -331,7 +342,10 @@ impl<'a> RootRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -377,7 +391,10 @@ impl<'a> RootRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 RootRelationshipField::Workspace => {
@@ -391,7 +408,10 @@ impl<'a> RootRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }

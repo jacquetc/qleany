@@ -5,9 +5,9 @@ use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
 use crate::database::Bincode;
 use crate::entities::Root;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const ROOT_TABLE: TableDefinition<EntityId, Bincode<Root>> = TableDefinition::new("root");
@@ -90,7 +90,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                 }
             } else {
                 if root_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "Root", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "Root",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -428,9 +431,8 @@ impl<'a> RootTable for RootRedbTable<'a> {
         for id in ids {
             if let Some(guard) = root_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -487,9 +489,8 @@ impl<'a> RootTable for RootRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Root = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: Root = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             root_table.insert(*id, entity)?;
         }
 

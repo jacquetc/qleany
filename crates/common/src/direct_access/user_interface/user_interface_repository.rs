@@ -26,12 +26,18 @@ impl Display for UserInterfaceRelationshipField {
 
 pub trait UserInterfaceTable {
     fn create(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError>;
-    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError>;
+    fn create_multi(
+        &mut self,
+        entities: &[UserInterface],
+    ) -> Result<Vec<UserInterface>, RepositoryError>;
     fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError>;
     fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError>;
     fn update(&mut self, entity: &UserInterface) -> Result<UserInterface, RepositoryError>;
-    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError>;
+    fn update_multi(
+        &mut self,
+        entities: &[UserInterface],
+    ) -> Result<Vec<UserInterface>, RepositoryError>;
     fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError>;
@@ -142,7 +148,10 @@ impl<'a> UserInterfaceRepository<'a> {
     pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
+    pub fn get_multi(
+        &self,
+        ids: &[EntityId],
+    ) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
     pub fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {
@@ -177,7 +186,11 @@ impl<'a> UserInterfaceRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -295,7 +308,10 @@ impl<'a> UserInterfaceRepositoryRO<'a> {
     pub fn get(&self, id: &EntityId) -> Result<Option<UserInterface>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
+    pub fn get_multi(
+        &self,
+        ids: &[EntityId],
+    ) -> Result<Vec<Option<UserInterface>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
     pub fn get_all(&self) -> Result<Vec<UserInterface>, RepositoryError> {

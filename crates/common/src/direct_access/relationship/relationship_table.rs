@@ -6,9 +6,9 @@ use super::relationship_repository::RelationshipTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Relationship;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const RELATIONSHIP_TABLE: TableDefinition<EntityId, Bincode<Relationship>> =
@@ -80,7 +80,10 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError> {
+    fn create_multi(
+        &mut self,
+        entities: &[Relationship],
+    ) -> Result<Vec<Relationship>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"relationship".to_string())? {
@@ -105,7 +108,10 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
                 }
             } else {
                 if relationship_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "Relationship", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "Relationship",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -250,7 +256,10 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError> {
+    fn update_multi(
+        &mut self,
+        entities: &[Relationship],
+    ) -> Result<Vec<Relationship>, RepositoryError> {
         let mut updated = Vec::new();
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
@@ -418,9 +427,8 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
         for id in ids {
             if let Some(guard) = relationship_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -498,9 +506,8 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Relationship = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: Relationship = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             relationship_table.insert(*id, entity)?;
         }
 

@@ -219,7 +219,11 @@ impl<'a> FileRepository<'a> {
         self.redb_table.get_all()
     }
 
-    pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &File) -> Result<File, RepositoryError> {
+    pub fn update(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &File,
+    ) -> Result<File, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::File(EntityEvent::Updated)),
@@ -243,7 +247,11 @@ impl<'a> FileRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -348,7 +356,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::Feature => {
@@ -362,7 +373,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::Field => {
@@ -376,7 +390,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::UseCase => {
@@ -390,7 +407,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -436,7 +456,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::Feature => {
@@ -450,7 +473,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::Field => {
@@ -464,7 +490,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 FileRelationshipField::UseCase => {
@@ -478,7 +507,10 @@ impl<'a> FileRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }

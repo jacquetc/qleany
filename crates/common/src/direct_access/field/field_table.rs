@@ -6,9 +6,9 @@ use super::field_repository::FieldTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Field;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const FIELD_TABLE: TableDefinition<EntityId, Bincode<Field>> = TableDefinition::new("field");
@@ -90,7 +90,10 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
                 }
             } else {
                 if field_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "Field", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "Field",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -345,9 +348,8 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
         for id in ids {
             if let Some(guard) = field_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -430,9 +432,8 @@ impl<'a> FieldTable for FieldRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Field = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: Field = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             field_table.insert(*id, entity)?;
         }
 

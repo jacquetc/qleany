@@ -246,7 +246,11 @@ impl<'a> UseCaseRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -377,7 +381,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 UseCaseRelationshipField::DtoOut => {
@@ -391,7 +398,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 UseCaseRelationshipField::Entities => {
@@ -405,7 +415,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -451,7 +464,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 UseCaseRelationshipField::DtoOut => {
@@ -465,7 +481,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 UseCaseRelationshipField::Entities => {
@@ -479,7 +498,10 @@ impl<'a> UseCaseRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }

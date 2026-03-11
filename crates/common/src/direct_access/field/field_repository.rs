@@ -244,7 +244,11 @@ impl<'a> FieldRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -349,7 +353,10 @@ impl<'a> FieldRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -395,7 +402,10 @@ impl<'a> FieldRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }

@@ -5,9 +5,9 @@ use super::user_interface_repository::UserInterfaceTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::UserInterface;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const USER_INTERFACE_TABLE: TableDefinition<EntityId, Bincode<UserInterface>> =
@@ -56,7 +56,10 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         self.remove_multi(std::slice::from_ref(id))
     }
 
-    fn create_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError> {
+    fn create_multi(
+        &mut self,
+        entities: &[UserInterface],
+    ) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut created = Vec::new();
         let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
         let mut counter = if let Some(counter) = counter_table.get(&"user_interface".to_string())? {
@@ -74,7 +77,10 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
                 }
             } else {
                 if user_interface_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "UserInterface", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "UserInterface",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -134,7 +140,10 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         Ok(list)
     }
 
-    fn update_multi(&mut self, entities: &[UserInterface]) -> Result<Vec<UserInterface>, RepositoryError> {
+    fn update_multi(
+        &mut self,
+        entities: &[UserInterface],
+    ) -> Result<Vec<UserInterface>, RepositoryError> {
         let mut updated = Vec::new();
         let mut user_interface_table = self.transaction.open_table(USER_INTERFACE_TABLE)?;
 
@@ -176,9 +185,8 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
         for id in ids {
             if let Some(guard) = user_interface_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -225,9 +233,8 @@ impl<'a> UserInterfaceTable for UserInterfaceRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: UserInterface = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: UserInterface = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             user_interface_table.insert(*id, entity)?;
         }
 

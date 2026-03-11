@@ -29,12 +29,18 @@ impl Display for RelationshipRelationshipField {
 
 pub trait RelationshipTable {
     fn create(&mut self, entity: &Relationship) -> Result<Relationship, RepositoryError>;
-    fn create_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError>;
+    fn create_multi(
+        &mut self,
+        entities: &[Relationship],
+    ) -> Result<Vec<Relationship>, RepositoryError>;
     fn get(&self, id: &EntityId) -> Result<Option<Relationship>, RepositoryError>;
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, RepositoryError>;
     fn get_all(&self) -> Result<Vec<Relationship>, RepositoryError>;
     fn update(&mut self, entity: &Relationship) -> Result<Relationship, RepositoryError>;
-    fn update_multi(&mut self, entities: &[Relationship]) -> Result<Vec<Relationship>, RepositoryError>;
+    fn update_multi(
+        &mut self,
+        entities: &[Relationship],
+    ) -> Result<Vec<Relationship>, RepositoryError>;
     fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
     fn get_relationship(
@@ -210,7 +216,10 @@ impl<'a> RelationshipRepository<'a> {
     pub fn get(&self, id: &EntityId) -> Result<Option<Relationship>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, RepositoryError> {
+    pub fn get_multi(
+        &self,
+        ids: &[EntityId],
+    ) -> Result<Vec<Option<Relationship>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
     pub fn get_all(&self) -> Result<Vec<Relationship>, RepositoryError> {
@@ -245,7 +254,11 @@ impl<'a> RelationshipRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let _entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -350,7 +363,10 @@ impl<'a> RelationshipRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
                 RelationshipRelationshipField::RightEntity => {
@@ -364,7 +380,10 @@ impl<'a> RelationshipRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -412,7 +431,10 @@ impl<'a> RelationshipRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
                 RelationshipRelationshipField::RightEntity => {
@@ -426,7 +448,10 @@ impl<'a> RelationshipRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -534,7 +559,10 @@ impl<'a> RelationshipRepositoryRO<'a> {
     pub fn get(&self, id: &EntityId) -> Result<Option<Relationship>, RepositoryError> {
         self.redb_table.get(id)
     }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>, RepositoryError> {
+    pub fn get_multi(
+        &self,
+        ids: &[EntityId],
+    ) -> Result<Vec<Option<Relationship>>, RepositoryError> {
         self.redb_table.get_multi(ids)
     }
     pub fn get_all(&self) -> Result<Vec<Relationship>, RepositoryError> {

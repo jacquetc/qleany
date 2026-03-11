@@ -6,9 +6,9 @@ use super::entity_repository::EntityTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Entity;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const ENTITY_TABLE: TableDefinition<EntityId, Bincode<Entity>> = TableDefinition::new("entity");
@@ -129,7 +129,10 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
                 }
             } else {
                 if entity_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "Entity", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "Entity",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -471,9 +474,8 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
         for id in ids {
             if let Some(guard) = entity_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -686,9 +688,8 @@ impl<'a> EntityTable for EntityRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Entity = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: Entity = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             entity_table.insert(*id, entity)?;
         }
 

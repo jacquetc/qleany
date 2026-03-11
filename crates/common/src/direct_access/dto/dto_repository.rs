@@ -216,7 +216,11 @@ impl<'a> DtoRepository<'a> {
         self.redb_table.get_all()
     }
 
-    pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &Dto) -> Result<Dto, RepositoryError> {
+    pub fn update(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        entity: &Dto,
+    ) -> Result<Dto, RepositoryError> {
         let updated = self.redb_table.update(entity)?;
         event_buffer.push(Event {
             origin: Origin::DirectAccess(DirectAccessEntity::Dto(EntityEvent::Updated)),
@@ -240,7 +244,11 @@ impl<'a> DtoRepository<'a> {
         Ok(updated)
     }
 
-    pub fn remove(&mut self, event_buffer: &mut EventBuffer, id: &EntityId) -> Result<(), RepositoryError> {
+    pub fn remove(
+        &mut self,
+        event_buffer: &mut EventBuffer,
+        id: &EntityId,
+    ) -> Result<(), RepositoryError> {
         let entity = match self.redb_table.get(id)? {
             Some(e) => e,
             None => return Ok(()),
@@ -362,7 +370,10 @@ impl<'a> DtoRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship_multi", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship_multi",
+                            ids: missing,
+                        });
                     }
                 }
             }
@@ -408,7 +419,10 @@ impl<'a> DtoRepository<'a> {
                         .map(|(id, _)| *id)
                         .collect();
                     if !missing.is_empty() {
-                        return Err(RepositoryError::MissingRelationshipTarget { operation: "set_relationship", ids: missing });
+                        return Err(RepositoryError::MissingRelationshipTarget {
+                            operation: "set_relationship",
+                            ids: missing,
+                        });
                     }
                 }
             }

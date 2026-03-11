@@ -6,9 +6,9 @@ use super::system_repository::SystemTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::System;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const SYSTEM_TABLE: TableDefinition<EntityId, Bincode<System>> = TableDefinition::new("system");
@@ -87,7 +87,10 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
                 }
             } else {
                 if system_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "System", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "System",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -327,9 +330,8 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
         for id in ids {
             if let Some(guard) = system_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -392,9 +394,8 @@ impl<'a> SystemTable for SystemRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: System = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: System = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             system_table.insert(*id, entity)?;
         }
 

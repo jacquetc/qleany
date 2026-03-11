@@ -77,9 +77,10 @@ impl Transaction {
     pub fn create_savepoint(&self) -> Result<types::Savepoint> {
         match &self.transaction {
             TransactionType::Read(_) => bail!("Cannot create savepoint on a read transaction"),
-            TransactionType::Write(transaction_option) => {
-                Ok(transaction_option.as_ref().unwrap().persistent_savepoint()?)
-            }
+            TransactionType::Write(transaction_option) => Ok(transaction_option
+                .as_ref()
+                .unwrap()
+                .persistent_savepoint()?),
         }
     }
     pub fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {

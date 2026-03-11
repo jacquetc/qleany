@@ -6,9 +6,9 @@ use super::file_repository::FileTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::File;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const FILE_TABLE: TableDefinition<EntityId, Bincode<File>> = TableDefinition::new("file");
@@ -108,7 +108,10 @@ impl<'a> FileTable for FileRedbTable<'a> {
                 }
             } else {
                 if file_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "File", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "File",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -461,9 +464,8 @@ impl<'a> FileTable for FileRedbTable<'a> {
         for id in ids {
             if let Some(guard) = file_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -571,9 +573,8 @@ impl<'a> FileTable for FileRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: File = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: File = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             file_table.insert(*id, entity)?;
         }
 

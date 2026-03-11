@@ -5,9 +5,9 @@ use super::global_repository::GlobalTableRO;
 use crate::database::Bincode;
 use crate::database::db_helpers;
 use crate::entities::Global;
+use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
-use crate::error::RepositoryError;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
 const GLOBAL_TABLE: TableDefinition<EntityId, Bincode<Global>> = TableDefinition::new("global");
@@ -71,7 +71,10 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
                 }
             } else {
                 if global_table.get(&entity.id)?.is_some() {
-                    return Err(RepositoryError::DuplicateId { entity: "Global", id: entity.id });
+                    return Err(RepositoryError::DuplicateId {
+                        entity: "Global",
+                        id: entity.id,
+                    });
                 }
                 entity.clone()
             };
@@ -173,9 +176,8 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
         for id in ids {
             if let Some(guard) = global_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity).map_err(|e| {
-                    RepositoryError::Serialization(e.to_string())
-                })?;
+                let bytes = bincode::serialize(&entity)
+                    .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
         }
@@ -222,9 +224,8 @@ impl<'a> GlobalTable for GlobalRedbTable<'a> {
 
         // Restore entity rows from bincode bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Global = bincode::deserialize(bytes).map_err(|e| {
-                RepositoryError::Serialization(e.to_string())
-            })?;
+            let entity: Global = bincode::deserialize(bytes)
+                .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             global_table.insert(*id, entity)?;
         }
 
