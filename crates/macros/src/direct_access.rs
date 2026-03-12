@@ -4,13 +4,94 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Error, ItemImpl, ItemTrait, parse_macro_input};
 
-/// Transforms an English word to its plural form following English language rules.
-fn to_plural(word: &str) -> String {
+/// Pluralizes a single English word (no underscores).
+fn pluralize_single(word: &str) -> String {
     if word.is_empty() {
         return String::new();
     }
 
-    // Special cases and irregular plurals could be added here
+    let lower = word.to_lowercase();
+
+    // Irregular plurals
+    let irregular: &[(&str, &str)] = &[
+        ("child", "children"),
+        ("person", "people"),
+        ("man", "men"),
+        ("woman", "women"),
+        ("mouse", "mice"),
+        ("goose", "geese"),
+        ("foot", "feet"),
+        ("tooth", "teeth"),
+        ("ox", "oxen"),
+        ("datum", "data"),
+        ("index", "indices"),
+        ("matrix", "matrices"),
+        ("vertex", "vertices"),
+        ("appendix", "appendices"),
+        ("criterion", "criteria"),
+        ("phenomenon", "phenomena"),
+        ("medium", "media"),
+        ("curriculum", "curricula"),
+        ("die", "dice"),
+    ];
+
+    for &(singular, plural) in irregular {
+        if lower == singular {
+            if word.chars().next().unwrap().is_uppercase() {
+                let mut chars = plural.chars();
+                let first = chars.next().unwrap().to_uppercase().to_string();
+                return format!("{}{}", first, chars.as_str());
+            }
+            return plural.to_string();
+        }
+    }
+
+    // Uncountable / already-plural words
+    let uncountable = [
+        "sheep", "fish", "deer", "species", "series", "aircraft", "offspring", "moose",
+    ];
+    if uncountable.contains(&lower.as_str()) {
+        return word.to_string();
+    }
+
+    // Words ending in -fe → -ves
+    let fe_to_ves = ["knife", "life", "wife", "midwife"];
+    if fe_to_ves.contains(&lower.as_str()) {
+        let stem = &word[..word.len() - 2];
+        return format!("{}ves", stem);
+    }
+
+    // Words ending in -f → -ves (common cases)
+    let f_to_ves = [
+        "leaf", "half", "wolf", "shelf", "self", "calf", "loaf", "thief", "sheaf", "elf",
+        "scarf",
+    ];
+    if f_to_ves.contains(&lower.as_str()) {
+        let stem = &word[..word.len() - 1];
+        return format!("{}ves", stem);
+    }
+
+    // Words ending in -sis or -xis → -ses / -xes (Latin/Greek)
+    if lower.ends_with("sis") || lower.ends_with("xis") {
+        return format!("{}es", &word[..word.len() - 2]);
+    }
+
+    // Words ending in -us → -i (Latin, common cases)
+    let us_to_i = [
+        "focus", "radius", "fungus", "cactus", "stimulus", "syllabus", "nucleus", "alumnus",
+    ];
+    if us_to_i.contains(&lower.as_str()) {
+        return format!("{}i", &word[..word.len() - 2]);
+    }
+
+    // Words ending in -o preceded by a consonant → -oes (common cases)
+    let o_to_oes = [
+        "hero", "potato", "tomato", "echo", "torpedo", "veto", "embargo", "volcano", "mosquito",
+        "cargo",
+    ];
+    if o_to_oes.contains(&lower.as_str()) {
+        return format!("{}es", word);
+    }
 
     // Words ending in 'y' preceded by a consonant: change 'y' to 'ies'
     if word.ends_with('y') && word.len() > 1 {
@@ -32,6 +113,22 @@ fn to_plural(word: &str) -> String {
 
     // Default case: add 's'
     format!("{}s", word)
+}
+
+/// Transforms an English word (possibly snake_case) to its plural form.
+/// For snake_case words like "deleted_tag", only the last segment is pluralized → "deleted_tags".
+fn to_plural(word: &str) -> String {
+    if word.is_empty() {
+        return String::new();
+    }
+
+    if let Some(pos) = word.rfind('_') {
+        let prefix = &word[..pos];
+        let last = &word[pos + 1..];
+        format!("{}_{}", prefix, pluralize_single(last))
+    } else {
+        pluralize_single(word)
+    }
 }
 
 pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
