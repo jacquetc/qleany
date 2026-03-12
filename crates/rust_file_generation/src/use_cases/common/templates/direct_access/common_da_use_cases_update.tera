@@ -104,9 +104,12 @@ where
         if let Some(last_entities) = self.undo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
+            // Capture current state before restoring, for redo
+            let ids: Vec<_> = last_entities.iter().map(|e| e.id()).collect();
+            let current: Vec<F::Entity> = uow.get_multi(&ids)?.into_iter().flatten().collect();
             uow.update_multi(&last_entities)?;
             uow.commit()?;
-            self.redo_stack.push_back(last_entities);
+            self.redo_stack.push_back(current);
         }
         Ok(())
     }
@@ -115,9 +118,12 @@ where
         if let Some(entities) = self.redo_stack.pop_back() {
             let mut uow = self.uow_factory.create();
             uow.begin_transaction()?;
+            // Capture current state before restoring, for undo
+            let ids: Vec<_> = entities.iter().map(|e| e.id()).collect();
+            let current: Vec<F::Entity> = uow.get_multi(&ids)?.into_iter().flatten().collect();
             uow.update_multi(&entities)?;
             uow.commit()?;
-            self.undo_stack.push_back(entities);
+            self.undo_stack.push_back(current);
         }
         Ok(())
     }
