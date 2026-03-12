@@ -12,10 +12,15 @@ list(APPEND CMAKE_MODULE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/tested_project/cmake/3rdparty/
 )
 
-# Build the tested project as a subdirectory so we can link against its targets
-set(FUL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+# Enable testing before adding subdirectories so that both embedded and
+# functional tests are registered with ctest
+enable_testing()
+
+# Build the tested project as a subdirectory so we can link against its targets.
+# FUL_BUILD_TESTS is controlled via cmake -D flag from run_tests.sh;
+# when ON, tested_project/tests/ is included and its add_test() calls register
+# the embedded (generated) tests.
 add_subdirectory(tested_project)
 
 # Build our functional tests
-enable_testing()
 add_subdirectory(functional)
