@@ -110,7 +110,7 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
 
     {%- if ent.forward_relationships %}
     void emitRelationshipChanged(int {{ ent.camel_name }}Id, {{ ent.pascal_name }}RelationshipField rel, const QList<int> &relatedIds) const;
-    {%- endif %};
+    {%- endif %}
 };
 
 } // namespace {{ s.global.application_pascal_name }}::Common::DirectAccess::{{ ent.snake_name }}
