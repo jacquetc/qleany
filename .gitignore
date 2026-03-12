@@ -176,6 +176,7 @@ temp_*/
 
 # qleany specific
 temp_manifest.yaml
+tested_project
 
 # LLM/AI tools
 .claude/

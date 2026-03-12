@@ -6,11 +6,10 @@
 #   ./run_tests.sh                  Full suite: build qleany, generate Rust & C++/Qt
 #                                   examples, build and test them, then clean up.
 #   ./run_tests.sh -g|--generate    Only generate the examples (skip build & test
-#                                   of the generated code). Output lands in
-#                                   examples/rust/full/temp/ and examples/cpp-qt/full/temp/.
+#                                   of the generated code).
 #   ./run_tests.sh --rust           Only run the Rust example (generate, build, test).
 #   ./run_tests.sh --cpp-qt         Only run the C++/Qt example (generate, build, test).
-#   ./run_tests.sh --no-cleanup      Keep generated temp/ directories after the run.
+#   ./run_tests.sh --no-cleanup      Keep build directories after the run.
 #   ./run_tests.sh --install-deps    Install Ubuntu packages first (Qt6, QCoro, Rust).
 #
 # Options can be combined, for example:
@@ -18,6 +17,9 @@
 #   ./run_tests.sh --rust --generate    Generate only the Rust example (skip build & test)
 #   ./run_tests.sh --cpp-qt -g          Generate only the C++/Qt example
 #   ./run_tests.sh --rust --no-cleanup  Run Rust example and keep temp/ for inspection
+#
+# C++/Qt generates into tests/cpp-qt/tested_project/ and runs both functional
+# tests (tests/cpp-qt/functional/) and embedded tests (tested_project/tests/).
 #
 # When neither --rust nor --cpp-qt is given, both examples are processed.
 #
@@ -176,32 +178,37 @@ if $RUN_RUST; then
 fi
 
 # -----------------------------------------------
-# 3. C++/Qt example (examples/cpp-qt/$EXAMPLE_DIR/)
+# 3. C++/Qt example
+#    - Generate into tests/cpp-qt/tested_project/ from the manifest
+#    - Build & run the functional tests (tests/cpp-qt/functional/)
+#    - Build & run the embedded tests (tests/cpp-qt/tested_project/tests/)
 # -----------------------------------------------
 if $RUN_CPPQT; then
+    CPPQT_MANIFEST="$REPO_ROOT/examples/cpp-qt/$EXAMPLE_DIR/qleany.yaml"
+    CPPQT_TEST_PROJECT="$REPO_ROOT/tests/cpp-qt/tested_project"
+
     echo ""
-    echo "--- C++/Qt example: generate examples/cpp-qt/$EXAMPLE_DIR/ ---"
-    cd examples/cpp-qt/"$EXAMPLE_DIR"
-    "$REPO_ROOT/target/debug/qleany" gen --temp
+    echo "--- C++/Qt: generate into tests/cpp-qt/tested_project/ ---"
+    cd "$CPPQT_TEST_PROJECT"
+    "$REPO_ROOT/target/debug/qleany" gen -m "$CPPQT_MANIFEST"
 
     if ! $GENERATE_ONLY; then
         echo ""
-        echo "--- C++/Qt example: cmake configure ---"
-        cd temp
-
+        echo "--- C++/Qt: cmake configure (functional + embedded tests) ---"
+        cd "$REPO_ROOT/tests/cpp-qt"
         mkdir -p build
         cd build
 
         # Extract the BUILD_TESTS option prefix from the generated CMakeLists.txt
-        BUILD_TESTS_OPT=$(grep -oP '\w+(?=_BUILD_TESTS)' ../CMakeLists.txt | head -1)
+        BUILD_TESTS_OPT=$(grep -oP '\w+(?=_BUILD_TESTS)' "$CPPQT_TEST_PROJECT/CMakeLists.txt" | head -1)
         cmake .. -D"${BUILD_TESTS_OPT}_BUILD_TESTS=ON"
 
         echo ""
-        echo "--- C++/Qt example: cmake build ---"
+        echo "--- C++/Qt: cmake build ---"
         cmake --build . --target all -j"$(nproc)"
 
         echo ""
-        echo "--- C++/Qt example: ctest ---"
+        echo "--- C++/Qt: ctest (all tests) ---"
         ctest --output-on-failure
     fi
 
@@ -218,7 +225,8 @@ if ! $NO_CLEANUP; then
         rm -rf examples/rust/$EXAMPLE_DIR/temp
     fi
     if $RUN_CPPQT; then
-        rm -rf examples/cpp-qt/$EXAMPLE_DIR/temp
+        rm -rf tests/cpp-qt/build
+        rm -rf tests/cpp-qt/tested_project/*
     fi
 fi
 
