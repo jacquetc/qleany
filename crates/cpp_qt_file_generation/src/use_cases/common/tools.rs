@@ -115,7 +115,14 @@ fn pluralize_single(word: &str) -> String {
 
     // Uncountable / already-plural words
     let uncountable = [
-        "sheep", "fish", "deer", "species", "series", "aircraft", "offspring", "moose",
+        "sheep",
+        "fish",
+        "deer",
+        "species",
+        "series",
+        "aircraft",
+        "offspring",
+        "moose",
     ];
     if uncountable.contains(&lower.as_str()) {
         return word.to_string();
@@ -130,8 +137,7 @@ fn pluralize_single(word: &str) -> String {
 
     // Words ending in -f → -ves (common cases)
     let f_to_ves = [
-        "leaf", "half", "wolf", "shelf", "self", "calf", "loaf", "thief", "sheaf", "elf",
-        "scarf",
+        "leaf", "half", "wolf", "shelf", "self", "calf", "loaf", "thief", "sheaf", "elf", "scarf",
     ];
     if f_to_ves.contains(&lower.as_str()) {
         let stem = &word[..word.len() - 1];
