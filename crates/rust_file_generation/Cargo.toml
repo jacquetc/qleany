@@ -8,8 +8,8 @@ license.workspace = true
 publish = false
 
 [dependencies]
-serde = "1.0"
-serde_json = { version = "1.0", features = ["preserve_order"] }
+serde = { workspace = true }
+serde_json =  { workspace = true }
 anyhow = { workspace = true }
 common = { path = "../common" }
 macros = { path = "../macros" }

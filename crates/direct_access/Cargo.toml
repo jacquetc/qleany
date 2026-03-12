@@ -14,7 +14,7 @@ publish = false
 thiserror = { workspace = true }
 common = { path = "../common" }
 anyhow = { workspace = true }
-serde = { version = "1", features = ["derive"], workspace = true }
+serde = { workspace = true }
 macros = { path = "../macros" }
 chrono = { workspace = true }
 uuid = { workspace = true }

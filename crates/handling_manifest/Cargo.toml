@@ -8,9 +8,9 @@ license.workspace = true
 publish = false
 
 [dependencies]
-serde = "1.0"
+serde = { workspace = true }
 serde_yml = "0.0.12"
-serde_json = "1.0"
+serde_json =  { workspace = true }
 jsonschema = "0.45.0"
 heck = "0.5"
 tera = "1.18"
