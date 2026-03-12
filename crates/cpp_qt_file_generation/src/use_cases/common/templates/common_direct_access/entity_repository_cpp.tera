@@ -207,7 +207,6 @@ void SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::setRelationshipI
                 throw std::runtime_error(
                     QStringLiteral("setRelationshipIds: child entities do not exist: %1")
                         .arg(QDebug::toString(missing)).toStdString());
-                return;
             }
         }
         {%- endfor %}
