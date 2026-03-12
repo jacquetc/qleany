@@ -1,0 +1,15 @@
+[package]
+name = "functional-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+common = { path = "../tested_project/crates/common" }
+direct_access = { path = "../tested_project/crates/direct_access" }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+[lints]
+workspace = true

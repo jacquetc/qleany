@@ -155,22 +155,31 @@ if ! $GENERATE_ONLY; then
 fi
 
 # -----------------------------------------------
-# 2. Rust example (examples/rust/$EXAMPLE_DIR/)
+# 2. Rust example
+#    - Generate into tests/rust/tested_project/ from the manifest
+#    - Build & run the functional tests (tests/rust/functional/)
 # -----------------------------------------------
 if $RUN_RUST; then
+    RUST_MANIFEST="$REPO_ROOT/examples/rust/$EXAMPLE_DIR/qleany.yaml"
+    RUST_TEST_PROJECT="$REPO_ROOT/tests/rust/tested_project"
+
     echo ""
-    echo "--- Rust example: generate examples/rust/$EXAMPLE_DIR/ ---"
-    cd examples/rust/"$EXAMPLE_DIR"
-    "$REPO_ROOT/target/debug/qleany" gen --temp
+    echo "--- Rust: generate into tests/rust/tested_project/ ---"
+    cd "$RUST_TEST_PROJECT"
+    "$REPO_ROOT/target/debug/qleany" gen -m "$RUST_MANIFEST"
+
+    # Remove the generated workspace Cargo.toml to avoid nested workspace conflict
+    # (the outer tests/rust/Cargo.toml is the real workspace root)
+    rm -f "$RUST_TEST_PROJECT/Cargo.toml"
 
     if ! $GENERATE_ONLY; then
         echo ""
-        echo "--- Rust example: cargo check ---"
-        cd temp
+        echo "--- Rust: cargo check (functional tests) ---"
+        cd "$REPO_ROOT/tests/rust"
         cargo check --workspace
 
         echo ""
-        echo "--- Rust example: cargo test ---"
+        echo "--- Rust: cargo test (functional tests) ---"
         cargo test --workspace
     fi
 
@@ -222,7 +231,8 @@ if ! $NO_CLEANUP; then
     echo ""
     echo "--- Clean up ---"
     if $RUN_RUST; then
-        rm -rf examples/rust/$EXAMPLE_DIR/temp
+        rm -rf tests/rust/tested_project/*
+        rm -rf tests/rust/target
     fi
     if $RUN_CPPQT; then
         rm -rf tests/cpp-qt/build
