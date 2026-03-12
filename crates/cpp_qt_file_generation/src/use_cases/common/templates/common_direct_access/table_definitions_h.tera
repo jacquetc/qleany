@@ -15,19 +15,19 @@ inline QString getSqlTableDefinition()
         "CREATE TABLE IF NOT EXISTS {{ ent.sql_safe_snake_name }} ("
         "    id INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE ON CONFLICT ROLLBACK NOT NULL,"
     {%- for f in ent.fields %}
-        {%- if f.cpp_qt_type == "QDateTime" %}
+        {%- if f.cpp_qt_base_type == "QDateTime" %}
         "    {{ f.sql_safe_snake_name }} TEXT NOT NULL{% if not loop.last %},{% endif %}"
-        {%- elif  f.cpp_qt_type == "QUuid" %}
+        {%- elif f.cpp_qt_base_type == "QUuid" %}
         "    {{ f.sql_safe_snake_name }} TEXT NOT NULL{% if not loop.last %},{% endif %}"
-        {%- elif f.cpp_qt_type == "QString" %}
+        {%- elif f.cpp_qt_base_type == "QString" %}
         "    {{ f.sql_safe_snake_name }} TEXT NOT NULL DEFAULT ''{% if not loop.last %},{% endif %}"
-        {%- elif f.cpp_qt_type == "bool" %}
+        {%- elif f.cpp_qt_base_type == "bool" %}
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
-        {%- elif f.cpp_qt_type == "float" %}
+        {%- elif f.cpp_qt_base_type == "float" %}
         "    {{ f.sql_safe_snake_name }} REAL NOT NULL DEFAULT 0.0{% if not loop.last %},{% endif %}"
-        {%- elif f.cpp_qt_type != "int" %}
+        {%- elif f.cpp_qt_base_type == "int" %}
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
-        {%- elif f.cpp_qt_type == "uint" %}
+        {%- elif f.cpp_qt_base_type == "uint" %}
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
         {%- else %}
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
