@@ -5,7 +5,8 @@ use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::UserInterface;
-use common::entities::{Entity, FileNature, FileStatus};
+use common::entities::{Entity, FileNature};
+use common::generator::file_list_builder::FileListBuilder;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork, entities::Feature, entities::File, entities::Global,
@@ -44,7 +45,7 @@ impl FillRustFilesUseCase {
     }
 
     pub fn execute(&mut self, dto: &FillRustFilesDto) -> Result<FillRustFilesReturnDto> {
-        let mut files: Vec<File> = vec![];
+        let mut b = FileListBuilder::new();
 
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
@@ -114,522 +115,241 @@ impl FillRustFilesUseCase {
             uow.remove_file_multi(&all_previous_files)?;
         }
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
-            relative_path: "".to_string(),
-            group: "base".to_string(),
-            template_name: "root_cargo".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: true,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "Cargo.toml",
+            "",
+            "base",
+            "root_cargo",
+            FileNature::Aggregate,
+        )
+        .all_features = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "common_cargo".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "Cargo.toml",
+            format!("{}/common/", prefix),
+            "base",
+            "common_cargo",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "lib.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "common_lib".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "lib.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "common_lib",
+            FileNature::Aggregate,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "undo_redo".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "undo_redo.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "undo_redo",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "long_operation.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "long_operation".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "long_operation.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "long_operation",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "error.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "error".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "error.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "error",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "repository_factory.rs".to_string(),
-            relative_path: format!("{}/common/src/direct_access/", prefix),
-            group: "base".to_string(),
-            template_name: "repository_factory".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "repository_factory.rs",
+            format!("{}/common/src/direct_access/", prefix),
+            "base",
+            "repository_factory",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "setup.rs".to_string(),
-            relative_path: format!("{}/common/src/direct_access/", prefix),
-            group: "base".to_string(),
-            template_name: "common_setup".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "setup.rs",
+            format!("{}/common/src/direct_access/", prefix),
+            "base",
+            "common_setup",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "types.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "types".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "types.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "types",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "database.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "database".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "database.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "database",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "db_context.rs".to_string(),
-            relative_path: format!("{}/common/src/database/", prefix),
-            group: "base".to_string(),
-            template_name: "db_context".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "db_context.rs",
+            format!("{}/common/src/database/", prefix),
+            "base",
+            "db_context",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "db_helpers.rs".to_string(),
-            relative_path: format!("{}/common/src/database/", prefix),
-            group: "base".to_string(),
-            template_name: "db_helpers".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "db_helpers.rs",
+            format!("{}/common/src/database/", prefix),
+            "base",
+            "db_helpers",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "transactions.rs".to_string(),
-            relative_path: format!("{}/common/src/database/", prefix),
-            group: "base".to_string(),
-            template_name: "transactions".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "transactions.rs",
+            format!("{}/common/src/database/", prefix),
+            "base",
+            "transactions",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "snapshot.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "snapshot".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "snapshot.rs",
+            format!("{}/common/src/", prefix),
+            "base",
+            "snapshot",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "redb_tests.rs".to_string(),
-            relative_path: format!("{}/common/tests/", prefix),
-            group: "base".to_string(),
-            template_name: "redb_tests".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "redb_tests.rs",
+            format!("{}/common/tests/", prefix),
+            "base",
+            "redb_tests",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_tests.rs".to_string(),
-            relative_path: format!("{}/common/tests/", prefix),
-            group: "base".to_string(),
-            template_name: "undo_redo_tests".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "undo_redo_tests.rs",
+            format!("{}/common/tests/", prefix),
+            "base",
+            "undo_redo_tests",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "snapshot_tests.rs".to_string(),
-            relative_path: format!("{}/common/tests/", prefix),
-            group: "base".to_string(),
-            template_name: "snapshot_tests".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "snapshot_tests.rs",
+            format!("{}/common/tests/", prefix),
+            "base",
+            "snapshot_tests",
+            FileNature::Infrastructure,
+        );
 
         // direct access entities
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "entities.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "entities".to_string(),
-            template_name: "common_entities".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "entities.rs",
+            format!("{}/common/src/", prefix),
+            "entities",
+            "common_entities",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "event.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "base".to_string(),
-            template_name: "common_event".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: true,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        {
+            let f = b.add(
+                "event.rs",
+                format!("{}/common/src/", prefix),
+                "base",
+                "common_event",
+                FileNature::Aggregate,
+            );
+            f.all_features = true;
+            f.all_entities = true;
+        }
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "direct_access.rs".to_string(),
-            relative_path: format!("{}/common/src/", prefix),
-            group: "entities".to_string(),
-            template_name: "common_direct_access_mod".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "direct_access.rs",
+            format!("{}/common/src/", prefix),
+            "entities",
+            "common_direct_access_mod",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
-            relative_path: format!("{}/direct_access/", prefix),
-            group: "entities".to_string(),
-            template_name: "direct_access_cargo".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "Cargo.toml",
+            format!("{}/direct_access/", prefix),
+            "entities",
+            "direct_access_cargo",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "lib.rs".to_string(),
-            relative_path: format!("{}/direct_access/src/", prefix),
-            group: "entities".to_string(),
-            template_name: "direct_access_lib".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "lib.rs",
+            format!("{}/direct_access/src/", prefix),
+            "entities",
+            "direct_access_lib",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "use_cases.rs".to_string(),
-            relative_path: format!("{}/common/src/direct_access/", prefix),
-            group: "entities".to_string(),
-            template_name: "common_da_use_cases_mod".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "use_cases.rs",
+            format!("{}/common/src/direct_access/", prefix),
+            "entities",
+            "common_da_use_cases_mod",
+            FileNature::Aggregate,
+        );
 
         let uc_relative_path = format!("{}/common/src/direct_access/use_cases/", prefix);
 
-        for (file_name, template_name) in [
-            ("traits.rs", "common_da_use_cases_traits"),
-            ("get.rs", "common_da_use_cases_get"),
-            ("create_orphan.rs", "common_da_use_cases_create_orphan"),
-            ("create.rs", "common_da_use_cases_create"),
-            ("update.rs", "common_da_use_cases_update"),
-            ("remove.rs", "common_da_use_cases_remove"),
-            (
-                "get_relationship.rs",
-                "common_da_use_cases_get_relationship",
-            ),
-            (
-                "get_relationship_many.rs",
-                "common_da_use_cases_get_relationship_many",
-            ),
-            (
-                "get_relationship_count.rs",
-                "common_da_use_cases_get_relationship_count",
-            ),
-            (
-                "get_relationship_in_range.rs",
-                "common_da_use_cases_get_relationship_in_range",
-            ),
-            (
-                "set_relationship.rs",
-                "common_da_use_cases_set_relationship",
-            ),
-            (
-                "move_relationship.rs",
-                "common_da_use_cases_move_relationship",
-            ),
-        ] {
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: file_name.to_string(),
-                relative_path: uc_relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: template_name.to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-        }
+        b.add_batch(
+            &uc_relative_path,
+            "entities",
+            FileNature::Infrastructure,
+            &[
+                ("traits.rs", "common_da_use_cases_traits"),
+                ("get.rs", "common_da_use_cases_get"),
+                ("create_orphan.rs", "common_da_use_cases_create_orphan"),
+                ("create.rs", "common_da_use_cases_create"),
+                ("update.rs", "common_da_use_cases_update"),
+                ("remove.rs", "common_da_use_cases_remove"),
+                (
+                    "get_relationship.rs",
+                    "common_da_use_cases_get_relationship",
+                ),
+                (
+                    "get_relationship_many.rs",
+                    "common_da_use_cases_get_relationship_many",
+                ),
+                (
+                    "get_relationship_count.rs",
+                    "common_da_use_cases_get_relationship_count",
+                ),
+                (
+                    "get_relationship_in_range.rs",
+                    "common_da_use_cases_get_relationship_in_range",
+                ),
+                (
+                    "set_relationship.rs",
+                    "common_da_use_cases_set_relationship",
+                ),
+                (
+                    "move_relationship.rs",
+                    "common_da_use_cases_move_relationship",
+                ),
+            ],
+        );
 
         // Get entities
         let entities =
@@ -646,25 +366,14 @@ impl FillRustFilesUseCase {
 
             // for crates/direct_access/src/
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: format!("{}/direct_access/src/", prefix),
-                group: "entities".to_string(),
-                template_name: "entity_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}.rs", heck::AsSnakeCase(&entity.name)),
+                format!("{}/direct_access/src/", prefix),
+                "entities",
+                "entity_mod",
+                FileNature::Aggregate,
+            )
+            .entity = Some(entity.id);
 
             let relative_path = format!(
                 "{}/direct_access/src/{}/",
@@ -672,131 +381,66 @@ impl FillRustFilesUseCase {
                 heck::AsSnakeCase(&entity.name)
             );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "dtos.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_dtos".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "dtos.rs",
+                relative_path.clone(),
+                "entities",
+                "entity_dtos",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "units_of_work.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_units_of_work".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "units_of_work.rs",
+                relative_path.clone(),
+                "entities",
+                "entity_units_of_work",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.clone(),
-                group: "entities".to_string(),
-                template_name: "entity_controller".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}_controller.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path.clone(),
+                "entities",
+                "entity_controller",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
 
             // for crates/common/src/direct_access/
             let relative_path = format!("{}/common/src/direct_access/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: relative_path.to_string(),
-                group: "entities".to_string(),
-                template_name: "common_entity_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}.rs", heck::AsSnakeCase(&entity.name)),
+                relative_path.to_string(),
+                "entities",
+                "common_entity_mod",
+                FileNature::Aggregate,
+            )
+            .entity = Some(entity.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_repository.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
-                group: "entities".to_string(),
-                template_name: "common_entity_repository".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}_repository.rs", heck::AsSnakeCase(&entity.name)),
+                format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
+                "entities",
+                "common_entity_repository",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_table.rs", heck::AsSnakeCase(&entity.name)),
-                relative_path: format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
-                group: "entities".to_string(),
-                template_name: "common_entity_table".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            })
+            b.add(
+                format!("{}_table.rs", heck::AsSnakeCase(&entity.name)),
+                format!("{}{}/", relative_path, heck::AsSnakeCase(&entity.name)),
+                "entities",
+                "common_entity_table",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
         }
 
         // features:
+
         let features =
             uow.get_workspace_relationship(&workspace_id, &WorkspaceRelationshipField::Features)?;
 
@@ -807,127 +451,61 @@ impl FillRustFilesUseCase {
 
             let relative_path = format!("{}/{}/", prefix, heck::AsSnakeCase(&feature.name));
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "Cargo.toml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_cargo".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "Cargo.toml",
+                relative_path.clone(),
+                "features",
+                "feature_cargo",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
 
             let relative_path = format!("{}/{}/src/", prefix, heck::AsSnakeCase(&feature.name));
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "lib.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_lib".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "lib.rs",
+                relative_path.clone(),
+                "features",
+                "feature_lib",
+                FileNature::Aggregate,
+            )
+            .feature = Some(feature.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "use_cases.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_use_cases_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "use_cases.rs",
+                relative_path.clone(),
+                "features",
+                "feature_use_cases_mod",
+                FileNature::Aggregate,
+            )
+            .feature = Some(feature.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "dtos.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_dtos".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "dtos.rs",
+                relative_path.clone(),
+                "features",
+                "feature_dtos",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "units_of_work.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_units_of_work_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "units_of_work.rs",
+                relative_path.clone(),
+                "features",
+                "feature_units_of_work_mod",
+                FileNature::Aggregate,
+            )
+            .feature = Some(feature.id);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_controller.rs", heck::AsSnakeCase(&feature.name)),
-                relative_path: relative_path.clone(),
-                group: "features".to_string(),
-                template_name: "feature_controller".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}_controller.rs", heck::AsSnakeCase(&feature.name)),
+                relative_path.clone(),
+                "features",
+                "feature_controller",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
 
             // for crates/{}/src/use_cases/
             let relative_path = format!(
@@ -943,25 +521,15 @@ impl FillRustFilesUseCase {
             for use_case in &use_cases {
                 let use_case = use_case.clone().ok_or(anyhow!("Use case not found"))?;
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_uc.rs", heck::AsSnakeCase(&use_case.name)),
-                    relative_path: relative_path.clone(),
-                    group: "features".to_string(),
-                    template_name: "feature_use_case".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("{}_uc.rs", heck::AsSnakeCase(&use_case.name)),
+                    relative_path.clone(),
+                    "features",
+                    "feature_use_case",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
             }
 
             // for crates/{}/src/units_of_work/
@@ -974,218 +542,113 @@ impl FillRustFilesUseCase {
             for use_case in use_cases {
                 let use_case = use_case.ok_or(anyhow!("Use case not found"))?;
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_uow.rs", heck::AsSnakeCase(&use_case.name)),
-                    relative_path: relative_path.clone(),
-                    group: "features".to_string(),
-                    template_name: "feature_use_case_uow".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("{}_uow.rs", heck::AsSnakeCase(&use_case.name)),
+                    relative_path.clone(),
+                    "features",
+                    "feature_use_case_uow",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
             }
         }
 
         // macros in crates/macros/
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "Cargo.toml".to_string(),
-            relative_path: format!("{}/macros/", prefix),
-            group: "base".to_string(),
-            template_name: "macros_cargo".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "Cargo.toml",
+            format!("{}/macros/", prefix),
+            "base",
+            "macros_cargo",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "lib.rs".to_string(),
-            relative_path: format!("{}/macros/src/", prefix),
-            group: "base".to_string(),
-            template_name: "macros_lib".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "lib.rs",
+            format!("{}/macros/src/", prefix),
+            "base",
+            "macros_lib",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "direct_access.rs".to_string(),
-            relative_path: format!("{}/macros/src/", prefix),
-            group: "base".to_string(),
-            template_name: "macros_direct_access".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "direct_access.rs",
+            format!("{}/macros/src/", prefix),
+            "base",
+            "macros_direct_access",
+            FileNature::Infrastructure,
+        );
 
         // Frontend crate (always generated)
         {
             let relative_path = format!("{}/frontend/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "Cargo.toml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_cargo".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "Cargo.toml",
+                relative_path.clone(),
+                "frontend",
+                "frontend_cargo",
+                FileNature::Aggregate,
+            )
+            .all_features = true;
 
             let relative_path_src = format!("{}/frontend/src/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "lib.rs".to_string(),
-                relative_path: relative_path_src.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_lib".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            {
+                let f = b.add(
+                    "lib.rs",
+                    relative_path_src.clone(),
+                    "frontend",
+                    "frontend_lib",
+                    FileNature::Aggregate,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "app_context.rs".to_string(),
-                relative_path: relative_path_src.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_app_context".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "app_context.rs",
+                relative_path_src.clone(),
+                "frontend",
+                "frontend_app_context",
+                FileNature::Infrastructure,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "event_hub_client.rs".to_string(),
-                relative_path: relative_path_src.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_event_hub_client".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "event_hub_client.rs",
+                relative_path_src.clone(),
+                "frontend",
+                "frontend_event_hub_client",
+                FileNature::Infrastructure,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "commands.rs".to_string(),
-                relative_path: relative_path_src.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_commands_mod".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            {
+                let f = b.add(
+                    "commands.rs",
+                    relative_path_src.clone(),
+                    "frontend",
+                    "frontend_commands_mod",
+                    FileNature::Aggregate,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
 
             // commands:
             let relative_path_commands = format!("{}/frontend/src/commands/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "undo_redo_commands.rs".to_string(),
-                relative_path: relative_path_commands.clone(),
-                group: "frontend".to_string(),
-                template_name: "frontend_undo_redo_commands".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            {
+                let f = b.add(
+                    "undo_redo_commands.rs",
+                    relative_path_commands.clone(),
+                    "frontend",
+                    "frontend_undo_redo_commands",
+                    FileNature::Infrastructure,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
 
             for entity in &entities {
                 let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
@@ -1193,210 +656,101 @@ impl FillRustFilesUseCase {
                     continue;
                 }
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
-                    relative_path: relative_path_commands.clone(),
-                    group: "frontend".to_string(),
-                    template_name: "frontend_entity_commands".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path_commands.clone(),
+                    "frontend",
+                    "frontend_entity_commands",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
             }
 
             for feature in &features {
                 let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
-                    relative_path: relative_path_commands.clone(),
-                    group: "frontend".to_string(),
-                    template_name: "frontend_feature_commands".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
+                    relative_path_commands.clone(),
+                    "frontend",
+                    "frontend_feature_commands",
+                    FileNature::Infrastructure,
+                )
+                .feature = Some(feature.id);
             }
         }
 
         if ui.rust_cli {
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "Cargo.toml".to_string(),
-                relative_path: format!("{}/cli/", prefix),
-                group: "cli".to_string(),
-                template_name: "cli_cargo".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "Cargo.toml",
+                format!("{}/cli/", prefix),
+                "cli",
+                "cli_cargo",
+                FileNature::Scaffold,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main.rs".to_string(),
-                relative_path: format!("{}/cli/src/", prefix),
-                group: "cli".to_string(),
-                template_name: "cli_main".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "main.rs",
+                format!("{}/cli/src/", prefix),
+                "cli",
+                "cli_main",
+                FileNature::Scaffold,
+            );
         }
 
         if ui.rust_slint {
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "Cargo.toml".to_string(),
-                relative_path: format!("{}/slint_ui/", prefix),
-                group: "slint".to_string(),
-                template_name: "slint_cargo".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "Cargo.toml",
+                format!("{}/slint_ui/", prefix),
+                "slint",
+                "slint_cargo",
+                FileNature::Scaffold,
+            )
+            .all_features = true;
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "build.rs".to_string(),
-                relative_path: format!("{}/slint_ui/", prefix),
-                group: "slint".to_string(),
-                template_name: "slint_build".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "build.rs",
+                format!("{}/slint_ui/", prefix),
+                "slint",
+                "slint_build",
+                FileNature::Scaffold,
+            );
 
             let relative_path = format!("{}/slint_ui/src/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main.rs".to_string(),
-                relative_path: relative_path.clone(),
-                group: "slint".to_string(),
-                template_name: "slint_main".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "main.rs",
+                relative_path.clone(),
+                "slint",
+                "slint_main",
+                FileNature::Scaffold,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "app.slint".to_string(),
-                relative_path: format!("{}/slint_ui/ui/", prefix),
-                group: "slint".to_string(),
-                template_name: "slint_app".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "app.slint",
+                format!("{}/slint_ui/ui/", prefix),
+                "slint",
+                "slint_app",
+                FileNature::Scaffold,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "globals.slint".to_string(),
-                relative_path: format!("{}/slint_ui/ui/", prefix),
-                group: "slint".to_string(),
-                template_name: "slint_globals".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "globals.slint",
+                format!("{}/slint_ui/ui/", prefix),
+                "slint",
+                "slint_globals",
+                FileNature::Scaffold,
+            );
         }
 
-        // Keep only the files already existing
-        let files = files
-            .into_iter()
-            .filter(|file| {
-                if dto.only_list_already_existing {
-                    let full_path = format!("{}{}", file.relative_path, file.name);
-                    std::path::Path::new(&full_path).exists()
-                } else {
-                    true
-                }
+        let files = if dto.only_list_already_existing {
+            b.build_filtered(|file| {
+                let full_path = format!("{}{}", file.relative_path, file.name);
+                std::path::Path::new(&full_path).exists()
             })
-            .collect::<Vec<File>>();
+        } else {
+            b.build()
+        };
 
         // create files in db
         let created_files = uow.create_orphan_file_multi(&files)?;

@@ -6,6 +6,7 @@ pub mod direct_access;
 pub mod entities;
 pub mod error;
 pub mod event;
+pub mod generator;
 pub mod long_operation;
 pub mod snapshot;
 pub mod types;

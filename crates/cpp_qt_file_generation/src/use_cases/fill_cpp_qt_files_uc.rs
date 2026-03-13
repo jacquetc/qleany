@@ -5,7 +5,8 @@ use common::direct_access::feature::FeatureRelationshipField;
 use common::direct_access::system::SystemRelationshipField;
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::UserInterface;
-use common::entities::{Entity, FileNature, FileStatus};
+use common::entities::{Entity, FileNature};
+use common::generator::file_list_builder::FileListBuilder;
 use common::types::EntityId;
 use common::{
     database::CommandUnitOfWork, entities::Feature, entities::Field, entities::File,
@@ -46,7 +47,7 @@ impl FillCppQtFilesUseCase {
     }
 
     pub fn execute(&mut self, dto: &FillCppQtFilesDto) -> Result<FillCppQtFilesReturnDto> {
-        let mut files: Vec<File> = vec![];
+        let mut b = FileListBuilder::new();
 
         let mut uow = self.uow_factory.create();
         uow.begin_transaction()?;
@@ -116,1351 +117,494 @@ impl FillCppQtFilesUseCase {
             uow.remove_file_multi(&all_previous_files)?;
         }
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: "".to_string(),
-            group: "base".to_string(),
-            template_name: "root_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: true,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "common_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "InstallHelpers.cmake".to_string(),
-            relative_path: "cmake/".to_string(),
-            group: "base".to_string(),
-            template_name: "install_helpers_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "VersionFromGit.cmake".to_string(),
-            relative_path: "cmake/".to_string(),
-            group: "base".to_string(),
-            template_name: "version_from_git_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "service_locator.h".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "service_locator_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "service_locator.cpp".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "service_locator_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "controller_command_helpers.h".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "controller_command_helpers_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "signal_buffer.h".to_string(),
-            relative_path: format!("{}/common/", prefix),
-            group: "base".to_string(),
-            template_name: "signal_buffer_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "app_bootstrap.h".to_string(),
-            relative_path: format!("{}/common/frontend", prefix),
-            group: "base".to_string(),
-            template_name: "app_bootstrap_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "app_bootstrap.cpp".to_string(),
-            relative_path: format!("{}/common/frontend", prefix),
-            group: "base".to_string(),
-            template_name: "app_bootstrap_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/common/frontend", prefix),
-            group: "base".to_string(),
-            template_name: "common_frontend_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "CMakeLists.txt",
+            "",
+            "base",
+            "root_cmake",
+            FileNature::Aggregate,
+        )
+        .all_features = true;
+        b.add(
+            "CMakeLists.txt",
+            format!("{}/common/", prefix),
+            "base",
+            "common_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "InstallHelpers.cmake",
+            "cmake/",
+            "base",
+            "install_helpers_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "VersionFromGit.cmake",
+            "cmake/",
+            "base",
+            "version_from_git_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "service_locator.h",
+            format!("{}/common/", prefix),
+            "base",
+            "service_locator_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "service_locator.cpp",
+            format!("{}/common/", prefix),
+            "base",
+            "service_locator_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "controller_command_helpers.h",
+            format!("{}/common/", prefix),
+            "base",
+            "controller_command_helpers_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "signal_buffer.h",
+            format!("{}/common/", prefix),
+            "base",
+            "signal_buffer_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "app_bootstrap.h",
+            format!("{}/common/frontend", prefix),
+            "base",
+            "app_bootstrap_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "app_bootstrap.cpp",
+            format!("{}/common/frontend", prefix),
+            "base",
+            "app_bootstrap_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "CMakeLists.txt",
+            format!("{}/common/frontend", prefix),
+            "base",
+            "common_frontend_cmake",
+            FileNature::Aggregate,
+        );
 
         // database
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "db_builder.h".to_string(),
-            relative_path: format!("{}/common/database", prefix),
-            group: "common_db".to_string(),
-            template_name: "db_builder_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "cache_registry.h".to_string(),
-            relative_path: format!("{}/common/database", prefix),
-            group: "common_db".to_string(),
-            template_name: "cache_registry_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "db_context.h".to_string(),
-            relative_path: format!("{}/common/database", prefix),
-            group: "common_db".to_string(),
-            template_name: "db_context_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "table_cache.h".to_string(),
-            relative_path: format!("{}/common/database", prefix),
-            group: "common_db".to_string(),
-            template_name: "table_cache_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "junction_cache.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "junction_cache_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "snapshot_types.h".to_string(),
-            relative_path: format!("{}/common/database", prefix),
-            group: "common_db".to_string(),
-            template_name: "snapshot_types_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "unordered_many_to_many.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "unordered_many_to_many_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "unordered_many_to_many.cpp".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "unordered_many_to_many_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "unordered_one_to_many.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "unordered_one_to_many_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "unordered_one_to_many.cpp".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "unordered_one_to_many_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "ordered_one_to_many.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "ordered_one_to_many_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "ordered_one_to_many.cpp".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "ordered_one_to_many_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "one_to_one.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "one_to_one_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "one_to_one.cpp".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "one_to_one_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "many_to_one.h".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "many_to_one_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "many_to_one.cpp".to_string(),
-            relative_path: format!("{}/common/database/junction_table_ops/", prefix),
-            group: "common_db".to_string(),
-            template_name: "many_to_one_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "db_builder.h",
+            format!("{}/common/database", prefix),
+            "common_db",
+            "db_builder_h",
+            FileNature::Infrastructure,
+        )
+        .all_entities = true;
+        b.add(
+            "cache_registry.h",
+            format!("{}/common/database", prefix),
+            "common_db",
+            "cache_registry_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "db_context.h",
+            format!("{}/common/database", prefix),
+            "common_db",
+            "db_context_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "table_cache.h",
+            format!("{}/common/database", prefix),
+            "common_db",
+            "table_cache_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "junction_cache.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "junction_cache_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "snapshot_types.h",
+            format!("{}/common/database", prefix),
+            "common_db",
+            "snapshot_types_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "unordered_many_to_many.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "unordered_many_to_many_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "unordered_many_to_many.cpp",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "unordered_many_to_many_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "unordered_one_to_many.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "unordered_one_to_many_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "unordered_one_to_many.cpp",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "unordered_one_to_many_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "ordered_one_to_many.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "ordered_one_to_many_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "ordered_one_to_many.cpp",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "ordered_one_to_many_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "one_to_one.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "one_to_one_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "one_to_one.cpp",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "one_to_one_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "many_to_one.h",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "many_to_one_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "many_to_one.cpp",
+            format!("{}/common/database/junction_table_ops/", prefix),
+            "common_db",
+            "many_to_one_cpp",
+            FileNature::Infrastructure,
+        );
 
         // undo redo
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "group_command.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "group_command_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "group_command.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "group_command_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "group_command_builder.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "group_command_builder_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "group_command_builder.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "group_command_builder_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "query_handler.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "query_handler_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "query_handler.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "query_handler_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_command.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_command_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_command.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_command_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_manager.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_manager_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_manager.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_manager_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_stack.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_stack_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_stack.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_stack_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_system.cpp".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_system_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "undo_redo_system.h".to_string(),
-            relative_path: format!("{}/common/undo_redo/", prefix),
-            group: "common_undo".to_string(),
-            template_name: "undo_redo_system_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "group_command.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "group_command_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "group_command.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "group_command_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "group_command_builder.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "group_command_builder_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "group_command_builder.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "group_command_builder_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "query_handler.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "query_handler_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "query_handler.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "query_handler_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_command.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_command_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_command.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_command_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_manager.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_manager_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_manager.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_manager_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_stack.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_stack_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_stack.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_stack_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_system.cpp",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_system_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "undo_redo_system.h",
+            format!("{}/common/undo_redo/", prefix),
+            "common_undo",
+            "undo_redo_system_h",
+            FileNature::Infrastructure,
+        );
 
         // common unit of work macros
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "uow_macros.h".to_string(),
-            relative_path: format!("{}/common/unit_of_work/", prefix),
-            group: "common_unit_of_work".to_string(),
-            template_name: "uow_macros_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "unit_of_work.h".to_string(),
-            relative_path: format!("{}/common/unit_of_work/", prefix),
-            group: "common_unit_of_work".to_string(),
-            template_name: "unit_of_work_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "uow_base.h".to_string(),
-            relative_path: format!("{}/common/unit_of_work/", prefix),
-            group: "common_unit_of_work".to_string(),
-            template_name: "uow_base_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "uow_ops.h".to_string(),
-            relative_path: format!("{}/common/unit_of_work/", prefix),
-            group: "common_unit_of_work".to_string(),
-            template_name: "uow_ops_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "uow_macros.h",
+            format!("{}/common/unit_of_work/", prefix),
+            "common_unit_of_work",
+            "uow_macros_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "unit_of_work.h",
+            format!("{}/common/unit_of_work/", prefix),
+            "common_unit_of_work",
+            "unit_of_work_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "uow_base.h",
+            format!("{}/common/unit_of_work/", prefix),
+            "common_unit_of_work",
+            "uow_base_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "uow_ops.h",
+            format!("{}/common/unit_of_work/", prefix),
+            "common_unit_of_work",
+            "uow_ops_h",
+            FileNature::Infrastructure,
+        );
 
         // direct access
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "event_registry.h".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "event_registry_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "repository_factory.cpp".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "repository_factory_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "repository_factory.h".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "repository_factory_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "mapper_tools.h".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "mapper_tools_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "converter_registration.h".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "converter_registration_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "operators.h".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "operators_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/common/direct_access/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "common_direct_access_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "uc_concepts.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_concepts_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "create_orphans_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_create_orphans_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "create_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_create_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_all_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_all_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "update_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_update_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "remove_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_remove_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_relationship_ids_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_relationship_ids_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_relationship_ids_many_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_relationship_ids_many_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_relationship_ids_count_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_relationship_ids_count_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "get_relationship_ids_in_range_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_get_relationship_ids_in_range_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "set_relationship_ids_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_set_relationship_ids_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "move_relationship_ids_uc.h".to_string(),
-            relative_path: format!("{}/common/direct_access/use_case_helpers/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "uc_helper_move_relationship_ids_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/common/entities/", prefix),
-            group: "common_direct_access".to_string(),
-            template_name: "common_entities_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: format!("{}/direct_access/", prefix),
-            group: "direct_access".to_string(),
-            template_name: "direct_access_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "event_registry.h",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "event_registry_h",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
+        b.add(
+            "repository_factory.cpp",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "repository_factory_cpp",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
+        b.add(
+            "repository_factory.h",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "repository_factory_h",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
+        b.add(
+            "mapper_tools.h",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "mapper_tools_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "converter_registration.h",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "converter_registration_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "operators.h",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "operators_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "CMakeLists.txt",
+            format!("{}/common/direct_access/", prefix),
+            "common_direct_access",
+            "common_direct_access_cmake",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
+        b.add(
+            "uc_concepts.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_concepts_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "create_orphans_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_create_orphans_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "create_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_create_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_all_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_all_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "update_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_update_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "remove_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_remove_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_relationship_ids_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_relationship_ids_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_relationship_ids_many_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_relationship_ids_many_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_relationship_ids_count_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_relationship_ids_count_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "get_relationship_ids_in_range_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_get_relationship_ids_in_range_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "set_relationship_ids_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_set_relationship_ids_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "move_relationship_ids_uc.h",
+            format!("{}/common/direct_access/use_case_helpers/", prefix),
+            "common_direct_access",
+            "uc_helper_move_relationship_ids_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "CMakeLists.txt",
+            format!("{}/common/entities/", prefix),
+            "common_direct_access",
+            "common_entities_cmake",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
+        b.add(
+            "CMakeLists.txt",
+            format!("{}/direct_access/", prefix),
+            "direct_access",
+            "direct_access_cmake",
+            FileNature::Aggregate,
+        )
+        .all_entities = true;
 
         // Get entities
         let entities =
@@ -1487,145 +631,62 @@ impl FillCppQtFilesUseCase {
                     heck::AsSnakeCase(&entity.name)
                 );
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "CMakeLists.txt".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "direct_access_entity_cmake".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Aggregate,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_controller.cpp", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "entity_controller_cpp".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_controller.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "entity_controller_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_unit_of_work.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "entity_unit_of_work_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "dtos.h".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "dtos_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("i_{}_unit_of_work.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("direct_access: {}", entity_pascal_name),
-                    template_name: "i_entity_unit_of_work_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: "dto_mapper.h".to_string(),
-                    relative_path: relative_path.clone(),
-                    group: "direct_access".to_string(),
-                    template_name: "dto_mapper_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    "CMakeLists.txt",
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "direct_access_entity_cmake",
+                    FileNature::Aggregate,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    format!("{}_controller.cpp", entity_snake_name),
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "entity_controller_cpp",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    format!("{}_controller.h", entity_snake_name),
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "entity_controller_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    format!("{}_unit_of_work.h", entity_snake_name),
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "entity_unit_of_work_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    "dtos.h",
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "dtos_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    format!("i_{}_unit_of_work.h", entity_snake_name),
+                    relative_path.clone(),
+                    format!("direct_access: {}", entity_pascal_name),
+                    "i_entity_unit_of_work_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    "dto_mapper.h",
+                    relative_path.clone(),
+                    "direct_access",
+                    "dto_mapper_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
 
                 let relative_path = format!(
                     "{}/direct_access/{}/models/",
@@ -1649,321 +710,150 @@ impl FillCppQtFilesUseCase {
                 for list_model_field in list_model_fields {
                     let field_snake_name = heck::AsSnakeCase(&list_model_field.name);
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("{}_{}_list_model.cpp", entity_snake_name, field_snake_name),
-                        relative_path: relative_path.clone(),
-                        group: format!("direct_access: {}", entity_pascal_name),
-                        template_name: "entity_field_list_model_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: Some(list_model_field.id),
-                    });
+                    let f = b.add(
+                        format!("{}_{}_list_model.cpp", entity_snake_name, field_snake_name),
+                        relative_path.clone(),
+                        format!("direct_access: {}", entity_pascal_name),
+                        "entity_field_list_model_cpp",
+                        FileNature::Infrastructure,
+                    );
+                    f.entity = Some(entity.id);
+                    f.field = Some(list_model_field.id);
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("{}_{}_list_model.h", entity_snake_name, field_snake_name),
-                        relative_path: relative_path.clone(),
-                        group: format!("direct_access: {}", entity_pascal_name),
-                        template_name: "entity_field_list_model_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: Some(list_model_field.id),
-                    });
+                    let f = b.add(
+                        format!("{}_{}_list_model.h", entity_snake_name, field_snake_name),
+                        relative_path.clone(),
+                        format!("direct_access: {}", entity_pascal_name),
+                        "entity_field_list_model_h",
+                        FileNature::Infrastructure,
+                    );
+                    f.entity = Some(entity.id);
+                    f.field = Some(list_model_field.id);
                 }
 
                 // single model
 
                 if entity.single_model {
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("single_{}.h", entity_snake_name),
-                        relative_path: relative_path.clone(),
-                        group: format!("direct_access: {}", entity_pascal_name),
-                        template_name: "single_entity_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: None,
-                    });
-
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("single_{}.cpp", entity_snake_name),
-                        relative_path: relative_path.clone(),
-                        group: format!("direct_access: {}", entity_pascal_name),
-                        template_name: "single_entity_cpp".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: None,
-                    });
+                    b.add(
+                        format!("single_{}.h", entity_snake_name),
+                        relative_path.clone(),
+                        format!("direct_access: {}", entity_pascal_name),
+                        "single_entity_h",
+                        FileNature::Infrastructure,
+                    )
+                    .entity = Some(entity.id);
+                    b.add(
+                        format!("single_{}.cpp", entity_snake_name),
+                        relative_path.clone(),
+                        format!("direct_access: {}", entity_pascal_name),
+                        "single_entity_cpp",
+                        FileNature::Infrastructure,
+                    )
+                    .entity = Some(entity.id);
                 }
             }
 
             // for common/entities/
             let relative_path = format!("{}/common/entities/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}.h", entity_snake_name),
-                relative_path: relative_path.to_string(),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}.h", entity_snake_name),
+                relative_path.to_string(),
+                format!("entities: {}", entity_pascal_name),
+                "entity_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
 
             // for common/direct_access/{entity_snake_name}/
             let relative_path = format!("{}/common/direct_access/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "common_direct_access_entity_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("i_{}_repository.h", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "i_entity_repository_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "table_definitions.h".to_string(),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "table_definitions_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_events.h", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_events_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_repository.cpp", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_repository_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_repository.h", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_repository_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_table.cpp", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_table_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_table.h", entity_snake_name),
-                relative_path: format!("{}{}/", relative_path, entity_snake_name),
-                group: format!("entities: {}", entity_pascal_name),
-                template_name: "entity_table_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: Some(entity.id),
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "common_direct_access_entity_cmake",
+                FileNature::Aggregate,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("i_{}_repository.h", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "i_entity_repository_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                "table_definitions.h",
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "table_definitions_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("{}_events.h", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "entity_events_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("{}_repository.cpp", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "entity_repository_cpp",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("{}_repository.h", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "entity_repository_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("{}_table.cpp", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "entity_table_cpp",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
+            b.add(
+                format!("{}_table.h", entity_snake_name),
+                format!("{}{}/", relative_path, entity_snake_name),
+                format!("entities: {}", entity_pascal_name),
+                "entity_table_h",
+                FileNature::Infrastructure,
+            )
+            .entity = Some(entity.id);
         }
 
         // common features:
 
         let relative_path = format!("{}/common/features/", prefix);
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: relative_path.clone(),
-            group: "features".to_string(),
-            template_name: "common_features_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: true,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "feature_event_registry.h".to_string(),
-            relative_path: relative_path.clone(),
-            group: "features".to_string(),
-            template_name: "feature_event_registry_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: true,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "CMakeLists.txt",
+            relative_path.clone(),
+            "features",
+            "common_features_cmake",
+            FileNature::Aggregate,
+        )
+        .all_features = true;
+        b.add(
+            "feature_event_registry.h",
+            relative_path.clone(),
+            "features",
+            "feature_event_registry_h",
+            FileNature::Aggregate,
+        )
+        .all_features = true;
 
         //----------------------------------------------------------------------
         // Features
@@ -1982,107 +872,49 @@ impl FillCppQtFilesUseCase {
             let feature_snake_name = heck::AsSnakeCase(&feature.name);
             let feature_pascal_name = heck::AsPascalCase(&feature.name);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_events.h", feature_snake_name),
-                relative_path: relative_path.clone(),
-                group: format!("feature: {}", feature_pascal_name),
-                template_name: "feature_events_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                format!("{}_events.h", feature_snake_name),
+                relative_path.clone(),
+                format!("feature: {}", feature_pascal_name),
+                "feature_events_h",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
 
             let relative_path = format!("{}/{}/", prefix, feature_snake_name);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: format!("feature: {}", feature_pascal_name),
-                template_name: "feature_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_dtos.h", feature_snake_name),
-                relative_path: relative_path.clone(),
-                group: format!("feature: {}", feature_pascal_name),
-                template_name: "feature_dtos_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_controller.h", feature_snake_name),
-                relative_path: relative_path.clone(),
-                group: format!("feature: {}", feature_pascal_name),
-                template_name: "feature_controller_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: format!("{}_controller.cpp", feature_snake_name),
-                relative_path: relative_path.clone(),
-                group: format!("feature: {}", feature_pascal_name),
-                template_name: "feature_controller_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: Some(feature.id),
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                format!("feature: {}", feature_pascal_name),
+                "feature_cmake",
+                FileNature::Aggregate,
+            )
+            .feature = Some(feature.id);
+            b.add(
+                format!("{}_dtos.h", feature_snake_name),
+                relative_path.clone(),
+                format!("feature: {}", feature_pascal_name),
+                "feature_dtos_h",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
+            b.add(
+                format!("{}_controller.h", feature_snake_name),
+                relative_path.clone(),
+                format!("feature: {}", feature_pascal_name),
+                "feature_controller_h",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
+            b.add(
+                format!("{}_controller.cpp", feature_snake_name),
+                relative_path.clone(),
+                format!("feature: {}", feature_pascal_name),
+                "feature_controller_cpp",
+                FileNature::Infrastructure,
+            )
+            .feature = Some(feature.id);
 
             let use_cases =
                 uow.get_feature_relationship(&feature.id, &FeatureRelationshipField::UseCases)?;
@@ -2094,92 +926,52 @@ impl FillCppQtFilesUseCase {
                 let use_case_snake_name = heck::AsSnakeCase(&use_case.name);
                 let relative_path = format!("{}/{}/units_of_work/", prefix, feature_snake_name);
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_uow.h", use_case_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("feature: {}", feature_pascal_name),
-                    template_name: "feature_uow_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("{}_uow.h", use_case_snake_name),
+                    relative_path.clone(),
+                    format!("feature: {}", feature_pascal_name),
+                    "feature_uow_h",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
 
                 let relative_path = format!(
                     "{}/{}/use_cases/{}_uc/",
                     prefix, feature_snake_name, use_case_snake_name
                 );
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("i_{}_uow.h", use_case_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("feature: {}", feature_pascal_name),
-                    template_name: "i_feature_uow_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("i_{}_uow.h", use_case_snake_name),
+                    relative_path.clone(),
+                    format!("feature: {}", feature_pascal_name),
+                    "i_feature_uow_h",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
 
                 let relative_path = format!("{}/{}/use_cases/", prefix, feature_snake_name);
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_uc.h", use_case_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("feature: {}", feature_pascal_name),
-                    template_name: "feature_uc_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("{}_uc.h", use_case_snake_name),
+                    relative_path.clone(),
+                    format!("feature: {}", feature_pascal_name),
+                    "feature_uc_h",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}_uc.cpp", use_case_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: format!("feature: {}", feature_pascal_name),
-                    template_name: "feature_uc_cpp".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Scaffold,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: Some(use_case.id),
-                    all_use_cases: false,
-                    field: None,
-                });
+                let f = b.add(
+                    format!("{}_uc.cpp", use_case_snake_name),
+                    relative_path.clone(),
+                    format!("feature: {}", feature_pascal_name),
+                    "feature_uc_cpp",
+                    FileNature::Scaffold,
+                );
+                f.feature = Some(feature.id);
+                f.use_case = Some(use_case.id);
             }
         }
 
@@ -2187,65 +979,27 @@ impl FillCppQtFilesUseCase {
         // Long Operation support
         //----------------------------------------------------------------------
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "i_long_operation.h".to_string(),
-            relative_path: format!("{}/common/long_operation/", prefix),
-            group: "base".to_string(),
-            template_name: "i_long_operation_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "long_operation_manager.h".to_string(),
-            relative_path: format!("{}/common/long_operation/", prefix),
-            group: "base".to_string(),
-            template_name: "long_operation_manager_h".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "long_operation_manager.cpp".to_string(),
-            relative_path: format!("{}/common/long_operation/", prefix),
-            group: "base".to_string(),
-            template_name: "long_operation_manager_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "i_long_operation.h",
+            format!("{}/common/long_operation/", prefix),
+            "base",
+            "i_long_operation_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "long_operation_manager.h",
+            format!("{}/common/long_operation/", prefix),
+            "base",
+            "long_operation_manager_h",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "long_operation_manager.cpp",
+            format!("{}/common/long_operation/", prefix),
+            "base",
+            "long_operation_manager_cpp",
+            FileNature::Infrastructure,
+        );
 
         //----------------------------------------------------------------------
         // QtWidgets GUI
@@ -2255,85 +1009,37 @@ impl FillCppQtFilesUseCase {
             // for common/entities/
             let relative_path = format!("{}/qtwidgets_app/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtWidgets UI".to_string(),
-                template_name: "qt_widgets_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main.cpp".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtWidgets UI".to_string(),
-                template_name: "qt_widgets_main_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main_window.cpp".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtWidgets UI".to_string(),
-                template_name: "qt_widgets_main_window_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main_window.h".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtWidgets UI".to_string(),
-                template_name: "qt_widgets_main_window_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QtWidgets UI",
+                "qt_widgets_cmake",
+                FileNature::Aggregate,
+            )
+            .all_features = true;
+            b.add(
+                "main.cpp",
+                relative_path.clone(),
+                "QtWidgets UI",
+                "qt_widgets_main_cpp",
+                FileNature::Scaffold,
+            );
+            b.add(
+                "main_window.cpp",
+                relative_path.clone(),
+                "QtWidgets UI",
+                "qt_widgets_main_window_cpp",
+                FileNature::Scaffold,
+            )
+            .all_entities = true;
+            b.add(
+                "main_window.h",
+                relative_path.clone(),
+                "QtWidgets UI",
+                "qt_widgets_main_window_h",
+                FileNature::Scaffold,
+            )
+            .all_entities = true;
         }
 
         //----------------------------------------------------------------------
@@ -2354,129 +1060,58 @@ impl FillCppQtFilesUseCase {
         let qml_enabled = ui.cpp_qt_qtquick;
 
         if qml_enabled {
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_presentation_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_presentation_cmake",
+                FileNature::Aggregate,
+            );
 
             // Real controllers
 
             let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_controllers_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            let f = b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_controllers_cmake",
+                FileNature::Aggregate,
+            );
+            f.all_features = true;
+            f.all_entities = true;
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "foreign_event_registry.h".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_event_registry_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "foreign_feature_event_registry.h".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_feature_event_registry_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "foreign_undo_redo_controller.h".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_undo_redo_controller_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "foreign_service_locator.h".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_service_locator_h".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "foreign_event_registry.h",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_event_registry_h",
+                FileNature::Aggregate,
+            )
+            .all_entities = true;
+            b.add(
+                "foreign_feature_event_registry.h",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_feature_event_registry_h",
+                FileNature::Aggregate,
+            )
+            .all_features = true;
+            b.add(
+                "foreign_undo_redo_controller.h",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_undo_redo_controller_h",
+                FileNature::Infrastructure,
+            );
+            b.add(
+                "foreign_service_locator.h",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_service_locator_h",
+                FileNature::Infrastructure,
+            );
 
             // mock controllers
 
@@ -2485,129 +1120,58 @@ impl FillCppQtFilesUseCase {
                 prefix, application_short_name
             );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "EventRegistry.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "event_registry_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "EventRegistry.qml",
+                relative_path.clone(),
+                "QML Presentation",
+                "event_registry_qml",
+                FileNature::Infrastructure,
+            )
+            .all_entities = true;
+            b.add(
+                "QCoroQmlTask.qml",
+                relative_path.clone(),
+                "QML Presentation",
+                "qcoro_qml_task_qml",
+                FileNature::Infrastructure,
+            );
+            b.add(
+                "UndoRedoController.qml",
+                relative_path.clone(),
+                "QML Presentation",
+                "undo_redo_controller_qml",
+                FileNature::Infrastructure,
+            );
+            b.add(
+                "ServiceLocator.qml",
+                relative_path.clone(),
+                "QML Presentation",
+                "service_locator_qml",
+                FileNature::Infrastructure,
+            );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "QCoroQmlTask.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "qcoro_qml_task_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "UndoRedoController.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "undo_redo_controller_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "ServiceLocator.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "service_locator_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Infrastructure,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "qmldir".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "mock_controllers_qmldir".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: true,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            let f = b.add(
+                "qmldir",
+                relative_path.clone(),
+                "QML Presentation",
+                "mock_controllers_qmldir",
+                FileNature::Aggregate,
+            );
+            f.all_features = true;
+            f.all_entities = true;
 
             // Real models
 
             let relative_path = format!("{}/presentation/real_imports/models", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_models_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_models_cmake",
+                FileNature::Aggregate,
+            )
+            .all_entities = true;
 
             // mock models
 
@@ -2616,49 +1180,27 @@ impl FillCppQtFilesUseCase {
                 prefix, application_short_name
             );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "qmldir".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "mock_models_qmldir".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "qmldir",
+                relative_path.clone(),
+                "QML Presentation",
+                "mock_models_qmldir",
+                FileNature::Aggregate,
+            )
+            .all_entities = true;
 
             // Real singles
 
             let relative_path = format!("{}/presentation/real_imports/singles", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "foreign_singles_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QML Presentation",
+                "foreign_singles_cmake",
+                FileNature::Aggregate,
+            )
+            .all_entities = true;
 
             // mock singles
 
@@ -2667,25 +1209,14 @@ impl FillCppQtFilesUseCase {
                 prefix, application_short_name
             );
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "qmldir".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QML Presentation".to_string(),
-                template_name: "mock_singles_qmldir".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "qmldir",
+                relative_path.clone(),
+                "QML Presentation",
+                "mock_singles_qmldir",
+                FileNature::Aggregate,
+            )
+            .all_entities = true;
 
             // Get entities
             let entities = uow
@@ -2707,25 +1238,14 @@ impl FillCppQtFilesUseCase {
 
                 let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("foreign_{}_controller.h", entity_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "foreign_entity_controller_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("foreign_{}_controller.h", entity_snake_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "foreign_entity_controller_h",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
 
                 // mock controllers
 
@@ -2734,45 +1254,22 @@ impl FillCppQtFilesUseCase {
                     prefix, application_short_name
                 );
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}Controller.qml", entity_pascal_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "entity_controller_qml".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
-
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}Events.qml", entity_pascal_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "entity_events_qml".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: None,
-                    all_features: false,
-                    entity: Some(entity.id),
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("{}Controller.qml", entity_pascal_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "entity_controller_qml",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+                b.add(
+                    format!("{}Events.qml", entity_pascal_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "entity_events_qml",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
 
                 let fields = uow.get_entity_relationship(
                     &entity.id,
@@ -2793,28 +1290,18 @@ impl FillCppQtFilesUseCase {
 
                     let relative_path = format!("{}/presentation/real_imports/models", prefix);
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!(
+                    let f = b.add(
+                        format!(
                             "foreign_{}_{}_list_model.h",
                             entity_snake_name, field_snake_name
                         ),
-                        relative_path: relative_path.clone(),
-                        group: "QML Presentation".to_string(),
-                        template_name: "foreign_list_model_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: Some(list_model_field.id),
-                    });
+                        relative_path.clone(),
+                        "QML Presentation",
+                        "foreign_list_model_h",
+                        FileNature::Infrastructure,
+                    );
+                    f.entity = Some(entity.id);
+                    f.field = Some(list_model_field.id);
 
                     // mock models
 
@@ -2823,50 +1310,29 @@ impl FillCppQtFilesUseCase {
                         prefix, application_short_name
                     );
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("{}{}ListModel.qml", entity_pascal_name, field_pascal_name),
-                        relative_path: relative_path.clone(),
-                        group: "QML Presentation".to_string(),
-                        template_name: "list_model_qml".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: Some(list_model_field.id),
-                    });
+                    let f = b.add(
+                        format!("{}{}ListModel.qml", entity_pascal_name, field_pascal_name),
+                        relative_path.clone(),
+                        "QML Presentation",
+                        "list_model_qml",
+                        FileNature::Infrastructure,
+                    );
+                    f.entity = Some(entity.id);
+                    f.field = Some(list_model_field.id);
                 }
 
                 if entity.single_model {
                     // real singles
                     let relative_path = format!("{}/presentation/real_imports/singles", prefix);
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("foreign_single_{}.h", entity_snake_name),
-                        relative_path: relative_path.clone(),
-                        group: "QML Presentation".to_string(),
-                        template_name: "foreign_single_h".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: None,
-                    });
+                    b.add(
+                        format!("foreign_single_{}.h", entity_snake_name),
+                        relative_path.clone(),
+                        "QML Presentation",
+                        "foreign_single_h",
+                        FileNature::Infrastructure,
+                    )
+                    .entity = Some(entity.id);
 
                     // mock singles
 
@@ -2875,25 +1341,14 @@ impl FillCppQtFilesUseCase {
                         prefix, application_short_name
                     );
 
-                    files.push(File {
-                        id: 0,
-                        created_at: chrono::Utc::now(),
-                        updated_at: chrono::Utc::now(),
-                        name: format!("Single{}.qml", entity_pascal_name),
-                        relative_path: relative_path.clone(),
-                        group: "QML Presentation".to_string(),
-                        template_name: "single_entity_qml".to_string(),
-                        generated_code: None,
-                        status: FileStatus::Unknown,
-                        nature: FileNature::Infrastructure,
-                        feature: None,
-                        all_features: false,
-                        entity: Some(entity.id),
-                        all_entities: false,
-                        use_case: None,
-                        all_use_cases: false,
-                        field: None,
-                    });
+                    b.add(
+                        format!("Single{}.qml", entity_pascal_name),
+                        relative_path.clone(),
+                        "QML Presentation",
+                        "single_entity_qml",
+                        FileNature::Infrastructure,
+                    )
+                    .entity = Some(entity.id);
                 }
             }
 
@@ -2910,25 +1365,14 @@ impl FillCppQtFilesUseCase {
 
                 let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("foreign_{}_controller.h", feature_snake_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "foreign_feature_controller_h".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("foreign_{}_controller.h", feature_snake_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "foreign_feature_controller_h",
+                    FileNature::Infrastructure,
+                )
+                .feature = Some(feature.id);
 
                 // mock controllers feature
 
@@ -2937,25 +1381,14 @@ impl FillCppQtFilesUseCase {
                     prefix, application_short_name
                 );
 
-                files.push(File {
-                    id: 0,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    name: format!("{}Controller.qml", feature_pascal_name),
-                    relative_path: relative_path.clone(),
-                    group: "QML Presentation".to_string(),
-                    template_name: "feature_controller_qml".to_string(),
-                    generated_code: None,
-                    status: FileStatus::Unknown,
-                    nature: FileNature::Infrastructure,
-                    feature: Some(feature.id),
-                    all_features: false,
-                    entity: None,
-                    all_entities: false,
-                    use_case: None,
-                    all_use_cases: false,
-                    field: None,
-                });
+                b.add(
+                    format!("{}Controller.qml", feature_pascal_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "feature_controller_qml",
+                    FileNature::Infrastructure,
+                )
+                .feature = Some(feature.id);
             }
         }
 
@@ -2966,407 +1399,162 @@ impl FillCppQtFilesUseCase {
         if ui.cpp_qt_qtquick {
             let relative_path = format!("{}/qtquick_app/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_main_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "main.cpp".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_main_cpp".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "qtquickcontrols2.conf".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_qtquickcontrols2_conf".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_cmake",
+                FileNature::Aggregate,
+            );
+            b.add(
+                "main.qml",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_main_qml",
+                FileNature::Scaffold,
+            );
+            b.add(
+                "main.cpp",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_main_cpp",
+                FileNature::Scaffold,
+            );
+            b.add(
+                "qtquickcontrols2.conf",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_qtquickcontrols2_conf",
+                FileNature::Scaffold,
+            );
 
             let relative_path = format!("{}/qtquick_app/content/", prefix);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_content_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
-
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "App.qml".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_app_qml".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Scaffold,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: true,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_content_cmake",
+                FileNature::Aggregate,
+            );
+            b.add(
+                "App.qml",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_app_qml",
+                FileNature::Scaffold,
+            )
+            .all_entities = true;
 
             let relative_path = format!("{}/qtquick_app/{}/", prefix, application_short_name);
 
-            files.push(File {
-                id: 0,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                name: "CMakeLists.txt".to_string(),
-                relative_path: relative_path.clone(),
-                group: "QtQuick UI".to_string(),
-                template_name: "qt_quick_app_cmake".to_string(),
-                generated_code: None,
-                status: FileStatus::Unknown,
-                nature: FileNature::Aggregate,
-                feature: None,
-                all_features: false,
-                entity: None,
-                all_entities: false,
-                use_case: None,
-                all_use_cases: false,
-                field: None,
-            });
+            b.add(
+                "CMakeLists.txt",
+                relative_path.clone(),
+                "QtQuick UI",
+                "qt_quick_app_cmake",
+                FileNature::Aggregate,
+            );
         }
 
         //----------------------------------------------------------------------
         // Tests
         //----------------------------------------------------------------------
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: "tests/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tests_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
+        b.add(
+            "CMakeLists.txt",
+            "tests/",
+            "tests",
+            "tests_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "CMakeLists.txt",
+            "tests/database/",
+            "tests",
+            "tests_database_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "tst_many_to_one_junction.cpp",
+            "tests/database/",
+            "tests",
+            "tst_many_to_one_junction_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_one_to_one_junction.cpp",
+            "tests/database/",
+            "tests",
+            "tst_one_to_one_junction_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_ordered_one_to_many_junction.cpp",
+            "tests/database/",
+            "tests",
+            "tst_ordered_one_to_many_junction_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_unordered_many_to_many_junction.cpp",
+            "tests/database/",
+            "tests",
+            "tst_unordered_many_to_many_junction_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_unordered_one_to_many_junction.cpp",
+            "tests/database/",
+            "tests",
+            "tst_unordered_one_to_many_junction_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "CMakeLists.txt",
+            "tests/undo_redo/",
+            "tests",
+            "tests_undo_redo_cmake",
+            FileNature::Aggregate,
+        );
+        b.add(
+            "tst_enhanced_undo_redo.cpp",
+            "tests/undo_redo/",
+            "tests",
+            "tst_enhanced_undo_redo_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_qcoro_integration.cpp",
+            "tests/undo_redo/",
+            "tests",
+            "tst_qcoro_integration_cpp",
+            FileNature::Infrastructure,
+        );
+        b.add(
+            "tst_root_undo_redo.cpp",
+            "tests/undo_redo/",
+            "tests",
+            "tst_root_undo_redo_cpp",
+            FileNature::Infrastructure,
+        )
+        .all_entities = true;
+        b.add(
+            "tst_undo_redo.cpp",
+            "tests/undo_redo/",
+            "tests",
+            "tst_undo_redo_cpp",
+            FileNature::Infrastructure,
+        );
 
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tests_database_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_many_to_one_junction.cpp".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_many_to_one_junction_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_one_to_one_junction.cpp".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_one_to_one_junction_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_ordered_one_to_many_junction.cpp".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_ordered_one_to_many_junction_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_unordered_many_to_many_junction.cpp".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_unordered_many_to_many_junction_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_unordered_one_to_many_junction.cpp".to_string(),
-            relative_path: "tests/database/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_unordered_one_to_many_junction_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "CMakeLists.txt".to_string(),
-            relative_path: "tests/undo_redo/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tests_undo_redo_cmake".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Aggregate,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_enhanced_undo_redo.cpp".to_string(),
-            relative_path: "tests/undo_redo/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_enhanced_undo_redo_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_qcoro_integration.cpp".to_string(),
-            relative_path: "tests/undo_redo/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_qcoro_integration_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_root_undo_redo.cpp".to_string(),
-            relative_path: "tests/undo_redo/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_root_undo_redo_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: true,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        files.push(File {
-            id: 0,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            name: "tst_undo_redo.cpp".to_string(),
-            relative_path: "tests/undo_redo/".to_string(),
-            group: "tests".to_string(),
-            template_name: "tst_undo_redo_cpp".to_string(),
-            generated_code: None,
-            status: FileStatus::Unknown,
-            nature: FileNature::Infrastructure,
-            feature: None,
-            all_features: false,
-            entity: None,
-            all_entities: false,
-            use_case: None,
-            all_use_cases: false,
-            field: None,
-        });
-
-        // Keep only the files already existing
-        let files = files
-            .into_iter()
-            .filter(|file| {
-                if dto.only_list_already_existing {
-                    let full_path = format!("{}{}", file.relative_path, file.name);
-                    std::path::Path::new(&full_path).exists()
-                } else {
-                    true
-                }
+        let files = if dto.only_list_already_existing {
+            b.build_filtered(|file| {
+                let full_path = format!("{}{}", file.relative_path, file.name);
+                std::path::Path::new(&full_path).exists()
             })
-            .collect::<Vec<File>>();
+        } else {
+            b.build()
+        };
 
         // create files in db
         let created_files = uow.create_orphan_file_multi(&files)?;
