@@ -14,4 +14,7 @@ mod test_tag_controller;
 mod test_task_controller;
 
 #[cfg(test)]
+mod test_project_list_fields;
+
+#[cfg(test)]
 mod test_undo_redo;
