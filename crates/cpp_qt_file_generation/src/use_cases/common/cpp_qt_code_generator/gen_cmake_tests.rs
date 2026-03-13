@@ -25,6 +25,7 @@ fn render_direct_access_lib_lists_entities() {
         template_name: "common_direct_access_cmake".into(),
         generated_code: None,
         status: FileStatus::New,
+        nature: Default::default(),
         feature: None,
         entity: Some(0),
         use_case: None,
