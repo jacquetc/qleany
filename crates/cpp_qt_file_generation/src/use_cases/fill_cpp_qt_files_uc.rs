@@ -127,9 +127,12 @@ impl FillCppQtFilesUseCase {
             generated_code: None,
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
-            feature: Some(0),
+            feature: None,
+            all_features: true,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -145,8 +148,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -162,8 +168,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -179,8 +188,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -196,8 +208,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -213,8 +228,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -230,8 +248,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -247,8 +268,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -264,8 +288,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -281,8 +308,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -298,8 +328,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -317,8 +350,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -334,8 +370,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -351,8 +390,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -368,8 +410,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -385,8 +430,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -402,8 +450,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -419,8 +470,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -436,8 +490,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -453,8 +510,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -470,8 +530,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -487,8 +550,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -504,8 +570,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -521,8 +590,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -538,8 +610,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
         files.push(File {
@@ -554,8 +629,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -571,8 +649,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -590,8 +671,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -607,8 +691,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -624,8 +711,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -641,8 +731,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -658,8 +751,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -675,8 +771,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -692,8 +791,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -709,8 +811,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -726,8 +831,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -743,8 +851,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -760,8 +871,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -777,8 +891,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -794,8 +911,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -811,8 +931,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -829,8 +952,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -846,8 +972,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -863,8 +992,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -880,8 +1012,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -899,8 +1034,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -916,8 +1054,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -933,8 +1074,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -950,8 +1094,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -967,8 +1114,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -984,8 +1134,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1001,8 +1154,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1018,8 +1174,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1035,8 +1194,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1052,8 +1214,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1069,8 +1234,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1086,8 +1254,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1103,8 +1274,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1120,8 +1294,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1137,8 +1314,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1154,8 +1334,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1171,8 +1354,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1188,8 +1374,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1205,8 +1394,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1222,8 +1414,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1239,8 +1434,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1256,8 +1454,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1298,8 +1499,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Aggregate,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1315,8 +1519,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1332,8 +1539,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1349,8 +1559,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1366,8 +1579,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1383,8 +1599,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1400,8 +1619,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1439,8 +1661,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: Some(list_model_field.id),
                     });
 
@@ -1456,8 +1681,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: Some(list_model_field.id),
                     });
                 }
@@ -1477,8 +1705,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: None,
                     });
 
@@ -1494,8 +1725,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: None,
                     });
                 }
@@ -1516,8 +1750,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1536,8 +1773,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
             files.push(File {
@@ -1552,8 +1792,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1569,8 +1812,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1586,8 +1832,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1603,8 +1852,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1620,8 +1872,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1637,8 +1892,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1654,8 +1912,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: Some(entity.id),
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
         }
@@ -1675,9 +1936,12 @@ impl FillCppQtFilesUseCase {
             generated_code: None,
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
-            feature: Some(0),
+            feature: None,
+            all_features: true,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1692,9 +1956,12 @@ impl FillCppQtFilesUseCase {
             generated_code: None,
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
-            feature: Some(0),
+            feature: None,
+            all_features: true,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1727,8 +1994,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: Some(feature.id),
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1746,8 +2016,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: Some(feature.id),
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1763,8 +2036,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: Some(feature.id),
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1780,8 +2056,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: Some(feature.id),
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1797,8 +2076,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: Some(feature.id),
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1824,8 +2106,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Scaffold,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: Some(use_case.id),
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1846,8 +2131,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Scaffold,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: Some(use_case.id),
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1865,8 +2153,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Scaffold,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: Some(use_case.id),
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -1882,8 +2173,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Scaffold,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: Some(use_case.id),
+                    all_use_cases: false,
                     field: None,
                 });
             }
@@ -1905,8 +2199,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1922,8 +2219,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1939,8 +2239,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -1963,9 +2266,12 @@ impl FillCppQtFilesUseCase {
                 generated_code: None,
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
-                feature: Some(0),
+                feature: None,
+                all_features: true,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1981,8 +2287,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -1998,8 +2307,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2015,8 +2327,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
         }
@@ -2051,8 +2366,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2071,9 +2389,12 @@ impl FillCppQtFilesUseCase {
                 generated_code: None,
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
-                feature: Some(0),
-                entity: Some(0),
+                feature: None,
+                all_features: true,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2089,8 +2410,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2105,9 +2429,12 @@ impl FillCppQtFilesUseCase {
                 generated_code: None,
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
-                feature: Some(0),
+                feature: None,
+                all_features: true,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2123,8 +2450,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2140,8 +2470,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2164,8 +2497,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2181,8 +2517,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2198,8 +2537,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2215,8 +2557,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Infrastructure,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2231,9 +2576,12 @@ impl FillCppQtFilesUseCase {
                 generated_code: None,
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
-                feature: Some(0),
-                entity: Some(0),
+                feature: None,
+                all_features: true,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2253,8 +2601,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2277,8 +2628,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2298,8 +2652,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2322,8 +2679,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2359,8 +2719,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -2383,8 +2746,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -2400,8 +2766,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: None,
+                    all_features: false,
                     entity: Some(entity.id),
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -2439,8 +2808,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: Some(list_model_field.id),
                     });
 
@@ -2463,8 +2835,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: Some(list_model_field.id),
                     });
                 }
@@ -2485,8 +2860,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: None,
                     });
 
@@ -2509,8 +2887,11 @@ impl FillCppQtFilesUseCase {
                         status: FileStatus::Unknown,
                         nature: FileNature::Infrastructure,
                         feature: None,
+                        all_features: false,
                         entity: Some(entity.id),
+                        all_entities: false,
                         use_case: None,
+                        all_use_cases: false,
                         field: None,
                     });
                 }
@@ -2541,8 +2922,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
 
@@ -2565,8 +2949,11 @@ impl FillCppQtFilesUseCase {
                     status: FileStatus::Unknown,
                     nature: FileNature::Infrastructure,
                     feature: Some(feature.id),
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 });
             }
@@ -2591,8 +2978,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2608,8 +2998,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2625,8 +3018,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2642,8 +3038,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2661,8 +3060,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2678,8 +3080,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Scaffold,
                 feature: None,
-                entity: Some(0),
+                all_features: false,
+                entity: None,
+                all_entities: true,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
 
@@ -2697,8 +3102,11 @@ impl FillCppQtFilesUseCase {
                 status: FileStatus::Unknown,
                 nature: FileNature::Aggregate,
                 feature: None,
+                all_features: false,
                 entity: None,
+                all_entities: false,
                 use_case: None,
+                all_use_cases: false,
                 field: None,
             });
         }
@@ -2719,8 +3127,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2736,8 +3147,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2753,8 +3167,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2770,8 +3187,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2787,8 +3207,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2804,8 +3227,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2821,8 +3247,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2838,8 +3267,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Aggregate,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2855,8 +3287,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2872,8 +3307,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2889,8 +3327,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
-            entity: Some(0),
+            all_features: false,
+            entity: None,
+            all_entities: true,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 
@@ -2906,8 +3347,11 @@ impl FillCppQtFilesUseCase {
             status: FileStatus::Unknown,
             nature: FileNature::Infrastructure,
             feature: None,
+            all_features: false,
             entity: None,
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         });
 

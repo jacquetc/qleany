@@ -269,8 +269,11 @@ fn for_file_feature_without_use_cases_errors() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: Some(10),
+        all_features: false,
         entity: None,
+        all_entities: false,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1, file);
@@ -343,8 +346,11 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: Some(10),
+        all_features: false,
         entity: None,
+        all_entities: false,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1, file);
@@ -533,7 +539,7 @@ fn for_file_various_combinations_generate_expected_items() {
     };
     uow.entities.insert(1, ent_a.clone());
     uow.entities.insert(2, ent_b.clone());
-    // Workspace contains both entities (for entity: Some(0))
+    // Workspace contains both entities (for all_entities: true)
     uow.workspace_entities.insert(2, vec![1, 2]);
 
     // DTOs for UC
@@ -642,8 +648,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: Some(200),
+        all_features: false,
         entity: None,
+        all_entities: false,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1000, file_feature_only);
@@ -667,8 +676,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: None,
+        all_features: false,
         entity: None,
+        all_entities: false,
         use_case: Some(100),
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1001, file_uc_only);
@@ -692,8 +704,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: None,
+        all_features: false,
         entity: Some(1),
+        all_entities: false,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1002, file_ent_only);
@@ -703,7 +718,7 @@ fn for_file_various_combinations_generate_expected_items() {
     assert!(snap.use_cases.is_empty());
     assert!(snap.entities.contains_key(&1));
 
-    // 4) File with entity Some(0) -> loads all entities from root
+    // 4) File with all_entities: true -> loads all entities from root
     let file_all_ent = File {
         id: 1003,
         created_at: chrono::Utc::now(),
@@ -716,8 +731,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: None,
-        entity: Some(0),
+        all_features: false,
+        entity: None,
+        all_entities: true,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1003, file_all_ent);
@@ -738,8 +756,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: Some(200),
+        all_features: false,
         entity: Some(1),
+        all_entities: false,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1004, file_feat_ent);
@@ -763,8 +784,11 @@ fn for_file_various_combinations_generate_expected_items() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: None,
+        all_features: false,
         entity: Some(2),
+        all_entities: false,
         use_case: Some(100),
+        all_use_cases: false,
         field: None,
     };
     uow.files.insert(1005, file_uc_ent);

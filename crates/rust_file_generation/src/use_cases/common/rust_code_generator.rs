@@ -573,6 +573,9 @@ impl SnapshotBuilder {
             if file.entity == cached_file_vm.inner.entity
                 && file.feature == cached_file_vm.inner.feature
                 && file.use_case == cached_file_vm.inner.use_case
+                && file.all_features == cached_file_vm.inner.all_features
+                && file.all_entities == cached_file_vm.inner.all_entities
+                && file.all_use_cases == cached_file_vm.inner.all_use_cases
             {
                 // cache hit
 
@@ -657,96 +660,34 @@ impl SnapshotBuilder {
         let mut features: HashMap<EntityId, Feature> = HashMap::new();
 
         // Feature scope
-        if let Some(feature_id) = file.feature {
-            if feature_id == 0 {
-                // Load all features via Root -> Features
-                let feature_ids = uow.get_workspace_relationship(
-                    &workspace_id,
-                    &common::direct_access::workspace::WorkspaceRelationshipField::Features,
-                )?;
-                let feats = uow.get_feature_multi(&feature_ids)?;
-                for feat_opt in feats.into_iter().flatten() {
-                    if feat_opt.use_cases.is_empty() {
-                        continue;
-                    }
-                    let feature_use_cases: Vec<UseCase> = uow
-                        .get_use_case_multi(&feat_opt.use_cases)?
-                        .into_iter()
-                        .flatten()
-                        .collect();
-
-                    features.insert(feat_opt.id, feat_opt);
-
-                    for use_case in feature_use_cases {
-                        // Entities for use case
-                        let use_case_entities: Vec<Entity> = uow
-                            .get_entity_multi(&use_case.entities)?
-                            .into_iter()
-                            .flatten()
-                            .collect();
-                        for e in use_case_entities {
-                            entities.insert(e.id, e);
-                        }
-
-                        // DTOs
-                        if let Some(dto_in) = use_case.dto_in {
-                            let dto = uow
-                                .get_dto(&dto_in)?
-                                .ok_or_else(|| anyhow!("DTO missing for use case"))?;
-                            let fields_vec: Vec<DtoField> = uow
-                                .get_dto_field_multi(&dto.fields)?
-                                .into_iter()
-                                .flatten()
-                                .collect();
-                            for f in fields_vec {
-                                dto_fields.insert(f.id, f);
-                            }
-                            dtos.insert(dto.id, dto);
-                        }
-                        if let Some(dto_out) = use_case.dto_out {
-                            let dto = uow
-                                .get_dto(&dto_out)?
-                                .ok_or_else(|| anyhow!("DTO missing for use case"))?;
-                            let fields_vec: Vec<DtoField> = uow
-                                .get_dto_field_multi(&dto.fields)?
-                                .into_iter()
-                                .flatten()
-                                .collect();
-                            for f in fields_vec {
-                                dto_fields.insert(f.id, f);
-                            }
-                            dtos.insert(dto.id, dto);
-                        }
-
-                        use_cases.insert(use_case.id, use_case);
-                    }
-                }
-            } else {
-                let feature = uow
-                    .get_feature(&feature_id)?
-                    .ok_or_else(|| anyhow!("Feature not found"))?;
-                if feature.use_cases.is_empty() {
-                    return Err(anyhow!("Feature does not have an associated use case"));
+        if file.all_features {
+            // Load all features via Root -> Features
+            let feature_ids = uow.get_workspace_relationship(
+                &workspace_id,
+                &common::direct_access::workspace::WorkspaceRelationshipField::Features,
+            )?;
+            let feats = uow.get_feature_multi(&feature_ids)?;
+            for feat_opt in feats.into_iter().flatten() {
+                if feat_opt.use_cases.is_empty() {
+                    continue;
                 }
                 let feature_use_cases: Vec<UseCase> = uow
-                    .get_use_case_multi(&feature.use_cases)?
+                    .get_use_case_multi(&feat_opt.use_cases)?
                     .into_iter()
                     .flatten()
                     .collect();
 
-                features.insert(feature.id, feature);
+                features.insert(feat_opt.id, feat_opt);
 
                 for use_case in feature_use_cases {
-                    if !use_case.entities.is_empty() {
-                        // Entities for use case
-                        let use_case_entities: Vec<Entity> = uow
-                            .get_entity_multi(&use_case.entities)?
-                            .into_iter()
-                            .flatten()
-                            .collect();
-                        for e in use_case_entities {
-                            entities.insert(e.id, e);
-                        }
+                    // Entities for use case
+                    let use_case_entities: Vec<Entity> = uow
+                        .get_entity_multi(&use_case.entities)?
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    for e in use_case_entities {
+                        entities.insert(e.id, e);
                     }
 
                     // DTOs
@@ -781,6 +722,66 @@ impl SnapshotBuilder {
 
                     use_cases.insert(use_case.id, use_case);
                 }
+            }
+        } else if let Some(feature_id) = file.feature {
+            let feature = uow
+                .get_feature(&feature_id)?
+                .ok_or_else(|| anyhow!("Feature not found"))?;
+            if feature.use_cases.is_empty() {
+                return Err(anyhow!("Feature does not have an associated use case"));
+            }
+            let feature_use_cases: Vec<UseCase> = uow
+                .get_use_case_multi(&feature.use_cases)?
+                .into_iter()
+                .flatten()
+                .collect();
+
+            features.insert(feature.id, feature);
+
+            for use_case in feature_use_cases {
+                if !use_case.entities.is_empty() {
+                    // Entities for use case
+                    let use_case_entities: Vec<Entity> = uow
+                        .get_entity_multi(&use_case.entities)?
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    for e in use_case_entities {
+                        entities.insert(e.id, e);
+                    }
+                }
+
+                // DTOs
+                if let Some(dto_in) = use_case.dto_in {
+                    let dto = uow
+                        .get_dto(&dto_in)?
+                        .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                    let fields_vec: Vec<DtoField> = uow
+                        .get_dto_field_multi(&dto.fields)?
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    for f in fields_vec {
+                        dto_fields.insert(f.id, f);
+                    }
+                    dtos.insert(dto.id, dto);
+                }
+                if let Some(dto_out) = use_case.dto_out {
+                    let dto = uow
+                        .get_dto(&dto_out)?
+                        .ok_or_else(|| anyhow!("DTO missing for use case"))?;
+                    let fields_vec: Vec<DtoField> = uow
+                        .get_dto_field_multi(&dto.fields)?
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    for f in fields_vec {
+                        dto_fields.insert(f.id, f);
+                    }
+                    dtos.insert(dto.id, dto);
+                }
+
+                use_cases.insert(use_case.id, use_case);
             }
         }
 
@@ -832,67 +833,65 @@ impl SnapshotBuilder {
             use_cases.insert(use_case.id, use_case);
         }
 
-        // Entity scope (including special case Some(0) meaning all entities)
-        if let Some(entity_id) = file.entity {
-            if entity_id == 0 {
-                // Load all entities via Root -> Entities
-                let entity_ids = uow.get_workspace_relationship(
-                    &workspace_id,
-                    &common::direct_access::workspace::WorkspaceRelationshipField::Entities,
-                )?;
-                let ents = uow.get_entity_multi(&entity_ids)?;
-                for ent_opt in ents.into_iter().flatten() {
-                    // skip heritage entities; include only those allowed for direct access when generating direct access code
-                    if ent_opt.only_for_heritage {
-                        continue;
-                    }
-
-                    // load fields
-                    let entity_fields: Vec<Field> = if ent_opt.fields.is_empty() {
-                        vec![]
-                    } else {
-                        uow.get_field_multi(&ent_opt.fields)?
-                            .into_iter()
-                            .flatten()
-                            .collect()
-                    };
-                    for field in &entity_fields {
-                        if let Some(eid) = field.entity
-                            && field.field_type == FieldType::Entity
-                            && let Some(ent_dep) = uow.get_entity(&eid)?
-                        {
-                            entities.insert(ent_dep.id, ent_dep);
-                        }
-                        fields.insert(field.id, field.clone());
-                    }
-                    entities.insert(ent_opt.id, ent_opt);
+        // Entity scope
+        if file.all_entities {
+            // Load all entities via Root -> Entities
+            let entity_ids = uow.get_workspace_relationship(
+                &workspace_id,
+                &common::direct_access::workspace::WorkspaceRelationshipField::Entities,
+            )?;
+            let ents = uow.get_entity_multi(&entity_ids)?;
+            for ent_opt in ents.into_iter().flatten() {
+                // skip heritage entities; include only those allowed for direct access when generating direct access code
+                if ent_opt.only_for_heritage {
+                    continue;
                 }
-            } else {
-                let entity = uow
-                    .get_entity(&entity_id)?
-                    .ok_or_else(|| anyhow!("Entity not found"))?;
-                let entity_fields: Vec<Field> = if entity.fields.is_empty() {
+
+                // load fields
+                let entity_fields: Vec<Field> = if ent_opt.fields.is_empty() {
                     vec![]
                 } else {
-                    uow.get_field_multi(&entity.fields)?
+                    uow.get_field_multi(&ent_opt.fields)?
                         .into_iter()
                         .flatten()
                         .collect()
                 };
-                // load fields so as to list entity dependencies
                 for field in &entity_fields {
                     if let Some(eid) = field.entity
                         && field.field_type == FieldType::Entity
+                        && let Some(ent_dep) = uow.get_entity(&eid)?
                     {
-                        let ent = uow
-                            .get_entity(&eid)?
-                            .ok_or_else(|| anyhow!("Entity not found"))?;
-                        entities.insert(ent.id, ent);
+                        entities.insert(ent_dep.id, ent_dep);
                     }
                     fields.insert(field.id, field.clone());
                 }
-                entities.insert(entity.id, entity);
+                entities.insert(ent_opt.id, ent_opt);
             }
+        } else if let Some(entity_id) = file.entity {
+            let entity = uow
+                .get_entity(&entity_id)?
+                .ok_or_else(|| anyhow!("Entity not found"))?;
+            let entity_fields: Vec<Field> = if entity.fields.is_empty() {
+                vec![]
+            } else {
+                uow.get_field_multi(&entity.fields)?
+                    .into_iter()
+                    .flatten()
+                    .collect()
+            };
+            // load fields so as to list entity dependencies
+            for field in &entity_fields {
+                if let Some(eid) = field.entity
+                    && field.field_type == FieldType::Entity
+                {
+                    let ent = uow
+                        .get_entity(&eid)?
+                        .ok_or_else(|| anyhow!("Entity not found"))?;
+                    entities.insert(ent.id, ent);
+                }
+                fields.insert(field.id, field.clone());
+            }
+            entities.insert(entity.id, entity);
         }
 
         // Load relationships for all collected entities
@@ -1230,8 +1229,11 @@ mod tests {
                     status: FileStatus::New,
                     nature: Default::default(),
                     feature: None,
+                    all_features: false,
                     entity: None,
+                    all_entities: false,
                     use_case: None,
+                    all_use_cases: false,
                     field: None,
                 },
             },
@@ -1294,8 +1296,11 @@ mod tests {
             status: FileStatus::New,
             nature: Default::default(),
             feature: None,
+            all_features: false,
             entity: Some(entity_id),
+            all_entities: false,
             use_case: None,
+            all_use_cases: false,
             field: None,
         };
         let global = Global {

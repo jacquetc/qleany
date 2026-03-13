@@ -14,7 +14,7 @@ use tera::Context;
 
 #[test]
 fn render_direct_access_lib_lists_entities() {
-    // Build a snapshot with file.entity = Some(0) and two entities in the map
+    // Build a snapshot with all_entities: true and two entities in the map
     let file = File {
         id: 1,
         created_at: chrono::Utc::now(),
@@ -27,8 +27,11 @@ fn render_direct_access_lib_lists_entities() {
         status: FileStatus::New,
         nature: Default::default(),
         feature: None,
-        entity: Some(0),
+        all_features: false,
+        entity: None,
+        all_entities: true,
         use_case: None,
+        all_use_cases: false,
         field: None,
     };
 

@@ -38,8 +38,11 @@ impl GenerateCppQtPromptUseCase {
                     name: "context".to_string(),
                     template_name: "cpp_qt_context".to_string(),
                     status: FileStatus::Unknown,
-                    feature: Some(0),
-                    entity: Some(0),
+                    feature: None,
+                    all_features: true,
+                    entity: None,
+                    all_entities: true,
+                    all_use_cases: false,
                     ..Default::default()
                 },
             )
@@ -54,6 +57,9 @@ impl GenerateCppQtPromptUseCase {
                     status: FileStatus::Unknown,
                     feature: dto.feature_id,
                     use_case: dto.use_case_id,
+                    all_features: false,
+                    all_entities: false,
+                    all_use_cases: false,
                     ..Default::default()
                 },
             )

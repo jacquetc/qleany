@@ -309,8 +309,11 @@ pub struct File {
     pub status: FileStatus,
     pub nature: FileNature,
     pub feature: Option<EntityId>,
+    pub all_features: bool,
     pub entity: Option<EntityId>,
+    pub all_entities: bool,
     pub use_case: Option<EntityId>,
+    pub all_use_cases: bool,
     pub field: Option<EntityId>,
 }
 
