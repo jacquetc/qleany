@@ -347,7 +347,7 @@ git commit -m "Before Qleany generation"
 ### Generate Code
 
 1. Click **Generate** in the sidebar
-2. Review the groups and files
+2. Review the groups and files. Use the **status** filters (Modified, New, Unchanged) and **nature** filters (Infra, Aggregate, Scaffold) to narrow the list
 3. (Optional) Check **in temp/** to generate to a temporary folder first
 4. Click a file to preview the generated code
 5. Click **Generate (N)** where N is the number of selected files

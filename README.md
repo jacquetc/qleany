@@ -39,9 +39,9 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 - **Complete CRUD infrastructure** — Controllers, DTOs, use cases, repositories per entity
 - **Undo/redo system** (optional) — Command-based with multi-stack scoping, composite grouping, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust; cascade snapshot/restore for entity trees
 - **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
+- **Models** — C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
 - **Reactive QML models** — Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
 - **QML mocks** — JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
-- **Models** — C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
 - **Relationship management** — Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
 - **Event system** — Thread-safe, decoupled communication between features
 - **Event Buffer** — Send events only if the command succeeds
@@ -225,7 +225,7 @@ qleany docs all --md
 # new qleany.yaml manifest, questions will guide you through the process
 qleany new
 
-# Generate all files
+# Generate modified and new files (default)
 qleany generate (or gen)
 
 # Generate to ./temp/ folder (recommended)
@@ -240,11 +240,23 @@ qleany generate --dry-run entity MyEntity
 # Generate specific feature
 qleany generate feature my_feature_name
 
-# List files that would be generated (only the new and modified ones)
+# List files that would be generated  (only modified and new by default)
 qleany list
 
-# List files that would be generated (including the unchanged ones)
-qleany list --all
+# Filter by status
+qleany list --modified          # only modified files (-M)
+qleany list --new               # only new files (-N)
+qleany list --unchanged         # only unchanged files (-U)
+qleany list --all-status        # all statuses
+
+# Filter by nature
+qleany list --infra             # infrastructure files only (-i)
+qleany list --aggregates        # aggregate files only (-g)
+qleany list --scaffolds         # scaffold files only (-s)
+qleany list --all-natures       # all natures
+
+# Show everything
+qleany list --all               # equivalent to --all-status --all-natures
 
 # List features that would be generated
 qleany list features

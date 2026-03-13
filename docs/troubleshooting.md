@@ -12,7 +12,7 @@ When you click "Generate" and nothing appears in your project, first check the *
 
 In the UI, is the "in temp/" checkbox selected? If so, files are written to a temporary folder inside the Qleany application data directory, not your project folder. Uncheck it to write directly to your project. For a minimum of safety, this checkbox is checked by default at each launch.
 
-Also, verify you've actually selected files to generate. The Generate tab shows all potential files, but only checked files are written. If you accidentally unchecked everything, clicking "Generate (0)" does nothing.
+Also, check the filter checkboxes. The Generate tab has two sets of filters: **status** (Modified, New, Unchanged) and **nature** (Infra, Aggregate, Scaffold). By default, only Modified and New files are shown. If you're looking for unchanged files or a specific nature, enable the corresponding checkboxes. Only visible, checked files are written when you click "Generate (N)".
 
 If using the CLI, double-check the `--output` flag points where you intend. A common mistake is specifying a relative path when you meant absolute, or vice versa.
 

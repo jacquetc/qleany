@@ -34,7 +34,19 @@ Inside the project folder, run:
 # See what would change (only modified and new files are shown by default)
 qleany list files
 
-# Show all files including unchanged ones
+# Filter by status
+qleany list files --modified       # only modified (-M)
+qleany list files --new            # only new (-N)
+qleany list files --unchanged      # only unchanged (-U)
+qleany list files --all-status     # all statuses
+
+# Filter by nature (infrastructure, aggregate, scaffold)
+qleany list files --infra          # infrastructure only (-i)
+qleany list files --aggregates     # aggregate only (-g)
+qleany list files --scaffolds      # scaffold only (-s)
+qleany list files --all-natures    # all natures
+
+# Show everything (all statuses + all natures)
 qleany list files --all
 
 # Show output as a tree
@@ -43,7 +55,7 @@ qleany list files --format tree
 # Show a unified diff for a specific file
 qleany diff src/entities.rs
 
-# Generate all modified and new files
+# Generate modified and new files (default)
 qleany generate
 
 # Generate to temp folder first (safe)
@@ -60,7 +72,7 @@ qleany generate group "use_cases"
 # Generate a specific file by path
 qleany generate file src/entities.rs
 
-# Generate all files including unchanged ones
+# Generate all files (all statuses + all natures)
 qleany generate --all
 
 # Then compare and merge manually
@@ -75,11 +87,11 @@ code --diff ./temp/file ./file
 - **Selected files are overwritten** — Your modifications are lost
 - **Unselected files are untouched** — Even if the manifest changed
 - **No files are deleted** — If you rename an entity, the old files remain; clean them up manually
-- **By default, only modified and new files are written** — Use `--all` to include unchanged files
+- **By default, only modified and new files are written** — Use `--all` to include unchanged files of all natures
 
-From the GUI (recommended), the "in temp" checkbox is checked by default to avoid accidental overwrites.
+From the GUI (recommended), the "in temp" checkbox is checked by default to avoid accidental overwrites. Filter checkboxes let you control which files are visible by **status** (Modified, New, Unchanged) and **nature** (Infra, Aggregate, Scaffold).
 
-In the CLI, `qleany generate` only writes files whose generated code differs from what's on disk (status `[M]` modified or `[N]` new). Use `--all` to force-write everything, or `--dry-run` to preview without writing.
+In the CLI, `qleany generate` only writes files whose generated code differs from what's on disk (status `[M]` modified or `[N]` new). Use `--all` to force-write everything (all statuses and all natures), or `--dry-run` to preview without writing. You can also combine status and nature filters independently: e.g. `--modified --infra` shows only modified infrastructure files.
 
 ## Files That Must Stay in Sync
 
@@ -138,31 +150,36 @@ This manual merge is the cost of customization. For files you modify heavily, co
 
 ## Practical Guidelines
 
-### Files you'll typically regenerate freely
+Every generated file has a **nature** that tells you how to treat it. You can filter by nature in both the CLI (`--infra`, `--aggregates`, `--scaffolds`) and the GUI (checkboxes).
 
-These are pure scaffolding with no business logic:
+### Infrastructure files — regenerate freely
+
+These are pure plumbing with no business logic (nature: `Infrastructure`):
 
 - Entity structs (`common/entities/`)
 - DTOs (`dtos.rs`, `dtos.h`)
 - Repository implementations
 - Table/cache definitions
 - Event classes
+- Database helpers, undo/redo infrastructure
 
-### Files you'll typically modify and protect
+### Scaffold files — modify and protect
 
-These contain your custom code:
+These are starting points for your custom code (nature: `Scaffold`). After first generation, you'll typically modify them and avoid regenerating:
 
 - Use case implementations (your business logic)
+- Use case unit-of-work trait definitions and implementations
 - Controllers (if you add custom endpoints)
 - Main entry point (`main.rs`, `main.cpp`)
 
-### Files that aggregate others
+### Aggregate files — handle with care
 
-These need careful handling — regenerate them when adding entities, but be aware they may need manual merging:
+These reference all entities/features and must be regenerated when you add or remove entities (nature: `Aggregate`). Be aware they may need manual merging if you've modified them:
 
 - Module declarations (`lib.rs`, feature exports)
 - Factory classes
 - Event registries
+- CMakeLists.txt files that list all entity sources
 
 ## When You Rename an Entity
 
