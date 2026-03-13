@@ -2,6 +2,7 @@
 // as changes will be lost.
 
 use common::entities::File;
+use common::entities::FileNature;
 use common::entities::FileStatus;
 use common::types::EntityId;
 use serde::{Deserialize, Serialize};
@@ -18,6 +19,7 @@ pub struct FileDto {
     pub template_name: String,
     pub generated_code: Option<String>,
     pub status: FileStatus,
+    pub nature: FileNature,
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
@@ -36,6 +38,7 @@ impl From<FileDto> for File {
             template_name: dto.template_name,
             generated_code: dto.generated_code,
             status: dto.status,
+            nature: dto.nature,
             feature: dto.feature,
             entity: dto.entity,
             use_case: dto.use_case,
@@ -56,6 +59,7 @@ impl From<&FileDto> for File {
             template_name: dto.template_name.clone(),
             generated_code: dto.generated_code.clone(),
             status: dto.status.clone(),
+            nature: dto.nature.clone(),
             feature: dto.feature.clone(),
             entity: dto.entity.clone(),
             use_case: dto.use_case.clone(),
@@ -76,6 +80,7 @@ impl From<File> for FileDto {
             template_name: entity.template_name,
             generated_code: entity.generated_code,
             status: entity.status,
+            nature: entity.nature,
             feature: entity.feature,
             entity: entity.entity,
             use_case: entity.use_case,
@@ -94,6 +99,7 @@ pub struct CreateFileDto {
     pub template_name: String,
     pub generated_code: Option<String>,
     pub status: FileStatus,
+    pub nature: FileNature,
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
@@ -112,6 +118,7 @@ impl From<CreateFileDto> for File {
             template_name: dto.template_name,
             generated_code: dto.generated_code,
             status: dto.status,
+            nature: dto.nature,
             feature: dto.feature,
             entity: dto.entity,
             use_case: dto.use_case,
@@ -132,6 +139,7 @@ impl From<&CreateFileDto> for File {
             template_name: dto.template_name.clone(),
             generated_code: dto.generated_code.clone(),
             status: dto.status.clone(),
+            nature: dto.nature.clone(),
             feature: dto.feature.clone(),
             entity: dto.entity.clone(),
             use_case: dto.use_case.clone(),
@@ -151,6 +159,7 @@ impl From<File> for CreateFileDto {
             template_name: entity.template_name,
             generated_code: entity.generated_code,
             status: entity.status,
+            nature: entity.nature,
             feature: entity.feature,
             entity: entity.entity,
             use_case: entity.use_case,

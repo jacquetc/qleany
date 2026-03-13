@@ -185,6 +185,13 @@ entities:
     - Unchanged
     - Modified
     - New
+  - name: nature
+    type: enum
+    enum_name: FileNature
+    enum_values:
+    - Infrastructure
+    - Aggregate
+    - Scaffold
   - name: feature
     type: entity
     entity: Feature

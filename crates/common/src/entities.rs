@@ -288,6 +288,14 @@ pub enum FileStatus {
     New,
 }
 
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+pub enum FileNature {
+    #[default]
+    Infrastructure,
+    Aggregate,
+    Scaffold,
+}
+
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct File {
     pub id: EntityId,
@@ -299,6 +307,7 @@ pub struct File {
     pub template_name: String,
     pub generated_code: Option<String>,
     pub status: FileStatus,
+    pub nature: FileNature,
     pub feature: Option<EntityId>,
     pub entity: Option<EntityId>,
     pub use_case: Option<EntityId>,
