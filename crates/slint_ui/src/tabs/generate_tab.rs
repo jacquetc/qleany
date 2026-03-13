@@ -20,8 +20,8 @@ use crate::commands::{
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use common::direct_access::system::SystemRelationshipField;
-use common::entities::FileStatus;
 use common::entities::FileNature;
+use common::entities::FileStatus;
 use common::long_operation::OperationProgress;
 use common::types::EntityId;
 use cpp_qt_file_generation::{FillCppQtFilesDto, GenerateCppQtFilesDto};

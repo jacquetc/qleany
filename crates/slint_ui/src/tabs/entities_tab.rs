@@ -414,7 +414,12 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                                         list_flag
                                     )
                                 } else {
-                                    format!("{}{}{}", field_type_to_string(&e.field_type), opt, list_flag)
+                                    format!(
+                                        "{}{}{}",
+                                        field_type_to_string(&e.field_type),
+                                        opt,
+                                        list_flag
+                                    )
                                 };
                                 list.push(ListItem {
                                     id: e.id as i32,

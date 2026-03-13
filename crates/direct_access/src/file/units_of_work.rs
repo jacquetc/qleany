@@ -181,7 +181,6 @@ impl use_cases::WriteRelUoW<FileRelationshipField> for FileWriteUoW {
         repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
         Ok(())
     }
-
 }
 
 // ---------------------------------------------------------------------------

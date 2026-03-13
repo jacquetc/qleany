@@ -180,4 +180,3 @@ pub fn set_relationship(
     uc.execute(&dto.id, &dto.field, dto.right_ids.as_slice())?;
     Ok(())
 }
-

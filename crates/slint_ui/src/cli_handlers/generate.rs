@@ -19,31 +19,64 @@ const ROOT_SYSTEM_ID: u64 = 1;
 
 /// Resolve status flags into the set of FileStatus values to include.
 /// Default (no flags): Modified + New.
-fn resolve_status_filter(all: bool, all_status: bool, modified: bool, new: bool, unchanged: bool) -> Vec<FileStatus> {
+fn resolve_status_filter(
+    all: bool,
+    all_status: bool,
+    modified: bool,
+    new: bool,
+    unchanged: bool,
+) -> Vec<FileStatus> {
     if all || all_status {
-        return vec![FileStatus::Modified, FileStatus::New, FileStatus::Unchanged, FileStatus::Unknown];
+        return vec![
+            FileStatus::Modified,
+            FileStatus::New,
+            FileStatus::Unchanged,
+            FileStatus::Unknown,
+        ];
     }
     if !modified && !new && !unchanged {
         // Default: Modified + New
         return vec![FileStatus::Modified, FileStatus::New];
     }
     let mut statuses = Vec::new();
-    if modified { statuses.push(FileStatus::Modified); }
-    if new { statuses.push(FileStatus::New); }
-    if unchanged { statuses.push(FileStatus::Unchanged); }
+    if modified {
+        statuses.push(FileStatus::Modified);
+    }
+    if new {
+        statuses.push(FileStatus::New);
+    }
+    if unchanged {
+        statuses.push(FileStatus::Unchanged);
+    }
     statuses
 }
 
 /// Resolve nature flags into the set of FileNature values to include.
 /// Default (no flags): all natures.
-fn resolve_nature_filter(all: bool, all_natures: bool, infra: bool, aggregates: bool, scaffolds: bool) -> Vec<FileNature> {
+fn resolve_nature_filter(
+    all: bool,
+    all_natures: bool,
+    infra: bool,
+    aggregates: bool,
+    scaffolds: bool,
+) -> Vec<FileNature> {
     if all || all_natures || (!infra && !aggregates && !scaffolds) {
-        return vec![FileNature::Infrastructure, FileNature::Aggregate, FileNature::Scaffold];
+        return vec![
+            FileNature::Infrastructure,
+            FileNature::Aggregate,
+            FileNature::Scaffold,
+        ];
     }
     let mut natures = Vec::new();
-    if infra { natures.push(FileNature::Infrastructure); }
-    if aggregates { natures.push(FileNature::Aggregate); }
-    if scaffolds { natures.push(FileNature::Scaffold); }
+    if infra {
+        natures.push(FileNature::Infrastructure);
+    }
+    if aggregates {
+        natures.push(FileNature::Aggregate);
+    }
+    if scaffolds {
+        natures.push(FileNature::Scaffold);
+    }
     natures
 }
 
@@ -173,8 +206,20 @@ pub fn execute(
     };
 
     // Step 6: Filter by status and nature
-    let status_filter = resolve_status_filter(args.all, args.all_status, args.modified, args.new, args.unchanged);
-    let nature_filter = resolve_nature_filter(args.all, args.all_natures, args.infra, args.aggregates, args.scaffolds);
+    let status_filter = resolve_status_filter(
+        args.all,
+        args.all_status,
+        args.modified,
+        args.new,
+        args.unchanged,
+    );
+    let nature_filter = resolve_nature_filter(
+        args.all,
+        args.all_natures,
+        args.infra,
+        args.aggregates,
+        args.scaffolds,
+    );
 
     let files: Vec<&FileDto> = filtered_by_target
         .into_iter()
