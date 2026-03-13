@@ -785,14 +785,7 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
             .into(),
     );
     state.set_selected_field_enum_name(field.enum_name.clone().unwrap_or_default().into());
-    state.set_selected_field_enum_values(
-        field
-            .enum_values
-            .clone()
-            .map(|v| v.join("\n"))
-            .unwrap_or_default()
-            .into(),
-    );
+    state.set_selected_field_enum_values(field.enum_values.join("\n").into());
 }
 
 /// Helper function to clear field form
@@ -1058,7 +1051,7 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                             .set_selected_field_relationship("one_to_one".into());
                     }
                     if field.field_type != FieldType::Enum {
-                        field.enum_values = None;
+                        field.enum_values = vec![];
                         field.enum_name = None;
                         app.global::<EntitiesTabState>()
                             .set_selected_field_enum_name("".into());
@@ -1301,19 +1294,14 @@ fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
                     let value_str = new_value.to_string();
                     update_field_helper(&app, &ctx, field_id, |field| {
                         if value_str.is_empty() {
-                            field.enum_values = None;
+                            field.enum_values = vec![];
                         } else {
                             // Split by newlines or commas
-                            let values: Vec<String> = value_str
+                            field.enum_values = value_str
                                 .split(['\n', ','])
                                 .map(|s| s.trim().to_string())
                                 .filter(|s| !s.is_empty())
                                 .collect();
-                            field.enum_values = if values.is_empty() {
-                                None
-                            } else {
-                                Some(values)
-                            };
                         }
                     });
                 }
@@ -1538,7 +1526,7 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     list_model: false,
                     list_model_displayed_field: None,
                     enum_name: None,
-                    enum_values: None,
+                    enum_values: vec![],
                 };
 
                 match field_commands::create_orphan_field(

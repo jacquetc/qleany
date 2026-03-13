@@ -56,8 +56,8 @@ pub struct Field {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enum_name: Option<String>,
     #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enum_values: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub enum_values: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -91,8 +91,8 @@ pub struct DtoField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enum_name: Option<String>,
     #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enum_values: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub enum_values: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -31,7 +31,7 @@ pub struct DtoField {
     pub optional: bool,
     pub is_list: bool,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl HasId for DtoField {
@@ -232,7 +232,7 @@ pub struct Field {
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl HasId for Field {

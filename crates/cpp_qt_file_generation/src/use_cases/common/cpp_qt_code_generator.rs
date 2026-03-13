@@ -1567,7 +1567,7 @@ mod tests {
             list_model: false,
             list_model_displayed_field: None,
             enum_name: None,
-            enum_values: None,
+            enum_values: vec![],
         };
         let field_tags = Field {
             id: 101,
@@ -1583,7 +1583,7 @@ mod tests {
             list_model: false,
             list_model_displayed_field: None,
             enum_name: None,
-            enum_values: None,
+            enum_values: vec![],
         };
 
         let snapshot = GenerationSnapshot {

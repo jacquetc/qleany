@@ -404,7 +404,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         list_model: false,
         list_model_displayed_field: None,
         enum_name: None,
-        enum_values: None,
+        enum_values: vec![],
     };
     uow.entities.insert(300, ent);
     uow.fields.insert(400, field);
@@ -434,7 +434,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         optional: false,
         is_list: false,
         enum_name: None,
-        enum_values: None,
+        enum_values: vec![],
     };
     let df_out = DtoField {
         id: 501,
@@ -445,7 +445,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         optional: true,
         is_list: false,
         enum_name: None,
-        enum_values: None,
+        enum_values: vec![],
     };
     uow.dto_fields.insert(500, df_in);
     uow.dto_fields.insert(501, df_out);

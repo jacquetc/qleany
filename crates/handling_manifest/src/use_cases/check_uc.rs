@@ -781,7 +781,7 @@ impl CheckUseCase {
                                 entity.name, field.name, en, en.to_upper_camel_case()
                             ));
                         }
-                        let vals = field.enum_values.as_deref().unwrap_or(&[]);
+                        let vals = field.enum_values.as_slice();
                         if vals.is_empty() {
                             critical_errors.push(format!(
                                 "Entity '{}', field '{}': field_type is Enum but enum_values is empty",
@@ -1219,7 +1219,7 @@ impl CheckUseCase {
                                             dto.name, df.name, en, en.to_upper_camel_case()
                                         ));
                                     }
-                                    let vals = df.enum_values.as_deref().unwrap_or(&[]);
+                                    let vals = df.enum_values.as_slice();
                                     if vals.is_empty() {
                                         critical_errors.push(format!(
                                             "DTO '{}', field '{}': field_type is Enum but enum_values is empty",

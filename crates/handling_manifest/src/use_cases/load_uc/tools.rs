@@ -207,7 +207,7 @@ mod tests {
                 list_model: false,
                 list_model_displayed_field: None,
                 enum_name: None,
-                enum_values: None,
+                enum_values: vec![],
             },
             // An OrderedOneToMany relationship
             Field {
@@ -224,7 +224,7 @@ mod tests {
                 list_model: true,
                 list_model_displayed_field: None,
                 enum_name: None,
-                enum_values: None,
+                enum_values: vec![],
             },
         ];
 

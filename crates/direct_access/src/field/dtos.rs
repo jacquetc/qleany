@@ -23,7 +23,7 @@ pub struct FieldDto {
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl From<FieldDto> for Field {
@@ -103,7 +103,7 @@ pub struct CreateFieldDto {
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl From<CreateFieldDto> for Field {

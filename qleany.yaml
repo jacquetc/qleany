@@ -150,7 +150,7 @@ entities:
     type: boolean
   - name: list_model_displayed_field
     type: string
-    optional: true
+    is_list: true
   undoable: true
 - name: Feature
   inherits_from: EntityBase
@@ -290,7 +290,7 @@ entities:
     optional: true
   - name: enum_values
     type: string
-    optional: true
+    is_list: true
   undoable: true
 - name: Global
   inherits_from: EntityBase

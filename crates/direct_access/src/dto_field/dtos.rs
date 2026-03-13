@@ -17,7 +17,7 @@ pub struct DtoFieldDto {
     pub optional: bool,
     pub is_list: bool,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl From<DtoFieldDto> for DtoField {
@@ -77,7 +77,7 @@ pub struct CreateDtoFieldDto {
     pub optional: bool,
     pub is_list: bool,
     pub enum_name: Option<String>,
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Vec<String>,
 }
 
 impl From<CreateDtoFieldDto> for DtoField {

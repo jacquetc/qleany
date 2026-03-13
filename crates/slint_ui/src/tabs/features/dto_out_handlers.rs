@@ -79,14 +79,7 @@ pub fn fill_dto_out_field_form(app: &App, dto_field: &direct_access::DtoFieldDto
     state.set_selected_dto_out_field_enum_name(
         dto_field.enum_name.clone().unwrap_or_default().into(),
     );
-    state.set_selected_dto_out_field_enum_values(
-        dto_field
-            .enum_values
-            .clone()
-            .map(|v| v.join("\n"))
-            .unwrap_or_default()
-            .into(),
-    );
+    state.set_selected_dto_out_field_enum_values(dto_field.enum_values.join("\n").into());
 }
 
 /// Helper function to clear DTO Out field form
@@ -584,18 +577,13 @@ pub fn setup_dto_out_field_enum_values_callback(app: &App, app_context: &Arc<App
                     let values_str = values.to_string();
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
                         if values_str.is_empty() {
-                            field.enum_values = None;
+                            field.enum_values = vec![];
                         } else {
-                            let values: Vec<String> = values_str
+                            field.enum_values = values_str
                                 .lines()
                                 .map(|s| s.trim().to_string())
                                 .filter(|s| !s.is_empty())
                                 .collect();
-                            field.enum_values = if values.is_empty() {
-                                None
-                            } else {
-                                Some(values)
-                            };
                         }
                     });
                 }
@@ -628,7 +616,7 @@ pub fn setup_dto_out_field_addition_callback(app: &App, app_context: &Arc<AppCon
                         optional: false,
                         is_list: false,
                         enum_name: None,
-                        enum_values: None,
+                        enum_values: vec![],
                     };
 
                     match dto_field_commands::create_orphan_dto_field(
