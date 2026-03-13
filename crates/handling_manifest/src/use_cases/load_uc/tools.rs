@@ -202,6 +202,7 @@ mod tests {
                 entity: Some(2), // Points to Child entity
                 relationship: FieldRelationshipType::OneToOne,
                 optional: false,
+                is_list: false,
                 strong: true,
                 list_model: false,
                 list_model_displayed_field: None,
@@ -218,6 +219,7 @@ mod tests {
                 entity: Some(2), // Points to Child entity
                 relationship: FieldRelationshipType::OrderedOneToMany,
                 optional: true,
+                is_list: false,
                 strong: true,
                 list_model: true,
                 list_model_displayed_field: None,

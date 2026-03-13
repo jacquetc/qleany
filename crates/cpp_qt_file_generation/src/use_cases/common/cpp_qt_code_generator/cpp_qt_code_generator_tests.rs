@@ -399,6 +399,7 @@ fn for_file_happy_path_feature_with_use_case_and_dtos() {
         entity: Some(300),
         relationship: FieldRelationshipType::OneToOne,
         optional: true,
+        is_list: false,
         strong: true,
         list_model: false,
         list_model_displayed_field: None,

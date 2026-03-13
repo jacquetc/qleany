@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 4
+  version: 5
 global:
   language: rust
   application_name: Qleany
@@ -141,6 +141,8 @@ entities:
     - OneToMany
     - ManyToMany
   - name: optional
+    type: boolean
+  - name: is_list
     type: boolean
   - name: strong
     type: boolean

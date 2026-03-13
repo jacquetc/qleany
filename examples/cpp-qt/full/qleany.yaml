@@ -1,5 +1,5 @@
 schema:
-  version: 4
+  version: 5
 global:
   language: cpp-qt
   application_name: FullCppQtApp
@@ -90,6 +90,7 @@ entities:
   # Covers: string, uuid, boolean, integer, float, datetime, enum
   #         one_to_one required+strong, one_to_one optional+weak,
   #         ordered_one_to_many strong+list_model, many_to_many
+  #         is_list: string, uuid, boolean, integer, uinteger, float, datetime
   - name: Project
     inherits_from: EntityBase
     undoable: true
@@ -117,6 +118,27 @@ entities:
           - OnHold
           - Completed
           - Archived
+      - name: labels
+        type: string
+        is_list: true
+      - name: scores
+        type: float
+        is_list: true
+      - name: version_ids
+        type: uuid
+        is_list: true
+      - name: milestone_dates
+        type: datetime
+        is_list: true
+      - name: participant_counts
+        type: integer
+        is_list: true
+      - name: retry_counts
+        type: uinteger
+        is_list: true
+      - name: feature_flags
+        type: boolean
+        is_list: true
       - name: settings
         type: entity
         entity: ProjectSettings

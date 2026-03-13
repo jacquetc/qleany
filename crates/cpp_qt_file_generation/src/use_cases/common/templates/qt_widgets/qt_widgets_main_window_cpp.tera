@@ -9,7 +9,7 @@
             {%- if not demo_ent and f.inner.list_model and f.inner.entity %}
                 {%- set_global has_form_fields = false %}
                 {%- for tf in s.entities[f.inner.entity].normal_fields %}
-                    {%- if tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
+                    {%- if not tf.is_list and tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
                         {%- set_global has_form_fields = true %}
                     {%- endif %}
                 {%- endfor %}
@@ -137,7 +137,7 @@ void MainWindow::setupUi()
         auto *formLayout = new QFormLayout;
         formLayout->setSpacing(8);
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
 
             {%- if f.inner.field_type == "Boolean" %}
 
@@ -259,7 +259,7 @@ void MainWindow::setupUi()
         detailForm->setSpacing(8);
 
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
 
         {
             m_{{ f.camel_name }}DetailLabel = new QLabel(this);
@@ -282,14 +282,14 @@ void MainWindow::setupUi()
                     bool loaded = m_singleDetail->loadingStatus() == DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::LoadingStatus::Loaded;
                     selectHint->setVisible(!loaded);
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
                     m_{{ f.camel_name }}DetailLabel->setText(loaded ? QVariant::fromValue(m_singleDetail->{{ f.camel_name }}()).toString() : QString());
         {%- endif %}
     {%- endfor %}
                 });
 
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
         connect(m_singleDetail, &DA::{{ demo_ent.pascal_name }}::Single{{ demo_ent.pascal_name }}::{{ f.camel_name }}Changed, this,
                 [this]() {
                     m_{{ f.camel_name }}DetailLabel->setText(QVariant::fromValue(m_singleDetail->{{ f.camel_name }}()).toString());
@@ -390,7 +390,7 @@ QCoro::Task<void> MainWindow::onAddClicked()
 
     auto dto = DA::{{ demo_ent.pascal_name }}::{{ demo_ent.pascal_name }}Controller::getCreateDto();
 {%- for f in demo_ent.normal_fields %}
-    {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+    {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
         {%- if f.inner.field_type == "Boolean" %}
     dto.{{ f.camel_name }} = m_{{ f.camel_name }}Field->isChecked();
         {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
@@ -416,7 +416,7 @@ QCoro::Task<void> MainWindow::onAddClicked()
         qDebug() << "{{ demo_ent.pascal_name }} created, id:" << result.first().id;
         // Clear form fields
 {%- for f in demo_ent.normal_fields %}
-    {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+    {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
         {%- if f.inner.field_type == "Boolean" %}
         m_{{ f.camel_name }}Field->setChecked(false);
         {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}

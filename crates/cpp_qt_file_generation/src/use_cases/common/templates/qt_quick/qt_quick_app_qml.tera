@@ -9,7 +9,7 @@
             {%- if not demo_ent and f.inner.list_model and f.inner.entity %}
                 {%- set_global has_form_fields = false %}
                 {%- for tf in s.entities[f.inner.entity].normal_fields %}
-                    {%- if tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
+                    {%- if not tf.is_list and tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
                         {%- set_global has_form_fields = true %}
                     {%- endif %}
                 {%- endfor %}
@@ -135,7 +135,7 @@ ApplicationWindow {
                     height: 1
                 }
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
 
             {%- if f.inner.field_type == "Boolean" %}
 
@@ -254,7 +254,7 @@ ApplicationWindow {
                     onClicked: {
                         var dto = {{ demo_ent.camel_name }}Controller.getCreateDto();
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
             {%- if f.inner.field_type == "Boolean" %}
                         dto.{{ f.camel_name }} = {{ f.camel_name }}Field.checked;
             {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
@@ -271,7 +271,7 @@ ApplicationWindow {
                         {{ demo_ent.camel_name }}Controller.create([dto], {{ list_ent.camel_name }}Id, -1).then(function(result) {
                             console.log("{{ demo_ent.pascal_name }} created:", JSON.stringify(result));
     {%- for f in demo_ent.normal_fields %}
-        {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+        {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
             {%- if f.inner.field_type == "Boolean" %}
                             {{ f.camel_name }}Field.checked = false;
             {%- elif f.inner.field_type == "Integer" or f.inner.field_type == "UInteger" %}
@@ -324,7 +324,7 @@ ApplicationWindow {
                     delegate: ItemDelegate {
                         required property int itemId
     {%- for tf in list_target_ent.normal_fields %}
-        {%- if tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
+        {%- if not tf.is_list and tf.camel_name != "id" and tf.camel_name != "createdAt" and tf.camel_name != "updatedAt" %}
                         required property {{ tf.qml_type }} {{ tf.camel_name }}
         {%- endif %}
     {%- endfor %}
@@ -384,7 +384,7 @@ ApplicationWindow {
                     text: "Select an item in the list"
                 }
         {%- for f in demo_ent.normal_fields %}
-            {%- if f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
+            {%- if not f.is_list and f.camel_name != "id" and f.camel_name != "createdAt" and f.camel_name != "updatedAt" %}
 
                 RowLayout {
                     visible: applicationWindow.selectedItemId > 0

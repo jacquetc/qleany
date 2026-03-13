@@ -19,11 +19,14 @@ pub fn migrate_to_current(value: &mut Value) -> Result<()> {
         ));
     }
 
-    if version == 2 {
+    if version <= 2 {
         migrate_v2_to_v3(value);
     }
-    if version == 3 {
+    if version <= 3 {
         migrate_v3_to_v4(value);
+    }
+    if version <= 4 {
+        migrate_v4_to_v5(value);
     }
 
     Ok(())
@@ -43,6 +46,13 @@ fn migrate_v2_to_v3(value: &mut Value) {
     // Bump version to 3
     if let Some(schema) = value.get_mut("schema").and_then(|s| s.as_object_mut()) {
         schema.insert("version".to_string(), Value::Number(3.into()));
+    }
+}
+
+/// Migrate a v4 manifest to v5: additive change (is_list on entity fields), just bump version.
+fn migrate_v4_to_v5(value: &mut Value) {
+    if let Some(schema) = value.get_mut("schema").and_then(|s| s.as_object_mut()) {
+        schema.insert("version".to_string(), Value::Number(5.into()));
     }
 }
 
@@ -89,8 +99,8 @@ mod tests {
 
         migrate_to_current(&mut value).unwrap();
 
-        // Version bumped to 3
-        assert_eq!(value["schema"]["version"], 3);
+        // Version bumped all the way to current
+        assert_eq!(value["schema"]["version"], CURRENT_SCHEMA_VERSION);
 
         // allow_direct_access removed from all entities
         for entity in value["entities"].as_array().unwrap() {
@@ -131,19 +141,39 @@ mod tests {
 
         migrate_to_current(&mut value).unwrap();
 
-        // Version bumped to 4
-        assert_eq!(value["schema"]["version"], 4);
+        // Version bumped all the way to current
+        assert_eq!(value["schema"]["version"], CURRENT_SCHEMA_VERSION);
 
-        // allow_direct_access removed from all entities
-        for entity in value["entities"].as_array().unwrap() {
-            assert!(entity.get("allow_direct_access").is_none());
+        // validator removed from all use cases
+        for feature in value["features"].as_array().unwrap() {
+            for uc in feature["use_cases"].as_array().unwrap() {
+                assert!(uc.get("validator").is_none());
+            }
         }
     }
 
     #[test]
-    fn test_v4_passes_through() {
+    fn test_migrate_v4_to_v5() {
         let mut value = json!({
             "schema": { "version": 4 },
+            "global": { "language": "rust", "application_name": "Test", "organisation": { "name": "Test", "domain": "test.com" }, "prefix_path": "" },
+            "entities": [],
+            "features": [
+                    { "name": "Foo", "use_cases": [
+                        { "name": "Bar" }
+                    ]}
+            ],
+            "ui": {}
+        });
+
+        migrate_to_current(&mut value).unwrap();
+        assert_eq!(value["schema"]["version"], CURRENT_SCHEMA_VERSION);
+    }
+
+    #[test]
+    fn test_v5_passes_through() {
+        let mut value = json!({
+            "schema": { "version": 5 },
             "global": { "language": "rust", "application_name": "Test", "organisation": { "name": "Test", "domain": "test.com" }, "prefix_path": "" },
             "entities": [],
             "features": [

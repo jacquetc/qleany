@@ -200,6 +200,7 @@ impl SaveUseCase {
                             entity,
                             relationship,
                             optional: if field.optional { Some(true) } else { None },
+                            is_list: if field.is_list { Some(true) } else { None },
                             strong: if field.strong { Some(true) } else { None },
                             list_model: if field.list_model { Some(true) } else { None },
                             list_model_displayed_field: field.list_model_displayed_field.clone(),

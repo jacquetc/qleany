@@ -1,6 +1,6 @@
 ---
 schema:
-  version: 4
+  version: 5
 global:
   language: cpp-qt
   application_name: CarLot

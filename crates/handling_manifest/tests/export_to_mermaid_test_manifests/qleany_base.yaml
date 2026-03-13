@@ -142,6 +142,8 @@ entities:
     - ManyToMany
   - name: required
     type: boolean
+  - name: is_list
+    type: boolean
   - name: strong
     type: boolean
   - name: list_model

@@ -185,7 +185,16 @@ pub const CRITICAL_RULES: &[Rule] = &[
         severity: "critical",
         description: "A DtoField must not be both 'optional' and 'is_list'",
     },
-    // Rule { id: "C30", severity: "critical", description: "A Field must not be both 'optional' and 'is_list'" },  // TODO: enable when Field gets is_list
+    Rule {
+        id: "C30",
+        severity: "critical",
+        description: "A Field must not be both 'optional' and 'is_list'",
+    },
+    Rule {
+        id: "C30b",
+        severity: "critical",
+        description: "A Field with is_list must not have field_type Entity or Enum",
+    },
     Rule {
         id: "C31",
         severity: "critical",
@@ -662,14 +671,23 @@ impl CheckUseCase {
                         ));
                     }
 
-                    // TODO: uncomment when Field gets an `is_list` property
-                    // // A field cannot be both optional and is_list
-                    // if field.optional && field.is_list {
-                    //     critical_errors.push(format!(
-                    //         "Entity '{}', field '{}': cannot be both optional and is_list",
-                    //         entity.name, field.name
-                    //     ));
-                    // }
+                    // A field cannot be both optional and is_list
+                    if field.optional && field.is_list {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': cannot be both optional and is_list",
+                            entity.name, field.name
+                        ));
+                    }
+
+                    // is_list cannot be used with Entity or Enum types
+                    if field.is_list
+                        && matches!(field.field_type, FieldType::Entity | FieldType::Enum)
+                    {
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': is_list cannot be used with type {:?}",
+                            entity.name, field.name, field.field_type
+                        ));
+                    }
 
                     // list_model / list_model_displayed_field require Entity type + to-many relationship
                     let is_to_many = matches!(

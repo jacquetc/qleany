@@ -166,14 +166,20 @@ impl ExportToMermaidUseCase {
                 .unwrap_or_else(|| "enum".to_string()),
         };
 
-        let optional_marker = if field.optional { " \"optional\"" } else { "" };
+        let qualifier = if field.is_list {
+            " \"list\""
+        } else if field.optional {
+            " \"optional\""
+        } else {
+            ""
+        };
 
         // exception for id field
         if field.name == "id" {
             return "EntityId id".to_string();
         }
 
-        format!("{} {}{}", type_str, field.name, optional_marker)
+        format!("{} {}{}", type_str, field.name, qualifier)
     }
 
     fn format_relationship(

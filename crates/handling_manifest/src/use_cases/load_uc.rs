@@ -251,6 +251,7 @@ impl LoadUseCase {
                         .transpose()?,
                     relationship,
                     optional: model_field.optional.unwrap_or_default(),
+                    is_list: model_field.is_list.unwrap_or_default(),
                     strong: model_field.strong.unwrap_or_default(),
                     list_model: model_field.list_model.unwrap_or_default(),
                     list_model_displayed_field: model_field.list_model_displayed_field.clone(),

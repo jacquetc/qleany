@@ -443,6 +443,15 @@ export component EntitiesTab inherits Rectangle {
                                 }
                             }
 
+                            // List checkbox (only visible when type is NOT Entity and NOT Enum)
+                            if EntitiesTabState.selected_field_type != "Entity" && EntitiesTabState.selected_field_type != "Enum": CheckBox {
+                                text: "List";
+                                checked <=> EntitiesTabState.selected_field_is_list;
+                                toggled => {
+                                    EntitiesTabState.field_is_list_changed(self.checked);
+                                }
+                            }
+
                             // Entity-specific options (only visible when type is Entity)
                             if EntitiesTabState.selected_field_type == "Entity": VerticalLayout {
                                 spacing: 12px;

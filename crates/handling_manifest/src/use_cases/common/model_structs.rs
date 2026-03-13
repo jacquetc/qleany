@@ -42,6 +42,9 @@ pub struct Field {
     pub optional: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_list: Option<bool>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub strong: Option<bool>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -322,31 +322,25 @@ impl SnapshotBuilder {
                 FieldRelationshipType::ManyToMany => "ManyToMany".to_string(),
             };
 
-            let cpp_qt_type = match f.relationship {
-                FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne => {
-                    if f.optional {
-                        format!("std::optional<{}>", &cpp_qt_base_type)
-                    } else {
-                        cpp_qt_base_type.clone()
-                    }
-                }
-                FieldRelationshipType::OrderedOneToMany
-                | FieldRelationshipType::OneToMany
-                | FieldRelationshipType::ManyToMany => format!("QList<{}>", cpp_qt_base_type),
-            };
-            let cpp_default_init = if f.optional
-                && matches!(
-                    f.relationship,
-                    FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne
-                ) {
-                " = std::nullopt".to_string()
-            } else if matches!(
+            let is_relationship_list = matches!(
                 f.relationship,
-                FieldRelationshipType::OrderedOneToMany
-                    | FieldRelationshipType::OneToMany
+                FieldRelationshipType::OneToMany
+                    | FieldRelationshipType::OrderedOneToMany
                     | FieldRelationshipType::ManyToMany
-            ) {
+            );
+            let is_list = f.is_list || is_relationship_list;
+
+            let cpp_qt_type = if is_list {
+                format!("QList<{}>", cpp_qt_base_type)
+            } else if f.optional {
+                format!("std::optional<{}>", &cpp_qt_base_type)
+            } else {
+                cpp_qt_base_type.clone()
+            };
+            let cpp_default_init = if is_list {
                 "{}".to_string()
+            } else if f.optional {
+                " = std::nullopt".to_string()
             } else {
                 match f.field_type {
                     FieldType::Boolean => " = false".to_string(),
@@ -359,15 +353,6 @@ impl SnapshotBuilder {
                     }
                 }
             };
-            // Relationship-based lists: OneToMany, OrderedOneToMany, ManyToMany are inherently lists.
-            // Optional doesn't apply for these — an empty list means "null".
-            // TODO: also wire up to Field.is_list when list support is added for non-relationship fields
-            let is_list = matches!(
-                f.relationship,
-                FieldRelationshipType::OneToMany
-                    | FieldRelationshipType::OrderedOneToMany
-                    | FieldRelationshipType::ManyToMany
-            );
 
             let qml_base_type = match f.field_type {
                 FieldType::Boolean => "bool",
@@ -1577,6 +1562,7 @@ mod tests {
             entity: Some(entity_id),
             relationship: FieldRelationshipType::OneToOne,
             optional: true, // nullable
+            is_list: false,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1592,6 +1578,7 @@ mod tests {
             entity: None,
             relationship: FieldRelationshipType::OneToMany,
             optional: true,
+            is_list: false,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,

@@ -163,6 +163,7 @@ struct FieldVM {
     pub snake_name: String,
     pub relationship: String,
     pub optional: bool,
+    pub is_list: bool,
     pub rust_base_type: String,
     pub rust_type: String,
 }
@@ -297,17 +298,20 @@ impl SnapshotBuilder {
                 FieldRelationshipType::ManyToMany => "ManyToMany".to_string(),
             };
 
-            let rust_type = match f.relationship {
-                FieldRelationshipType::OneToOne | FieldRelationshipType::ManyToOne => {
-                    if f.optional {
-                        format!("Option<{}>", &rust_base_type)
-                    } else {
-                        rust_base_type.clone()
-                    }
-                }
-                FieldRelationshipType::OrderedOneToMany
-                | FieldRelationshipType::OneToMany
-                | FieldRelationshipType::ManyToMany => format!("Vec<{}>", rust_base_type),
+            let is_relationship_list = matches!(
+                f.relationship,
+                FieldRelationshipType::OneToMany
+                    | FieldRelationshipType::OrderedOneToMany
+                    | FieldRelationshipType::ManyToMany
+            );
+            let is_list = f.is_list || is_relationship_list;
+
+            let rust_type = if is_list {
+                format!("Vec<{}>", rust_base_type)
+            } else if f.optional {
+                format!("Option<{}>", &rust_base_type)
+            } else {
+                rust_base_type.clone()
             };
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
@@ -315,6 +319,7 @@ impl SnapshotBuilder {
                 snake_name: heck::AsSnakeCase(&f.name).to_string(),
                 relationship,
                 optional: f.optional,
+                is_list,
                 rust_base_type,
                 rust_type,
             });
@@ -1335,6 +1340,7 @@ mod tests {
             entity: Some(entity_id),
             relationship: FieldRelationshipType::OneToOne,
             optional: true, // nullable
+            is_list: false,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1350,6 +1356,7 @@ mod tests {
             entity: None,
             relationship: FieldRelationshipType::OneToMany,
             optional: true,
+            is_list: false,
             strong: true,
             list_model: false,
             list_model_displayed_field: None,
@@ -1392,6 +1399,7 @@ mod tests {
                         snake_name: heck::AsSnakeCase(&field_relationship.name).to_string(),
                         relationship: "OneToOne".to_string(),
                         optional: true,
+                        is_list: false,
                         rust_base_type: "String".to_string(),
                         rust_type: "String".to_string(),
                     },
@@ -1401,6 +1409,7 @@ mod tests {
                         snake_name: heck::AsSnakeCase(&field_tags.name).to_string(),
                         relationship: "OneToMany".to_string(),
                         optional: true,
+                        is_list: true,
                         rust_base_type: "String".to_string(),
                         rust_type: "Vec<String>".to_string(),
                     },

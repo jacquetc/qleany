@@ -397,6 +397,7 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                             let mut list: Vec<ListItem> = Vec::new();
                             for e in fields_opt.into_iter().flatten() {
                                 let opt = if e.optional { " (opt)" } else { "" };
+                                let list_flag = if e.is_list { " (list)" } else { "" };
                                 let subtitle = if e.field_type == FieldType::Entity {
                                     format!(
                                         "{} ({}){}",
@@ -406,13 +407,14 @@ fn fill_field_list(app: &App, app_context: &Arc<AppContext>) {
                                     )
                                 } else if e.field_type == FieldType::Enum {
                                     format!(
-                                        "{}: {}{}",
+                                        "{}: {}{}{}",
                                         field_type_to_string(&e.field_type),
                                         e.enum_name.as_deref().unwrap_or("?"),
-                                        opt
+                                        opt,
+                                        list_flag
                                     )
                                 } else {
-                                    format!("{}{}", field_type_to_string(&e.field_type), opt)
+                                    format!("{}{}{}", field_type_to_string(&e.field_type), opt, list_flag)
                                 };
                                 list.push(ListItem {
                                     id: e.id as i32,
@@ -767,6 +769,7 @@ fn fill_field_form(app: &App, field: &direct_access::FieldDto) {
         field_relationship_type_to_string(&field.relationship).into(),
     );
     state.set_selected_field_optional(field.optional);
+    state.set_selected_field_is_list(field.is_list);
     state.set_selected_field_strong(field.strong);
     state.set_selected_field_list_model(field.list_model);
     state.set_selected_field_list_model_displayed_field(
@@ -796,6 +799,7 @@ fn clear_field_form(app: &App) {
     state.set_selected_field_entity_index(-1);
     state.set_selected_field_relationship("one_to_one".into());
     state.set_selected_field_optional(false);
+    state.set_selected_field_is_list(false);
     state.set_selected_field_strong(true);
     state.set_selected_field_list_model(false);
     state.set_selected_field_list_model_displayed_field("".into());
@@ -1126,12 +1130,42 @@ fn setup_field_optional_callback(app: &App, app_context: &Arc<AppContext>) {
     app.global::<EntitiesTabState>().on_field_optional_changed({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
-        move |value| {
+        move |optional| {
             if let Some(app) = app_weak.upgrade() {
                 let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
                 update_field_helper(&app, &ctx, field_id, |field| {
-                    field.optional = value;
+                    field.optional = optional;
+                    if optional {
+                        field.is_list = false;
+                    }
                 });
+                if optional {
+                    app.global::<EntitiesTabState>()
+                        .set_selected_field_is_list(false);
+                }
+            }
+        }
+    });
+}
+
+fn setup_field_is_list_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<EntitiesTabState>().on_field_is_list_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |is_list| {
+            if let Some(app) = app_weak.upgrade() {
+                let field_id = app.global::<EntitiesTabState>().get_selected_field_id();
+                update_field_helper(&app, &ctx, field_id, |field| {
+                    field.is_list = is_list;
+                    if is_list {
+                        field.optional = false;
+                    }
+                });
+                if is_list {
+                    app.global::<EntitiesTabState>()
+                        .set_selected_field_optional(false);
+                }
+                fill_field_list(&app, &ctx);
             }
         }
     });
@@ -1494,6 +1528,7 @@ fn setup_field_addition_callback(app: &App, app_context: &Arc<AppContext>) {
                     entity: None,
                     relationship: FieldRelationshipType::OneToOne,
                     optional: false,
+                    is_list: false,
                     strong: true,
                     list_model: false,
                     list_model_displayed_field: None,
@@ -1712,6 +1747,7 @@ pub fn init(event_hub_client: &EventHubClient, app: &App, app_context: &Arc<AppC
     setup_field_entity_callback(app, app_context);
     setup_field_relationship_callback(app, app_context);
     setup_field_optional_callback(app, app_context);
+    setup_field_is_list_callback(app, app_context);
     setup_field_strong_callback(app, app_context);
     setup_field_list_model_callback(app, app_context);
     setup_field_list_model_displayed_field_callback(app, app_context);

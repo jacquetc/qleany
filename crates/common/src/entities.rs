@@ -227,6 +227,7 @@ pub struct Field {
     pub entity: Option<EntityId>,
     pub relationship: FieldRelationshipType,
     pub optional: bool,
+    pub is_list: bool,
     pub strong: bool,
     pub list_model: bool,
     pub list_model_displayed_field: Option<String>,

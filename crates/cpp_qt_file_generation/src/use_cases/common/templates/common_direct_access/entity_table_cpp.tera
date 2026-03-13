@@ -7,6 +7,10 @@
 {%- set needs_unordered_m2m = false %}
 {%- set needs_one2one = false %}
 {%- set needs_many2one = false %}
+{%- set needs_json = false %}
+{%- for f in ent.normal_fields %}
+  {%- if f.is_list %}{% set_global needs_json = true %}{% endif %}
+{%- endfor %}
 {%- for f in ent.fields %}
   {%- if f.inner.field_type == "Entity" %}
     {%- if f.relationship == "OrderedOneToMany" %}{% set_global needs_ordered_o2m = true %}{% endif %}
@@ -46,6 +50,10 @@
 #include "entities/{{ ent.snake_name }}.h"
 
 #include <QDateTime>
+{% if needs_json -%}
+#include <QJsonArray>
+#include <QJsonDocument>
+{% endif -%}
 #include <QList>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -130,18 +138,44 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
         if (hasExplicitId)
             q.bindValue(":id"_L1, r.id);
     {%- for f in ent.normal_fields %}
+        {%- if f.is_list %}
+        {
+            QJsonArray arr;
+            for (const auto &item : r.{{ f.camel_name }})
+            {%- if f.cpp_qt_base_type == "QUuid" %}
+                arr.append(item.toString());
+            {%- elif f.cpp_qt_base_type == "QDateTime" %}
+                arr.append(item.toString(Qt::ISODate));
+            {%- elif f.cpp_qt_base_type == "bool" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "float" %}
+                arr.append(static_cast<double>(item));
+            {%- elif f.cpp_qt_base_type == "int" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "uint" %}
+                arr.append(static_cast<qint64>(item));
+            {%- else %}
+                arr.append(item);
+            {%- endif %}
+            q.bindValue(":{{ f.snake_name }}"_L1, QJsonDocument(arr).toJson(QJsonDocument::Compact));
+        }
+        {%- elif f.cpp_qt_type == "QDateTime" %}
         q.bindValue(":{{ f.snake_name }}"_L1,
-        {%- if f.cpp_qt_type == "QDateTime" %}
             r.{{ f.camel_name }}.toString(Qt::ISODate));
         {%- elif f.cpp_qt_type == "QUuid" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.toString());
         {%- elif f.inner.field_type == "Enum" and f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
         {%- elif f.inner.field_type == "Enum" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             static_cast<int>(r.{{ f.camel_name }}));
         {%- elif f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.has_value() ? QVariant(r.{{ f.camel_name }}.value()) : QVariant());
         {%- else %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }});
         {%- endif %}
     {%- endfor %}
@@ -205,18 +239,44 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
         q.prepare(sqlString);
         q.bindValue(":id"_L1, r.id);
     {%- for f in ent.normal_fields %}
+        {%- if f.is_list %}
+        {
+            QJsonArray arr;
+            for (const auto &item : r.{{ f.camel_name }})
+            {%- if f.cpp_qt_base_type == "QUuid" %}
+                arr.append(item.toString());
+            {%- elif f.cpp_qt_base_type == "QDateTime" %}
+                arr.append(item.toString(Qt::ISODate));
+            {%- elif f.cpp_qt_base_type == "bool" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "float" %}
+                arr.append(static_cast<double>(item));
+            {%- elif f.cpp_qt_base_type == "int" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "uint" %}
+                arr.append(static_cast<qint64>(item));
+            {%- else %}
+                arr.append(item);
+            {%- endif %}
+            q.bindValue(":{{ f.snake_name }}"_L1, QJsonDocument(arr).toJson(QJsonDocument::Compact));
+        }
+        {%- elif f.cpp_qt_type == "QDateTime" %}
         q.bindValue(":{{ f.snake_name }}"_L1,
-        {%- if f.cpp_qt_type == "QDateTime" %}
             r.{{ f.camel_name }}.toString(Qt::ISODate));
         {%- elif f.cpp_qt_type == "QUuid" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.toString());
         {%- elif f.inner.field_type == "Enum" and f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
         {%- elif f.inner.field_type == "Enum" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             static_cast<int>(r.{{ f.camel_name }}));
         {%- elif f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }}.has_value() ? QVariant(r.{{ f.camel_name }}.value()) : QVariant());
         {%- else %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
             r.{{ f.camel_name }});
         {%- endif %}
     {%- endfor %}
@@ -290,7 +350,31 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {{ ent.camel_name }}.id = rowId;
         {%- for f in ent.normal_fields %}
 
-            {%- if f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
+            {%- if f.is_list %}
+            {
+                const QJsonArray arr = QJsonDocument::fromJson(q.value({{ loop.index }}).toString().toUtf8()).array();
+                {{ f.cpp_qt_type }} list;
+                list.reserve(arr.size());
+                for (const auto &item : arr)
+                {%- if f.cpp_qt_base_type == "int" %}
+                    list.append(item.toInt());
+                {%- elif f.cpp_qt_base_type == "uint" %}
+                    list.append(static_cast<uint>(item.toInteger()));
+                {%- elif f.cpp_qt_base_type == "float" %}
+                    list.append(static_cast<float>(item.toDouble()));
+                {%- elif f.cpp_qt_base_type == "bool" %}
+                    list.append(item.toBool());
+                {%- elif f.cpp_qt_base_type == "QString" %}
+                    list.append(item.toString());
+                {%- elif f.cpp_qt_base_type == "QUuid" %}
+                    list.append(QUuid::fromString(item.toString()));
+                {%- elif f.cpp_qt_base_type == "QDateTime" %}
+                    list.append(QDateTime::fromString(item.toString(), Qt::ISODate));
+                {%- endif %}
+                {{ ent.camel_name }}.{{ f.camel_name }} = list;
+            }
+
+            {%- elif f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
             {
                 const QString dateTimeStr = q.value({{ loop.index }}).toString();
                 {{ ent.camel_name }}.{{ f.camel_name }} = dateTimeStr.isEmpty() ? std::nullopt
@@ -426,7 +510,31 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {{ ent.camel_name }}.id = rowId;
         {%- for f in ent.normal_fields %}
 
-            {%- if f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
+            {%- if f.is_list %}
+            {
+                const QJsonArray arr = QJsonDocument::fromJson(q.value({{ loop.index }}).toString().toUtf8()).array();
+                {{ f.cpp_qt_type }} list;
+                list.reserve(arr.size());
+                for (const auto &item : arr)
+                {%- if f.cpp_qt_base_type == "int" %}
+                    list.append(item.toInt());
+                {%- elif f.cpp_qt_base_type == "uint" %}
+                    list.append(static_cast<uint>(item.toInteger()));
+                {%- elif f.cpp_qt_base_type == "float" %}
+                    list.append(static_cast<float>(item.toDouble()));
+                {%- elif f.cpp_qt_base_type == "bool" %}
+                    list.append(item.toBool());
+                {%- elif f.cpp_qt_base_type == "QString" %}
+                    list.append(item.toString());
+                {%- elif f.cpp_qt_base_type == "QUuid" %}
+                    list.append(QUuid::fromString(item.toString()));
+                {%- elif f.cpp_qt_base_type == "QDateTime" %}
+                    list.append(QDateTime::fromString(item.toString(), Qt::ISODate));
+                {%- endif %}
+                {{ ent.camel_name }}.{{ f.camel_name }} = list;
+            }
+
+            {%- elif f.cpp_qt_base_type == "QDateTime" and f.optional == true %}
             {
                 const QString dateTimeStr = q.value({{ loop.index }}).toString();
                 {{ ent.camel_name }}.{{ f.camel_name }} = dateTimeStr.isEmpty() ? std::nullopt
