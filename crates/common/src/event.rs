@@ -280,6 +280,15 @@ impl EventHub {
     pub fn get_queue(&self) -> Queue {
         self.queue.clone()
     }
+
+    /// Get a direct event receiver.
+    ///
+    /// Each cloned receiver gets every event sent through the hub.
+    /// The receiver blocks on `recv()` until an event arrives — no polling needed.
+    /// Multiple receivers can coexist; each one independently receives all events.
+    pub fn subscribe_receiver(&self) -> Receiver<Event> {
+        self.receiver.clone()
+    }
 }
 
 #[cfg(test)]

@@ -22,7 +22,6 @@ impl AppContext {
 
         let event_hub = Arc::new(EventHub::new());
         let quit_signal = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        event_hub.start_event_loop(quit_signal.clone());
 
         let undo_redo_manager = Arc::new(Mutex::new(UndoRedoManager::new()));
         let long_operation_manager = Arc::new(Mutex::new(LongOperationManager::new()));

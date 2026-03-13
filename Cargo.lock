@@ -4766,6 +4766,7 @@ dependencies = [
  "dirs",
  "env_logger",
  "file_generation_shared_steps",
+ "flume",
  "handling_app_lifecycle",
  "handling_manifest",
  "heck",
