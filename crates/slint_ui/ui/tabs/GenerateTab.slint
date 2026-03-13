@@ -77,12 +77,61 @@ export component GenerateTab inherits Rectangle {
                 checked <=> AppState.generate_in_temp;
             }
 
+            Rectangle { width: 1px; height: 24px; background: #dee2e6; }
+
             CheckBox {
-                text: "show all";
-                checked: AppState.show_all_files;
+                text: "Modified";
+                checked: AppState.show_modified_files;
                 toggled => {
-                    AppState.show_all_files = self.checked;
-                    AppState.show_all_files_changed(self.checked);
+                    AppState.show_modified_files = self.checked;
+                    AppState.status_filter_changed();
+                }
+            }
+
+            CheckBox {
+                text: "New";
+                checked: AppState.show_new_files;
+                toggled => {
+                    AppState.show_new_files = self.checked;
+                    AppState.status_filter_changed();
+                }
+            }
+
+            CheckBox {
+                text: "Unchanged";
+                checked: AppState.show_unchanged_files;
+                toggled => {
+                    AppState.show_unchanged_files = self.checked;
+                    AppState.status_filter_changed();
+                }
+            }
+
+            Rectangle { width: 1px; height: 24px; background: #dee2e6; }
+
+            CheckBox {
+                text: "Infra";
+                checked: AppState.show_infra_files;
+                toggled => {
+                    AppState.show_infra_files = self.checked;
+                    AppState.nature_filter_changed();
+                }
+            }
+
+            CheckBox {
+                text: "Aggregate";
+                checked: AppState.show_aggregate_files;
+                toggled => {
+                    AppState.show_aggregate_files = self.checked;
+                    AppState.nature_filter_changed();
+                }
+            }
+
+            CheckBox {
+                text: "Scaffold";
+                checked: AppState.show_scaffold_files;
+                toggled => {
+                    AppState.show_scaffold_files = self.checked;
+                    AppState.nature_filter_changed();
                 }
             }
 

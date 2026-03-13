@@ -21,6 +21,7 @@ use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, GenerateCommands, ListItem};
 use common::direct_access::system::SystemRelationshipField;
 use common::entities::FileStatus;
+use common::entities::FileNature;
 use common::long_operation::OperationProgress;
 use common::types::EntityId;
 use cpp_qt_file_generation::{FillCppQtFilesDto, GenerateCppQtFilesDto};
@@ -55,6 +56,7 @@ struct FileDisplayData {
     display_name: String,
     group: String,
     status: FileStatus,
+    nature: FileNature,
 }
 
 /// Read all files from DB and return display data
@@ -74,6 +76,7 @@ fn read_files_from_db(app_context: &Arc<AppContext>) -> Result<Vec<FileDisplayDa
             display_name: format!("{}{}", f.relative_path, f.name),
             group: f.group,
             status: f.status,
+            nature: f.nature,
         })
         .collect())
 }
@@ -209,18 +212,27 @@ fn update_file_display_from_db(app: &App, app_context: &Arc<AppContext>) {
     };
 
     let state = app.global::<AppState>();
-    let show_all = state.get_show_all_files();
+    let show_modified = state.get_show_modified_files();
+    let show_new = state.get_show_new_files();
+    let show_unchanged = state.get_show_unchanged_files();
+    let show_infra = state.get_show_infra_files();
+    let show_aggregate = state.get_show_aggregate_files();
+    let show_scaffold = state.get_show_scaffold_files();
     let text_filter = state.get_file_filter_text().to_string().to_lowercase();
     let selected_group = get_selected_group_name(app);
 
     let filtered: Vec<&FileDisplayData> = files
         .iter()
-        .filter(|f| {
-            show_all
-                || matches!(
-                    f.status,
-                    FileStatus::Modified | FileStatus::New | FileStatus::Unknown
-                )
+        .filter(|f| match f.status {
+            FileStatus::Modified => show_modified,
+            FileStatus::New => show_new,
+            FileStatus::Unchanged => show_unchanged,
+            FileStatus::Unknown => true, // always show Unknown status
+        })
+        .filter(|f| match f.nature {
+            FileNature::Infrastructure => show_infra,
+            FileNature::Aggregate => show_aggregate,
+            FileNature::Scaffold => show_scaffold,
         })
         .filter(|f| selected_group == "All" || f.group == selected_group)
         .filter(|f| text_filter.is_empty() || f.display_name.to_lowercase().contains(&text_filter))
@@ -279,16 +291,26 @@ fn update_full_display(app: &App, app_context: &Arc<AppContext>) {
     state.set_code_preview(SharedString::from(""));
     state.set_file_filter_text(SharedString::from(""));
 
-    // Apply status filter and display files
-    let show_all = state.get_show_all_files();
+    // Apply status and nature filters
+    let show_modified = state.get_show_modified_files();
+    let show_new = state.get_show_new_files();
+    let show_unchanged = state.get_show_unchanged_files();
+    let show_infra = state.get_show_infra_files();
+    let show_aggregate = state.get_show_aggregate_files();
+    let show_scaffold = state.get_show_scaffold_files();
+
     let filtered: Vec<&FileDisplayData> = files
         .iter()
-        .filter(|f| {
-            show_all
-                || matches!(
-                    f.status,
-                    FileStatus::Modified | FileStatus::New | FileStatus::Unknown
-                )
+        .filter(|f| match f.status {
+            FileStatus::Modified => show_modified,
+            FileStatus::New => show_new,
+            FileStatus::Unchanged => show_unchanged,
+            FileStatus::Unknown => true,
+        })
+        .filter(|f| match f.nature {
+            FileNature::Infrastructure => show_infra,
+            FileNature::Aggregate => show_aggregate,
+            FileNature::Scaffold => show_scaffold,
         })
         .collect();
 
@@ -966,11 +988,23 @@ fn setup_unselect_all_files_callback(app: &App, _app_context: &Arc<AppContext>) 
     });
 }
 
-fn setup_show_all_files_changed_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<AppState>().on_show_all_files_changed({
+fn setup_status_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_status_filter_changed({
         let ctx = Arc::clone(app_context);
         let app_weak = app.as_weak();
-        move |_show_all| {
+        move || {
+            if let Some(app) = app_weak.upgrade() {
+                update_file_display_from_db(&app, &ctx);
+            }
+        }
+    });
+}
+
+fn setup_nature_filter_changed_callback(app: &App, app_context: &Arc<AppContext>) {
+    app.global::<AppState>().on_nature_filter_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move || {
             if let Some(app) = app_weak.upgrade() {
                 update_file_display_from_db(&app, &ctx);
             }
@@ -1011,6 +1045,7 @@ pub fn init(_event_hub_client: &EventHubClient, app: &App, app_context: &Arc<App
     setup_file_filter_changed_callback(app, app_context);
     setup_select_all_files_callback(app, app_context);
     setup_unselect_all_files_callback(app, app_context);
-    setup_show_all_files_changed_callback(app, app_context);
+    setup_status_filter_changed_callback(app, app_context);
+    setup_nature_filter_changed_callback(app, app_context);
     setup_view_diff_changed_callback(app, app_context);
 }

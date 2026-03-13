@@ -343,9 +343,17 @@ export global AppState {
     callback select_all_files();
     callback unselect_all_files();
 
-    // Show all files (including unchanged)
-    in-out property <bool> show_all_files: false;
-    callback show_all_files_changed(bool);
+    // Status filter checkboxes (default: modified + new checked)
+    in-out property <bool> show_modified_files: true;
+    in-out property <bool> show_new_files: true;
+    in-out property <bool> show_unchanged_files: false;
+    callback status_filter_changed();
+
+    // Nature filter checkboxes (default: all checked)
+    in-out property <bool> show_infra_files: true;
+    in-out property <bool> show_aggregate_files: true;
+    in-out property <bool> show_scaffold_files: true;
+    callback nature_filter_changed();
 
     // View diff mode for code preview
     in-out property <bool> view_diff: true;

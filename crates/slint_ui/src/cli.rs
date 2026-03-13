@@ -160,9 +160,43 @@ pub struct ListArgs {
     #[command(subcommand)]
     pub target: Option<ListTarget>,
 
-    /// Show all files including unchanged (default: only modified and new)
+    /// Show all files (all statuses + all natures)
     #[arg(long)]
     pub all: bool,
+
+    // Status filters (default: Modified + New)
+    /// Include modified files
+    #[arg(long, short = 'M')]
+    pub modified: bool,
+
+    /// Include new files
+    #[arg(long, short = 'N')]
+    pub new: bool,
+
+    /// Include unchanged files
+    #[arg(long, short = 'U')]
+    pub unchanged: bool,
+
+    /// Include all statuses (modified + new + unchanged)
+    #[arg(long)]
+    pub all_status: bool,
+
+    // Nature filters (default: all natures)
+    /// Include infrastructure files
+    #[arg(long, short = 'i')]
+    pub infra: bool,
+
+    /// Include aggregate files
+    #[arg(long, short = 'g')]
+    pub aggregates: bool,
+
+    /// Include scaffold files
+    #[arg(long, short = 's')]
+    pub scaffolds: bool,
+
+    /// Include all natures (infrastructure + aggregate + scaffold)
+    #[arg(long)]
+    pub all_natures: bool,
 
     /// Plain text output without colors
     #[arg(long)]
@@ -213,9 +247,43 @@ pub struct GenerateArgs {
     #[arg(long)]
     pub dry_run: bool,
 
-    /// Write all files including unchanged (default: only modified and new)
+    /// Write all files (all statuses + all natures)
     #[arg(long)]
     pub all: bool,
+
+    // Status filters (default: Modified + New)
+    /// Include modified files
+    #[arg(long, short = 'M')]
+    pub modified: bool,
+
+    /// Include new files
+    #[arg(long, short = 'N')]
+    pub new: bool,
+
+    /// Include unchanged files
+    #[arg(long, short = 'U')]
+    pub unchanged: bool,
+
+    /// Include all statuses (modified + new + unchanged)
+    #[arg(long)]
+    pub all_status: bool,
+
+    // Nature filters (default: all natures)
+    /// Include infrastructure files
+    #[arg(long, short = 'i')]
+    pub infra: bool,
+
+    /// Include aggregate files
+    #[arg(long, short = 'g')]
+    pub aggregates: bool,
+
+    /// Include scaffold files
+    #[arg(long, short = 's')]
+    pub scaffolds: bool,
+
+    /// Include all natures (infrastructure + aggregate + scaffold)
+    #[arg(long)]
+    pub all_natures: bool,
 
     /// What to generate
     #[command(subcommand)]
