@@ -4,6 +4,58 @@ This document covers breaking changes between manifest schema versions and how t
 
 ---
 
+## Schema v4 to v5 — `is_list` for entity fields
+
+**Qleany version**: v1.4.0
+
+### What changed
+
+Entity fields now support `is_list: true`, the same way DTO fields already did. This allows declaring list/array fields of primitive types (string, integer, uinteger, float, boolean, uuid, datetime) directly on entities.
+
+### Constraints
+
+- `is_list` cannot be used with `entity` or `enum` field types.
+- `is_list` and `optional` are mutually exclusive on the same field.
+
+### Example
+
+```yaml
+entities:
+  - name: Project
+    inherits_from: EntityBase
+    fields:
+      - name: title
+        type: string
+      - name: labels
+        type: string
+        is_list: true
+      - name: scores
+        type: float
+        is_list: true
+```
+
+### Automatic migration
+
+Qleany auto-migrates v2+ manifests on load. When you open a v4 manifest, the migrator bumps the version to 5 before validation. No manual editing is required.
+
+### Manual migration
+
+Change the schema version:
+
+```yaml
+schema:
+  version: 5    # was 4
+```
+
+No other manifest changes are needed — `is_list` defaults to `false` when omitted.
+
+### Storage
+
+- **Rust**: list fields are stored as `Vec<T>` in the entity struct, serialized via bincode in redb.
+- **C++/Qt**: list fields are stored as `QList<T>` in the entity struct, serialized as JSON arrays in SQLite TEXT columns.
+
+---
+
 ## Schema v3 to v4
 
 **Qleany version**: v1.0.31

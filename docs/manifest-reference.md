@@ -16,7 +16,7 @@ Real-world manifests you can reference:
 
 ```yaml
 schema:
-  version: 4
+  version: 5
 
 global:
   language: cpp-qt          # rust, cpp-qt
@@ -69,7 +69,7 @@ entities:
 
 ```yaml
 schema:
-  version: 4
+  version: 5
 
 global:
   language: cpp-qt
@@ -89,7 +89,7 @@ entities:
         type: datetime
       - name: updated_at
         type: datetime
-        
+
   - name: Root
     inherits_from: EntityBase
     undoable: false
@@ -189,8 +189,9 @@ features:
 | `name`                       | string | required | Field name (snake_case)                                                                            |
 | `type`                       | string | required | Field type (see below)                                                                             |
 | `entity`                     | string | none     | For `entity` type, name of the entity                                                              |
-| `relationship`               | string | none     | For `entity` type, relationship type (see below)                                                   |                           
+| `relationship`               | string | none     | For `entity` type, relationship type (see below)                                                   |
 | `optional`                   | bool   | false    | For `one_to_one` and `many_to_one`                                                                 |
+| `is_list`                    | bool   | false    | Field is a list/array. Cannot be used with `entity` or `enum` types, and cannot be combined with `optional` |
 | `strong`                     | bool   | false    | For `one_to_one`, `one_to_many`, and `ordered_one_to_many`, enable cascade deletion                |
 | `list_model`                 | bool   | false    | For C++/Qt only, generate a C++ QAbstractListModel and its QML wrapper for this relationship field |
 | `list_model_displayed_field` | string | none     | For C++/Qt only, default display role for the generated ListModel                                  |
@@ -229,6 +230,45 @@ features:
 ```
 
 Like entities, the enum name should be PascalCase. Enum values should also be PascalCase. And the name must be unique.
+
+### List Fields
+
+Entity fields can be declared as lists of primitive values using `is_list: true`. This works the same way as list fields in DTOs.
+
+```yaml
+- name: labels
+  type: string
+  is_list: true
+
+- name: scores
+  type: float
+  is_list: true
+
+- name: version_ids
+  type: uuid
+  is_list: true
+```
+
+**Constraints:**
+- `is_list` can only be used with primitive types: `boolean`, `integer`, `uinteger`, `float`, `string`, `uuid`, `datetime`.
+- `is_list` cannot be used with `entity` or `enum` field types.
+- `is_list` and `optional` are mutually exclusive on the same field.
+
+**Generated types:**
+
+| Field type   | Rust type              | C++/Qt type         |
+|--------------|------------------------|---------------------|
+| `string`     | `Vec<String>`          | `QList<QString>`    |
+| `integer`    | `Vec<i32>`             | `QList<int>`        |
+| `uinteger`   | `Vec<u32>`             | `QList<uint>`       |
+| `float`      | `Vec<f32>`             | `QList<float>`      |
+| `boolean`    | `Vec<bool>`            | `QList<bool>`       |
+| `uuid`       | `Vec<Uuid>`            | `QList<QUuid>`      |
+| `datetime`   | `Vec<DateTime<Utc>>`   | `QList<QDateTime>`  |
+
+**Storage:**
+- **Rust**: serialized via bincode within the entity in redb (same as all other fields).
+- **C++/Qt**: serialized as JSON arrays in SQLite TEXT columns. `QList<QUuid>` and `QList<QDateTime>` have registered `QMetaType` converters for QVariantList round-tripping (QML interop).
 
 ---
 

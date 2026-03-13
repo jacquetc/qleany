@@ -109,6 +109,25 @@ The model subscribes to:
 
 Note: Since `id` is a reserved word in QML, the property is named `itemId`. It corresponds to the entity's primary key.
 
+## List Fields in QML
+
+Entity fields declared with `is_list: true` in the manifest are exposed as `QList<T>` properties on both Single models and DTOs. In QML, these appear as JavaScript arrays.
+
+For most types (`QList<QString>`, `QList<int>`, `QList<float>`, `QList<uint>`, `QList<bool>`), Qt handles the `QList<T>` ↔ `QVariantList` conversion automatically.
+
+For `QList<QUuid>` and `QList<QDateTime>`, Qleany registers custom `QMetaType` converters at startup (in `converter_registration.h`) so the round-trip through QML works correctly. UUIDs are converted to/from strings without braces; DateTimes use Qt's standard `QVariant` conversion.
+
+```qml
+// Reading a list field from a Single model
+SingleProject {
+    id: currentProject
+    itemId: selectedProjectId
+}
+
+Text { text: "Labels: " + currentProject.labels.join(", ") }
+Text { text: "Score count: " + currentProject.scores.length }
+```
+
 ## Enabling Model Generation
 
 To generate models for an entity, configure these options in the manifest:

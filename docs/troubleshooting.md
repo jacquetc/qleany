@@ -162,6 +162,8 @@ Validate your YAML syntax with an online validator or `yamllint` before loading 
 
 Certain relationship configurations are invalid and rejected at parse time. For example, `strong: true` is only valid on `one_to_one`, `one_to_many`, and `ordered_one_to_many` relationships — not on `many_to_one` or `many_to_many`. The `optional` flag only applies to `one_to_one` and `many_to_one`.
 
+Similarly, `is_list` and `optional` are mutually exclusive on entity fields — a field cannot be both a list and optional. And `is_list` cannot be used with `entity` or `enum` field types.
+
 See the validation rules table in [Manifest Reference](manifest-reference.md#validation-rules).
 
 ### Changes to manifest don't appear after regeneration

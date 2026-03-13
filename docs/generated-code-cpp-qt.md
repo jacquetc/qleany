@@ -40,6 +40,12 @@ These are tuned for a typical desktop workload: frequent reads with occasional w
 
 Together, these give fast, responsive data access while accepting a durability tradeoff that simply doesn't matter for a single-user desktop application.
 
+### List Field Storage
+
+Entity fields marked `is_list: true` in the manifest are stored as JSON arrays in SQLite TEXT columns. On read, the JSON array is deserialized back into `QList<T>`. This applies to all primitive list types (`QList<QString>`, `QList<int>`, `QList<float>`, `QList<uint>`, `QList<bool>`, `QList<QUuid>`, `QList<QDateTime>`).
+
+For `QList<QUuid>` and `QList<QDateTime>`, `QMetaType` converters are registered at startup (in `converter_registration.h`) to handle the `QList<T>` ↔ `QVariantList` round-trip required by QML property binding and `QSqlQuery` value conversion.
+
 ### Ephemeral Database Pattern
 
 The internal database lives in `/tmp/`, decoupled from user files:
