@@ -7,8 +7,8 @@
 
 #[cfg(test)]
 mod tests {
-    use mobile_bridge::MobileBackend;
-    use std::sync::Arc;
+    use mobile_bridge::{MobileBackend, MobileEvent, MobileEventKind, MobileEventListener};
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_backend_lifecycle() {
@@ -25,5 +25,94 @@ mod tests {
         let result = backend.cancel_operation("nonexistent-op-id".to_string());
         assert!(!result);
         backend.shutdown();
+    }
+
+    /// A test event listener that collects events into a shared vec.
+    struct TestEventListener {
+        events: Arc<Mutex<Vec<MobileEvent>>>,
+    }
+
+    impl MobileEventListener for TestEventListener {
+        fn on_event(&self, event: MobileEvent) {
+            self.events.lock().unwrap().push(event);
+        }
+    }
+
+    #[test]
+    fn test_set_and_remove_event_listener() {
+        let backend = MobileBackend::new();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let listener = Arc::new(TestEventListener {
+            events: Arc::clone(&events),
+        });
+        // Setting a listener should not panic
+        backend.set_event_listener(listener);
+        // Removing it should not panic either
+        backend.remove_event_listener();
+        backend.shutdown();
+    }
+
+    #[test]
+    fn test_event_listener_receives_events() {
+        let backend = MobileBackend::new();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let listener = Arc::new(TestEventListener {
+            events: Arc::clone(&events),
+        });
+        backend.set_event_listener(listener);
+
+        // Trigger an entity event by creating an orphan entity.
+        // We only need one — break after the first ownerless entity.
+        {%- for eid, ent in s.entities %}
+        {%- if not ent.inner.only_for_heritage and not ent.owner %}
+        {
+            let dto = mobile_bridge::{{ ent.snake_name }}_commands::MobileCreate{{ ent.pascal_name }}Dto {
+                {%- for f in ent.fields %}
+                {%- if f.snake_name != "created_at" and f.snake_name != "updated_at" %}
+                {{ f.snake_name }}:
+                {%- if f.is_list %} vec![]
+                {%- elif f.optional %} None
+                {%- elif f.inner.field_type == "Boolean" %} false
+                {%- elif f.inner.field_type == "Integer" %} 0
+                {%- elif f.inner.field_type == "UInteger" %} 0
+                {%- elif f.inner.field_type == "Float" %} 0.0
+                {%- elif f.inner.field_type == "String" %} String::new()
+                {%- elif f.inner.field_type == "Entity" %} 0
+                {%- else %} Default::default()
+                {%- endif %},
+                {%- endif %}
+                {%- endfor %}
+            };
+            let _ = backend.create_orphan_{{ ent.snake_name }}(
+                {%- if ent.inner.undoable %}
+                None,
+                {%- endif %}
+                dto,
+            );
+        }
+        {% break %}
+        {%- endif %}
+        {%- endfor %}
+
+        // Give the dispatch thread time to deliver
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+
+        let received = events.lock().unwrap();
+        assert!(
+            !received.is_empty(),
+            "Expected at least one event to be delivered"
+        );
+
+        backend.shutdown();
+    }
+
+    #[test]
+    fn test_mobile_event_kind_variants() {
+        // Verify key variants exist and are distinct
+        assert_ne!(MobileEventKind::Reset, MobileEventKind::UndoPerformed);
+        assert_ne!(
+            MobileEventKind::LongOperationStarted,
+            MobileEventKind::LongOperationCompleted
+        );
     }
 }

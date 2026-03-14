@@ -816,6 +816,18 @@ impl FillRustFilesUseCase {
                 FileNature::Infrastructure,
             );
 
+            {
+                let f = b.add(
+                    "events.rs",
+                    relative_path_src.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_events",
+                    FileNature::Infrastructure,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
+
             // Per-entity command modules
             for entity in &entities {
                 let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;

@@ -11,6 +11,7 @@ uniffi::setup_scaffolding!();
 pub mod backend;
 pub mod custom_types;
 pub mod errors;
+pub mod events;
 
 // Entity command modules (CRUD + relationships)
 {%- for eid, ent in s.entities %}
@@ -21,3 +22,4 @@ pub mod {{ ent.snake_name }}_commands;
 pub use backend::MobileBackend;
 pub use custom_types::MobileDateTime;
 pub use errors::MobileError;
+pub use events::{MobileEvent, MobileEventKind, MobileEventListener, MobileAutoSaveListener};

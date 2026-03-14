@@ -18,6 +18,7 @@ direct_access = { path = "../direct_access" }
 {%- endfor %}
 uniffi = { workspace = true }
 chrono = { workspace = true }
+flume = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 

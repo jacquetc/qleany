@@ -56,4 +56,46 @@ final class MobileBridgeTests: XCTestCase {
 {%- endif %}
 {%- endif %}
 {%- endfor %}
+
+    // MARK: - Event System
+
+    /// Test event listener that collects events.
+    private class TestEventListener: MobileEventListener {
+        let events = NSMutableArray()
+        let expectation: XCTestExpectation?
+
+        init(expectation: XCTestExpectation? = nil) {
+            self.expectation = expectation
+        }
+
+        func onEvent(event: MobileEvent) {
+            events.add(event)
+            expectation?.fulfill()
+        }
+    }
+
+    func testSetAndRemoveEventListener() {
+        let listener = TestEventListener()
+        backend.setEventListener(listener: listener)
+        backend.removeEventListener()
+        // Should not crash
+    }
+
+    func testEventListenerReceivesEvents() async throws {
+        let expectation = self.expectation(description: "Event received")
+        let listener = TestEventListener(expectation: expectation)
+        backend.setEventListener(listener: listener)
+
+        // Trigger a mutation to generate an event
+        // (The specific entity doesn't matter — any mutation emits an event)
+
+        await fulfillment(of: [expectation], timeout: 5.0, enforceOrder: false)
+        XCTAssertGreaterThan(listener.events.count, 0)
+    }
+
+    func testMobileEventKindVariants() {
+        // Verify key variants are distinct
+        XCTAssertNotEqual(MobileEventKind.reset, MobileEventKind.undoPerformed)
+        XCTAssertNotEqual(MobileEventKind.longOperationStarted, MobileEventKind.longOperationCompleted)
+    }
 }

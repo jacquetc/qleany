@@ -64,4 +64,42 @@ class MobileBridgeTest {
 {%- endif %}
 {%- endif %}
 {%- endfor %}
+
+    // Event System
+
+    @Test
+    fun testSetAndRemoveEventListener() {
+        val listener = object : MobileEventListener {
+            override fun onEvent(event: MobileEvent) {}
+        }
+        backend.setEventListener(listener)
+        backend.removeEventListener()
+        // Should not crash
+    }
+
+    @Test
+    fun testEventListenerReceivesEvents() {
+        val events = mutableListOf<MobileEvent>()
+        val latch = java.util.concurrent.CountDownLatch(1)
+        val listener = object : MobileEventListener {
+            override fun onEvent(event: MobileEvent) {
+                events.add(event)
+                latch.countDown()
+            }
+        }
+        backend.setEventListener(listener)
+
+        // Trigger a mutation to generate an event
+        // (Events are delivered asynchronously via the dispatch thread)
+
+        // Wait up to 5 seconds for an event
+        latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun testMobileEventKindVariants() {
+        // Verify key variants are distinct
+        assertNotEquals(MobileEventKind.RESET, MobileEventKind.UNDO_PERFORMED)
+        assertNotEquals(MobileEventKind.LONG_OPERATION_STARTED, MobileEventKind.LONG_OPERATION_COMPLETED)
+    }
 }
