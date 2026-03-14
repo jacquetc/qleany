@@ -141,6 +141,8 @@ pub struct UserInterface {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
+    pub rust_ios: bool,
+    pub rust_android: bool,
 }
 
 impl HasId for UserInterface {

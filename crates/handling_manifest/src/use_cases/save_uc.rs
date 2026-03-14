@@ -152,6 +152,8 @@ impl SaveUseCase {
             rust_slint: ui.rust_slint,
             cpp_qt_qtwidgets: ui.cpp_qt_qtwidgets,
             cpp_qt_qtquick: ui.cpp_qt_qtquick,
+            rust_ios: ui.rust_ios,
+            rust_android: ui.rust_android,
         };
 
         let model_entities = entities

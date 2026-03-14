@@ -143,6 +143,12 @@ pub struct Ui {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
     pub cpp_qt_qtquick: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub rust_ios: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub rust_android: bool,
 }
 
 #[derive(Serialize, Deserialize)]

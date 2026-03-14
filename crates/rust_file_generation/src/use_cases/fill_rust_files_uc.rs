@@ -755,6 +755,97 @@ impl FillRustFilesUseCase {
             );
         }
 
+        // Mobile bridge crate (generated when rust_ios or rust_android is enabled)
+        if ui.rust_ios || ui.rust_android {
+            let relative_path = format!("{}/mobile_bridge/", prefix);
+
+            {
+                let f = b.add(
+                    "Cargo.toml",
+                    relative_path.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_cargo",
+                    FileNature::Aggregate,
+                );
+                f.all_features = true;
+            }
+
+            b.add(
+                "uniffi.toml",
+                relative_path.clone(),
+                "mobile_bridge",
+                "mobile_bridge_uniffi_toml",
+                FileNature::Infrastructure,
+            );
+
+            let relative_path_src = format!("{}/mobile_bridge/src/", prefix);
+
+            {
+                let f = b.add(
+                    "lib.rs",
+                    relative_path_src.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_lib",
+                    FileNature::Aggregate,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
+
+            b.add(
+                "backend.rs",
+                relative_path_src.clone(),
+                "mobile_bridge",
+                "mobile_bridge_backend",
+                FileNature::Infrastructure,
+            );
+
+            b.add(
+                "custom_types.rs",
+                relative_path_src.clone(),
+                "mobile_bridge",
+                "mobile_bridge_custom_types",
+                FileNature::Infrastructure,
+            );
+
+            b.add(
+                "errors.rs",
+                relative_path_src.clone(),
+                "mobile_bridge",
+                "mobile_bridge_errors",
+                FileNature::Infrastructure,
+            );
+
+            // Per-entity command modules
+            for entity in &entities {
+                let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;
+                if entity.only_for_heritage {
+                    continue;
+                }
+
+                b.add(
+                    format!("{}_commands.rs", heck::AsSnakeCase(&entity.name)),
+                    relative_path_src.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_entity_commands",
+                    FileNature::Infrastructure,
+                )
+                .entity = Some(entity.id);
+            }
+
+            // Integration tests
+            {
+                let f = b.add(
+                    "integration_tests.rs",
+                    format!("{}/mobile_bridge/tests/", prefix),
+                    "mobile_bridge",
+                    "mobile_bridge_tests",
+                    FileNature::Infrastructure,
+                );
+                f.all_entities = true;
+            }
+        }
+
         let files = if dto.only_list_already_existing {
             b.build_filtered(|file| {
                 let full_path = format!("{}{}", file.relative_path, file.name);

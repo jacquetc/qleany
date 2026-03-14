@@ -16,6 +16,9 @@ members = [
 {%- if s.ui.inner.rust_slint %}
     "{{ s.global.prefix }}/slint_ui",
 {%- endif %}
+{%- if s.ui.inner.rust_ios or s.ui.inner.rust_android %}
+    "{{ s.global.prefix }}/mobile_bridge",
+{%- endif %}
     ]
 
 {%- if s.ui.inner.rust_cli and s.ui.inner.rust_slint %}
@@ -48,7 +51,9 @@ flume = "0.12"
 serde = { version = "1", features = ["derive"] }
 chrono = { version = "0.4" , features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
-
+{%- if s.ui.inner.rust_ios or s.ui.inner.rust_android %}
+uniffi = { version = "0.28" }
+{%- endif %}
 
 [profile.release]
 lto = "fat"

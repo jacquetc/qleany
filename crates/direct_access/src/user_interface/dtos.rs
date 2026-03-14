@@ -14,6 +14,8 @@ pub struct UserInterfaceDto {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
+    pub rust_ios: bool,
+    pub rust_android: bool,
 }
 
 impl From<UserInterfaceDto> for UserInterface {
@@ -26,6 +28,8 @@ impl From<UserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            rust_ios: dto.rust_ios,
+            rust_android: dto.rust_android,
         }
     }
 }
@@ -40,6 +44,8 @@ impl From<&UserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint.clone(),
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
             cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
+            rust_ios: dto.rust_ios.clone(),
+            rust_android: dto.rust_android.clone(),
         }
     }
 }
@@ -54,6 +60,8 @@ impl From<UserInterface> for UserInterfaceDto {
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,
             cpp_qt_qtquick: entity.cpp_qt_qtquick,
+            rust_ios: entity.rust_ios,
+            rust_android: entity.rust_android,
         }
     }
 }
@@ -66,6 +74,8 @@ pub struct CreateUserInterfaceDto {
     pub rust_slint: bool,
     pub cpp_qt_qtwidgets: bool,
     pub cpp_qt_qtquick: bool,
+    pub rust_ios: bool,
+    pub rust_android: bool,
 }
 
 impl From<CreateUserInterfaceDto> for UserInterface {
@@ -78,6 +88,8 @@ impl From<CreateUserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint,
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
             cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            rust_ios: dto.rust_ios,
+            rust_android: dto.rust_android,
         }
     }
 }
@@ -92,6 +104,8 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
             rust_slint: dto.rust_slint.clone(),
             cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
             cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
+            rust_ios: dto.rust_ios.clone(),
+            rust_android: dto.rust_android.clone(),
         }
     }
 }
@@ -105,6 +119,8 @@ impl From<UserInterface> for CreateUserInterfaceDto {
             rust_slint: entity.rust_slint,
             cpp_qt_qtwidgets: entity.cpp_qt_qtwidgets,
             cpp_qt_qtquick: entity.cpp_qt_qtquick,
+            rust_ios: entity.rust_ios,
+            rust_android: entity.rust_android,
         }
     }
 }

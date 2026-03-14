@@ -18,6 +18,8 @@ const VALID_OPTIONS: &[&str] = &[
     "rust_slint",
     "cpp_qt_qtquick",
     "cpp_qt_qtwidgets",
+    "rust_ios",
+    "rust_android",
 ];
 
 pub trait CreateUnitOfWorkFactoryTrait: Send + Sync {
@@ -100,6 +102,14 @@ impl CreateUseCase {
         context.insert(
             "cpp_qt_qtquick",
             &dto.options.contains(&"cpp_qt_qtquick".to_string()),
+        );
+        context.insert(
+            "rust_ios",
+            &dto.options.contains(&"rust_ios".to_string()),
+        );
+        context.insert(
+            "rust_android",
+            &dto.options.contains(&"rust_android".to_string()),
         );
 
         // Select and render template

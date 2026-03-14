@@ -118,3 +118,5 @@ ui:
   rust_slint: {{ rust_slint }}
   cpp_qt_qtwidgets: {{ cpp_qt_qtwidgets }}
   cpp_qt_qtquick: {{ cpp_qt_qtquick }}
+  rust_ios: {{ rust_ios }}
+  rust_android: {{ rust_android }}
