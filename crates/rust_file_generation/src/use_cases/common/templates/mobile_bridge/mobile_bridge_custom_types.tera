@@ -6,6 +6,7 @@
 ///
 /// Represented as milliseconds since Unix epoch (i64) across the FFI boundary.
 /// Swift maps this to `Date`, Kotlin maps this to `java.time.Instant`.
+#[derive(Clone, Debug)]
 pub struct MobileDateTime(pub chrono::DateTime<chrono::Utc>);
 
 uniffi::custom_type!(MobileDateTime, i64, {

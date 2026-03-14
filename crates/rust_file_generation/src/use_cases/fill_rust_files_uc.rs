@@ -778,6 +778,14 @@ impl FillRustFilesUseCase {
                 FileNature::Infrastructure,
             );
 
+            b.add(
+                "uniffi-bindgen.rs",
+                relative_path.clone(),
+                "mobile_bridge",
+                "mobile_bridge_uniffi_bindgen",
+                FileNature::Infrastructure,
+            );
+
             let relative_path_src = format!("{}/mobile_bridge/src/", prefix);
 
             {

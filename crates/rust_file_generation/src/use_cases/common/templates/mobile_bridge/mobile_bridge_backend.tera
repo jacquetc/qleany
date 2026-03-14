@@ -70,9 +70,9 @@ impl MobileBackend {
     /// if updating UI.
     ///
     /// Replaces any previously registered event listener.
-    pub fn set_event_listener(&self, listener: Arc<dyn MobileEventListener>) {
+    pub fn set_event_listener(&self, listener: Box<dyn MobileEventListener>) {
         let mut disp = self.dispatcher.lock().unwrap();
-        disp.event_listener = Some(listener);
+        disp.event_listener = Some(Arc::from(listener));
     }
 
     /// Register a listener for auto-save notifications.
@@ -81,9 +81,9 @@ impl MobileBackend {
     /// whenever an entity mutation event (created, updated, removed) is received.
     ///
     /// Replaces any previously registered auto-save listener.
-    pub fn set_auto_save_listener(&self, listener: Arc<dyn MobileAutoSaveListener>) {
+    pub fn set_auto_save_listener(&self, listener: Box<dyn MobileAutoSaveListener>) {
         let mut disp = self.dispatcher.lock().unwrap();
-        disp.auto_save_listener = Some(listener);
+        disp.auto_save_listener = Some(Arc::from(listener));
     }
 
     /// Remove the currently registered event listener.

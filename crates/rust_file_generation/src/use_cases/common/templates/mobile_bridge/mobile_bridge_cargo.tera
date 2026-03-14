@@ -16,11 +16,15 @@ direct_access = { path = "../direct_access" }
 {%- for fid, feature in s.features %}
 {{ feature.snake_name }} = { path = "../{{ feature.snake_name }}" }
 {%- endfor %}
-uniffi = { version = "0.31" }
+uniffi = { version = "0.31", features = ["cli"] }
 chrono = { workspace = true }
 flume = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
 
 [lints]
 workspace = true
