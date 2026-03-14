@@ -953,6 +953,49 @@ impl FillRustFilesUseCase {
                 );
                 f.all_entities = true;
             }
+
+            // SwiftUI demo app (iOS only)
+            if ui.rust_ios {
+                let swift_demo_path = format!("{}/mobile_bridge/swift/demo/", prefix);
+                for (name, template) in [
+                    ("DemoApp.swift", "mobile_bridge_swiftui_app"),
+                    (
+                        "BackendWrapper.swift",
+                        "mobile_bridge_swiftui_backend_wrapper",
+                    ),
+                    ("ContentView.swift", "mobile_bridge_swiftui_content_view"),
+                    ("EntityRowView.swift", "mobile_bridge_swiftui_entity_row"),
+                ] {
+                    let f = b.add(
+                        name,
+                        swift_demo_path.clone(),
+                        "mobile_bridge",
+                        template,
+                        FileNature::Scaffold,
+                    );
+                    f.all_entities = true;
+                }
+            }
+
+            // Jetpack Compose demo app (Android only)
+            if ui.rust_android {
+                let kotlin_demo_path = format!("{}/mobile_bridge/kotlin/demo/", prefix);
+                for (name, template) in [
+                    ("DemoActivity.kt", "mobile_bridge_compose_activity"),
+                    ("DemoViewModel.kt", "mobile_bridge_compose_viewmodel"),
+                    ("MainScreen.kt", "mobile_bridge_compose_main_screen"),
+                    ("EntityCard.kt", "mobile_bridge_compose_entity_card"),
+                ] {
+                    let f = b.add(
+                        name,
+                        kotlin_demo_path.clone(),
+                        "mobile_bridge",
+                        template,
+                        FileNature::Scaffold,
+                    );
+                    f.all_entities = true;
+                }
+            }
         }
 
         let files = if dto.only_list_already_existing {
