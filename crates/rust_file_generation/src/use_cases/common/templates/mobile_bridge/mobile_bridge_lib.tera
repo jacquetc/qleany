@@ -18,6 +18,11 @@ pub mod events;
 pub mod {{ ent.snake_name }}_commands;
 {%- endfor %}
 
+// Feature command modules
+{%- for fid, feat in s.features %}
+pub mod {{ feat.snake_name }}_commands;
+{%- endfor %}
+
 // Re-exports for convenience
 pub use backend::MobileBackend;
 pub use custom_types::MobileDateTime;

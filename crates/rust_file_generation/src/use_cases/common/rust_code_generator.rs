@@ -189,10 +189,24 @@ static RUST_TEMPLATES_DIR: Dir<'_> =
 
 static RUST_TERA: OnceLock<Tera> = OnceLock::new();
 
+/// Tera filter that converts a snake_case string to lowerCamelCase.
+/// Example: "import_data" → "importData"
+fn camel_case_filter(
+    value: &tera::Value,
+    _args: &std::collections::HashMap<String, tera::Value>,
+) -> tera::Result<tera::Value> {
+    let s = value
+        .as_str()
+        .ok_or_else(|| tera::Error::msg("camelCase filter expects a string"))?;
+    let camel = heck::AsLowerCamelCase(s).to_string();
+    Ok(tera::Value::String(camel))
+}
+
 fn get_rust_tera() -> &'static Tera {
     RUST_TERA.get_or_init(|| {
         let mut tera = Tera::default();
         load_templates_from_dir(&mut tera, &RUST_TEMPLATES_DIR);
+        tera.register_filter("camelCase", camel_case_filter);
         tera
     })
 }

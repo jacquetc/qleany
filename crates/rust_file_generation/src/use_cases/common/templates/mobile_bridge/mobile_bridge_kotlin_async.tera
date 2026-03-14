@@ -238,3 +238,62 @@ suspend fun MobileBackend.move{{ entity.pascal_name }}RelationshipAsync(
 {%- endif %}
 {%- endif %}
 {%- endfor %}
+
+// MARK: Feature Commands
+{%- for fid, feature in s.features %}
+
+// {{ feature.pascal_name }}
+{%- for uc_id, uc in feature.use_cases %}
+{%- if uc.inner.long_operation %}
+
+/** Start {{ uc.snake_name }} long operation asynchronously. */
+suspend fun MobileBackend.{{ uc.snake_name | camelCase }}Async(
+    {%- if uc.dto_in %}
+    dto: Mobile{{ uc.dto_in.pascal_name }}
+    {%- endif %}
+): String =
+    withContext(Dispatchers.IO) {
+        {{ uc.snake_name | camelCase }}(
+            {%- if uc.dto_in %}
+            dto
+            {%- endif %}
+        )
+    }
+
+/** Get the result of a {{ uc.snake_name }} operation asynchronously. */
+suspend fun MobileBackend.get{{ uc.pascal_name }}ResultAsync(
+    operationId: String
+): {% if uc.dto_out %}Mobile{{ uc.dto_out.pascal_name }}?{% else %}Unit{% endif %} =
+    withContext(Dispatchers.IO) { get{{ uc.pascal_name }}Result(operationId) }
+
+{%- elif uc.inner.undoable %}
+
+suspend fun MobileBackend.{{ uc.snake_name | camelCase }}Async(
+    stackId: ULong?{% if uc.dto_in %},
+    dto: Mobile{{ uc.dto_in.pascal_name }}{% endif %}
+): {% if uc.dto_out %}Mobile{{ uc.dto_out.pascal_name }}{% else %}Unit{% endif %} =
+    withContext(Dispatchers.IO) {
+        {{ uc.snake_name | camelCase }}(
+            stackId{% if uc.dto_in %},
+            dto{% endif %}
+        )
+    }
+
+{%- else %}
+
+suspend fun MobileBackend.{{ uc.snake_name | camelCase }}Async(
+    {%- if uc.dto_in %}
+    dto: Mobile{{ uc.dto_in.pascal_name }}
+    {%- endif %}
+): {% if uc.dto_out %}Mobile{{ uc.dto_out.pascal_name }}{% else %}Unit{% endif %} =
+    withContext(Dispatchers.IO) {
+        {{ uc.snake_name | camelCase }}(
+            {%- if uc.dto_in %}
+            dto
+            {%- endif %}
+        )
+    }
+
+{%- endif %}
+{%- endfor %}
+{%- endfor %}

@@ -15,3 +15,13 @@ uniffi::custom_type!(MobileDateTime, i64, {
             .unwrap_or_default()
     )),
 });
+
+/// Progress report for a long-running operation.
+///
+/// Defined centrally to avoid duplicate UniFFI type registrations
+/// when multiple features have long operations.
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct MobileOperationProgress {
+    pub percentage: f32,
+    pub message: Option<String>,
+}

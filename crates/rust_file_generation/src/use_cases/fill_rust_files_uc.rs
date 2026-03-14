@@ -845,6 +845,20 @@ impl FillRustFilesUseCase {
                 .entity = Some(entity.id);
             }
 
+            // Per-feature command modules
+            for feature in &features {
+                let feature = feature.as_ref().ok_or(anyhow!("Feature not found"))?;
+
+                b.add(
+                    format!("{}_commands.rs", heck::AsSnakeCase(&feature.name)),
+                    relative_path_src.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_feature_commands",
+                    FileNature::Infrastructure,
+                )
+                .feature = Some(feature.id);
+            }
+
             // Integration tests
             {
                 let f = b.add(
@@ -869,6 +883,7 @@ impl FillRustFilesUseCase {
                     FileNature::Infrastructure,
                 );
                 f.all_entities = true;
+                f.all_features = true;
             }
 
             // Swift tests
@@ -893,6 +908,7 @@ impl FillRustFilesUseCase {
                     FileNature::Infrastructure,
                 );
                 f.all_entities = true;
+                f.all_features = true;
             }
 
             // Kotlin tests
