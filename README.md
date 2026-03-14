@@ -317,8 +317,6 @@ See the [Migration Guide](docs/migration-guide.md) for more details.
 
 ## Contributing
 
-Qleany is developed alongside Skribisto. The architecture is stable, but templates are being extracted and refined.
-
 To contribute:
 1. Open an issue to discuss changes
 2. Ensure changes work for both Rust and C++/Qt
