@@ -145,7 +145,10 @@ fn prompt_template() -> Result<ManifestTemplateOption> {
 fn prompt_options(language: &LanguageOption) -> Result<Vec<String>> {
     require_interactive("--options")?;
     let (available, default) = match language {
-        LanguageOption::Rust => (vec!["rust_cli", "rust_slint"], "rust_cli"),
+        LanguageOption::Rust => (
+            vec!["rust_cli", "rust_slint", "rust_ios", "rust_android"],
+            "rust_cli",
+        ),
         LanguageOption::CppQt => (vec!["cpp_qt_qtquick", "cpp_qt_qtwidgets"], "cpp_qt_qtquick"),
     };
     println!("UI options (comma-separated, or 'none' for no UI):");
