@@ -332,4 +332,60 @@ extension MobileBackend {
 {%- endif %}
 {%- endfor %}
 {%- endfor %}
+
+    // MARK: - Undo/Redo Commands
+
+    func undoAsync(stackId: UInt64?) async throws {
+        try await Task.detached {
+            try self.undo(stackId: stackId)
+        }.value
+    }
+
+    func redoAsync(stackId: UInt64?) async throws {
+        try await Task.detached {
+            try self.redo(stackId: stackId)
+        }.value
+    }
+
+    func deleteStackAsync(stackId: UInt64) async throws {
+        try await Task.detached {
+            try self.deleteStack(stackId: stackId)
+        }.value
+    }
+
+    func createNewStackAsync() async -> UInt64 {
+        await Task.detached {
+            self.createNewStack()
+        }.value
+    }
+
+    func beginCompositeAsync(stackId: UInt64?) async {
+        await Task.detached {
+            self.beginComposite(stackId: stackId)
+        }.value
+    }
+
+    func endCompositeAsync() async {
+        await Task.detached {
+            self.endComposite()
+        }.value
+    }
+
+    func cancelCompositeAsync() async {
+        await Task.detached {
+            self.cancelComposite()
+        }.value
+    }
+
+    func clearStackAsync(stackId: UInt64) async {
+        await Task.detached {
+            self.clearStack(stackId: stackId)
+        }.value
+    }
+
+    func clearAllStacksAsync() async {
+        await Task.detached {
+            self.clearAllStacks()
+        }.value
+    }
 }

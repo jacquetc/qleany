@@ -96,6 +96,46 @@ class MobileBridgeTest {
         latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
     }
 
+    // Undo/Redo
+
+    @Test
+    fun testUndoRedoStackLifecycle() {
+        // Initially nothing to undo or redo
+        assertFalse(backend.canUndo(null))
+        assertFalse(backend.canRedo(null))
+
+        // Create a new stack
+        val stackId = backend.createNewStack()
+        assertEquals(0uL, backend.getStackSize(stackId))
+        assertFalse(backend.canUndo(stackId))
+        assertFalse(backend.canRedo(stackId))
+
+        // Delete the stack
+        backend.deleteStack(stackId)
+    }
+
+    @Test
+    fun testUndoRedoComposite() {
+        // Composite begin/cancel should not crash
+        backend.beginComposite(null)
+        backend.cancelComposite()
+    }
+
+    @Test
+    fun testUndoRedoClear() {
+        val stackId = backend.createNewStack()
+        backend.clearStack(stackId)
+        backend.clearAllStacks()
+        backend.deleteStack(stackId)
+    }
+
+    @Test
+    fun testUndoRedoStackLifecycleAsync() = runBlocking {
+        val stackId = backend.createNewStackAsync()
+        assertEquals(0uL, backend.getStackSize(stackId))
+        backend.deleteStackAsync(stackId)
+    }
+
     @Test
     fun testMobileEventKindVariants() {
         // Verify key variants are distinct

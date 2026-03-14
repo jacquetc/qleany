@@ -103,10 +103,7 @@ impl CreateUseCase {
             "cpp_qt_qtquick",
             &dto.options.contains(&"cpp_qt_qtquick".to_string()),
         );
-        context.insert(
-            "rust_ios",
-            &dto.options.contains(&"rust_ios".to_string()),
-        );
+        context.insert("rust_ios", &dto.options.contains(&"rust_ios".to_string()));
         context.insert(
             "rust_android",
             &dto.options.contains(&"rust_android".to_string()),

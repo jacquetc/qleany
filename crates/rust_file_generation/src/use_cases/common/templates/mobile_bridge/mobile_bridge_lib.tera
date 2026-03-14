@@ -12,6 +12,7 @@ pub mod backend;
 pub mod custom_types;
 pub mod errors;
 pub mod events;
+pub mod undo_redo_commands;
 
 // Entity command modules (CRUD + relationships)
 {%- for eid, ent in s.entities %}

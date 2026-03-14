@@ -304,18 +304,17 @@ fn setup_cpp_qt_qtquick_callback(app: &App, app_context: &Arc<AppContext>) {
 }
 
 fn setup_rust_ios_callback(app: &App, app_context: &Arc<AppContext>) {
-    app.global::<UserInterfaceTabState>()
-        .on_rust_ios_changed({
-            let ctx = Arc::clone(app_context);
-            let app_weak = app.as_weak();
-            move |new_value| {
-                if let Some(app) = app_weak.upgrade() {
-                    update_user_interface_helper(&app, &ctx, |ui| {
-                        ui.rust_ios = new_value;
-                    });
-                }
+    app.global::<UserInterfaceTabState>().on_rust_ios_changed({
+        let ctx = Arc::clone(app_context);
+        let app_weak = app.as_weak();
+        move |new_value| {
+            if let Some(app) = app_weak.upgrade() {
+                update_user_interface_helper(&app, &ctx, |ui| {
+                    ui.rust_ios = new_value;
+                });
             }
-        });
+        }
+    });
 }
 
 fn setup_rust_android_callback(app: &App, app_context: &Arc<AppContext>) {

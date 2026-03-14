@@ -828,6 +828,14 @@ impl FillRustFilesUseCase {
                 f.all_entities = true;
             }
 
+            b.add(
+                "undo_redo_commands.rs",
+                relative_path_src.clone(),
+                "mobile_bridge",
+                "mobile_bridge_undo_redo_commands",
+                FileNature::Infrastructure,
+            );
+
             // Per-entity command modules
             for entity in &entities {
                 let entity = entity.as_ref().ok_or(anyhow!("Entity not found"))?;

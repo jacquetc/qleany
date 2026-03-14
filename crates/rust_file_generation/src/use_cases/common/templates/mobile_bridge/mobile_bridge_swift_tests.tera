@@ -93,6 +93,42 @@ final class MobileBridgeTests: XCTestCase {
         XCTAssertGreaterThan(listener.events.count, 0)
     }
 
+    // MARK: - Undo/Redo
+
+    func testUndoRedoStackLifecycle() {
+        // Initially nothing to undo or redo
+        XCTAssertFalse(backend.canUndo(stackId: nil))
+        XCTAssertFalse(backend.canRedo(stackId: nil))
+
+        // Create a new stack
+        let stackId = backend.createNewStack()
+        XCTAssertEqual(backend.getStackSize(stackId: stackId), 0)
+        XCTAssertFalse(backend.canUndo(stackId: stackId))
+        XCTAssertFalse(backend.canRedo(stackId: stackId))
+
+        // Delete the stack
+        try! backend.deleteStack(stackId: stackId)
+    }
+
+    func testUndoRedoComposite() {
+        // Composite begin/cancel should not crash
+        backend.beginComposite(stackId: nil)
+        backend.cancelComposite()
+    }
+
+    func testUndoRedoClear() {
+        let stackId = backend.createNewStack()
+        backend.clearStack(stackId: stackId)
+        backend.clearAllStacks()
+        try! backend.deleteStack(stackId: stackId)
+    }
+
+    func testUndoRedoStackLifecycleAsync() async throws {
+        let stackId = await backend.createNewStackAsync()
+        XCTAssertEqual(backend.getStackSize(stackId: stackId), 0)
+        try await backend.deleteStackAsync(stackId: stackId)
+    }
+
     func testMobileEventKindVariants() {
         // Verify key variants are distinct
         XCTAssertNotEqual(MobileEventKind.reset, MobileEventKind.undoPerformed)

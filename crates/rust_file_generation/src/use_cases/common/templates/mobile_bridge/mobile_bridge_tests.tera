@@ -107,6 +107,51 @@ mod tests {
     }
 
     #[test]
+    fn test_undo_redo_stack_lifecycle() {
+        let backend = MobileBackend::new();
+
+        // Initially nothing to undo or redo on default stack
+        assert!(!backend.can_undo(None));
+        assert!(!backend.can_redo(None));
+
+        // Create a new stack
+        let stack_id = backend.create_new_stack();
+        assert_eq!(backend.get_stack_size(stack_id), 0);
+        assert!(!backend.can_undo(Some(stack_id)));
+        assert!(!backend.can_redo(Some(stack_id)));
+
+        // Delete the stack
+        backend.delete_stack(stack_id).unwrap();
+
+        backend.shutdown();
+    }
+
+    #[test]
+    fn test_undo_redo_composite() {
+        let backend = MobileBackend::new();
+
+        // Composite begin/end/cancel should not panic even with no commands
+        backend.begin_composite(None);
+        backend.cancel_composite();
+
+        backend.shutdown();
+    }
+
+    #[test]
+    fn test_undo_redo_clear() {
+        let backend = MobileBackend::new();
+
+        let stack_id = backend.create_new_stack();
+        // Clear specific stack
+        backend.clear_stack(stack_id);
+        // Clear all stacks
+        backend.clear_all_stacks();
+
+        backend.delete_stack(stack_id).unwrap();
+        backend.shutdown();
+    }
+
+    #[test]
     fn test_mobile_event_kind_variants() {
         // Verify key variants exist and are distinct
         assert_ne!(MobileEventKind::Reset, MobileEventKind::UndoPerformed);

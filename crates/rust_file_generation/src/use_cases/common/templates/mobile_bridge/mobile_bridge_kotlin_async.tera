@@ -297,3 +297,32 @@ suspend fun MobileBackend.{{ uc.snake_name | camelCase }}Async(
 {%- endif %}
 {%- endfor %}
 {%- endfor %}
+
+// MARK: Undo/Redo Commands
+
+suspend fun MobileBackend.undoAsync(stackId: ULong?) =
+    withContext(Dispatchers.IO) { undo(stackId) }
+
+suspend fun MobileBackend.redoAsync(stackId: ULong?) =
+    withContext(Dispatchers.IO) { redo(stackId) }
+
+suspend fun MobileBackend.deleteStackAsync(stackId: ULong) =
+    withContext(Dispatchers.IO) { deleteStack(stackId) }
+
+suspend fun MobileBackend.createNewStackAsync(): ULong =
+    withContext(Dispatchers.IO) { createNewStack() }
+
+suspend fun MobileBackend.beginCompositeAsync(stackId: ULong?) =
+    withContext(Dispatchers.IO) { beginComposite(stackId) }
+
+suspend fun MobileBackend.endCompositeAsync() =
+    withContext(Dispatchers.IO) { endComposite() }
+
+suspend fun MobileBackend.cancelCompositeAsync() =
+    withContext(Dispatchers.IO) { cancelComposite() }
+
+suspend fun MobileBackend.clearStackAsync(stackId: ULong) =
+    withContext(Dispatchers.IO) { clearStack(stackId) }
+
+suspend fun MobileBackend.clearAllStacksAsync() =
+    withContext(Dispatchers.IO) { clearAllStacks() }
