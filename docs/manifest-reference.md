@@ -567,6 +567,8 @@ You can't put entities in DTOs. Only primitive types are allowed because entitie
   ui:
     rust_cli: true
     rust_slint: true
+    rust_ios: false
+    rust_android: false
     cpp_qt_qtwidgets: false
     cpp_qt_qtquick: false
 
@@ -576,3 +578,14 @@ You can't put entities in DTOs. Only primitive types are allowed because entitie
 These options allow the generation of scaffolding for the UI. They will each live in their own separate folders, also separate from the common backend code.
 
 One backend, many frontends.
+
+| Flag | Effect |
+|------|--------|
+| `rust_cli` | Generates a Clap CLI crate |
+| `rust_slint` | Generates a Slint desktop UI crate |
+| `rust_ios` | Generates `mobile_bridge` crate + Swift async wrappers + iOS README |
+| `rust_android` | Generates `mobile_bridge` crate + Kotlin suspend wrappers + Android README |
+| `cpp_qt_qtwidgets` | Generates C++/Qt Widgets scaffolding |
+| `cpp_qt_qtquick` | Generates C++/Qt Quick/QML scaffolding |
+
+Either `rust_ios` or `rust_android` triggers generation of the `mobile_bridge` crate with UniFFI bindings. See `qleany docs mobile` for details.

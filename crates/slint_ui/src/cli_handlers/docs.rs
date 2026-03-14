@@ -49,6 +49,7 @@ pub fn execute(
 |`qleany docs api-reference-rust`|`api-rust`|API Reference — Rust|
 |`qleany docs migration-guide`|`mig`|Migration Guide|
 |`qleany docs troubleshooting`|`trouble`|Troubleshooting|
+|`qleany docs mobile-bridge-development`|`mobile`|Mobile Bridge Development|
 |-|-|-|
 
 Use `--md` to output raw Markdown instead of terminal-formatted text.
@@ -85,6 +86,7 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
             "api-reference-rust.md",
             "migration-guide.md",
             "troubleshooting.md",
+            "mobile-bridge-development.md",
         ],
         DocsTarget::Introduction => unreachable!(),
         DocsTarget::ManifestReference => vec!["manifest-reference.md"],
@@ -101,6 +103,7 @@ Use `--md` to output raw Markdown instead of terminal-formatted text.
         DocsTarget::MigrationGuide => vec!["migration-guide.md"],
         DocsTarget::Troubleshooting => vec!["troubleshooting.md"],
         DocsTarget::RegenerationWorkflow => vec!["regeneration-workflow.md"],
+        DocsTarget::MobileBridgeDevelopment => vec!["mobile-bridge-development.md"],
     };
 
     for filename in files {

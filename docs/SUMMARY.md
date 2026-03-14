@@ -22,6 +22,7 @@
 - [API Reference — C++/Qt](api-reference-cpp-qt.md)
 - [API Reference — Rust](api-reference-rust.md)
 - [QML Integration](qml-integration.md)
+- [Mobile Bridge Development](mobile-bridge-development.md)
 - [Migration Guide](migration-guide.md)
 - [Troubleshooting](troubleshooting.md)
 

@@ -930,6 +930,29 @@ impl FillRustFilesUseCase {
                 );
                 f.all_entities = true;
             }
+
+            // Platform READMEs
+            if ui.rust_ios {
+                let f = b.add(
+                    "README-iOS.md",
+                    relative_path.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_readme_ios",
+                    FileNature::Scaffold,
+                );
+                f.all_entities = true;
+            }
+
+            if ui.rust_android {
+                let f = b.add(
+                    "README-Android.md",
+                    relative_path.clone(),
+                    "mobile_bridge",
+                    "mobile_bridge_readme_android",
+                    FileNature::Scaffold,
+                );
+                f.all_entities = true;
+            }
         }
 
         let files = if dto.only_list_already_existing {

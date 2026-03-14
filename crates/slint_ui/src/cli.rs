@@ -453,6 +453,10 @@ pub enum DocsTarget {
     /// Show regeneration workflow documentation
     #[command(visible_alias = "regen")]
     RegenerationWorkflow,
+
+    /// Show mobile bridge development documentation
+    #[command(visible_alias = "mobile")]
+    MobileBridgeDevelopment,
 }
 
 // ─────────────────────────────────────────────────────────────

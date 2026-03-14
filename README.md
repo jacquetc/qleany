@@ -5,11 +5,11 @@
 
 # Qleany
 
-**Define your entities in YAML. Get a complete, tested architecture in C++20/Qt6 or Rust — controllers, repositories, undo/redo, reactive models, and ready-to-compile UIs.**
+**Define your entities in YAML. Get a complete, tested architecture in C++20/Qt6 or Rust: controllers, repositories, undo/redo, reactive models, and ready-to-compile UIs.**
 
 > **No framework. No runtime. No Qleany dependencies in your code.**
 >
-> The generated code is yours — plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
+> The generated code is yours: plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
 ## Try it now
 
@@ -36,16 +36,17 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 
 ## Key Features
 
-- **Complete CRUD infrastructure** — Controllers, DTOs, use cases, repositories per entity
-- **Undo/redo system** (optional) — Command-based with multi-stack scoping, composite grouping, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust; cascade snapshot/restore for entity trees
-- **GUI skeleton generation** — Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
-- **Models** — C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
-- **Reactive QML models** — Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
-- **QML mocks** — JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
-- **Relationship management** — Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
-- **Event system** — Thread-safe, decoupled communication between features
-- **Event Buffer** — Send events only if the command succeeds
-- **Generated test suite** — Junction table operations, undo/redo behavior, and async integration tests
+- **Complete CRUD infrastructure**: Controllers, DTOs, use cases, repositories per entity
+- **Undo/redo system** (optional): Command-based with multi-stack scoping, composite grouping, and failure strategies; async execution with QCoro coroutines in C++/Qt, synchronous in Rust; cascade snapshot/restore for entity trees
+- **GUI skeleton generation**: Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
+- **Mobile bridge**: UniFFI-based iOS (Swift) and Android (Kotlin) support with generated async wrappers, event callbacks, and platform READMEs
+- **Models**: C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
+- **Reactive QML models**: Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
+- **QML mocks**: JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
+- **Relationship management**: Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
+- **Event system**: Thread-safe, decoupled communication between features
+- **Event Buffer**: Send events only if the command succeeds
+- **Generated test suite**: Junction table operations, undo/redo behavior, and async integration tests
 
 ## Documentation
 
@@ -64,6 +65,7 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 | [Generated Infrastructure - Rust](docs/generated-code-rust.md)     | Database layer, repositories, and file organization details                    |
 | [API Reference - C++/Qt](docs/api-reference-cpp-qt.md)             | Entity controller, feature controller, and custom UoW macros                   |
 | [API Reference - Rust](docs/api-reference-rust.md)                  | Entity controller, feature controller, and custom UoW proc macros              |
+| [Mobile Bridge Development](docs/mobile-bridge-development.md)     | UniFFI bridge for iOS (Swift) and Android (Kotlin)                             |
 | [Troubleshooting](docs/troubleshooting.md)                         | Common issues and how to fix them                                              |
 
 New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md). Then return here for reference.
@@ -76,17 +78,19 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 ### When Qleany Makes Sense
 
-**Data-centric applications** that will grow in complexity over time. Think document editors, project management tools, creative applications, or anything where users manipulate structured data and expect undo/redo to work reliably. This applies equally to desktop and mobile — a note-taking app on Plasma Mobile has the same architectural needs as one on desktop Linux.
+**Data-centric applications** that will grow in complexity over time. Think document editors, project management tools, creative applications, or anything where users manipulate structured data and expect undo/redo to work reliably. This applies equally to desktop and mobile: a note-taking app on Plasma Mobile has the same architectural needs as one on desktop Linux.
 
-**Complex CLI tools in Rust** — tools like `git` that manage structured data, have multiple subcommands, and need consistent internal architecture. Qleany itself is built this way: type `qleany -h` to see a CLI interface backed by the same architecture that powers its Slint GUI.
+**Complex CLI tools in Rust**: tools like `git` that manage structured data, have multiple subcommands, and need consistent internal architecture. Qleany itself is built this way: type `qleany -h` to see a CLI interface backed by the same architecture that powers its Slint GUI.
 
-**Applications targeting multiple platforms** — if you're building for desktop Linux and want to support Plasma Mobile or Ubuntu Touch with the same codebase, Qleany's generated backend works identically across all of them. Write your business logic once, swap UI frontends as needed.
+**Applications targeting multiple platforms**: if you're building for desktop Linux and want to support Plasma Mobile or Ubuntu Touch with the same codebase, Qleany's generated backend works identically across all of them. Write your business logic once, swap UI frontends as needed.
 
-**Applications needing multiple Qt frontends** — if you need QtQuick, QtWidgets (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
+**Mobile apps with a Rust backend**: if you are targeting iOS (Swift) or Android (Kotlin), enable `rust_ios` and/or `rust_android` in your manifest. Qleany generates a complete UniFFI bridge with platform-native async wrappers. See the [Mobile Bridge Development](docs/mobile-bridge-development.md) guide. This solution is doubly interesting if you want to share the backend between desktop and mobile.
+
+**Applications needing multiple Qt frontends**: if you need QtQuick, QtWidgets (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
 
 **Solo developers or small teams** without established architectural patterns. Qt provides excellent widgets and signals, but little guidance on organizing a 30,000-line application (or I couldn't find it). Qleany gives you that structure immediately, with patterns validated through real-world use in Skribisto.
 
-**Projects that will grow incrementally** — the manifest-driven approach means you can define a new entity, regenerate the architecture, and immediately have a working controller, repository, DTOs, and use cases. The consistency this brings across your codebase is hard to achieve manually.
+**Projects that will grow incrementally**: the manifest-driven approach means you can define a new entity, regenerate the architecture, and immediately have a working controller, repository, DTOs, and use cases. The consistency this brings across your codebase is hard to achieve manually.
 
 ### When to Reconsider
 
@@ -98,9 +102,9 @@ Qleany **targets native applications**. If you're building for the web, using El
 
 ### Special Considerations
 
-If you are targeting Android/iOS with Flutter or React Native, the Rust as a backend option can be an interesting choice, but the C++/Qt generation is not. Any Rust backend can use UniFFI or other means to call Rust from nearly any frontend accepting FFI (SwiftUI, Kotlin, etc...)
+For Flutter or React Native, the Rust backend option can still be an interesting choice, but the C++/Qt generation is not.
 
-You can also have a Rust backend and a C++/Qt frontend in the same codebase, using cxx-qt as a bridge.
+You can also have a Rust backend and a C++/Qt frontend in the same codebase, using cxx-qt as a bridge. This is only an idea. Qleany does not support this.
 
 ### The Practical Test
 
@@ -114,11 +118,11 @@ The "generate and disappear" philosophy means you're not locked in. If you decid
 
 I wrote [Skribisto](https://github.com/jacquetc/skribisto), a novel-writing application in Qt. Four times. In different languages. Each time, I hit the same wall: spaghetti code and structural dead-ends that made adding features painful and eventually impossible without rewriting half the codebase.
 
-After the third rewrite, I studied architecture patterns seriously. Clean Architecture (Robert C. Martin) clicked — the separation of concerns, the dependency rules, the testability. But implementing it by hand meant writing the same boilerplate over and over: repositories, DTOs, use cases, controllers. So I wrote templates. The templates grew into a generator. The generator needed a manifest file.
+After the third rewrite, I studied architecture patterns seriously. Clean Architecture (Robert C. Martin) clicked: the separation of concerns, the dependency rules, the testability. But implementing it by hand meant writing the same boilerplate over and over: repositories, DTOs, use cases, controllers. So I wrote templates. The templates grew into a generator. The generator needed a manifest file.
 
 **Qleany v0** was Python/Jinja2 generating C++/Qt code following pure Clean Architecture. It worked, but the tradeoffs were hard to miss: a 17-entity project produced 1700+ files across 500 folders. Some of my early design choices were dubious in hindsight.
 
-**Qleany v1** is a ground-up rewrite in Rust, aiming to fix those problems while adopting a more robust and easier-to-maintain language. Less sophisticated, more pragmatic, architecture. It adopts Package by Feature (a.k.a. Vertical Slice Architecture) instead of strict layer separation — same Clean Architecture principles (SOLID), but organized by what the code does rather than what layer it belongs to. The same manifest now generates both C++/Qt and Rust code.
+**Qleany v1** is a ground-up rewrite in Rust, aiming to fix those problems while adopting a more robust and easier-to-maintain language. Less sophisticated, more pragmatic, architecture. It adopts Package by Feature (a.k.a. Vertical Slice Architecture) instead of strict layer separation. Same Clean Architecture principles (SOLID), but organized by what the code does rather than what layer it belongs to. The same manifest now generates both C++/Qt and Rust code.
 
 This is the tool I needed when I started Skribisto. If it saves someone else from their fourth rewrite, it's done its job.
 
@@ -126,25 +130,27 @@ This is the tool I needed when I started Skribisto. If it saves someone else fro
 
 ## Target Platforms
 
-| Language | Standard    | internal database | Frontend Options   |
-|----------|-------------|-------------------|--------------------|
-| C++      | C++20 / Qt6 | SQLite            | QtQuick, QtWidgets |
-| Rust     | Rust 2024   | redb              | CLI, Slint         |
+| Language | Standard    | internal database | Frontend Options                  |
+|----------|-------------|-------------------|-----------------------------------|
+| C++      | C++20 / Qt6 | SQLite            | QtQuick, QtWidgets                |
+| Rust     | Rust 2024   | redb              | CLI, Slint, iOS (Swift), Android (Kotlin) |
 
 **Supported deployment targets for C++/Qt:**
 - Desktop Linux (KDE Plasma, GNOME, etc.)
 - Windows, macOS (Qt's cross-platform support)
+- Mobile (Android, iOS) via Qt's mobile support
 
 **Supported deployment targets for Rust:**
 - All the usual Rust targets (Linux, Windows, macOS, etc.)
+- iOS and Android via the generated `mobile_bridge` crate (UniFFI)
 
 The generated backend is platform-agnostic. Your business logic, repositories, and controllers work identically whether you're building a desktop app, a mobile app, or both from the same codebase. Only the UI layer differs.
 
 Also, the internal database choice (SQLite for C++/Qt, redb for Rust) is abstracted behind repositories. You can swap out the database implementation if needed, though SQLite and redb are solid choices for most applications.
 
-**Rust frontend examples (working references):**
-- **Slint UI**: [qleany/crates/slint_ui](https://github.com/jacquetc/qleany/tree/generator_in_rust/crates/slint_ui)
-- **Tauri/React**: [qleany/crates/qleany-app](https://github.com/jacquetc/qleany/tree/885c3ac6fdf6f115aed2c5a30fd26b81e331b4dd/crates/qleany-app)
+**Rust frontend examples:**
+- **Slint UI**: [qleany/crates/slint_ui](https://github.com/jacquetc/qleany/tree/generator_in_rust/crates/slint_ui) (Qleany's current GUI frontend)
+- **Tauri/React**: [qleany/crates/qleany-app](https://github.com/jacquetc/qleany/tree/885c3ac6fdf6f115aed2c5a30fd26b81e331b4dd/crates/qleany-app) (abandoned prototypes but still working references)
 
 I'm no web developer, and Tauri/React is not my forte. But if you want to build a web-based frontend with Rust backend generated by Qleany, this is a starting point.
 

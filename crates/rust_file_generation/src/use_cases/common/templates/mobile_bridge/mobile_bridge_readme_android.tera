@@ -1,0 +1,132 @@
+# {{ s.global.inner.application_name }} — Android Integration
+
+## Prerequisites
+
+- Rust toolchain with Android targets:
+  ```bash
+  rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+  ```
+- Android NDK (install via Android Studio SDK Manager)
+- [cargo-ndk](https://github.com/bbqsrc/cargo-ndk) for cross-compilation:
+  ```bash
+  cargo install cargo-ndk
+  ```
+- Android Studio with Kotlin support
+
+## Building the Library
+
+From the workspace root:
+
+```bash
+cargo ndk -t armeabi-v7a -t arm64-v8a -t x86 -t x86_64 -o ./jniLibs build --release -p mobile_bridge
+```
+
+This produces `.so` files for each architecture in `./jniLibs/`.
+
+## Generating Kotlin Bindings
+
+UniFFI generates Kotlin bindings from the compiled library. First build for the host to produce the library metadata, then run the bindgen:
+
+```bash
+cargo build -p mobile_bridge
+cargo run -p mobile_bridge --bin uniffi-bindgen generate \
+    --library target/debug/libmobile_bridge.so \
+    --language kotlin \
+    --out-dir ./kotlin-bindings
+```
+
+## Integrating with Your App
+
+### Gradle Setup
+
+1. Copy `jniLibs/` into `app/src/main/`
+2. Copy generated Kotlin bindings into `app/src/main/java/`
+3. Copy `kotlin/MobileBackendAsync.kt` into your source tree
+4. Add UniFFI runtime dependency to `app/build.gradle.kts`:
+   ```kotlin
+   dependencies {
+       implementation("net.java.dev.jna:jna:5.13.0@aar")
+   }
+   ```
+
+### Usage
+
+```kotlin
+import {{ s.global.inner.organisation_domain }}.{{ s.global.application_snake_name }}.bridge.*
+import kotlinx.coroutines.*
+
+// Initialize
+val backend = MobileBackend()
+
+// CRUD operations (suspend)
+val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+scope.launch {
+{%- for eid, entity in s.entities %}
+{%- if not entity.inner.only_for_heritage %}
+{%- if not entity.owner %}
+    val {{ entity.snake_name }} = backend.createOrphan{{ entity.pascal_name }}Async(
+        {%- if entity.inner.undoable %}
+        stackId = null,
+        {%- endif %}
+        dto = MobileCreate{{ entity.pascal_name }}Dto(/* ... */)
+    )
+{% break %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
+    // Undo/redo
+    backend.undoAsync(stackId = null)
+}
+
+// Events
+backend.setEventListener(object : MobileEventListener {
+    override fun onEvent(event: MobileEvent) {
+        // Post to main thread to update UI
+    }
+})
+
+// Shutdown
+backend.shutdown()
+```
+
+## Async Wrappers
+
+All database-touching methods have `*Async` suspend variants that use `withContext(Dispatchers.IO)`. Lightweight queries (`canUndo`, `canRedo`, `getStackSize`) remain synchronous.
+
+## Testing
+
+The generated `kotlin/MobileBridgeTest.kt` provides a JUnit test suite:
+
+```bash
+./gradlew test
+```
+
+Tests run against the real backend, no emulator needed.
+
+## Release Build
+
+For optimized binary size, the workspace `Cargo.toml` includes:
+
+```toml
+[profile.release]
+lto = "fat"
+panic = "abort"
+strip = true
+codegen-units = 1
+```
+
+Build with `--release` for production:
+
+```bash
+cargo ndk -t arm64-v8a -o ./jniLibs build --release -p mobile_bridge
+```
+
+## ProGuard / R8
+
+If using code shrinking, keep the JNA and UniFFI-generated classes:
+
+```proguard
+-keep class {{ s.global.inner.organisation_domain }}.{{ s.global.application_snake_name }}.bridge.** { *; }
+-keep class com.sun.jna.** { *; }
+```

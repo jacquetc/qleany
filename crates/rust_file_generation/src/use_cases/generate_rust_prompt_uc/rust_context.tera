@@ -30,6 +30,9 @@ Dependency direction: **UI -> Controllers -> Use Cases -> Repositories -> Databa
 {%- if s.ui.inner.rust_cli %}
 - **CLI**: Clap
 {%- endif %}
+{%- if s.ui.inner.rust_ios or s.ui.inner.rust_android %}
+- **Mobile bridge**: UniFFI (FFI bindings for {% if s.ui.inner.rust_ios %}iOS/Swift{% endif %}{% if s.ui.inner.rust_ios and s.ui.inner.rust_android %} and {% endif %}{% if s.ui.inner.rust_android %}Android/Kotlin{% endif %})
+{%- endif %}
 - **Async**: std threads + flume channels for events
 - **Error handling**: `anyhow::Result` (use cases throw `anyhow!` errors; UoW handles rollback)
 - **Build**: Cargo workspace
@@ -101,6 +104,18 @@ Cargo.toml                                          # Workspace root
 |   |   +-- commands/
 |   +-- ui/
 |       +-- app.slint
+{%- endif %}
+{%- if s.ui.inner.rust_ios or s.ui.inner.rust_android %}
++-- mobile_bridge/                                  # Mobile bridge (UniFFI)
+|   +-- src/
+|   |   +-- lib.rs
+|   |   +-- backend.rs                              # MobileBackend lifecycle
+|   |   +-- events.rs                               # Event dispatch + listeners
+|   |   +-- undo_redo_commands.rs                    # Undo/redo wrappers
+|   |   +-- {entity_snake}_commands.rs               # Per-entity CRUD
+|   |   +-- {feature_snake}_commands.rs              # Per-feature use cases
+|   +-- swift/                                       # Swift async wrappers
+|   +-- kotlin/                                      # Kotlin suspend wrappers
 {%- endif %}
 ```
 

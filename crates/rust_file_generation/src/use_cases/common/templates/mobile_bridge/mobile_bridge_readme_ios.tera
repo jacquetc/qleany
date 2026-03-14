@@ -1,0 +1,104 @@
+# {{ s.global.inner.application_name }} — iOS Integration
+
+## Prerequisites
+
+- Rust toolchain with iOS targets:
+  ```bash
+  rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+  ```
+- [cargo-swift](https://github.com/antoniusnaumann/cargo-swift) for generating `.xcframework`:
+  ```bash
+  cargo install cargo-swift
+  ```
+- Xcode 15+
+
+## Building the Framework
+
+From the workspace root:
+
+```bash
+cargo swift package --name {{ s.global.inner.application_name }}Bridge --platforms ios
+```
+
+This produces `{{ s.global.inner.application_name }}Bridge.xcframework` containing the compiled library and generated Swift bindings.
+
+## Integrating with Your App
+
+### Swift Package Manager
+
+1. Copy the generated `.xcframework` into your Xcode project
+2. Add it to your target's "Frameworks, Libraries, and Embedded Content"
+3. Copy the generated Swift files into your project:
+   - `swift/MobileBackend+Async.swift` (async/await wrappers)
+
+### Usage
+
+```swift
+import {{ s.global.inner.application_name }}Bridge
+
+// Initialize
+let backend = MobileBackend()
+
+// CRUD operations (async)
+{%- for eid, entity in s.entities %}
+{%- if not entity.inner.only_for_heritage %}
+{%- if not entity.owner %}
+let {{ entity.snake_name }} = try await backend.createOrphan{{ entity.pascal_name }}Async(
+    {%- if entity.inner.undoable %}
+    stackId: nil,
+    {%- endif %}
+    dto: MobileCreate{{ entity.pascal_name }}Dto(/* ... */)
+)
+{% break %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
+// Undo/redo
+try await backend.undoAsync(stackId: nil)
+
+// Events
+class MyListener: MobileEventListener {
+    func onEvent(event: MobileEvent) {
+        DispatchQueue.main.async {
+            // Update UI based on event.kind
+        }
+    }
+}
+backend.setEventListener(listener: MyListener())
+
+// Shutdown
+backend.shutdown()
+```
+
+## Async Wrappers
+
+All database-touching methods have `*Async` variants that use `Task.detached` to run off the main thread. Lightweight queries (`canUndo`, `canRedo`, `getStackSize`) remain synchronous.
+
+## Testing
+
+The generated `swift/MobileBridgeTests.swift` provides an XCTest suite:
+
+```bash
+swift test
+```
+
+Tests run against the real backend, no mocks or device needed.
+
+## Release Build
+
+For optimized binary size, the workspace `Cargo.toml` includes:
+
+```toml
+[profile.release]
+lto = "fat"
+panic = "abort"
+strip = true
+codegen-units = 1
+```
+
+Build with `--release` for production:
+
+```bash
+cargo swift package --name {{ s.global.inner.application_name }}Bridge --platforms ios --release
+```
