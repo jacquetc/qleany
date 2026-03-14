@@ -141,6 +141,15 @@ pub fn get_{{ entity.snake_name }}_multi(ctx: &AppContext, ids: &[EntityId]) -> 
         .context("getting {{ entity.snake_name }} entities")
 }
 
+/// Get all {{ entity.snake_name }} entities.
+/// Note: returns entities in database key order (by EntityId), not insertion order
+/// or any user-defined sort. For ordered collections, use relationship-based
+/// retrieval (e.g. get_*_relationship for ordered_one_to_many fields).
+pub fn get_all_{{ entity.snake_name }}(ctx: &AppContext) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
+    {{ entity.snake_name }}_controller::get_all(&ctx.db_context)
+        .context("getting all {{ entity.snake_name }} entities")
+}
+
 /// Update a {{ entity.snake_name }} entity
 pub fn update_{{ entity.snake_name }}(
     ctx: &AppContext,

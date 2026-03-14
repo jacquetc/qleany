@@ -12,10 +12,12 @@
 pub mod app_context;
 pub mod commands;
 pub mod event_hub_client;
+pub mod flat_event;
 
 // Core type re-exports
 pub use app_context::AppContext;
 pub use event_hub_client::EventHubClient;
+pub use flat_event::{FlatEvent, FlatEventKind};
 pub use common::types::EntityId;
 pub use common::event::{Event, Origin};
 pub use common::long_operation::OperationProgress;

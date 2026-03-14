@@ -217,9 +217,10 @@ impl EventHub {
 
     /// Get a direct event receiver.
     ///
-    /// Each cloned receiver gets every event sent through the hub.
     /// The receiver blocks on `recv()` until an event arrives — no polling needed.
-    /// Multiple receivers can coexist; each one independently receives all events.
+    /// **Important**: flume uses MPMC semantics — each event is delivered to exactly
+    /// one receiver. Multiple cloned receivers compete for events rather than each
+    /// receiving a copy. Ensure only one consumer calls `subscribe_receiver()`.
     pub fn subscribe_receiver(&self) -> Receiver<Event> {
         self.receiver.clone()
     }

@@ -12,6 +12,7 @@ license.workspace = true
 log = "0.4"
 anyhow = { workspace = true }
 chrono = { workspace = true }
+flume = { workspace = true }
 
 # Backend crates
 common = { path = "../common" }

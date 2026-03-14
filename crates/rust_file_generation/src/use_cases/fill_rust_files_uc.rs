@@ -625,6 +625,18 @@ impl FillRustFilesUseCase {
 
             {
                 let f = b.add(
+                    "flat_event.rs",
+                    relative_path_src.clone(),
+                    "frontend",
+                    "frontend_flat_event",
+                    FileNature::Infrastructure,
+                );
+                f.all_features = true;
+                f.all_entities = true;
+            }
+
+            {
+                let f = b.add(
                     "commands.rs",
                     relative_path_src.clone(),
                     "frontend",
